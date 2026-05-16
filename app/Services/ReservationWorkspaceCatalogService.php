@@ -558,24 +558,43 @@ class ReservationWorkspaceCatalogService
                 return $typeA <=> $typeB;
             }
 
-            $tierA = $this->workspaceCatalogSortTier($a, $today);
-            $tierB = $this->workspaceCatalogSortTier($b, $today);
-            if ($tierA !== $tierB) {
-                return $tierA <=> $tierB;
+            $priorityA = $this->workspaceCatalogPriorityTier($a);
+            $priorityB = $this->workspaceCatalogPriorityTier($b);
+            if ($priorityA !== $priorityB) {
+                return $priorityA <=> $priorityB;
             }
 
-            if ($tierA === 1) {
-                return strcmp((string) ($a['code'] ?? ''), (string) ($b['code'] ?? ''));
+            $daysA = $a['commercial']['jours_avant_depart'] ?? null;
+            $daysB = $b['commercial']['jours_avant_depart'] ?? null;
+            if ($daysA !== null && $daysB !== null && $daysA !== $daysB) {
+                return $daysA <=> $daysB;
+            }
+            if ($daysA !== null && $daysB === null) {
+                return -1;
+            }
+            if ($daysA === null && $daysB !== null) {
+                return 1;
+            }
+
+            $remainingA = $a['commercial']['places_restantes'] ?? null;
+            $remainingB = $b['commercial']['places_restantes'] ?? null;
+            if ($remainingA !== null && $remainingB !== null && $remainingA !== $remainingB) {
+                return $remainingA <=> $remainingB;
+            }
+            if ($remainingA !== null && $remainingB === null) {
+                return -1;
+            }
+            if ($remainingA === null && $remainingB !== null) {
+                return 1;
             }
 
             $dateA = $this->normalizeCatalogRowDepartureDate($a);
             $dateB = $this->normalizeCatalogRowDepartureDate($b);
-            if ($dateA === null || $dateB === null) {
-                return strcmp((string) ($a['code'] ?? ''), (string) ($b['code'] ?? ''));
-            }
-            $cmp = $dateA->timestamp <=> $dateB->timestamp;
-            if ($cmp !== 0) {
-                return $cmp;
+            if ($dateA !== null && $dateB !== null) {
+                $cmp = $dateA->timestamp <=> $dateB->timestamp;
+                if ($cmp !== 0) {
+                    return $cmp;
+                }
             }
 
             return strcmp((string) ($a['code'] ?? ''), (string) ($b['code'] ?? ''));
@@ -606,6 +625,26 @@ class ReservationWorkspaceCatalogService
         }
 
         return $d->gte($today) ? 0 : 2;
+    }
+
+    /**
+     * Priorit+� commerciale pour le tri workspace.
+     *
+     * @return int 0 push_urgent, 1 almost_full, 2 high_potential, 3 promote, 4 standard, 5 watch
+     */
+    private function workspaceCatalogPriorityTier(array $r): int
+    {
+        $priority = $r['commercial']['priorite_vente'] ?? 'standard';
+
+        return match ($priority) {
+            'push_urgent' => 0,
+            'almost_full' => 1,
+            'high_potential' => 2,
+            'promote' => 3,
+            'standard' => 4,
+            'watch' => 5,
+            default => 4,
+        };
     }
 
     private function normalizeCatalogRowDepartureDate(array $r): ?Carbon

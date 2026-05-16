@@ -104,6 +104,71 @@
     }
 
     $viewMode = $mode ?? 'card';
+
+    // Commercial data
+    $commercial = $row['commercial'] ?? [];
+    $comBadge = $commercial['badge'] ?? null;
+    $comPriority = $commercial['priorite_vente'] ?? 'standard';
+    $comCity = $commercial['ville_depart'] ?? '';
+    $comSold = $commercial['places_vendues'] ?? 0;
+    $comRemaining = $commercial['places_restantes'] ?? null;
+    $comCapacity = $commercial['capacity_total'] ?? null;
+    $comFillRate = $commercial['taux_remplissage'] ?? null;
+    $comNextDep = $commercial['prochaine_date_depart'] ?? null;
+    $comDaysUntil = $commercial['jours_avant_depart'] ?? null;
+    $comAvailStatus = $commercial['statut_disponibilite'] ?? 'unknown';
+    $comTopDates = $commercial['top_dates'] ?? [];
+
+    $badgeHtmlClass = match ($comBadge) {
+        'TOP VENTE' => 'ws-commercial-badge ws-commercial-badge--top',
+        'À POUSSER' => 'ws-commercial-badge ws-commercial-badge--push',
+        'FAIBLE STOCK' => 'ws-commercial-badge ws-commercial-badge--low',
+        'DÉPART PROCHE' => 'ws-commercial-badge ws-commercial-badge--near',
+        'FORT POTENTIEL' => 'ws-commercial-badge ws-commercial-badge--potential',
+        'DISPONIBLE' => 'ws-commercial-badge ws-commercial-badge--avail',
+        default => null,
+    };
+
+    $priorityHtmlClass = match ($comPriority) {
+        'push_urgent' => 'ws-priority-badge ws-priority-badge--push',
+        'almost_full' => 'ws-priority-badge ws-priority-badge--almost',
+        'high_potential' => 'ws-priority-badge ws-priority-badge--potential',
+        'promote' => 'ws-priority-badge ws-priority-badge--promote',
+        'watch' => 'ws-priority-badge ws-priority-badge--watch',
+        default => 'ws-priority-badge ws-priority-badge--standard',
+    };
+
+    $availHtmlClass = match ($comAvailStatus) {
+        'full' => 'ws-avail-badge ws-avail-badge--full',
+        'low' => 'ws-avail-badge ws-avail-badge--low',
+        'almost_full' => 'ws-avail-badge ws-avail-badge--almost',
+        'ok' => 'ws-avail-badge ws-avail-badge--ok',
+        default => 'ws-avail-badge ws-avail-badge--unknown',
+    };
+
+    $availLabel = match ($comAvailStatus) {
+        'full' => 'Complet',
+        'low' => 'Faible stock',
+        'almost_full' => 'Presque complet',
+        'ok' => 'Disponible',
+        default => 'Non renseigné',
+    };
+
+    $priorityLabel = match ($comPriority) {
+        'push_urgent' => 'À pousser',
+        'almost_full' => 'Presque complet',
+        'high_potential' => 'Fort potentiel',
+        'promote' => 'À promouvoir',
+        'watch' => 'À surveiller',
+        default => 'Standard',
+    };
+
+    $progressColor = 'bg-emerald-500';
+    if ($comFillRate !== null) {
+        if ($comFillRate >= 90) $progressColor = 'bg-red-500';
+        elseif ($comFillRate >= 75) $progressColor = 'bg-orange-500';
+        elseif ($comFillRate >= 50) $progressColor = 'bg-amber-500';
+    }
 @endphp
 
 @if($viewMode === 'table')
@@ -116,6 +181,7 @@
     data-dep="{{ $row['departure_date'] ? \Carbon\Carbon::parse($row['departure_date'])->format('Y-m-d') : '' }}"
     data-ws-avail="{{ e($wsAvail) }}"
     data-ws-upcoming="{{ $wsUpcoming ? '1' : '0' }}"
+    data-avail-status="{{ $comAvailStatus }}"
     data-date-status="{{ $dateStatus }}"
     data-stats-validee="{{ $statVal }}"
     data-stats-pending="{{ $statPending }}"
@@ -123,6 +189,14 @@
     data-sort-dep="{{ $depTs }}"
     data-sort-price="{{ $priceSort }}"
     data-sort-places="{{ $placesSort }}"
+    data-commercial-priority="{{ $comPriority }}"
+    data-commercial-badge="{{ $comBadge ?? '' }}"
+    data-departure-city="{{ e($row['data_departure_city'] ?? '') }}"
+    data-remaining="{{ $comRemaining ?? -1 }}"
+    data-sold="{{ $comSold }}"
+    data-days-until="{{ $comDaysUntil ?? 9999 }}"
+    data-fill-rate="{{ $comFillRate ?? -1 }}"
+    data-price="{{ $priceSort }}"
     title="{{ e($rowTitle) }}">
     <td class="ws-td ws-td--ref" data-label="Réf">
         <span class="ws-td__code">{{ $row['code'] }}</span>
@@ -136,8 +210,20 @@
             <span class="ws-td__title ws-td__title--clamp">{{ $row['name'] }}</span>
         </div>
     </td>
+    <td class="ws-td ws-td--city" data-label="Ville départ">
+        @if($comCity !== '')
+            <span class="ws-td__city">{{ $comCity }}</span>
+        @else
+            <span class="ws-td__muted">—</span>
+        @endif
+    </td>
     <td class="ws-td ws-td--dep" data-label="Départ">
-        @if($hasDepDate)
+        @if($comNextDep)
+            <span class="ws-td__dep-date">{{ \Carbon\Carbon::parse($comNextDep)->locale('fr')->translatedFormat('d M Y') }}</span>
+            @if($comDaysUntil !== null && $comDaysUntil >= 0)
+                <span class="ws-td__dep-note">{{ $comDaysUntil }}j</span>
+            @endif
+        @elseif($hasDepDate)
             <span class="ws-td__dep-date">{{ \Carbon\Carbon::parse($row['departure_date'])->locale('fr')->translatedFormat('d M Y') }}</span>
             @if($pkgDepCanceled)
                 <span class="ws-td__dep-note">Annulé</span>
@@ -153,16 +239,40 @@
             <span class="ws-td__muted">—</span>
         @endif
     </td>
+    <td class="ws-td ws-td--sold" data-label="Vendu">
+        <span class="ws-td__sold">{{ $comSold }}</span>
+    </td>
+    <td class="ws-td ws-td--remain" data-label="Restant">
+        @if($comRemaining !== null)
+            <span class="ws-td__remain {{ $comRemaining <= 5 ? 'ws-td__remain--danger' : ($comRemaining <= 10 ? 'ws-td__remain--warn' : '') }}">{{ $comRemaining }}</span>
+        @else
+            <span class="ws-td__muted">—</span>
+        @endif
+    </td>
     <td class="ws-td ws-td--cap" data-label="Capacité">
-        <span class="ws-td__cap-cell" title="Capacité basée sur la répartition des chambres">
-            {{ is_numeric(str_replace(' ', '', $capText)) ? $capText.' places' : $capText }}
-        </span>
+        <div class="ws-td__cap-wrap">
+            <span class="ws-td__cap-text">{{ $comCapacity !== null ? $comCapacity.' places' : '—' }}</span>
+            @if($comCapacity !== null && $comCapacity > 0)
+                <div class="ws-progress-bar--mini">
+                    <div class="ws-progress-bar--mini__track">
+                        <div class="ws-progress-bar--mini__fill {{ $progressColor }}" style="width: {{ min(100, $comFillRate ?? 0) }}%"></div>
+                    </div>
+                    <span class="ws-progress-bar--mini__label">{{ $comFillRate ?? 0 }}%</span>
+                </div>
+            @endif
+        </div>
+    </td>
+    <td class="ws-td ws-td--avail" data-label="Disponibilité">
+        <span class="{{ $availHtmlClass }}">{{ $availLabel }}</span>
+    </td>
+    <td class="ws-td ws-td--priority" data-label="Priorité">
+        <span class="{{ $priorityHtmlClass }}">{{ $priorityLabel }}</span>
     </td>
     <td class="ws-td ws-td--actions" data-label="Actions">
         <div class="ws-td__actions">
             @if(!empty($modalDetail))
-                    <button type="button"
-                        class="ws-btn ws-btn--secondary ws-btn--sm ws-btn--iconish btn-ws-open-detail btn-view"
+                <button type="button"
+                    class="ws-btn ws-btn--secondary ws-btn--sm ws-btn--iconish btn-ws-open-detail btn-view"
                     data-row-code="{{ e($row['code']) }}"
                     title="Détail">
                     <i class="fas fa-eye" aria-hidden="true"></i><span>Voir</span>
@@ -203,6 +313,7 @@
     data-dep="{{ $row['departure_date'] ? \Carbon\Carbon::parse($row['departure_date'])->format('Y-m-d') : '' }}"
     data-ws-avail="{{ e($wsAvail) }}"
     data-ws-upcoming="{{ $wsUpcoming ? '1' : '0' }}"
+    data-avail-status="{{ $comAvailStatus }}"
     data-date-status="{{ $dateStatus }}"
     data-stats-validee="{{ $statVal }}"
     data-stats-pending="{{ $statPending }}"
@@ -210,7 +321,19 @@
     data-sort-dep="{{ $depTs }}"
     data-sort-price="{{ $priceSort }}"
     data-sort-places="{{ $placesSort }}"
+    data-commercial-priority="{{ $comPriority }}"
+    data-commercial-badge="{{ $comBadge ?? '' }}"
+    data-departure-city="{{ e($row['data_departure_city'] ?? '') }}"
+    data-remaining="{{ $comRemaining ?? -1 }}"
+    data-sold="{{ $comSold }}"
+    data-days-until="{{ $comDaysUntil ?? 9999 }}"
+    data-fill-rate="{{ $comFillRate ?? -1 }}"
+    data-price="{{ $priceSort }}"
     title="{{ e($rowTitle) }}">
+
+    @if($comBadge)
+        <div class="ws-offer-card__badge-overlay {{ $badgeHtmlClass }}">{{ $comBadge }}</div>
+    @endif
 
     <div class="ws-offer-card__media ws-offer-card__media--compact{{ $imageUrl ? ' ws-offer-card__media--has-img' : '' }}">
         <div class="ws-offer-card__media-fill{{ $imageUrl ? ' ws-offer-card__media-fill--has-img' : '' }}">
@@ -246,6 +369,9 @@
         @if($referenceBits !== [])
             <p class="ws-offer-card__refs">{{ implode(' · ', $referenceBits) }}</p>
         @endif
+        @if($comCity !== '')
+            <p class="ws-offer-card__city"><i class="fas fa-location-dot" aria-hidden="true"></i> {{ $comCity }}</p>
+        @endif
         <div class="ws-offer-card__meta-list" role="group" aria-label="Tarif et capacité">
             <div class="ws-offer-card__meta-item ws-offer-card__meta-item--price">
                 <span class="ws-offer-card__meta-label"><i class="fas fa-coins" aria-hidden="true"></i>Prix à partir de</span>
@@ -268,6 +394,28 @@
                 </span>
             </div>
         </div>
+
+        @if($comCapacity !== null && $comCapacity > 0)
+            <div class="ws-offer-card__commercial-bar">
+                <div class="ws-offer-card__commercial-stats">
+                    <span class="ws-offer-card__commercial-stat ws-offer-card__commercial-stat--sold">{{ $comSold }} vendues</span>
+                    <span class="ws-offer-card__commercial-stat ws-offer-card__commercial-stat--remain {{ $comRemaining !== null && $comRemaining <= 5 ? 'ws-offer-card__commercial-stat--danger' : ($comRemaining !== null && $comRemaining <= 10 ? 'ws-offer-card__commercial-stat--warn' : '') }}">
+                        @if($comRemaining !== null)
+                            {{ $comRemaining }} restantes
+                        @else
+                            —
+                        @endif
+                    </span>
+                </div>
+                <div class="ws-progress-bar--mini">
+                    <div class="ws-progress-bar--mini__track">
+                        <div class="ws-progress-bar--mini__fill {{ $progressColor }}" style="width: {{ min(100, $comFillRate ?? 0) }}%"></div>
+                    </div>
+                    <span class="ws-progress-bar--mini__label">{{ $comFillRate ?? 0 }}%</span>
+                </div>
+            </div>
+        @endif
+
         @if($typeKey === 'package' && $departures->isNotEmpty())
             <div class="ws-offer-card__departures">
                 <div class="ws-offer-card__section-label">Départs disponibles</div>
@@ -307,6 +455,16 @@
                 </div>
             </div>
         @endif
+
+        @if($comBadge || $comAvailStatus !== 'unknown')
+            <div class="ws-offer-card__avail-row">
+                @if($comBadge)
+                    <span class="{{ $badgeHtmlClass }} ws-offer-card__avail-badge">{{ $comBadge }}</span>
+                @endif
+                <span class="{{ $availHtmlClass }} ws-offer-card__avail-badge">{{ $availLabel }}</span>
+            </div>
+        @endif
+
         <div class="ws-offer-card__actions ws-offer-card__actions--compact" role="group" aria-label="Actions">
             @if(!empty($modalDetail))
                 <button type="button"
@@ -316,6 +474,27 @@
                     <i class="fas fa-eye" aria-hidden="true"></i><span>Voir</span>
                 </button>
             @endif
+            @can('reservations.view')
+                @if($hasLaravel)
+                    <a href="{{ $reserveUrl }}"
+                        class="ws-btn ws-btn--primary ws-btn--sm"
+                        title="{{ $reserveLabel }}">
+                        @if($typeKey === 'vol')
+                            <i class="fas fa-plane-departure" aria-hidden="true"></i>
+                        @else
+                            <i class="fas fa-suitcase-rolling" aria-hidden="true"></i>
+                        @endif
+                        <span>{{ $reserveLabel }}</span>
+                    </a>
+                @else
+                    <a href="{{ $editTourUrl ?: '#' }}"
+                        class="ws-btn ws-btn--sm {{ $editTourUrl ? 'ws-btn--ghost' : 'ws-btn--disabled' }}"
+                        {!! $editTourUrl ? '' : 'aria-disabled="true"' !!}
+                        title="Associer la fiche Laravel">
+                        <i class="fas fa-link" aria-hidden="true"></i><span>Lier</span>
+                    </a>
+                @endif
+            @endcan
         </div>
     </div>
 </article>

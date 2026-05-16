@@ -14,6 +14,7 @@ use App\Services\ReservationVisibilityService;
 use App\Services\ReservationDossierService;
 use App\Services\ReservationWorkspaceBookingService;
 use App\Services\ReservationWorkspaceCatalogService;
+use App\Services\ReservationWorkspaceCommercialService;
 use App\Support\AdminReservationFlash;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
@@ -33,6 +34,7 @@ class ReservationWorkspaceController extends Controller
         protected ReservationListQueryService $reservationListQuery,
         protected ReservationVisibilityService $reservationVisibility,
         protected ReservationDossierService $reservationDossier,
+        protected ReservationWorkspaceCommercialService $commercial,
     ) {}
 
     public function index(Request $request): View
@@ -42,6 +44,11 @@ class ReservationWorkspaceController extends Controller
         $catalog = $this->catalog->buildRows($request->user());
         $allRows = $catalog['rows'];
         $catalogMeta = $catalog['meta'];
+
+        $enriched = $this->commercial->enrichRows($allRows, $request->user());
+        $allRows = $enriched['rows'];
+        $commercialKpis = $enriched['kpis'];
+        $commercialAssistant = $enriched['assistant'];
 
         $catalogParam = $request->query('catalog');
         if (is_string($catalogParam) && $catalogParam !== '' && in_array($catalogParam, ['upcoming', 'past', 'none'], true)) {
@@ -64,6 +71,8 @@ class ReservationWorkspaceController extends Controller
             'catalogFullCount' => $allRows->count(),
             'catalogPackageCount' => (int) ($catalogMeta['wp_tour_count'] ?? $allRows->where('type', 'package')->count()),
             'catalogTotalCount' => $rows->count(),
+            'commercialKpis' => $commercialKpis,
+            'commercialAssistant' => $commercialAssistant,
         ]);
     }
 

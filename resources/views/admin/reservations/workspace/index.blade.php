@@ -1016,6 +1016,8 @@
     $wsUpcomingCount = $catalogRows->where('ws_has_future', true)->count();
     $wsPackageCount = $catalogRows->where('type', 'package')->count();
     $wsWithPriceCount = $catalogRows->filter(fn ($row) => !empty($row['price_label']))->count();
+    $commercialKpis = $commercialKpis ?? [];
+    $commercialAssistant = $commercialAssistant ?? [];
 @endphp
 <div class="fade-in ws-page max-w-[1680px] mx-auto pb-10 overflow-x-hidden">
     <header class="ws-hero">
@@ -1023,22 +1025,30 @@
             <p class="ws-hero__eyebrow">Workspace commercial</p>
             <h1 class="ws-hero__title">Espace réservation</h1>
             <p class="ws-hero__sub">Catalogue opérationnel orienté vente: repérez vite le bon voyage, la bonne date, le bon tarif, puis lancez la réservation.</p>
-            <div class="ws-kpi-row" aria-label="Indicateurs rapides catalogue">
+            <div class="ws-kpi-row ws-kpi-row--commercial" aria-label="Indicateurs commerciaux">
                 <div class="ws-kpi ws-kpi--accent">
-                    <span class="ws-kpi__val" id="ws-kpi-visible">{{ $catalogRows->count() }}</span>
-                    <span class="ws-kpi__lbl">offres visibles</span>
+                    <span class="ws-kpi__val">{{ number_format($commercialKpis['near_departures'] ?? 0, 0, ',', ' ') }}</span>
+                    <span class="ws-kpi__lbl">Départs les plus proches</span>
                 </div>
-                <div class="ws-kpi">
-                    <span class="ws-kpi__val">{{ $wsUpcomingCount }}</span>
-                    <span class="ws-kpi__lbl">départs à venir</span>
+                <div class="ws-kpi ws-kpi--warn">
+                    <span class="ws-kpi__val">{{ number_format($commercialKpis['low_stock'] ?? 0, 0, ',', ' ') }}</span>
+                    <span class="ws-kpi__lbl">Circuits presque complets</span>
                 </div>
-                <div class="ws-kpi">
-                    <span class="ws-kpi__val">{{ $wsPackageCount }}</span>
-                    <span class="ws-kpi__lbl">circuits</span>
+                <div class="ws-kpi ws-kpi--push">
+                    <span class="ws-kpi__val">{{ number_format($commercialKpis['push_count'] ?? 0, 0, ',', ' ') }}</span>
+                    <span class="ws-kpi__lbl">Voyages à pousser</span>
                 </div>
-                <div class="ws-kpi">
-                    <span class="ws-kpi__val">{{ $wsWithPriceCount }}</span>
-                    <span class="ws-kpi__lbl">prix renseignés</span>
+                <div class="ws-kpi ws-kpi--info">
+                    <span class="ws-kpi__val">{{ number_format($commercialKpis['cities_count'] ?? 0, 0, ',', ' ') }}</span>
+                    <span class="ws-kpi__lbl">Villes de départ</span>
+                </div>
+                <div class="ws-kpi ws-kpi--success">
+                    <span class="ws-kpi__val">{{ number_format($commercialKpis['monthly_sold'] ?? 0, 0, ',', ' ') }}</span>
+                    <span class="ws-kpi__lbl">Places vendues ce mois</span>
+                </div>
+                <div class="ws-kpi ws-kpi--remain">
+                    <span class="ws-kpi__val">{{ number_format($commercialKpis['total_remaining'] ?? 0, 0, ',', ' ') }}</span>
+                    <span class="ws-kpi__lbl">Places restantes</span>
                 </div>
             </div>
         </div>
@@ -1051,6 +1061,45 @@
             </a>
         </div>
     </header>
+
+    <!-- Assistant commercial -->
+    <section class="ws-assistant-bar mb-6">
+        <h2 class="ws-assistant-bar__title"><i class="fas fa-lightbulb" aria-hidden="true"></i> Assistant commercial</h2>
+        <div class="ws-assistant-bar__grid">
+            <div class="ws-assistant-card">
+                <div class="ws-assistant-card__head">
+                    <span class="ws-assistant-card__icon"><i class="fas fa-calendar-day"></i></span>
+                    <span class="ws-assistant-card__label">Départs les plus proches</span>
+                </div>
+                <p class="ws-assistant-card__desc">Voyages avec départ dans les 7 prochains jours</p>
+                <button type="button" class="ws-assistant-card__btn" data-filter-near>Afficher</button>
+            </div>
+            <div class="ws-assistant-card">
+                <div class="ws-assistant-card__head">
+                    <span class="ws-assistant-card__icon"><i class="fas fa-exclamation-circle"></i></span>
+                    <span class="ws-assistant-card__label">Faible disponibilité</span>
+                </div>
+                <p class="ws-assistant-card__desc">Voyages avec moins de 10 places restantes</p>
+                <button type="button" class="ws-assistant-card__btn" data-filter-low>Afficher</button>
+            </div>
+            <div class="ws-assistant-card">
+                <div class="ws-assistant-card__head">
+                    <span class="ws-assistant-card__icon"><i class="fas fa-rocket"></i></span>
+                    <span class="ws-assistant-card__label">Fort potentiel de vente</span>
+                </div>
+                <p class="ws-assistant-card__desc">Beaucoup de places, bon prix et départ proche</p>
+                <button type="button" class="ws-assistant-card__btn" data-filter-potential>Afficher</button>
+            </div>
+            <div class="ws-assistant-card">
+                <div class="ws-assistant-card__head">
+                    <span class="ws-assistant-card__icon"><i class="fas fa-city"></i></span>
+                    <span class="ws-assistant-card__label">Villes à mentionner</span>
+                </div>
+                <p class="ws-assistant-card__desc">{{ implode(', ', array_slice(array_keys($commercialAssistant['top_cities'] ?? []), 0, 3)) }}</p>
+                <button type="button" class="ws-assistant-card__btn" data-filter-cities>Afficher</button>
+            </div>
+        </div>
+    </section>
 
     @if(session('workspace_store_error'))
         <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 text-red-900 px-4 py-3 text-sm shadow-sm" role="alert">
@@ -1074,8 +1123,10 @@
         <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-900 px-4 py-3 text-sm font-medium shadow-sm">{{ session('success') }}</div>
     @endif
 
-    <div id="reservations-main-content" class="space-y-6">
-        {{-- Filtres --}}
+    <div class="row g-4">
+        <div class="col-xl-9 col-lg-8">
+            <div id="reservations-main-content" class="space-y-6">
+                {{-- Filtres --}}
         <div id="catalogue-workspace" class="ws-toolbar" data-workspace-url="{{ route('admin.reservations.workspace') }}">
             <div class="ws-toolbar__row ws-toolbar__row--search">
                 <div class="ws-field ws-field--grow">
@@ -1105,6 +1156,24 @@
                     </select>
                 </div>
                 <div class="ws-field">
+                    <label class="ws-field__label" for="ws-filter-city">Ville départ</label>
+                    <select id="ws-filter-city" class="ws-select">
+                        <option value="all">Toutes</option>
+                        @php
+                            $uniqueCities = collect();
+                            foreach ($catalogRows as $row) {
+                                foreach ($row['commercial']['villes_list'] ?? [] as $city) {
+                                    if ($city !== '') $uniqueCities[$city] = true;
+                                }
+                            }
+                            $uniqueCities = collect(array_keys($uniqueCities->all()))->sort()->values();
+                        @endphp
+                        @foreach($uniqueCities as $city)
+                            <option value="{{ e(strtolower($city)) }}">{{ $city }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="ws-field">
                     <label class="ws-field__label" for="ws-filter-date-status">Période</label>
                     <select id="ws-filter-date-status" class="ws-select" data-ws-catalog-scope="{{ e($catalogScope) }}" title="Période (recharge la liste)">
                         <option value="all" @selected($catalogScope === 'all')>Tous</option>
@@ -1114,12 +1183,35 @@
                     </select>
                 </div>
                 <div class="ws-field">
-                    <label class="ws-field__label" for="ws-filter-avail">Places</label>
+                    <label class="ws-field__label" for="ws-filter-budget">Budget</label>
+                    <select id="ws-filter-budget" class="ws-select">
+                        <option value="all">Tous</option>
+                        <option value="0-3000">< 3 000 MAD</option>
+                        <option value="3000-6000">3 000 – 6 000 MAD</option>
+                        <option value="6000-10000">6 000 – 10 000 MAD</option>
+                        <option value="10000+">> 10 000 MAD</option>
+                    </select>
+                </div>
+                <div class="ws-field">
+                    <label class="ws-field__label" for="ws-filter-avail">Disponibilité</label>
                     <select id="ws-filter-avail" class="ws-select">
                         <option value="all">Tous</option>
-                        <option value="places">Avec places</option>
+                        <option value="ok">Disponible</option>
+                        <option value="almost_full">Presque complet</option>
+                        <option value="low">Faible stock</option>
                         <option value="full">Complet</option>
                         <option value="unknown">Non renseigné</option>
+                    </select>
+                </div>
+                <div class="ws-field">
+                    <label class="ws-field__label" for="ws-filter-priority">Priorité</label>
+                    <select id="ws-filter-priority" class="ws-select">
+                        <option value="all">Toutes</option>
+                        <option value="push_urgent">À pousser aujourd'hui</option>
+                        <option value="almost_full">Presque complet</option>
+                        <option value="high_potential">Fort potentiel</option>
+                        <option value="promote">À promouvoir</option>
+                        <option value="watch">À surveiller</option>
                     </select>
                 </div>
                 <div class="ws-field">
@@ -1142,14 +1234,14 @@
                 <div class="ws-field">
                     <label class="ws-field__label" for="ws-sort">Tri</label>
                     <select id="ws-sort" class="ws-select">
-                        <option value="preserve" selected>Ordre serveur (priorité vente)</option>
+                        <option value="preserve" selected>Priorité commerciale</option>
                         <option value="dep-asc">Date départ ↑</option>
-                        <option value="default">Référence</option>
                         <option value="dep-desc">Date départ ↓</option>
                         <option value="price-asc">Prix ↑</option>
                         <option value="price-desc">Prix ↓</option>
-                        <option value="places-desc">Places ↓</option>
-                        <option value="places-asc">Places ↑</option>
+                        <option value="places-asc">Places restantes ↑</option>
+                        <option value="places-desc">Places restantes ↓</option>
+                        <option value="default">Référence</option>
                     </select>
                 </div>
                 <div class="ws-field ws-field--actions">
@@ -1170,9 +1262,14 @@
                         <tr>
                             <th scope="col" class="ws-data-table__th-ref">Réf</th>
                             <th scope="col" class="ws-data-table__th-offer">Voyage</th>
+                            <th scope="col" class="ws-data-table__th-city">Ville départ</th>
                             <th scope="col" class="ws-data-table__th-dep">Départ</th>
                             <th scope="col" class="ws-data-table__th-price">Prix</th>
+                            <th scope="col" class="ws-data-table__th-sold">Vendu</th>
+                            <th scope="col" class="ws-data-table__th-remain">Restant</th>
                             <th scope="col" class="ws-data-table__th-cap">Capacité</th>
+                            <th scope="col" class="ws-data-table__th-avail">Dispo</th>
+                            <th scope="col" class="ws-data-table__th-priority">Priorité</th>
                             <th scope="col" class="ws-data-table__th-actions">Actions</th>
                         </tr>
                     </thead>
@@ -1181,7 +1278,7 @@
                             @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table'])
                         @empty
                             <tr>
-                                <td colspan="6" class="ws-table-empty-cell">
+                                <td colspan="11" class="ws-table-empty-cell">
                                     <div class="ws-catalog-empty ws-catalog-empty--inline">
                                         <div class="max-w-md mx-auto text-center py-10 px-6">
                                             <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 mb-3 text-xl">
@@ -1235,7 +1332,69 @@
             <p class="text-sm text-gray-600 mb-4">Clic sur un événement : ouverture de la page dédiée de création de réservation.</p>
             <div id="workspace-calendar" class="w-full min-h-[540px] fc-workspace"></div>
         </div>
+        </div>
     </div>
+    <div class="col-xl-3 col-lg-4">
+        <div class="ws-sale-panel sticky-top">
+            <div class="ws-sale-panel__section">
+                <h3 class="ws-sale-panel__title"><i class="fas fa-calendar-check" aria-hidden="true"></i> Prochains départs</h3>
+                <ul class="ws-sale-panel__list">
+                    @foreach($catalogRows->take(8) as $row)
+                        @php $c = $row['commercial'] ?? []; @endphp
+                        @if(!empty($c['prochaine_date_depart']))
+                            <li class="ws-sale-panel__item">
+                                <span class="ws-sale-panel__item-date">{{ \Carbon\Carbon::parse($c['prochaine_date_depart'])->locale('fr')->translatedFormat('d M Y') }}</span>
+                                <span class="ws-sale-panel__item-name">{{ \Illuminate\Support\Str::limit($row['name'] ?? '', 28) }}</span>
+                                @if(!empty($c['ville_depart']))
+                                    <span class="ws-sale-panel__item-city">{{ $c['ville_depart'] }}</span>
+                                @endif
+                                @if($c['places_restantes'] !== null)
+                                    <span class="ws-sale-panel__item-remain {{ $c['places_restantes'] <= 5 ? 'ws-sale-panel__item-remain--danger' : '' }}">{{ $c['places_restantes'] }} restantes</span>
+                                @endif
+                            </li>
+                        @endif
+                    @endforeach
+                </ul>
+            </div>
+            <div class="ws-sale-panel__section">
+                <h3 class="ws-sale-panel__title"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i> Manque de places</h3>
+                <ul class="ws-sale-panel__list">
+                    @foreach($catalogRows->filter(fn ($r) => ($r['commercial']['places_restantes'] ?? 999) <= 10 && ($r['commercial']['places_restantes'] ?? 0) > 0)->take(8) as $row)
+                        @php $c = $row['commercial'] ?? []; @endphp
+                        <li class="ws-sale-panel__item">
+                            <span class="ws-sale-panel__item-name">{{ \Illuminate\Support\Str::limit($row['name'] ?? '', 28) }}</span>
+                            <span class="ws-sale-panel__item-badge {{ $c['places_restantes'] <= 5 ? 'ws-sale-panel__item-badge--danger' : 'ws-sale-panel__item-badge--warn' }}">{{ $c['places_restantes'] }} restantes</span>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+            <div class="ws-sale-panel__section">
+                <h3 class="ws-sale-panel__title"><i class="fas fa-bullhorn" aria-hidden="true"></i> Recommandations</h3>
+                <ul class="ws-sale-panel__recommendations">
+                    @if(($commercialKpis['near_departures'] ?? 0) > 0)
+                        <li>Poussez les circuits à départ proche</li>
+                    @endif
+                    @if(($commercialKpis['low_stock'] ?? 0) > 0)
+                        <li>Mettez en avant la faible disponibilité</li>
+                    @endif
+                    @if(!empty(array_keys($commercialAssistant['top_cities'] ?? [])[0] ?? null))
+                        <li>Proposez {{ implode(' et ', array_slice(array_keys($commercialAssistant['top_cities'] ?? []), 0, 2)) }} en priorité</li>
+                    @endif
+                    <li>Priorisez les voyages avec forte marge</li>
+                </ul>
+            </div>
+            <div class="ws-sale-panel__section">
+                <h3 class="ws-sale-panel__title"><i class="fas fa-handshake" aria-hidden="true"></i> Arguments de vente</h3>
+                <ul class="ws-sale-panel__arguments">
+                    <li>Départs garantis et confirmés</li>
+                    <li>Places limitées, réservez vite</li>
+                    <li>Meilleur rapport qualité/prix</li>
+                    <li>Accompagnement 24/7</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
 </div>
 
 <script type="application/json" id="workspace-calendar-json">{!! json_encode($workspaceCalendarEvents, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
@@ -1624,7 +1783,10 @@ document.addEventListener('DOMContentLoaded', function () {
     var searchEl = document.getElementById('ws-filter-search');
     var typeEl = document.getElementById('ws-filter-type');
     var dateStatusEl = document.getElementById('ws-filter-date-status');
+    var cityEl = document.getElementById('ws-filter-city');
+    var budgetEl = document.getElementById('ws-filter-budget');
     var availEl = document.getElementById('ws-filter-avail');
+    var priorityEl = document.getElementById('ws-filter-priority');
     var resEl = document.getElementById('ws-filter-res');
     var sortEl = document.getElementById('ws-sort');
     var rangeInput = document.getElementById('ws-date-range-picker');
@@ -1656,14 +1818,26 @@ document.addEventListener('DOMContentLoaded', function () {
             var v = parseInt(tr.getAttribute(attr), 10);
             return isNaN(v) ? 0 : v;
         }
+        function prio(tr) {
+            var p = tr.getAttribute('data-commercial-priority') || 'standard';
+            var map = { push_urgent: 0, almost_full: 1, high_potential: 2, promote: 3, standard: 4, watch: 5 };
+            return map[p] !== undefined ? map[p] : 4;
+        }
         switch (sort) {
-            case 'preserve': return 0;
+            case 'preserve':
+                var pa = prio(a), pb = prio(b);
+                if (pa !== pb) return pa - pb;
+                var da = n(a, 'data-days-until'), db = n(b, 'data-days-until');
+                if (da !== db) return da - db;
+                var ra = n(a, 'data-remaining'), rb = n(b, 'data-remaining');
+                if (ra !== rb) return ra - rb;
+                return ca.localeCompare(cb, 'fr');
             case 'dep-asc': return n(a, 'data-sort-dep') - n(b, 'data-sort-dep');
             case 'dep-desc': return n(b, 'data-sort-dep') - n(a, 'data-sort-dep');
             case 'price-asc': return n(a, 'data-sort-price') - n(b, 'data-sort-price');
             case 'price-desc': return n(b, 'data-sort-price') - n(a, 'data-sort-price');
-            case 'places-asc': return n(a, 'data-sort-places') - n(b, 'data-sort-places');
-            case 'places-desc': return n(b, 'data-sort-places') - n(a, 'data-sort-places');
+            case 'places-asc': return n(a, 'data-remaining') - n(b, 'data-remaining');
+            case 'places-desc': return n(b, 'data-remaining') - n(a, 'data-remaining');
             default: return ca.localeCompare(cb, 'fr');
         }
     }
@@ -1686,7 +1860,10 @@ document.addEventListener('DOMContentLoaded', function () {
     window.applyWsFilters = function applyWsFilters() {
         var q = (searchEl && searchEl.value) ? searchEl.value.toLowerCase().trim() : '';
         var t = typeEl ? typeEl.value : 'all';
+        var city = cityEl ? cityEl.value : 'all';
+        var budget = budgetEl ? budgetEl.value : 'all';
         var av = availEl ? availEl.value : 'all';
+        var pr = priorityEl ? priorityEl.value : 'all';
         var rs = resEl ? resEl.value : 'all';
         var rows = document.querySelectorAll('#ws-catalog-list .ws-catalog-row, #ws-catalog-table-body .ws-catalog-row');
         var visible = 0;
@@ -1700,15 +1877,35 @@ document.addEventListener('DOMContentLoaded', function () {
         rows.forEach(function (tr) {
             var ok = true;
             if (t !== 'all' && tr.getAttribute('data-type') !== t) ok = false;
+            if (ok && city !== 'all') {
+                var dc = tr.getAttribute('data-departure-city') || '';
+                if (dc.indexOf(city) === -1) ok = false;
+            }
+            if (ok && budget !== 'all') {
+                var price = parseInt(tr.getAttribute('data-price'), 10) || 0;
+                if (budget === '0-3000' && price >= 3000) ok = false;
+                if (budget === '3000-6000' && (price < 3000 || price >= 6000)) ok = false;
+                if (budget === '6000-10000' && (price < 6000 || price >= 10000)) ok = false;
+                if (budget === '10000+' && price < 10000) ok = false;
+            }
             if (ok && av !== 'all') {
-                var w = tr.getAttribute('data-ws-avail') || 'na';
-                if (av === 'places') {
-                    if (w !== 'ok' && w !== 'low') ok = false;
+                var astat = tr.getAttribute('data-avail-status') || 'unknown';
+                if (av === 'ok') {
+                    if (astat !== 'ok') ok = false;
+                } else if (av === 'almost_full') {
+                    if (astat !== 'almost_full') ok = false;
+                } else if (av === 'low') {
+                    if (astat !== 'low') ok = false;
                 } else if (av === 'full') {
-                    if (w !== 'full') ok = false;
+                    if (astat !== 'full') ok = false;
                 } else if (av === 'unknown') {
-                    if (w !== 'unknown' && w !== 'na') ok = false;
+                    if (astat !== 'unknown') ok = false;
+                } else if (av === 'places') {
+                    if (astat !== 'ok' && astat !== 'low' && astat !== 'almost_full') ok = false;
                 }
+            }
+            if (ok && pr !== 'all') {
+                if (tr.getAttribute('data-commercial-priority') !== pr) ok = false;
             }
             if (ok && rs !== 'all') {
                 var st = parseInt(tr.getAttribute('data-stats-total'), 10) || 0;
@@ -1722,7 +1919,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (ok && q) {
                 var blob = (tr.getAttribute('data-search') || '')
                     + ' ' + (tr.getAttribute('data-name') || '')
-                    + ' ' + (tr.getAttribute('data-code') || '');
+                    + ' ' + (tr.getAttribute('data-code') || '')
+                    + ' ' + (tr.getAttribute('data-departure-city') || '');
                 if (blob.toLowerCase().indexOf(q) === -1) ok = false;
             }
             if (ok && range) {
@@ -1754,6 +1952,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (searchEl) searchEl.addEventListener('input', applyWsFilters);
     if (typeEl) typeEl.addEventListener('change', applyWsFilters);
+    if (cityEl) cityEl.addEventListener('change', applyWsFilters);
+    if (budgetEl) budgetEl.addEventListener('change', applyWsFilters);
     if (dateStatusEl) {
         dateStatusEl.addEventListener('change', function () {
             var v = dateStatusEl.value || 'all';
@@ -1763,13 +1963,17 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
     if (availEl) availEl.addEventListener('change', applyWsFilters);
+    if (priorityEl) priorityEl.addEventListener('change', applyWsFilters);
     if (resEl) resEl.addEventListener('change', applyWsFilters);
     if (sortEl) sortEl.addEventListener('change', applyWsFiltersAndSort);
     if (resetBtn) {
         resetBtn.addEventListener('click', function () {
             if (searchEl) searchEl.value = '';
             if (typeEl) typeEl.value = 'all';
+            if (cityEl) cityEl.value = 'all';
+            if (budgetEl) budgetEl.value = 'all';
             if (availEl) availEl.value = 'all';
+            if (priorityEl) priorityEl.value = 'all';
             if (resEl) resEl.value = 'all';
             if (rangeInput && rangeInput._flatpickr) rangeInput._flatpickr.clear();
             if (dateStatusEl && dateStatusEl.value !== 'all') {
@@ -1780,6 +1984,44 @@ document.addEventListener('DOMContentLoaded', function () {
             applyWsFiltersAndSort();
         });
     }
+
+    // Assistant commercial buttons
+    document.querySelectorAll('[data-filter-near]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            if (availEl) availEl.value = 'all';
+            if (priorityEl) priorityEl.value = 'all';
+            if (sortEl) sortEl.value = 'dep-asc';
+            applyWsFiltersAndSort();
+            setTimeout(function () {
+                var rows = document.querySelectorAll('#ws-catalog-list .ws-catalog-row:not(.hidden), #ws-catalog-table-body .ws-catalog-row:not(.hidden)');
+                rows.forEach(function (tr) {
+                    var days = parseInt(tr.getAttribute('data-days-until'), 10);
+                    tr.classList.toggle('hidden', isNaN(days) || days < 0 || days > 7);
+                });
+                wsApplySort();
+            }, 10);
+        });
+    });
+    document.querySelectorAll('[data-filter-low]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            if (availEl) availEl.value = 'low';
+            if (priorityEl) priorityEl.value = 'all';
+            applyWsFiltersAndSort();
+        });
+    });
+    document.querySelectorAll('[data-filter-potential]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            if (priorityEl) priorityEl.value = 'high_potential';
+            if (availEl) availEl.value = 'all';
+            applyWsFiltersAndSort();
+        });
+    });
+    document.querySelectorAll('[data-filter-cities]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            if (cityEl) cityEl.value = 'all';
+            applyWsFiltersAndSort();
+        });
+    });
 
     if (typeof flatpickr !== 'undefined' && rangeInput) {
         flatpickr(rangeInput, {
