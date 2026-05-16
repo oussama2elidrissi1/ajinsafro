@@ -1555,7 +1555,7 @@
 </div>
 @endpush
 
-@push('scripts’)
+@push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
@@ -1573,22 +1573,22 @@
         show_departure_report: true
     };
     var injected = {!! json_encode($wsModalSettings ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!};
-    if (!injected || typeof injected !== 'object’ || Array.isArray(injected)) injected = {};
+    if (!injected || typeof injected !== 'object' || Array.isArray(injected)) injected = {};
     window.wsModalSettings = Object.assign({}, defaults, injected);
 })();
 </script>
 <script>
-document.addEventListener('DOMContentLoaded’, function () {
-    /* Modal détail : enregistré en premier (avant FullCalendar) pour éviter qu’une erreur JS bloque le clic. */
-    var wsModalJson = document.getElementById('ws-modal-detail-json’);
-    var wsModalEl = document.getElementById('ws-voyage-detail-modal’);
-    var wsMdTitle = document.getElementById('ws-md-title’);
-    var wsMdSub = document.getElementById('ws-md-sub’);
-    var wsMdBody = document.getElementById('ws-md-body’);
-    var wsMdFooter = document.getElementById('ws-md-footer’);
+document.addEventListener('DOMContentLoaded', function () {
+    /* Modal détail : enregistre en premier (avant FullCalendar) pour éviter qu'une erreur JS bloque le clic. */
+    var wsModalJson = document.getElementById('ws-modal-detail-json');
+    var wsModalEl = document.getElementById('ws-voyage-detail-modal');
+    var wsMdTitle = document.getElementById('ws-md-title');
+    var wsMdSub = document.getElementById('ws-md-sub');
+    var wsMdBody = document.getElementById('ws-md-body');
+    var wsMdFooter = document.getElementById('ws-md-footer');
     function parseWsDetailMap() {
         if (!wsModalJson) return {};
-        try { return JSON.parse(wsModalJson.textContent || '{}’); } catch (err) { return {}; }
+        try { return JSON.parse(wsModalJson.textContent || '{}'); } catch (err) { return {}; }
     }
     var wsDetailMap = parseWsDetailMap();
     var wsModalSettings = window.wsModalSettings || {};
