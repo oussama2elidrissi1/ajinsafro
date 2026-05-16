@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Validation\Rule;
 
 class ClientController extends Controller
 {
@@ -290,11 +291,13 @@ class ClientController extends Controller
                 ->orWhere('last_name', 'like', '%'.$q.'%')
                 ->orWhere('email', 'like', '%'.$q.'%')
                 ->orWhere('phone', 'like', '%'.$q.'%')
+                ->orWhere('whatsapp_number', 'like', '%'.$q.'%')
                 ->orWhere('national_id_number', 'like', '%'.$q.'%')
                 ->orWhere('passport_number', 'like', '%'.$q.'%');
 
             if ($hasNormalized) {
                 $qq->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '.', ''), '/', ''), '\\\\', '') LIKE ?", ['%'.$normalized.'%'])
+                    ->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(whatsapp_number, ' ', ''), '-', ''), '.', ''), '/', ''), '\\\\', '') LIKE ?", ['%'.$normalized.'%'])
                     ->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(national_id_number, ' ', ''), '-', ''), '.', ''), '/', ''), '\\\\', '') LIKE ?", ['%'.$normalized.'%'])
                     ->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(passport_number, ' ', ''), '-', ''), '.', ''), '/', ''), '\\\\', '') LIKE ?", ['%'.$normalized.'%']);
             }
@@ -311,6 +314,7 @@ class ClientController extends Controller
                 'last_name',
                 'email',
                 'phone',
+                'whatsapp_number',
                 'city',
                 'national_id_number',
                 'passport_number',
@@ -325,6 +329,7 @@ class ClientController extends Controller
                     'full_name' => $c->full_name ?: trim(($c->first_name ?? '').' '.($c->last_name ?? '')),
                     'email' => $c->email,
                     'phone' => $c->phone,
+                    'whatsapp_number' => $c->whatsapp_number,
                     'city' => $c->city,
                     'document' => $doc,
                     'status' => $c->status,
@@ -341,77 +346,89 @@ class ClientController extends Controller
 
     public function quickStore(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'string', 'max:50'],
-            'email' => ['nullable', 'email', 'max:255', Rule::unique(Client::class, 'email')],
-            'gender' => ['nullable', 'in:male,female'],
-            'date_of_birth' => ['nullable', 'date'],
-            'nationality' => ['nullable', 'string', 'max:100'],
-            'national_id_number' => ['nullable', 'string', 'max:50'],
-            'passport_number' => ['nullable', 'string', 'max:50'],
-        ]);
+        try {
+            $validated = $request->validate([
+                'first_name' => ['required', 'string', 'max:255'],
+                'last_name' => ['required', 'string', 'max:255'],
+                'phone' => ['required', 'string', 'max:50'],
+                'email' => ['nullable', 'email', 'max:255', Rule::unique(Client::class, 'email')],
+                'gender' => ['nullable', 'in:male,female'],
+                'date_of_birth' => ['nullable', 'date'],
+                'nationality' => ['nullable', 'string', 'max:100'],
+                'national_id_number' => ['nullable', 'string', 'max:50'],
+                'passport_number' => ['nullable', 'string', 'max:50'],
+            ]);
 
-        // Duplicate check by phone, email, or document numbers
-        $dupQuery = Client::query();
-        $this->branchScope->scopeClients($dupQuery, $request->user());
-        $dupQuery->where(function ($q) use ($validated) {
-            if (!empty($validated['phone'])) {
-                $q->orWhere('phone', $validated['phone']);
-            }
-            if (!empty($validated['email'])) {
-                $q->orWhere('email', $validated['email']);
-            }
-            if (!empty($validated['national_id_number'])) {
-                $q->orWhere('national_id_number', $validated['national_id_number']);
-            }
-            if (!empty($validated['passport_number'])) {
-                $q->orWhere('passport_number', $validated['passport_number']);
-            }
-        });
+            // Duplicate check by phone, email, or document numbers
+            $dupQuery = Client::query();
+            $this->branchScope->scopeClients($dupQuery, $request->user());
+            $dupQuery->where(function ($q) use ($validated) {
+                if (!empty($validated['phone'])) {
+                    $q->orWhere('phone', $validated['phone']);
+                }
+                if (!empty($validated['email'])) {
+                    $q->orWhere('email', $validated['email']);
+                }
+                if (!empty($validated['national_id_number'])) {
+                    $q->orWhere('national_id_number', $validated['national_id_number']);
+                }
+                if (!empty($validated['passport_number'])) {
+                    $q->orWhere('passport_number', $validated['passport_number']);
+                }
+            });
 
-        $duplicate = $dupQuery->first([
-            'id',
-            'client_code',
-            'full_name',
-            'first_name',
-            'last_name',
-            'phone',
-            'email',
-        ]);
+            $duplicate = $dupQuery->first([
+                'id',
+                'client_code',
+                'full_name',
+                'first_name',
+                'last_name',
+                'phone',
+                'email',
+            ]);
 
-        if ($duplicate) {
+            if ($duplicate) {
+                return response()->json([
+                    'success' => false,
+                    'duplicate' => [
+                        'id' => $duplicate->id,
+                        'client_code' => $duplicate->client_code,
+                        'full_name' => $duplicate->full_name ?: trim(($duplicate->first_name ?? '').' '.($duplicate->last_name ?? '')),
+                        'phone' => $duplicate->phone,
+                        'email' => $duplicate->email,
+                    ],
+                ]);
+            }
+
+            $data = array_merge($validated, [
+                'client_type' => 'individual',
+                'status' => 'active',
+                'source' => 'admin',
+                'branch_id' => $request->user()->branch_id,
+            ]);
+
+            $client = Client::create($data);
+
             return response()->json([
-                'success' => false,
-                'duplicate' => [
-                    'id' => $duplicate->id,
-                    'client_code' => $duplicate->client_code,
-                    'full_name' => $duplicate->full_name ?: trim(($duplicate->first_name ?? '').' '.($duplicate->last_name ?? '')),
-                    'phone' => $duplicate->phone,
-                    'email' => $duplicate->email,
+                'success' => true,
+                'client' => [
+                    'id' => $client->id,
+                    'client_code' => $client->client_code,
+                    'full_name' => $client->full_name ?: trim(($client->first_name ?? '').' '.($client->last_name ?? '')),
+                    'phone' => $client->phone,
+                    'email' => $client->email,
                 ],
             ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur serveur : ' . $e->getMessage(),
+            ], 500);
         }
-
-        $data = array_merge($validated, [
-            'client_type' => 'individual',
-            'status' => 'active',
-            'source' => 'admin',
-            'branch_id' => $request->user()->branch_id,
-        ]);
-
-        $client = Client::create($data);
-
-        return response()->json([
-            'success' => true,
-            'client' => [
-                'id' => $client->id,
-                'client_code' => $client->client_code,
-                'full_name' => $client->full_name ?: trim(($client->first_name ?? '').' '.($client->last_name ?? '')),
-                'phone' => $client->phone,
-                'email' => $client->email,
-            ],
-        ]);
     }
 }

@@ -1094,14 +1094,19 @@
 
         var url = '/admin/customers/clients/search?q=' + encodeURIComponent(query);
         fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(function (r) { return r.json(); })
+            .then(function (r) {
+                if (!r.ok) {
+                    throw new Error('HTTP ' + r.status);
+                }
+                return r.json();
+            })
             .then(function (data) {
                 var items = data && Array.isArray(data.items) ? data.items : [];
                 renderClientResults(items, query);
                 if (emptyMsg) emptyMsg.classList.toggle('d-none', items.length > 0);
             })
-            .catch(function () {
-                renderClientResults([], query);
+            .catch(function (err) {
+                renderClientResults([], query, true);
                 if (emptyMsg) emptyMsg.classList.remove('d-none');
             });
     }
@@ -1112,13 +1117,14 @@
         return div.innerHTML;
     }
 
-    function renderClientResults(items, query) {
+    function renderClientResults(items, query, isError) {
         var container = document.getElementById('client-search-results');
         if (!container) return;
 
         if (!items.length) {
+            var title = isError ? 'Erreur lors de la recherche' : 'Aucun client trouvé';
             var noResultHtml = '<div class="reservation-create__search-result reservation-create__search-result--empty">' +
-                '<span><strong>Aucun client trouvé</strong><br><span class="reservation-create__search-result-meta">Pour "' + escapeHtml(query) + '"</span></span>' +
+                '<span><strong>' + title + '</strong><br><span class="reservation-create__search-result-meta">Pour "' + escapeHtml(query) + '"</span></span>' +
                 '</div>' +
                 '<div class="reservation-create__search-result reservation-create__search-result--action" id="client-search-create-new">' +
                 '<span>Créer un nouveau client avec cette recherche</span>' +
@@ -1236,18 +1242,53 @@
                     if (existingMode) existingMode.checked = true;
                     syncClientMode();
                     clearInlineError();
+                    clearStepErrors(2);
+                    unblockContinueButton();
                     if (typeof callback === 'function') callback(true);
                 } else if (data && data.duplicate) {
                     var dupLabel = data.duplicate.full_name || ('Client #' + data.duplicate.id);
                     showInlineError('Ce client existe déjà : ' + dupLabel + '. Veuillez le sélectionner dans la liste.');
+                    blockContinueButton();
+                    if (typeof callback === 'function') callback(false);
+                } else if (data && data.errors) {
+                    var fieldMap = {
+                        first_name: 'client_first_name',
+                        last_name: 'client_last_name',
+                        phone: 'client_phone',
+                        email: 'client_email',
+                        gender: 'client_gender',
+                        date_of_birth: 'client_birth_date',
+                        nationality: 'client_nationality',
+                        national_id_number: 'client_document_number',
+                        passport_number: 'client_document_number',
+                    };
+                    var stepErrors = [];
+                    Object.keys(data.errors).forEach(function (key) {
+                        var messages = data.errors[key];
+                        if (Array.isArray(messages)) {
+                            messages.forEach(function (msg) {
+                                stepErrors.push({ field: fieldMap[key] || key, message: msg });
+                            });
+                        } else {
+                            stepErrors.push({ field: fieldMap[key] || key, message: String(messages) });
+                        }
+                    });
+                    renderStepErrors(2, stepErrors);
+                    blockContinueButton();
+                    if (typeof callback === 'function') callback(false);
+                } else if (data && data.message) {
+                    showInlineError(data.message);
+                    blockContinueButton();
                     if (typeof callback === 'function') callback(false);
                 } else {
                     showInlineError('Erreur lors de la création du client. Veuillez réessayer.');
+                    blockContinueButton();
                     if (typeof callback === 'function') callback(false);
                 }
             })
             .catch(function () {
                 showInlineError('Erreur réseau lors de la création du client.');
+                blockContinueButton();
                 if (typeof callback === 'function') callback(false);
             });
     }
