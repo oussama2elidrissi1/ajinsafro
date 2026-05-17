@@ -5116,7 +5116,14 @@ body[data-layout="detached"] #page-topbar .header-item span {
    WORKSPACE LIST TABLE — PROFESSIONAL REDESIGN
    ============================================================ */
 
-/* 1. Wrapper */
+/* 1. Center the table card */
+.ws-page #ws-view-table.ws-table-card {
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Wrapper */
 .ws-page .workspace-list-table-wrapper {
     width: 100%;
     overflow-x: auto;
@@ -5127,10 +5134,15 @@ body[data-layout="detached"] #page-topbar .header-item span {
     -webkit-overflow-scrolling: touch;
 }
 
+/* Compact card header in workspace list */
+.ws-page #ws-view-table .ws-table-card__head {
+    padding: 0.6rem 1rem;
+}
+
 /* 2. Table base */
 .ws-page .workspace-list-table {
     width: 100%;
-    min-width: 950px;
+    min-width: 1230px;
     table-layout: fixed;
     border-collapse: separate;
     border-spacing: 0;
@@ -5149,47 +5161,54 @@ body[data-layout="detached"] #page-topbar .header-item span {
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    padding: 10px 12px;
+    padding: 8px 10px;
     border-bottom: 1px solid #e2e8f0;
     vertical-align: middle;
     white-space: nowrap;
     text-align: left;
 }
 
-/* 4. Column widths */
+/* 4. Column widths — fixed, coherent */
 .ws-page .workspace-list-table .ws-data-table__th-ref,
 .ws-page .workspace-list-table .ws-td--ref {
-    width: 5%;
+    width: 80px;
+    min-width: 80px;
 }
 
 .ws-page .workspace-list-table .ws-data-table__th-offer,
 .ws-page .workspace-list-table .ws-td--offer {
-    width: 23%;
+    width: 320px;
+    min-width: 320px;
 }
 
 .ws-page .workspace-list-table .ws-data-table__th-destination,
 .ws-page .workspace-list-table .ws-td--destination {
-    width: 10%;
+    width: 160px;
+    min-width: 160px;
 }
 
 .ws-page .workspace-list-table .ws-data-table__th-dep,
 .ws-page .workspace-list-table .ws-td--dep {
-    width: 10%;
+    width: 130px;
+    min-width: 130px;
 }
 
 .ws-page .workspace-list-table .ws-data-table__th-sold,
 .ws-page .workspace-list-table .ws-td--sold {
-    width: 10%;
+    width: 140px;
+    min-width: 140px;
 }
 
 .ws-page .workspace-list-table .ws-data-table__th-remain,
 .ws-page .workspace-list-table .ws-td--remain {
-    width: 7%;
+    width: 100px;
+    min-width: 100px;
 }
 
 .ws-page .workspace-list-table .ws-data-table__th-cap,
 .ws-page .workspace-list-table .ws-td--cap {
-    width: 10%;
+    width: 150px;
+    min-width: 150px;
 }
 
 .ws-page .workspace-list-table .ws-data-table__th-actions,
@@ -5200,10 +5219,10 @@ body[data-layout="detached"] #page-topbar .header-item span {
     text-align: right;
 }
 
-/* 5. Cells — uniform, no per-cell backgrounds */
+/* 5. Cells — uniform, compact, no per-cell backgrounds */
 .ws-page .workspace-list-table .ws-catalog-table-row td {
     vertical-align: middle;
-    padding: 8px 12px;
+    padding: 6px 8px;
     border-bottom: 1px solid #e8eef6;
     color: #1e293b;
     background: transparent !important;
