@@ -1196,6 +1196,7 @@
                     </div>
                 </div>
                 <div class="ws-field ws-field--actions">
+                    <button type="button" id="ws-filters-apply" class="ws-btn-filter"><i class="fas fa-filter" aria-hidden="true"></i> Filtrer</button>
                     <button type="button" id="ws-filters-reset" class="ws-btn-reset">Réinitialiser</button>
                 </div>
             </div>
@@ -1810,6 +1811,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var dateToEl = document.getElementById('ws-filter-date-to');
     var budgetMinEl = document.getElementById('ws-filter-budget-min');
     var budgetMaxEl = document.getElementById('ws-filter-budget-max');
+    var applyBtn = document.getElementById('ws-filters-apply');
     var resetBtn = document.getElementById('ws-filters-reset');
     function readBudgetValue(input) {
         if (!input || input.value == null || input.value === '') return null;
@@ -1992,13 +1994,7 @@ document.addEventListener('DOMContentLoaded', function () {
         controls.innerHTML = html;
     }
 
-    if (searchEl) searchEl.addEventListener('input', applyWsFilters);
-    if (typeEl) typeEl.addEventListener('change', applyWsFilters);
-    if (destinationEl) destinationEl.addEventListener('change', applyWsFilters);
-    if (dateFromEl) dateFromEl.addEventListener('change', applyWsFilters);
-    if (dateToEl) dateToEl.addEventListener('change', applyWsFilters);
-    if (budgetMinEl) budgetMinEl.addEventListener('input', applyWsFilters);
-    if (budgetMaxEl) budgetMaxEl.addEventListener('input', applyWsFilters);
+    if (applyBtn) applyBtn.addEventListener('click', applyWsFilters);
     if (resetBtn) {
         resetBtn.addEventListener('click', function () {
             if (searchEl) searchEl.value = '';
