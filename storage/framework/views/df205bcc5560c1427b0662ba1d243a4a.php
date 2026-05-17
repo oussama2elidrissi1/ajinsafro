@@ -2,6 +2,18 @@
     use App\Services\View\AgentPortalLayout;
     use Carbon\Carbon;
     $usePortalTailwind = AgentPortalLayout::shouldUse(auth()->user());
+    $workspaceView = $workspaceView ?? 'list';
+    $workspaceFilters = $workspaceFilters ?? [
+        'search' => '',
+        'type' => '',
+        'destination' => '',
+        'date_from' => '',
+        'date_to' => '',
+        'budget_min' => null,
+        'budget_max' => null,
+    ];
+    $workspaceFilterOptions = $workspaceFilterOptions ?? ['destinations' => []];
+    $workspaceResetUrl = $workspaceResetUrl ?? route('admin.reservations.workspace', ['view' => 'list']);
 
     $workspaceCalendarEvents = $catalogRows->map(function ($r) {
         if (empty($r['departure_date']) || empty($r['voyage_id'])) {
@@ -1118,75 +1130,77 @@
     <?php endif; ?>
 
     <div id="reservations-main-content" class="space-y-4">
-        <div id="catalogue-workspace" class="ws-toolbar">
+        <form id="catalogue-workspace" class="ws-toolbar" method="GET" action="<?php echo e(route('admin.reservations.workspace')); ?>">
+            <input type="hidden" name="view" id="ws-filter-view" value="<?php echo e($workspaceView); ?>">
+            <?php if(request()->filled('catalog')): ?>
+                <input type="hidden" name="catalog" value="<?php echo e(request()->query('catalog')); ?>">
+            <?php endif; ?>
             <div class="ws-toolbar__row ws-toolbar__row--search">
                 <div class="ws-field ws-field--grow">
                     <label class="ws-field__label" for="ws-filter-search">Recherche rapide</label>
                     <div class="ws-field__input-wrap">
                         <i class="fas fa-search ws-field__icon" aria-hidden="true"></i>
-                        <input type="text" id="ws-filter-search" placeholder="Nom, code, destination…" autocomplete="off" class="ws-input">
+                        <input type="text" id="ws-filter-search" name="search" value="<?php echo e($workspaceFilters['search'] ?? ''); ?>" placeholder="Nom, code, destination…" autocomplete="off" class="ws-input">
                     </div>
                 </div>
                 <div class="ws-toolbar__views">
-                    <span class="ws-toolbar__count"><strong id="ws-row-visible-count"><?php echo e($catalogRows->count()); ?></strong> / <?php echo e($catalogFullCount); ?> offres</span>
                     <div class="ws-seg ws-seg--triple" role="group" aria-label="Mode d'affichage">
-                        <button type="button" id="btn-view-catalog" class="ws-seg__btn is-active" title="Catalogue"><i class="fas fa-th-large" aria-hidden="true"></i><span class="ws-seg__btn-label-catalog">Catalogue</span></button>
-                        <button type="button" id="btn-view-list" class="ws-seg__btn" title="Vue liste (tableau)"><i class="fas fa-table" aria-hidden="true"></i><span>Liste</span></button>
-                        <button type="button" id="btn-view-calendar" class="ws-seg__btn" title="Calendrier"><i class="far fa-calendar-alt" aria-hidden="true"></i><span>Calendrier</span></button>
+                        <button type="button" id="btn-view-catalog" class="ws-seg__btn <?php echo e($workspaceView === 'catalog' ? 'is-active' : ''); ?>" data-ws-target-view="catalog" title="Catalogue"><i class="fas fa-th-large" aria-hidden="true"></i><span class="ws-seg__btn-label-catalog">Catalogue</span></button>
+                        <button type="button" id="btn-view-list" class="ws-seg__btn <?php echo e($workspaceView === 'list' ? 'is-active' : ''); ?>" data-ws-target-view="list" title="Vue liste (tableau)"><i class="fas fa-table" aria-hidden="true"></i><span>Liste</span></button>
+                        <button type="button" id="btn-view-calendar" class="ws-seg__btn <?php echo e($workspaceView === 'calendar' ? 'is-active' : ''); ?>" data-ws-target-view="calendar" title="Calendrier"><i class="far fa-calendar-alt" aria-hidden="true"></i><span>Calendrier</span></button>
                     </div>
                 </div>
             </div>
-            <div class="ws-toolbar__row ws-toolbar__row--filters">
+            <div class="ws-toolbar__row ws-toolbar__row--filters-grid">
                 <div class="ws-field">
                     <label class="ws-field__label" for="ws-filter-type">Type</label>
-                    <select id="ws-filter-type" class="ws-select">
-                        <option value="all">Tous</option>
-                        <option value="package">Package</option>
-                        <option value="vol">Vol</option>
-                        <option value="hebergement">Hébergement</option>
+                    <select id="ws-filter-type" name="type" class="ws-select">
+                        <option value="" <?php echo e(($workspaceFilters['type'] ?? '') === '' ? 'selected' : ''); ?>>Tous</option>
+                        <option value="package" <?php echo e(($workspaceFilters['type'] ?? '') === 'package' ? 'selected' : ''); ?>>Package</option>
+                        <option value="vol" <?php echo e(($workspaceFilters['type'] ?? '') === 'vol' ? 'selected' : ''); ?>>Vol</option>
+                        <option value="hebergement" <?php echo e(($workspaceFilters['type'] ?? '') === 'hebergement' ? 'selected' : ''); ?>>Hébergement</option>
                     </select>
                 </div>
                 <div class="ws-field">
-                    <label class="ws-field__label" for="ws-filter-city">Ville départ</label>
-                    <select id="ws-filter-city" class="ws-select">
-                        <option value="all">Toutes</option>
-                        <?php
-                            $uniqueCities = collect();
-                            foreach ($catalogRows as $row) {
-                                foreach ($row['commercial']['villes_list'] ?? [] as $city) {
-                                    if ($city !== '') $uniqueCities[$city] = true;
-                                }
-                            }
-                            $uniqueCities = collect(array_keys($uniqueCities->all()))->sort()->values();
-                        ?>
-                        <?php $__currentLoopData = $uniqueCities; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $city): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <option value="<?php echo e(e(strtolower($city))); ?>"><?php echo e($city); ?></option>
+                    <label class="ws-field__label" for="ws-filter-destination">Destination</label>
+                    <select id="ws-filter-destination" name="destination" class="ws-select">
+                        <option value="">Toutes</option>
+                        <?php $__currentLoopData = ($workspaceFilterOptions['destinations'] ?? []); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $destination): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($destination); ?>" <?php echo e(($workspaceFilters['destination'] ?? '') === $destination ? 'selected' : ''); ?>><?php echo e($destination); ?></option>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
-                <div class="ws-field ws-field--budget">
-                    <label class="ws-field__label" for="ws-filter-budget-min">Budget</label>
-                    <div class="ws-budget-group" role="group" aria-label="Filtre budget en MAD">
-                        <label class="ws-budget-input" for="ws-filter-budget-min">
-                            <span class="ws-budget-input__prefix">Min</span>
-                            <input type="number" id="ws-filter-budget-min" class="ws-input" min="0" step="500" inputmode="numeric" placeholder="0">
-                            <span class="ws-budget-input__suffix">MAD</span>
-                        </label>
-                        <label class="ws-budget-input" for="ws-filter-budget-max">
-                            <span class="ws-budget-input__prefix">Max</span>
-                            <input type="number" id="ws-filter-budget-max" class="ws-input" min="0" step="500" inputmode="numeric" placeholder="30000">
-                            <span class="ws-budget-input__suffix">MAD</span>
-                        </label>
+                <div class="ws-field">
+                    <label class="ws-field__label" for="ws-filter-date-from">Date départ Du</label>
+                    <input type="date" id="ws-filter-date-from" name="date_from" value="<?php echo e($workspaceFilters['date_from'] ?? ''); ?>" class="ws-input">
+                </div>
+                <div class="ws-field">
+                    <label class="ws-field__label" for="ws-filter-date-to">Date départ Au</label>
+                    <input type="date" id="ws-filter-date-to" name="date_to" value="<?php echo e($workspaceFilters['date_to'] ?? ''); ?>" class="ws-input">
+                </div>
+                <div class="ws-field">
+                    <label class="ws-field__label" for="ws-filter-budget-min">Budget min</label>
+                    <div class="ws-budget-inline">
+                        <input type="number" id="ws-filter-budget-min" name="budget_min" value="<?php echo e($workspaceFilters['budget_min'] ?? ''); ?>" class="ws-input" min="0" step="500" inputmode="numeric" placeholder="0">
+                        <span class="ws-budget-inline__suffix">MAD</span>
                     </div>
                 </div>
-                <div class="ws-field ws-field--actions">
-                    <button type="button" id="ws-filters-reset" class="ws-btn-reset">Réinitialiser</button>
+                <div class="ws-field">
+                    <label class="ws-field__label" for="ws-filter-budget-max">Budget max</label>
+                    <div class="ws-budget-inline">
+                        <input type="number" id="ws-filter-budget-max" name="budget_max" value="<?php echo e($workspaceFilters['budget_max'] ?? ''); ?>" class="ws-input" min="0" step="500" inputmode="numeric" placeholder="30000">
+                        <span class="ws-budget-inline__suffix">MAD</span>
+                    </div>
+                </div>
+                <div class="ws-filter-actions">
+                    <button type="submit" id="ws-filters-apply" class="ws-btn-filter"><i class="fas fa-filter" aria-hidden="true"></i><span>Filtrer</span></button>
+                    <a href="<?php echo e($workspaceResetUrl); ?>" id="ws-filters-reset" class="ws-btn-reset">Réinitialiser</a>
                 </div>
             </div>
-        </div>
+        </form>
 
         
-        <div id="ws-view-table" class="ws-table-card hidden">
+        <div id="ws-view-table" class="ws-table-card <?php echo e($workspaceView === 'list' ? '' : 'hidden'); ?>">
             <div class="ws-table-card__head">
                 <h2 class="ws-table-card__title">Vue liste</h2>
                 <p class="ws-table-card__sub">Référence, voyage, départ, capacité et actions.</p>
@@ -1197,9 +1211,9 @@
         <tr>
             <th scope="col" class="ws-data-table__th-ref">Réf</th>
             <th scope="col" class="ws-data-table__th-offer">Voyage</th>
-            <th scope="col" class="ws-data-table__th-city">Ville départ</th>
+            <th scope="col" class="ws-data-table__th-destination">Destination</th>
             <th scope="col" class="ws-data-table__th-dep">Départ</th>
-            <th scope="col" class="ws-data-table__th-sold">Vendu</th>
+            <th scope="col" class="ws-data-table__th-sold">Vendu / En attente</th>
             <th scope="col" class="ws-data-table__th-remain">Restant</th>
             <th scope="col" class="ws-data-table__th-cap">Capacité</th>
             <th scope="col" class="ws-data-table__th-actions">Actions</th>
@@ -1312,7 +1326,7 @@
         </div>
 
         
-        <div id="ws-view-catalog" class="ws-table-card">
+        <div id="ws-view-catalog" class="ws-table-card <?php echo e($workspaceView === 'catalog' ? '' : 'hidden'); ?>">
             <div class="ws-table-card__head">
                 <h2 class="ws-table-card__title">Catalogue</h2>
                 <p class="ws-table-card__sub">Vue compacte des voyages et départs disponibles.</p>
@@ -1360,7 +1374,7 @@
         </div>
 
         
-        <div id="reservations-calendar-view" class="bg-white p-4 sm:p-6 rounded-2xl shadow-custom border border-gray-100/90 hidden">
+        <div id="reservations-calendar-view" class="bg-white p-4 sm:p-6 rounded-2xl shadow-custom border border-gray-100/90 <?php echo e($workspaceView === 'calendar' ? '' : 'hidden'); ?>">
             <p class="text-sm text-gray-600 mb-4">Clic sur un événement : ouverture de la page dédiée de création de réservation.</p>
             <div id="workspace-calendar" class="w-full min-h-[540px] fc-workspace"></div>
         </div>
@@ -1772,98 +1786,38 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    var filterForm = document.getElementById('catalogue-workspace');
+    var viewInputEl = document.getElementById('ws-filter-view');
+    var searchEl = document.getElementById('ws-filter-search');
+    var typeEl = document.getElementById('ws-filter-type');
+    var destinationEl = document.getElementById('ws-filter-destination');
+    var dateFromEl = document.getElementById('ws-filter-date-from');
+    var dateToEl = document.getElementById('ws-filter-date-to');
+    var budgetMinEl = document.getElementById('ws-filter-budget-min');
+    var budgetMaxEl = document.getElementById('ws-filter-budget-max');
+    var applyBtn = document.getElementById('ws-filters-apply');
+
     function wsActivateView(mode) {
         if (btnList) btnList.classList.toggle('is-active', mode === 'list');
-        if (btnCal) btnCal.classList.toggle('is-active', mode === 'cal');
+        if (btnCal) btnCal.classList.toggle('is-active', mode === 'calendar');
         if (btnCatalog) btnCatalog.classList.toggle('is-active', mode === 'catalog');
         if (tableView) tableView.classList.toggle('hidden', mode !== 'list');
         if (catalogView) catalogView.classList.toggle('hidden', mode !== 'catalog');
-        if (calView) calView.classList.toggle('hidden', mode !== 'cal');
-        if (mode === 'cal' && calendar) setTimeout(function () { calendar.render(); }, 80);
-        if (mode === 'list') applyWsFilters();
-    }
-
-    if (btnList) btnList.addEventListener('click', function () { wsActivateView('list'); });
-    if (btnCal) btnCal.addEventListener('click', function () { wsActivateView('cal'); });
-    if (btnCatalog) btnCatalog.addEventListener('click', function () { wsActivateView('catalog'); });
-
-    var searchEl = document.getElementById('ws-filter-search');
-    var typeEl = document.getElementById('ws-filter-type');
-    var cityEl = document.getElementById('ws-filter-city');
-    var budgetMinEl = document.getElementById('ws-filter-budget-min');
-    var budgetMaxEl = document.getElementById('ws-filter-budget-max');
-    var resetBtn = document.getElementById('ws-filters-reset');
-    function readBudgetValue(input) {
-        if (!input || input.value == null || input.value === '') return null;
-        var value = parseInt(String(input.value).replace(/[^\d]/g, ''), 10);
-        return isNaN(value) ? null : value;
+        if (calView) calView.classList.toggle('hidden', mode !== 'calendar');
+        if (viewInputEl) viewInputEl.value = mode;
+        if (mode === 'calendar' && calendar) {
+            setTimeout(function () { calendar.render(); }, 80);
+        }
+        if (mode === 'list') {
+            window.wsCurrentPage = 1;
+            paginateWsRows();
+        }
     }
 
     window.wsCurrentPage = 1;
     window.wsPerPage = 10;
 
     window.applyWsFilters = function applyWsFilters() {
-        var q = (searchEl && searchEl.value) ? searchEl.value.toLowerCase().trim() : '';
-        var t = typeEl ? typeEl.value : 'all';
-        var city = cityEl ? cityEl.value : 'all';
-        var budgetMin = readBudgetValue(budgetMinEl);
-        var budgetMax = readBudgetValue(budgetMaxEl);
-        if (budgetMin !== null && budgetMax !== null && budgetMin > budgetMax) {
-            var swapped = budgetMin;
-            budgetMin = budgetMax;
-            budgetMax = swapped;
-        }
-        var catalogRows = document.querySelectorAll('#ws-catalog-list .ws-catalog-row');
-        var tableRows = document.querySelectorAll('#ws-catalog-table-body .ws-catalog-row');
-        var isTableVisible = tableView && !tableView.classList.contains('hidden');
-        var rows = isTableVisible ? tableRows : catalogRows;
-        rows.forEach(function (tr) {
-            var ok = true;
-            if (t !== 'all' && tr.getAttribute('data-type') !== t) ok = false;
-            if (ok && city !== 'all') {
-                var dc = tr.getAttribute('data-departure-city') || '';
-                if (dc.indexOf(city) === -1) ok = false;
-            }
-            if (ok && (budgetMin !== null || budgetMax !== null)) {
-                var price = parseInt(tr.getAttribute('data-price'), 10) || 0;
-                if (budgetMin !== null && price < budgetMin) ok = false;
-                if (budgetMax !== null && price > budgetMax) ok = false;
-            }
-            if (ok && q) {
-                var blob = (tr.getAttribute('data-search') || '')
-                    + ' ' + (tr.getAttribute('data-name') || '')
-                    + ' ' + (tr.getAttribute('data-code') || '')
-                    + ' ' + (tr.getAttribute('data-departure-city') || '');
-                if (blob.toLowerCase().indexOf(q) === -1) ok = false;
-            }
-            tr.classList.toggle('hidden', !ok);
-        });
-        // Also sync hidden state on rows in the non-visible view so switching views keeps filter state
-        var otherRows = isTableVisible ? catalogRows : tableRows;
-        otherRows.forEach(function (tr) {
-            var ok = true;
-            if (t !== 'all' && tr.getAttribute('data-type') !== t) ok = false;
-            if (ok && city !== 'all') {
-                var dc = tr.getAttribute('data-departure-city') || '';
-                if (dc.indexOf(city) === -1) ok = false;
-            }
-            if (ok && (budgetMin !== null || budgetMax !== null)) {
-                var price = parseInt(tr.getAttribute('data-price'), 10) || 0;
-                if (budgetMin !== null && price < budgetMin) ok = false;
-                if (budgetMax !== null && price > budgetMax) ok = false;
-            }
-            if (ok && q) {
-                var blob = (tr.getAttribute('data-search') || '')
-                    + ' ' + (tr.getAttribute('data-name') || '')
-                    + ' ' + (tr.getAttribute('data-code') || '')
-                    + ' ' + (tr.getAttribute('data-departure-city') || '');
-                if (blob.toLowerCase().indexOf(q) === -1) ok = false;
-            }
-            tr.classList.toggle('hidden', !ok);
-        });
-        var visible = Array.from(rows).filter(function (tr) { return !tr.classList.contains('hidden'); }).length;
-        var c = document.getElementById('ws-row-visible-count');
-        if (c) c.textContent = String(visible);
         window.wsCurrentPage = 1;
         paginateWsRows();
     };
@@ -1932,19 +1886,36 @@ document.addEventListener('DOMContentLoaded', function () {
         controls.innerHTML = html;
     }
 
-    if (searchEl) searchEl.addEventListener('input', applyWsFilters);
-    if (typeEl) typeEl.addEventListener('change', applyWsFilters);
-    if (cityEl) cityEl.addEventListener('change', applyWsFilters);
-    if (budgetMinEl) budgetMinEl.addEventListener('input', applyWsFilters);
-    if (budgetMaxEl) budgetMaxEl.addEventListener('input', applyWsFilters);
-    if (resetBtn) {
-        resetBtn.addEventListener('click', function () {
-            if (searchEl) searchEl.value = '';
-            if (typeEl) typeEl.value = 'all';
-            if (cityEl) cityEl.value = 'all';
-            if (budgetMinEl) budgetMinEl.value = '';
-            if (budgetMaxEl) budgetMaxEl.value = '';
-            applyWsFilters();
+    if (btnList) btnList.addEventListener('click', function (event) {
+        event.preventDefault();
+        wsActivateView('list');
+    });
+    if (btnCal) btnCal.addEventListener('click', function (event) {
+        event.preventDefault();
+        wsActivateView('calendar');
+    });
+    if (btnCatalog) btnCatalog.addEventListener('click', function (event) {
+        event.preventDefault();
+        wsActivateView('catalog');
+    });
+    if (filterForm) {
+        filterForm.addEventListener('submit', function () {
+            if (applyBtn) applyBtn.disabled = true;
+            if (viewInputEl && !viewInputEl.value) {
+                viewInputEl.value = 'list';
+            }
+            if (typeof console !== 'undefined' && console.log) {
+                console.log('[Workspace filter]', {
+                    search: searchEl ? searchEl.value : '',
+                    type: typeEl ? typeEl.value : '',
+                    destination: destinationEl ? destinationEl.value : '',
+                    date_from: dateFromEl ? dateFromEl.value : '',
+                    date_to: dateToEl ? dateToEl.value : '',
+                    budget_min: budgetMinEl ? budgetMinEl.value : '',
+                    budget_max: budgetMaxEl ? budgetMaxEl.value : '',
+                    view: viewInputEl ? viewInputEl.value : '',
+                });
+            }
         });
     }
 
@@ -1969,6 +1940,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    wsActivateView(<?php echo json_encode($workspaceView, 15, 512) ?>);
     applyWsFilters();
 
 });
@@ -1987,6 +1959,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var viewCatalog = document.getElementById('ws-view-catalog');
     var viewList = document.getElementById('ws-view-table');
     var viewCalendar = document.getElementById('reservations-calendar-view');
+    var viewInputEl = document.getElementById('ws-filter-view');
 
     function parseDetails() {
         if (!detailMapEl) return {};
@@ -2020,6 +1993,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (viewCatalog) viewCatalog.classList.toggle('hidden', mode !== 'catalog');
         if (viewList) viewList.classList.toggle('hidden', mode !== 'list');
         if (viewCalendar) viewCalendar.classList.toggle('hidden', mode !== 'calendar');
+        if (viewInputEl) viewInputEl.value = mode;
     }
 
     function openModal(title, subHtml, bodyHtml, footerHtml) {
@@ -2400,7 +2374,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (btnCatalog) btnCatalog.addEventListener('click', function () { setWorkspaceView('catalog'); });
     if (btnList) btnList.addEventListener('click', function () { setWorkspaceView('list'); });
     if (btnCalendar) btnCalendar.addEventListener('click', function () { setWorkspaceView('calendar'); });
-    setWorkspaceView('catalog');
+    setWorkspaceView(<?php echo json_encode($workspaceView, 15, 512) ?>);
     normalizeWorkspaceButtons();
 
     document.addEventListener('click', function (event) {

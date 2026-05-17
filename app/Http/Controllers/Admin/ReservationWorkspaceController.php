@@ -41,6 +41,8 @@ class ReservationWorkspaceController extends Controller
     public function index(Request $request): View
     {
         $this->authorizeWorkspace($request);
+        $workspaceView = $this->normalizeWorkspaceView($request->query('view'));
+        $workspaceFilters = $this->normalizeWorkspaceFilters($request);
 
         $catalog = $this->catalog->buildRows($request->user());
         $allRows = $catalog['rows'];
@@ -63,7 +65,12 @@ class ReservationWorkspaceController extends Controller
             $scoped = $allRows;
         }
 
-        $rows = $this->catalog->sortCatalogRowsForWorkspaceDisplay($scoped);
+        $workspaceFilterOptions = [
+            'destinations' => $this->workspaceDestinationOptions($scoped),
+        ];
+
+        $rows = $this->catalog->filterWorkspaceRows($scoped, $workspaceFilters);
+        $rows = $this->catalog->sortCatalogRowsForWorkspaceDisplay($rows);
 
         $wsModalSettings = [
             'show_commission' => Setting::getValue('ws_modal_show_commission', '1') === '1',
@@ -87,6 +94,10 @@ class ReservationWorkspaceController extends Controller
             'commercialKpis' => $commercialKpis,
             'commercialAssistant' => $commercialAssistant,
             'wsModalSettings' => $wsModalSettings,
+            'workspaceView' => $workspaceView,
+            'workspaceFilters' => $workspaceFilters,
+            'workspaceFilterOptions' => $workspaceFilterOptions,
+            'workspaceResetUrl' => route('admin.reservations.workspace', ['view' => 'list']),
         ]);
     }
 
@@ -439,6 +450,67 @@ class ReservationWorkspaceController extends Controller
     private function authorizeWorkspace(Request $request): void
     {
         abort_unless($request->user()->can('reservations.view'), 403);
+    }
+
+    private function normalizeWorkspaceView(mixed $raw): string
+    {
+        $view = strtolower(trim((string) ($raw ?? '')));
+
+        return in_array($view, ['catalog', 'list', 'calendar'], true) ? $view : 'list';
+    }
+
+    /**
+     * @return array{search: string, type: string, destination: string, date_from: string, date_to: string, budget_min: ?int, budget_max: ?int}
+     */
+    private function normalizeWorkspaceFilters(Request $request): array
+    {
+        $search = trim((string) $request->query('search', $request->query('q', '')));
+        $type = strtolower(trim((string) $request->query('type', '')));
+        if (! in_array($type, ['', 'all', 'package', 'vol', 'hebergement'], true)) {
+            $type = '';
+        }
+
+        return [
+            'search' => $search,
+            'type' => $type,
+            'destination' => trim((string) $request->query('destination', '')),
+            'date_from' => trim((string) $request->query('date_from', '')),
+            'date_to' => trim((string) $request->query('date_to', '')),
+            'budget_min' => $this->normalizeWorkspaceBudget($request->query('budget_min')),
+            'budget_max' => $this->normalizeWorkspaceBudget($request->query('budget_max')),
+        ];
+    }
+
+    private function normalizeWorkspaceBudget(mixed $raw): ?int
+    {
+        if ($raw === null || $raw === '') {
+            return null;
+        }
+
+        if (is_numeric($raw)) {
+            return max(0, (int) round((float) $raw));
+        }
+
+        $digits = preg_replace('/[^\d]/', '', (string) $raw);
+
+        return $digits !== '' ? max(0, (int) $digits) : null;
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, array<string, mixed>>  $rows
+     * @return array<int, string>
+     */
+    private function workspaceDestinationOptions(\Illuminate\Support\Collection $rows): array
+    {
+        return $rows
+            ->map(function (array $row): string {
+                return trim((string) ($row['voyage_destination'] ?? data_get($row, 'modal_detail.destination', '')));
+            })
+            ->filter(fn (string $destination): bool => $destination !== '')
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
     }
 
     private function assertReservationVisible(Request $request, Reservation $reservation): void

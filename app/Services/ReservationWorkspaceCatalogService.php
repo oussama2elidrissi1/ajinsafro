@@ -631,6 +631,53 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
+     * @param  Collection<int, array<string, mixed>>  $rows
+     * @param  array{search?: string, type?: string, destination?: string, date_from?: string, date_to?: string, budget_min?: int|null, budget_max?: int|null}  $filters
+     * @return Collection<int, array<string, mixed>>
+     */
+    public function filterWorkspaceRows(Collection $rows, array $filters): Collection
+    {
+        $search = Str::lower(trim((string) ($filters['search'] ?? '')));
+        $type = strtolower(trim((string) ($filters['type'] ?? '')));
+        $destination = Str::lower(trim((string) ($filters['destination'] ?? '')));
+        $dateFrom = $this->parseWorkspaceFilterDate($filters['date_from'] ?? null, false);
+        $dateTo = $this->parseWorkspaceFilterDate($filters['date_to'] ?? null, true);
+        $budgetMin = isset($filters['budget_min']) ? max(0, (int) $filters['budget_min']) : null;
+        $budgetMax = isset($filters['budget_max']) ? max(0, (int) $filters['budget_max']) : null;
+
+        if ($budgetMin !== null && $budgetMax !== null && $budgetMin > $budgetMax) {
+            [$budgetMin, $budgetMax] = [$budgetMax, $budgetMin];
+        }
+
+        return $rows->map(function (array $row) use ($search, $type, $destination, $dateFrom, $dateTo, $budgetMin, $budgetMax): ?array {
+            if ($type !== '' && $type !== 'all' && (string) ($row['type'] ?? '') !== $type) {
+                return null;
+            }
+
+            $rowDestination = Str::lower(trim((string) ($row['voyage_destination'] ?? data_get($row, 'modal_detail.destination', ''))));
+            if ($destination !== '' && $destination !== 'all' && ($rowDestination === '' || ! str_contains($rowDestination, $destination))) {
+                return null;
+            }
+
+            if ($search !== '' && ! str_contains($this->workspaceRowSearchBlob($row), $search)) {
+                return null;
+            }
+
+            $budgetAmount = $this->resolveWorkspaceRowBudgetAmount($row);
+            if ($budgetMin !== null && ($budgetAmount === null || $budgetAmount < $budgetMin)) {
+                return null;
+            }
+            if ($budgetMax !== null && ($budgetAmount === null || $budgetAmount > $budgetMax)) {
+                return null;
+            }
+
+            $row = $this->filterWorkspaceRowDepartures($row, $dateFrom, $dateTo);
+
+            return $row;
+        })->filter()->values();
+    }
+
+    /**
      * Tri workspace (PHP, catalogue agr+�g+� hors d���une seule requ+�te SQL).
      *
      * Ordre :
@@ -1152,6 +1199,146 @@ class ReservationWorkspaceCatalogService
         }
 
         return number_format((float) $voyage->price_from, 0, ',', ' ').' '.$cur;
+    }
+
+    private function resolveWorkspaceRowBudgetAmount(array $row): ?int
+    {
+        $prefillAmount = data_get($row, 'form_prefill.prices.adult_amount');
+        if (is_numeric($prefillAmount)) {
+            return max(0, (int) round((float) $prefillAmount));
+        }
+
+        $priceLabel = trim((string) ($row['price_label'] ?? data_get($row, 'modal_detail.prices.adult_label', '')));
+        if ($priceLabel === '') {
+            return null;
+        }
+
+        $digits = preg_replace('/[^\d]/', '', $priceLabel);
+
+        return $digits !== '' ? max(0, (int) $digits) : null;
+    }
+
+    private function workspaceRowSearchBlob(array $row): string
+    {
+        $summary = trim((string) ($row['summary'] ?? ''));
+        $placesSearchBits = '';
+        if (($row['type'] ?? null) === 'package' && ! empty($row['voyage_id']) && ($row['places_state'] ?? '') === 'ok' && ($row['places_total'] ?? null) !== null) {
+            $placesSearchBits = ' places '.(int) $row['places_total'];
+            foreach ((array) ($row['places_lines'] ?? []) as $line) {
+                $placesSearchBits .= ' '.trim((string) ($line['room_type'] ?? '')).' '.trim((string) ($line['product'] ?? ''));
+            }
+        }
+
+        return Str::lower(trim(
+            (string) ($row['name'] ?? '')
+            .' '.(string) ($row['code'] ?? '')
+            .' '.(string) ($row['subtitle'] ?? '')
+            .' '.(string) ($row['voyage_destination'] ?? data_get($row, 'modal_detail.destination', ''))
+            .' '.(string) ($row['price_label'] ?? '')
+            .' '.$summary
+            .$placesSearchBits
+        ));
+    }
+
+    private function parseWorkspaceFilterDate(mixed $raw, bool $endOfDay): ?Carbon
+    {
+        $value = trim((string) ($raw ?? ''));
+        if ($value === '') {
+            return null;
+        }
+
+        try {
+            $date = Carbon::parse($value);
+
+            return $endOfDay ? $date->endOfDay() : $date->startOfDay();
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function filterWorkspaceRowDepartures(array $row, ?Carbon $dateFrom, ?Carbon $dateTo): ?array
+    {
+        if ($dateFrom === null && $dateTo === null) {
+            return $row;
+        }
+
+        $departures = collect(data_get($row, 'modal_detail.departures', []))
+            ->filter(fn ($departure) => is_array($departure))
+            ->values();
+
+        if ($departures->isNotEmpty()) {
+            $matched = $departures->filter(function (array $departure) use ($dateFrom, $dateTo): bool {
+                $dateIso = trim((string) ($departure['date_iso'] ?? ''));
+                if ($dateIso === '') {
+                    return false;
+                }
+
+                try {
+                    $departureDate = Carbon::parse($dateIso)->startOfDay();
+                } catch (\Throwable) {
+                    return false;
+                }
+
+                if ($dateFrom !== null && $departureDate->lt($dateFrom->copy()->startOfDay())) {
+                    return false;
+                }
+                if ($dateTo !== null && $departureDate->gt($dateTo->copy()->startOfDay())) {
+                    return false;
+                }
+
+                return true;
+            })->values();
+
+            if ($matched->isEmpty()) {
+                return null;
+            }
+
+            $first = $matched->first();
+            $matchedIds = $matched->pluck('travel_date_id')->filter()->map(fn ($id) => (int) $id)->all();
+
+            data_set($row, 'modal_detail.departures', $matched->all());
+            if (is_array(data_get($row, 'modal_detail.travel_dates'))) {
+                data_set($row, 'modal_detail.travel_dates', collect(data_get($row, 'modal_detail.travel_dates', []))
+                    ->filter(fn ($travelDate) => in_array((int) ($travelDate['id'] ?? 0), $matchedIds, true))
+                    ->values()
+                    ->all());
+            }
+            if (is_array(data_get($row, 'form_prefill.travel_dates'))) {
+                data_set($row, 'form_prefill.travel_dates', collect(data_get($row, 'form_prefill.travel_dates', []))
+                    ->filter(fn ($travelDate) => in_array((int) ($travelDate['id'] ?? 0), $matchedIds, true))
+                    ->values()
+                    ->all());
+            }
+            if ($first !== null) {
+                $row['travel_date_id'] = $first['travel_date_id'] ?? $row['travel_date_id'] ?? null;
+                $row['departure_date'] = $first['date_iso'] ?? $row['departure_date'] ?? null;
+                $row['departure_is_past'] = ! empty($first['is_past']);
+                data_set($row, 'modal_detail.form.travel_date_id', $first['travel_date_id'] ?? data_get($row, 'modal_detail.form.travel_date_id'));
+                data_set($row, 'form_prefill.default_travel_date_id', $first['travel_date_id'] ?? data_get($row, 'form_prefill.default_travel_date_id'));
+            }
+
+            return $row;
+        }
+
+        $rowDateRaw = $row['departure_date'] ?? data_get($row, 'modal_detail.departure_date');
+        if (empty($rowDateRaw)) {
+            return null;
+        }
+
+        try {
+            $rowDate = Carbon::parse($rowDateRaw)->startOfDay();
+        } catch (\Throwable) {
+            return null;
+        }
+
+        if ($dateFrom !== null && $rowDate->lt($dateFrom->copy()->startOfDay())) {
+            return null;
+        }
+        if ($dateTo !== null && $rowDate->gt($dateTo->copy()->startOfDay())) {
+            return null;
+        }
+
+        return $row;
     }
 
     /**

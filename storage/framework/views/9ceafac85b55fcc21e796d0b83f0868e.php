@@ -296,6 +296,7 @@
     data-commercial-priority="<?php echo e($comPriority); ?>"
     data-commercial-badge="<?php echo e($comBadge ?? ''); ?>"
     data-departure-city="<?php echo e(e($row['data_departure_city'] ?? '')); ?>"
+    data-destination="<?php echo e(e($row['voyage_destination'] ?? ($modalDetail['destination'] ?? ''))); ?>"
     data-remaining="<?php echo e($depRowRemaining ?? -1); ?>"
     data-sold="<?php echo e($depRowSoldVal + $depRowSoldPending); ?>"
     data-days-until="<?php echo e($departureData ? ($departureData['days_until'] ?? 9999) : ($comDaysUntil ?? 9999)); ?>"
@@ -315,9 +316,12 @@
             <span class="ws-td__title ws-td__title--clamp" title="<?php echo e(!empty($row['price_label']) ? 'Prix : '.$row['price_label'] : 'Prix non renseigné'); ?>"><?php echo e($row['name']); ?></span>
         </div>
     </td>
-    <td class="ws-td ws-td--city" data-label="Ville départ">
-        <?php if($comCity !== ''): ?>
-            <span class="ws-td__city"><?php echo e($comCity); ?></span>
+    <td class="ws-td ws-td--destination" data-label="Destination">
+        <?php
+            $destination = $row['voyage_destination'] ?? ($modalDetail['destination'] ?? '');
+        ?>
+        <?php if($destination !== ''): ?>
+            <span class="ws-td__destination"><?php echo e($destination); ?></span>
         <?php else: ?>
             <span class="ws-td__muted">—</span>
         <?php endif; ?>
@@ -332,8 +336,8 @@
             <span class="ws-td__muted">—</span>
         <?php endif; ?>
     </td>
-    <td class="ws-td ws-td--sold" data-label="Vendu">
-        <span class="ws-td__sold" title="<?php echo e($depRowSoldTitle); ?>"><?php echo e($depRowSoldVal); ?> / <?php echo e($depRowSoldPending); ?></span>
+    <td class="ws-td ws-td--sold" data-label="Vendu / En attente">
+        <span class="ws-td__sold" title="<?php echo e($depRowSoldVal); ?> place<?php echo e($depRowSoldVal > 1 ? 's' : ''); ?> vendue<?php echo e($depRowSoldVal > 1 ? 's' : ''); ?> confirmée<?php echo e($depRowSoldVal > 1 ? 's' : ''); ?> — <?php echo e($depRowSoldPending); ?> place<?php echo e($depRowSoldPending > 1 ? 's' : ''); ?> en attente"><?php echo e($depRowSoldVal); ?> / <?php echo e($depRowSoldPending); ?></span>
     </td>
     <td class="ws-td ws-td--remain" data-label="Restant">
         <?php if($depRowRemaining !== null): ?>
@@ -442,6 +446,7 @@
     data-commercial-priority="<?php echo e($comPriority); ?>"
     data-commercial-badge="<?php echo e($comBadge ?? ''); ?>"
     data-departure-city="<?php echo e(e($row['data_departure_city'] ?? '')); ?>"
+    data-destination="<?php echo e(e($row['voyage_destination'] ?? ($modalDetail['destination'] ?? ''))); ?>"
     data-remaining="<?php echo e($comRemaining ?? -1); ?>"
     data-sold="<?php echo e($comSold); ?>"
     data-days-until="<?php echo e($comDaysUntil ?? 9999); ?>"
@@ -490,8 +495,9 @@
         <?php if($referenceBits !== []): ?>
             <p class="ws-offer-card__refs"><?php echo e(implode(' · ', $referenceBits)); ?></p>
         <?php endif; ?>
-        <?php if($comCity !== ''): ?>
-            <p class="ws-offer-card__city"><i class="fas fa-location-dot" aria-hidden="true"></i> <?php echo e($comCity); ?></p>
+        <?php $cardDestination = $row['voyage_destination'] ?? ($modalDetail['destination'] ?? ''); ?>
+        <?php if($cardDestination !== ''): ?>
+            <p class="ws-offer-card__city"><i class="fas fa-location-dot" aria-hidden="true"></i> <?php echo e($cardDestination); ?></p>
         <?php endif; ?>
         <div class="ws-offer-card__meta-list" role="group" aria-label="Tarif et capacité">
             <div class="ws-offer-card__meta-item ws-offer-card__meta-item--price">
