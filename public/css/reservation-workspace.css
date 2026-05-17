@@ -5194,7 +5194,10 @@ body[data-layout="detached"] #page-topbar .header-item span {
 
 .ws-page .workspace-list-table .ws-data-table__th-actions,
 .ws-page .workspace-list-table .ws-td--actions {
-    width: 25%;
+    width: 150px;
+    min-width: 150px;
+    max-width: 150px;
+    text-align: right;
 }
 
 /* 5. Cells — uniform, no per-cell backgrounds */
@@ -5279,16 +5282,16 @@ body[data-layout="detached"] #page-topbar .header-item span {
 }
 
 .ws-page .workspace-list-table .ws-td__actions .ws-btn {
-    height: 28px;
-    padding: 0 10px;
-    border-radius: 6px;
-    font-size: 0.7rem;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 5px;
+    font-size: 0.65rem;
     font-weight: 700;
     white-space: nowrap;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 3px;
     border: 1px solid transparent;
     line-height: 1;
     text-decoration: none;
