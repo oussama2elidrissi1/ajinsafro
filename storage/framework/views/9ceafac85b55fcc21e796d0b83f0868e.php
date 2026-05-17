@@ -120,6 +120,52 @@
     $comTopDates = $commercial['top_dates'] ?? [];
     $isSellable = $commercial['is_sellable'] ?? false;
 
+    // Per-departure overrides for table mode
+    $departureData = $departure ?? null;
+    if ($viewMode === 'table' && $departureData) {
+        $depRowStatVal = (int) data_get($departureData, 'reservations.validee', 0);
+        $depRowStatPending = (int) data_get($departureData, 'reservations.en_cours', 0);
+        $depRowStatCancel = (int) data_get($departureData, 'reservations.annulee', 0);
+        $depRowRemaining = data_get($departureData, 'remaining');
+        $depRowCapacity = data_get($departureData, 'capacity');
+        $depRowFillRate = data_get($departureData, 'fill_pct');
+        $depRowDateLabel = data_get($departureData, 'date_label');
+        $depRowDateIso = data_get($departureData, 'date_iso');
+        $depRowRouteReserve = data_get($departureData, 'routes.reserve');
+        $depRowIsPast = !empty($departureData['is_past']);
+        $depRowStatusKey = $departureData['status_key'] ?? 'unknown';
+        $depRowTravelDateId = data_get($departureData, 'travel_date_id');
+    } else {
+        $depRowStatVal = $statVal;
+        $depRowStatPending = $statPending;
+        $depRowStatCancel = $statCancel;
+        $depRowRemaining = $comRemaining;
+        $depRowCapacity = $comCapacity;
+        $depRowFillRate = $comFillRate;
+        $depRowDateLabel = $comNextDep ?: ($row['departure_date'] ?? null);
+        $depRowDateIso = $row['departure_date'] ? \Carbon\Carbon::parse($row['departure_date'])->format('Y-m-d') : null;
+        $depRowRouteReserve = $reserveUrl;
+        $depRowIsPast = $isPast;
+        $depRowStatusKey = $comAvailStatus;
+        $depRowTravelDateId = $row['travel_date_id'] ?? null;
+    }
+
+    $isSellableForRow = $isSellable;
+    if ($viewMode === 'table' && $departureData) {
+        $isSellableForRow = $isSellable
+            && ! $depRowIsPast
+            && $depRowStatusKey !== 'full'
+            && ($depRowRemaining === null || $depRowRemaining > 0);
+    }
+
+    $progressColor = 'bg-emerald-500';
+    $progressFillRate = ($viewMode === 'table' && $departureData) ? $depRowFillRate : $comFillRate;
+    if ($progressFillRate !== null) {
+        if ($progressFillRate >= 90) $progressColor = 'bg-red-500';
+        elseif ($progressFillRate >= 75) $progressColor = 'bg-orange-500';
+        elseif ($progressFillRate >= 50) $progressColor = 'bg-amber-500';
+    }
+
     $badgeHtmlClass = match ($comBadge) {
         'TOP VENTE' => 'ws-commercial-badge ws-commercial-badge--top',
         'À POUSSER' => 'ws-commercial-badge ws-commercial-badge--push',
@@ -212,32 +258,32 @@
 ?>
 
 <?php if($viewMode === 'table'): ?>
-<tr class="ws-catalog-row ws-catalog-table-row <?php echo e($rowAccent); ?> <?php echo e($hasLaravel ? '' : 'ws-catalog-row--unlinked'); ?><?php echo e($isNearFuture ? ' ws-catalog-row--near' : ''); ?><?php echo e($isSellable ? '' : ' ws-catalog-row--configure'); ?>"
+<tr class="ws-catalog-row ws-catalog-table-row <?php echo e($rowAccent); ?> <?php echo e($hasLaravel ? '' : 'ws-catalog-row--unlinked'); ?><?php echo e($isNearFuture ? ' ws-catalog-row--near' : ''); ?><?php echo e($isSellableForRow ? '' : ' ws-catalog-row--configure'); ?>"
     data-type="<?php echo e($typeKey); ?>"
     data-row-code="<?php echo e($row['code']); ?>"
     data-code="<?php echo e($row['code']); ?>"
     data-name="<?php echo e($row['name']); ?>"
     data-search="<?php echo e(e($wsSearchBlob)); ?>"
-    data-dep="<?php echo e($row['departure_date'] ? \Carbon\Carbon::parse($row['departure_date'])->format('Y-m-d') : ''); ?>"
+    data-dep="<?php echo e($depRowDateIso ?? ''); ?>"
     data-ws-avail="<?php echo e(e($wsAvail)); ?>"
     data-ws-upcoming="<?php echo e($wsUpcoming ? '1' : '0'); ?>"
-    data-avail-status="<?php echo e($comAvailStatus); ?>"
-    data-date-status="<?php echo e($dateStatus); ?>"
-    data-stats-validee="<?php echo e($statVal); ?>"
-    data-stats-pending="<?php echo e($statPending); ?>"
-    data-stats-total="<?php echo e($statTotal); ?>"
-    data-sort-dep="<?php echo e($depTs); ?>"
+    data-avail-status="<?php echo e($depRowStatusKey); ?>"
+    data-date-status="<?php echo e($depRowIsPast ? 'past' : ($depRowDateIso ? 'upcoming' : 'none')); ?>"
+    data-stats-validee="<?php echo e($depRowStatVal); ?>"
+    data-stats-pending="<?php echo e($depRowStatPending); ?>"
+    data-stats-total="<?php echo e($depRowStatVal + $depRowStatPending + $depRowStatCancel); ?>"
+    data-sort-dep="<?php echo e($depRowDateIso ? \Carbon\Carbon::parse($depRowDateIso)->timestamp : $depTs); ?>"
     data-sort-price="<?php echo e($priceSort); ?>"
     data-sort-places="<?php echo e($placesSort); ?>"
     data-commercial-priority="<?php echo e($comPriority); ?>"
     data-commercial-badge="<?php echo e($comBadge ?? ''); ?>"
     data-departure-city="<?php echo e(e($row['data_departure_city'] ?? '')); ?>"
-    data-remaining="<?php echo e($comRemaining ?? -1); ?>"
-    data-sold="<?php echo e($comSold); ?>"
-    data-days-until="<?php echo e($comDaysUntil ?? 9999); ?>"
-    data-fill-rate="<?php echo e($comFillRate ?? -1); ?>"
+    data-remaining="<?php echo e($depRowRemaining ?? -1); ?>"
+    data-sold="<?php echo e($depRowStatVal + $depRowStatPending); ?>"
+    data-days-until="<?php echo e($departureData ? ($departureData['days_until'] ?? 9999) : ($comDaysUntil ?? 9999)); ?>"
+    data-fill-rate="<?php echo e($depRowFillRate ?? -1); ?>"
     data-price="<?php echo e($priceSort); ?>"
-    data-is-sellable="<?php echo e($isSellable ? '1' : '0'); ?>"
+    data-is-sellable="<?php echo e($isSellableForRow ? '1' : '0'); ?>"
     title="<?php echo e(e($rowTitle)); ?>">
     <td class="ws-td ws-td--ref" data-label="Réf">
         <span class="ws-td__code"><?php echo e($row['code']); ?></span>
@@ -248,7 +294,7 @@
     <td class="ws-td ws-td--offer" data-label="Voyage">
         <div class="ws-td__offer-compact">
             <span class="ws-td__type-txt"><?php echo e($typeShort); ?></span>
-            <span class="ws-td__title ws-td__title--clamp"><?php echo e($row['name']); ?></span>
+            <span class="ws-td__title ws-td__title--clamp" title="<?php echo e(!empty($row['price_label']) ? 'Prix : '.$row['price_label'] : 'Prix non renseigné'); ?>"><?php echo e($row['name']); ?></span>
         </div>
     </td>
     <td class="ws-td ws-td--city" data-label="Ville départ">
@@ -259,65 +305,37 @@
         <?php endif; ?>
     </td>
     <td class="ws-td ws-td--dep" data-label="Départ">
-        <?php if($comNextDep): ?>
-            <span class="ws-td__dep-date"><?php echo e(\Carbon\Carbon::parse($comNextDep)->locale('fr')->translatedFormat('d M Y')); ?></span>
-            <?php if($comDaysUntil !== null && $comDaysUntil >= 0): ?>
-                <span class="ws-td__dep-note"><?php echo e($comDaysUntil); ?>j</span>
+        <?php if($depRowDateLabel): ?>
+            <span class="ws-td__dep-date"><?php echo e($depRowDateLabel); ?></span>
+            <?php if($depRowIsPast): ?>
+                <span class="ws-td__dep-badge ws-td__dep-badge--past">Passé</span>
             <?php endif; ?>
-        <?php elseif($hasDepDate): ?>
-            <span class="ws-td__dep-date"><?php echo e(\Carbon\Carbon::parse($row['departure_date'])->locale('fr')->translatedFormat('d M Y')); ?></span>
-            <?php if($pkgDepCanceled): ?>
-                <span class="ws-td__dep-note">Annulé</span>
-            <?php endif; ?>
-        <?php else: ?>
-            <span class="ws-td__muted">—</span>
-        <?php endif; ?>
-    </td>
-    <td class="ws-td ws-td--price" data-label="Prix">
-        <?php if(! empty($row['price_label'])): ?>
-            <strong class="ws-td__price"><?php echo e($row['price_label']); ?></strong>
         <?php else: ?>
             <span class="ws-td__muted">—</span>
         <?php endif; ?>
     </td>
     <td class="ws-td ws-td--sold" data-label="Vendu">
-        <span class="ws-td__sold"><?php echo e($comSold); ?></span>
+        <span class="ws-td__sold" title="<?php echo e($depRowStatVal); ?> vendus confirmés — <?php echo e($depRowStatPending); ?> en attente"><?php echo e($depRowStatVal); ?> / <?php echo e($depRowStatPending); ?></span>
     </td>
     <td class="ws-td ws-td--remain" data-label="Restant">
-        <?php if($comRemaining !== null): ?>
-            <span class="ws-td__remain <?php echo e($comRemaining <= 5 ? 'ws-td__remain--danger' : ($comRemaining <= 10 ? 'ws-td__remain--warn' : '')); ?>"><?php echo e($comRemaining); ?></span>
+        <?php if($depRowRemaining !== null): ?>
+            <span class="ws-td__remain <?php echo e($depRowRemaining <= 5 ? 'ws-td__remain--danger' : ($depRowRemaining <= 10 ? 'ws-td__remain--warn' : '')); ?>"><?php echo e($depRowRemaining); ?></span>
         <?php else: ?>
             <span class="ws-td__muted">—</span>
         <?php endif; ?>
     </td>
     <td class="ws-td ws-td--cap" data-label="Capacité">
         <div class="ws-td__cap-wrap">
-            <span class="ws-td__cap-text"><?php echo e($comCapacity !== null ? $comCapacity.' places' : '—'); ?></span>
-            <?php if($comCapacity !== null && $comCapacity > 0): ?>
+            <span class="ws-td__cap-text"><?php echo e($depRowCapacity !== null ? $depRowCapacity.' places' : '—'); ?></span>
+            <?php if($depRowCapacity !== null && $depRowCapacity > 0): ?>
                 <div class="ws-progress-bar--mini">
                     <div class="ws-progress-bar--mini__track">
-                        <div class="ws-progress-bar--mini__fill <?php echo e($progressColor); ?>" style="width: <?php echo e(min(100, $comFillRate ?? 0)); ?>%"></div>
+                        <div class="ws-progress-bar--mini__fill <?php echo e($progressColor); ?>" style="width: <?php echo e(min(100, $depRowFillRate ?? 0)); ?>%"></div>
                     </div>
-                    <span class="ws-progress-bar--mini__label"><?php echo e($comFillRate ?? 0); ?>%</span>
+                    <span class="ws-progress-bar--mini__label"><?php echo e($depRowFillRate ?? 0); ?>%</span>
                 </div>
             <?php endif; ?>
         </div>
-    </td>
-    <td class="ws-td ws-td--avail" data-label="Disponibilité">
-        <?php if($isSellable): ?>
-            <span class="<?php echo e($availHtmlClass); ?>"><?php echo e($availLabel); ?></span>
-        <?php elseif($nonSellableBadge): ?>
-            <span class="<?php echo e($nonSellableBadgeClass); ?>"><?php echo e($nonSellableBadge); ?></span>
-        <?php else: ?>
-            <span class="ws-avail-badge ws-avail-badge--configure"><?php echo e($configureLabel); ?></span>
-        <?php endif; ?>
-    </td>
-    <td class="ws-td ws-td--priority" data-label="Priorité">
-        <?php if($isSellable): ?>
-            <span class="<?php echo e($priorityHtmlClass); ?>"><?php echo e($priorityLabel); ?></span>
-        <?php else: ?>
-            <span class="<?php echo e($nonSellablePriorityClass); ?>"><?php echo e($nonSellablePriorityLabel); ?></span>
-        <?php endif; ?>
     </td>
     <td class="ws-td ws-td--actions" data-label="Actions">
         <div class="ws-td__actions">
@@ -325,24 +343,43 @@
                 <button type="button"
                     class="ws-btn ws-btn--secondary ws-btn--sm ws-btn--iconish btn-ws-open-detail btn-view"
                     data-row-code="<?php echo e(e($row['code'])); ?>"
+                    <?php if($departureData && $depRowTravelDateId): ?>
+                        data-travel-date-id="<?php echo e($depRowTravelDateId); ?>"
+                    <?php endif; ?>
                     title="Détail">
                     <i class="fas fa-eye" aria-hidden="true"></i><span>Voir</span>
                 </button>
             <?php endif; ?>
             <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('reservations.view')): ?>
-                <?php if($isSellable && $hasLaravel): ?>
-                    <button type="button"
-                        class="ws-btn ws-btn--primary ws-btn--sm ws-btn--iconish btn-ws-open-reserve"
-                        data-row-code="<?php echo e(e($row['code'])); ?>"
-                        title="<?php echo e($reserveLabel); ?>">
-                        <?php if($typeKey === 'vol'): ?>
-                            <i class="fas fa-plane-departure" aria-hidden="true"></i>
-                        <?php else: ?>
-                            <i class="fas fa-suitcase-rolling" aria-hidden="true"></i>
-                        <?php endif; ?>
-                        <span><?php echo e($reserveLabel); ?></span>
-                    </button>
-                <?php elseif(! $isSellable && $hasLaravel): ?>
+                <?php if($isSellableForRow && $hasLaravel): ?>
+                    <?php if($departureData): ?>
+                        <button type="button"
+                            class="ws-btn ws-btn--primary ws-btn--sm ws-btn--iconish"
+                            data-ws-reserve-departure="1"
+                            data-row-code="<?php echo e(e($row['code'])); ?>"
+                            data-travel-date-id="<?php echo e($depRowTravelDateId); ?>"
+                            title="<?php echo e($reserveLabel); ?>">
+                            <?php if($typeKey === 'vol'): ?>
+                                <i class="fas fa-plane-departure" aria-hidden="true"></i>
+                            <?php else: ?>
+                                <i class="fas fa-suitcase-rolling" aria-hidden="true"></i>
+                            <?php endif; ?>
+                            <span><?php echo e($reserveLabel); ?></span>
+                        </button>
+                    <?php else: ?>
+                        <button type="button"
+                            class="ws-btn ws-btn--primary ws-btn--sm ws-btn--iconish btn-ws-open-reserve"
+                            data-row-code="<?php echo e(e($row['code'])); ?>"
+                            title="<?php echo e($reserveLabel); ?>">
+                            <?php if($typeKey === 'vol'): ?>
+                                <i class="fas fa-plane-departure" aria-hidden="true"></i>
+                            <?php else: ?>
+                                <i class="fas fa-suitcase-rolling" aria-hidden="true"></i>
+                            <?php endif; ?>
+                            <span><?php echo e($reserveLabel); ?></span>
+                        </button>
+                    <?php endif; ?>
+                <?php elseif(! $isSellableForRow && $hasLaravel): ?>
                     <a href="<?php echo e($editTourUrl ?: '#'); ?>"
                         class="ws-btn ws-btn--sm ws-btn--iconish <?php echo e($editTourUrl ? 'ws-btn--configure' : 'ws-btn--disabled'); ?>"
                         <?php echo $editTourUrl ? '' : 'aria-disabled="true"'; ?>

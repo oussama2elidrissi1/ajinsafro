@@ -1961,7 +1961,15 @@ class ReservationWorkspaceCatalogService
                     $roomLines = $roomGroups
                         ->flatMap(function ($group) {
                             $hotelName = (string) ($group['hotel_name'] ?? '');
-                            return collect($group['rooms'] ?? [])->map(function ($room) use ($hotelName) {
+                            $groupRooms = collect();
+
+                            if (is_array($group) && isset($group['rooms']) && is_array($group['rooms'])) {
+                                $groupRooms = collect($group['rooms']);
+                            } elseif (is_array($group)) {
+                                $groupRooms = collect([$group]);
+                            }
+
+                            return $groupRooms->map(function ($room) use ($hotelName) {
                                 $type = (string) ($room['room_type'] ?? 'Chambre');
                                 $quantity = max(0, (int) ($room['total_rooms'] ?? $room['available_rooms'] ?? 0));
                                 $capacityPerRoom = max(0, (int) ($room['capacity_per_room'] ?? $room['capacity_total'] ?? $room['capacity'] ?? 0));

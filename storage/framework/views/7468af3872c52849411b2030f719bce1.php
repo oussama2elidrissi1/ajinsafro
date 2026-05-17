@@ -112,7 +112,7 @@
 
     $reservationsChildren = array_values(array_filter([
         $makeLeaf('reservations_index', 'Toutes les réservations', 'admin.reservations.index', 'bx bx-calendar-check', ['admin.reservations.index']),
-        $makeLeaf('reservations_workspace', 'Workspace commercial', 'admin.reservations.workspace', 'bx bx-briefcase-alt', ['admin.reservations.workspace*']),
+        $makeLeaf('reservations_workspace', 'Vente', 'admin.reservations.workspace', 'bx bx-briefcase-alt', ['admin.reservations.workspace*']),
         $makeLeaf('reservations_clients', 'Réservation en ligne', 'admin.reservations.clients', 'bx bx-user', ['admin.reservations.clients']),
         $makeLeaf('tailor_made_requests', 'Demande à la carte', 'admin.tailor-made-requests.index', 'bx bx-edit-alt', ['admin.tailor-made-requests.*'], [], null, 'reservations.view'),
         $makeLeaf('assignments_index', 'Affectations', 'admin.assignments.index', 'bx bx-transfer', ['admin.assignments.*'], [], null, 'assignments.view'),

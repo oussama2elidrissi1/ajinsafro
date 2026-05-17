@@ -1189,7 +1189,7 @@
         <div id="ws-view-table" class="ws-table-card hidden">
             <div class="ws-table-card__head">
                 <h2 class="ws-table-card__title">Vue liste</h2>
-                <p class="ws-table-card__sub">Référence, voyage, départ, prix, capacité et actions.</p>
+                <p class="ws-table-card__sub">Référence, voyage, départ, capacité et actions.</p>
             </div>
             <div class="ws-table-scroll workspace-list-table-wrapper">
                 <table class="ws-data-table ws-data-table--responsive workspace-list-table" aria-label="Catalogue des offres en liste">
@@ -1199,42 +1199,75 @@
             <th scope="col" class="ws-data-table__th-offer">Voyage</th>
             <th scope="col" class="ws-data-table__th-city">Ville départ</th>
             <th scope="col" class="ws-data-table__th-dep">Départ</th>
-            <th scope="col" class="ws-data-table__th-price">Prix</th>
             <th scope="col" class="ws-data-table__th-sold">Vendu</th>
             <th scope="col" class="ws-data-table__th-remain">Restant</th>
             <th scope="col" class="ws-data-table__th-cap">Capacité</th>
-            <th scope="col" class="ws-data-table__th-priority">Priorité</th>
             <th scope="col" class="ws-data-table__th-actions">Actions</th>
         </tr>
     </thead>
 
     <tbody id="ws-catalog-table-body">
         <?php
-            $sellableRows = $catalogRows->filter(fn($r) => $r['commercial']['is_sellable'] ?? false);
-            $nonSellableRows = $catalogRows->filter(fn($r) => !($r['commercial']['is_sellable'] ?? false));
+            $today = \Carbon\Carbon::today();
+            $allDepRows = collect();
+            foreach ($catalogRows as $row) {
+                $isVoyageSellable = $row['commercial']['is_sellable'] ?? false;
+                $departures = collect($row['modal_detail']['departures'] ?? [])->values();
+                if ($departures->isNotEmpty()) {
+                    foreach ($departures as $departure) {
+                        $depDate = !empty($departure['date_iso']) ? \Carbon\Carbon::parse($departure['date_iso']) : null;
+                        $isPast = !empty($departure['is_past']);
+                        $statusKey = $departure['status_key'] ?? 'unknown';
+                        $remaining = $departure['remaining'] ?? null;
+                        $isDepSellable = $isVoyageSellable
+                            && $depDate !== null
+                            && ! $isPast
+                            && $statusKey !== 'full'
+                            && ($remaining === null || $remaining > 0);
+                        $allDepRows->push([
+                            'row' => $row,
+                            'departure' => $departure,
+                            'sort_date' => $depDate,
+                            'is_sellable' => $isDepSellable,
+                        ]);
+                    }
+                } else {
+                    $allDepRows->push([
+                        'row' => $row,
+                        'departure' => null,
+                        'sort_date' => null,
+                        'is_sellable' => false,
+                    ]);
+                }
+            }
+            $sortedDepRows = $allDepRows->sortBy(function ($item) {
+                return $item['sort_date'] ? $item['sort_date']->timestamp : PHP_INT_MAX;
+            })->values();
+            $sellableDepRows = $sortedDepRows->filter(fn($i) => $i['is_sellable']);
+            $nonSellableDepRows = $sortedDepRows->filter(fn($i) => ! $i['is_sellable']);
         ?>
 
-        <?php if($sellableRows->isNotEmpty()): ?>
-            <?php $__currentLoopData = $sellableRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <?php echo $__env->make('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table'], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+        <?php if($sellableDepRows->isNotEmpty()): ?>
+            <?php $__currentLoopData = $sellableDepRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $depItem): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <?php echo $__env->make('admin.reservations.workspace.partials.catalog-row', ['row' => $depItem['row'], 'mode' => 'table', 'departure' => $depItem['departure']], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         <?php endif; ?>
 
-        <?php if($nonSellableRows->isNotEmpty()): ?>
+        <?php if($nonSellableDepRows->isNotEmpty()): ?>
             <tr class="ws-catalog-section-divider">
-                <td colspan="10" class="ws-catalog-section-divider__cell">
+                <td colspan="8" class="ws-catalog-section-divider__cell">
                     <span class="ws-catalog-section-divider__label">Voyages non disponibles / à configurer</span>
                 </td>
             </tr>
 
-            <?php $__currentLoopData = $nonSellableRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <?php echo $__env->make('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table'], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+            <?php $__currentLoopData = $nonSellableDepRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $depItem): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <?php echo $__env->make('admin.reservations.workspace.partials.catalog-row', ['row' => $depItem['row'], 'mode' => 'table', 'departure' => $depItem['departure']], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         <?php endif; ?>
 
         <?php if($catalogRows->isEmpty()): ?>
             <tr>
-                <td colspan="10" class="ws-table-empty-cell">
+                <td colspan="8" class="ws-table-empty-cell">
                     <div class="ws-catalog-empty ws-catalog-empty--inline">
                         <div class="max-w-md mx-auto text-center py-10 px-6">
                             <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 mb-3 text-xl">
@@ -1261,6 +1294,20 @@
         <?php endif; ?>
     </tbody>
 </table>
+                <div class="ws-pagination" id="ws-pagination">
+                    <div class="ws-pagination__info">
+                        <span id="ws-pagination-info"></span>
+                    </div>
+                    <div class="ws-pagination__controls" id="ws-pagination-controls"></div>
+                    <div class="ws-pagination__per-page">
+                        <label for="ws-per-page">Lignes</label>
+                        <select id="ws-per-page">
+                            <option value="10" selected>10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1438,8 +1485,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 h += '<div class="ws-md-dep-kpi"><span>Taux remplissage</span><strong>' + dep.fill_pct + '%</strong></div>';
             }
             h += '</div>';
-            if (dep.capacity_note && !(d.rooms && d.rooms.length)) {
+            if (dep.capacity_note && !(dep.rooms && dep.rooms.length)) {
                 h += '<p style="margin:0.5rem 0 0;font-size:0.75rem;color:#64748b">' + escapeWsHtml(dep.capacity_note) + '</p>';
+            }
+            if (dep.rooms && dep.rooms.length) {
+                h += '<div class="ws-md-departure-room-list" style="margin:0.75rem 0 0">';
+                dep.rooms.forEach(function (room) {
+                    var full = room.available_rooms <= 0;
+                    h += '<div style="display:flex;align-items:center;justify-content:space-between;font-size:0.8rem;padding:0.35rem 0;border-top:1px solid #f1f5f9;">';
+                    h += '<span><strong>' + escapeWsHtml(room.room_type || 'Chambre') + '</strong> · ' + room.capacity_per_room + ' pers.</span>';
+                    if (full) {
+                        h += '<span style="color:#991b1b;font-weight:700;font-size:0.75rem">Complet</span>';
+                    } else {
+                        h += '<span>' + room.available_rooms + ' / ' + room.total_rooms + ' restantes</span>';
+                    }
+                    h += '</div>';
+                });
+                h += '</div>';
             }
             if (dep.capacity_known && dep.fill_pct != null) {
                 var barClass = 'ws-md-progress-bar';
@@ -1714,6 +1776,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (catalogView) catalogView.classList.toggle('hidden', mode !== 'catalog');
         if (calView) calView.classList.toggle('hidden', mode !== 'cal');
         if (mode === 'cal' && calendar) setTimeout(function () { calendar.render(); }, 80);
+        if (mode === 'list') applyWsFilters();
     }
 
     if (btnList) btnList.addEventListener('click', function () { wsActivateView('list'); });
@@ -1732,6 +1795,9 @@ document.addEventListener('DOMContentLoaded', function () {
         return isNaN(value) ? null : value;
     }
 
+    window.wsCurrentPage = 1;
+    window.wsPerPage = 10;
+
     window.applyWsFilters = function applyWsFilters() {
         var q = (searchEl && searchEl.value) ? searchEl.value.toLowerCase().trim() : '';
         var t = typeEl ? typeEl.value : 'all';
@@ -1743,9 +1809,10 @@ document.addEventListener('DOMContentLoaded', function () {
             budgetMin = budgetMax;
             budgetMax = swapped;
         }
-        var rows = document.querySelectorAll('#ws-catalog-list .ws-catalog-row, #ws-catalog-table-body .ws-catalog-row');
-        var visible = 0;
-        var seenCodes = {};
+        var catalogRows = document.querySelectorAll('#ws-catalog-list .ws-catalog-row');
+        var tableRows = document.querySelectorAll('#ws-catalog-table-body .ws-catalog-row');
+        var isTableVisible = tableView && !tableView.classList.contains('hidden');
+        var rows = isTableVisible ? tableRows : catalogRows;
         rows.forEach(function (tr) {
             var ok = true;
             if (t !== 'all' && tr.getAttribute('data-type') !== t) ok = false;
@@ -1766,17 +1833,100 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (blob.toLowerCase().indexOf(q) === -1) ok = false;
             }
             tr.classList.toggle('hidden', !ok);
-            if (ok) {
-                var rc = tr.getAttribute('data-row-code') || '_';
-                if (!seenCodes[rc]) {
-                    seenCodes[rc] = true;
-                    visible++;
-                }
-            }
         });
+        // Also sync hidden state on rows in the non-visible view so switching views keeps filter state
+        var otherRows = isTableVisible ? catalogRows : tableRows;
+        otherRows.forEach(function (tr) {
+            var ok = true;
+            if (t !== 'all' && tr.getAttribute('data-type') !== t) ok = false;
+            if (ok && city !== 'all') {
+                var dc = tr.getAttribute('data-departure-city') || '';
+                if (dc.indexOf(city) === -1) ok = false;
+            }
+            if (ok && (budgetMin !== null || budgetMax !== null)) {
+                var price = parseInt(tr.getAttribute('data-price'), 10) || 0;
+                if (budgetMin !== null && price < budgetMin) ok = false;
+                if (budgetMax !== null && price > budgetMax) ok = false;
+            }
+            if (ok && q) {
+                var blob = (tr.getAttribute('data-search') || '')
+                    + ' ' + (tr.getAttribute('data-name') || '')
+                    + ' ' + (tr.getAttribute('data-code') || '')
+                    + ' ' + (tr.getAttribute('data-departure-city') || '');
+                if (blob.toLowerCase().indexOf(q) === -1) ok = false;
+            }
+            tr.classList.toggle('hidden', !ok);
+        });
+        var visible = Array.from(rows).filter(function (tr) { return !tr.classList.contains('hidden'); }).length;
         var c = document.getElementById('ws-row-visible-count');
         if (c) c.textContent = String(visible);
+        window.wsCurrentPage = 1;
+        paginateWsRows();
     };
+
+    function paginateWsRows() {
+        var tbody = document.getElementById('ws-catalog-table-body');
+        if (!tbody) return;
+        var allRows = tbody.querySelectorAll('tr');
+        var visibleRows = [];
+        allRows.forEach(function (row) {
+            if (row.classList.contains('ws-table-empty-cell')) return;
+            if (row.classList.contains('ws-catalog-section-divider')) return;
+            if (!row.classList.contains('hidden')) visibleRows.push(row);
+        });
+
+        var total = visibleRows.length;
+        var perPage = window.wsPerPage || 10;
+        var currentPage = window.wsCurrentPage || 1;
+        var totalPages = Math.max(1, Math.ceil(total / perPage));
+
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+        window.wsCurrentPage = currentPage;
+
+        var start = (currentPage - 1) * perPage;
+        var end = start + perPage;
+
+        visibleRows.forEach(function (row, index) {
+            row.style.display = (index >= start && index < end) ? '' : 'none';
+        });
+
+        renderPaginationControls(total, perPage, currentPage, totalPages);
+    }
+
+    function renderPaginationControls(total, perPage, currentPage, totalPages) {
+        var info = document.getElementById('ws-pagination-info');
+        var controls = document.getElementById('ws-pagination-controls');
+        if (!info || !controls) return;
+
+        if (total === 0) {
+            info.textContent = '0 résultat';
+            controls.innerHTML = '';
+            return;
+        }
+
+        var start = (currentPage - 1) * perPage + 1;
+        var end = Math.min(currentPage * perPage, total);
+        info.textContent = start + '–' + end + ' sur ' + total;
+
+        var html = '';
+        html += '<button type="button" ' + (currentPage <= 1 ? 'disabled' : '') + ' data-ws-page="' + (currentPage - 1) + '" title="Précédent">Précédent</button>';
+
+        var maxVisible = 5;
+        var startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+        var endPage = Math.min(totalPages, startPage + maxVisible - 1);
+        if (endPage - startPage + 1 < maxVisible) {
+            startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+
+        for (var p = startPage; p <= endPage; p++) {
+            html += '<button type="button" class="' + (p === currentPage ? 'is-active' : '') + '" data-ws-page="' + p + '" title="Page ' + p + '" aria-current="' + (p === currentPage ? 'page' : 'false') + '">' + p + '</button>';
+        }
+
+        html += '<button type="button" ' + (currentPage >= totalPages ? 'disabled' : '') + ' data-ws-page="' + (currentPage + 1) + '" title="Suivant">Suivant</button>';
+
+        controls.innerHTML = html;
+    }
 
     if (searchEl) searchEl.addEventListener('input', applyWsFilters);
     if (typeEl) typeEl.addEventListener('change', applyWsFilters);
@@ -1791,6 +1941,27 @@ document.addEventListener('DOMContentLoaded', function () {
             if (budgetMinEl) budgetMinEl.value = '';
             if (budgetMaxEl) budgetMaxEl.value = '';
             applyWsFilters();
+        });
+    }
+
+    var perPageEl = document.getElementById('ws-per-page');
+    var paginationControls = document.getElementById('ws-pagination-controls');
+    if (perPageEl) {
+        perPageEl.addEventListener('change', function () {
+            window.wsPerPage = parseInt(this.value, 10) || 10;
+            window.wsCurrentPage = 1;
+            paginateWsRows();
+        });
+    }
+    if (paginationControls) {
+        paginationControls.addEventListener('click', function (e) {
+            var btn = e.target.closest('button[data-ws-page]');
+            if (!btn) return;
+            var p = parseInt(btn.getAttribute('data-ws-page'), 10);
+            if (!isNaN(p) && p > 0) {
+                window.wsCurrentPage = p;
+                paginateWsRows();
+            }
         });
     }
 
@@ -1900,6 +2071,17 @@ document.addEventListener('DOMContentLoaded', function () {
         return '<span class="' + cls + '">' + escapeHtml(label) + '</span>';
     }
 
+    function departureRooms(detail, departure) {
+        if (departure && Array.isArray(departure.rooms)) {
+            return departure.rooms.filter(Boolean);
+        }
+        if (detail && Array.isArray(detail.rooms)) {
+            return detail.rooms.filter(Boolean);
+        }
+
+        return [];
+    }
+
     function commercialCommissionHtml(detail) {
         var s = (typeof window !== 'undefined' && window.wsModalSettings) ? window.wsModalSettings : {};
         if (!s.show_commission) return '';
@@ -1943,7 +2125,8 @@ document.addEventListener('DOMContentLoaded', function () {
         var capacity = departure.capacity != null ? Number(departure.capacity) : null;
         var remaining = departure.remaining != null ? Number(departure.remaining) : null;
         var fillPct = departure.fill_pct != null ? Number(departure.fill_pct) : 0;
-        var hasRooms = !!(detail.rooms && detail.rooms.length);
+        var rooms = departureRooms(detail, departure);
+        var hasRooms = rooms.length > 0;
         var daysUntil = departure.days_until != null ? Number(departure.days_until) : null;
         var rules = [];
         var badgeClass = 'ws-md-report-badge ws-md-report-badge--neutral';
@@ -2001,6 +2184,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function departureBody(detail, departure) {
         var reservations = departure.reservations || {};
+        var rooms = departureRooms(detail, departure);
         var fillPct = departure.fill_pct != null ? departure.fill_pct : 0;
         var rateClass = 'ws-md-departure-kpi--rate';
         if (fillPct >= 100) rateClass = 'ws-md-departure-kpi--rate-full';
@@ -2018,21 +2202,56 @@ document.addEventListener('DOMContentLoaded', function () {
         html += '<div class="ws-md-departure-kpi ' + rateClass + '"><i class="fas fa-chart-line"></i><span>Taux</span><strong>' + escapeHtml(fillPct + '%') + '</strong></div>';
         html += '</div>';
         html += '<div class="ws-md-progress ws-md-progress--dep" role="progressbar" aria-valuenow="' + fillPct + '" aria-valuemin="0" aria-valuemax="100"><div class="ws-md-progress-bar" style="width:' + fillPct + '%"></div></div>';
-        if (departure.capacity_note && !(detail.rooms && detail.rooms.length)) html += '<p class="ws-md-inline-note">' + escapeHtml(departure.capacity_note) + '</p>';
+        if (departure.capacity_note && !rooms.length) html += '<p class="ws-md-inline-note">' + escapeHtml(departure.capacity_note) + '</p>';
         html += '<div class="ws-md-departure-info-grid" style="margin-top:1rem">';
         if (detail.duration) html += '<div class="ws-md-departure-info"><span>Durée</span><strong>' + escapeHtml(detail.duration) + '</strong></div>';
         html += '<div class="ws-md-departure-info"><span>Date sélectionnée</span><strong>' + escapeHtml(departure.date_label || '—') + '</strong></div>';
         if (detail.prices && detail.prices.adult_label) html += '<div class="ws-md-departure-info"><span>Prix à partir de</span><strong>' + escapeHtml(detail.prices.adult_label) + '</strong></div>';
         html += '<div class="ws-md-departure-info"><span>Statut du départ</span><strong>' + availabilityBadge(departure) + '</strong></div>';
-        if (detail.rooms && detail.rooms.length) {
-            var roomLabels = detail.rooms.map(function (room) {
-                return (room.room_type || 'Chambre') + ' (' + (room.product || 0) + ')';
-            }).join(', ');
-            html += '<div class="ws-md-departure-info"><span>Chambres disponibles</span><strong>' + escapeHtml(roomLabels) + '</strong></div>';
+        if (rooms.length) {
+            html += '<div class="ws-md-departure-info ws-md-departure-info--rooms"><span>Chambres configurées</span><strong>' + rooms.length + ' type(s)</strong></div>';
         } else {
             html += '<div class="ws-md-departure-info"><span>Chambres disponibles</span><strong>Aucune chambre configurée</strong></div>';
         }
         html += '</div></section>';
+
+        // Bloc détail chambres du départ
+        if (rooms.length) {
+            html += '<section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-bed"></i> Chambres disponibles</div>';
+            html += '<div class="ws-md-room-list">';
+            rooms.forEach(function (room) {
+                var totalRooms = Number(room.total_rooms != null ? room.total_rooms : (room.quantity != null ? room.quantity : 0));
+                var remainingRooms = Number(room.remaining_rooms != null ? room.remaining_rooms : (room.available_rooms != null ? room.available_rooms : 0));
+                var usedRooms = Number(room.used_rooms != null ? room.used_rooms : Math.max(0, totalRooms - remainingRooms));
+                var remainingPlaces = Number(room.remaining_places != null ? room.remaining_places : (room.available_places != null ? room.available_places : 0));
+                var capacityPerRoom = Number(room.capacity_per_room != null ? room.capacity_per_room : (room.capacity != null ? room.capacity : (room.capacity_total != null ? room.capacity_total : 0)));
+                var supplement = Number(room.supplement != null ? room.supplement : 0);
+                var isFull = remainingRooms <= 0;
+                var statusClass = isFull ? 'ws-md-room-item--full' : (remainingRooms <= 2 ? 'ws-md-room-item--low' : 'ws-md-room-item--ok');
+                html += '<div class="ws-md-room-item ' + statusClass + '" style="display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid #e2e8f0;">';
+                html += '<div>';
+                html += '<strong>' + escapeHtml(room.room_type || room.type || 'Chambre') + '</strong>';
+                html += '<span style="display:block;font-size:0.75rem;color:#64748b">' + totalRooms + ' configurées, ' + usedRooms + ' utilisées, ' + remainingRooms + ' restantes</span>';
+                html += '<span style="display:block;font-size:0.72rem;color:#94a3b8">Capacité ' + capacityPerRoom + ' pers./chambre' + (remainingPlaces > 0 ? ' · ' + remainingPlaces + ' places restantes' : '') + (supplement > 0 ? ' · Suppl. ' + supplement + ' MAD' : '') + '</span>';
+                html += '</div>';
+                html += '<div style="text-align:right">';
+                if (isFull) {
+                    html += '<span style="color:#991b1b;font-weight:700">Complet</span>';
+                } else {
+                    html += '<span style="color:#0e3a5a;font-weight:800">' + remainingRooms + ' / ' + totalRooms + '</span> <span style="font-size:0.75rem;color:#64748b">restantes</span>';
+                }
+                html += '</div>';
+                html += '</div>';
+            });
+            html += '</div>';
+            var allFull = rooms.every(function (room) {
+                return Number(room.remaining_rooms != null ? room.remaining_rooms : (room.available_rooms != null ? room.available_rooms : 0)) <= 0;
+            });
+            if (allFull) {
+                html += '<p style="margin:0.5rem 0 0;font-size:0.75rem;color:#991b1b;font-weight:700">Toutes les chambres sont complètes pour ce départ.</p>';
+            }
+            html += '</section>';
+        }
         html += renderDepartureReport(detail, departure);
         html += commercialCommissionHtml(detail);
         html += '</div>';
@@ -2055,8 +2274,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function selectorBody(code, detail, selectedDeparture) {
         var departures = Array.isArray(detail.departures) ? detail.departures : [];
-        if (!departures.length || !selectedDeparture) {
-            return '<div class="ws-md-body-inner"><section class="ws-md-card"><p style="margin:0;color:#64748b">Aucun départ disponible pour ce voyage.</p></section></div>';
+        if (!departures.length) {
+            return '<div class="ws-md-body-inner"><section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-calendar-times"></i> Départs</div><p style="margin:0;color:#64748b;font-weight:600">Aucun départ configuré pour ce voyage.</p></section></div>';
         }
         var html = '<div class="ws-md-body-inner"><section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-calendar-check"></i> Choisir une date de départ</div>';
         html += '<div class="ws-md-departure-tabs" role="tablist" aria-label="Dates de départ">';
@@ -2089,13 +2308,20 @@ document.addEventListener('DOMContentLoaded', function () {
             var statusKey = selectedDeparture.status_key || '';
             var isAvailable = (statusKey === 'available' || statusKey === 'almost_full');
             var hasReserveRoute = selectedDeparture.routes && selectedDeparture.routes.reserve;
-            var canReserve = !isPast && remaining > 0 && isAvailable && hasReserveRoute;
+            var rooms = departureRooms(detail, selectedDeparture);
+            var hasRoomsConfigured = rooms.length > 0;
+            var allRoomsFull = hasRoomsConfigured && rooms.every(function (room) {
+                return Number(room.remaining_rooms != null ? room.remaining_rooms : (room.available_rooms != null ? room.available_rooms : 0)) <= 0;
+            });
+            var canReserve = !isPast && remaining > 0 && isAvailable && hasReserveRoute && (!hasRoomsConfigured || !allRoomsFull);
             if (canReserve) {
                 html += '<a href="' + selectedDeparture.routes.reserve + '" class="ws-md-btn ws-md-btn-success"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</a>';
             } else {
-                var title = isPast ? 'Départ passé' : (remaining <= 0 ? 'Aucune place restante' : (!isAvailable ? 'Départ indisponible' : 'Réservation non configurée'));
+                var title = isPast ? 'Départ passé' : (remaining <= 0 ? 'Aucune place restante' : (allRoomsFull ? 'Toutes les chambres sont complètes' : (!isAvailable ? 'Départ indisponible' : 'Réservation non configurée')));
                 html += '<button type="button" disabled class="ws-md-btn ws-md-btn-disabled" title="' + title + '"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</button>';
             }
+        } else {
+            html += '<button type="button" disabled class="ws-md-btn ws-md-btn-disabled" title="Aucun départ configuré"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</button>';
         }
         html += '</div>';
         return html;
@@ -2114,11 +2340,16 @@ document.addEventListener('DOMContentLoaded', function () {
             var statusKey = departure.status_key || '';
             var isAvailable = (statusKey === 'available' || statusKey === 'almost_full');
             var hasReserveRoute = departure.routes && departure.routes.reserve;
-            var canReserve = !isPast && remaining > 0 && isAvailable && hasReserveRoute;
+            var rooms = departureRooms(detail, departure);
+            var hasRoomsConfigured = rooms.length > 0;
+            var allRoomsFull = hasRoomsConfigured && rooms.every(function (room) {
+                return Number(room.remaining_rooms != null ? room.remaining_rooms : (room.available_rooms != null ? room.available_rooms : 0)) <= 0;
+            });
+            var canReserve = !isPast && remaining > 0 && isAvailable && hasReserveRoute && (!hasRoomsConfigured || !allRoomsFull);
             if (canReserve) {
                 html += '<a href="' + departure.routes.reserve + '" class="ws-md-btn ws-md-btn-success"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</a>';
             } else {
-                var title = isPast ? 'Départ passé' : (remaining <= 0 ? 'Aucune place restante' : (!isAvailable ? 'Départ indisponible' : 'Réservation non configurée'));
+                var title = isPast ? 'Départ passé' : (remaining <= 0 ? 'Aucune place restante' : (allRoomsFull ? 'Toutes les chambres sont complètes' : (!isAvailable ? 'Départ indisponible' : 'Réservation non configurée')));
                 html += '<button type="button" disabled class="ws-md-btn ws-md-btn-disabled" title="' + title + '"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</button>';
             }
         }
@@ -2164,7 +2395,7 @@ document.addEventListener('DOMContentLoaded', function () {
         event.preventDefault();
         event.stopPropagation();
         if (target.hasAttribute('data-ws-detail-trigger')) {
-            openSelector(target.getAttribute('data-row-code') || '');
+            openSelector(target.getAttribute('data-row-code') || '', target.getAttribute('data-travel-date-id') || '');
             return;
         }
         if (target.hasAttribute('data-ws-reserve-trigger')) {

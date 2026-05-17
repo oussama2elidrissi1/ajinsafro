@@ -2071,6 +2071,17 @@ document.addEventListener('DOMContentLoaded', function () {
         return '<span class="' + cls + '">' + escapeHtml(label) + '</span>';
     }
 
+    function departureRooms(detail, departure) {
+        if (departure && Array.isArray(departure.rooms)) {
+            return departure.rooms.filter(Boolean);
+        }
+        if (detail && Array.isArray(detail.rooms)) {
+            return detail.rooms.filter(Boolean);
+        }
+
+        return [];
+    }
+
     function commercialCommissionHtml(detail) {
         var s = (typeof window !== 'undefined' && window.wsModalSettings) ? window.wsModalSettings : {};
         if (!s.show_commission) return '';
@@ -2114,7 +2125,8 @@ document.addEventListener('DOMContentLoaded', function () {
         var capacity = departure.capacity != null ? Number(departure.capacity) : null;
         var remaining = departure.remaining != null ? Number(departure.remaining) : null;
         var fillPct = departure.fill_pct != null ? Number(departure.fill_pct) : 0;
-        var hasRooms = !!(detail.rooms && detail.rooms.length);
+        var rooms = departureRooms(detail, departure);
+        var hasRooms = rooms.length > 0;
         var daysUntil = departure.days_until != null ? Number(departure.days_until) : null;
         var rules = [];
         var badgeClass = 'ws-md-report-badge ws-md-report-badge--neutral';
@@ -2172,6 +2184,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function departureBody(detail, departure) {
         var reservations = departure.reservations || {};
+        var rooms = departureRooms(detail, departure);
         var fillPct = departure.fill_pct != null ? departure.fill_pct : 0;
         var rateClass = 'ws-md-departure-kpi--rate';
         if (fillPct >= 100) rateClass = 'ws-md-departure-kpi--rate-full';
@@ -2189,42 +2202,51 @@ document.addEventListener('DOMContentLoaded', function () {
         html += '<div class="ws-md-departure-kpi ' + rateClass + '"><i class="fas fa-chart-line"></i><span>Taux</span><strong>' + escapeHtml(fillPct + '%') + '</strong></div>';
         html += '</div>';
         html += '<div class="ws-md-progress ws-md-progress--dep" role="progressbar" aria-valuenow="' + fillPct + '" aria-valuemin="0" aria-valuemax="100"><div class="ws-md-progress-bar" style="width:' + fillPct + '%"></div></div>';
-        if (departure.capacity_note && !(detail.rooms && detail.rooms.length)) html += '<p class="ws-md-inline-note">' + escapeHtml(departure.capacity_note) + '</p>';
+        if (departure.capacity_note && !rooms.length) html += '<p class="ws-md-inline-note">' + escapeHtml(departure.capacity_note) + '</p>';
         html += '<div class="ws-md-departure-info-grid" style="margin-top:1rem">';
         if (detail.duration) html += '<div class="ws-md-departure-info"><span>Durée</span><strong>' + escapeHtml(detail.duration) + '</strong></div>';
         html += '<div class="ws-md-departure-info"><span>Date sélectionnée</span><strong>' + escapeHtml(departure.date_label || '—') + '</strong></div>';
         if (detail.prices && detail.prices.adult_label) html += '<div class="ws-md-departure-info"><span>Prix à partir de</span><strong>' + escapeHtml(detail.prices.adult_label) + '</strong></div>';
         html += '<div class="ws-md-departure-info"><span>Statut du départ</span><strong>' + availabilityBadge(departure) + '</strong></div>';
-        if (departure.rooms && departure.rooms.length) {
-            html += '<div class="ws-md-departure-info ws-md-departure-info--rooms"><span>Chambres configurées</span><strong>' + departure.rooms.length + ' type(s)</strong></div>';
+        if (rooms.length) {
+            html += '<div class="ws-md-departure-info ws-md-departure-info--rooms"><span>Chambres configurées</span><strong>' + rooms.length + ' type(s)</strong></div>';
         } else {
             html += '<div class="ws-md-departure-info"><span>Chambres disponibles</span><strong>Aucune chambre configurée</strong></div>';
         }
         html += '</div></section>';
 
         // Bloc détail chambres du départ
-        if (departure.rooms && departure.rooms.length) {
-            html += '<section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-bed"></i> Chambres restantes par type</div>';
+        if (rooms.length) {
+            html += '<section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-bed"></i> Chambres disponibles</div>';
             html += '<div class="ws-md-room-list">';
-            departure.rooms.forEach(function (room) {
-                var isFull = room.available_rooms <= 0;
-                var statusClass = isFull ? 'ws-md-room-item--full' : (room.available_rooms <= 2 ? 'ws-md-room-item--low' : 'ws-md-room-item--ok');
+            rooms.forEach(function (room) {
+                var totalRooms = Number(room.total_rooms != null ? room.total_rooms : (room.quantity != null ? room.quantity : 0));
+                var remainingRooms = Number(room.remaining_rooms != null ? room.remaining_rooms : (room.available_rooms != null ? room.available_rooms : 0));
+                var usedRooms = Number(room.used_rooms != null ? room.used_rooms : Math.max(0, totalRooms - remainingRooms));
+                var remainingPlaces = Number(room.remaining_places != null ? room.remaining_places : (room.available_places != null ? room.available_places : 0));
+                var capacityPerRoom = Number(room.capacity_per_room != null ? room.capacity_per_room : (room.capacity != null ? room.capacity : (room.capacity_total != null ? room.capacity_total : 0)));
+                var supplement = Number(room.supplement != null ? room.supplement : 0);
+                var isFull = remainingRooms <= 0;
+                var statusClass = isFull ? 'ws-md-room-item--full' : (remainingRooms <= 2 ? 'ws-md-room-item--low' : 'ws-md-room-item--ok');
                 html += '<div class="ws-md-room-item ' + statusClass + '" style="display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid #e2e8f0;">';
                 html += '<div>';
-                html += '<strong>' + escapeHtml(room.room_type || 'Chambre') + '</strong>';
-                html += '<span style="display:block;font-size:0.75rem;color:#64748b">Capacité ' + room.capacity_per_room + ' pers./chambre' + (room.supplement ? ' · Suppl. ' + room.supplement : '') + '</span>';
+                html += '<strong>' + escapeHtml(room.room_type || room.type || 'Chambre') + '</strong>';
+                html += '<span style="display:block;font-size:0.75rem;color:#64748b">' + totalRooms + ' configurées, ' + usedRooms + ' utilisées, ' + remainingRooms + ' restantes</span>';
+                html += '<span style="display:block;font-size:0.72rem;color:#94a3b8">Capacité ' + capacityPerRoom + ' pers./chambre' + (remainingPlaces > 0 ? ' · ' + remainingPlaces + ' places restantes' : '') + (supplement > 0 ? ' · Suppl. ' + supplement + ' MAD' : '') + '</span>';
                 html += '</div>';
                 html += '<div style="text-align:right">';
                 if (isFull) {
                     html += '<span style="color:#991b1b;font-weight:700">Complet</span>';
                 } else {
-                    html += '<span style="color:#0e3a5a;font-weight:800">' + room.available_rooms + ' / ' + room.total_rooms + '</span> <span style="font-size:0.75rem;color:#64748b">restantes</span>';
+                    html += '<span style="color:#0e3a5a;font-weight:800">' + remainingRooms + ' / ' + totalRooms + '</span> <span style="font-size:0.75rem;color:#64748b">restantes</span>';
                 }
                 html += '</div>';
                 html += '</div>';
             });
             html += '</div>';
-            var allFull = departure.rooms.every(function (r) { return r.available_rooms <= 0; });
+            var allFull = rooms.every(function (room) {
+                return Number(room.remaining_rooms != null ? room.remaining_rooms : (room.available_rooms != null ? room.available_rooms : 0)) <= 0;
+            });
             if (allFull) {
                 html += '<p style="margin:0.5rem 0 0;font-size:0.75rem;color:#991b1b;font-weight:700">Toutes les chambres sont complètes pour ce départ.</p>';
             }
@@ -2286,9 +2308,11 @@ document.addEventListener('DOMContentLoaded', function () {
             var statusKey = selectedDeparture.status_key || '';
             var isAvailable = (statusKey === 'available' || statusKey === 'almost_full');
             var hasReserveRoute = selectedDeparture.routes && selectedDeparture.routes.reserve;
-            var rooms = Array.isArray(selectedDeparture.rooms) ? selectedDeparture.rooms : [];
+            var rooms = departureRooms(detail, selectedDeparture);
             var hasRoomsConfigured = rooms.length > 0;
-            var allRoomsFull = hasRoomsConfigured && rooms.every(function (r) { return r.available_rooms <= 0; });
+            var allRoomsFull = hasRoomsConfigured && rooms.every(function (room) {
+                return Number(room.remaining_rooms != null ? room.remaining_rooms : (room.available_rooms != null ? room.available_rooms : 0)) <= 0;
+            });
             var canReserve = !isPast && remaining > 0 && isAvailable && hasReserveRoute && (!hasRoomsConfigured || !allRoomsFull);
             if (canReserve) {
                 html += '<a href="' + selectedDeparture.routes.reserve + '" class="ws-md-btn ws-md-btn-success"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</a>';
@@ -2316,9 +2340,11 @@ document.addEventListener('DOMContentLoaded', function () {
             var statusKey = departure.status_key || '';
             var isAvailable = (statusKey === 'available' || statusKey === 'almost_full');
             var hasReserveRoute = departure.routes && departure.routes.reserve;
-            var rooms = Array.isArray(departure.rooms) ? departure.rooms : [];
+            var rooms = departureRooms(detail, departure);
             var hasRoomsConfigured = rooms.length > 0;
-            var allRoomsFull = hasRoomsConfigured && rooms.every(function (r) { return r.available_rooms <= 0; });
+            var allRoomsFull = hasRoomsConfigured && rooms.every(function (room) {
+                return Number(room.remaining_rooms != null ? room.remaining_rooms : (room.available_rooms != null ? room.available_rooms : 0)) <= 0;
+            });
             var canReserve = !isPast && remaining > 0 && isAvailable && hasReserveRoute && (!hasRoomsConfigured || !allRoomsFull);
             if (canReserve) {
                 html += '<a href="' + departure.routes.reserve + '" class="ws-md-btn ws-md-btn-success"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</a>';
