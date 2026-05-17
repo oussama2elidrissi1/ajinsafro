@@ -15,31 +15,99 @@
     $workspaceFilterOptions = $workspaceFilterOptions ?? ['destinations' => []];
     $workspaceResetUrl = $workspaceResetUrl ?? route('admin.reservations.workspace', ['view' => 'list']);
 
-    $workspaceCalendarEvents = $catalogRows->map(function ($r) {
-        if (empty($r['departure_date']) || empty($r['voyage_id'])) {
-            return null;
+    $workspaceCalendarEvents = $catalogRows->flatMap(function ($r) {
+        $type = (string) ($r['type'] ?? 'package');
+        $tourId = (int) ($r['voyage_id'] ?? 0);
+        $code = (string) ($r['code'] ?? '');
+        if ($tourId <= 0 || $code === '') {
+            return [];
         }
-        $name = (string) ($r['name'] ?? '');
-        if (function_exists('mb_strlen') && mb_strlen($name) > 36) {
-            $name = mb_substr($name, 0, 34).'…';
+
+        $name = trim((string) ($r['name'] ?? ''));
+        $shortTitle = $name;
+        if (function_exists('mb_strlen') && mb_strlen($shortTitle) > 28) {
+            $shortTitle = mb_substr($shortTitle, 0, 26).'…';
         }
-        return [
-            'title' => ($r['code'] ?? '').' — '.$name,
+
+        $destination = trim((string) ($r['voyage_destination'] ?? data_get($r, 'modal_detail.destination', '')));
+        $priceLabel = trim((string) ($r['price_label'] ?? data_get($r, 'modal_detail.prices.adult_label', '')));
+        $departures = collect(data_get($r, 'modal_detail.departures', []))
+            ->filter(fn ($departure) => is_array($departure) && ! empty($departure['date_iso']))
+            ->values();
+
+        if ($departures->isNotEmpty()) {
+            return $departures->map(function (array $departure) use ($type, $tourId, $code, $name, $shortTitle, $destination, $priceLabel) {
+                $confirmed = (int) data_get($departure, 'pax.validee', 0);
+                $pending = (int) data_get($departure, 'pax.en_cours', 0);
+                $remaining = data_get($departure, 'remaining');
+                $capacity = data_get($departure, 'capacity');
+
+                return [
+                    'title' => $name,
+                    'short_title' => $shortTitle,
+                    'destination' => $destination,
+                    'departure_date' => (string) $departure['date_iso'],
+                    'start' => (string) $departure['date_iso'],
+                    'type' => $type,
+                    'code' => $code,
+                    'tour_id' => $tourId,
+                    'voyage_id' => $tourId,
+                    'travel_date_id' => $departure['travel_date_id'] ?? '',
+                    'prestation_type' => $type,
+                    'price' => $priceLabel,
+                    'confirmed_places' => $confirmed,
+                    'pending_places' => $pending,
+                    'remaining_places' => $remaining,
+                    'capacity' => $capacity,
+                    'status' => $departure['status_key'] ?? 'unknown',
+                    'status_label' => $departure['status_label'] ?? 'Disponible',
+                    'is_past' => ! empty($departure['is_past']),
+                    'routes' => $departure['routes'] ?? [],
+                    'label' => $name.' ('.$code.')',
+                ];
+            })->all();
+        }
+
+        if (empty($r['departure_date'])) {
+            return [];
+        }
+
+        $status = ! empty($r['departure_is_past']) ? 'past' : ((string) ($r['ws_avail'] ?? 'unknown'));
+        $stats = (array) ($r['stats'] ?? []);
+
+        return [[
+            'title' => $name,
+            'short_title' => $shortTitle,
+            'destination' => $destination,
+            'departure_date' => Carbon::parse($r['departure_date'])->format('Y-m-d'),
             'start' => Carbon::parse($r['departure_date'])->format('Y-m-d'),
-            'type' => $r['type'] ?? 'package',
-            'code' => $r['code'] ?? '',
-            'voyage_id' => (int) $r['voyage_id'],
+            'type' => $type,
+            'code' => $code,
+            'tour_id' => $tourId,
+            'voyage_id' => $tourId,
             'travel_date_id' => $r['travel_date_id'] ?? '',
-            'prestation_type' => $r['type'] ?? 'package',
-            'label' => ($r['name'] ?? '').' ('.($r['code'] ?? '').')',
-            'create_url' => !empty($r['voyage_id'])
-                ? route('admin.reservations.create', array_filter([
-                    'voyage_id' => (int) $r['voyage_id'],
-                    'travel_date_id' => $r['travel_date_id'] ?? null,
-                ], fn ($value) => $value !== null && $value !== ''))
-                : route('admin.reservations.create'),
-        ];
-    })->filter()->values()->all();
+            'prestation_type' => $type,
+            'price' => $priceLabel,
+            'confirmed_places' => (int) ($stats['validee'] ?? 0),
+            'pending_places' => (int) ($stats['en_cours'] ?? 0),
+            'remaining_places' => null,
+            'capacity' => null,
+            'status' => $status,
+            'status_label' => $status === 'past' ? 'Passé' : 'À configurer',
+            'is_past' => ! empty($r['departure_is_past']),
+            'routes' => [
+                'reserve' => !empty($r['voyage_id'])
+                    ? route('admin.reservations.create', array_filter([
+                        'voyage_id' => (int) $r['voyage_id'],
+                        'travel_date_id' => $r['travel_date_id'] ?? null,
+                    ], fn ($value) => $value !== null && $value !== ''))
+                    : route('admin.reservations.create'),
+            ],
+            'label' => $name.' ('.$code.')',
+        ]];
+    })->values()->all();
+    $workspaceCalendarSeedDate = $workspaceFilters['date_from']
+        ?? (collect($workspaceCalendarEvents)->pluck('departure_date')->filter()->sort()->first() ?: Carbon::today()->format('Y-m-d'));
 ?>
 
 
@@ -1375,13 +1443,16 @@
 
         
         <div id="reservations-calendar-view" class="bg-white p-4 sm:p-6 rounded-2xl shadow-custom border border-gray-100/90 <?php echo e($workspaceView === 'calendar' ? '' : 'hidden'); ?>">
-            <p class="text-sm text-gray-600 mb-4">Clic sur un événement : ouverture de la page dédiée de création de réservation.</p>
-            <div id="workspace-calendar" class="w-full min-h-[540px] fc-workspace"></div>
+            <div class="ws-calendar-panel">
+                <p class="ws-calendar-panel__hint">Vue mensuelle des départs filtrés. Cliquez sur un départ pour ouvrir son détail.</p>
+                <div id="workspace-calendar" class="w-full min-h-[540px] fc-workspace" data-reset-url="<?php echo e($workspaceResetUrl); ?>"></div>
+            </div>
         </div>
     </div>
 </div>
 
 <script type="application/json" id="workspace-calendar-json"><?php echo json_encode($workspaceCalendarEvents, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE); ?></script>
+<script type="application/json" id="workspace-calendar-meta-json"><?php echo json_encode(['seed_date' => $workspaceCalendarSeedDate, 'reset_url' => $workspaceResetUrl], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE); ?></script>
 <script type="application/json" id="ws-modal-detail-json"><?php echo json_encode($catalogRows->mapWithKeys(fn ($r) => [($r['code'] ?? '') => $r['modal_detail'] ?? null])->filter(fn ($v) => $v !== null), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE); ?></script>
 <?php $__env->stopSection(); ?>
 
@@ -1410,7 +1481,6 @@
 <?php $__env->stopPush(); ?>
 
 <?php $__env->startPush('scripts'); ?>
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 <script>
 (function () {
     var defaults = {
@@ -1994,6 +2064,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if (viewList) viewList.classList.toggle('hidden', mode !== 'list');
         if (viewCalendar) viewCalendar.classList.toggle('hidden', mode !== 'calendar');
         if (viewInputEl) viewInputEl.value = mode;
+        if (mode === 'calendar') {
+            renderWorkspaceCalendar();
+        }
     }
 
     function openModal(title, subHtml, bodyHtml, footerHtml) {
@@ -2356,6 +2429,199 @@ document.addEventListener('DOMContentLoaded', function () {
         openSelector(code, travelDateId);
     }
 
+    var calendarJsonEl = document.getElementById('workspace-calendar-json');
+    var calendarMetaEl = document.getElementById('workspace-calendar-meta-json');
+    var calendarRoot = document.getElementById('workspace-calendar');
+    var calendarMeta = (function () {
+        if (!calendarMetaEl) return {};
+        try { return JSON.parse(calendarMetaEl.textContent || '{}'); } catch (error) { return {}; }
+    })();
+    var calendarEvents = (function () {
+        if (!calendarJsonEl) return [];
+        try {
+            var parsed = JSON.parse(calendarJsonEl.textContent || '[]');
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (error) {
+            return [];
+        }
+    })();
+    var calendarState = {
+        currentMonth: resolveCalendarSeedDate(calendarMeta.seed_date, calendarEvents),
+    };
+
+    function resolveCalendarSeedDate(seedDate, events) {
+        var base = typeof seedDate === 'string' && seedDate ? seedDate : (events[0] && events[0].departure_date ? events[0].departure_date : null);
+        var date = base ? new Date(base + 'T00:00:00') : new Date();
+        if (isNaN(date.getTime())) {
+            date = new Date();
+        }
+        return new Date(date.getFullYear(), date.getMonth(), 1);
+    }
+
+    function formatCalendarMonth(date) {
+        var label = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(date);
+        return label.charAt(0).toUpperCase() + label.slice(1);
+    }
+
+    function formatCalendarDateLabel(date) {
+        return new Intl.DateTimeFormat('fr-FR', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        }).format(date);
+    }
+
+    function normalizeCalendarStatus(event) {
+        if (event && event.is_past) return 'past';
+        var status = String((event && event.status) || 'unknown');
+        if (status === 'ok') return 'available';
+        if (status === 'low') return 'almost_full';
+        if (['available', 'almost_full', 'full', 'past', 'unknown'].indexOf(status) !== -1) return status;
+        return 'unknown';
+    }
+
+    function calendarStatusLabel(event) {
+        var status = normalizeCalendarStatus(event);
+        if (status === 'available') return 'Disponible';
+        if (status === 'almost_full') return 'Presque complet';
+        if (status === 'full') return 'Complet';
+        if (status === 'past') return 'Passé';
+        return 'À configurer';
+    }
+
+    function groupCalendarEventsByDate(events) {
+        var map = {};
+        events.forEach(function (event) {
+            var key = String(event.departure_date || event.start || '');
+            if (!key) return;
+            if (!map[key]) map[key] = [];
+            map[key].push(event);
+        });
+        Object.keys(map).forEach(function (key) {
+            map[key].sort(function (a, b) {
+                var remainingA = a.remaining_places == null ? Number.MAX_SAFE_INTEGER : Number(a.remaining_places);
+                var remainingB = b.remaining_places == null ? Number.MAX_SAFE_INTEGER : Number(b.remaining_places);
+                if (remainingA !== remainingB) return remainingA - remainingB;
+                return String(a.short_title || a.title || '').localeCompare(String(b.short_title || b.title || ''), 'fr');
+            });
+        });
+        return map;
+    }
+
+    function renderCalendarEventCard(event, compact) {
+        var status = normalizeCalendarStatus(event);
+        var confirmed = Number(event.confirmed_places != null ? event.confirmed_places : 0);
+        var pending = Number(event.pending_places != null ? event.pending_places : 0);
+        var remaining = event.remaining_places != null ? Number(event.remaining_places) : null;
+        var title = escapeHtml(event.short_title || event.title || 'Départ');
+        var destination = escapeHtml(event.destination || '');
+        var price = escapeHtml(event.price || '');
+        var statusLabel = escapeHtml(calendarStatusLabel(event));
+        var metaLine = confirmed + ' / ' + pending + ' vendus';
+        var stockLine = remaining !== null ? remaining + ' restantes' : 'Stock à confirmer';
+        var classes = compact ? 'ws-calendar-mobile__item ws-calendar-event ws-calendar-event--' + status : 'ws-calendar-event ws-calendar-event--' + status;
+
+        var html = '<button type="button" class="' + classes + '" data-cal-open-detail="1" data-row-code="' + escapeHtml(event.code || '') + '" data-travel-date-id="' + escapeHtml(event.travel_date_id || '') + '">';
+        html += '<span class="' + (compact ? 'ws-calendar-mobile__title' : 'ws-calendar-event__title') + '">' + title + '</span>';
+        if (destination) {
+            html += '<span class="' + (compact ? 'ws-calendar-mobile__meta' : 'ws-calendar-event__destination') + '">' + destination + '</span>';
+        }
+        html += '<span class="' + (compact ? 'ws-calendar-mobile__meta' : 'ws-calendar-event__meta') + '">' + escapeHtml(metaLine) + (event.capacity != null ? ' · ' + escapeHtml(String(event.capacity)) + ' pl.' : '') + '</span>';
+        html += '<span class="' + (compact ? 'ws-calendar-mobile__meta' : 'ws-calendar-event__price') + '">' + escapeHtml(stockLine) + (price ? ' · ' + price : '') + '</span>';
+        html += '<span class="ws-calendar-event__status">' + statusLabel + '</span>';
+        html += '</button>';
+
+        return html;
+    }
+
+    function renderWorkspaceCalendar() {
+        if (!calendarRoot) return;
+
+        var events = Array.isArray(calendarEvents) ? calendarEvents.slice() : [];
+        if (!events.length) {
+            var resetUrl = escapeHtml((calendarMeta && calendarMeta.reset_url) || (calendarRoot.dataset ? calendarRoot.dataset.resetUrl : '') || '');
+            calendarRoot.innerHTML = '<div class="ws-calendar-empty"><p class="ws-calendar-empty__title">Aucun départ trouvé pour cette période.</p><p class="ws-calendar-empty__text">Ajustez la période ou réinitialisez les filtres pour revoir le catalogue complet.</p>' + (resetUrl ? '<a href="' + resetUrl + '" class="ws-calendar-empty__link">Réinitialiser les filtres</a>' : '') + '</div>';
+            return;
+        }
+
+        var currentMonth = new Date(calendarState.currentMonth.getFullYear(), calendarState.currentMonth.getMonth(), 1);
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        var firstGridDate = new Date(currentMonth);
+        var firstWeekday = (firstGridDate.getDay() + 6) % 7;
+        firstGridDate.setDate(firstGridDate.getDate() - firstWeekday);
+
+        var lastMonthDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+        var lastGridDate = new Date(lastMonthDay);
+        var lastWeekday = (lastGridDate.getDay() + 6) % 7;
+        lastGridDate.setDate(lastGridDate.getDate() + (6 - lastWeekday));
+
+        var eventsByDate = groupCalendarEventsByDate(events);
+        var currentMonthKey = currentMonth.getFullYear() + '-' + String(currentMonth.getMonth() + 1).padStart(2, '0');
+        var monthEvents = events.filter(function (event) {
+            return String(event.departure_date || '').slice(0, 7) === currentMonthKey;
+        });
+        var totalMonthEvents = monthEvents.length;
+
+        var weekdayLabels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+        var html = '<div class="ws-calendar-shell">';
+        html += '<div class="ws-calendar-header">';
+        html += '<div><h3 class="ws-calendar-header__title">' + escapeHtml(formatCalendarMonth(currentMonth)) + '</h3><p class="ws-calendar-header__meta">' + escapeHtml(String(totalMonthEvents)) + ' départ(s) affiché(s) pour ce mois.</p></div>';
+        html += '<div class="ws-calendar-nav">';
+        html += '<button type="button" class="ws-calendar-nav__btn" data-cal-nav="prev"><i class="fas fa-chevron-left"></i><span>Précédent</span></button>';
+        html += '<button type="button" class="ws-calendar-nav__btn" data-cal-nav="today"><i class="far fa-dot-circle"></i><span>Aujourd’hui</span></button>';
+        html += '<button type="button" class="ws-calendar-nav__btn" data-cal-nav="next"><span>Suivant</span><i class="fas fa-chevron-right"></i></button>';
+        html += '</div></div>';
+
+        html += '<div class="ws-calendar-grid">';
+        weekdayLabels.forEach(function (label) {
+            html += '<div class="ws-calendar-weekday">' + label + '</div>';
+        });
+
+        var cursor = new Date(firstGridDate);
+        while (cursor <= lastGridDate) {
+            var dateKey = cursor.toISOString().slice(0, 10);
+            var isOutside = cursor.getMonth() !== currentMonth.getMonth();
+            var isToday = cursor.getTime() === today.getTime();
+            var dayEvents = eventsByDate[dateKey] || [];
+            html += '<div class="ws-calendar-day' + (isOutside ? ' ws-calendar-day--outside' : '') + (isToday ? ' ws-calendar-day--today' : '') + '">';
+            html += '<div class="ws-calendar-day__head"><span class="ws-calendar-day__date">' + escapeHtml(String(cursor.getDate())) + '</span>';
+            html += '<span class="ws-calendar-day__count">' + (dayEvents.length ? escapeHtml(String(dayEvents.length)) + ' départ(s)' : '') + '</span></div>';
+            html += '<div class="ws-calendar-day__events">';
+            dayEvents.slice(0, 4).forEach(function (event) {
+                html += renderCalendarEventCard(event, false);
+            });
+            if (dayEvents.length > 4) {
+                html += '<div class="ws-calendar-event__meta">+' + escapeHtml(String(dayEvents.length - 4)) + ' autre(s)</div>';
+            }
+            html += '</div></div>';
+            cursor.setDate(cursor.getDate() + 1);
+        }
+        html += '</div>';
+
+        html += '<div class="ws-calendar-mobile">';
+        if (!monthEvents.length) {
+            html += '<div class="ws-calendar-empty"><p class="ws-calendar-empty__title">Aucun départ trouvé pour cette période.</p><p class="ws-calendar-empty__text">Naviguez au mois suivant ou réinitialisez les filtres.</p></div>';
+        } else {
+            var groupedMonthEvents = groupCalendarEventsByDate(monthEvents);
+            Object.keys(groupedMonthEvents).sort().forEach(function (dateKey) {
+                var date = new Date(dateKey + 'T00:00:00');
+                html += '<section class="ws-calendar-mobile__day">';
+                html += '<div class="ws-calendar-mobile__date">' + escapeHtml(formatCalendarDateLabel(date)) + '</div>';
+                html += '<div class="ws-calendar-mobile__items">';
+                groupedMonthEvents[dateKey].forEach(function (event) {
+                    html += renderCalendarEventCard(event, true);
+                });
+                html += '</div></section>';
+            });
+        }
+        html += '</div></div>';
+
+        calendarRoot.innerHTML = html;
+    }
+
     function handleReserve(code) {
         var detail = getDetail(code);
         if (!detail) return;
@@ -2375,13 +2641,31 @@ document.addEventListener('DOMContentLoaded', function () {
     if (btnList) btnList.addEventListener('click', function () { setWorkspaceView('list'); });
     if (btnCalendar) btnCalendar.addEventListener('click', function () { setWorkspaceView('calendar'); });
     setWorkspaceView(<?php echo json_encode($workspaceView, 15, 512) ?>);
+    window.addEventListener('resize', renderWorkspaceCalendar);
     normalizeWorkspaceButtons();
 
     document.addEventListener('click', function (event) {
-        var target = event.target.closest('[data-ws-detail-trigger],[data-ws-reserve-trigger],[data-ws-select-departure],[data-ws-reserve-departure],[data-ws-md-close],[data-ws-md-backdrop]');
+        var target = event.target.closest('[data-ws-detail-trigger],[data-ws-reserve-trigger],[data-ws-select-departure],[data-ws-reserve-departure],[data-ws-md-close],[data-ws-md-backdrop],[data-cal-open-detail],[data-cal-nav]');
         if (!target) return;
         event.preventDefault();
         event.stopPropagation();
+        if (target.hasAttribute('data-cal-nav')) {
+            var action = target.getAttribute('data-cal-nav') || '';
+            if (action === 'prev') {
+                calendarState.currentMonth = new Date(calendarState.currentMonth.getFullYear(), calendarState.currentMonth.getMonth() - 1, 1);
+            } else if (action === 'next') {
+                calendarState.currentMonth = new Date(calendarState.currentMonth.getFullYear(), calendarState.currentMonth.getMonth() + 1, 1);
+            } else {
+                var now = new Date();
+                calendarState.currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            }
+            renderWorkspaceCalendar();
+            return;
+        }
+        if (target.hasAttribute('data-cal-open-detail')) {
+            openDepartureDetail(target.getAttribute('data-row-code') || '', target.getAttribute('data-travel-date-id') || '');
+            return;
+        }
         if (target.hasAttribute('data-ws-detail-trigger')) {
             openSelector(target.getAttribute('data-row-code') || '', target.getAttribute('data-travel-date-id') || '');
             return;
