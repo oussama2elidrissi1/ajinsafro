@@ -1128,7 +1128,6 @@
                     </div>
                 </div>
                 <div class="ws-toolbar__views">
-                    <span class="ws-toolbar__count"><strong id="ws-row-visible-count">{{ $catalogRows->count() }}</strong> / {{ $catalogFullCount }} offres</span>
                     <div class="ws-seg ws-seg--triple" role="group" aria-label="Mode d'affichage">
                         <button type="button" id="btn-view-catalog" class="ws-seg__btn is-active" title="Catalogue"><i class="fas fa-th-large" aria-hidden="true"></i><span class="ws-seg__btn-label-catalog">Catalogue</span></button>
                         <button type="button" id="btn-view-list" class="ws-seg__btn" title="Vue liste (tableau)"><i class="fas fa-table" aria-hidden="true"></i><span>Liste</span></button>
@@ -1147,22 +1146,39 @@
                     </select>
                 </div>
                 <div class="ws-field">
-                    <label class="ws-field__label" for="ws-filter-city">Ville départ</label>
-                    <select id="ws-filter-city" class="ws-select">
+                    <label class="ws-field__label" for="ws-filter-destination">Destination</label>
+                    <select id="ws-filter-destination" class="ws-select">
                         <option value="all">Toutes</option>
                         @php
-                            $uniqueCities = collect();
+                            $uniqueDestinations = collect();
                             foreach ($catalogRows as $row) {
-                                foreach ($row['commercial']['villes_list'] ?? [] as $city) {
-                                    if ($city !== '') $uniqueCities[$city] = true;
+                                $dest = $row['voyage_destination'] ?? null;
+                                if ($dest !== null && trim((string) $dest) !== '') {
+                                    $uniqueDestinations[trim((string) $dest)] = true;
                                 }
                             }
-                            $uniqueCities = collect(array_keys($uniqueCities->all()))->sort()->values();
+                            $uniqueDestinations = collect(array_keys($uniqueDestinations->all()))->sort()->values();
                         @endphp
-                        @foreach($uniqueCities as $city)
-                            <option value="{{ e(strtolower($city)) }}">{{ $city }}</option>
+                        @foreach($uniqueDestinations as $dest)
+                            <option value="{{ e(strtolower($dest)) }}">{{ $dest }}</option>
                         @endforeach
+                        @if($uniqueDestinations->isEmpty())
+                            <option value="__none">Destination non renseignée</option>
+                        @endif
                     </select>
+                </div>
+                <div class="ws-field ws-field--date-range">
+                    <label class="ws-field__label">Date départ</label>
+                    <div class="ws-date-range-group" role="group" aria-label="Filtre date de départ">
+                        <label class="ws-date-input" for="ws-filter-date-from">
+                            <span class="ws-date-input__prefix">Du</span>
+                            <input type="date" id="ws-filter-date-from" class="ws-input" placeholder="jj/mm/aaaa">
+                        </label>
+                        <label class="ws-date-input" for="ws-filter-date-to">
+                            <span class="ws-date-input__prefix">Au</span>
+                            <input type="date" id="ws-filter-date-to" class="ws-input" placeholder="jj/mm/aaaa">
+                        </label>
+                    </div>
                 </div>
                 <div class="ws-field ws-field--budget">
                     <label class="ws-field__label" for="ws-filter-budget-min">Budget</label>
@@ -1197,9 +1213,9 @@
         <tr>
             <th scope="col" class="ws-data-table__th-ref">Réf</th>
             <th scope="col" class="ws-data-table__th-offer">Voyage</th>
-            <th scope="col" class="ws-data-table__th-city">Ville départ</th>
+            <th scope="col" class="ws-data-table__th-destination">Destination</th>
             <th scope="col" class="ws-data-table__th-dep">Départ</th>
-            <th scope="col" class="ws-data-table__th-sold">Vendu</th>
+            <th scope="col" class="ws-data-table__th-sold">Vendu / En attente</th>
             <th scope="col" class="ws-data-table__th-remain">Restant</th>
             <th scope="col" class="ws-data-table__th-cap">Capacité</th>
             <th scope="col" class="ws-data-table__th-actions">Actions</th>
@@ -1789,7 +1805,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var searchEl = document.getElementById('ws-filter-search');
     var typeEl = document.getElementById('ws-filter-type');
-    var cityEl = document.getElementById('ws-filter-city');
+    var destinationEl = document.getElementById('ws-filter-destination');
+    var dateFromEl = document.getElementById('ws-filter-date-from');
+    var dateToEl = document.getElementById('ws-filter-date-to');
     var budgetMinEl = document.getElementById('ws-filter-budget-min');
     var budgetMaxEl = document.getElementById('ws-filter-budget-max');
     var resetBtn = document.getElementById('ws-filters-reset');
@@ -1798,6 +1816,11 @@ document.addEventListener('DOMContentLoaded', function () {
         var value = parseInt(String(input.value).replace(/[^\d]/g, ''), 10);
         return isNaN(value) ? null : value;
     }
+    function parseDateFilter(input) {
+        if (!input || !input.value) return null;
+        var d = new Date(input.value);
+        return isNaN(d.getTime()) ? null : d;
+    }
 
     window.wsCurrentPage = 1;
     window.wsPerPage = 10;
@@ -1805,7 +1828,9 @@ document.addEventListener('DOMContentLoaded', function () {
     window.applyWsFilters = function applyWsFilters() {
         var q = (searchEl && searchEl.value) ? searchEl.value.toLowerCase().trim() : '';
         var t = typeEl ? typeEl.value : 'all';
-        var city = cityEl ? cityEl.value : 'all';
+        var dest = destinationEl ? destinationEl.value : 'all';
+        var dateFrom = parseDateFilter(dateFromEl);
+        var dateTo = parseDateFilter(dateToEl);
         var budgetMin = readBudgetValue(budgetMinEl);
         var budgetMax = readBudgetValue(budgetMaxEl);
         if (budgetMin !== null && budgetMax !== null && budgetMin > budgetMax) {
@@ -1820,9 +1845,28 @@ document.addEventListener('DOMContentLoaded', function () {
         rows.forEach(function (tr) {
             var ok = true;
             if (t !== 'all' && tr.getAttribute('data-type') !== t) ok = false;
-            if (ok && city !== 'all') {
-                var dc = tr.getAttribute('data-departure-city') || '';
-                if (dc.indexOf(city) === -1) ok = false;
+            if (ok && dest !== 'all') {
+                var td = tr.getAttribute('data-destination') || '';
+                if (td.toLowerCase().indexOf(dest) === -1) ok = false;
+            }
+            if (ok && (dateFrom !== null || dateTo !== null)) {
+                var depStr = tr.getAttribute('data-dep') || '';
+                var depDate = depStr ? new Date(depStr) : null;
+                if (!depDate || isNaN(depDate.getTime())) {
+                    ok = false;
+                } else {
+                    depDate.setHours(0,0,0,0);
+                    if (dateFrom !== null) {
+                        var fromD = new Date(dateFrom);
+                        fromD.setHours(0,0,0,0);
+                        if (depDate < fromD) ok = false;
+                    }
+                    if (dateTo !== null) {
+                        var toD = new Date(dateTo);
+                        toD.setHours(23,59,59,999);
+                        if (depDate > toD) ok = false;
+                    }
+                }
             }
             if (ok && (budgetMin !== null || budgetMax !== null)) {
                 var price = parseInt(tr.getAttribute('data-price'), 10) || 0;
@@ -1833,7 +1877,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 var blob = (tr.getAttribute('data-search') || '')
                     + ' ' + (tr.getAttribute('data-name') || '')
                     + ' ' + (tr.getAttribute('data-code') || '')
-                    + ' ' + (tr.getAttribute('data-departure-city') || '');
+                    + ' ' + (tr.getAttribute('data-destination') || '');
                 if (blob.toLowerCase().indexOf(q) === -1) ok = false;
             }
             tr.classList.toggle('hidden', !ok);
@@ -1843,9 +1887,28 @@ document.addEventListener('DOMContentLoaded', function () {
         otherRows.forEach(function (tr) {
             var ok = true;
             if (t !== 'all' && tr.getAttribute('data-type') !== t) ok = false;
-            if (ok && city !== 'all') {
-                var dc = tr.getAttribute('data-departure-city') || '';
-                if (dc.indexOf(city) === -1) ok = false;
+            if (ok && dest !== 'all') {
+                var td = tr.getAttribute('data-destination') || '';
+                if (td.toLowerCase().indexOf(dest) === -1) ok = false;
+            }
+            if (ok && (dateFrom !== null || dateTo !== null)) {
+                var depStr = tr.getAttribute('data-dep') || '';
+                var depDate = depStr ? new Date(depStr) : null;
+                if (!depDate || isNaN(depDate.getTime())) {
+                    ok = false;
+                } else {
+                    depDate.setHours(0,0,0,0);
+                    if (dateFrom !== null) {
+                        var fromD = new Date(dateFrom);
+                        fromD.setHours(0,0,0,0);
+                        if (depDate < fromD) ok = false;
+                    }
+                    if (dateTo !== null) {
+                        var toD = new Date(dateTo);
+                        toD.setHours(23,59,59,999);
+                        if (depDate > toD) ok = false;
+                    }
+                }
             }
             if (ok && (budgetMin !== null || budgetMax !== null)) {
                 var price = parseInt(tr.getAttribute('data-price'), 10) || 0;
@@ -1856,14 +1919,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 var blob = (tr.getAttribute('data-search') || '')
                     + ' ' + (tr.getAttribute('data-name') || '')
                     + ' ' + (tr.getAttribute('data-code') || '')
-                    + ' ' + (tr.getAttribute('data-departure-city') || '');
+                    + ' ' + (tr.getAttribute('data-destination') || '');
                 if (blob.toLowerCase().indexOf(q) === -1) ok = false;
             }
             tr.classList.toggle('hidden', !ok);
         });
-        var visible = Array.from(rows).filter(function (tr) { return !tr.classList.contains('hidden'); }).length;
-        var c = document.getElementById('ws-row-visible-count');
-        if (c) c.textContent = String(visible);
         window.wsCurrentPage = 1;
         paginateWsRows();
     };
@@ -1934,14 +1994,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (searchEl) searchEl.addEventListener('input', applyWsFilters);
     if (typeEl) typeEl.addEventListener('change', applyWsFilters);
-    if (cityEl) cityEl.addEventListener('change', applyWsFilters);
+    if (destinationEl) destinationEl.addEventListener('change', applyWsFilters);
+    if (dateFromEl) dateFromEl.addEventListener('change', applyWsFilters);
+    if (dateToEl) dateToEl.addEventListener('change', applyWsFilters);
     if (budgetMinEl) budgetMinEl.addEventListener('input', applyWsFilters);
     if (budgetMaxEl) budgetMaxEl.addEventListener('input', applyWsFilters);
     if (resetBtn) {
         resetBtn.addEventListener('click', function () {
             if (searchEl) searchEl.value = '';
             if (typeEl) typeEl.value = 'all';
-            if (cityEl) cityEl.value = 'all';
+            if (destinationEl) destinationEl.value = 'all';
+            if (dateFromEl) dateFromEl.value = '';
+            if (dateToEl) dateToEl.value = '';
             if (budgetMinEl) budgetMinEl.value = '';
             if (budgetMaxEl) budgetMaxEl.value = '';
             applyWsFilters();

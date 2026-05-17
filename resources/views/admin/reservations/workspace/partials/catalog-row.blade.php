@@ -296,6 +296,7 @@
     data-commercial-priority="{{ $comPriority }}"
     data-commercial-badge="{{ $comBadge ?? '' }}"
     data-departure-city="{{ e($row['data_departure_city'] ?? '') }}"
+    data-destination="{{ e($row['voyage_destination'] ?? ($modalDetail['destination'] ?? '')) }}"
     data-remaining="{{ $depRowRemaining ?? -1 }}"
     data-sold="{{ $depRowSoldVal + $depRowSoldPending }}"
     data-days-until="{{ $departureData ? ($departureData['days_until'] ?? 9999) : ($comDaysUntil ?? 9999) }}"
@@ -315,9 +316,12 @@
             <span class="ws-td__title ws-td__title--clamp" title="{{ !empty($row['price_label']) ? 'Prix : '.$row['price_label'] : 'Prix non renseigné' }}">{{ $row['name'] }}</span>
         </div>
     </td>
-    <td class="ws-td ws-td--city" data-label="Ville départ">
-        @if($comCity !== '')
-            <span class="ws-td__city">{{ $comCity }}</span>
+    <td class="ws-td ws-td--destination" data-label="Destination">
+        @php
+            $destination = $row['voyage_destination'] ?? ($modalDetail['destination'] ?? '');
+        @endphp
+        @if($destination !== '')
+            <span class="ws-td__destination">{{ $destination }}</span>
         @else
             <span class="ws-td__muted">—</span>
         @endif
@@ -332,8 +336,8 @@
             <span class="ws-td__muted">—</span>
         @endif
     </td>
-    <td class="ws-td ws-td--sold" data-label="Vendu">
-        <span class="ws-td__sold" title="{{ $depRowSoldTitle }}">{{ $depRowSoldVal }} / {{ $depRowSoldPending }}</span>
+    <td class="ws-td ws-td--sold" data-label="Vendu / En attente">
+        <span class="ws-td__sold" title="{{ $depRowSoldVal }} place{{ $depRowSoldVal > 1 ? 's' : '' }} vendue{{ $depRowSoldVal > 1 ? 's' : '' }} confirmée{{ $depRowSoldVal > 1 ? 's' : '' }} — {{ $depRowSoldPending }} place{{ $depRowSoldPending > 1 ? 's' : '' }} en attente">{{ $depRowSoldVal }} / {{ $depRowSoldPending }}</span>
     </td>
     <td class="ws-td ws-td--remain" data-label="Restant">
         @if($depRowRemaining !== null)
@@ -440,6 +444,7 @@
     data-commercial-priority="{{ $comPriority }}"
     data-commercial-badge="{{ $comBadge ?? '' }}"
     data-departure-city="{{ e($row['data_departure_city'] ?? '') }}"
+    data-destination="{{ e($row['voyage_destination'] ?? ($modalDetail['destination'] ?? '')) }}"
     data-remaining="{{ $comRemaining ?? -1 }}"
     data-sold="{{ $comSold }}"
     data-days-until="{{ $comDaysUntil ?? 9999 }}"
@@ -488,8 +493,9 @@
         @if($referenceBits !== [])
             <p class="ws-offer-card__refs">{{ implode(' · ', $referenceBits) }}</p>
         @endif
-        @if($comCity !== '')
-            <p class="ws-offer-card__city"><i class="fas fa-location-dot" aria-hidden="true"></i> {{ $comCity }}</p>
+        @php $cardDestination = $row['voyage_destination'] ?? ($modalDetail['destination'] ?? ''); @endphp
+        @if($cardDestination !== '')
+            <p class="ws-offer-card__city"><i class="fas fa-location-dot" aria-hidden="true"></i> {{ $cardDestination }}</p>
         @endif
         <div class="ws-offer-card__meta-list" role="group" aria-label="Tarif et capacité">
             <div class="ws-offer-card__meta-item ws-offer-card__meta-item--price">

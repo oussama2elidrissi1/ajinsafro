@@ -3622,7 +3622,7 @@ body[data-layout="detached"] .main-content {
 .ws-data-table {
     table-layout: fixed;
     width: 100%;
-    min-width: 1250px;
+    min-width: 1000px;
 }
 
 .ws-data-table__th-ref,
@@ -3635,8 +3635,8 @@ body[data-layout="detached"] .main-content {
     width: 20%;
 }
 
-.ws-data-table__th-city,
-.ws-td--city {
+.ws-data-table__th-destination,
+.ws-td--destination {
     width: 8%;
 }
 
@@ -4590,12 +4590,12 @@ body[data-layout="detached"] #page-topbar .header-item span {
 }
 
 /* Table enriched cells */
-.ws-td--city {
+.ws-td--destination {
     min-width: 100px;
     max-width: 160px;
 }
 
-.ws-td__city {
+.ws-td__destination {
     font-size: 0.8rem;
     font-weight: 700;
     color: #0e3a5a;
@@ -4761,7 +4761,7 @@ body[data-layout="detached"] #page-topbar .header-item span {
 /* 2. Table base */
 .ws-page .workspace-list-table {
     width: 100%;
-    min-width: 1100px;
+    min-width: 950px;
     table-layout: fixed;
     border-collapse: separate;
     border-spacing: 0;
@@ -4790,42 +4790,42 @@ body[data-layout="detached"] #page-topbar .header-item span {
 /* 4. Column widths */
 .ws-page .workspace-list-table .ws-data-table__th-ref,
 .ws-page .workspace-list-table .ws-td--ref {
-    width: 90px;
+    width: 5%;
 }
 
 .ws-page .workspace-list-table .ws-data-table__th-offer,
 .ws-page .workspace-list-table .ws-td--offer {
-    width: 340px;
+    width: 23%;
 }
 
-.ws-page .workspace-list-table .ws-data-table__th-city,
-.ws-page .workspace-list-table .ws-td--city {
-    width: 160px;
+.ws-page .workspace-list-table .ws-data-table__th-destination,
+.ws-page .workspace-list-table .ws-td--destination {
+    width: 10%;
 }
 
 .ws-page .workspace-list-table .ws-data-table__th-dep,
 .ws-page .workspace-list-table .ws-td--dep {
-    width: 130px;
+    width: 10%;
 }
 
 .ws-page .workspace-list-table .ws-data-table__th-sold,
 .ws-page .workspace-list-table .ws-td--sold {
-    width: 100px;
+    width: 10%;
 }
 
 .ws-page .workspace-list-table .ws-data-table__th-remain,
 .ws-page .workspace-list-table .ws-td--remain {
-    width: 80px;
+    width: 7%;
 }
 
 .ws-page .workspace-list-table .ws-data-table__th-cap,
 .ws-page .workspace-list-table .ws-td--cap {
-    width: 110px;
+    width: 10%;
 }
 
 .ws-page .workspace-list-table .ws-data-table__th-actions,
 .ws-page .workspace-list-table .ws-td--actions {
-    width: 140px;
+    width: 25%;
 }
 
 /* 5. Cells — uniform, no per-cell backgrounds */
@@ -5006,15 +5006,13 @@ body[data-layout="detached"] #page-topbar .header-item span {
 }
 
 /* 12. Responsive */
-@media (max-width: 1400px) {
-    .ws-page .workspace-list-table {
-        min-width: 1100px;
-    }
-}
-
 @media (max-width: 1200px) {
-    .ws-page .workspace-list-table {
-        min-width: 1100px;
+    .ws-page .workspace-list-table .ws-td__actions .ws-btn--iconish span {
+        display: none;
+    }
+    .ws-page .workspace-list-table .ws-data-table__th-actions,
+    .ws-page .workspace-list-table .ws-td--actions {
+        width: 110px;
     }
 }
 
@@ -5220,6 +5218,53 @@ body[data-layout="detached"] #page-topbar .header-item span {
 
 .ws-budget-input__prefix {
     color: #0e3a5a;
+}
+
+.ws-field--date-range {
+    min-width: 0;
+}
+
+.ws-date-range-group {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+}
+
+.ws-date-input {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 2.45rem;
+    padding: 0 0.65rem;
+    border: 1px solid #d8e3ef;
+    border-radius: 0.75rem;
+    background: #f8fbff;
+}
+
+.ws-date-input:focus-within {
+    border-color: #0083c4;
+    box-shadow: 0 0 0 4px rgba(0, 131, 196, 0.12);
+    background: #fff;
+}
+
+.ws-date-input .ws-input {
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.ws-date-input .ws-input:focus {
+    box-shadow: none;
+}
+
+.ws-date-input__prefix {
+    font-size: 0.69rem;
+    font-weight: 800;
+    color: #0e3a5a;
+    white-space: nowrap;
 }
 
 .ws-field--actions {
