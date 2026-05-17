@@ -203,7 +203,9 @@
                     </thead>
                     <tbody>
                     <?php $__currentLoopData = $offers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $offer): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                        <?php ($nextDeparture = $offer->resolveUpcomingDeparture()); ?>
+                        <?php
+                            $nextDeparture = $offer->resolveUpcomingDeparture();
+                        ?>
                         <tr>
                             <td><?php if (isset($component)) { $__componentOriginalf5efe4dc5fa3be8d4c5a3e56a4ce9c7d = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalf5efe4dc5fa3be8d4c5a3e56a4ce9c7d = $attributes; } ?>

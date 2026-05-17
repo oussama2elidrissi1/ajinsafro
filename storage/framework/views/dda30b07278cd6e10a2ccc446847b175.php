@@ -180,7 +180,9 @@
                     </thead>
                     <tbody>
                     <?php $__currentLoopData = $packages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $package): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                        <?php ($nextDeparture = $package->resolveUpcomingDeparture()); ?>
+                        <?php
+                            $nextDeparture = $package->resolveUpcomingDeparture();
+                        ?>
                         <tr>
                             <td><?php if (isset($component)) { $__componentOriginalf5efe4dc5fa3be8d4c5a3e56a4ce9c7d = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalf5efe4dc5fa3be8d4c5a3e56a4ce9c7d = $attributes; } ?>

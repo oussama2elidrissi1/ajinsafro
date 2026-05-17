@@ -114,7 +114,9 @@
                     </thead>
                     <tbody>
                     @foreach($offers as $offer)
-                        @php($nextDeparture = $offer->resolveUpcomingDeparture())
+                        @php
+                            $nextDeparture = $offer->resolveUpcomingDeparture();
+                        @endphp
                         <tr>
                             <td><x-admin.image-thumb :src="$offer->main_image_url ?: $offer->fallback_image_url" :alt="$offer->title" size="sm" /></td>
                             <td>

@@ -1001,7 +1001,9 @@
                         @if($histories->isNotEmpty())
                             <div class="timeline-list">
                                 @foreach($histories as $history)
-                                    @php($timeline = $historyMeta($history))
+                                    @php
+                                        $timeline = $historyMeta($history);
+                                    @endphp
                                     <div class="timeline-row">
                                         <div class="timeline-head">
                                             <div>

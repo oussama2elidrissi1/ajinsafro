@@ -91,7 +91,9 @@
                     </thead>
                     <tbody>
                     @foreach($packages as $package)
-                        @php($nextDeparture = $package->resolveUpcomingDeparture())
+                        @php
+                            $nextDeparture = $package->resolveUpcomingDeparture();
+                        @endphp
                         <tr>
                             <td><x-admin.image-thumb :src="$package->main_image_url" :alt="$package->title" size="sm" /></td>
                             <td>

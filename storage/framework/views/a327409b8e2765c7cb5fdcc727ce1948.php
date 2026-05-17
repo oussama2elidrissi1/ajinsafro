@@ -1009,26 +1009,28 @@
                         <?php if($histories->isNotEmpty()): ?>
                             <div class="timeline-list">
                                 <?php $__currentLoopData = $histories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $history): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                    <?php($timeline = $historyMeta($history))
+                                    <?php
+                                        $timeline = $historyMeta($history);
+                                    ?>
                                     <div class="timeline-row">
                                         <div class="timeline-head">
                                             <div>
-                                                <div class="document-title">{{ $timeline['label'] }}</div>
-                                                @if($timeline['details'] !== '')
-                                                    <div class="timeline-meta mt-1">{{ $timeline['details'] }}</div>
-                                                @endif
+                                                <div class="document-title"><?php echo e($timeline['label']); ?></div>
+                                                <?php if($timeline['details'] !== ''): ?>
+                                                    <div class="timeline-meta mt-1"><?php echo e($timeline['details']); ?></div>
+                                                <?php endif; ?>
                                             </div>
                                             <div class="timeline-meta text-end">
-                                                <div>{{ optional($history->created_at)->format('d/m/Y H:i') ?? '—' }}</div>
-                                                <div>{{ $history->user?->name ?? 'Système' }}</div>
+                                                <div><?php echo e(optional($history->created_at)->format('d/m/Y H:i') ?? '—'); ?></div>
+                                                <div><?php echo e($history->user?->name ?? 'Système'); ?></div>
                                             </div>
                                         </div>
                                     </div>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </div>
-                        @else
+                        <?php else: ?>
                             <div class="empty-state">Aucun historique disponible pour ce dossier.</div>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </section>
             </div>
@@ -1043,44 +1045,44 @@
                         <div class="summary-highlight">
                             <div class="summary-row mb-3">
                                 <span>Statut paiement</span>
-                                <strong class="dossier-pill {{ $paymentBadge['class'] }}">{{ $paymentBadge['label'] }}</strong>
+                                <strong class="dossier-pill <?php echo e($paymentBadge['class']); ?>"><?php echo e($paymentBadge['label']); ?></strong>
                             </div>
                             <div class="summary-row">
                                 <span>Progression</span>
-                                <strong>{{ $paymentProgress }}%</strong>
+                                <strong><?php echo e($paymentProgress); ?>%</strong>
                             </div>
                             <div class="progress-shell mt-3">
-                                <div class="progress-bar" style="width: {{ $paymentProgress }}%;"></div>
+                                <div class="progress-bar" style="width: <?php echo e($paymentProgress); ?>%;"></div>
                             </div>
                         </div>
 
                         <div class="summary-row">
                             <span>Total du dossier</span>
-                            @if($hasCalculatedFinancials)
-                                <strong>{{ number_format($totalAmount, 2, ',', ' ') }} DH</strong>
-                            @else
+                            <?php if($hasCalculatedFinancials): ?>
+                                <strong><?php echo e(number_format($totalAmount, 2, ',', ' ')); ?> DH</strong>
+                            <?php else: ?>
                                 <strong class="text-muted" style="font-size:0.95rem;">Non calculé</strong>
-                            @endif
+                            <?php endif; ?>
                         </div>
                         <div class="summary-row">
                             <span>Payé</span>
-                            @if($hasCalculatedFinancials)
-                                <strong>{{ number_format($paidAmount, 2, ',', ' ') }} DH</strong>
-                            @else
+                            <?php if($hasCalculatedFinancials): ?>
+                                <strong><?php echo e(number_format($paidAmount, 2, ',', ' ')); ?> DH</strong>
+                            <?php else: ?>
                                 <strong class="text-muted" style="font-size:0.95rem;">—</strong>
-                            @endif
+                            <?php endif; ?>
                         </div>
                         <div class="summary-row">
                             <span>Restant à payer</span>
-                            @if($hasCalculatedFinancials)
-                                <strong>{{ number_format($remainingAmount, 2, ',', ' ') }} DH</strong>
-                            @else
+                            <?php if($hasCalculatedFinancials): ?>
+                                <strong><?php echo e(number_format($remainingAmount, 2, ',', ' ')); ?> DH</strong>
+                            <?php else: ?>
                                 <strong class="text-muted" style="font-size:0.95rem;">—</strong>
-                            @endif
+                            <?php endif; ?>
                         </div>
                         <div class="summary-row">
                             <span>Suppléments</span>
-                            @php $roomSupp = (float) ($dossier->room_supplement_total ?? $reservation->room_supplement_total ?? 0); ?>
+                            <?php $roomSupp = (float) ($dossier->room_supplement_total ?? $reservation->room_supplement_total ?? 0); ?>
                             <?php if($hasCalculatedFinancials || $roomSupp > 0): ?>
                                 <strong><?php echo e(number_format($roomSupp, 2, ',', ' ')); ?> DH</strong>
                             <?php else: ?>
