@@ -126,6 +126,8 @@
         $depRowStatVal = (int) data_get($departureData, 'reservations.validee', 0);
         $depRowStatPending = (int) data_get($departureData, 'reservations.en_cours', 0);
         $depRowStatCancel = (int) data_get($departureData, 'reservations.annulee', 0);
+        $depRowSoldVal = (int) data_get($departureData, 'pax.validee', 0);
+        $depRowSoldPending = (int) data_get($departureData, 'pax.en_cours', 0);
         $depRowRemaining = data_get($departureData, 'remaining');
         $depRowCapacity = data_get($departureData, 'capacity');
         $depRowFillRate = data_get($departureData, 'fill_pct');
@@ -135,10 +137,13 @@
         $depRowIsPast = !empty($departureData['is_past']);
         $depRowStatusKey = $departureData['status_key'] ?? 'unknown';
         $depRowTravelDateId = data_get($departureData, 'travel_date_id');
+        $depRowAlerts = collect(data_get($departureData, 'alerts', []))->filter()->values()->all();
     } else {
         $depRowStatVal = $statVal;
         $depRowStatPending = $statPending;
         $depRowStatCancel = $statCancel;
+        $depRowSoldVal = $statVal;
+        $depRowSoldPending = $statPending;
         $depRowRemaining = $comRemaining;
         $depRowCapacity = $comCapacity;
         $depRowFillRate = $comFillRate;
@@ -148,7 +153,20 @@
         $depRowIsPast = $isPast;
         $depRowStatusKey = $comAvailStatus;
         $depRowTravelDateId = $row['travel_date_id'] ?? null;
+        $depRowAlerts = [];
     }
+
+    $depRowSoldTitleParts = [
+        $depRowSoldVal.' place'.($depRowSoldVal > 1 ? 's' : '').' confirmée'.($depRowSoldVal > 1 ? 's' : ''),
+    ];
+    if ($depRowStatVal > 0) {
+        $depRowSoldTitleParts[] = 'dans '.$depRowStatVal.' dossier'.($depRowStatVal > 1 ? 's' : '');
+    }
+    $depRowSoldTitleParts[] = $depRowSoldPending.' place'.($depRowSoldPending > 1 ? 's' : '').' en attente';
+    if ($depRowStatPending > 0) {
+        $depRowSoldTitleParts[] = 'dans '.$depRowStatPending.' dossier'.($depRowStatPending > 1 ? 's' : '');
+    }
+    $depRowSoldTitle = implode(' — ', $depRowSoldTitleParts);
 
     $isSellableForRow = $isSellable;
     if ($viewMode === 'table' && $departureData) {
@@ -269,8 +287,8 @@
     data-ws-upcoming="<?php echo e($wsUpcoming ? '1' : '0'); ?>"
     data-avail-status="<?php echo e($depRowStatusKey); ?>"
     data-date-status="<?php echo e($depRowIsPast ? 'past' : ($depRowDateIso ? 'upcoming' : 'none')); ?>"
-    data-stats-validee="<?php echo e($depRowStatVal); ?>"
-    data-stats-pending="<?php echo e($depRowStatPending); ?>"
+    data-stats-validee="<?php echo e($depRowSoldVal); ?>"
+    data-stats-pending="<?php echo e($depRowSoldPending); ?>"
     data-stats-total="<?php echo e($depRowStatVal + $depRowStatPending + $depRowStatCancel); ?>"
     data-sort-dep="<?php echo e($depRowDateIso ? \Carbon\Carbon::parse($depRowDateIso)->timestamp : $depTs); ?>"
     data-sort-price="<?php echo e($priceSort); ?>"
@@ -279,7 +297,7 @@
     data-commercial-badge="<?php echo e($comBadge ?? ''); ?>"
     data-departure-city="<?php echo e(e($row['data_departure_city'] ?? '')); ?>"
     data-remaining="<?php echo e($depRowRemaining ?? -1); ?>"
-    data-sold="<?php echo e($depRowStatVal + $depRowStatPending); ?>"
+    data-sold="<?php echo e($depRowSoldVal + $depRowSoldPending); ?>"
     data-days-until="<?php echo e($departureData ? ($departureData['days_until'] ?? 9999) : ($comDaysUntil ?? 9999)); ?>"
     data-fill-rate="<?php echo e($depRowFillRate ?? -1); ?>"
     data-price="<?php echo e($priceSort); ?>"
@@ -315,7 +333,7 @@
         <?php endif; ?>
     </td>
     <td class="ws-td ws-td--sold" data-label="Vendu">
-        <span class="ws-td__sold" title="<?php echo e($depRowStatVal); ?> vendus confirmés — <?php echo e($depRowStatPending); ?> en attente"><?php echo e($depRowStatVal); ?> / <?php echo e($depRowStatPending); ?></span>
+        <span class="ws-td__sold" title="<?php echo e($depRowSoldTitle); ?>"><?php echo e($depRowSoldVal); ?> / <?php echo e($depRowSoldPending); ?></span>
     </td>
     <td class="ws-td ws-td--remain" data-label="Restant">
         <?php if($depRowRemaining !== null): ?>
@@ -334,6 +352,9 @@
                     </div>
                     <span class="ws-progress-bar--mini__label"><?php echo e($depRowFillRate ?? 0); ?>%</span>
                 </div>
+            <?php endif; ?>
+            <?php if(!empty($depRowAlerts)): ?>
+                <span style="display:block;margin-top:0.25rem;font-size:0.7rem;color:#b45309;font-weight:700"><?php echo e($depRowAlerts[0]); ?></span>
             <?php endif; ?>
         </div>
     </td>

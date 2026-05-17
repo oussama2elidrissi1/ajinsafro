@@ -1459,6 +1459,7 @@ document.addEventListener('DOMContentLoaded', function () {
         h += '<div class="ws-md-departure-list">';
         deps.forEach(function (dep) {
             var rs = dep.reservations || {};
+            var pax = dep.pax || {};
             var sk = dep.status_key || 'unknown';
             var badgeClass = 'ws-md-avail-badge ws-md-avail-badge--unknown';
             if (sk === 'available') badgeClass = 'ws-md-avail-badge ws-md-avail-badge--ok';
@@ -1476,9 +1477,9 @@ document.addEventListener('DOMContentLoaded', function () {
             h += '</div>';
             h += '<div class="ws-md-departure-kpis">';
             h += '<div class="ws-md-dep-kpi"><span>Capacité</span><strong>' + escapeWsHtml(String(dep.capacity != null ? dep.capacity : 0)) + '</strong></div>';
-            h += '<div class="ws-md-dep-kpi"><span>Confirmées</span><strong>' + (rs.validee != null ? rs.validee : 0) + '</strong></div>';
-            h += '<div class="ws-md-dep-kpi"><span>En attente</span><strong>' + (rs.en_cours != null ? rs.en_cours : 0) + '</strong></div>';
-            h += '<div class="ws-md-dep-kpi"><span>Annulées</span><strong>' + (rs.annulee != null ? rs.annulee : 0) + '</strong></div>';
+            h += '<div class="ws-md-dep-kpi"><span>Confirmées</span><strong>' + (pax.validee != null ? pax.validee : 0) + '</strong></div>';
+            h += '<div class="ws-md-dep-kpi"><span>En attente</span><strong>' + (pax.en_cours != null ? pax.en_cours : 0) + '</strong></div>';
+            h += '<div class="ws-md-dep-kpi"><span>Annulées</span><strong>' + (pax.annulee != null ? pax.annulee : 0) + '</strong></div>';
             h += '<div class="ws-md-dep-kpi"><span>Total dossiers</span><strong>' + (rs.total != null ? rs.total : 0) + '</strong></div>';
             h += '<div class="ws-md-dep-kpi"><span>Places restantes</span><strong>' + (dep.remaining != null ? escapeWsHtml(String(dep.remaining)) : '—') + '</strong></div>';
             if (dep.fill_pct != null) {
@@ -1487,6 +1488,9 @@ document.addEventListener('DOMContentLoaded', function () {
             h += '</div>';
             if (dep.capacity_note && !(dep.rooms && dep.rooms.length)) {
                 h += '<p style="margin:0.5rem 0 0;font-size:0.75rem;color:#64748b">' + escapeWsHtml(dep.capacity_note) + '</p>';
+            }
+            if (Array.isArray(dep.alerts) && dep.alerts.length) {
+                h += '<p style="margin:0.5rem 0 0;font-size:0.75rem;color:#b45309;font-weight:700">' + escapeWsHtml(dep.alerts.join(' · ')) + '</p>';
             }
             if (dep.rooms && dep.rooms.length) {
                 h += '<div class="ws-md-departure-room-list" style="margin:0.75rem 0 0">';
@@ -2122,6 +2126,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var s = (typeof window !== 'undefined' && window.wsModalSettings) ? window.wsModalSettings : {};
         if (!s.show_departure_report) return '';
         var reservations = departure.reservations || {};
+        var alerts = Array.isArray(departure.alerts) ? departure.alerts : [];
         var capacity = departure.capacity != null ? Number(departure.capacity) : null;
         var remaining = departure.remaining != null ? Number(departure.remaining) : null;
         var fillPct = departure.fill_pct != null ? Number(departure.fill_pct) : 0;
@@ -2133,6 +2138,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (!hasRooms) {
             rules.push({ text: 'Chambres non configurées', type: 'warn' });
+        }
+        if (alerts.length) {
+            alerts.forEach(function (alert) {
+                rules.push({ text: alert, type: 'warn' });
+            });
         }
         if (remaining !== null && remaining <= 0) {
             rules.push({ text: 'Complet — ne pas vendre', type: 'danger' });
@@ -2184,7 +2194,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function departureBody(detail, departure) {
         var reservations = departure.reservations || {};
+        var pax = departure.pax || {};
         var rooms = departureRooms(detail, departure);
+        var alerts = Array.isArray(departure.alerts) ? departure.alerts : [];
         var fillPct = departure.fill_pct != null ? departure.fill_pct : 0;
         var rateClass = 'ws-md-departure-kpi--rate';
         if (fillPct >= 100) rateClass = 'ws-md-departure-kpi--rate-full';
@@ -2195,14 +2207,16 @@ document.addEventListener('DOMContentLoaded', function () {
         html += '<section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-route"></i> Détail du départ</div>';
         html += '<div class="ws-md-departure-kpi-grid">';
         html += '<div class="ws-md-departure-kpi ws-md-departure-kpi--neutral"><i class="fas fa-users"></i><span>Capacité</span><strong>' + escapeHtml(departure.capacity != null ? departure.capacity : '—') + '</strong></div>';
-        html += '<div class="ws-md-departure-kpi ws-md-departure-kpi--ok"><i class="fas fa-check-circle"></i><span>Confirmées</span><strong>' + escapeHtml(reservations.validee != null ? reservations.validee : 0) + '</strong></div>';
-        html += '<div class="ws-md-departure-kpi ws-md-departure-kpi--wait"><i class="fas fa-hourglass-half"></i><span>En attente</span><strong>' + escapeHtml(reservations.en_cours != null ? reservations.en_cours : 0) + '</strong></div>';
-        html += '<div class="ws-md-departure-kpi ws-md-departure-kpi--cancel"><i class="fas fa-times-circle"></i><span>Annulées</span><strong>' + escapeHtml(reservations.annulee != null ? reservations.annulee : 0) + '</strong></div>';
+        html += '<div class="ws-md-departure-kpi ws-md-departure-kpi--ok"><i class="fas fa-check-circle"></i><span>Confirmées</span><strong>' + escapeHtml(pax.validee != null ? pax.validee : 0) + '</strong></div>';
+        html += '<div class="ws-md-departure-kpi ws-md-departure-kpi--wait"><i class="fas fa-hourglass-half"></i><span>En attente</span><strong>' + escapeHtml(pax.en_cours != null ? pax.en_cours : 0) + '</strong></div>';
+        html += '<div class="ws-md-departure-kpi ws-md-departure-kpi--cancel"><i class="fas fa-times-circle"></i><span>Annulées</span><strong>' + escapeHtml(pax.annulee != null ? pax.annulee : 0) + '</strong></div>';
         html += '<div class="ws-md-departure-kpi ws-md-departure-kpi--remain"><i class="fas fa-chair"></i><span>Restantes</span><strong>' + escapeHtml(departure.remaining != null ? departure.remaining : '—') + '</strong></div>';
         html += '<div class="ws-md-departure-kpi ' + rateClass + '"><i class="fas fa-chart-line"></i><span>Taux</span><strong>' + escapeHtml(fillPct + '%') + '</strong></div>';
         html += '</div>';
         html += '<div class="ws-md-progress ws-md-progress--dep" role="progressbar" aria-valuenow="' + fillPct + '" aria-valuemin="0" aria-valuemax="100"><div class="ws-md-progress-bar" style="width:' + fillPct + '%"></div></div>';
         if (departure.capacity_note && !rooms.length) html += '<p class="ws-md-inline-note">' + escapeHtml(departure.capacity_note) + '</p>';
+        html += '<p class="ws-md-inline-note">Confirmées: ' + escapeHtml((pax.validee != null ? pax.validee : 0) + ' places dans ' + (reservations.validee != null ? reservations.validee : 0) + ' dossier(s)') + ' · En attente: ' + escapeHtml((pax.en_cours != null ? pax.en_cours : 0) + ' places dans ' + (reservations.en_cours != null ? reservations.en_cours : 0) + ' dossier(s)') + '</p>';
+        if (alerts.length) html += '<p class="ws-md-inline-note" style="color:#b45309;font-weight:700">' + escapeHtml(alerts.join(' · ')) + '</p>';
         html += '<div class="ws-md-departure-info-grid" style="margin-top:1rem">';
         if (detail.duration) html += '<div class="ws-md-departure-info"><span>Durée</span><strong>' + escapeHtml(detail.duration) + '</strong></div>';
         html += '<div class="ws-md-departure-info"><span>Date sélectionnée</span><strong>' + escapeHtml(departure.date_label || '—') + '</strong></div>';

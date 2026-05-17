@@ -126,6 +126,8 @@
         $depRowStatVal = (int) data_get($departureData, 'reservations.validee', 0);
         $depRowStatPending = (int) data_get($departureData, 'reservations.en_cours', 0);
         $depRowStatCancel = (int) data_get($departureData, 'reservations.annulee', 0);
+        $depRowSoldVal = (int) data_get($departureData, 'pax.validee', 0);
+        $depRowSoldPending = (int) data_get($departureData, 'pax.en_cours', 0);
         $depRowRemaining = data_get($departureData, 'remaining');
         $depRowCapacity = data_get($departureData, 'capacity');
         $depRowFillRate = data_get($departureData, 'fill_pct');
@@ -135,10 +137,13 @@
         $depRowIsPast = !empty($departureData['is_past']);
         $depRowStatusKey = $departureData['status_key'] ?? 'unknown';
         $depRowTravelDateId = data_get($departureData, 'travel_date_id');
+        $depRowAlerts = collect(data_get($departureData, 'alerts', []))->filter()->values()->all();
     } else {
         $depRowStatVal = $statVal;
         $depRowStatPending = $statPending;
         $depRowStatCancel = $statCancel;
+        $depRowSoldVal = $statVal;
+        $depRowSoldPending = $statPending;
         $depRowRemaining = $comRemaining;
         $depRowCapacity = $comCapacity;
         $depRowFillRate = $comFillRate;
@@ -148,7 +153,20 @@
         $depRowIsPast = $isPast;
         $depRowStatusKey = $comAvailStatus;
         $depRowTravelDateId = $row['travel_date_id'] ?? null;
+        $depRowAlerts = [];
     }
+
+    $depRowSoldTitleParts = [
+        $depRowSoldVal.' place'.($depRowSoldVal > 1 ? 's' : '').' confirmée'.($depRowSoldVal > 1 ? 's' : ''),
+    ];
+    if ($depRowStatVal > 0) {
+        $depRowSoldTitleParts[] = 'dans '.$depRowStatVal.' dossier'.($depRowStatVal > 1 ? 's' : '');
+    }
+    $depRowSoldTitleParts[] = $depRowSoldPending.' place'.($depRowSoldPending > 1 ? 's' : '').' en attente';
+    if ($depRowStatPending > 0) {
+        $depRowSoldTitleParts[] = 'dans '.$depRowStatPending.' dossier'.($depRowStatPending > 1 ? 's' : '');
+    }
+    $depRowSoldTitle = implode(' — ', $depRowSoldTitleParts);
 
     $isSellableForRow = $isSellable;
     if ($viewMode === 'table' && $departureData) {
@@ -269,8 +287,8 @@
     data-ws-upcoming="{{ $wsUpcoming ? '1' : '0' }}"
     data-avail-status="{{ $depRowStatusKey }}"
     data-date-status="{{ $depRowIsPast ? 'past' : ($depRowDateIso ? 'upcoming' : 'none') }}"
-    data-stats-validee="{{ $depRowStatVal }}"
-    data-stats-pending="{{ $depRowStatPending }}"
+    data-stats-validee="{{ $depRowSoldVal }}"
+    data-stats-pending="{{ $depRowSoldPending }}"
     data-stats-total="{{ $depRowStatVal + $depRowStatPending + $depRowStatCancel }}"
     data-sort-dep="{{ $depRowDateIso ? \Carbon\Carbon::parse($depRowDateIso)->timestamp : $depTs }}"
     data-sort-price="{{ $priceSort }}"
@@ -279,7 +297,7 @@
     data-commercial-badge="{{ $comBadge ?? '' }}"
     data-departure-city="{{ e($row['data_departure_city'] ?? '') }}"
     data-remaining="{{ $depRowRemaining ?? -1 }}"
-    data-sold="{{ $depRowStatVal + $depRowStatPending }}"
+    data-sold="{{ $depRowSoldVal + $depRowSoldPending }}"
     data-days-until="{{ $departureData ? ($departureData['days_until'] ?? 9999) : ($comDaysUntil ?? 9999) }}"
     data-fill-rate="{{ $depRowFillRate ?? -1 }}"
     data-price="{{ $priceSort }}"
@@ -315,7 +333,7 @@
         @endif
     </td>
     <td class="ws-td ws-td--sold" data-label="Vendu">
-        <span class="ws-td__sold" title="{{ $depRowStatVal }} vendus confirmés — {{ $depRowStatPending }} en attente">{{ $depRowStatVal }} / {{ $depRowStatPending }}</span>
+        <span class="ws-td__sold" title="{{ $depRowSoldTitle }}">{{ $depRowSoldVal }} / {{ $depRowSoldPending }}</span>
     </td>
     <td class="ws-td ws-td--remain" data-label="Restant">
         @if($depRowRemaining !== null)
@@ -334,6 +352,9 @@
                     </div>
                     <span class="ws-progress-bar--mini__label">{{ $depRowFillRate ?? 0 }}%</span>
                 </div>
+            @endif
+            @if(!empty($depRowAlerts))
+                <span style="display:block;margin-top:0.25rem;font-size:0.7rem;color:#b45309;font-weight:700">{{ $depRowAlerts[0] }}</span>
             @endif
         </div>
     </td>

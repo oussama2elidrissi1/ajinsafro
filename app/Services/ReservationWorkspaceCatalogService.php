@@ -16,7 +16,6 @@ use App\Models\Wp\Activity;
 use App\Models\Wp\TourDayActivity;
 use App\Models\Wp\WpPost;
 use App\Models\Wp\WpPostMeta;
-use App\Services\Reservations\ReservationPricingService;
 use App\Services\Wp\WpHeroImageService;
 use App\Support\TourPlacesCalculator;
 use Carbon\Carbon;
@@ -35,7 +34,7 @@ class ReservationWorkspaceCatalogService
 {
     public function __construct(
         protected BranchScopeService $branchScope,
-        protected ReservationPricingService $reservationPricing,
+        protected DepartureInventoryService $departureInventory,
     ) {}
 
     /**
@@ -778,20 +777,17 @@ class ReservationWorkspaceCatalogService
             return $prefill;
         }
 
-        $q = Reservation::query()
-            ->whereIn('tour_id', Voyage::allIdsSharingWpTour((int) $voyage->id))
-            ->whereIn('status', [Reservation::STATUS_EN_COURS, Reservation::STATUS_VALIDEE])
-            ->where('travel_date_id', $travelDateId);
-        $this->branchScope->scopeReservations($q, $user, [
-            'tour_id' => (int) $voyage->id,
-            'travel_date_id' => $travelDateId,
-        ]);
-        $booked = (int) (clone $q)->sum('passengers_count');
+        $inventory = $this->departureInventory->buildForTravelDates($user, $voyage, [$travelDateId])[$travelDateId] ?? null;
+        $capacityTotal = max(0, (int) data_get($inventory, 'capacity_total', 0));
+        $booked = max(0, (int) data_get($inventory, 'consumed_places', 0));
+        $remaining = $capacityTotal > 0
+            ? max(0, (int) data_get($inventory, 'remaining_places', 0))
+            : max(0, $total - $booked);
+        $pct = $capacityTotal > 0
+            ? data_get($inventory, 'occupancy_rate')
+            : ($total > 0 ? min(100, (int) round(($booked / $total) * 100)) : null);
 
-        $remaining = max(0, $total - $booked);
-        $pct = $total > 0 ? min(100, (int) round(($booked / $total) * 100)) : null;
-
-        $placesPayload = ['state' => 'ok', 'total' => $total];
+        $placesPayload = ['state' => 'ok', 'total' => $capacityTotal > 0 ? $capacityTotal : $total];
         $band = $this->computeWorkspaceAvailabilityBand($placesPayload, $booked);
 
         $tds = $prefill['travel_dates'] ?? [];
@@ -1911,6 +1907,112 @@ class ReservationWorkspaceCatalogService
         if ($ids === []) {
             return [];
         }
+
+        $inventories = $voyage !== null && (int) ($voyage->id ?? 0) > 0
+            ? $this->departureInventory->buildForTravelDates($user, $voyage, $ids)
+            : [];
+
+        $out = [];
+        foreach ($sorted as $td) {
+            $tid = (int) $td->id;
+            $inventory = $inventories[$tid] ?? [
+                'departure_id' => null,
+                'capacity_total' => 0,
+                'capacity_note' => 'Départ non synchronisé',
+                'reservations_count_confirmed' => 0,
+                'reservations_count_pending' => 0,
+                'reservations_count_cancelled' => 0,
+                'confirmed_places' => 0,
+                'pending_places' => 0,
+                'cancelled_places' => 0,
+                'remaining_places' => 0,
+                'occupancy_rate' => null,
+                'status_key' => 'unknown',
+                'status_label' => 'Départ non synchronisé',
+                'room_lines' => [],
+                'alerts' => [],
+                'reservations' => [],
+            ];
+
+            $dossierTotal = (int) ($inventory['reservations_count_confirmed'] ?? 0)
+                + (int) ($inventory['reservations_count_pending'] ?? 0)
+                + (int) ($inventory['reservations_count_cancelled'] ?? 0);
+            $confirmedPax = (int) ($inventory['confirmed_places'] ?? 0);
+            $pendingPax = (int) ($inventory['pending_places'] ?? 0);
+            $cancelledPax = (int) ($inventory['cancelled_places'] ?? 0);
+            $departureId = (int) ($inventory['departure_id'] ?? 0) ?: null;
+            $roomCap = max(0, (int) ($inventory['capacity_total'] ?? 0));
+            $roomRemaining = max(0, (int) ($inventory['remaining_places'] ?? 0));
+            $roomFillPct = isset($inventory['occupancy_rate']) ? (int) $inventory['occupancy_rate'] : null;
+            $roomCapNote = $inventory['capacity_note'] ?? null;
+            $roomStatusKey = (string) ($inventory['status_key'] ?? 'unknown');
+            $roomStatusLabel = (string) ($inventory['status_label'] ?? ($roomCapNote ?: 'Disponible'));
+            $roomLines = is_array($inventory['room_lines'] ?? null) ? $inventory['room_lines'] : [];
+            $roomDebug = null;
+
+            if (config('app.debug')) {
+                $roomDebug = [
+                    'departure_id' => $departureId,
+                    'travel_date_id' => $tid,
+                    'capacity_total' => $roomCap,
+                    'confirmed_places' => $confirmedPax,
+                    'pending_places' => $pendingPax,
+                    'remaining_places' => $roomRemaining,
+                    'room_lines' => $roomLines,
+                    'alerts' => $inventory['alerts'] ?? [],
+                ];
+            }
+
+            $reserveUrl = $laravelId ? route('admin.reservations.create', array_filter([
+                'tour_id' => $laravelId,
+                'travel_date_id' => $tid,
+            ], fn ($v) => $v !== null && $v !== '')) : null;
+
+            $listUrl = $laravelId ? route('admin.reservations.index', array_filter([
+                'voyage_id' => $laravelId,
+                'travel_date_id' => $tid,
+            ], fn ($v) => $v !== null && $v !== '')) : null;
+
+            $travelDateCarbon = Carbon::parse($td->date);
+            $daysUntil = $today->diffInDays($travelDateCarbon, false);
+            $out[] = [
+                'travel_date_id' => $tid,
+                'date_iso' => $travelDateCarbon->format('Y-m-d'),
+                'date_label' => $this->formatFrenchLongDate($travelDateCarbon),
+                'is_past' => $travelDateCarbon->lt($today),
+                'days_until' => $daysUntil !== false ? (int) $daysUntil : null,
+                'departure_id' => $departureId,
+                'capacity' => $roomCap,
+                'capacity_known' => true,
+                'capacity_note' => $roomCapNote,
+                'reservations' => [
+                    'validee' => (int) ($inventory['reservations_count_confirmed'] ?? 0),
+                    'en_cours' => (int) ($inventory['reservations_count_pending'] ?? 0),
+                    'annulee' => (int) ($inventory['reservations_count_cancelled'] ?? 0),
+                    'total' => $dossierTotal,
+                ],
+                'pax' => [
+                    'validee' => $confirmedPax,
+                    'en_cours' => $pendingPax,
+                    'annulee' => $cancelledPax,
+                ],
+                'remaining' => $roomRemaining,
+                'fill_pct' => $roomFillPct,
+                'booked_pax' => $confirmedPax + $pendingPax,
+                'status_key' => $roomStatusKey,
+                'status_label' => $roomStatusLabel,
+                'rooms' => $roomLines,
+                'alerts' => array_values((array) ($inventory['alerts'] ?? [])),
+                'inventory' => $inventory,
+                'debug' => $roomDebug,
+                'routes' => [
+                    'reserve' => $reserveUrl,
+                    'reservations' => $listUrl,
+                ],
+            ];
+        }
+
+        return $out;
 
         $metrics = $this->batchReservationMetricsByTravelDateIds($user, $voyage, $ids);
 
