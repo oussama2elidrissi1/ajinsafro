@@ -1624,11 +1624,11 @@ class VoyageController extends Controller
 
             return redirect()
                 ->route('admin.circuits.voyages.edit', $tour->ID)
-                ->with('success', 'Tour crÃ©Ã© avec succÃ¨s dans WordPress ! Visible immÃ©diatement sur ajinsafro.net');
+                ->with('success', 'Tour créé avec succès dans WordPress ! Visible immédiatement sur ajinsafro.net');
         } catch (\Exception $e) {
             return back()
                 ->withInput()
-                ->withErrors(['error' => 'Erreur lors de la crÃ©ation : ' . $e->getMessage()]);
+                ->withErrors(['error' => 'Erreur lors de la création : ' . $e->getMessage()]);
         }
     }
 
@@ -2245,7 +2245,7 @@ class VoyageController extends Controller
                 'city_name' => $request->input('city_name'),
             ]);
             return response()->json([
-                'error' => 'Impossible de crÃ©er la destination.',
+                'error' => 'Impossible de créer la destination.',
                 'message' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
@@ -2254,7 +2254,7 @@ class VoyageController extends Controller
     /**
      * Sync hotels for tour: replace all by request data (tour_hotels[] or tour_hotel).
      *
-     * @return int[] IDs des enregistrements TourHotel crÃƒÂ©ÃƒÂ©s, dans lÃ¢â‚¬â„¢ordre dÃ¢â‚¬â„¢affichage (pour sync des chambres).
+     * @return int[] IDs des enregistrements TourHotel créés, dans l'ordre d'affichage (pour sync des chambres).
      */
         private function syncTourHotels(int $tourId, \Illuminate\Http\Request $request): array
     {
@@ -4214,7 +4214,7 @@ class VoyageController extends Controller
             return;
         }
 
-        // Syncer l'hÃƒÂ´tel (0..1). Si hotel_id vide, lier au TourHotel crÃƒÂ©ÃƒÂ© pour ce jour (ex. ajout depuis le drawer).
+        // Syncer l'hôtel (0..1). Si hotel_id vide, lier au TourHotel créé pour ce jour (ex. ajout depuis le drawer).
         $hotelId = !empty($dayRow['hotel_id']) ? (int) $dayRow['hotel_id'] : null;
         if ($hotelId) {
             $hotel = TourHotel::find($hotelId);

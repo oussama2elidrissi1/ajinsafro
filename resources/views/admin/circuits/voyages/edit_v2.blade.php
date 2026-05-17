@@ -17,10 +17,39 @@
             $vePriceLabel = number_format((float) $priceFrom, 0, ',', ' ') . ' ' . ($cur !== '' ? $cur : 'MAD');
         }
     }
-    $veDestinationRaw = $laravelV ? data_get($laravelV, 'destination') : null;
-    $veDestination = ($veDestinationRaw !== null && trim((string) $veDestinationRaw) !== '')
-        ? trim((string) $veDestinationRaw)
-        : null;
+    // Résolution destination : priorité meta WP address > multi_location > Laravel destination
+    $veDestination = null;
+    $veWpId = isset($voyage->ID) ? (int) $voyage->ID : 0;
+    if ($veWpId > 0) {
+        $wpAddress = null;
+        try {
+            $wpPost = \App\Models\Wp\WpPost::tours()->find($veWpId);
+            if ($wpPost) {
+                $wpAddress = $wpPost->getMeta('address');
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('edit_v2.blade: failed reading WP address meta', ['wp_post_id' => $veWpId, 'error' => $e->getMessage()]);
+        }
+        if (is_string($wpAddress) && trim($wpAddress) !== '') {
+            $veDestination = trim(preg_split('/[,;|]/', $wpAddress)[0] ?? $wpAddress);
+        } else {
+            try {
+                $multiLoc = $wpPost ? $wpPost->getMeta('multi_location') : null;
+                $locNames = app(\App\Services\Wp\WpTourRepository::class)->getLocationNamesFromMultiLocation($multiLoc);
+                if ($locNames !== '') {
+                    $veDestination = $locNames;
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('edit_v2.blade: failed reading WP locations', ['wp_post_id' => $veWpId, 'error' => $e->getMessage()]);
+            }
+        }
+    }
+    if (! $veDestination && $laravelV) {
+        $laravelDest = data_get($laravelV, 'destination');
+        if ($laravelDest !== null && trim((string) $laravelDest) !== '') {
+            $veDestination = trim((string) $laravelDest);
+        }
+    }
     $veDatesCount = isset($travelDates) && $travelDates instanceof \Illuminate\Support\Collection ? $travelDates->count() : 0;
 
     $headerTitle = old('title', $voyage->post_title ?? '') ?: ($isCreate ? 'Nouveau voyage' : 'Modifier le voyage');

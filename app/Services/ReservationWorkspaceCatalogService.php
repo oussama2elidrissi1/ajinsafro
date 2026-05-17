@@ -35,7 +35,100 @@ class ReservationWorkspaceCatalogService
     public function __construct(
         protected BranchScopeService $branchScope,
         protected DepartureInventoryService $departureInventory,
+        protected \App\Services\Wp\WpTourRepository $wpTourRepo,
     ) {}
+
+    /**
+     * Résout la destination réelle d’un voyage en priorisant :
+     * 1) meta WordPress `address` (source de vérité fiche produit)
+     * 2) taxonomies locations WordPress (`multi_location`)
+     * 3) champ Laravel `voyage->destination` (fallback legacy)
+     * 4) null si rien trouvé
+     */
+    public function resolveVoyageDestination(?Voyage $voyage, ?WpPost $wp = null, ?int $wpPostId = null): ?string
+    {
+        $wpId = $wpPostId ?? ($voyage?->wp_post_id ? (int) $voyage->wp_post_id : null);
+        if (! $wpId) {
+            $laravelDest = $voyage && trim((string) $voyage->destination) !== '' ? trim((string) $voyage->destination) : null;
+            Log::info('Voyage destination debug', [
+                'voyage_id' => $voyage?->id,
+                'wp_post_id' => $wpId,
+                'source' => 'laravel_fallback_no_wp_id',
+                'destination' => $laravelDest,
+            ]);
+            return $laravelDest;
+        }
+
+        // 1) Meta WordPress `address`
+        $address = null;
+        try {
+            if ($wp) {
+                $address = $wp->getMeta('address');
+            } else {
+                $metaRow = WpPostMeta::query()
+                    ->where('post_id', $wpId)
+                    ->where('meta_key', 'address')
+                    ->orderBy('meta_id')
+                    ->first();
+                $address = $metaRow?->meta_value;
+            }
+        } catch (\Throwable $e) {
+            Log::warning('resolveVoyageDestination: failed reading address meta', ['wp_post_id' => $wpId, 'error' => $e->getMessage()]);
+        }
+        if (is_string($address) && trim($address) !== '') {
+            $cleaned = trim(preg_split('/[,;|]/', $address)[0] ?? $address);
+            if ($cleaned !== '') {
+                Log::info('Voyage destination debug', [
+                    'voyage_id' => $voyage?->id,
+                    'wp_post_id' => $wpId,
+                    'source' => 'wp_address_meta',
+                    'destination' => $cleaned,
+                ]);
+                return $cleaned;
+            }
+        }
+
+        // 2) Taxonomies locations WordPress (multi_location)
+        try {
+            $multiLocation = null;
+            if ($wp) {
+                $multiLocation = $wp->getMeta('multi_location');
+            } else {
+                $metaRow = WpPostMeta::query()
+                    ->where('post_id', $wpId)
+                    ->where('meta_key', 'multi_location')
+                    ->orderBy('meta_id')
+                    ->first();
+                $multiLocation = $metaRow?->meta_value;
+            }
+            $locNames = $this->wpTourRepo->getLocationNamesFromMultiLocation($multiLocation);
+            if ($locNames !== '') {
+                Log::info('Voyage destination debug', [
+                    'voyage_id' => $voyage?->id,
+                    'wp_post_id' => $wpId,
+                    'source' => 'wp_multi_location',
+                    'destination' => $locNames,
+                ]);
+                return $locNames;
+            }
+        } catch (\Throwable $e) {
+            Log::warning('resolveVoyageDestination: failed reading locations', ['wp_post_id' => $wpId, 'error' => $e->getMessage()]);
+        }
+
+        // 3) Fallback Laravel destination
+        $laravelDest = $voyage && trim((string) $voyage->destination) !== '' ? trim((string) $voyage->destination) : null;
+        Log::info('Voyage destination debug', [
+            'voyage_id' => $voyage?->id,
+            'wp_post_id' => $wpId,
+            'source' => 'laravel_fallback',
+            'destination' => $laravelDest,
+        ]);
+        if ($laravelDest) {
+            return $laravelDest;
+        }
+
+        return null;
+    }
 
     /**
      * @return array{rows: Collection<int, array<string, mixed>>, meta: array<string, int|bool|array>}
@@ -293,7 +386,7 @@ class ReservationWorkspaceCatalogService
                 'departure_is_past' => $pickTd['is_past'],
                 'departure_is_canceled' => false,
                 'price_label' => $priceLabel,
-                'voyage_destination' => $voyage && trim((string) $voyage->destination) !== '' ? trim((string) $voyage->destination) : null,
+                'voyage_destination' => $this->resolveVoyageDestination($voyage, $wp, $wpId),
                 'image_url' => $this->resolveCatalogRowImageUrl($voyage, $wp),
                 'summary' => $this->resolveCatalogRowSummary($voyage, $wp),
                 'is_featured' => $voyage && $voyage->is_featured,
@@ -320,7 +413,7 @@ class ReservationWorkspaceCatalogService
                     $durationRaw,
                     $priceLabel,
                     $adultPriceRaw,
-                    $voyage && trim((string) $voyage->destination) !== '' ? trim((string) $voyage->destination) : null,
+                    $this->resolveVoyageDestination($voyage, $wp, $wpId),
                     $travelDateId,
                 )),
                 'form_prefill' => $this->buildPackageFormPrefill(
@@ -742,7 +835,7 @@ class ReservationWorkspaceCatalogService
                 'id' => (int) $voyage->id,
                 'name' => $voyage->name,
                 'wp_post_id' => $voyage->wp_post_id ? (int) $voyage->wp_post_id : null,
-                'destination' => $voyage->destination,
+                'destination' => $this->resolveVoyageDestination($voyage, null, $voyage->wp_post_id ? (int) $voyage->wp_post_id : null),
             ],
             'catalog_code' => $row['code'] ?? null,
             'catalog_type' => $row['type'] ?? null,
@@ -1566,7 +1659,7 @@ class ReservationWorkspaceCatalogService
     {
         $terms = [];
         foreach ([
-            $voyage->destination,
+            $this->resolveVoyageDestination($voyage, null, $voyage->wp_post_id ? (int) $voyage->wp_post_id : null),
             $voyage->name,
             $voyage->slug,
             $voyage->wp_post_id ? WpPost::query()->where('ID', (int) $voyage->wp_post_id)->value('post_title') : null,
@@ -2521,6 +2614,8 @@ class ReservationWorkspaceCatalogService
         $travelDatesList = $packageModalDetail['travel_dates'] ?? [];
         $hasFuture = $travelDatesList !== [] && collect($travelDatesList)->contains(fn ($d) => empty($d['is_past']));
 
+        $resolvedDestination = $this->resolveVoyageDestination($voyage, null, $voyage->wp_post_id ? (int) $voyage->wp_post_id : null);
+
         return [
             'type' => 'package',
             'code' => 'LVL-'.$tid,
@@ -2537,9 +2632,7 @@ class ReservationWorkspaceCatalogService
             'departure_is_past' => false,
             'departure_is_canceled' => false,
             'price_label' => $this->formatVoyagePriceLabel($voyage),
-            'voyage_destination' => $voyage->destination && trim((string) $voyage->destination) !== ''
-                ? trim((string) $voyage->destination)
-                : null,
+            'voyage_destination' => $resolvedDestination,
             'image_url' => $this->resolveCatalogRowImageUrl($voyage, null),
             'summary' => $this->resolveCatalogRowSummary($voyage, null),
             'is_featured' => (bool) $voyage->is_featured,
@@ -2639,9 +2732,7 @@ class ReservationWorkspaceCatalogService
             'laravel_voyage_id' => $tid,
             'post_status' => null,
             'post_status_label' => 'Laravel',
-            'destination' => $voyage->destination && trim((string) $voyage->destination) !== ''
-                ? trim((string) $voyage->destination)
-                : null,
+            'destination' => $this->resolveVoyageDestination($voyage, null, $voyage->wp_post_id ? (int) $voyage->wp_post_id : null),
             'duration' => $this->resolveDurationLabel($voyage, null),
             'travel_dates' => $travelDates,
             'departures' => $departures,

@@ -36,7 +36,9 @@
       "Bash(Get-ChildItem -Recurse -Filter \"*.blade.php\" -Path \"C:\\\\Users\\\\oussa\\\\Desktop\\\\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\\\\Qovex_Laravel_v3.0.0\\\\Admin\\\\resources\\\\views\\\\vendor\")",
       "PowerShell(Get-Content *)",
       "Bash(echo \"Exit code: $?\")",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "Bash(python3 *)",
+      "PowerShell(. C:\\\\Users\\\\oussa\\\\Desktop\\\\fix_js.ps1)"
     ]
   }
 }
