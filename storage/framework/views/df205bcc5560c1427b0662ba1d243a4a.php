@@ -1,4 +1,4 @@
-@php
+<?php
     use App\Services\View\AgentPortalLayout;
     use Carbon\Carbon;
     $usePortalTailwind = AgentPortalLayout::shouldUse(auth()->user());
@@ -28,18 +28,18 @@
                 : route('admin.reservations.create'),
         ];
     })->filter()->values()->all();
-@endphp
-@extends('layouts.admin-v2')
+?>
 
-@section('title', 'Espace réservation — Catalogue')
 
-@push('styles')
-@if(!$usePortalTailwind)
+<?php $__env->startSection('title', 'Espace réservation — Catalogue'); ?>
+
+<?php $__env->startPush('styles'); ?>
+<?php if(!$usePortalTailwind): ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
-    {{-- TODO: remplacer par un build Tailwind local (Vite/PostCSS) avant mise en production --}}
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -64,8 +64,8 @@
             }
         };
     </script>
-@endif
-<link rel="stylesheet" href="{{ asset('css/reservation-workspace.css') }}">
+<?php endif; ?>
+<link rel="stylesheet" href="<?php echo e(asset('css/reservation-workspace.css')); ?>">
 <style>
     .ws-ring-pulse { animation: wsPulse 1.6s ease-out 1; }
     @keyframes wsPulse {
@@ -1088,34 +1088,34 @@
         color: #ffffff !important;
     }
 </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
-@php
+<?php $__env->startSection('content'); ?>
+<?php
     $catalogFullCount = $catalogFullCount ?? $catalogRows->count();
-@endphp
+?>
 <div class="fade-in ws-page max-w-[1680px] mx-auto pb-10 overflow-x-hidden">
-    @if(session('workspace_store_error'))
+    <?php if(session('workspace_store_error')): ?>
         <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 text-red-900 px-4 py-3 text-sm shadow-sm" role="alert">
             <strong class="font-semibold">Enregistrement impossible.</strong>
-            <p class="mb-0 mt-1">{{ session('workspace_store_error') }}</p>
+            <p class="mb-0 mt-1"><?php echo e(session('workspace_store_error')); ?></p>
         </div>
-    @endif
+    <?php endif; ?>
 
-    @if($errors->any())
+    <?php if($errors->any()): ?>
         <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 text-amber-950 px-4 py-3 text-sm shadow-sm" role="alert">
             <strong class="font-semibold">Vérifiez le formulaire :</strong>
             <ul class="mb-0 mt-2 ps-4 list-disc space-y-1">
-                @foreach($errors->all() as $err)
-                    <li>{{ $err }}</li>
-                @endforeach
+                <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $err): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <li><?php echo e($err); ?></li>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </ul>
         </div>
-    @endif
+    <?php endif; ?>
 
-    @if(session('success'))
-        <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-900 px-4 py-3 text-sm font-medium shadow-sm">{{ session('success') }}</div>
-    @endif
+    <?php if(session('success')): ?>
+        <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-900 px-4 py-3 text-sm font-medium shadow-sm"><?php echo e(session('success')); ?></div>
+    <?php endif; ?>
 
     <div id="reservations-main-content" class="space-y-4">
         <div id="catalogue-workspace" class="ws-toolbar">
@@ -1128,7 +1128,7 @@
                     </div>
                 </div>
                 <div class="ws-toolbar__views">
-                    <span class="ws-toolbar__count"><strong id="ws-row-visible-count">{{ $catalogRows->count() }}</strong> / {{ $catalogFullCount }} offres</span>
+                    <span class="ws-toolbar__count"><strong id="ws-row-visible-count"><?php echo e($catalogRows->count()); ?></strong> / <?php echo e($catalogFullCount); ?> offres</span>
                     <div class="ws-seg ws-seg--triple" role="group" aria-label="Mode d'affichage">
                         <button type="button" id="btn-view-catalog" class="ws-seg__btn is-active" title="Catalogue"><i class="fas fa-th-large" aria-hidden="true"></i><span class="ws-seg__btn-label-catalog">Catalogue</span></button>
                         <button type="button" id="btn-view-list" class="ws-seg__btn" title="Vue liste (tableau)"><i class="fas fa-table" aria-hidden="true"></i><span>Liste</span></button>
@@ -1150,7 +1150,7 @@
                     <label class="ws-field__label" for="ws-filter-city">Ville départ</label>
                     <select id="ws-filter-city" class="ws-select">
                         <option value="all">Toutes</option>
-                        @php
+                        <?php
                             $uniqueCities = collect();
                             foreach ($catalogRows as $row) {
                                 foreach ($row['commercial']['villes_list'] ?? [] as $city) {
@@ -1158,10 +1158,10 @@
                                 }
                             }
                             $uniqueCities = collect(array_keys($uniqueCities->all()))->sort()->values();
-                        @endphp
-                        @foreach($uniqueCities as $city)
-                            <option value="{{ e(strtolower($city)) }}">{{ $city }}</option>
-                        @endforeach
+                        ?>
+                        <?php $__currentLoopData = $uniqueCities; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $city): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e(e(strtolower($city))); ?>"><?php echo e($city); ?></option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
                 <div class="ws-field ws-field--budget">
@@ -1185,7 +1185,7 @@
             </div>
         </div>
 
-        {{-- Vue liste (tableau) — défaut --}}
+        
         <div id="ws-view-table" class="ws-table-card hidden">
             <div class="ws-table-card__head">
                 <h2 class="ws-table-card__title">Vue liste</h2>
@@ -1209,30 +1209,30 @@
     </thead>
 
     <tbody id="ws-catalog-table-body">
-        @php
+        <?php
             $sellableRows = $catalogRows->filter(fn($r) => $r['commercial']['is_sellable'] ?? false);
             $nonSellableRows = $catalogRows->filter(fn($r) => !($r['commercial']['is_sellable'] ?? false));
-        @endphp
+        ?>
 
-        @if($sellableRows->isNotEmpty())
-            @foreach($sellableRows as $row)
-                @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table'])
-            @endforeach
-        @endif
+        <?php if($sellableRows->isNotEmpty()): ?>
+            <?php $__currentLoopData = $sellableRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <?php echo $__env->make('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table'], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+        <?php endif; ?>
 
-        @if($nonSellableRows->isNotEmpty())
+        <?php if($nonSellableRows->isNotEmpty()): ?>
             <tr class="ws-catalog-section-divider">
                 <td colspan="10" class="ws-catalog-section-divider__cell">
                     <span class="ws-catalog-section-divider__label">Voyages non disponibles / à configurer</span>
                 </td>
             </tr>
 
-            @foreach($nonSellableRows as $row)
-                @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table'])
-            @endforeach
-        @endif
+            <?php $__currentLoopData = $nonSellableRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <?php echo $__env->make('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table'], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+        <?php endif; ?>
 
-        @if($catalogRows->isEmpty())
+        <?php if($catalogRows->isEmpty()): ?>
             <tr>
                 <td colspan="10" class="ws-table-empty-cell">
                     <div class="ws-catalog-empty ws-catalog-empty--inline">
@@ -1249,7 +1249,7 @@
                                 Créez ou liez des fiches voyages depuis Circuits / voyages.
                             </p>
 
-                            <a href="{{ route('admin.circuits.voyages.index') }}"
+                            <a href="<?php echo e(route('admin.circuits.voyages.index')); ?>"
                                class="inline-flex items-center gap-2 rounded-xl bg-brand-blue text-white font-bold text-sm px-5 py-2.5 hover:bg-brand-dark transition-colors">
                                 <i class="fas fa-plus-circle"></i>
                                 Gérer les voyages
@@ -1258,44 +1258,44 @@
                     </div>
                 </td>
             </tr>
-        @endif
+        <?php endif; ?>
     </tbody>
 </table>
             </div>
         </div>
 
-        {{-- Présentation catalogue (cartes) --}}
+        
         <div id="ws-view-catalog" class="ws-table-card">
             <div class="ws-table-card__head">
                 <h2 class="ws-table-card__title">Catalogue</h2>
                 <p class="ws-table-card__sub">Vue compacte des voyages et départs disponibles.</p>
             </div>
-            @php
+            <?php
                 $sellableRows = $catalogRows->filter(fn($r) => $r['commercial']['is_sellable'] ?? false);
                 $nonSellableRows = $catalogRows->filter(fn($r) => !($r['commercial']['is_sellable'] ?? false));
-            @endphp
+            ?>
             <div id="ws-catalog-list">
-                @if($sellableRows->isNotEmpty())
+                <?php if($sellableRows->isNotEmpty()): ?>
                     <div class="ws-catalog-section">
                         <h3 class="ws-catalog-section__title">Voyages disponibles à la vente</h3>
                         <div class="ws-catalog-grid ws-catalog-grid--compact">
-                            @foreach($sellableRows as $row)
-                                @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'card'])
-                            @endforeach
+                            <?php $__currentLoopData = $sellableRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php echo $__env->make('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'card'], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
                     </div>
-                @endif
-                @if($nonSellableRows->isNotEmpty())
+                <?php endif; ?>
+                <?php if($nonSellableRows->isNotEmpty()): ?>
                     <div class="ws-catalog-section ws-catalog-section--configure">
                         <h3 class="ws-catalog-section__title ws-catalog-section__title--configure">Voyages non disponibles / à configurer</h3>
                         <div class="ws-catalog-grid ws-catalog-grid--compact">
-                            @foreach($nonSellableRows as $row)
-                                @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'card'])
-                            @endforeach
+                            <?php $__currentLoopData = $nonSellableRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php echo $__env->make('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'card'], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
                     </div>
-                @endif
-                @if($catalogRows->isEmpty())
+                <?php endif; ?>
+                <?php if($catalogRows->isEmpty()): ?>
                     <div class="ws-catalog-empty">
                         <div class="max-w-md mx-auto text-center py-12 px-6">
                             <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 mb-4 text-2xl">
@@ -1303,16 +1303,16 @@
                             </div>
                             <p class="text-brand-dark font-bold text-lg mb-2">Aucun voyage dans le catalogue</p>
                             <p class="text-gray-500 text-sm mb-6">Créez ou liez des fiches voyages depuis Circuits / voyages.</p>
-                            <a href="{{ route('admin.circuits.voyages.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-brand-blue text-white font-bold text-sm px-5 py-3 hover:bg-brand-dark transition-colors">
+                            <a href="<?php echo e(route('admin.circuits.voyages.index')); ?>" class="inline-flex items-center gap-2 rounded-xl bg-brand-blue text-white font-bold text-sm px-5 py-3 hover:bg-brand-dark transition-colors">
                                 <i class="fas fa-plus-circle"></i> Gérer les voyages
                             </a>
                         </div>
                     </div>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
 
-        {{-- Calendrier --}}
+        
         <div id="reservations-calendar-view" class="bg-white p-4 sm:p-6 rounded-2xl shadow-custom border border-gray-100/90 hidden">
             <p class="text-sm text-gray-600 mb-4">Clic sur un événement : ouverture de la page dédiée de création de réservation.</p>
             <div id="workspace-calendar" class="w-full min-h-[540px] fc-workspace"></div>
@@ -1320,12 +1320,12 @@
     </div>
 </div>
 
-<script type="application/json" id="workspace-calendar-json">{!! json_encode($workspaceCalendarEvents, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
-<script type="application/json" id="ws-modal-detail-json">{!! json_encode($catalogRows->mapWithKeys(fn ($r) => [($r['code'] ?? '') => $r['modal_detail'] ?? null])->filter(fn ($v) => $v !== null), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
-@endsection
+<script type="application/json" id="workspace-calendar-json"><?php echo json_encode($workspaceCalendarEvents, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE); ?></script>
+<script type="application/json" id="ws-modal-detail-json"><?php echo json_encode($catalogRows->mapWithKeys(fn ($r) => [($r['code'] ?? '') => $r['modal_detail'] ?? null])->filter(fn ($v) => $v !== null), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE); ?></script>
+<?php $__env->stopSection(); ?>
 
-@push('scripts')
-{{-- Modal hors layout (évite overflow / stacking) — rendu juste avant </body> --}}
+<?php $__env->startPush('scripts'); ?>
+
 <div id="ws-modal-root">
     <div id="ws-voyage-detail-modal" class="ws-md-root hidden" role="dialog" aria-modal="true" aria-labelledby="ws-md-title" aria-hidden="true">
         <div class="ws-md-overlay" data-ws-md-backdrop tabindex="-1" aria-hidden="true"></div>
@@ -1346,9 +1346,9 @@
         </div>
     </div>
 </div>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 <script>
 (function () {
@@ -1363,7 +1363,7 @@
         show_commission_help: true,
         show_departure_report: true
     };
-    var injected = {!! json_encode($wsModalSettings ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!};
+    var injected = <?php echo json_encode($wsModalSettings ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE); ?>;
     if (!injected || typeof injected !== 'object' || Array.isArray(injected)) injected = {};
     window.wsModalSettings = Object.assign({}, defaults, injected);
 })();
@@ -2185,4 +2185,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }, true);
 });
 </script>
-@endpush
+<?php $__env->stopPush(); ?>
+
+<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\reservations\workspace\index.blade.php ENDPATH**/ ?>

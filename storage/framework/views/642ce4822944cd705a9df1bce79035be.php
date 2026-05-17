@@ -1,0 +1,5 @@
+
+<div class="hidden pointer-events-none" aria-hidden="true" data-ajin-cal-safelist>
+    <span class="ajin-cal-day min-h-[100px] sm:min-h-[120px] p-1.5 sm:p-2 border border-gray-100 flex flex-col relative group bg-white bg-gray-50 cursor-not-allowed hover:bg-[#e6f3fa]/30 cursor-pointer flex justify-between items-start mb-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-[#0083c4] text-[10px] font-bold text-xs font-bold text-gray-300 ml-auto text-gray-700 text-[#f37a1f] group-hover:text-[#0083c4] space-y-1 flex-grow overflow-hidden trip-chip w-full text-left text-[9px] font-medium px-1.5 py-1 rounded truncate shadow-sm border transition-all hover:brightness-95 bg-green-50 text-green-700 border-green-100 bg-red-50 text-red-600 border-red-100 bg-yellow-50 text-yellow-700 border-yellow-100 bg-blue-50 text-[#0083c4] border-blue-100 text-[9px] text-gray-400 font-bold text-center"></span>
+</div>
+<?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\reservations\calendrier\partials\tailwind-safelist.blade.php ENDPATH**/ ?>
