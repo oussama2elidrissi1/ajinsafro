@@ -1545,6 +1545,22 @@
     white-space: nowrap;
 }
 
+.ws-td__dep-badge {
+    display: inline-block;
+    margin-left: 0.35rem;
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.25rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    vertical-align: middle;
+}
+
+.ws-td__dep-badge--past {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
 .ws-td__price {
     font-weight: 800;
     color: #0e3a5a;

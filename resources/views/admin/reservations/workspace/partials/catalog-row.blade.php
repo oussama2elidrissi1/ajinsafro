@@ -150,6 +150,14 @@
         $depRowTravelDateId = $row['travel_date_id'] ?? null;
     }
 
+    $isSellableForRow = $isSellable;
+    if ($viewMode === 'table' && $departureData) {
+        $isSellableForRow = $isSellable
+            && ! $depRowIsPast
+            && $depRowStatusKey !== 'full'
+            && ($depRowRemaining === null || $depRowRemaining > 0);
+    }
+
     $progressColor = 'bg-emerald-500';
     $progressFillRate = ($viewMode === 'table' && $departureData) ? $depRowFillRate : $comFillRate;
     if ($progressFillRate !== null) {
@@ -250,7 +258,7 @@
 @endphp
 
 @if($viewMode === 'table')
-<tr class="ws-catalog-row ws-catalog-table-row {{ $rowAccent }} {{ $hasLaravel ? '' : 'ws-catalog-row--unlinked' }}{{ $isNearFuture ? ' ws-catalog-row--near' : '' }}{{ $isSellable ? '' : ' ws-catalog-row--configure' }}"
+<tr class="ws-catalog-row ws-catalog-table-row {{ $rowAccent }} {{ $hasLaravel ? '' : 'ws-catalog-row--unlinked' }}{{ $isNearFuture ? ' ws-catalog-row--near' : '' }}{{ $isSellableForRow ? '' : ' ws-catalog-row--configure' }}"
     data-type="{{ $typeKey }}"
     data-row-code="{{ $row['code'] }}"
     data-code="{{ $row['code'] }}"
@@ -275,7 +283,7 @@
     data-days-until="{{ $departureData ? ($departureData['days_until'] ?? 9999) : ($comDaysUntil ?? 9999) }}"
     data-fill-rate="{{ $depRowFillRate ?? -1 }}"
     data-price="{{ $priceSort }}"
-    data-is-sellable="{{ $isSellable ? '1' : '0' }}"
+    data-is-sellable="{{ $isSellableForRow ? '1' : '0' }}"
     title="{{ e($rowTitle) }}">
     <td class="ws-td ws-td--ref" data-label="Réf">
         <span class="ws-td__code">{{ $row['code'] }}</span>
@@ -299,6 +307,9 @@
     <td class="ws-td ws-td--dep" data-label="Départ">
         @if($depRowDateLabel)
             <span class="ws-td__dep-date">{{ $depRowDateLabel }}</span>
+            @if($depRowIsPast)
+                <span class="ws-td__dep-badge ws-td__dep-badge--past">Passé</span>
+            @endif
         @else
             <span class="ws-td__muted">—</span>
         @endif
@@ -337,7 +348,7 @@
                 </button>
             @endif
             @can('reservations.view')
-                @if($isSellable && $hasLaravel)
+                @if($isSellableForRow && $hasLaravel)
                     @if($departureData)
                         <button type="button"
                             class="ws-btn ws-btn--primary ws-btn--sm ws-btn--iconish"
@@ -365,7 +376,7 @@
                             <span>{{ $reserveLabel }}</span>
                         </button>
                     @endif
-                @elseif(! $isSellable && $hasLaravel)
+                @elseif(! $isSellableForRow && $hasLaravel)
                     <a href="{{ $editTourUrl ?: '#' }}"
                         class="ws-btn ws-btn--sm ws-btn--iconish {{ $editTourUrl ? 'ws-btn--configure' : 'ws-btn--disabled' }}"
                         {!! $editTourUrl ? '' : 'aria-disabled="true"' !!}

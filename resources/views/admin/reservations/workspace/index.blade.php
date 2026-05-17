@@ -1208,43 +1208,60 @@
 
     <tbody id="ws-catalog-table-body">
         @php
-            $sellableRows = $catalogRows->filter(fn($r) => $r['commercial']['is_sellable'] ?? false);
-            $nonSellableRows = $catalogRows->filter(fn($r) => !($r['commercial']['is_sellable'] ?? false));
+            $today = \Carbon\Carbon::today();
+            $allDepRows = collect();
+            foreach ($catalogRows as $row) {
+                $isVoyageSellable = $row['commercial']['is_sellable'] ?? false;
+                $departures = collect($row['modal_detail']['departures'] ?? [])->values();
+                if ($departures->isNotEmpty()) {
+                    foreach ($departures as $departure) {
+                        $depDate = !empty($departure['date_iso']) ? \Carbon\Carbon::parse($departure['date_iso']) : null;
+                        $isPast = !empty($departure['is_past']);
+                        $statusKey = $departure['status_key'] ?? 'unknown';
+                        $remaining = $departure['remaining'] ?? null;
+                        $isDepSellable = $isVoyageSellable
+                            && $depDate !== null
+                            && ! $isPast
+                            && $statusKey !== 'full'
+                            && ($remaining === null || $remaining > 0);
+                        $allDepRows->push([
+                            'row' => $row,
+                            'departure' => $departure,
+                            'sort_date' => $depDate,
+                            'is_sellable' => $isDepSellable,
+                        ]);
+                    }
+                } else {
+                    $allDepRows->push([
+                        'row' => $row,
+                        'departure' => null,
+                        'sort_date' => null,
+                        'is_sellable' => false,
+                    ]);
+                }
+            }
+            $sortedDepRows = $allDepRows->sortBy(function ($item) {
+                return $item['sort_date'] ? $item['sort_date']->timestamp : PHP_INT_MAX;
+            })->values();
+            $sellableDepRows = $sortedDepRows->filter(fn($i) => $i['is_sellable']);
+            $nonSellableDepRows = $sortedDepRows->filter(fn($i) => ! $i['is_sellable']);
         @endphp
 
-        @if($sellableRows->isNotEmpty())
-            @foreach($sellableRows as $row)
-                @php
-                    $departures = collect($row['modal_detail']['departures'] ?? [])->values();
-                @endphp
-                @if($departures->isNotEmpty())
-                    @foreach($departures as $departure)
-                        @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table', 'departure' => $departure])
-                    @endforeach
-                @else
-                    @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table'])
-                @endif
+        @if($sellableDepRows->isNotEmpty())
+            @foreach($sellableDepRows as $depItem)
+                @include('admin.reservations.workspace.partials.catalog-row', ['row' => $depItem['row'], 'mode' => 'table', 'departure' => $depItem['departure']])
             @endforeach
         @endif
 
-        @if($nonSellableRows->isNotEmpty())
+        @if($nonSellableDepRows->isNotEmpty())
             <tr class="ws-catalog-section-divider">
                 <td colspan="8" class="ws-catalog-section-divider__cell">
                     <span class="ws-catalog-section-divider__label">Voyages non disponibles / à configurer</span>
                 </td>
             </tr>
 
-            @foreach($nonSellableRows as $row)
-                @php
-                    $departures = collect($row['modal_detail']['departures'] ?? [])->values();
-                @endphp
-                @if($departures->isNotEmpty())
-                    @foreach($departures as $departure)
-                        @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table', 'departure' => $departure])
-                    @endforeach
-                @else
-                    @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table'])
-                @endif
+            @foreach($nonSellableDepRows as $depItem)
+                @include('admin.reservations.workspace.partials.catalog-row', ['row' => $depItem['row'], 'mode' => 'table', 'departure' => $depItem['departure']])
             @endforeach
         @endif
 
