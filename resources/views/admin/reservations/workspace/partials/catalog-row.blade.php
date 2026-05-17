@@ -120,6 +120,44 @@
     $comTopDates = $commercial['top_dates'] ?? [];
     $isSellable = $commercial['is_sellable'] ?? false;
 
+    // Per-departure overrides for table mode
+    $departureData = $departure ?? null;
+    if ($viewMode === 'table' && $departureData) {
+        $depRowStatVal = (int) data_get($departureData, 'reservations.validee', 0);
+        $depRowStatPending = (int) data_get($departureData, 'reservations.en_cours', 0);
+        $depRowStatCancel = (int) data_get($departureData, 'reservations.annulee', 0);
+        $depRowRemaining = data_get($departureData, 'remaining');
+        $depRowCapacity = data_get($departureData, 'capacity');
+        $depRowFillRate = data_get($departureData, 'fill_pct');
+        $depRowDateLabel = data_get($departureData, 'date_label');
+        $depRowDateIso = data_get($departureData, 'date_iso');
+        $depRowRouteReserve = data_get($departureData, 'routes.reserve');
+        $depRowIsPast = !empty($departureData['is_past']);
+        $depRowStatusKey = $departureData['status_key'] ?? 'unknown';
+        $depRowTravelDateId = data_get($departureData, 'travel_date_id');
+    } else {
+        $depRowStatVal = $statVal;
+        $depRowStatPending = $statPending;
+        $depRowStatCancel = $statCancel;
+        $depRowRemaining = $comRemaining;
+        $depRowCapacity = $comCapacity;
+        $depRowFillRate = $comFillRate;
+        $depRowDateLabel = $comNextDep ?: ($row['departure_date'] ?? null);
+        $depRowDateIso = $row['departure_date'] ? \Carbon\Carbon::parse($row['departure_date'])->format('Y-m-d') : null;
+        $depRowRouteReserve = $reserveUrl;
+        $depRowIsPast = $isPast;
+        $depRowStatusKey = $comAvailStatus;
+        $depRowTravelDateId = $row['travel_date_id'] ?? null;
+    }
+
+    $progressColor = 'bg-emerald-500';
+    $progressFillRate = ($viewMode === 'table' && $departureData) ? $depRowFillRate : $comFillRate;
+    if ($progressFillRate !== null) {
+        if ($progressFillRate >= 90) $progressColor = 'bg-red-500';
+        elseif ($progressFillRate >= 75) $progressColor = 'bg-orange-500';
+        elseif ($progressFillRate >= 50) $progressColor = 'bg-amber-500';
+    }
+
     $badgeHtmlClass = match ($comBadge) {
         'TOP VENTE' => 'ws-commercial-badge ws-commercial-badge--top',
         'À POUSSER' => 'ws-commercial-badge ws-commercial-badge--push',
@@ -218,24 +256,24 @@
     data-code="{{ $row['code'] }}"
     data-name="{{ $row['name'] }}"
     data-search="{{ e($wsSearchBlob) }}"
-    data-dep="{{ $row['departure_date'] ? \Carbon\Carbon::parse($row['departure_date'])->format('Y-m-d') : '' }}"
+    data-dep="{{ $depRowDateIso ?? '' }}"
     data-ws-avail="{{ e($wsAvail) }}"
     data-ws-upcoming="{{ $wsUpcoming ? '1' : '0' }}"
-    data-avail-status="{{ $comAvailStatus }}"
-    data-date-status="{{ $dateStatus }}"
-    data-stats-validee="{{ $statVal }}"
-    data-stats-pending="{{ $statPending }}"
-    data-stats-total="{{ $statTotal }}"
-    data-sort-dep="{{ $depTs }}"
+    data-avail-status="{{ $depRowStatusKey }}"
+    data-date-status="{{ $depRowIsPast ? 'past' : ($depRowDateIso ? 'upcoming' : 'none') }}"
+    data-stats-validee="{{ $depRowStatVal }}"
+    data-stats-pending="{{ $depRowStatPending }}"
+    data-stats-total="{{ $depRowStatVal + $depRowStatPending + $depRowStatCancel }}"
+    data-sort-dep="{{ $depRowDateIso ? \Carbon\Carbon::parse($depRowDateIso)->timestamp : $depTs }}"
     data-sort-price="{{ $priceSort }}"
     data-sort-places="{{ $placesSort }}"
     data-commercial-priority="{{ $comPriority }}"
     data-commercial-badge="{{ $comBadge ?? '' }}"
     data-departure-city="{{ e($row['data_departure_city'] ?? '') }}"
-    data-remaining="{{ $comRemaining ?? -1 }}"
-    data-sold="{{ $comSold }}"
-    data-days-until="{{ $comDaysUntil ?? 9999 }}"
-    data-fill-rate="{{ $comFillRate ?? -1 }}"
+    data-remaining="{{ $depRowRemaining ?? -1 }}"
+    data-sold="{{ $depRowStatVal + $depRowStatPending }}"
+    data-days-until="{{ $departureData ? ($departureData['days_until'] ?? 9999) : ($comDaysUntil ?? 9999) }}"
+    data-fill-rate="{{ $depRowFillRate ?? -1 }}"
     data-price="{{ $priceSort }}"
     data-is-sellable="{{ $isSellable ? '1' : '0' }}"
     title="{{ e($rowTitle) }}">
@@ -259,33 +297,31 @@
         @endif
     </td>
     <td class="ws-td ws-td--dep" data-label="Départ">
-        @if($comNextDep)
-            <span class="ws-td__dep-date">{{ \Carbon\Carbon::parse($comNextDep)->locale('fr')->translatedFormat('d M Y') }}</span>
-        @elseif($hasDepDate)
-            <span class="ws-td__dep-date">{{ \Carbon\Carbon::parse($row['departure_date'])->locale('fr')->translatedFormat('d M Y') }}</span>
+        @if($depRowDateLabel)
+            <span class="ws-td__dep-date">{{ $depRowDateLabel }}</span>
         @else
             <span class="ws-td__muted">—</span>
         @endif
     </td>
     <td class="ws-td ws-td--sold" data-label="Vendu">
-        <span class="ws-td__sold" title="{{ $statVal }} vendus confirmés — {{ $statPending }} en attente">{{ $statVal }} / {{ $statPending }}</span>
+        <span class="ws-td__sold" title="{{ $depRowStatVal }} vendus confirmés — {{ $depRowStatPending }} en attente">{{ $depRowStatVal }} / {{ $depRowStatPending }}</span>
     </td>
     <td class="ws-td ws-td--remain" data-label="Restant">
-        @if($comRemaining !== null)
-            <span class="ws-td__remain {{ $comRemaining <= 5 ? 'ws-td__remain--danger' : ($comRemaining <= 10 ? 'ws-td__remain--warn' : '') }}">{{ $comRemaining }}</span>
+        @if($depRowRemaining !== null)
+            <span class="ws-td__remain {{ $depRowRemaining <= 5 ? 'ws-td__remain--danger' : ($depRowRemaining <= 10 ? 'ws-td__remain--warn' : '') }}">{{ $depRowRemaining }}</span>
         @else
             <span class="ws-td__muted">—</span>
         @endif
     </td>
     <td class="ws-td ws-td--cap" data-label="Capacité">
         <div class="ws-td__cap-wrap">
-            <span class="ws-td__cap-text">{{ $comCapacity !== null ? $comCapacity.' places' : '—' }}</span>
-            @if($comCapacity !== null && $comCapacity > 0)
+            <span class="ws-td__cap-text">{{ $depRowCapacity !== null ? $depRowCapacity.' places' : '—' }}</span>
+            @if($depRowCapacity !== null && $depRowCapacity > 0)
                 <div class="ws-progress-bar--mini">
                     <div class="ws-progress-bar--mini__track">
-                        <div class="ws-progress-bar--mini__fill {{ $progressColor }}" style="width: {{ min(100, $comFillRate ?? 0) }}%"></div>
+                        <div class="ws-progress-bar--mini__fill {{ $progressColor }}" style="width: {{ min(100, $depRowFillRate ?? 0) }}%"></div>
                     </div>
-                    <span class="ws-progress-bar--mini__label">{{ $comFillRate ?? 0 }}%</span>
+                    <span class="ws-progress-bar--mini__label">{{ $depRowFillRate ?? 0 }}%</span>
                 </div>
             @endif
         </div>
@@ -302,17 +338,33 @@
             @endif
             @can('reservations.view')
                 @if($isSellable && $hasLaravel)
-                    <button type="button"
-                        class="ws-btn ws-btn--primary ws-btn--sm ws-btn--iconish btn-ws-open-reserve"
-                        data-row-code="{{ e($row['code']) }}"
-                        title="{{ $reserveLabel }}">
-                        @if($typeKey === 'vol')
-                            <i class="fas fa-plane-departure" aria-hidden="true"></i>
-                        @else
-                            <i class="fas fa-suitcase-rolling" aria-hidden="true"></i>
-                        @endif
-                        <span>{{ $reserveLabel }}</span>
-                    </button>
+                    @if($departureData)
+                        <button type="button"
+                            class="ws-btn ws-btn--primary ws-btn--sm ws-btn--iconish"
+                            data-ws-reserve-departure="1"
+                            data-row-code="{{ e($row['code']) }}"
+                            data-travel-date-id="{{ $depRowTravelDateId }}"
+                            title="{{ $reserveLabel }}">
+                            @if($typeKey === 'vol')
+                                <i class="fas fa-plane-departure" aria-hidden="true"></i>
+                            @else
+                                <i class="fas fa-suitcase-rolling" aria-hidden="true"></i>
+                            @endif
+                            <span>{{ $reserveLabel }}</span>
+                        </button>
+                    @else
+                        <button type="button"
+                            class="ws-btn ws-btn--primary ws-btn--sm ws-btn--iconish btn-ws-open-reserve"
+                            data-row-code="{{ e($row['code']) }}"
+                            title="{{ $reserveLabel }}">
+                            @if($typeKey === 'vol')
+                                <i class="fas fa-plane-departure" aria-hidden="true"></i>
+                            @else
+                                <i class="fas fa-suitcase-rolling" aria-hidden="true"></i>
+                            @endif
+                            <span>{{ $reserveLabel }}</span>
+                        </button>
+                    @endif
                 @elseif(! $isSellable && $hasLaravel)
                     <a href="{{ $editTourUrl ?: '#' }}"
                         class="ws-btn ws-btn--sm ws-btn--iconish {{ $editTourUrl ? 'ws-btn--configure' : 'ws-btn--disabled' }}"

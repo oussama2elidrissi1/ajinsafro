@@ -1214,7 +1214,16 @@
 
         @if($sellableRows->isNotEmpty())
             @foreach($sellableRows as $row)
-                @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table'])
+                @php
+                    $departures = collect($row['modal_detail']['departures'] ?? [])->values();
+                @endphp
+                @if($departures->isNotEmpty())
+                    @foreach($departures as $departure)
+                        @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table', 'departure' => $departure])
+                    @endforeach
+                @else
+                    @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table'])
+                @endif
             @endforeach
         @endif
 
@@ -1226,7 +1235,16 @@
             </tr>
 
             @foreach($nonSellableRows as $row)
-                @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table'])
+                @php
+                    $departures = collect($row['modal_detail']['departures'] ?? [])->values();
+                @endphp
+                @if($departures->isNotEmpty())
+                    @foreach($departures as $departure)
+                        @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table', 'departure' => $departure])
+                    @endforeach
+                @else
+                    @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'table'])
+                @endif
             @endforeach
         @endif
 
@@ -1726,6 +1744,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (catalogView) catalogView.classList.toggle('hidden', mode !== 'catalog');
         if (calView) calView.classList.toggle('hidden', mode !== 'cal');
         if (mode === 'cal' && calendar) setTimeout(function () { calendar.render(); }, 80);
+        if (mode === 'list') applyWsFilters();
     }
 
     if (btnList) btnList.addEventListener('click', function () { wsActivateView('list'); });
@@ -1758,9 +1777,10 @@ document.addEventListener('DOMContentLoaded', function () {
             budgetMin = budgetMax;
             budgetMax = swapped;
         }
-        var rows = document.querySelectorAll('#ws-catalog-list .ws-catalog-row, #ws-catalog-table-body .ws-catalog-row');
-        var visible = 0;
-        var seenCodes = {};
+        var catalogRows = document.querySelectorAll('#ws-catalog-list .ws-catalog-row');
+        var tableRows = document.querySelectorAll('#ws-catalog-table-body .ws-catalog-row');
+        var isTableVisible = tableView && !tableView.classList.contains('hidden');
+        var rows = isTableVisible ? tableRows : catalogRows;
         rows.forEach(function (tr) {
             var ok = true;
             if (t !== 'all' && tr.getAttribute('data-type') !== t) ok = false;
@@ -1781,14 +1801,31 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (blob.toLowerCase().indexOf(q) === -1) ok = false;
             }
             tr.classList.toggle('hidden', !ok);
-            if (ok) {
-                var rc = tr.getAttribute('data-row-code') || '_';
-                if (!seenCodes[rc]) {
-                    seenCodes[rc] = true;
-                    visible++;
-                }
-            }
         });
+        // Also sync hidden state on rows in the non-visible view so switching views keeps filter state
+        var otherRows = isTableVisible ? catalogRows : tableRows;
+        otherRows.forEach(function (tr) {
+            var ok = true;
+            if (t !== 'all' && tr.getAttribute('data-type') !== t) ok = false;
+            if (ok && city !== 'all') {
+                var dc = tr.getAttribute('data-departure-city') || '';
+                if (dc.indexOf(city) === -1) ok = false;
+            }
+            if (ok && (budgetMin !== null || budgetMax !== null)) {
+                var price = parseInt(tr.getAttribute('data-price'), 10) || 0;
+                if (budgetMin !== null && price < budgetMin) ok = false;
+                if (budgetMax !== null && price > budgetMax) ok = false;
+            }
+            if (ok && q) {
+                var blob = (tr.getAttribute('data-search') || '')
+                    + ' ' + (tr.getAttribute('data-name') || '')
+                    + ' ' + (tr.getAttribute('data-code') || '')
+                    + ' ' + (tr.getAttribute('data-departure-city') || '');
+                if (blob.toLowerCase().indexOf(q) === -1) ok = false;
+            }
+            tr.classList.toggle('hidden', !ok);
+        });
+        var visible = Array.from(rows).filter(function (tr) { return !tr.classList.contains('hidden'); }).length;
         var c = document.getElementById('ws-row-visible-count');
         if (c) c.textContent = String(visible);
         window.wsCurrentPage = 1;
@@ -1802,6 +1839,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var visibleRows = [];
         allRows.forEach(function (row) {
             if (row.classList.contains('ws-table-empty-cell')) return;
+            if (row.classList.contains('ws-catalog-section-divider')) return;
             if (!row.classList.contains('hidden')) visibleRows.push(row);
         });
 
