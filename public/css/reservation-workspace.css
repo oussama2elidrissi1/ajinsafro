@@ -4593,15 +4593,18 @@ body[data-layout="detached"] #page-topbar .header-item span {
 }
 
 .ws-td__sold {
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     font-weight: 800;
     color: #0e3a5a;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
 .ws-td__remain {
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     font-weight: 800;
     color: #047857;
+    font-variant-numeric: tabular-nums;
 }
 
 .ws-td__remain--warn {
@@ -4733,7 +4736,7 @@ body[data-layout="detached"] #page-topbar .header-item span {
 .ws-page .workspace-list-table-wrapper {
     width: 100%;
     overflow-x: auto;
-    overflow-y: auto;
+    overflow-y: visible;
     border-radius: 16px;
     border: 1px solid #e2e8f0;
     background: #fff;
@@ -4743,7 +4746,7 @@ body[data-layout="detached"] #page-topbar .header-item span {
 /* 2. Table base */
 .ws-page .workspace-list-table {
     width: 100%;
-    min-width: 1600px;
+    min-width: 1100px;
     table-layout: fixed;
     border-collapse: separate;
     border-spacing: 0;
@@ -4758,11 +4761,11 @@ body[data-layout="detached"] #page-topbar .header-item span {
     z-index: 2;
     background: #f8fafc;
     color: #64748b;
-    font-size: 0.625rem;
+    font-size: 0.6rem;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    padding: 14px;
+    padding: 10px 12px;
     border-bottom: 1px solid #e2e8f0;
     vertical-align: middle;
     white-space: nowrap;
@@ -4777,7 +4780,7 @@ body[data-layout="detached"] #page-topbar .header-item span {
 
 .ws-page .workspace-list-table .ws-data-table__th-offer,
 .ws-page .workspace-list-table .ws-td--offer {
-    width: 260px;
+    width: 340px;
 }
 
 .ws-page .workspace-list-table .ws-data-table__th-city,
@@ -4790,48 +4793,34 @@ body[data-layout="detached"] #page-topbar .header-item span {
     width: 130px;
 }
 
-.ws-page .workspace-list-table .ws-data-table__th-price,
-.ws-page .workspace-list-table .ws-td--price {
-    width: 120px;
-}
-
 .ws-page .workspace-list-table .ws-data-table__th-sold,
 .ws-page .workspace-list-table .ws-td--sold {
-    width: 90px;
+    width: 100px;
 }
 
 .ws-page .workspace-list-table .ws-data-table__th-remain,
 .ws-page .workspace-list-table .ws-td--remain {
-    width: 90px;
+    width: 80px;
 }
 
 .ws-page .workspace-list-table .ws-data-table__th-cap,
 .ws-page .workspace-list-table .ws-td--cap {
-    width: 120px;
-}
-
-.ws-page .workspace-list-table .ws-data-table__th-avail,
-.ws-page .workspace-list-table .ws-td--avail {
-    width: 180px;
-}
-
-.ws-page .workspace-list-table .ws-data-table__th-priority,
-.ws-page .workspace-list-table .ws-td--priority {
-    width: 180px;
+    width: 110px;
 }
 
 .ws-page .workspace-list-table .ws-data-table__th-actions,
 .ws-page .workspace-list-table .ws-td--actions {
-    width: 150px;
+    width: 140px;
 }
 
 /* 5. Cells — uniform, no per-cell backgrounds */
 .ws-page .workspace-list-table .ws-catalog-table-row td {
     vertical-align: middle;
-    padding: 12px 14px;
+    padding: 8px 12px;
     border-bottom: 1px solid #e8eef6;
     color: #1e293b;
     background: transparent !important;
+    font-size: 0.78rem;
 }
 
 /* 6. Row backgrounds — uniform */
@@ -4875,10 +4864,10 @@ body[data-layout="detached"] #page-topbar .header-item span {
 .ws-page .workspace-list-table .ws-priority-badge {
     display: inline-flex;
     align-items: center;
-    height: 24px;
-    padding: 0 10px;
+    height: 20px;
+    padding: 0 8px;
     border-radius: 999px;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.03em;
@@ -4901,15 +4890,15 @@ body[data-layout="detached"] #page-topbar .header-item span {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: nowrap;
 }
 
 .ws-page .workspace-list-table .ws-td__actions .ws-btn {
-    height: 32px;
-    padding: 0 12px;
-    border-radius: 8px;
-    font-size: 0.75rem;
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 6px;
+    font-size: 0.7rem;
     font-weight: 700;
     white-space: nowrap;
     display: inline-flex;
@@ -4993,10 +4982,10 @@ body[data-layout="detached"] #page-topbar .header-item span {
     color: #51657d;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 900;
     text-align: center;
-    padding: 14px 16px;
+    padding: 10px 12px;
     border-top: 1px dashed #cbd5e1;
     border-bottom: 1px dashed #cbd5e1;
 }
@@ -5004,13 +4993,13 @@ body[data-layout="detached"] #page-topbar .header-item span {
 /* 12. Responsive */
 @media (max-width: 1400px) {
     .ws-page .workspace-list-table {
-        min-width: 1400px;
+        min-width: 1100px;
     }
 }
 
 @media (max-width: 1200px) {
     .ws-page .workspace-list-table {
-        min-width: 1200px;
+        min-width: 1100px;
     }
 }
 

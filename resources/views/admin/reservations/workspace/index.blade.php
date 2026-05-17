@@ -1189,7 +1189,7 @@
         <div id="ws-view-table" class="ws-table-card hidden">
             <div class="ws-table-card__head">
                 <h2 class="ws-table-card__title">Vue liste</h2>
-                <p class="ws-table-card__sub">Référence, voyage, départ, prix, capacité et actions.</p>
+                <p class="ws-table-card__sub">Référence, voyage, départ, capacité et actions.</p>
             </div>
             <div class="ws-table-scroll workspace-list-table-wrapper">
                 <table class="ws-data-table ws-data-table--responsive workspace-list-table" aria-label="Catalogue des offres en liste">
@@ -1199,11 +1199,9 @@
             <th scope="col" class="ws-data-table__th-offer">Voyage</th>
             <th scope="col" class="ws-data-table__th-city">Ville départ</th>
             <th scope="col" class="ws-data-table__th-dep">Départ</th>
-            <th scope="col" class="ws-data-table__th-price">Prix</th>
             <th scope="col" class="ws-data-table__th-sold">Vendu</th>
             <th scope="col" class="ws-data-table__th-remain">Restant</th>
             <th scope="col" class="ws-data-table__th-cap">Capacité</th>
-            <th scope="col" class="ws-data-table__th-priority">Priorité</th>
             <th scope="col" class="ws-data-table__th-actions">Actions</th>
         </tr>
     </thead>
@@ -1222,7 +1220,7 @@
 
         @if($nonSellableRows->isNotEmpty())
             <tr class="ws-catalog-section-divider">
-                <td colspan="10" class="ws-catalog-section-divider__cell">
+                <td colspan="8" class="ws-catalog-section-divider__cell">
                     <span class="ws-catalog-section-divider__label">Voyages non disponibles / à configurer</span>
                 </td>
             </tr>
@@ -1234,7 +1232,7 @@
 
         @if($catalogRows->isEmpty())
             <tr>
-                <td colspan="10" class="ws-table-empty-cell">
+                <td colspan="8" class="ws-table-empty-cell">
                     <div class="ws-catalog-empty ws-catalog-empty--inline">
                         <div class="max-w-md mx-auto text-center py-10 px-6">
                             <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 mb-3 text-xl">

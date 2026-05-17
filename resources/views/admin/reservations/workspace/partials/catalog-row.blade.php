@@ -248,7 +248,7 @@
     <td class="ws-td ws-td--offer" data-label="Voyage">
         <div class="ws-td__offer-compact">
             <span class="ws-td__type-txt">{{ $typeShort }}</span>
-            <span class="ws-td__title ws-td__title--clamp">{{ $row['name'] }}</span>
+            <span class="ws-td__title ws-td__title--clamp" title="{{ !empty($row['price_label']) ? 'Prix : '.$row['price_label'] : 'Prix non renseigné' }}">{{ $row['name'] }}</span>
         </div>
     </td>
     <td class="ws-td ws-td--city" data-label="Ville départ">
@@ -261,27 +261,14 @@
     <td class="ws-td ws-td--dep" data-label="Départ">
         @if($comNextDep)
             <span class="ws-td__dep-date">{{ \Carbon\Carbon::parse($comNextDep)->locale('fr')->translatedFormat('d M Y') }}</span>
-            @if($comDaysUntil !== null && $comDaysUntil >= 0)
-                <span class="ws-td__dep-note">{{ $comDaysUntil }}j</span>
-            @endif
         @elseif($hasDepDate)
             <span class="ws-td__dep-date">{{ \Carbon\Carbon::parse($row['departure_date'])->locale('fr')->translatedFormat('d M Y') }}</span>
-            @if($pkgDepCanceled)
-                <span class="ws-td__dep-note">Annulé</span>
-            @endif
-        @else
-            <span class="ws-td__muted">—</span>
-        @endif
-    </td>
-    <td class="ws-td ws-td--price" data-label="Prix">
-        @if(! empty($row['price_label']))
-            <strong class="ws-td__price">{{ $row['price_label'] }}</strong>
         @else
             <span class="ws-td__muted">—</span>
         @endif
     </td>
     <td class="ws-td ws-td--sold" data-label="Vendu">
-        <span class="ws-td__sold">{{ $comSold }}</span>
+        <span class="ws-td__sold" title="{{ $statVal }} vendus confirmés — {{ $statPending }} en attente">{{ $statVal }} / {{ $statPending }}</span>
     </td>
     <td class="ws-td ws-td--remain" data-label="Restant">
         @if($comRemaining !== null)
@@ -302,22 +289,6 @@
                 </div>
             @endif
         </div>
-    </td>
-    <td class="ws-td ws-td--avail" data-label="Disponibilité">
-        @if($isSellable)
-            <span class="{{ $availHtmlClass }}">{{ $availLabel }}</span>
-        @elseif($nonSellableBadge)
-            <span class="{{ $nonSellableBadgeClass }}">{{ $nonSellableBadge }}</span>
-        @else
-            <span class="ws-avail-badge ws-avail-badge--configure">{{ $configureLabel }}</span>
-        @endif
-    </td>
-    <td class="ws-td ws-td--priority" data-label="Priorité">
-        @if($isSellable)
-            <span class="{{ $priorityHtmlClass }}">{{ $priorityLabel }}</span>
-        @else
-            <span class="{{ $nonSellablePriorityClass }}">{{ $nonSellablePriorityLabel }}</span>
-        @endif
     </td>
     <td class="ws-td ws-td--actions" data-label="Actions">
         <div class="ws-td__actions">
