@@ -1943,6 +1943,7 @@ class ReservationWorkspaceCatalogService
             $cap = 0;
             $capNote = null;
             $roomsDebug = null;
+            $departureRooms = [];
             if ($departureId) {
                 $roomRow = DB::connection($departure->getConnectionName() ?: config('database.default'))
                     ->table('departure_hotel_rooms as dhr')
@@ -1965,6 +1966,41 @@ class ReservationWorkspaceCatalogService
                     $capNote = 'Aucune chambre configur+�e';
                 }
 
+                // Charger le d�tail des chambres pour ce d�part
+                $departureRooms = DB::connection($departure->getConnectionName() ?: config('database.default'))
+                    ->table('departure_hotel_rooms as dhr')
+                    ->join('departure_hotels as dh', 'dh.id', '=', 'dhr.departure_hotel_id')
+                    ->where('dh.departure_id', $departureId)
+                    ->where('dh.is_active', true)
+                    ->whereNotIn('dhr.status', [DepartureHotelRoom::STATUS_CLOSED, DepartureHotelRoom::STATUS_INACTIVE])
+                    ->select([
+                        'dhr.room_type',
+                        'dhr.capacity_total',
+                        'dhr.total_rooms',
+                        'dhr.reserved_rooms',
+                        'dhr.available_rooms',
+                        'dhr.total_places',
+                        'dhr.reserved_places',
+                        'dhr.available_places',
+                        'dhr.supplement',
+                        'dhr.status',
+                    ])
+                    ->orderBy('dhr.room_type')
+                    ->get()
+                    ->map(fn ($r) => [
+                        'room_type' => $r->room_type,
+                        'capacity_per_room' => (int) $r->capacity_total,
+                        'total_rooms' => (int) $r->total_rooms,
+                        'reserved_rooms' => (int) $r->reserved_rooms,
+                        'available_rooms' => (int) $r->available_rooms,
+                        'total_places' => (int) $r->total_places,
+                        'reserved_places' => (int) $r->reserved_places,
+                        'available_places' => (int) $r->available_places,
+                        'supplement' => $r->supplement ? number_format((float) $r->supplement, 2, ',', ' ') . ' DH' : null,
+                        'status' => $r->status,
+                    ])
+                    ->all();
+
                 if (config('app.debug')) {
                     $roomsDebug = [
                         'departure_id' => $departureId,
@@ -1973,6 +2009,7 @@ class ReservationWorkspaceCatalogService
                         'rooms_count' => $roomsCount,
                         'departure_total_capacity_field' => (int) ($departure->total_capacity ?? 0),
                         'capacity_final' => $cap,
+                        'room_lines' => $departureRooms,
                     ];
                 }
             } else {
@@ -2037,6 +2074,7 @@ class ReservationWorkspaceCatalogService
                 'booked_pax' => $confirmedPax,
                 'status_key' => $statusKey,
                 'status_label' => $statusLabel,
+                'rooms' => $departureRooms,
                 'debug' => $roomsDebug,
                 'routes' => [
                     'reserve' => $reserveUrl,

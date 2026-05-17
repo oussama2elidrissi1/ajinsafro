@@ -636,6 +636,11 @@ class ReservationsController extends Controller
                     }
 
                     $availableRooms = (int) ($room->available_rooms ?? 0);
+                    if (in_array($room->status, ['inactive', 'closed'], true)) {
+                        throw ValidationException::withMessages([
+                            "hotel_rooms.{$idx}.departure_hotel_room_id" => ['Ce type de chambre n\'est plus disponible pour ce départ.'],
+                        ]);
+                    }
                     if ($count > $availableRooms) {
                         throw ValidationException::withMessages([
                             "hotel_rooms.{$idx}.room_count" => ["Il n'y a que {$availableRooms} chambre(s) disponible(s) pour ce type."],

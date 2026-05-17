@@ -161,7 +161,7 @@ class ReservationPricingService
         $rooms = $departure->departureHotels
             ->filter(fn ($hotel) => (bool) ($hotel->is_active ?? false))
             ->flatMap(function ($hotel) {
-                return $hotel->rooms->filter(fn ($room) => ($room->status ?? null) !== 'inactive');
+                return $hotel->rooms->filter(fn ($room) => !in_array($room->status ?? null, ['inactive', 'closed'], true));
             })
             ->values();
         $departureRoomsCount = $rooms->count();
@@ -171,7 +171,7 @@ class ReservationPricingService
             'departure_id' => $departure->id,
             'rooms_count_raw' => $departure->departureHotels->flatMap(fn ($h) => $h->rooms)->count(),
             'rooms_count_after_filter' => $rooms->count(),
-            'filter_used' => 'status !== inactive',
+            'filter_used' => "status not in ['inactive','closed']",
         ]);
         $mode = 'blocked';
         $message = null;
@@ -191,7 +191,7 @@ class ReservationPricingService
                         'departure_hotel_id' => (int) $hotel->id,
                         'hotel_name' => $hotel->hotel_name ?: 'HÃ´tel',
                         'rooms' => $hotel->rooms
-                            ->filter(fn ($room) => ($room->status ?? null) !== 'inactive')
+                            ->filter(fn ($room) => !in_array($room->status ?? null, ['inactive', 'closed'], true))
                             ->map(fn ($room) => [
                                 'departure_hotel_room_id' => (int) $room->id,
                                 'room_type' => (string) $room->room_type,
@@ -832,7 +832,7 @@ class ReservationPricingService
         $departure->loadMissing(['departureHotels.rooms']);
         $rooms = $departure->departureHotels
             ->flatMap(fn ($hotel) => $hotel->rooms)
-            ->filter(fn ($room) => ($room->status ?? null) !== 'inactive')
+            ->filter(fn ($room) => !in_array($room->status ?? null, ['inactive', 'closed'], true))
             ->values();
 
         if ($rooms->isEmpty()) {
