@@ -343,6 +343,9 @@
                 <button type="button"
                     class="ws-btn ws-btn--secondary ws-btn--sm ws-btn--iconish btn-ws-open-detail btn-view"
                     data-row-code="{{ e($row['code']) }}"
+                    @if($departureData && $depRowTravelDateId)
+                        data-travel-date-id="{{ $depRowTravelDateId }}"
+                    @endif
                     title="Détail">
                     <i class="fas fa-eye" aria-hidden="true"></i><span>Voir</span>
                 </button>

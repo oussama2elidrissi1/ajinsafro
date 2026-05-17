@@ -2211,8 +2211,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function selectorBody(code, detail, selectedDeparture) {
         var departures = Array.isArray(detail.departures) ? detail.departures : [];
-        if (!departures.length || !selectedDeparture) {
-            return '<div class="ws-md-body-inner"><section class="ws-md-card"><p style="margin:0;color:#64748b">Aucun départ disponible pour ce voyage.</p></section></div>';
+        if (!departures.length) {
+            return '<div class="ws-md-body-inner"><section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-calendar-times"></i> Départs</div><p style="margin:0;color:#64748b;font-weight:600">Aucun départ configuré pour ce voyage.</p></section></div>';
         }
         var html = '<div class="ws-md-body-inner"><section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-calendar-check"></i> Choisir une date de départ</div>';
         html += '<div class="ws-md-departure-tabs" role="tablist" aria-label="Dates de départ">';
@@ -2252,6 +2252,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 var title = isPast ? 'Départ passé' : (remaining <= 0 ? 'Aucune place restante' : (!isAvailable ? 'Départ indisponible' : 'Réservation non configurée'));
                 html += '<button type="button" disabled class="ws-md-btn ws-md-btn-disabled" title="' + title + '"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</button>';
             }
+        } else {
+            html += '<button type="button" disabled class="ws-md-btn ws-md-btn-disabled" title="Aucun départ configuré"><i class="fas fa-suitcase-rolling"></i> Réserver ce départ</button>';
         }
         html += '</div>';
         return html;
@@ -2320,7 +2322,7 @@ document.addEventListener('DOMContentLoaded', function () {
         event.preventDefault();
         event.stopPropagation();
         if (target.hasAttribute('data-ws-detail-trigger')) {
-            openSelector(target.getAttribute('data-row-code') || '');
+            openSelector(target.getAttribute('data-row-code') || '', target.getAttribute('data-travel-date-id') || '');
             return;
         }
         if (target.hasAttribute('data-ws-reserve-trigger')) {
