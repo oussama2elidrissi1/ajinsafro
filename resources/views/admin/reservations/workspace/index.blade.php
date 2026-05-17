@@ -1259,6 +1259,20 @@
         @endif
     </tbody>
 </table>
+                <div class="ws-pagination" id="ws-pagination">
+                    <div class="ws-pagination__info">
+                        <span id="ws-pagination-info"></span>
+                    </div>
+                    <div class="ws-pagination__controls" id="ws-pagination-controls"></div>
+                    <div class="ws-pagination__per-page">
+                        <label for="ws-per-page">Lignes</label>
+                        <select id="ws-per-page">
+                            <option value="10" selected>10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1730,6 +1744,9 @@ document.addEventListener('DOMContentLoaded', function () {
         return isNaN(value) ? null : value;
     }
 
+    window.wsCurrentPage = 1;
+    window.wsPerPage = 10;
+
     window.applyWsFilters = function applyWsFilters() {
         var q = (searchEl && searchEl.value) ? searchEl.value.toLowerCase().trim() : '';
         var t = typeEl ? typeEl.value : 'all';
@@ -1774,7 +1791,72 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         var c = document.getElementById('ws-row-visible-count');
         if (c) c.textContent = String(visible);
+        window.wsCurrentPage = 1;
+        paginateWsRows();
     };
+
+    function paginateWsRows() {
+        var tbody = document.getElementById('ws-catalog-table-body');
+        if (!tbody) return;
+        var allRows = tbody.querySelectorAll('tr');
+        var visibleRows = [];
+        allRows.forEach(function (row) {
+            if (row.classList.contains('ws-table-empty-cell')) return;
+            if (!row.classList.contains('hidden')) visibleRows.push(row);
+        });
+
+        var total = visibleRows.length;
+        var perPage = window.wsPerPage || 10;
+        var currentPage = window.wsCurrentPage || 1;
+        var totalPages = Math.max(1, Math.ceil(total / perPage));
+
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+        window.wsCurrentPage = currentPage;
+
+        var start = (currentPage - 1) * perPage;
+        var end = start + perPage;
+
+        visibleRows.forEach(function (row, index) {
+            row.style.display = (index >= start && index < end) ? '' : 'none';
+        });
+
+        renderPaginationControls(total, perPage, currentPage, totalPages);
+    }
+
+    function renderPaginationControls(total, perPage, currentPage, totalPages) {
+        var info = document.getElementById('ws-pagination-info');
+        var controls = document.getElementById('ws-pagination-controls');
+        if (!info || !controls) return;
+
+        if (total === 0) {
+            info.textContent = '0 résultat';
+            controls.innerHTML = '';
+            return;
+        }
+
+        var start = (currentPage - 1) * perPage + 1;
+        var end = Math.min(currentPage * perPage, total);
+        info.textContent = start + '–' + end + ' sur ' + total;
+
+        var html = '';
+        html += '<button type="button" ' + (currentPage <= 1 ? 'disabled' : '') + ' data-ws-page="' + (currentPage - 1) + '" title="Précédent">Précédent</button>';
+
+        var maxVisible = 5;
+        var startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+        var endPage = Math.min(totalPages, startPage + maxVisible - 1);
+        if (endPage - startPage + 1 < maxVisible) {
+            startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+
+        for (var p = startPage; p <= endPage; p++) {
+            html += '<button type="button" class="' + (p === currentPage ? 'is-active' : '') + '" data-ws-page="' + p + '" title="Page ' + p + '" aria-current="' + (p === currentPage ? 'page' : 'false') + '">' + p + '</button>';
+        }
+
+        html += '<button type="button" ' + (currentPage >= totalPages ? 'disabled' : '') + ' data-ws-page="' + (currentPage + 1) + '" title="Suivant">Suivant</button>';
+
+        controls.innerHTML = html;
+    }
 
     if (searchEl) searchEl.addEventListener('input', applyWsFilters);
     if (typeEl) typeEl.addEventListener('change', applyWsFilters);
@@ -1789,6 +1871,27 @@ document.addEventListener('DOMContentLoaded', function () {
             if (budgetMinEl) budgetMinEl.value = '';
             if (budgetMaxEl) budgetMaxEl.value = '';
             applyWsFilters();
+        });
+    }
+
+    var perPageEl = document.getElementById('ws-per-page');
+    var paginationControls = document.getElementById('ws-pagination-controls');
+    if (perPageEl) {
+        perPageEl.addEventListener('change', function () {
+            window.wsPerPage = parseInt(this.value, 10) || 10;
+            window.wsCurrentPage = 1;
+            paginateWsRows();
+        });
+    }
+    if (paginationControls) {
+        paginationControls.addEventListener('click', function (e) {
+            var btn = e.target.closest('button[data-ws-page]');
+            if (!btn) return;
+            var p = parseInt(btn.getAttribute('data-ws-page'), 10);
+            if (!isNaN(p) && p > 0) {
+                window.wsCurrentPage = p;
+                paginateWsRows();
+            }
         });
     }
 

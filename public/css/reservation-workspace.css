@@ -1410,8 +1410,7 @@
 
 .ws-table-scroll {
     overflow-x: auto;
-    overflow-y: auto;
-    max-height: min(72vh, 920px);
+    overflow-y: visible;
     -webkit-overflow-scrolling: touch;
     border-radius: 12px;
     border: 1px solid #e2e8f0;
@@ -5006,6 +5005,90 @@ body[data-layout="detached"] #page-topbar .header-item span {
 @media (max-width: 991px) {
     .ws-page .workspace-list-table-wrapper {
         border-radius: 12px;
+    }
+}
+
+/* Pagination workspace liste */
+.ws-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 10px 14px;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+    border-radius: 0 0 12px 12px;
+    font-size: 0.75rem;
+    color: #475569;
+}
+
+.ws-pagination__controls {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.ws-pagination__controls button {
+    min-width: 28px;
+    height: 26px;
+    padding: 0 8px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #475569;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ws-pagination__controls button:hover:not(:disabled):not(.is-active) {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.ws-pagination__controls button.is-active {
+    background: #0083c4;
+    color: #fff;
+    border-color: #0083c4;
+}
+
+.ws-pagination__controls button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.ws-pagination__per-page {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.ws-pagination__per-page select {
+    height: 26px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0 6px;
+    color: #475569;
+}
+
+@media (max-width: 640px) {
+    .ws-pagination {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    .ws-pagination__controls {
+        justify-content: center;
     }
 }
 
