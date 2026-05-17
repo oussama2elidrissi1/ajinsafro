@@ -134,6 +134,19 @@ class ReservationPricingService
      * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
+    public function previewDepartureRooms(array $payload): array
+    {
+        $voyage = $this->resolveVoyage($payload);
+        $departure = $this->resolveDepartureForPreview($payload, $voyage);
+        $travelDate = $this->resolveTravelDate($payload, $departure);
+
+        return $this->buildDepartureRoomPreviewPayload($voyage, $departure, $travelDate);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
     public function previewDepartureSelection(array $payload): array
     {
         $tourId = (int) ($payload['tour_id'] ?? 0);
@@ -156,6 +169,54 @@ class ReservationPricingService
                 'tour_id' => ['Aucun prix configurÃ© pour ce voyage ou ce dÃ©part.'],
             ]);
         }
+
+        $roomPreview = $this->buildDepartureRoomPreviewPayload($voyage, $departure, $travelDate);
+        $mode = (string) ($roomPreview['mode'] ?? 'blocked');
+        $message = $roomPreview['message'] ?? null;
+        $roomsPayload = $roomPreview['rooms'] ?? [];
+        $roomsSource = $roomPreview['rooms_source'] ?? null;
+        $departureRoomsCount = (int) ($roomPreview['meta']['departure_rooms_count'] ?? 0);
+        $tourHotelsCount = $roomPreview['meta']['tour_hotels_count'] ?? null;
+        $tourHotelRoomsCount = $roomPreview['meta']['tour_hotel_rooms_count'] ?? null;
+        $availabilityCount = $roomPreview['meta']['availability_count'] ?? null;
+
+        $totalBase = round($unitPrice * $travelersCount, 2);
+        Log::info('URGENT PRICING PREVIEW ROOMS SOURCE', [
+            'departure_rooms_count' => $departureRoomsCount,
+            'tour_hotel_rooms_count' => $tourHotelRoomsCount,
+            'availability_count' => $availabilityCount,
+            'final_mode' => $mode,
+            'rooms' => $roomsPayload,
+        ]);
+        Log::info('ROOM LOOKUP FINAL', [
+            'tour_id' => $tourId ?: null,
+            'travel_date_id' => $travelDateId ?: null,
+            'departure_id' => $departureId ?: null,
+            'departure_rooms_count' => $departureRoomsCount,
+            'tour_hotels_count' => $tourHotelsCount,
+            'tour_hotel_rooms_count' => $tourHotelRoomsCount,
+            'tour_hotel_availabilities_count' => $availabilityCount,
+            'final_mode' => $mode,
+            'rooms_source' => $roomsSource,
+            'rooms' => $roomsPayload,
+        ]);
+
+        return [
+            'success' => true,
+            'mode' => $mode,
+            'message' => $message,
+            'rooms_source' => $roomsSource,
+            'departure' => $roomPreview['departure'] ?? null,
+            'pricing' => [
+                'unit_price' => round($unitPrice, 2),
+                'travelers_count' => $travelersCount,
+                'total_base' => $totalBase,
+                'room_supplement_total' => 0.0,
+                'extras_total' => 0.0,
+                'total_amount' => $totalBase,
+            ],
+            'rooms' => $roomsPayload,
+        ];
 
         $departure->loadMissing(['departureHotels.rooms', 'roomAllocations']);
         $rooms = $departure->departureHotels
@@ -363,6 +424,161 @@ class ReservationPricingService
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    private function buildDepartureRoomPreviewPayload(Voyage $voyage, Departure $departure, ?TravelDate $travelDate): array
+    {
+        $departure->loadMissing(['departureHotels.rooms', 'roomAllocations']);
+        $rooms = $departure->departureHotels
+            ->filter(fn ($hotel) => (bool) ($hotel->is_active ?? false))
+            ->flatMap(function ($hotel) {
+                return $hotel->rooms->filter(fn ($room) => ! in_array($room->status ?? null, ['inactive', 'closed'], true));
+            })
+            ->values();
+        $departureRoomsCount = $rooms->count();
+
+        $hasAssociatedHotels = $departure->departureHotels->filter(fn ($hotel) => (bool) ($hotel->is_active ?? false))->isNotEmpty();
+        Log::info('URGENT ROOM SERVICE rooms after filter', [
+            'departure_id' => $departure->id,
+            'rooms_count_raw' => $departure->departureHotels->flatMap(fn ($h) => $h->rooms)->count(),
+            'rooms_count_after_filter' => $rooms->count(),
+            'filter_used' => "status not in ['inactive','closed']",
+        ]);
+
+        $mode = 'blocked';
+        $message = null;
+        $roomsPayload = [];
+        $roomsSource = null;
+        $tourHotelsCount = null;
+        $tourHotelRoomsCount = null;
+        $availabilityCount = null;
+
+        if ($rooms->isNotEmpty()) {
+            $mode = 'rooms';
+            $roomsSource = 'departure_hotel_rooms';
+            $roomsPayload = $departure->departureHotels
+                ->filter(fn ($hotel) => (bool) ($hotel->is_active ?? false))
+                ->map(function ($hotel) {
+                    $roomLines = $hotel->rooms
+                        ->filter(fn ($room) => ! in_array($room->status ?? null, ['inactive', 'closed'], true))
+                        ->map(function ($room) {
+                            $totalRooms = max(0, (int) ($room->total_rooms ?? 0));
+                            $remainingRooms = max(0, (int) ($room->available_rooms ?? 0));
+                            $usedRooms = max(0, $totalRooms - $remainingRooms);
+                            $capacity = max(0, (int) ($room->capacity_total ?? 0));
+                            $totalPlaces = max(0, (int) ($room->total_places ?? ($totalRooms * $capacity)));
+                            $remainingPlaces = max(0, (int) ($room->available_places ?? ($remainingRooms * $capacity)));
+                            $usedPlaces = max(0, $totalPlaces - $remainingPlaces);
+
+                            return [
+                                'departure_hotel_room_id' => (int) $room->id,
+                                'room_type' => (string) $room->room_type,
+                                'capacity' => $capacity,
+                                'capacity_total' => $capacity,
+                                'capacity_per_room' => $capacity,
+                                'total_rooms' => $totalRooms,
+                                'used_rooms' => $usedRooms,
+                                'reserved_rooms' => $usedRooms,
+                                'available_rooms' => $remainingRooms,
+                                'remaining_rooms' => $remainingRooms,
+                                'total_places' => $totalPlaces,
+                                'used_places' => $usedPlaces,
+                                'reserved_places' => $usedPlaces,
+                                'available_places' => $remainingPlaces,
+                                'remaining_places' => $remainingPlaces,
+                                'unit_supplement' => (float) ($room->supplement ?? 0),
+                                'supplement' => (float) ($room->supplement ?? 0),
+                                'room_count' => 0,
+                                'subtotal' => 0,
+                                'status' => $room->status,
+                            ];
+                        })
+                        ->values()
+                        ->all();
+
+                    return $roomLines !== [] ? [
+                        'departure_hotel_id' => (int) $hotel->id,
+                        'hotel_name' => $hotel->hotel_name ?: 'Hôtel',
+                        'rooms' => $roomLines,
+                    ] : null;
+                })
+                ->filter()
+                ->values()
+                ->all();
+        } elseif (! $hasAssociatedHotels && (int) ($departure->available_capacity ?? 0) > 0) {
+            $tourHotelLookup = $this->buildTourHotelAvailabilityPayload($voyage, $travelDate);
+            $tourHotelsCount = $tourHotelLookup['tour_hotels_count'];
+            $tourHotelRoomsCount = $tourHotelLookup['tour_hotel_rooms_count'];
+            $availabilityCount = $tourHotelLookup['availability_count'];
+
+            if ($tourHotelLookup['rooms'] !== []) {
+                $mode = 'rooms';
+                $roomsSource = 'tour_hotel_room_availabilities';
+                $roomsPayload = $tourHotelLookup['rooms'];
+            } else {
+                $allocationLookup = $this->buildDepartureRoomAllocationPayload($departure);
+                if ($allocationLookup['rooms'] !== []) {
+                    $mode = 'rooms';
+                    $roomsSource = 'departure_room_allocations';
+                    $roomsPayload = $allocationLookup['rooms'];
+                } else {
+                    $mode = 'places_only';
+                }
+            }
+        } else {
+            $tourHotelLookup = $this->buildTourHotelAvailabilityPayload($voyage, $travelDate);
+            $tourHotelsCount = $tourHotelLookup['tour_hotels_count'];
+            $tourHotelRoomsCount = $tourHotelLookup['tour_hotel_rooms_count'];
+            $availabilityCount = $tourHotelLookup['availability_count'];
+
+            if ($tourHotelLookup['rooms'] !== []) {
+                $mode = 'rooms';
+                $roomsSource = 'tour_hotel_room_availabilities';
+                $roomsPayload = $tourHotelLookup['rooms'];
+            }
+
+            if ($mode !== 'rooms') {
+                $allocationLookup = $this->buildDepartureRoomAllocationPayload($departure);
+                if ($allocationLookup['rooms'] !== []) {
+                    $mode = 'rooms';
+                    $roomsSource = 'departure_room_allocations';
+                    $roomsPayload = $allocationLookup['rooms'];
+                }
+            }
+
+            if ($mode !== 'rooms') {
+                if ($hasAssociatedHotels) {
+                    $message = 'Configuration incomplète : des hôtels sont liés à ce départ mais aucune chambre n’est configurée.';
+                } else {
+                    $message = 'Ce départ n’a plus de places disponibles.';
+                }
+            }
+        }
+
+        return [
+            'success' => true,
+            'mode' => $mode,
+            'message' => $message,
+            'rooms_source' => $roomsSource,
+            'departure' => [
+                'id' => (int) $departure->id,
+                'start_date' => $departure->getRawOriginal('start_date') ? date('Y-m-d', strtotime((string) $departure->getRawOriginal('start_date'))) : null,
+                'end_date' => $departure->getRawOriginal('end_date') ? date('Y-m-d', strtotime((string) $departure->getRawOriginal('end_date'))) : null,
+                'travel_date_id' => (int) ($travelDate?->id ?? ($departure->wp_travel_date_id ?? 0)),
+                'available_places' => (int) ($departure->available_capacity ?? 0),
+                'configure_url' => route('admin.circuits.voyages.departures.show', [$departure->voyage_id, $departure]),
+            ],
+            'rooms' => $roomsPayload,
+            'meta' => [
+                'departure_rooms_count' => $departureRoomsCount,
+                'tour_hotels_count' => $tourHotelsCount,
+                'tour_hotel_rooms_count' => $tourHotelRoomsCount,
+                'availability_count' => $availabilityCount,
+            ],
+        ];
+    }
+
+    /**
      * @return array{rooms: array<int, array<string, mixed>>, tour_hotels_count: int, tour_hotel_rooms_count: int, availability_count: int}
      */
     private function buildTourHotelAvailabilityPayload(Voyage $voyage, ?TravelDate $travelDate): array
@@ -450,8 +666,15 @@ class ReservationPricingService
                     'room_type' => $roomType,
                     'capacity' => $capacity,
                     'capacity_total' => $capacity,
+                    'capacity_per_room' => $capacity,
+                    'total_rooms' => $quantity,
+                    'used_rooms' => 0,
                     'available_rooms' => $quantity,
+                    'remaining_rooms' => $quantity,
+                    'total_places' => $availablePlaces,
+                    'used_places' => 0,
                     'available_places' => $availablePlaces,
+                    'remaining_places' => $availablePlaces,
                     'unit_supplement' => (float) ($availability->supplement ?? $room->supplement ?? 0),
                     'supplement' => (float) ($availability->supplement ?? $room->supplement ?? 0),
                     'room_count' => 0,
@@ -529,9 +752,17 @@ class ReservationPricingService
             'departure_hotel_id' => $hotelId ?: null,
             'hotel_name' => (string) ($hotelNames->get($hotelId) ?: 'Hôtel'),
             'room_type' => (string) ($allocation->room_type ?? $allocation->type ?? 'Chambre'),
-            'available_rooms' => $quantity,
             'capacity' => $capacity,
+            'capacity_total' => $capacity,
+            'capacity_per_room' => $capacity,
+            'total_rooms' => $quantity,
+            'used_rooms' => 0,
+            'available_rooms' => $quantity,
+            'remaining_rooms' => $quantity,
+            'total_places' => $quantity * $capacity,
+            'used_places' => 0,
             'available_places' => $quantity * $capacity,
+            'remaining_places' => $quantity * $capacity,
             'unit_supplement' => (float) ($allocation->unit_supplement ?? $allocation->supplement ?? 0),
         ];
         }

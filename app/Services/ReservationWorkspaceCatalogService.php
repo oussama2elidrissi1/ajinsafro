@@ -16,6 +16,7 @@ use App\Models\Wp\Activity;
 use App\Models\Wp\TourDayActivity;
 use App\Models\Wp\WpPost;
 use App\Models\Wp\WpPostMeta;
+use App\Services\Reservations\ReservationPricingService;
 use App\Services\Wp\WpHeroImageService;
 use App\Support\TourPlacesCalculator;
 use Carbon\Carbon;
@@ -33,7 +34,8 @@ use Illuminate\Support\Str;
 class ReservationWorkspaceCatalogService
 {
     public function __construct(
-        protected BranchScopeService $branchScope
+        protected BranchScopeService $branchScope,
+        protected ReservationPricingService $reservationPricing,
     ) {}
 
     /**
@@ -1939,6 +1941,156 @@ class ReservationWorkspaceCatalogService
 
             $departure = $departuresByTravelDateId->get($tid);
             $departureId = $departure instanceof Departure ? (int) $departure->id : null;
+
+            $roomCap = 0;
+            $roomRemaining = 0;
+            $roomFillPct = null;
+            $roomCapNote = $departureId ? 'Aucune chambre configurée' : 'Départ non synchronisé';
+            $roomDebug = null;
+            $roomLines = [];
+
+            if ($laravelId) {
+                try {
+                    $roomPreview = $this->reservationPricing->previewDepartureRooms([
+                        'tour_id' => $laravelId,
+                        'travel_date_id' => $tid,
+                        'departure_id' => $departureId,
+                    ]);
+
+                    $roomGroups = collect($roomPreview['rooms'] ?? []);
+                    $roomLines = $roomGroups
+                        ->flatMap(function ($group) {
+                            $hotelName = (string) ($group['hotel_name'] ?? '');
+                            return collect($group['rooms'] ?? [])->map(function ($room) use ($hotelName) {
+                                $type = (string) ($room['room_type'] ?? 'Chambre');
+                                $quantity = max(0, (int) ($room['total_rooms'] ?? $room['available_rooms'] ?? 0));
+                                $capacityPerRoom = max(0, (int) ($room['capacity_per_room'] ?? $room['capacity_total'] ?? $room['capacity'] ?? 0));
+                                $remainingRooms = max(0, (int) ($room['remaining_rooms'] ?? $room['available_rooms'] ?? 0));
+                                $usedRooms = max(0, (int) ($room['used_rooms'] ?? ($quantity - $remainingRooms)));
+                                $remainingPlaces = max(0, (int) ($room['remaining_places'] ?? $room['available_places'] ?? ($remainingRooms * $capacityPerRoom)));
+                                $totalPlaces = max(0, (int) ($room['total_places'] ?? ($quantity * $capacityPerRoom)));
+                                $usedPlaces = max(0, (int) ($room['used_places'] ?? ($totalPlaces - $remainingPlaces)));
+
+                                return [
+                                    'type' => $type,
+                                    'room_type' => $type,
+                                    'hotel_name' => $hotelName,
+                                    'quantity' => $quantity,
+                                    'total_rooms' => $quantity,
+                                    'capacity_per_room' => $capacityPerRoom,
+                                    'supplement' => (float) ($room['supplement'] ?? $room['unit_supplement'] ?? 0),
+                                    'used_rooms' => $usedRooms,
+                                    'remaining_rooms' => $remainingRooms,
+                                    'total_places' => $totalPlaces,
+                                    'used_places' => $usedPlaces,
+                                    'remaining_places' => $remainingPlaces,
+                                    'status' => (string) ($room['status'] ?? ''),
+                                ];
+                            });
+                        })
+                        ->values()
+                        ->all();
+
+                    $roomCap = collect($roomLines)->sum(fn ($room) => (int) ($room['total_places'] ?? 0));
+                    $roomRemaining = collect($roomLines)->sum(fn ($room) => (int) ($room['remaining_places'] ?? 0));
+                    $usedPlaces = max(0, $roomCap - $roomRemaining);
+                    $roomFillPct = $roomCap > 0 ? min(100, (int) round(($usedPlaces / $roomCap) * 100)) : null;
+
+                    if ($roomLines !== []) {
+                        $roomCapNote = null;
+                    } elseif ($departureId === null) {
+                        $roomCapNote = 'Départ non synchronisé';
+                    }
+
+                    Log::info('Workspace departure rooms debug', [
+                        'tour_id' => $laravelId,
+                        'travel_date_id' => $tid,
+                        'departure_hotels_count' => $roomGroups->count(),
+                        'rooms_count' => count($roomLines),
+                        'rooms' => $roomLines,
+                    ]);
+
+                    if (config('app.debug')) {
+                        $roomDebug = [
+                            'departure_id' => $departureId,
+                            'travel_date_id' => $tid,
+                            'rooms_source' => $roomPreview['rooms_source'] ?? null,
+                            'room_lines' => $roomLines,
+                            'capacity' => $roomCap,
+                            'remaining_places' => $roomRemaining,
+                        ];
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('Workspace departure rooms lookup failed', [
+                        'tour_id' => $laravelId,
+                        'travel_date_id' => $tid,
+                        'departure_id' => $departureId,
+                        'message' => $e->getMessage(),
+                    ]);
+                }
+            }
+
+            $almostThreshold = 10;
+            if ($roomCap <= 0) {
+                $roomStatusKey = 'unknown';
+                $roomStatusLabel = $roomCapNote ?: 'Aucune capacité';
+            } elseif ($roomRemaining <= 0) {
+                $roomStatusKey = 'full';
+                $roomStatusLabel = 'Complet';
+            } elseif ($roomRemaining < $almostThreshold) {
+                $roomStatusKey = 'almost_full';
+                $roomStatusLabel = 'Presque complet';
+            } else {
+                $roomStatusKey = 'available';
+                $roomStatusLabel = 'Disponible';
+            }
+
+            $reserveUrl = $laravelId ? route('admin.reservations.create', array_filter([
+                'tour_id' => $laravelId,
+                'travel_date_id' => $tid,
+            ], fn ($v) => $v !== null && $v !== '')) : null;
+
+            $listUrl = $laravelId ? route('admin.reservations.index', array_filter([
+                'voyage_id' => $laravelId,
+                'travel_date_id' => $tid,
+            ], fn ($v) => $v !== null && $v !== '')) : null;
+
+            $travelDateCarbon = Carbon::parse($td->date);
+            $daysUntil = $today->diffInDays($travelDateCarbon, false);
+            $out[] = [
+                'travel_date_id' => $tid,
+                'date_iso' => $travelDateCarbon->format('Y-m-d'),
+                'date_label' => $this->formatFrenchLongDate($travelDateCarbon),
+                'is_past' => $travelDateCarbon->lt($today),
+                'days_until' => $daysUntil !== false ? (int) $daysUntil : null,
+                'departure_id' => $departureId,
+                'capacity' => $roomCap,
+                'capacity_known' => true,
+                'capacity_note' => $roomCapNote,
+                'reservations' => [
+                    'validee' => $m['validee'],
+                    'en_cours' => $m['en_cours'],
+                    'annulee' => $m['annulee'],
+                    'total' => $dossierTotal,
+                ],
+                'pax' => [
+                    'validee' => $m['pax_validee'],
+                    'en_cours' => $m['pax_en_cours'],
+                    'annulee' => $m['pax_annulee'],
+                ],
+                'remaining' => $roomRemaining,
+                'fill_pct' => $roomFillPct,
+                'booked_pax' => $confirmedPax,
+                'status_key' => $roomStatusKey,
+                'status_label' => $roomStatusLabel,
+                'rooms' => $roomLines,
+                'debug' => $roomDebug,
+                'routes' => [
+                    'reserve' => $reserveUrl,
+                    'reservations' => $listUrl,
+                ],
+            ];
+            continue;
 
             $cap = 0;
             $capNote = null;
