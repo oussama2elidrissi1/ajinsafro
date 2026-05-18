@@ -169,8 +169,9 @@ get_header();
                                         </div>
                                         <button type="button" class="ajtb-guest-apply" id="ajtb-v1-guest-apply"><?php echo esc_html__('Appliquer', 'ajinsafro-traveler-home'); ?></button>
                                     </div>
-                                    <input type="hidden" id="ajtb-v1-guest-adults-input" value="2">
-                                    <input type="hidden" id="ajtb-v1-guest-children-input" value="0">
+                                    <input type="hidden" id="ajtb-v1-guest-adults-input" name="adults_count" value="2">
+                                    <input type="hidden" id="ajtb-v1-guest-children-input" name="children_count" value="0">
+                                    <input type="hidden" id="ajtb-v1-guest-total-input" name="travelers_count" value="2">
                                 </div>
                             </div>
                         </div>
@@ -213,12 +214,16 @@ get_header();
                     <section class="ajtb-panel">
                         <div class="ajtb-companion-header">
                             <h2 class="ajtb-section-title" style="margin:0;"><?php echo esc_html__('Accompagnants', 'ajinsafro-traveler-home'); ?></h2>
-                            <div class="ajtb-companion-actions">
-                                <button class="ajtb-btn ajtb-btn-prev" type="button" data-ajtb-recap-action="add-adult">+ <?php echo esc_html__('Adulte', 'ajinsafro-traveler-home'); ?></button>
-                                <button class="ajtb-btn ajtb-btn-prev" type="button" data-ajtb-recap-action="add-child">+ <?php echo esc_html__('Enfant', 'ajinsafro-traveler-home'); ?></button>
-                            </div>
                         </div>
+                        <p class="ajtb-muted" data-ajtb-companions-info style="margin:8px 0 14px;"></p>
                         <div id="ajtb-recap-companions-list" data-ajtb-companions></div>
+                    </section>
+
+                    <!-- Bouton fallback confirmation (bas du formulaire) -->
+                    <section class="ajtb-panel" style="padding:0; border:none; box-shadow:none; background:transparent;">
+                        <button type="button" class="ajtb-confirm ajtb-confirm--bottom" id="ajtb-bottom-submit" data-ajtb-recap-action="final-submit">
+                            <?php echo esc_html__('Confirmer ma reservation', 'ajinsafro-traveler-home'); ?>
+                        </button>
                     </section>
 
                     <!-- Programme -->

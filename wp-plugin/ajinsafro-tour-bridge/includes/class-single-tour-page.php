@@ -955,6 +955,24 @@ class AJTB_Single_Tour_Page
             . ($room_id > 0 ? (' room_id=' . $room_id) : '')
             . ' room_alloc=' . wp_json_encode($normalizedLines, JSON_UNESCAPED_UNICODE)
             . ($hasHalfDouble ? (' half_double_pending=' . wp_json_encode($halfDoublePendingKeys, JSON_UNESCAPED_UNICODE)) : '');
+
+        $companions_raw = isset($_POST['companions']) && is_array($_POST['companions']) ? $_POST['companions'] : [];
+        if (!empty($companions_raw)) {
+            $companionLabels = [];
+            foreach ($companions_raw as $c) {
+                if (!is_array($c)) { continue; }
+                $cf = trim((string) ($c['first_name'] ?? ''));
+                $cl = trim((string) ($c['last_name'] ?? ''));
+                $ct = sanitize_text_field((string) ($c['type'] ?? 'adult'));
+                if ($cf !== '' || $cl !== '') {
+                    $companionLabels[] = ($ct === 'child' ? 'Enfant' : 'Adulte') . ': ' . $cf . ' ' . $cl;
+                }
+            }
+            if (!empty($companionLabels)) {
+                $notes .= ' | Accompagnants: ' . implode(', ', $companionLabels);
+            }
+        }
+
         if ($special_request !== '') {
             $notes .= ' | Demande speciale: ' . $special_request;
         }

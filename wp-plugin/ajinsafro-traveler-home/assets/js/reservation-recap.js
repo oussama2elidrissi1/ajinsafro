@@ -52,11 +52,16 @@
             return txt;
         }
 
+        var totalInput = document.getElementById("ajtb-v1-guest-total-input");
+
         function render() {
             adultsValue.textContent = String(state.adults);
             childrenValue.textContent = String(state.children);
             adultsInput.value = String(state.adults);
             childrenInput.value = String(state.children);
+            if (totalInput) {
+                totalInput.value = String(state.adults + state.children);
+            }
             summary.textContent = formatSummary();
             document.dispatchEvent(
                 new CustomEvent("ajtb:v1:travellers-changed", {
@@ -129,53 +134,67 @@
 
     function initCompanions() {
         var container = document.getElementById("ajtb-recap-companions-list");
-        var addAdultBtn = document.querySelector("[data-ajtb-recap-action='add-adult']");
-        var addChildBtn = document.querySelector("[data-ajtb-recap-action='add-child']");
+        var infoEl = document.querySelector("[data-ajtb-companions-info]");
         if (!container) { return; }
 
-        var counter = 0;
-
-        function createRow(type) {
-            counter += 1;
-            var row = document.createElement("div");
-            row.className = "ajtb-companion-row";
-            row.setAttribute("data-companion-row", "");
-            row.innerHTML =
-                '<div class="ajtb-field">' +
-                '<select data-companion-type>' +
-                '<option value="adult"' + (type === "adult" ? " selected" : "") + '>Adulte</option>' +
-                '<option value="child"' + (type === "child" ? " selected" : "") + '>Enfant</option>' +
-                '</select>' +
-                '</div>' +
-                '<div class="ajtb-field">' +
-                '<input type="text" data-companion-first placeholder="Prenom" />' +
-                '</div>' +
-                '<div class="ajtb-field">' +
-                '<input type="text" data-companion-last placeholder="Nom" />' +
-                '</div>' +
-                '<button class="ajtb-remove" type="button" data-companion-remove>&times;</button>';
-
-            row.querySelector("[data-companion-remove]").addEventListener("click", function () {
-                row.remove();
-                document.dispatchEvent(new CustomEvent("ajtb:v1:companions-changed"));
-            });
-
-            return row;
+        function getCounts() {
+            var adultsInput = document.getElementById("ajtb-v1-guest-adults-input");
+            var childrenInput = document.getElementById("ajtb-v1-guest-children-input");
+            var adults = Math.max(1, parseInt(adultsInput ? adultsInput.value : "2", 10) || 2);
+            var children = Math.max(0, parseInt(childrenInput ? childrenInput.value : "0", 10) || 0);
+            return { adults: adults, children: children };
         }
 
-        if (addAdultBtn) {
-            addAdultBtn.addEventListener("click", function () {
-                container.appendChild(createRow("adult"));
-                document.dispatchEvent(new CustomEvent("ajtb:v1:companions-changed"));
-            });
+        function companionRowHtml(index, type) {
+            var label = type === "child" ? "Enfant" : "Adulte";
+            var isAdult = type === "adult";
+            return (
+                '<div class="ajtb-companion-row is-auto" data-companion-row data-companion-index="' + index + '">'
+                + '<div class="ajtb-field">'
+                + '<select name="companions[' + index + '][type]" required>'
+                + '<option value="adult"' + (isAdult ? ' selected' : '') + '>Adulte</option>'
+                + '<option value="child"' + (!isAdult ? ' selected' : '') + '>Enfant</option>'
+                + '</select>'
+                + '</div>'
+                + '<div class="ajtb-field">'
+                + '<input type="text" name="companions[' + index + '][first_name]" placeholder="Prenom" required />'
+                + '</div>'
+                + '<div class="ajtb-field">'
+                + '<input type="text" name="companions[' + index + '][last_name]" placeholder="Nom" required />'
+                + '</div>'
+                + '</div>'
+            );
         }
 
-        if (addChildBtn) {
-            addChildBtn.addEventListener("click", function () {
-                container.appendChild(createRow("child"));
-                document.dispatchEvent(new CustomEvent("ajtb:v1:companions-changed"));
-            });
+        function render() {
+            var counts = getCounts();
+            var adultCompanions = Math.max(counts.adults - 1, 0);
+            var childCompanions = counts.children;
+            var totalCompanions = adultCompanions + childCompanions;
+
+            if (infoEl) {
+                if (totalCompanions > 0) {
+                    infoEl.textContent = totalCompanions + " accompagnant(s) requis selon votre selection.";
+                } else {
+                    infoEl.textContent = "Aucun accompagnant requis.";
+                }
+            }
+
+            var html = "";
+            var index = 0;
+            for (var i = 0; i < adultCompanions; i++) {
+                html += companionRowHtml(index, "adult");
+                index++;
+            }
+            for (var i = 0; i < childCompanions; i++) {
+                html += companionRowHtml(index, "child");
+                index++;
+            }
+            container.innerHTML = html;
         }
+
+        render();
+        document.addEventListener("ajtb:v1:travellers-changed", render);
     }
 
     function initPriceCalculation() {
@@ -380,9 +399,9 @@
         }
 
         document.querySelectorAll("[data-companion-row]").forEach(function (row) {
-            var typeEl = row.querySelector("[data-companion-type]");
-            var firstEl = row.querySelector("[data-companion-first]");
-            var lastEl = row.querySelector("[data-companion-last]");
+            var typeEl = row.querySelector('select[name*="[type]"]');
+            var firstEl = row.querySelector('input[name*="[first_name]"]');
+            var lastEl = row.querySelector('input[name*="[last_name]"]');
             if (!firstEl || !lastEl) { return; }
             var fn = firstEl.value.trim();
             var ln = lastEl.value.trim();
@@ -420,6 +439,26 @@
         }
         if (phone && phone.value.trim() === "") {
             alert("Veuillez saisir le telephone du client.");
+            return false;
+        }
+
+        var companionRows = document.querySelectorAll("[data-companion-row]");
+        var missing = false;
+        companionRows.forEach(function (row) {
+            var fn = row.querySelector('input[name*="[first_name]"]');
+            var ln = row.querySelector('input[name*="[last_name]"]');
+            if (!fn || !ln) { return; }
+            if (fn.value.trim() === "" || ln.value.trim() === "") {
+                missing = true;
+                fn.style.borderColor = fn.value.trim() === "" ? "#ef4444" : "";
+                ln.style.borderColor = ln.value.trim() === "" ? "#ef4444" : "";
+            } else {
+                fn.style.borderColor = "";
+                ln.style.borderColor = "";
+            }
+        });
+        if (missing) {
+            alert("Veuillez renseigner les informations de tous les accompagnants.");
             return false;
         }
         return true;
@@ -494,6 +533,17 @@
         formData.append("passengers", JSON.stringify(passengers));
         formData.append("room_allocation_json", JSON.stringify([]));
         formData.append("extras_json", JSON.stringify(getSelectedExtras()));
+
+        var companionRows = document.querySelectorAll("[data-companion-row]");
+        companionRows.forEach(function (row, idx) {
+            var typeEl = row.querySelector('select[name*="[type]"]');
+            var firstEl = row.querySelector('input[name*="[first_name]"]');
+            var lastEl = row.querySelector('input[name*="[last_name]"]');
+            if (typeEl) { formData.append("companions[" + idx + "][type]", typeEl.value); }
+            if (firstEl) { formData.append("companions[" + idx + "][first_name]", firstEl.value.trim()); }
+            if (lastEl) { formData.append("companions[" + idx + "][last_name]", lastEl.value.trim()); }
+        });
+
         if (specialReq) {
             formData.append("special_request", specialReq.value.trim());
         }

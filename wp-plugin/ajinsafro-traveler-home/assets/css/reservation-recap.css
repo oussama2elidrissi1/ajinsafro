@@ -726,3 +726,19 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Bottom confirm fallback */
+.ajtb-confirm--bottom {
+  margin-top: 8px;
+}
+
+/* Auto companions — no remove button */
+.ajtb-companion-row.is-auto {
+  grid-template-columns: 130px 1fr 1fr;
+}
+
+.ajtb-companion-row.is-auto .ajtb-field select {
+  pointer-events: none;
+  opacity: 0.85;
+  background: #f8fbff;
+}
