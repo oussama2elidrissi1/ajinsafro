@@ -1391,6 +1391,11 @@
 
         {{-- Vue liste (tableau) — défaut --}}
         <div id="ws-view-table" class="ws-table-card {{ $workspaceView === 'list' ? '' : 'hidden' }}">
+            @if(config('app.debug'))
+                <div style="background:#fff3cd;padding:6px 12px;font-size:12px;border-bottom:1px solid #e2e8f0;">
+                    sort={{ request('sort') }} | direction={{ request('direction') }} | currentSort={{ $currentSort ?? 'null' }} | currentDirection={{ $currentDirection ?? 'null' }}
+                </div>
+            @endif
             <div class="ws-table-card__head">
                 <h2 class="ws-table-card__title">Vue liste</h2>
                 <p class="ws-table-card__sub">Référence, voyage, départ, capacité et actions.</p>
@@ -1489,8 +1494,64 @@
                     ]);
                 }
             }
-            $sortedDepRows = $allDepRows->sortBy(function ($item) {
-                return $item['sort_date'] ? $item['sort_date']->timestamp : PHP_INT_MAX;
+            $sortedDepRows = $allDepRows->sort(function ($a, $b) use ($currentSort, $currentDirection) {
+                $cmp = 0;
+                switch ($currentSort) {
+                    case 'ref':
+                        $cmp = strcasecmp((string) ($a['row']['code'] ?? ''), (string) ($b['row']['code'] ?? ''));
+                        break;
+                    case 'voyage':
+                        $cmp = strcasecmp((string) ($a['row']['name'] ?? ''), (string) ($b['row']['name'] ?? ''));
+                        break;
+                    case 'destination':
+                        $cmp = strcasecmp((string) ($a['row']['voyage_destination'] ?? ''), (string) ($b['row']['voyage_destination'] ?? ''));
+                        break;
+                    case 'departure_date':
+                        $tsA = $a['sort_date'] ? $a['sort_date']->timestamp : PHP_INT_MAX;
+                        $tsB = $b['sort_date'] ? $b['sort_date']->timestamp : PHP_INT_MAX;
+                        $cmp = $tsA <=> $tsB;
+                        break;
+                    case 'sold_pending':
+                        $valA = (int) ($a['row']['stats']['validee'] ?? 0) + (int) ($a['row']['stats']['en_cours'] ?? 0);
+                        $valB = (int) ($b['row']['stats']['validee'] ?? 0) + (int) ($b['row']['stats']['en_cours'] ?? 0);
+                        $cmp = $valA <=> $valB;
+                        break;
+                    case 'remaining':
+                        $remA = data_get($a['departure'], 'remaining', $a['row']['commercial']['places_restantes'] ?? null);
+                        $remB = data_get($b['departure'], 'remaining', $b['row']['commercial']['places_restantes'] ?? null);
+                        if ($remA === null && $remB === null) {
+                            $cmp = 0;
+                        } elseif ($remA === null) {
+                            $cmp = 1;
+                        } elseif ($remB === null) {
+                            $cmp = -1;
+                        } else {
+                            $cmp = $remA <=> $remB;
+                        }
+                        break;
+                    case 'capacity':
+                        $capA = data_get($a['departure'], 'capacity', $a['row']['commercial']['capacity_total'] ?? null);
+                        $capB = data_get($b['departure'], 'capacity', $b['row']['commercial']['capacity_total'] ?? null);
+                        if ($capA === null && $capB === null) {
+                            $cmp = 0;
+                        } elseif ($capA === null) {
+                            $cmp = 1;
+                        } elseif ($capB === null) {
+                            $cmp = -1;
+                        } else {
+                            $cmp = $capA <=> $capB;
+                        }
+                        break;
+                    default:
+                        $tsA = $a['sort_date'] ? $a['sort_date']->timestamp : PHP_INT_MAX;
+                        $tsB = $b['sort_date'] ? $b['sort_date']->timestamp : PHP_INT_MAX;
+                        $cmp = $tsA <=> $tsB;
+                        break;
+                }
+                if ($cmp === 0) {
+                    $cmp = strcasecmp((string) ($a['row']['code'] ?? ''), (string) ($b['row']['code'] ?? ''));
+                }
+                return $currentDirection === 'desc' ? -$cmp : $cmp;
             })->values();
             $sellableDepRows = $sortedDepRows->filter(fn($i) => $i['is_sellable']);
             $nonSellableDepRows = $sortedDepRows->filter(fn($i) => ! $i['is_sellable']);

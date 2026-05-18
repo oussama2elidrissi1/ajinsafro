@@ -75,7 +75,8 @@ class ReservationWorkspaceController extends Controller
         $direction = strtolower(trim((string) $request->query('direction', 'asc')));
         $allowedSorts = ['ref', 'voyage', 'destination', 'departure_date', 'sold_pending', 'remaining', 'capacity'];
         if (! in_array($sort, $allowedSorts, true)) {
-            $sort = null;
+            $sort = 'departure_date';
+            $direction = 'asc';
         }
         if (! in_array($direction, ['asc', 'desc'], true)) {
             $direction = 'asc';
