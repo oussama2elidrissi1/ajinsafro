@@ -1273,7 +1273,7 @@
                 <h2 class="ws-table-card__title">Vue liste</h2>
                 <p class="ws-table-card__sub">Référence, voyage, départ, capacité et actions.</p>
             </div>
-            <div class="ws-table-scroll workspace-list-table-wrapper">
+            <div class="ws-table-scroll workspace-list-table-wrapper workspace-table-fixed">
                 <table class="ws-data-table ws-data-table--responsive workspace-list-table" aria-label="Catalogue des offres en liste">
     <thead>
         <tr>
