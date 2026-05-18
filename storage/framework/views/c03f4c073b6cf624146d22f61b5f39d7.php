@@ -104,4 +104,4 @@
 
 </body>
 </html>
-<?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\layouts\admin-v2.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views/layouts/admin-v2.blade.php ENDPATH**/ ?>

@@ -56,7 +56,7 @@
     <link href="{{ URL::asset('css/admin-v2.css') }}" rel="stylesheet">
 
     @stack('styles')
-    <link href="{{ URL::asset('css/admin-compact.css') }}?v=workspace-list-fullwidth-6" rel="stylesheet">
+    <link href="{{ URL::asset('css/admin-compact.css') }}?v=workspace-fixed-v7" rel="stylesheet">
 </head>
 <body class="aj-admin-v2-body aj-admin aj-admin-compact">
 

@@ -35,7 +35,7 @@
     <link href="<?php echo e(URL::asset('css/admin-premium.css')); ?>" rel="stylesheet" type="text/css" />
 
     <?php echo $__env->yieldPushContent('styles'); ?>
-    <link href="<?php echo e(URL::asset('css/admin-compact.css')); ?>?v=workspace-list-fullwidth-6" rel="stylesheet" type="text/css" />
+    <link href="<?php echo e(URL::asset('css/admin-compact.css')); ?>?v=workspace-fixed-v7" rel="stylesheet" type="text/css" />
 </head>
 <body class="partner-v2 admin-premium-ui aj-admin aj-admin-compact text-gray-800 antialiased font-sans<?php echo e($voyageLayoutPage ? ' voyage-layout-page' : ''); ?><?php echo e($hideInternalV2Topbar ? ' internal-v2-topbar-hidden' : ''); ?>">
     <?php if($hideInternalV2Topbar): ?>
@@ -80,7 +80,7 @@
 
     <?php echo $__env->make('layouts.head-css', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
     <?php echo $__env->yieldPushContent('styles'); ?>
-    <link href="<?php echo e(URL::asset('css/admin-compact.css')); ?>?v=workspace-list-fullwidth-6" rel="stylesheet" type="text/css" />
+    <link href="<?php echo e(URL::asset('css/admin-compact.css')); ?>?v=workspace-fixed-v7" rel="stylesheet" type="text/css" />
 </head>
 
 <body class="admin-premium-ui aj-admin aj-admin-compact<?php echo e($voyageLayoutPage ? ' voyage-layout-page' : ''); ?><?php echo e($hideInternalV2Topbar ? ' internal-v2-topbar-hidden' : ''); ?>" data-layout="detached" data-topbar="colored">

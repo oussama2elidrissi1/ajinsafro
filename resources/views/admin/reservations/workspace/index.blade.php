@@ -145,7 +145,7 @@
         };
     </script>
 @endif
-<link rel="stylesheet" href="{{ asset('css/reservation-workspace.css') }}">
+<link rel="stylesheet" href="{{ asset('css/reservation-workspace.css') }}?v=workspace-fixed-v7">
 <style>
     .ws-ring-pulse { animation: wsPulse 1.6s ease-out 1; }
     @keyframes wsPulse {
@@ -1167,6 +1167,122 @@
         border-color: #047857 !important;
         color: #ffffff !important;
     }
+
+    /* Workspace fixed table v7: loaded after reservation-workspace.css to guarantee the cascade */
+    body.aj-admin-compact,
+    body.aj-admin-compact .page-content,
+    body.aj-admin-compact .main-content {
+        overflow-x: hidden !important;
+    }
+
+    body.aj-admin-compact .workspace-table-fixed {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+    }
+
+    body.aj-admin-compact .workspace-table-fixed-table {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        table-layout: fixed !important;
+        border-collapse: collapse !important;
+    }
+
+    body.aj-admin-compact .workspace-table-fixed-table .col-ref { width: 6%; }
+    body.aj-admin-compact .workspace-table-fixed-table .col-voyage { width: 28%; }
+    body.aj-admin-compact .workspace-table-fixed-table .col-destination { width: 13%; }
+    body.aj-admin-compact .workspace-table-fixed-table .col-depart { width: 10%; }
+    body.aj-admin-compact .workspace-table-fixed-table .col-sold { width: 10%; }
+    body.aj-admin-compact .workspace-table-fixed-table .col-restant { width: 7%; }
+    body.aj-admin-compact .workspace-table-fixed-table .col-capacite { width: 13%; }
+    body.aj-admin-compact .workspace-table-fixed-table .col-actions { width: 13%; }
+
+    body.aj-admin-compact .workspace-table-fixed-table th,
+    body.aj-admin-compact .workspace-table-fixed-table td {
+        box-sizing: border-box !important;
+        padding: 4px 5px !important;
+        font-size: 10.5px !important;
+        line-height: 1.2 !important;
+        vertical-align: middle !important;
+        overflow: hidden !important;
+    }
+
+    body.aj-admin-compact .workspace-table-fixed-table th:nth-child(2),
+    body.aj-admin-compact .workspace-table-fixed-table td:nth-child(2),
+    body.aj-admin-compact .workspace-table-fixed-table td:nth-child(2) * {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+        word-break: break-word !important;
+        overflow-wrap: anywhere !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    body.aj-admin-compact .workspace-table-fixed-table td:nth-child(2) .ws-td__offer-compact {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.2rem !important;
+        min-width: 0 !important;
+    }
+
+    body.aj-admin-compact .workspace-table-fixed-table td:nth-child(2) .ws-td__title--clamp {
+        display: block !important;
+        -webkit-line-clamp: unset !important;
+        line-clamp: unset !important;
+        -webkit-box-orient: unset !important;
+        max-height: none !important;
+    }
+
+    body.aj-admin-compact .workspace-table-fixed-table td:last-child {
+        overflow: visible !important;
+        white-space: normal !important;
+    }
+
+    body.aj-admin-compact .workspace-table-fixed-table td:last-child .d-flex,
+    body.aj-admin-compact .workspace-table-fixed-table td:last-child .actions,
+    body.aj-admin-compact .workspace-table-fixed-table td:last-child .btn-group,
+    body.aj-admin-compact .workspace-table-fixed-table td:last-child .ws-td__actions {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 3px !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    body.aj-admin-compact .workspace-table-fixed-table td:last-child .btn,
+    body.aj-admin-compact .workspace-table-fixed-table td:last-child .ws-btn {
+        min-width: 0 !important;
+        max-width: 100% !important;
+        height: 24px !important;
+        min-height: 24px !important;
+        padding: 3px 5px !important;
+        font-size: 9.5px !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+
+    @media (max-width: 1366px) {
+        body.aj-admin-compact .workspace-table-fixed-table .col-voyage { width: 30%; }
+        body.aj-admin-compact .workspace-table-fixed-table .col-actions { width: 12%; }
+
+        body.aj-admin-compact .workspace-table-fixed-table th,
+        body.aj-admin-compact .workspace-table-fixed-table td {
+            padding: 3px 4px !important;
+            font-size: 10px !important;
+        }
+
+        body.aj-admin-compact .workspace-table-fixed-table td:last-child .btn,
+        body.aj-admin-compact .workspace-table-fixed-table td:last-child .ws-btn {
+            height: 22px !important;
+            min-height: 22px !important;
+            padding: 2px 4px !important;
+            font-size: 9px !important;
+        }
+    }
 </style>
 @endpush
 
@@ -1274,7 +1390,17 @@
                 <p class="ws-table-card__sub">Référence, voyage, départ, capacité et actions.</p>
             </div>
             <div class="ws-table-scroll workspace-list-table-wrapper workspace-table-fixed">
-                <table class="ws-data-table ws-data-table--responsive workspace-list-table" aria-label="Catalogue des offres en liste">
+                <table class="ws-data-table ws-data-table--responsive workspace-list-table workspace-table-fixed-table" aria-label="Catalogue des offres en liste">
+    <colgroup>
+        <col class="col-ref">
+        <col class="col-voyage">
+        <col class="col-destination">
+        <col class="col-depart">
+        <col class="col-sold">
+        <col class="col-restant">
+        <col class="col-capacite">
+        <col class="col-actions">
+    </colgroup>
     <thead>
         <tr>
             <th scope="col" class="ws-data-table__th-ref">Réf</th>
