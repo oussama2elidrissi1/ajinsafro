@@ -426,6 +426,11 @@ class ReservationDossierController extends Controller
             ?? ''
         );
 
+        $voyages = Voyage::query()
+            ->orderBy('name')
+            ->limit(200)
+            ->get(['id', 'name', 'slug']);
+
         return view('admin.reservation-dossiers.show', [
             'dossier' => $reservationDossier,
             'reservation' => $reservation,
@@ -436,6 +441,7 @@ class ReservationDossierController extends Controller
             'allClientReservationsUrl' => $allClientReservationsUrl,
             'noteEntries' => $noteEntries,
             'notesContent' => $notesContent,
+            'voyages' => $voyages,
         ]);
     }
 

@@ -1,0 +1,286 @@
+body.aj-admin-compact .dashboard-global-page {
+    font-family: inherit;
+    color: #0f2742;
+}
+
+body.aj-admin-compact .dashboard-global-page h1,
+body.aj-admin-compact .dashboard-global-page .dashboard-title {
+    font-size: 24px !important;
+    line-height: 1.15 !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.03em !important;
+    color: #0b2545 !important;
+    margin: 0 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .dashboard-subtitle,
+body.aj-admin-compact .dashboard-global-page .page-subtitle {
+    font-size: 12.5px !important;
+    line-height: 1.4 !important;
+    font-weight: 500 !important;
+    color: #7b8aa0 !important;
+    margin-top: 3px !important;
+}
+
+body.aj-admin-compact .dashboard-global-page h2,
+body.aj-admin-compact .dashboard-global-page .section-title,
+body.aj-admin-compact .dashboard-global-page .card-title {
+    font-size: 15.5px !important;
+    line-height: 1.25 !important;
+    font-weight: 800 !important;
+    color: #102a43 !important;
+    margin: 0 0 10px !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .section-subtitle,
+body.aj-admin-compact .dashboard-global-page .card-subtitle {
+    font-size: 11.5px !important;
+    line-height: 1.35 !important;
+    font-weight: 500 !important;
+    color: #7b8aa0 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .card,
+body.aj-admin-compact .dashboard-global-page .dashboard-card,
+body.aj-admin-compact .dashboard-global-page .kpi-card,
+body.aj-admin-compact .dashboard-global-page .stats-card,
+body.aj-admin-compact .dashboard-global-page .chart-card,
+body.aj-admin-compact .dashboard-global-page .list-card {
+    background: #ffffff !important;
+    border: 1px solid #e4edf7 !important;
+    border-radius: 18px !important;
+    box-shadow: 0 10px 28px rgba(15, 39, 66, 0.06) !important;
+    padding: 18px !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .kpi-card {
+    min-height: 122px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .kpi-card .kpi-icon,
+body.aj-admin-compact .dashboard-global-page .kpi-card .icon {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-bottom: 12px !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .kpi-card .kpi-label,
+body.aj-admin-compact .dashboard-global-page .kpi-card .label {
+    font-size: 10.5px !important;
+    line-height: 1.2 !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+    color: #6f7f95 !important;
+    margin-bottom: 5px !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .kpi-card .kpi-value,
+body.aj-admin-compact .dashboard-global-page .kpi-card .value,
+body.aj-admin-compact .dashboard-global-page .kpi-card .number {
+    font-size: 27px !important;
+    line-height: 1 !important;
+    font-weight: 850 !important;
+    letter-spacing: -0.03em !important;
+    color: #0b2545 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .kpi-card .kpi-footer,
+body.aj-admin-compact .dashboard-global-page .kpi-card .footer-link {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #71829a !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .metric-row,
+body.aj-admin-compact .dashboard-global-page .activity-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 8px 0 !important;
+    border-bottom: 1px solid #eef3f8 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .metric-row span,
+body.aj-admin-compact .dashboard-global-page .activity-row span {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #6f7f95 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .metric-row strong,
+body.aj-admin-compact .dashboard-global-page .activity-row strong {
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    color: #0b2545 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .chart-card {
+    min-height: 320px !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .chart-card canvas,
+body.aj-admin-compact .dashboard-global-page .chart-card svg {
+    max-width: 100% !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .chart-legend,
+body.aj-admin-compact .dashboard-global-page .legend {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #66768d !important;
+}
+
+body.aj-admin-compact .dashboard-global-page table {
+    width: 100% !important;
+    font-size: 11px !important;
+    border-collapse: collapse !important;
+}
+
+body.aj-admin-compact .dashboard-global-page th {
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.03em !important;
+    color: #71829a !important;
+    background: #f7faff !important;
+    padding: 8px 9px !important;
+}
+
+body.aj-admin-compact .dashboard-global-page td {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #23415f !important;
+    padding: 8px 9px !important;
+    border-bottom: 1px solid #eef3f8 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page td strong,
+body.aj-admin-compact .dashboard-global-page .client-name {
+    font-size: 11.5px !important;
+    font-weight: 800 !important;
+    color: #102a43 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .client-email,
+body.aj-admin-compact .dashboard-global-page .muted-text {
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    color: #8a99ab !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .badge,
+body.aj-admin-compact .dashboard-global-page .status-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 22px !important;
+    padding: 3px 8px !important;
+    border-radius: 999px !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .btn,
+body.aj-admin-compact .dashboard-global-page button,
+body.aj-admin-compact .dashboard-global-page .dashboard-btn {
+    min-height: 32px !important;
+    padding: 7px 12px !important;
+    border-radius: 10px !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .btn-link-card,
+body.aj-admin-compact .dashboard-global-page .card-footer-link {
+    width: 100% !important;
+    min-height: 34px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0 12px !important;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+    border: 1px solid #eef3f8 !important;
+    color: #0b5ed7 !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    text-decoration: none !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .list-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 12px 0 !important;
+    border-bottom: 1px solid #eef3f8 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .list-item-title {
+    font-size: 11.5px !important;
+    line-height: 1.3 !important;
+    font-weight: 800 !important;
+    color: #102a43 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .list-item-subtitle {
+    font-size: 10.5px !important;
+    line-height: 1.3 !important;
+    font-weight: 500 !important;
+    color: #8a99ab !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .list-item-value {
+    margin-left: auto !important;
+    font-size: 14px !important;
+    font-weight: 850 !important;
+    color: #006fe6 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .section,
+body.aj-admin-compact .dashboard-global-page section {
+    margin: 14px 0 !important;
+}
+
+@media (max-width: 1366px) {
+    body.aj-admin-compact .dashboard-global-page h1,
+    body.aj-admin-compact .dashboard-global-page .dashboard-title {
+        font-size: 21px !important;
+    }
+
+    body.aj-admin-compact .dashboard-global-page .card,
+    body.aj-admin-compact .dashboard-global-page .dashboard-card,
+    body.aj-admin-compact .dashboard-global-page .kpi-card,
+    body.aj-admin-compact .dashboard-global-page .stats-card,
+    body.aj-admin-compact .dashboard-global-page .chart-card,
+    body.aj-admin-compact .dashboard-global-page .list-card {
+        padding: 14px !important;
+    }
+
+    body.aj-admin-compact .dashboard-global-page .kpi-card .kpi-value,
+    body.aj-admin-compact .dashboard-global-page .kpi-card .value,
+    body.aj-admin-compact .dashboard-global-page .kpi-card .number {
+        font-size: 24px !important;
+    }
+
+    body.aj-admin-compact .dashboard-global-page h2,
+    body.aj-admin-compact .dashboard-global-page .section-title,
+    body.aj-admin-compact .dashboard-global-page .card-title {
+        font-size: 14px !important;
+    }
+
+    body.aj-admin-compact .dashboard-global-page th,
+    body.aj-admin-compact .dashboard-global-page td {
+        font-size: 10.5px !important;
+        padding: 7px 8px !important;
+    }
+}

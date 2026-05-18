@@ -778,6 +778,8 @@
 @endpush
 
 @section('content')
+    <div class="dashboard-global-page">
+        <link rel="stylesheet" href="{{ asset('css/dashboard-global.css') }}">
 {{-- DIAG_MARKER: DASHBOARD_VIEW_ACTIVE [admin.dashboard.vue-globale.index] rendered at {{ now('Africa/Casablanca')->format('Y-m-d H:i:s T') }} --}}
 @php
     $now      = \Carbon\Carbon::now('Africa/Casablanca')->locale('fr');
@@ -1194,6 +1196,7 @@
     </div>
 
 </div>
+    </div>
 @endsection
 
 @push('scripts')

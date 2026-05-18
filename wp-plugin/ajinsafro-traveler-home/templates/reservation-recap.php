@@ -343,6 +343,12 @@ get_header();
                 </aside>
             </div>
         </div>
+
+        <!-- Success message (shown after submit if account modal unavailable) -->
+        <div class="ajtb-success-card" id="ajtb-success-message" hidden>
+            <h2><?php echo esc_html__('Votre demande de reservation a ete envoyee.', 'ajinsafro-traveler-home'); ?></h2>
+            <p><?php echo esc_html__('Un conseiller Ajinsafro va vous contacter pour finaliser votre dossier.', 'ajinsafro-traveler-home'); ?></p>
+        </div>
     </main>
 
     <!-- Mobile sticky bar -->
@@ -357,73 +363,61 @@ get_header();
     </div>
 
     <!-- Confirmation modal -->
-    <div class="modal fade" id="ajtb-confirm-modal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><?php echo esc_html__('Confirmer cette demande ?', 'ajinsafro-traveler-home'); ?></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<?php echo esc_attr__('Fermer', 'ajinsafro-traveler-home'); ?>"></button>
+    <div class="ajtb-confirm-modal" id="ajtb-confirm-modal" hidden>
+        <div class="ajtb-confirm-backdrop" data-ajtb-close-modal></div>
+        <div class="ajtb-confirm-box">
+            <h3 class="ajtb-confirm-box__title"><?php echo esc_html__('Confirmer cette demande ?', 'ajinsafro-traveler-home'); ?></h3>
+            <div class="ajtb-confirm-summary">
+                <div class="ajtb-confirm-line">
+                    <span><?php echo esc_html__('Voyage', 'ajinsafro-traveler-home'); ?></span>
+                    <strong><?php echo esc_html($tour_title); ?></strong>
                 </div>
-                <div class="modal-body">
-                    <div class="ajtb-confirm-summary">
-                        <div class="ajtb-confirm-line">
-                            <span><?php echo esc_html__('Voyage', 'ajinsafro-traveler-home'); ?></span>
-                            <strong><?php echo esc_html($tour_title); ?></strong>
-                        </div>
-                        <div class="ajtb-confirm-line">
-                            <span><?php echo esc_html__('Date', 'ajinsafro-traveler-home'); ?></span>
-                            <strong id="ajtb-confirm-date">-</strong>
-                        </div>
-                        <div class="ajtb-confirm-line">
-                            <span><?php echo esc_html__('Voyageurs', 'ajinsafro-traveler-home'); ?></span>
-                            <strong id="ajtb-confirm-people">-</strong>
-                        </div>
-                        <div class="ajtb-confirm-line">
-                            <span><?php echo esc_html__('Total', 'ajinsafro-traveler-home'); ?></span>
-                            <strong id="ajtb-confirm-total">-</strong>
-                        </div>
-                    </div>
+                <div class="ajtb-confirm-line">
+                    <span><?php echo esc_html__('Date', 'ajinsafro-traveler-home'); ?></span>
+                    <strong id="ajtb-confirm-date">-</strong>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><?php echo esc_html__('Annuler', 'ajinsafro-traveler-home'); ?></button>
-                    <button type="button" class="btn btn-primary" id="ajtb-confirm-ok"><?php echo esc_html__('Confirmer', 'ajinsafro-traveler-home'); ?></button>
+                <div class="ajtb-confirm-line">
+                    <span><?php echo esc_html__('Voyageurs', 'ajinsafro-traveler-home'); ?></span>
+                    <strong id="ajtb-confirm-people">-</strong>
                 </div>
+                <div class="ajtb-confirm-line">
+                    <span><?php echo esc_html__('Total', 'ajinsafro-traveler-home'); ?></span>
+                    <strong id="ajtb-confirm-total">-</strong>
+                </div>
+            </div>
+            <div class="ajtb-confirm-actions">
+                <button type="button" class="ajtb-btn-cancel" id="ajtb-confirm-cancel" data-ajtb-close-modal>
+                    <?php echo esc_html__('Annuler', 'ajinsafro-traveler-home'); ?>
+                </button>
+                <button type="button" class="ajtb-btn-submit" id="ajtb-confirm-final-submit">
+                    <?php echo esc_html__('Confirmer et envoyer la demande', 'ajinsafro-traveler-home'); ?>
+                </button>
             </div>
         </div>
     </div>
 
     <!-- Account modal (success) -->
-    <div class="modal fade" id="ajtb-account-modal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><?php echo esc_html__('Votre compte client Ajinsafro', 'ajinsafro-traveler-home'); ?></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="ajtb-confirm-modal" id="ajtb-account-modal" hidden>
+        <div class="ajtb-confirm-backdrop" data-ajtb-close-modal></div>
+        <div class="ajtb-confirm-box">
+            <h3 class="ajtb-confirm-box__title"><?php echo esc_html__('Votre compte client Ajinsafro', 'ajinsafro-traveler-home'); ?></h3>
+            <p id="ajtb-account-modal-message"><?php echo esc_html__('Votre reservation est confirmee.', 'ajinsafro-traveler-home'); ?></p>
+            <div class="ajtb-creds">
+                <div class="ajtb-creds__row">
+                    <span class="ajtb-creds__label">Login</span>
+                    <span><code id="ajtb-account-login">--</code></span>
+                    <button type="button" class="ajtb-btn-copy" data-ajtb-copy="#ajtb-account-login"><?php echo esc_html__('Copier', 'ajinsafro-traveler-home'); ?></button>
                 </div>
-                <div class="modal-body">
-                    <p class="mb-2" id="ajtb-account-modal-message"><?php echo esc_html__('Votre reservation est confirmee.', 'ajinsafro-traveler-home'); ?></p>
-                    <div class="border rounded p-3 bg-light">
-                        <div class="mb-2">
-                            <div class="text-muted small">Login</div>
-                            <div class="d-flex align-items-center justify-content-between gap-2">
-                                <code id="ajtb-account-login">--</code>
-                                <button type="button" class="btn btn-sm btn-outline-secondary" data-ajtb-copy="#ajtb-account-login"><?php echo esc_html__('Copier', 'ajinsafro-traveler-home'); ?></button>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="text-muted small"><?php echo esc_html__('Mot de passe', 'ajinsafro-traveler-home'); ?></div>
-                            <div class="d-flex align-items-center justify-content-between gap-2">
-                                <code id="ajtb-account-password">--</code>
-                                <button type="button" class="btn btn-sm btn-outline-secondary" data-ajtb-copy="#ajtb-account-password"><?php echo esc_html__('Copier', 'ajinsafro-traveler-home'); ?></button>
-                            </div>
-                            <div class="form-text"><?php echo esc_html__('Note: ce mot de passe est affiche juste apres creation. Conservez-le.', 'ajinsafro-traveler-home'); ?></div>
-                        </div>
-                    </div>
+                <div class="ajtb-creds__row">
+                    <span class="ajtb-creds__label"><?php echo esc_html__('Mot de passe', 'ajinsafro-traveler-home'); ?></span>
+                    <span><code id="ajtb-account-password">--</code></span>
+                    <button type="button" class="ajtb-btn-copy" data-ajtb-copy="#ajtb-account-password"><?php echo esc_html__('Copier', 'ajinsafro-traveler-home'); ?></button>
                 </div>
-                <div class="modal-footer">
-                    <a class="btn btn-primary" href="https://booking.ajinsafro.net/login"><?php echo esc_html__('Se connecter', 'ajinsafro-traveler-home'); ?></a>
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><?php echo esc_html__('Fermer', 'ajinsafro-traveler-home'); ?></button>
-                </div>
+                <p class="ajtb-creds__hint"><?php echo esc_html__('Note: ce mot de passe est affiche juste apres creation. Conservez-le.', 'ajinsafro-traveler-home'); ?></p>
+            </div>
+            <div class="ajtb-confirm-actions">
+                <a class="ajtb-btn-submit" href="https://booking.ajinsafro.net/login"><?php echo esc_html__('Se connecter', 'ajinsafro-traveler-home'); ?></a>
+                <button type="button" class="ajtb-btn-cancel" data-ajtb-close-modal><?php echo esc_html__('Fermer', 'ajinsafro-traveler-home'); ?></button>
             </div>
         </div>
     </div>

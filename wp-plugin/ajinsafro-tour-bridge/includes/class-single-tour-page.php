@@ -422,22 +422,11 @@ class AJTB_Single_Tour_Page
                 );
             }
 
-            // Bootstrap modal dependency must be registered before the recap JS.
-            if (!wp_script_is('ajtb-bootstrap-bundle', 'enqueued')) {
-                wp_enqueue_script(
-                    'ajtb-bootstrap-bundle',
-                    'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js',
-                    [],
-                    '5.3.3',
-                    true
-                );
-            }
-
             if (file_exists($new_js)) {
                 wp_enqueue_script(
                     'ajth-reservation-recap-js',
                     $ajth_url . 'assets/js/reservation-recap.js',
-                    ['ajtb-bootstrap-bundle'],
+                    [],
                     (string) filemtime($new_js),
                     true
                 );
@@ -475,6 +464,14 @@ class AJTB_Single_Tour_Page
         );
 
         // Bootstrap modal is used on recap for credentials display.
+        if (!wp_style_is('ajtb-bootstrap-css', 'enqueued')) {
+            wp_enqueue_style(
+                'ajtb-bootstrap-css',
+                'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css',
+                [],
+                '5.3.3'
+            );
+        }
         if (!wp_script_is('ajtb-bootstrap-bundle', 'enqueued')) {
             wp_enqueue_script(
                 'ajtb-bootstrap-bundle',
@@ -635,6 +632,19 @@ class AJTB_Single_Tour_Page
         $extras = json_decode($extras_json, true);
         if (!is_array($extras)) {
             $extras = [];
+        }
+
+        $companions_raw = isset($_POST['companions']) && is_array($_POST['companions']) ? $_POST['companions'] : [];
+        $expectedCompanions = max($adults + $children - 1, 0);
+        $receivedCompanions = count($companions_raw);
+        if ($receivedCompanions !== $expectedCompanions) {
+            wp_send_json_error([
+                'message' => sprintf(
+                    __('Nombre d\'accompagnants incoherent : %d attendu, %d recu.', 'ajinsafro-tour-bridge'),
+                    $expectedCompanions,
+                    $receivedCompanions
+                ),
+            ], 422);
         }
 
         $table_travel_dates = self::first_table([
@@ -956,7 +966,6 @@ class AJTB_Single_Tour_Page
             . ' room_alloc=' . wp_json_encode($normalizedLines, JSON_UNESCAPED_UNICODE)
             . ($hasHalfDouble ? (' half_double_pending=' . wp_json_encode($halfDoublePendingKeys, JSON_UNESCAPED_UNICODE)) : '');
 
-        $companions_raw = isset($_POST['companions']) && is_array($_POST['companions']) ? $_POST['companions'] : [];
         if (!empty($companions_raw)) {
             $companionLabels = [];
             foreach ($companions_raw as $c) {

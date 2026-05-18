@@ -157,10 +157,10 @@
                 + '</select>'
                 + '</div>'
                 + '<div class="ajtb-field">'
-                + '<input type="text" name="companions[' + index + '][first_name]" placeholder="Prenom" required />'
+                + '<input type="text" name="companions[' + index + '][first_name]" placeholder="Prenom" required value="" autocomplete="new-password" data-no-autofill="true" />'
                 + '</div>'
                 + '<div class="ajtb-field">'
-                + '<input type="text" name="companions[' + index + '][last_name]" placeholder="Nom" required />'
+                + '<input type="text" name="companions[' + index + '][last_name]" placeholder="Nom" required value="" autocomplete="new-password" data-no-autofill="true" />'
                 + '</div>'
                 + '</div>'
             );
@@ -488,13 +488,8 @@
         if (confirmTotal) confirmTotal.textContent = totalTxt;
 
         var modalEl = document.getElementById("ajtb-confirm-modal");
-        if (modalEl && typeof bootstrap !== "undefined") {
-            var modal = new bootstrap.Modal(modalEl);
-            modal.show();
-        } else {
-            if (window.confirm("Confirmer cette demande de reservation ?")) {
-                doSubmit();
-            }
+        if (modalEl) {
+            modalEl.removeAttribute("hidden");
         }
     }
 
@@ -565,19 +560,26 @@
         })
             .then(function (res) { return res.json(); })
             .then(function (data) {
-                if (confirmBtn) {
-                    confirmBtn.disabled = false;
-                    confirmBtn.textContent = "Confirmer ma reservation";
-                }
-                if (mobileBtn) {
-                    mobileBtn.disabled = false;
-                    mobileBtn.textContent = "Confirmer";
-                }
-
                 if (!data.success) {
+                    if (confirmBtn) {
+                        confirmBtn.disabled = false;
+                        confirmBtn.textContent = "Confirmer ma reservation";
+                    }
+                    if (mobileBtn) {
+                        mobileBtn.disabled = false;
+                        mobileBtn.textContent = "Confirmer";
+                    }
                     alert(data.data && data.data.message ? data.data.message : "Une erreur est survenue.");
                     return;
                 }
+
+                var formEl = document.querySelector(".ajtb-booking-grid");
+                var successEl = document.getElementById("ajtb-success-message");
+                if (formEl) { formEl.style.display = "none"; }
+                if (successEl) { successEl.removeAttribute("hidden"); }
+
+                var mobileBar = document.getElementById("ajtb-mobile-bar");
+                if (mobileBar) { mobileBar.setAttribute("hidden", ""); }
 
                 var modalEl = document.getElementById("ajtb-account-modal");
                 var loginEl = document.getElementById("ajtb-account-login");
@@ -586,11 +588,10 @@
                 if (loginEl) { loginEl.textContent = data.data.login || ""; }
                 if (passEl) { passEl.textContent = data.data.password || ""; }
 
-                if (modalEl && typeof bootstrap !== "undefined") {
-                    var modal = new bootstrap.Modal(modalEl);
-                    modal.show();
+                if (modalEl) {
+                    modalEl.removeAttribute("hidden");
                 } else {
-                    alert("Reservation creee avec succes. ID : " + (data.data.reservation_id || ""));
+                    alert("Votre demande de reservation a ete envoyee. Un conseiller Ajinsafro va vous contacter.");
                 }
             })
             .catch(function () {
@@ -630,17 +631,27 @@
             });
         });
 
-        var confirmOk = document.getElementById("ajtb-confirm-ok");
-        if (confirmOk) {
-            confirmOk.addEventListener("click", function () {
+        var confirmFinal = document.getElementById("ajtb-confirm-final-submit");
+        if (confirmFinal) {
+            confirmFinal.addEventListener("click", function () {
                 var modalEl = document.getElementById("ajtb-confirm-modal");
-                if (modalEl && typeof bootstrap !== "undefined") {
-                    var modal = bootstrap.Modal.getInstance(modalEl);
-                    if (modal) modal.hide();
+                if (modalEl) {
+                    modalEl.setAttribute("hidden", "");
                 }
                 doSubmit();
             });
         }
+    }
+
+    function initModalClose() {
+        document.querySelectorAll("[data-ajtb-close-modal]").forEach(function (el) {
+            el.addEventListener("click", function () {
+                var modal = el.closest(".ajtb-confirm-modal");
+                if (modal) {
+                    modal.setAttribute("hidden", "");
+                }
+            });
+        });
     }
 
     function initCopyButtons() {
@@ -674,6 +685,7 @@
         initPriceCalculation();
         initMobileBar();
         initConfirmButtons();
+        initModalClose();
         initCopyButtons();
     }
 

@@ -4,7 +4,9 @@
 
 @php
     use App\Models\Reservation;
+    use App\Models\Voyage;
     use Illuminate\Support\Facades\Storage;
+    use Illuminate\Support\Str;
 
     $backUrl = $backUrl ?? route('admin.reservation-dossiers.index');
     $offerImageUrl = $offerImageUrl ?? null;
@@ -91,7 +93,7 @@
             return $document->file_path;
         }
 
-        return Storage::disk('public')->url($document->file_path);
+        return asset('storage/'.ltrim((string) $document->file_path, '/'));
     };
 
     $historyMeta = function ($history) {
@@ -124,283 +126,262 @@
             'details' => $details,
         ];
     };
+
+    $voyages = $voyages ?? Voyage::query()
+        ->orderBy('name')
+        ->limit(200)
+        ->get(['id', 'name', 'slug']);
+
+    $currentTourId = (int) ($reservation->tour_id ?? $offer?->id ?? 0);
+    $currentDepartureId = (int) ($reservation->departure_id ?? $departure?->id ?? 0);
+    $currentTravelDateId = (int) ($reservation->travel_date_id ?? 0);
+
+    $mainTraveler = [
+        'key' => '__main',
+        'is_main' => true,
+        'type' => 'adult',
+        'type_label' => 'Principal',
+        'first_name' => $client?->first_name ?: $reservation->client_first_name ?: $client?->full_name,
+        'last_name' => $client?->last_name ?: $reservation->client_last_name,
+        'birth_date' => optional($client?->birth_date)->format('Y-m-d') ?: optional($reservation->client_birth_date)->format('Y-m-d'),
+        'document_type' => $client?->document_type ?: $reservation->client_document_type,
+        'document_number' => $client?->document_number ?: $reservation->client_document_number,
+        'gender' => $client?->gender ?? null,
+        'relationship_to_main' => 'main',
+        'consumes_bed' => true,
+    ];
+
+    $companionTravelers = $passengers->map(function ($passenger, $index) {
+        return [
+            'key' => (string) ($passenger->id ?? $index),
+            'id' => $passenger->id ?? null,
+            'is_main' => false,
+            'type' => $passenger->type ?: $passenger->traveler_type ?: 'adult',
+            'type_label' => ucfirst((string) ($passenger->type ?: $passenger->traveler_type ?: 'adult')),
+            'first_name' => $passenger->first_name,
+            'last_name' => $passenger->last_name,
+            'birth_date' => optional($passenger->birth_date)->format('Y-m-d') ?: ($passenger->birth_date ?: null),
+            'document_type' => $passenger->document_type,
+            'document_number' => $passenger->document_number,
+            'gender' => $passenger->gender ?? null,
+            'relationship_to_main' => $passenger->relationship_to_main ?? null,
+            'consumes_bed' => $passenger->consumes_bed ?? true,
+        ];
+    })->values();
+
+    $travelerRows = collect([$mainTraveler])->merge($companionTravelers)->values();
+    $travelersCount = max(1, $travelerRows->count());
+
+    $roomAllocationRows = ($reservation->reservationRooms ?? collect())
+        ->map(function ($roomRow) {
+            $room = $roomRow->departureHotelRoom;
+            $hotel = $roomRow->tourHotel ?? $roomRow->departureHotel?->tourHotel ?? null;
+
+            $roomCount = (int) ($roomRow->room_count ?? 0);
+            $capacity = (int) (
+                $roomRow->passenger_count
+                ?? $room?->capacity_total
+                ?? $room?->capacity
+                ?? $roomRow->capacity
+                ?? 0
+            );
+            $supplement = (float) (
+                $roomRow->supplement_unit
+                ?? $roomRow->supplement_total
+                ?? $room?->supplement
+                ?? $room?->supplement_unit
+                ?? 0
+            );
+
+            return [
+                'id' => $roomRow->id,
+                'hotel_name' => $hotel?->hotel_name ?: $hotel?->name ?: $room?->hotel_name ?: 'Hôtel',
+                'room_type' => $room?->room_type ?: $roomRow->source_room_type ?: $roomRow->room_type_snapshot ?: 'Chambre',
+                'room_label' => $room?->room_label ?: $room?->name ?: null,
+                'capacity' => $capacity,
+                'room_count' => $roomCount,
+                'supplement' => $supplement,
+                'subtotal' => (float) ($roomRow->supplement_total ?? ($supplement * $roomCount)),
+                'departure_hotel_room_id' => (int) ($roomRow->departure_hotel_room_id ?? 0),
+                'tour_hotel_id' => (int) ($roomRow->tour_hotel_id ?? 0),
+                'tour_hotel_room_id' => (int) ($roomRow->tour_hotel_room_id ?? 0),
+            ];
+        })
+        ->filter(fn (array $row) => $row['room_count'] > 0 || $row['capacity'] > 0 || trim((string) $row['room_type']) !== '')
+        ->groupBy('hotel_name')
+        ->sortKeys();
+
+    $selectedRoomCapacity = (int) $roomAllocationRows
+        ->flatten(1)
+        ->sum(fn (array $row) => max(0, (int) $row['capacity']) * max(0, (int) $row['room_count']));
+    $selectedRoomCount = (int) $roomAllocationRows
+        ->flatten(1)
+        ->sum(fn (array $row) => max(0, (int) $row['room_count']));
+
+    $baseTotal = (float) ($dossier->total_base ?? $reservation->total_base ?? 0);
+    $roomSupplementTotal = (float) ($dossier->room_supplement_total ?? $reservation->room_supplement_total ?? $roomAllocationRows->flatten(1)->sum('subtotal'));
+    $extrasTotal = (float) ($dossier->extras_total ?? $reservation->extras_total ?? 0);
+    $totalAmount = (float) ($dossier->total_amount ?? $reservation->total_amount ?? 0);
+    $paidAmount = (float) ($dossier->paid_amount ?? $reservation->paid_amount ?? 0);
+    $remainingAmount = (float) ($dossier->remaining_amount ?? $reservation->remaining_amount ?? max(0, $totalAmount - $paidAmount));
+    $hasFinancialData = $payments->isNotEmpty() || $baseTotal > 0 || $roomSupplementTotal > 0 || $extrasTotal > 0 || $totalAmount > 0 || $paidAmount > 0;
+    $roomCoverageIncomplete = $selectedRoomCapacity < $travelersCount;
+    $visaRequired = ! in_array(strtolower((string) ($reservation->visa_status ?? '')), ['not_required', 'not required', 'none'], true)
+        && ! ((bool) ($offer?->requires_visa ?? true) === false);
+
+    $paymentRows = $payments->sortByDesc(fn ($payment) => optional($payment->payment_date)->timestamp ?? optional($payment->created_at)?->timestamp ?? 0)->values();
+    $documentRows = $documents->sortByDesc(fn ($document) => optional($document->created_at)?->timestamp ?? 0)->values();
+    $historyRows = $histories->sortByDesc(fn ($history) => optional($history->created_at)?->timestamp ?? 0)->values();
+    $extraRows = ($reservation->extras ?? collect())->sortByDesc(fn ($extra) => optional($extra->created_at)?->timestamp ?? 0)->values();
+
+    $paymentReceiptName = $reservation->payment_receipt ?? $dossier->payment_receipt ?? null;
+    $visaDocumentName = $reservation->visa_document ?? $dossier->visa_document ?? null;
+
+    $currentRoomingPayload = $roomAllocationRows->flatten(1)->values()->map(function (array $row) {
+        return [
+            'departure_hotel_room_id' => $row['departure_hotel_room_id'],
+            'tour_hotel_id' => $row['tour_hotel_id'],
+            'tour_hotel_room_id' => $row['tour_hotel_room_id'],
+            'room_count' => $row['room_count'],
+        ];
+    })->values();
+
+    $currentExtrasPayload = $extraRows->values()->map(function ($extra) {
+        return [
+            'voyage_extra_id' => $extra->voyage_extra_id ?? null,
+            'name' => $extra->name ?? 'Extra',
+            'description' => $extra->description ?? null,
+            'unit_price' => (float) ($extra->unit_price ?? $extra->price ?? 0),
+            'quantity' => (int) ($extra->quantity ?? 1),
+            'total_price' => (float) ($extra->total_price ?? 0),
+            'application_scope' => $extra->application_scope ?? 'dossier',
+            'traveler_keys' => $extra->traveler_keys ?? [],
+        ];
+    })->values();
 @endphp
 
 @push('styles')
 <style>
-    :root {
-        --dossier-blue-900: #073b63;
-        --dossier-blue-800: #07598f;
-        --dossier-blue-700: #0877bd;
-        --dossier-blue-100: #e8f4ff;
-        --dossier-orange: #f97316;
-        --dossier-green: #12b76a;
-        --dossier-red: #ef4444;
-        --dossier-amber: #f59e0b;
-        --dossier-slate: #102a43;
-        --dossier-muted: #6b7a90;
-        --dossier-line: #e5edf6;
-        --dossier-bg: #f5f8fc;
-        --dossier-white: #ffffff;
-        --dossier-shadow: 0 18px 36px rgba(16, 42, 67, 0.08);
-        --dossier-shadow-soft: 0 10px 24px rgba(16, 42, 67, 0.06);
-        --dossier-radius-xl: 24px;
-        --dossier-radius-lg: 18px;
-        --dossier-radius-md: 14px;
+    body.aj-admin-compact .reservation-dossier-page {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding-bottom: 110px;
     }
 
-    .dossier-shell {
+    body.aj-admin-compact .reservation-dossier-page .rd-page {
         display: grid;
-        gap: 24px;
-    }
-
-    .dossier-page-head {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
         gap: 18px;
     }
 
-    .dossier-page-head h1 {
-        font-size: clamp(28px, 3vw, 38px);
+    body.aj-admin-compact .reservation-dossier-page .rd-panel,
+    body.aj-admin-compact .reservation-dossier-page .rd-header {
+        background: #fff;
+        border: 1px solid #e5edf6;
+        border-radius: 18px;
+        box-shadow: 0 10px 24px rgba(16, 42, 67, 0.06);
+    }
+
+    body.aj-admin-compact .reservation-dossier-page .rd-header {
+        padding: 18px 20px;
+    }
+
+    body.aj-admin-compact .reservation-dossier-page .rd-header-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    body.aj-admin-compact .reservation-dossier-page .rd-title {
+        margin: 0 0 6px;
+        font-size: clamp(24px, 2.8vw, 34px);
         line-height: 1.05;
         letter-spacing: -0.04em;
-        color: #0b2545;
         font-weight: 800;
-        margin-bottom: 6px;
+        color: #0b2545;
     }
 
-    .dossier-page-head p {
-        color: var(--dossier-muted);
-        margin-bottom: 0;
+    body.aj-admin-compact .reservation-dossier-page .rd-lead {
+        margin: 0;
+        color: #6b7a90;
+        font-weight: 600;
     }
 
-    .dossier-actions {
-        display: flex;
-        flex-wrap: wrap;
+    body.aj-admin-compact .reservation-dossier-page .rd-meta {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 10px;
-        justify-content: flex-end;
+        margin-top: 14px;
     }
 
-    .dossier-btn {
-        border: 0;
-        border-radius: 12px;
-        padding: 11px 16px;
-        font-weight: 700;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        text-decoration: none;
-        cursor: pointer;
+    body.aj-admin-compact .reservation-dossier-page .rd-meta-card,
+    body.aj-admin-compact .reservation-dossier-page .rd-summary-card,
+    body.aj-admin-compact .reservation-dossier-page .rd-mini-card {
+        border: 1px solid #e5edf6;
+        border-radius: 14px;
+        background: #f8fbff;
+        padding: 12px 14px;
     }
 
-    .dossier-btn-primary {
-        color: #fff !important;
-        background: linear-gradient(135deg, var(--dossier-blue-700), var(--dossier-blue-900));
-        box-shadow: 0 10px 20px rgba(8, 119, 189, 0.22);
-    }
-
-    .dossier-btn-soft {
-        color: var(--dossier-blue-900);
-        background: #fff;
-        border: 1px solid var(--dossier-line);
-        box-shadow: var(--dossier-shadow-soft);
-    }
-
-    .dossier-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        border-radius: 999px;
-        padding: 7px 12px;
-        font-size: 12px;
+    body.aj-admin-compact .reservation-dossier-page .rd-meta-card span,
+    body.aj-admin-compact .reservation-dossier-page .rd-mini-card span,
+    body.aj-admin-compact .reservation-dossier-page .rd-summary-card span {
+        display: block;
+        color: #6b7a90;
+        font-size: 11px;
         font-weight: 800;
         text-transform: uppercase;
-    }
-
-    .dossier-pill.is-draft { background: #eef2f7; color: #4b5d73; }
-    .dossier-pill.is-pending { background: #fff4e8; color: #c25b06; }
-    .dossier-pill.is-confirmed, .dossier-pill.is-paid { background: #e8fff4; color: #0e8b55; }
-    .dossier-pill.is-cancelled, .dossier-pill.is-unpaid { background: #fff1f2; color: #d12f45; }
-    .dossier-pill.is-completed, .dossier-pill.is-refunded { background: #eef4ff; color: #2454d6; }
-    .dossier-pill.is-partial { background: #edf4ff; color: #2454d6; }
-
-    .dossier-card {
-        background: var(--dossier-white);
-        border: 1px solid var(--dossier-line);
-        border-radius: var(--dossier-radius-xl);
-        box-shadow: var(--dossier-shadow-soft);
-    }
-
-    .dossier-card-header {
-        padding: 20px 22px 0;
-    }
-
-    .dossier-card-body {
-        padding: 22px;
-    }
-
-    .dossier-card-title {
-        font-size: 18px;
-        color: var(--dossier-slate);
-        font-weight: 800;
+        letter-spacing: .03em;
         margin-bottom: 4px;
     }
 
-    .dossier-card-subtitle {
-        color: var(--dossier-muted);
-        font-size: 13px;
-        margin-bottom: 0;
-    }
-
-    .dossier-hero {
-        display: grid;
-        grid-template-columns: minmax(280px, 360px) 1fr;
-        overflow: hidden;
-    }
-
-    .dossier-hero-media {
-        min-height: 280px;
-        position: relative;
-        background: linear-gradient(135deg, #dcecff, #f5f8fc);
-    }
-
-    .dossier-hero-media img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-    }
-
-    .dossier-hero-placeholder {
-        height: 100%;
-        display: grid;
-        place-items: center;
-        text-align: center;
-        color: #7c8ea6;
-        font-weight: 700;
-        padding: 24px;
-    }
-
-    .dossier-hero-copy {
-        padding: 28px;
-        display: grid;
-        gap: 18px;
-        background:
-            radial-gradient(circle at top right, rgba(8, 119, 189, 0.12), transparent 26%),
-            linear-gradient(180deg, #ffffff, #fbfdff);
-    }
-
-    .dossier-hero-title {
-        font-size: clamp(24px, 3vw, 34px);
-        line-height: 1.08;
-        color: #08233f;
+    body.aj-admin-compact .reservation-dossier-page .rd-meta-card strong,
+    body.aj-admin-compact .reservation-dossier-page .rd-mini-card strong,
+    body.aj-admin-compact .reservation-dossier-page .rd-summary-card strong {
+        color: #102a43;
         font-weight: 800;
-        letter-spacing: -0.04em;
-        margin-bottom: 8px;
     }
 
-    .dossier-hero-meta {
+    body.aj-admin-compact .reservation-dossier-page .rd-actions {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
+        gap: 8px;
+        justify-content: flex-end;
     }
 
-    .dossier-meta-card {
-        min-width: 140px;
-        background: #f8fbff;
-        border: 1px solid var(--dossier-line);
-        border-radius: 16px;
-        padding: 14px 16px;
-    }
-
-    .dossier-meta-card span {
-        display: block;
-        color: var(--dossier-muted);
-        font-size: 12px;
+    body.aj-admin-compact .reservation-dossier-page .rd-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 10px;
+        padding: 9px 12px;
         font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        margin-bottom: 6px;
+        text-decoration: none;
+        white-space: nowrap;
     }
 
-    .dossier-meta-card strong {
-        display: block;
-        color: var(--dossier-slate);
-        font-size: 16px;
-        font-weight: 800;
-    }
-
-    .dossier-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1.75fr) minmax(320px, 0.95fr);
-        gap: 24px;
-    }
-
-    .dossier-stack {
-        display: grid;
-        gap: 24px;
-    }
-
-    .info-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px 18px;
-    }
-
-    .info-item {
-        padding: 14px 16px;
-        border-radius: 16px;
-        background: #f8fbff;
-        border: 1px solid var(--dossier-line);
-    }
-
-    .info-item span {
-        display: block;
-        color: var(--dossier-muted);
-        font-size: 12px;
-        font-weight: 700;
-        text-transform: uppercase;
-        margin-bottom: 6px;
-    }
-
-    .info-item strong, .info-item div {
-        color: var(--dossier-slate);
-        font-weight: 700;
-    }
-
-    .passenger-list, .related-list, .document-list, .notes-list, .timeline-list, .actions-list {
-        display: grid;
-        gap: 14px;
-    }
-
-    .passenger-row, .related-row, .document-row, .note-row, .timeline-row, .action-row {
-        border: 1px solid var(--dossier-line);
-        border-radius: 16px;
-        background: #fff;
-        padding: 16px;
-    }
-
-    .passenger-head, .related-head, .document-head, .timeline-head {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        align-items: flex-start;
-    }
-
-    .passenger-name, .related-title, .document-title {
-        color: var(--dossier-slate);
-        font-weight: 800;
-    }
-
-    .passenger-meta, .related-meta, .document-meta, .note-meta, .timeline-meta {
-        color: var(--dossier-muted);
+    body.aj-admin-compact .reservation-dossier-page .rd-btn-sm {
+        padding: 7px 11px;
         font-size: 13px;
     }
 
-    .passenger-badge {
-        background: #edf4ff;
-        color: #2454d6;
+    body.aj-admin-compact .reservation-dossier-page .rd-btn-primary {
+        background: linear-gradient(135deg, #0877bd, #073b63);
+        color: #fff !important;
+        border: 0;
+    }
+
+    body.aj-admin-compact .reservation-dossier-page .rd-btn-soft {
+        background: #fff;
+        color: #073b63;
+        border: 1px solid #e5edf6;
+    }
+
+    body.aj-admin-compact .reservation-dossier-page .rd-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
         border-radius: 999px;
         padding: 6px 10px;
         font-size: 11px;
@@ -408,520 +389,546 @@
         text-transform: uppercase;
     }
 
-    .related-price {
-        font-weight: 800;
-        color: var(--dossier-slate);
-        white-space: nowrap;
+    body.aj-admin-compact .reservation-dossier-page .rd-pill.is-draft { background: #eef2f7; color: #4b5d73; }
+    body.aj-admin-compact .reservation-dossier-page .rd-pill.is-pending { background: #fff4e8; color: #c25b06; }
+    body.aj-admin-compact .reservation-dossier-page .rd-pill.is-confirmed,
+    body.aj-admin-compact .reservation-dossier-page .rd-pill.is-paid { background: #e8fff4; color: #0e8b55; }
+    body.aj-admin-compact .reservation-dossier-page .rd-pill.is-cancelled,
+    body.aj-admin-compact .reservation-dossier-page .rd-pill.is-unpaid { background: #fff1f2; color: #d12f45; }
+    body.aj-admin-compact .reservation-dossier-page .rd-pill.is-completed,
+    body.aj-admin-compact .reservation-dossier-page .rd-pill.is-refunded { background: #eef4ff; color: #2454d6; }
+    body.aj-admin-compact .reservation-dossier-page .rd-pill.is-partial { background: #edf4ff; color: #2454d6; }
+
+    body.aj-admin-compact .reservation-dossier-page .rd-tabs {
+        gap: 8px;
+        border: 0;
     }
 
-    .summary-grid {
-        display: grid;
-        gap: 16px;
-    }
-
-    .summary-row {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        align-items: center;
-        color: var(--dossier-slate);
-        font-weight: 700;
-    }
-
-    .summary-row span {
-        color: var(--dossier-muted);
-        font-weight: 700;
-    }
-
-    .summary-highlight {
-        padding: 18px;
-        border-radius: 18px;
-        background: linear-gradient(135deg, #eef7ff, #ffffff);
-        border: 1px solid #dcecff;
-    }
-
-    .progress-shell {
-        width: 100%;
-        height: 10px;
+    body.aj-admin-compact .reservation-dossier-page .rd-tabs .nav-link {
         border-radius: 999px;
-        background: #edf2f7;
-        overflow: hidden;
-    }
-
-    .progress-bar {
-        height: 100%;
-        border-radius: inherit;
-        background: linear-gradient(135deg, var(--dossier-blue-700), var(--dossier-green));
-    }
-
-    .nav-pills.dossier-tabs {
-        gap: 10px;
-        margin-bottom: 18px;
-    }
-
-    .nav-pills.dossier-tabs .nav-link {
-        border-radius: 999px;
-        padding: 9px 14px;
-        border: 1px solid var(--dossier-line);
+        border: 1px solid #e5edf6;
         color: #4f647b;
         font-weight: 700;
         background: #fff;
     }
 
-    .nav-pills.dossier-tabs .nav-link.active {
-        background: var(--dossier-blue-800);
-        border-color: var(--dossier-blue-800);
+    body.aj-admin-compact .reservation-dossier-page .rd-tabs .nav-link.active {
+        background: #073b63;
         color: #fff;
+        border-color: #073b63;
     }
 
-    .dossier-form-grid {
-        display: grid;
-        gap: 12px;
+    body.aj-admin-compact .reservation-dossier-page .rd-tab-content {
         margin-top: 16px;
     }
 
-    .timeline-list {
-        position: relative;
-        gap: 18px;
+    body.aj-admin-compact .reservation-dossier-page .rd-card-grid {
+        display: grid;
+        gap: 16px;
     }
 
-    .timeline-row {
-        position: relative;
-        padding-left: 28px;
+    body.aj-admin-compact .reservation-dossier-page .rd-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 10px;
     }
 
-    .timeline-row::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 8px;
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, var(--dossier-blue-700), var(--dossier-orange));
-        box-shadow: 0 0 0 5px #eef6ff;
+    body.aj-admin-compact .reservation-dossier-page .rd-summary-card.is-blue { background: linear-gradient(180deg, #eef7ff, #fff); }
+    body.aj-admin-compact .reservation-dossier-page .rd-summary-card.is-green { background: linear-gradient(180deg, #ecfff5, #fff); }
+    body.aj-admin-compact .reservation-dossier-page .rd-summary-card.is-orange { background: linear-gradient(180deg, #fff7eb, #fff); }
+    body.aj-admin-compact .reservation-dossier-page .rd-summary-card.is-red { background: linear-gradient(180deg, #fff1f2, #fff); }
+
+    body.aj-admin-compact .reservation-dossier-page .rd-panel-head {
+        padding: 16px 18px 0;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+        flex-wrap: wrap;
     }
 
-    .timeline-row::after {
-        content: "";
-        position: absolute;
-        left: 5px;
-        top: 24px;
-        bottom: -18px;
-        width: 2px;
-        background: #e7eef7;
+    body.aj-admin-compact .reservation-dossier-page .rd-panel-title {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 800;
+        color: #102a43;
     }
 
-    .timeline-row:last-child::after {
-        display: none;
+    body.aj-admin-compact .reservation-dossier-page .rd-panel-subtitle {
+        margin: 4px 0 0;
+        color: #6b7a90;
+        font-size: 13px;
     }
 
-    .empty-state {
+    body.aj-admin-compact .reservation-dossier-page .rd-panel-body {
+        padding: 18px;
+    }
+
+    body.aj-admin-compact .reservation-dossier-page .rd-empty {
         border: 1px dashed #cdd8e6;
-        border-radius: 16px;
-        padding: 20px;
+        border-radius: 14px;
+        padding: 16px;
         text-align: center;
-        color: var(--dossier-muted);
+        color: #6b7a90;
         background: #fbfdff;
     }
 
-    @media (max-width: 1199.98px) {
-        .dossier-grid, .dossier-hero {
-            grid-template-columns: 1fr;
-        }
+    body.aj-admin-compact .reservation-dossier-page .rd-table {
+        width: 100%;
+        font-size: 13px;
+    }
 
-        .dossier-hero-media {
-            min-height: 220px;
+    body.aj-admin-compact .reservation-dossier-page .rd-table thead th {
+        background: #f8fbff;
+        color: #102a43;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+        font-weight: 800;
+        border-bottom: 1px solid #e5edf6;
+    }
+
+    body.aj-admin-compact .reservation-dossier-page .rd-table td,
+    body.aj-admin-compact .reservation-dossier-page .rd-table th {
+        padding: 11px 12px;
+        border-color: #e5edf6;
+        vertical-align: middle;
+    }
+
+    body.aj-admin-compact .reservation-dossier-page .rd-label {
+        display: block;
+        color: #6b7a90;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+        letter-spacing: .03em;
+    }
+
+    body.aj-admin-compact .reservation-dossier-page .rd-room-alert {
+        border-radius: 14px;
+        border: 1px solid #f3d39f;
+        background: #fff8ea;
+        color: #9a5800;
+        padding: 14px 16px;
+    }
+
+    body.aj-admin-compact .reservation-dossier-page .rd-sticky-actions {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        z-index: 1050;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    body.aj-admin-compact .reservation-dossier-page .rd-sticky-actions .btn {
+        box-shadow: 0 14px 30px rgba(16, 42, 67, 0.16);
+    }
+
+    @media (max-width: 1199.98px) {
+        body.aj-admin-compact .reservation-dossier-page .rd-meta,
+        body.aj-admin-compact .reservation-dossier-page .rd-summary-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
 
     @media (max-width: 767.98px) {
-        .dossier-page-head, .passenger-head, .related-head, .document-head, .timeline-head {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .dossier-actions {
-            width: 100%;
+        body.aj-admin-compact .reservation-dossier-page .rd-header-top,
+        body.aj-admin-compact .reservation-dossier-page .rd-actions {
             justify-content: stretch;
         }
 
-        .dossier-actions > * {
+        body.aj-admin-compact .reservation-dossier-page .rd-actions > * {
             flex: 1 1 auto;
             justify-content: center;
         }
 
-        .info-grid {
+        body.aj-admin-compact .reservation-dossier-page .rd-meta,
+        body.aj-admin-compact .reservation-dossier-page .rd-summary-grid {
             grid-template-columns: 1fr;
         }
 
-        .dossier-card-body, .dossier-card-header, .dossier-hero-copy {
-            padding: 18px;
-        }
-    }
-
-    @media print {
-        .dossier-page-head .dossier-actions,
-        .dossier-form-grid,
-        .dropdown,
-        .nav-pills.dossier-tabs,
-        .btn,
-        .dossier-btn {
-            display: none !important;
+        body.aj-admin-compact .reservation-dossier-page .rd-sticky-actions {
+            left: 16px;
+            right: 16px;
         }
 
-        .dossier-grid {
-            grid-template-columns: 1fr;
+        body.aj-admin-compact .reservation-dossier-page .rd-sticky-actions .btn {
+            width: 100%;
+            justify-content: center;
         }
     }
 </style>
 @endpush
 
 @section('content')
-    <div class="container-fluid dossier-shell">
-        <div class="dossier-page-head">
-            <div>
-                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                    <span class="dossier-pill {{ $dossierBadge['class'] }}">{{ $dossierBadge['label'] }}</span>
-                    <span class="dossier-pill {{ $paymentBadge['class'] }}">{{ $paymentBadge['label'] }}</span>
-                </div>
-                <h1>Dossier {{ $dossier->dossier_number ?: 'En attente de confirmation' }}</h1>
-                <p>Vue détaillée du dossier client, du voyage, des paiements, documents et actions opérationnelles.</p>
-            </div>
+    <div class="reservation-dossier-page">
+        <div class="rd-page">
+            @if(session('success'))
+                <div class="alert alert-success shadow-sm border-0">{{ session('success') }}</div>
+            @endif
 
-            <div class="dossier-actions">
-                <a href="{{ $backUrl ?? route('admin.reservation-dossiers.index') }}" class="dossier-btn dossier-btn-soft">
-                    <i class="bx bx-arrow-back"></i>
-                    <span>Retour</span>
-                </a>
-                <button type="button" class="dossier-btn dossier-btn-soft" onclick="window.print()">
-                    <i class="bx bx-printer"></i>
-                    <span>Imprimer</span>
-                </button>
-                <div class="dropdown">
-                    <button class="dossier-btn dossier-btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bx bx-dots-horizontal-rounded"></i>
-                        <span>Actions</span>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                        <li><a class="dropdown-item" href="#payment-form"><i class="bx bx-wallet me-2"></i>Ajouter paiement</a></li>
-                        <li><a class="dropdown-item" href="{{ route('admin.reservations.invoice', $reservation) }}" target="_blank"><i class="bx bx-receipt me-2"></i>Voir facture</a></li>
-                        @if($mailToUrl)
-                            <li><a class="dropdown-item" href="{{ $mailToUrl }}"><i class="bx bx-envelope me-2"></i>Contacter le client</a></li>
-                        @endif
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <form action="{{ route('admin.reservations.cancel', $reservation) }}" method="POST" onsubmit="return confirm('Annuler ce dossier ?');">
-                                @csrf
-                                <button type="submit" class="dropdown-item text-danger"><i class="bx bx-x-circle me-2"></i>Annuler dossier</button>
-                            </form>
-                        </li>
+            @if(session('error'))
+                <div class="alert alert-danger shadow-sm border-0">{{ session('error') }}</div>
+            @endif
+
+            @if($errors->any())
+                <div class="alert alert-danger shadow-sm border-0 mb-0">
+                    <strong>Des champs sont à corriger.</strong>
+                    <ul class="mb-0 mt-2 ps-3">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
                     </ul>
                 </div>
-            </div>
-        </div>
+            @endif
 
-        @if(session('success'))
-            <div class="alert alert-success shadow-sm border-0">{{ session('success') }}</div>
-        @endif
-
-        @if(session('error'))
-            <div class="alert alert-danger shadow-sm border-0">{{ session('error') }}</div>
-        @endif
-
-        @if($errors->any())
-            <div class="alert alert-danger shadow-sm border-0 mb-0">
-                <strong>Des champs sont à corriger.</strong>
-                <ul class="mb-0 mt-2 ps-3">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-        <section class="dossier-card dossier-hero">
-            <div class="dossier-hero-media">
-                @if($offerImageUrl)
-                    <img src="{{ $offerImageUrl }}" alt="{{ $offer?->name ?? 'Offre liée' }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';">
-                    <div class="dossier-hero-placeholder" style="display:none;">
-                        <div>
-                            <i class="bx bx-image-alt fs-1 d-block mb-2"></i>
-                            <div>Visuel indisponible</div>
+            <section class="rd-header">
+                <div class="rd-header-top">
+                    <div class="flex-grow-1">
+                        <div class="d-flex flex-wrap gap-2 mb-2">
+                            <span class="rd-pill {{ $dossierBadge['class'] }}">{{ $dossierBadge['label'] }}</span>
+                            <span class="rd-pill {{ $paymentBadge['class'] }}">{{ $paymentBadge['label'] }}</span>
+                            @if($roomCoverageIncomplete)
+                                <span class="rd-pill is-pending">Affectation chambre incomplète</span>
+                            @endif
                         </div>
-                    </div>
-                @else
-                    <div class="dossier-hero-placeholder">
-                        <div>
-                            <i class="bx bx-image-alt fs-1 d-block mb-2"></i>
-                            <div>Visuel indisponible</div>
-                        </div>
-                    </div>
-                @endif
-            </div>
+                        <h1 class="rd-title">Dossier de réservation #{{ $dossier->dossier_number ?: $dossier->id }}</h1>
+                        <p class="rd-lead">Client principal {{ $clientName }} • Voyage {{ $offer?->name ?? 'non renseigné' }} • Départ {{ $departure?->start_date?->format('d/m/Y') ?? '—' }}</p>
 
-            <div class="dossier-hero-copy">
-                <div>
-                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                        <span class="dossier-pill {{ $dossierBadge['class'] }}">{{ $dossierBadge['label'] }}</span>
-                        <span class="dossier-pill {{ $paymentBadge['class'] }}">{{ $paymentBadge['label'] }}</span>
-                    </div>
-                    <h2 class="dossier-hero-title">{{ $offer?->name ?? 'Offre non renseignée' }}</h2>
-                    <p class="text-muted mb-0">{{ $offer?->destination ?? 'Destination non renseignée' }}</p>
-                </div>
-
-                <div class="dossier-hero-meta">
-                    <div class="dossier-meta-card">
-                        <span>Départ</span>
-                        <strong>{{ $departure?->start_date?->format('d/m/Y') ?? '—' }}</strong>
-                    </div>
-                    <div class="dossier-meta-card">
-                        <span>Durée</span>
-                        <strong>{{ $durationLabel ?: '—' }}</strong>
-                    </div>
-                    <div class="dossier-meta-card">
-                        <span>Client</span>
-                        <strong>{{ $clientName }}</strong>
-                    </div>
-                    <div class="dossier-meta-card">
-                        <span>Dossier</span>
-                        <strong>{{ $dossier->dossier_number ?: 'En attente' }}</strong>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <div class="dossier-grid">
-            <div class="dossier-stack">
-                <section class="dossier-card">
-                    <div class="dossier-card-header">
-                        <h3 class="dossier-card-title">Informations client</h3>
-                        <p class="dossier-card-subtitle">Coordonnées et fiche du client principal rattaché au dossier.</p>
-                    </div>
-                    <div class="dossier-card-body">
-                        <div class="info-grid mb-3">
-                            <div class="info-item">
-                                <span>Nom complet</span>
+                        <div class="rd-meta">
+                            <div class="rd-meta-card">
+                                <span>Client principal</span>
                                 <strong>{{ $clientName }}</strong>
                             </div>
-                            <div class="info-item">
-                                <span>Email</span>
-                                <div>{{ $clientEmail ?: '—' }}</div>
+                            <div class="rd-meta-card">
+                                <span>Voyage</span>
+                                <strong>{{ $offer?->name ?? '—' }}</strong>
                             </div>
-                            <div class="info-item">
-                                <span>Téléphone</span>
-                                <div>{{ $clientPhone ?: '—' }}</div>
+                            <div class="rd-meta-card">
+                                <span>Date départ</span>
+                                <strong>{{ $departure?->start_date?->format('d/m/Y') ?? '—' }}</strong>
                             </div>
-                            <div class="info-item">
-                                <span>Adresse</span>
-                                <div>{{ $clientAddress ?: '—' }}</div>
+                            <div class="rd-meta-card">
+                                <span>Voyageurs</span>
+                                <strong>{{ $travelersCount }}</strong>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="d-flex flex-wrap gap-2">
-                            @if($clientProfileUrl)
-                                <a href="{{ $clientProfileUrl }}" class="dossier-btn dossier-btn-soft">
-                                    <i class="bx bx-user-circle"></i>
-                                    <span>Voir le profil client</span>
-                                </a>
-                            @endif
-                            @if($mailToUrl)
-                                <a href="{{ $mailToUrl }}" class="dossier-btn dossier-btn-soft">
-                                    <i class="bx bx-envelope"></i>
-                                    <span>Envoyer un email</span>
-                                </a>
-                            @endif
-                            @if($whatsAppUrl)
-                                <a href="{{ $whatsAppUrl }}" target="_blank" rel="noopener" class="dossier-btn dossier-btn-soft">
-                                    <i class="bx bxl-whatsapp"></i>
-                                    <span>WhatsApp</span>
-                                </a>
-                            @endif
-                        </div>
-                    </div>
-                </section>
-
-                <section class="dossier-card">
-                    <div class="dossier-card-header">
-                        <h3 class="dossier-card-title">Offre & départ</h3>
-                        <p class="dossier-card-subtitle">Synthèse voyage, commercial et point de vente.</p>
-                    </div>
-                    <div class="dossier-card-body">
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <span>Destination</span>
-                                <strong>{{ $offer?->destination ?? '—' }}</strong>
-                            </div>
-                            <div class="info-item">
-                                <span>Date de départ</span>
-                                <div>{{ $departure?->start_date?->format('d/m/Y') ?? '—' }}</div>
-                            </div>
-                            <div class="info-item">
-                                <span>Durée</span>
-                                <div>{{ $durationLabel ?: '—' }}</div>
-                            </div>
-                            <div class="info-item">
-                                <span>Agence</span>
-                                <div>{{ $reservation->partner?->name ?? 'Ajinsafro' }}</div>
-                            </div>
-                            <div class="info-item">
-                                <span>Point de vente</span>
-                                <div>{{ $reservation->branch?->name ?? '—' }}</div>
-                            </div>
-                            <div class="info-item">
-                                <span>Agent / commercial</span>
-                                <div>{{ $reservation->assignedTo?->name ?? $reservation->agent?->name ?? $reservation->creator?->name ?? '—' }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="dossier-card">
-                    <div class="dossier-card-header">
-                        <div class="d-flex justify-content-between align-items-center gap-2">
-                            <div>
-                                <h3 class="dossier-card-title">Passagers</h3>
-                                <p class="dossier-card-subtitle">Voyageurs rattachés à cette réservation.</p>
-                            </div>
-                            <span class="passenger-badge">{{ max(1, $passengers->count()) }} passager{{ max(1, $passengers->count()) > 1 ? 's' : '' }}</span>
-                        </div>
-                    </div>
-                    <div class="dossier-card-body">
-                        <div class="passenger-list">
-                            @if($passengers->isNotEmpty())
-                                @foreach($passengers as $passenger)
-                                    <div class="passenger-row">
-                                        <div class="passenger-head">
-                                            <div>
-                                                <div class="passenger-name">{{ trim(($passenger->first_name ?? '').' '.($passenger->last_name ?? '')) ?: 'Passager' }}</div>
-                                                <div class="passenger-meta">
-                                                    {{ ucfirst((string) ($passenger->type ?: $passenger->traveler_type ?: 'adulte')) }}
-                                                    @if($passenger->phone)
-                                                        • {{ $passenger->phone }}
-                                                    @endif
-                                                </div>
-                                            </div>
-                                            <span class="dossier-pill is-completed">{{ $passenger->document_type ?: 'Document' }}</span>
-                                        </div>
-                                        <div class="passenger-meta mt-2">
-                                            {{ $passenger->document_number ?: 'Document non renseigné' }}
-                                        </div>
-                                    </div>
-                                @endforeach
-                            @else
-                                <div class="passenger-row">
-                                    <div class="passenger-head">
-                                        <div>
-                                            <div class="passenger-name">{{ $clientName }}</div>
-                                            <div class="passenger-meta">Passager principal</div>
-                                        </div>
-                                        <span class="dossier-pill is-completed">Principal</span>
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                </section>
-
-                <section class="dossier-card">
-                    <div class="dossier-card-header">
-                        <div class="d-flex justify-content-between align-items-center gap-2">
-                            <div>
-                                <h3 class="dossier-card-title">Réservations liées</h3>
-                                <p class="dossier-card-subtitle">Autres réservations du même dossier ou du même client.</p>
-                            </div>
-                            <a href="{{ $allClientReservationsUrl }}" class="dossier-btn dossier-btn-soft">
-                                <i class="bx bx-link-external"></i>
-                                <span>Voir toutes les réservations liées</span>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="dossier-card-body">
-                        @if($relatedReservations->isNotEmpty())
-                            <div class="related-list">
-                                @foreach($relatedReservations as $related)
-                                    @php
-                                        $relatedStatus = $statusMap[$related->status] ?? ['label' => ucfirst((string) $related->status), 'class' => 'is-draft'];
-                                    @endphp
-                                    <div class="related-row">
-                                        <div class="related-head">
-                                            <div>
-                                                <div class="related-title">#{{ $related->id }} • {{ $related->dossier_number ?? 'Sans numéro' }}</div>
-                                                <div class="related-meta">
-                                                    {{ $related->client?->full_name ?: trim(($related->client_first_name ?? '').' '.($related->client_last_name ?? '')) ?: '—' }}
-                                                    • {{ $related->departure?->start_date?->format('d/m/Y') ?? optional($related->created_at)->format('d/m/Y') ?? '—' }}
-                                                </div>
-                                            </div>
-                                            <div class="text-end">
-                                                <span class="dossier-pill {{ $relatedStatus['class'] }}">{{ $relatedStatus['label'] }}</span>
-                                                <div class="related-price mt-2">{{ number_format((float) ($related->total_amount ?? 0), 2, ',', ' ') }} DH</div>
-                                            </div>
-                                        </div>
-                                        <div class="mt-3">
-                                            <a href="{{ route('admin.reservations.show', $related) }}" class="dossier-btn dossier-btn-soft">
-                                                <i class="bx bx-show"></i>
-                                                <span>Voir</span>
-                                            </a>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @else
-                            <div class="empty-state">Aucune autre réservation liée n’a été trouvée pour ce client.</div>
+                    <div class="rd-actions">
+                        <a href="#dossier-update-card" class="rd-btn rd-btn-soft rd-btn-sm"><i class="bx bx-edit"></i><span>Modifier dossier</span></a>
+                        <a href="#payments-panel" data-bs-toggle="pill" class="rd-btn rd-btn-soft rd-btn-sm"><i class="bx bx-wallet"></i><span>Ajouter paiement</span></a>
+                        <a href="#documents-panel" data-bs-toggle="pill" class="rd-btn rd-btn-soft rd-btn-sm"><i class="bx bx-file"></i><span>Ajouter justificatif</span></a>
+                        @if($mailToUrl)
+                            <a href="{{ $mailToUrl }}" class="rd-btn rd-btn-soft rd-btn-sm"><i class="bx bx-envelope"></i><span>Envoyer par email</span></a>
                         @endif
+                        <form action="{{ route('admin.reservations.cancel', $reservation) }}" method="POST" onsubmit="return confirm('Annuler ce dossier ?');" class="d-inline">
+                            @csrf
+                            <button type="submit" class="rd-btn rd-btn-soft rd-btn-sm text-danger"><i class="bx bx-x-circle"></i><span>Annuler réservation</span></button>
+                        </form>
                     </div>
-                </section>
+                </div>
+            </section>
 
-                <section class="dossier-card">
-                    <div class="dossier-card-header">
-                        <h3 class="dossier-card-title">Documents / Notes</h3>
-                        <p class="dossier-card-subtitle">Pièces du dossier et suivi interne de l’équipe.</p>
-                    </div>
-                    <div class="dossier-card-body">
-                        <ul class="nav nav-pills dossier-tabs" id="dossier-tabs" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="documents-tab" data-bs-toggle="pill" data-bs-target="#documents-panel" type="button" role="tab">Documents</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="notes-tab" data-bs-toggle="pill" data-bs-target="#notes-panel" type="button" role="tab">Notes</button>
-                            </li>
-                        </ul>
+            <ul class="nav nav-pills rd-tabs" role="tablist">
+                <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#overview-panel" type="button" role="tab">Vue d’ensemble</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#payments-panel" type="button" role="tab">Paiements & documents</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#travelers-panel" type="button" role="tab">Voyageurs</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#rooms-panel" type="button" role="tab">Chambres</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#visa-panel" type="button" role="tab">Visa / Reçu</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#history-panel" type="button" role="tab">Historique</button></li>
+            </ul>
 
-                        <div class="tab-content">
-                            <div class="tab-pane fade show active" id="documents-panel" role="tabpanel" aria-labelledby="documents-tab">
-                                @if($documents->isNotEmpty())
-                                    <div class="document-list mb-3">
-                                        @foreach($documents as $document)
-                                            <div class="document-row">
-                                                <div class="document-head">
-                                                    <div>
-                                                        <div class="document-title">{{ $document->title }}</div>
-                                                        <div class="document-meta">
-                                                            <span class="text-dark fw-bold">Description : {{ $document->title }}</span>
-                                                            • {{ ucfirst(str_replace('_', ' ', (string) $document->type)) }}
-                                                            • {{ optional($document->created_at)->format('d/m/Y H:i') ?? '—' }}
-                                                            • {{ $document->creator?->name ?? 'Système' }}
-                                                        </div>
-                                                    </div>
-                                                    @if($documentUrl($document))
-                                                        <a href="{{ $documentUrl($document) }}" target="_blank" rel="noopener" class="dossier-btn dossier-btn-soft">
-                                                            <i class="bx bx-download"></i>
-                                                            <span>Ouvrir</span>
-                                                        </a>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @else
-                                    <div class="empty-state mb-3">Aucun document chargé pour ce dossier.</div>
+            <div class="tab-content rd-tab-content">
+                <div class="tab-pane fade show active" id="overview-panel" role="tabpanel">
+                    <div class="rd-card-grid">
+                        <section class="rd-panel">
+                            <div class="rd-panel-head">
+                                <div>
+                                    <h2 class="rd-panel-title">Résumé financier</h2>
+                                    <p class="rd-panel-subtitle">Totaux compactés pour lecture rapide et suivi du reste à payer.</p>
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <span class="rd-pill {{ $paymentBadge['class'] }}">{{ $paymentBadge['label'] }}</span>
+                                    <span class="rd-pill is-completed">{{ $paymentProgress }}%</span>
+                                </div>
+                            </div>
+                            <div class="rd-panel-body">
+                                @if(! $hasFinancialData)
+                                    <div class="alert alert-warning border-0 mb-3">Aucun paiement enregistré pour ce dossier.</div>
                                 @endif
 
-                                <form action="{{ route('admin.reservations.documents.store', $reservation) }}" method="POST" enctype="multipart/form-data" class="dossier-form-grid">
-                                    @csrf
-                                    <div class="row g-3">
+                                <div class="rd-summary-grid mb-3">
+                                    <div class="rd-summary-card is-blue"><span>Total base</span><strong>{{ $baseTotal > 0 ? number_format($baseTotal, 2, ',', ' ').' DH' : '—' }}</strong></div>
+                                    <div class="rd-summary-card"><span>Suppléments chambres</span><strong>{{ $roomSupplementTotal > 0 ? number_format($roomSupplementTotal, 2, ',', ' ').' DH' : '—' }}</strong></div>
+                                    <div class="rd-summary-card"><span>Extras</span><strong>{{ $extrasTotal > 0 ? number_format($extrasTotal, 2, ',', ' ').' DH' : '—' }}</strong></div>
+                                    <div class="rd-summary-card is-blue"><span>Total dossier</span><strong>{{ $totalAmount > 0 ? number_format($totalAmount, 2, ',', ' ').' DH' : '—' }}</strong></div>
+                                    <div class="rd-summary-card is-green"><span>Total payé</span><strong>{{ $paidAmount > 0 ? number_format($paidAmount, 2, ',', ' ').' DH' : '—' }}</strong></div>
+                                    <div class="rd-summary-card {{ $remainingAmount > 0 ? 'is-orange' : 'is-green' }}"><span>Reste à payer</span><strong>{{ $remainingAmount > 0 ? number_format($remainingAmount, 2, ',', ' ').' DH' : '—' }}</strong></div>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center gap-3 mb-3 flex-wrap">
+                                    <div class="flex-grow-1" style="min-width: 260px;">
+                                        <div class="d-flex justify-content-between mb-1"><small class="rd-muted">Progression paiement</small><strong>{{ $paymentProgress }}%</strong></div>
+                                        <div class="progress" style="height:10px;border-radius:999px;">
+                                            <div class="progress-bar" role="progressbar" style="width: {{ $paymentProgress }}%; background: linear-gradient(135deg, #0877bd, #12b76a);"></div>
+                                        </div>
+                                    </div>
+                                    <a href="#payments-panel" data-bs-toggle="pill" class="rd-btn rd-btn-soft rd-btn-sm"><i class="bx bx-wallet"></i><span>Aller aux paiements</span></a>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="rd-panel" id="dossier-update-card">
+                            <div class="rd-panel-head">
+                                <div>
+                                    <h2 class="rd-panel-title">Informations dossier</h2>
+                                    <p class="rd-panel-subtitle">Zone compacte de modification du dossier et des voyageurs.</p>
+                                </div>
+                                <a href="{{ route('admin.reservations.edit', $reservation) }}" class="rd-btn rd-btn-soft rd-btn-sm"><i class="bx bx-external-link"></i><span>Ouvrir l’édition complète</span></a>
+                            </div>
+                            <div class="rd-panel-body">
+                                @can('reservations.update')
+                                    <form id="dossier-update-form" action="{{ route('admin.reservations.update', $reservation) }}" method="POST" enctype="multipart/form-data">
+                                        @csrf
+                                        @method('PUT')
+
+                                        <input type="hidden" name="accommodation_mode" value="rooms">
+                                        <input type="hidden" name="departure_id" value="{{ $currentDepartureId }}">
+                                        <input type="hidden" name="travel_date_id" value="{{ $currentTravelDateId }}">
+                                        <input type="hidden" name="client_mode" value="new">
+                                        <input type="hidden" name="client_traveler_type" value="adult">
+                                        <input type="hidden" name="extras_json" value='@json($currentExtrasPayload, JSON_UNESCAPED_UNICODE)'>
+
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label class="rd-label">Offre / voyage</label>
+                                                <select name="tour_id" class="form-select" required>
+                                                    <option value="">Sélectionner un voyage…</option>
+                                                    @foreach($voyages as $voyage)
+                                                        <option value="{{ $voyage->id }}" @selected((int) old('tour_id', $currentTourId) === (int) $voyage->id)>{{ $voyage->name ?? $voyage->slug }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="rd-label">Statut dossier</label>
+                                                <div class="form-control d-flex align-items-center justify-content-between bg-light">
+                                                    <span>{{ $dossierBadge['label'] }}</span>
+                                                    <span class="rd-pill {{ $dossierBadge['class'] }}">{{ $dossierBadge['label'] }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="rd-label">Mode de paiement</label>
+                                                <select name="payment_type" class="form-select">
+                                                    <option value="">—</option>
+                                                    @foreach(['Espèces', 'Virement bancaire', 'Carte bancaire', 'Chèque', 'TPE', 'Autre'] as $paymentType)
+                                                        <option value="{{ $paymentType }}" @selected(old('payment_type', $reservation->payment_type) === $paymentType)>{{ $paymentType }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+
+                                            <div class="col-12">
+                                                <div class="rd-room-alert">
+                                                    <strong>Voyageurs couverts :</strong> {{ min($selectedRoomCapacity, $travelersCount) }}/{{ $travelersCount }} voyageurs.
+                                                    @if($roomCoverageIncomplete)
+                                                        Affectation chambre incomplète : {{ $selectedRoomCapacity }}/{{ $travelersCount }} voyageurs couverts.
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                            <div class="col-12">
+                                                <div class="row g-3">
+                                                    <div class="col-md-6">
+                                                        <label class="rd-label">Prénom du client principal</label>
+                                                        <input type="text" name="client_first_name" class="form-control" value="{{ old('client_first_name', $client?->first_name ?? $reservation->client_first_name ?? '') }}">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="rd-label">Nom du client principal</label>
+                                                        <input type="text" name="client_last_name" class="form-control" value="{{ old('client_last_name', $client?->last_name ?? $reservation->client_last_name ?? '') }}">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="rd-label">Téléphone</label>
+                                                        <input type="text" name="client_phone" class="form-control" value="{{ old('client_phone', $client?->phone ?? $reservation->client_phone ?? '') }}">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="rd-label">Email</label>
+                                                        <input type="email" name="client_email" class="form-control" value="{{ old('client_email', $client?->email ?? $reservation->client_email ?? '') }}">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="rd-label">Date de naissance</label>
+                                                        <input type="date" name="client_birth_date" class="form-control" value="{{ old('client_birth_date', optional($client?->birth_date)->format('Y-m-d') ?? optional($reservation->client_birth_date)->format('Y-m-d')) }}">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="rd-label">Type document</label>
+                                                        <input type="text" name="client_document_type" class="form-control" value="{{ old('client_document_type', $client?->document_type ?? $reservation->client_document_type ?? '') }}">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="rd-label">Numéro document</label>
+                                                        <input type="text" name="client_document_number" class="form-control" value="{{ old('client_document_number', $client?->document_number ?? $reservation->client_document_number ?? '') }}">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="rd-label">Nationalité</label>
+                                                        <input type="text" name="client_nationality" class="form-control" value="{{ old('client_nationality', $client?->nationality ?? '') }}">
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <label class="rd-label">Adresse</label>
+                                                        <input type="text" name="client_address" class="form-control" value="{{ old('client_address', $client?->address_line_1 ?? $reservation->client?->address_line_1 ?? '') }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-12">
+                                                <div class="d-flex justify-content-between align-items-center gap-2 mb-2 flex-wrap">
+                                                    <div>
+                                                        <h3 class="rd-panel-title mb-0">Accompagnants</h3>
+                                                        <p class="rd-panel-subtitle mb-0">Chaque voyageur occupe une seule ligne claire.</p>
+                                                    </div>
+                                                    <button type="button" class="rd-btn rd-btn-soft rd-btn-sm" id="btn-add-companion"><i class="bx bx-plus"></i><span>Ajouter accompagnant</span></button>
+                                                </div>
+
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered align-middle rd-table mb-0" id="companions-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Type</th>
+                                                                <th>Prénom</th>
+                                                                <th>Nom</th>
+                                                                <th>Date naissance</th>
+                                                                <th>Type document</th>
+                                                                <th>Numéro document</th>
+                                                                <th class="text-end">Action</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="companions-container">
+                                                            @foreach($companionTravelers as $index => $traveler)
+                                                                <tr class="companion-row">
+                                                                    <td style="width: 120px;">
+                                                                        <input type="hidden" name="passengers[{{ $index }}][id]" value="{{ $traveler['id'] ?? '' }}">
+                                                                        <select name="passengers[{{ $index }}][type]" class="form-select form-select-sm">
+                                                                            <option value="adult" @selected(($traveler['type'] ?? '') === 'adult')>Adulte</option>
+                                                                            <option value="child" @selected(($traveler['type'] ?? '') === 'child')>Enfant</option>
+                                                                            <option value="infant" @selected(($traveler['type'] ?? '') === 'infant')>Bébé</option>
+                                                                        </select>
+                                                                    </td>
+                                                                    <td><input type="text" name="passengers[{{ $index }}][first_name]" class="form-control form-control-sm" value="{{ $traveler['first_name'] ?? '' }}"></td>
+                                                                    <td><input type="text" name="passengers[{{ $index }}][last_name]" class="form-control form-control-sm" value="{{ $traveler['last_name'] ?? '' }}"></td>
+                                                                    <td><input type="date" name="passengers[{{ $index }}][birth_date]" class="form-control form-control-sm" value="{{ $traveler['birth_date'] ?? '' }}"></td>
+                                                                    <td><input type="text" name="passengers[{{ $index }}][document_type]" class="form-control form-control-sm" value="{{ $traveler['document_type'] ?? '' }}"></td>
+                                                                    <td><input type="text" name="passengers[{{ $index }}][document_number]" class="form-control form-control-sm" value="{{ $traveler['document_number'] ?? '' }}"></td>
+                                                                    <td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger btn-remove-companion">Supprimer</button></td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        @foreach($currentRoomingPayload as $roomIndex => $roomPayload)
+                                            <input type="hidden" name="hotel_rooms[{{ $roomIndex }}][departure_hotel_room_id]" value="{{ $roomPayload['departure_hotel_room_id'] }}">
+                                            <input type="hidden" name="hotel_rooms[{{ $roomIndex }}][tour_hotel_id]" value="{{ $roomPayload['tour_hotel_id'] }}">
+                                            <input type="hidden" name="hotel_rooms[{{ $roomIndex }}][tour_hotel_room_id]" value="{{ $roomPayload['tour_hotel_room_id'] }}">
+                                            <input type="hidden" name="hotel_rooms[{{ $roomIndex }}][room_count]" value="{{ $roomPayload['room_count'] }}">
+                                        @endforeach
+                                    </form>
+                                @else
+                                    <div class="rd-empty">Vous n’avez pas l’autorisation de modifier ce dossier.</div>
+                                @endcan
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="payments-panel" role="tabpanel">
+                    <div class="rd-card-grid">
+                        <section class="rd-panel">
+                            <div class="rd-panel-head">
+                                <div>
+                                    <h2 class="rd-panel-title">Paiements</h2>
+                                    <p class="rd-panel-subtitle">Liste des encaissements puis formulaire compact en bloc pliable.</p>
+                                </div>
+                                <button class="rd-btn rd-btn-primary rd-btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#payment-form-collapse"><i class="bx bx-wallet"></i><span>Ajouter paiement</span></button>
+                            </div>
+                            <div class="rd-panel-body">
+                                @if($paymentRows->isNotEmpty())
+                                    <div class="table-responsive mb-3">
+                                        <table class="table table-hover align-middle rd-table mb-0">
+                                            <thead>
+                                                <tr><th>Date</th><th>Mode</th><th>Référence</th><th>Justificatif</th><th class="text-end">Montant</th></tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($paymentRows as $payment)
+                                                    <tr>
+                                                        <td>{{ optional($payment->payment_date ?? $payment->created_at)->format('d/m/Y') ?? '—' }}</td>
+                                                        <td>{{ $payment->payment_method ?? '—' }}</td>
+                                                        <td>{{ $payment->reference ?? '—' }}</td>
+                                                        <td>{{ $payment->proof_file ?? '—' }}</td>
+                                                        <td class="text-end fw-bold">{{ number_format((float) ($payment->amount ?? 0), 2, ',', ' ') }} DH</td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @else
+                                    <div class="rd-empty mb-3">Aucun paiement enregistré pour ce dossier.</div>
+                                @endif
+
+                                <div class="collapse" id="payment-form-collapse">
+                                    <form action="{{ route('admin.reservations.payments.store', $reservation) }}" method="POST" enctype="multipart/form-data" class="row g-3 pt-2 border-top">
+                                        @csrf
+                                        <div class="col-md-3"><label class="rd-label">Date paiement</label><input type="date" name="payment_date" class="form-control" value="{{ now()->toDateString() }}" required></div>
+                                        <div class="col-md-3"><label class="rd-label">Mode paiement</label><select name="payment_method" class="form-select" required><option value="ESPECE">Espèce</option><option value="VIREMENT">Virement</option><option value="CASHPLUS">Cash Plus</option><option value="CARTE">Carte</option><option value="AUTRE">Autre</option></select></div>
+                                        <div class="col-md-2"><label class="rd-label">Montant payé</label><input type="number" step="0.01" min="0.01" name="amount" class="form-control" required></div>
+                                        <div class="col-md-2"><label class="rd-label">Référence</label><input type="text" name="reference" class="form-control"></div>
+                                        <div class="col-md-2"><label class="rd-label">Justificatif</label><input type="file" name="proof_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.webp"></div>
+                                        <div class="col-12"><label class="rd-label">Note interne</label><textarea name="note" class="form-control" rows="3"></textarea></div>
+                                        <div class="col-12 text-end"><button type="submit" class="rd-btn rd-btn-primary rd-btn-sm"><i class="bx bx-save"></i><span>Enregistrer le paiement</span></button></div>
+                                    </form>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="rd-panel">
+                            <div class="rd-panel-head">
+                                <div>
+                                    <h2 class="rd-panel-title">Documents</h2>
+                                    <p class="rd-panel-subtitle">Pièces du dossier séparées du paiement.</p>
+                                </div>
+                                <button class="rd-btn rd-btn-primary rd-btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#document-form-collapse"><i class="bx bx-file"></i><span>Ajouter document</span></button>
+                            </div>
+                            <div class="rd-panel-body">
+                                @if($documentRows->isNotEmpty())
+                                    <div class="table-responsive mb-3">
+                                        <table class="table table-hover align-middle rd-table mb-0">
+                                            <thead><tr><th>Type</th><th>Titre</th><th>Date</th><th class="text-end">Action</th></tr></thead>
+                                            <tbody>
+                                                @foreach($documentRows as $document)
+                                                    <tr>
+                                                        <td>{{ ucfirst(str_replace('_', ' ', (string) $document->type)) }}</td>
+                                                        <td>{{ $document->title }}</td>
+                                                        <td>{{ optional($document->created_at)->format('d/m/Y H:i') ?? '—' }}</td>
+                                                        <td class="text-end">
+                                                            @if($documentUrl($document))
+                                                                <a href="{{ $documentUrl($document) }}" target="_blank" rel="noopener" class="rd-btn rd-btn-soft rd-btn-sm"><i class="bx bx-download"></i><span>Ouvrir</span></a>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @else
+                                    <div class="rd-empty mb-3">Aucun document chargé pour ce dossier.</div>
+                                @endif
+
+                                <div class="collapse" id="document-form-collapse">
+                                    <form action="{{ route('admin.reservations.documents.store', $reservation) }}" method="POST" enctype="multipart/form-data" class="row g-3 pt-2 border-top">
+                                        @csrf
                                         <div class="col-md-4">
-                                            <label class="form-label">Type</label>
+                                            <label class="rd-label">Type</label>
                                             <select name="type" class="form-select" required>
                                                 <option value="invoice">Facture</option>
                                                 <option value="payment_receipt">Reçu paiement</option>
@@ -932,291 +939,294 @@
                                                 <option value="other">Autre fichier</option>
                                             </select>
                                         </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Description</label>
-                                            <input type="text" name="title" class="form-control" placeholder="Ex. Facture acompte, visa client, voucher hôtel…" required>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Fichier</label>
-                                            <input type="file" name="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.webp" required>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <button type="submit" class="dossier-btn dossier-btn-primary">
-                                            <i class="bx bx-upload"></i>
-                                            <span>Ajouter un document</span>
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-
-                            <div class="tab-pane fade" id="notes-panel" role="tabpanel" aria-labelledby="notes-tab">
-                                @if($noteEntries->isNotEmpty())
-                                    <div class="notes-list mb-3">
-                                        @foreach($noteEntries as $noteEntry)
-                                            <div class="note-row">
-                                                <div class="note-meta mb-2">
-                                                    {{ optional($noteEntry->created_at)->format('d/m/Y H:i') ?? '—' }}
-                                                    • {{ $noteEntry->user?->name ?? 'Système' }}
-                                                </div>
-                                                <div class="text-dark" style="white-space: pre-line;">{{ $noteEntry->note }}</div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @elseif($notesContent !== '')
-                                    <div class="note-row mb-3">
-                                        <div class="note-meta mb-2">Notes internes existantes</div>
-                                        <div class="text-dark" style="white-space: pre-line;">{{ $notesContent }}</div>
-                                    </div>
-                                @else
-                                    <div class="empty-state mb-3">Aucune note interne enregistrée.</div>
-                                @endif
-
-                                @if(auth()->user()->can('reservations.view_internal_notes') || auth()->user()->can('reservations.update'))
-                                    <form action="{{ route('admin.reservations.notes.store', $reservation) }}" method="POST" class="dossier-form-grid">
-                                        @csrf
-                                        <div>
-                                            <label class="form-label">Nouvelle note interne</label>
-                                            <textarea name="note" class="form-control" rows="5" placeholder="Suivi commercial, précision client, prochaine action..." required></textarea>
-                                        </div>
-                                        <div>
-                                            <button type="submit" class="dossier-btn dossier-btn-primary">
-                                                <i class="bx bx-message-square-add"></i>
-                                                <span>Ajouter la note</span>
-                                            </button>
-                                        </div>
+                                        <div class="col-md-4"><label class="rd-label">Titre</label><input type="text" name="title" class="form-control" placeholder="Ex. Reçu acompte" required></div>
+                                        <div class="col-md-4"><label class="rd-label">Fichier</label><input type="file" name="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.webp" required></div>
+                                        <div class="col-12 text-end"><button type="submit" class="rd-btn rd-btn-primary rd-btn-sm"><i class="bx bx-upload"></i><span>Ajouter document</span></button></div>
                                     </form>
-                                @endif
+                                </div>
                             </div>
-                        </div>
+                        </section>
                     </div>
-                </section>
+                </div>
 
-                <section class="dossier-card">
-                    <div class="dossier-card-header">
-                        <h3 class="dossier-card-title">Historique</h3>
-                        <p class="dossier-card-subtitle">Timeline des événements clés du dossier.</p>
-                    </div>
-                    <div class="dossier-card-body">
-                        @if($histories->isNotEmpty())
-                            <div class="timeline-list">
-                                @foreach($histories as $history)
-                                    @php
-                                        $timeline = $historyMeta($history);
-                                    @endphp
-                                    <div class="timeline-row">
-                                        <div class="timeline-head">
-                                            <div>
-                                                <div class="document-title">{{ $timeline['label'] }}</div>
-                                                @if($timeline['details'] !== '')
-                                                    <div class="timeline-meta mt-1">{{ $timeline['details'] }}</div>
-                                                @endif
-                                            </div>
-                                            <div class="timeline-meta text-end">
-                                                <div>{{ optional($history->created_at)->format('d/m/Y H:i') ?? '—' }}</div>
-                                                <div>{{ $history->user?->name ?? 'Système' }}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
+                <div class="tab-pane fade" id="travelers-panel" role="tabpanel">
+                    <section class="rd-panel">
+                        <div class="rd-panel-head">
+                            <div>
+                                <h2 class="rd-panel-title">Voyageurs</h2>
+                                <p class="rd-panel-subtitle">Client principal et accompagnants, affichés ligne par ligne.</p>
                             </div>
-                        @else
-                            <div class="empty-state">Aucun historique disponible pour ce dossier.</div>
-                        @endif
-                    </div>
-                </section>
-            </div>
-
-            <div class="dossier-stack">
-                <section class="dossier-card">
-                    <div class="dossier-card-header">
-                        <h3 class="dossier-card-title">Résumé financier</h3>
-                        <p class="dossier-card-subtitle">Total, encaissement et progression du paiement.</p>
-                    </div>
-                    <div class="dossier-card-body summary-grid">
-                        <div class="summary-highlight">
-                            <div class="summary-row mb-3">
-                                <span>Statut paiement</span>
-                                <strong class="dossier-pill {{ $paymentBadge['class'] }}">{{ $paymentBadge['label'] }}</strong>
-                            </div>
-                            <div class="summary-row">
-                                <span>Progression</span>
-                                <strong>{{ $paymentProgress }}%</strong>
-                            </div>
-                            <div class="progress-shell mt-3">
-                                <div class="progress-bar" style="width: {{ $paymentProgress }}%;"></div>
-                            </div>
+                            <span class="rd-pill is-completed">{{ $travelersCount }} voyageurs</span>
                         </div>
-
-                        <div class="summary-row">
-                            <span>Total du dossier</span>
-                            @if($hasCalculatedFinancials)
-                                <strong>{{ number_format($totalAmount, 2, ',', ' ') }} DH</strong>
-                            @else
-                                <strong class="text-muted" style="font-size:0.95rem;">Non calculé</strong>
-                            @endif
-                        </div>
-                        <div class="summary-row">
-                            <span>Payé</span>
-                            @if($hasCalculatedFinancials)
-                                <strong>{{ number_format($paidAmount, 2, ',', ' ') }} DH</strong>
-                            @else
-                                <strong class="text-muted" style="font-size:0.95rem;">—</strong>
-                            @endif
-                        </div>
-                        <div class="summary-row">
-                            <span>Restant à payer</span>
-                            @if($hasCalculatedFinancials)
-                                <strong>{{ number_format($remainingAmount, 2, ',', ' ') }} DH</strong>
-                            @else
-                                <strong class="text-muted" style="font-size:0.95rem;">—</strong>
-                            @endif
-                        </div>
-                        <div class="summary-row">
-                            <span>Suppléments</span>
-                            @php $roomSupp = (float) ($dossier->room_supplement_total ?? $reservation->room_supplement_total ?? 0); @endphp
-                            @if($hasCalculatedFinancials || $roomSupp > 0)
-                                <strong>{{ number_format($roomSupp, 2, ',', ' ') }} DH</strong>
-                            @else
-                                <strong class="text-muted" style="font-size:0.95rem;">—</strong>
-                            @endif
-                        </div>
-                        <div class="summary-row">
-                            <span>Extras</span>
-                            @php $extrasTotal = (float) ($dossier->extras_total ?? $reservation->extras_total ?? 0); @endphp
-                            @if($hasCalculatedFinancials || $extrasTotal > 0)
-                                <strong>{{ number_format($extrasTotal, 2, ',', ' ') }} DH</strong>
-                            @else
-                                <strong class="text-muted" style="font-size:0.95rem;">—</strong>
-                            @endif
-                        </div>
-                    </div>
-                </section>
-
-                @php $roomAllocations = $reservation->reservationRooms ?? collect(); @endphp
-                @if($roomAllocations->isEmpty())
-                    <section class="dossier-card" style="border-color: #f59e0b; background: linear-gradient(135deg, #fffbeb, #ffffff);">
-                        <div class="dossier-card-header">
-                            <h3 class="dossier-card-title" style="color: #b45309;"><i class="bx bx-bed me-1"></i>Rooming à traiter</h3>
-                            <p class="dossier-card-subtitle">Ce dossier n’a pas encore de chambres affectées.</p>
-                        </div>
-                        <div class="dossier-card-body">
-                            <div class="alert alert-warning border-0 mb-0 small">
-                                <strong>Demande client sans chambre.</strong> L’admin doit traiter le rooming manuellement via la modification du dossier.
-                            </div>
-                            <div class="mt-3">
-                                @if(Route::has('admin.reservations.edit'))
-                                    <a href="{{ route('admin.reservations.edit', $reservation) }}" class="dossier-btn dossier-btn-soft">
-                                        <i class="bx bx-edit"></i>
-                                        <span>Modifier le dossier</span>
-                                    </a>
-                                @endif
+                        <div class="rd-panel-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle rd-table mb-0">
+                                    <thead>
+                                        <tr><th>Type voyageur</th><th>Prénom</th><th>Nom</th><th>Date naissance</th><th>Type document</th><th>Numéro document</th><th>Action</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Principal</td>
+                                            <td>{{ $client?->first_name ?? $reservation->client_first_name ?? '—' }}</td>
+                                            <td>{{ $client?->last_name ?? $reservation->client_last_name ?? '—' }}</td>
+                                            <td>{{ optional($client?->birth_date)->format('d/m/Y') ?? optional($reservation->client_birth_date)->format('d/m/Y') ?? '—' }}</td>
+                                            <td>{{ $client?->document_type ?? $reservation->client_document_type ?? '—' }}</td>
+                                            <td>{{ $client?->document_number ?? $reservation->client_document_number ?? '—' }}</td>
+                                            <td class="text-end"><span class="rd-pill is-completed">Client principal</span></td>
+                                        </tr>
+                                        @forelse($companionTravelers as $traveler)
+                                            <tr>
+                                                <td>{{ ucfirst((string) ($traveler['type'] ?? 'adult')) }}</td>
+                                                <td>{{ $traveler['first_name'] ?? '—' }}</td>
+                                                <td>{{ $traveler['last_name'] ?? '—' }}</td>
+                                                <td>{{ ! empty($traveler['birth_date']) ? \Illuminate\Support\Carbon::parse($traveler['birth_date'])->format('d/m/Y') : '—' }}</td>
+                                                <td>{{ $traveler['document_type'] ?? '—' }}</td>
+                                                <td>{{ $traveler['document_number'] ?? '—' }}</td>
+                                                <td class="text-end"><span class="text-muted small">—</span></td>
+                                            </tr>
+                                        @empty
+                                            <tr><td colspan="7"><div class="rd-empty">Aucun accompagnant enregistré.</div></td></tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </section>
-                @endif
+                </div>
 
-                <section class="dossier-card">
-                    <div class="dossier-card-header">
-                        <h3 class="dossier-card-title">Actions rapides</h3>
-                        <p class="dossier-card-subtitle">Raccourcis utiles pour gérer le dossier au quotidien.</p>
-                    </div>
-                    <div class="dossier-card-body">
-                        <div class="actions-list">
-                            <div class="action-row">
-                                <div class="d-flex justify-content-between align-items-center gap-3">
-                                    <div>
-                                        <div class="document-title">Voir facture</div>
-                                        <div class="document-meta">Ouvre la version imprimable / PDF du dossier.</div>
-                                    </div>
-                                    <a href="{{ route('admin.reservations.invoice', $reservation) }}" target="_blank" class="dossier-btn dossier-btn-soft">
-                                        <i class="bx bx-receipt"></i>
-                                        <span>Ouvrir</span>
-                                    </a>
-                                </div>
+                <div class="tab-pane fade" id="rooms-panel" role="tabpanel">
+                    <section class="rd-panel">
+                        <div class="rd-panel-head">
+                            <div>
+                                <h2 class="rd-panel-title">Hôtels et chambres</h2>
+                                <p class="rd-panel-subtitle">Chambres réelles seulement, sans blocs vides ni debug en production.</p>
                             </div>
-                            <div class="action-row">
-                                <div class="d-flex justify-content-between align-items-center gap-3">
-                                    <div>
-                                        <div class="document-title">Ajouter paiement</div>
-                                        <div class="document-meta">Enregistrement immédiat avec mise à jour des soldes.</div>
-                                    </div>
-                                    <a href="#payment-form" class="dossier-btn dossier-btn-soft">
-                                        <i class="bx bx-wallet"></i>
-                                        <span>Ajouter</span>
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="action-row">
-                                <div class="d-flex justify-content-between align-items-center gap-3">
-                                    <div>
-                                        <div class="document-title">Contacter le client</div>
-                                        <div class="document-meta">Email direct et WhatsApp si disponible.</div>
-                                    </div>
-                                    <div class="d-flex flex-wrap gap-2">
-                                        @if($mailToUrl)
-                                            <a href="{{ $mailToUrl }}" class="dossier-btn dossier-btn-soft"><i class="bx bx-envelope"></i><span>Email</span></a>
-                                        @endif
-                                        @if($whatsAppUrl)
-                                            <a href="{{ $whatsAppUrl }}" target="_blank" rel="noopener" class="dossier-btn dossier-btn-soft"><i class="bx bxl-whatsapp"></i><span>WhatsApp</span></a>
-                                        @endif
-                                    </div>
-                                </div>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <span class="rd-pill is-completed">{{ $selectedRoomCapacity }}/{{ $travelersCount }} couverts</span>
+                                <span class="rd-pill {{ $roomCoverageIncomplete ? 'is-pending' : 'is-paid' }}">{{ $selectedRoomCount }} chambres sélectionnées</span>
                             </div>
                         </div>
-                    </div>
-                </section>
+                        <div class="rd-panel-body">
+                            @if($roomCoverageIncomplete)
+                                <div class="alert alert-warning border-0 mb-3">Affectation chambre incomplète : {{ $selectedRoomCapacity }}/{{ $travelersCount }} voyageurs couverts.</div>
+                            @endif
 
-                <section class="dossier-card" id="payment-form">
-                    <div class="dossier-card-header">
-                        <h3 class="dossier-card-title">Ajouter un paiement</h3>
-                        <p class="dossier-card-subtitle">Met à jour le payé, le restant et l’historique du dossier.</p>
-                    </div>
-                    <div class="dossier-card-body">
-                        <form action="{{ route('admin.reservations.payments.store', $reservation) }}" method="POST" enctype="multipart/form-data" class="dossier-form-grid">
-                            @csrf
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Montant</label>
-                                    <input type="number" step="0.01" min="0.01" name="amount" class="form-control" required>
+                            @if($roomAllocationRows->isEmpty())
+                                <div class="rd-empty">Aucune chambre disponible/configurée pour ce départ.</div>
+                            @else
+                                <div class="row g-3">
+                                    @foreach($roomAllocationRows as $hotelName => $hotelRows)
+                                        <div class="col-12">
+                                            <div class="card border-0 shadow-sm">
+                                                <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                                    <strong>{{ $hotelName }}</strong>
+                                                    <span class="rd-pill is-completed">{{ $hotelRows->count() }} ligne{{ $hotelRows->count() > 1 ? 's' : '' }}</span>
+                                                </div>
+                                                <div class="card-body p-0">
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm align-middle rd-table mb-0">
+                                                            <thead>
+                                                                <tr><th>Type chambre</th><th class="text-center">Places dispo</th><th class="text-center">Chambres dispo</th><th class="text-center">Capacité</th><th class="text-end">Supplément</th><th class="text-end">Sous-total</th></tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach($hotelRows as $roomRow)
+                                                                    <tr>
+                                                                        <td>{{ $roomRow['room_type'] }}{{ $roomRow['room_label'] ? ' — '.$roomRow['room_label'] : '' }}</td>
+                                                                        <td class="text-center">{{ $roomRow['capacity'] > 0 ? $roomRow['capacity'].' pers.' : '—' }}</td>
+                                                                        <td class="text-center">{{ $roomRow['room_count'] }}</td>
+                                                                        <td class="text-center">{{ $roomRow['capacity'] > 0 ? $roomRow['capacity'].' pers.' : '—' }}</td>
+                                                                        <td class="text-end">{{ $roomRow['supplement'] > 0 ? number_format((float) $roomRow['supplement'], 2, ',', ' ').' DH' : '—' }}</td>
+                                                                        <td class="text-end fw-bold">{{ $roomRow['subtotal'] > 0 ? number_format((float) $roomRow['subtotal'], 2, ',', ' ').' DH' : '—' }}</td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Date paiement</label>
-                                    <input type="date" name="payment_date" class="form-control" value="{{ now()->toDateString() }}" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Mode de paiement</label>
-                                    <select name="payment_method" class="form-select" required>
-                                        <option value="ESPECE">Espèce</option>
-                                        <option value="VIREMENT">Virement</option>
-                                        <option value="CASHPLUS">Cash Plus</option>
-                                        <option value="CARTE">Carte</option>
-                                        <option value="AUTRE">Autre</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Référence</label>
-                                    <input type="text" name="reference" class="form-control" placeholder="Référence paiement">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Justificatif</label>
-                                    <input type="file" name="proof_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.webp">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Note</label>
-                                    <textarea name="note" class="form-control" rows="3" placeholder="Commentaire interne lié au paiement"></textarea>
-                                </div>
-                            </div>
+                            @endif
+
+                            @if(config('app.debug'))
+                                <details class="mt-3">
+                                    <summary class="rd-label mb-2">Debug technique chambres</summary>
+                                    <pre class="small mb-0">@json($roomAllocationRows, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)</pre>
+                                </details>
+                            @endif
+                        </div>
+                    </section>
+                </div>
+
+                <div class="tab-pane fade" id="visa-panel" role="tabpanel">
+                    <section class="rd-panel">
+                        <div class="rd-panel-head">
                             <div>
-                                <button type="submit" class="dossier-btn dossier-btn-primary">
-                                    <i class="bx bx-save"></i>
-                                    <span>Enregistrer le paiement</span>
-                                </button>
+                                <h2 class="rd-panel-title">Visa / Reçu</h2>
+                                <p class="rd-panel-subtitle">Section réduite si le voyage ne nécessite pas de visa.</p>
                             </div>
-                        </form>
-                    </div>
-                </section>
+                            @if(! $visaRequired)
+                                <span class="rd-pill is-paid">Visa non requis</span>
+                            @endif
+                        </div>
+                        <div class="rd-panel-body">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <div class="rd-mini-card h-100"><span>Reçu principal</span><strong>{{ $paymentReceiptName ?: 'Aucun fichier' }}</strong></div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="rd-mini-card h-100"><span>Document visa</span><strong>{{ $visaDocumentName ?: 'Aucun fichier' }}</strong></div>
+                                </div>
+                            </div>
+
+                            @if($visaRequired)
+                                @can('reservations.update')
+                                    <form action="{{ route('admin.reservations.update', $reservation) }}" method="POST" enctype="multipart/form-data" class="row g-3">
+                                        @csrf
+                                        @method('PUT')
+                                        <input type="hidden" name="tour_id" value="{{ $currentTourId }}">
+                                        <input type="hidden" name="departure_id" value="{{ $currentDepartureId }}">
+                                        <input type="hidden" name="travel_date_id" value="{{ $currentTravelDateId }}">
+                                        <input type="hidden" name="client_mode" value="new">
+                                        <input type="hidden" name="client_first_name" value="{{ $client?->first_name ?? $reservation->client_first_name ?? '' }}">
+                                        <input type="hidden" name="client_last_name" value="{{ $client?->last_name ?? $reservation->client_last_name ?? '' }}">
+                                        <input type="hidden" name="client_phone" value="{{ $client?->phone ?? $reservation->client_phone ?? '' }}">
+                                        <input type="hidden" name="client_email" value="{{ $client?->email ?? $reservation->client_email ?? '' }}">
+                                        <input type="hidden" name="client_document_type" value="{{ $client?->document_type ?? $reservation->client_document_type ?? '' }}">
+                                        <input type="hidden" name="client_document_number" value="{{ $client?->document_number ?? $reservation->client_document_number ?? '' }}">
+                                        <input type="hidden" name="client_birth_date" value="{{ optional($client?->birth_date)->format('Y-m-d') ?? optional($reservation->client_birth_date)->format('Y-m-d') }}">
+                                        <input type="hidden" name="client_nationality" value="{{ $client?->nationality ?? '' }}">
+                                        <input type="hidden" name="client_address" value="{{ $client?->address_line_1 ?? '' }}">
+                                        <input type="hidden" name="payment_type" value="{{ $reservation->payment_type ?? '' }}">
+                                        <input type="hidden" name="client_traveler_type" value="adult">
+                                        <input type="hidden" name="accommodation_mode" value="rooms">
+                                        <input type="hidden" name="extras_json" value='@json($currentExtrasPayload, JSON_UNESCAPED_UNICODE)'>
+                                        @foreach($currentRoomingPayload as $roomIndex => $roomPayload)
+                                            <input type="hidden" name="hotel_rooms[{{ $roomIndex }}][departure_hotel_room_id]" value="{{ $roomPayload['departure_hotel_room_id'] }}">
+                                            <input type="hidden" name="hotel_rooms[{{ $roomIndex }}][tour_hotel_id]" value="{{ $roomPayload['tour_hotel_id'] }}">
+                                            <input type="hidden" name="hotel_rooms[{{ $roomIndex }}][tour_hotel_room_id]" value="{{ $roomPayload['tour_hotel_room_id'] }}">
+                                            <input type="hidden" name="hotel_rooms[{{ $roomIndex }}][room_count]" value="{{ $roomPayload['room_count'] }}">
+                                        @endforeach
+
+                                        <div class="col-md-6"><label class="rd-label">Remplacer reçu principal</label><input type="file" name="payment_receipt" class="form-control" accept="image/*,.pdf"></div>
+                                        <div class="col-md-6"><label class="rd-label">Remplacer document visa</label><input type="file" name="visa_document" class="form-control" accept="image/*,.pdf"></div>
+                                        <div class="col-md-3"><label class="rd-label">Visa OK</label><input type="hidden" name="visa_ok" value="0"><div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="visa_ok" id="visa_ok" value="1" {{ old('visa_ok', $reservation->visa_ok ?? true) ? 'checked' : '' }}><label class="form-check-label" for="visa_ok">Visa OK</label></div></div>
+                                        <div class="col-md-9"><label class="rd-label">Notes visa</label><textarea name="visa_notes" class="form-control" rows="3">{{ old('visa_notes', $reservation->visa_notes) }}</textarea></div>
+                                        <div class="col-12 text-end"><button type="submit" class="rd-btn rd-btn-primary rd-btn-sm"><i class="bx bx-save"></i><span>Enregistrer la zone visa</span></button></div>
+                                    </form>
+                                @endcan
+                            @else
+                                <div class="rd-empty">Le voyage ne nécessite pas de visa. La section reste réduite.</div>
+                            @endif
+                        </div>
+                    </section>
+                </div>
+
+                <div class="tab-pane fade" id="history-panel" role="tabpanel">
+                    <section class="rd-panel">
+                        <div class="rd-panel-head">
+                            <div>
+                                <h2 class="rd-panel-title">Historique du dossier</h2>
+                                <p class="rd-panel-subtitle">Journal des événements, paiements, notes et changements.</p>
+                            </div>
+                        </div>
+                        <div class="rd-panel-body">
+                            @if($historyRows->isNotEmpty())
+                                <div class="list-group list-group-flush">
+                                    @foreach($historyRows as $history)
+                                        @php($timeline = $historyMeta($history))
+                                        <div class="list-group-item px-0 border-0 border-bottom">
+                                            <div class="d-flex justify-content-between gap-3 flex-wrap">
+                                                <div>
+                                                    <div class="fw-bold text-dark">{{ $timeline['label'] }}</div>
+                                                    @if($timeline['details'] !== '')
+                                                        <div class="small text-muted mt-1">{{ $timeline['details'] }}</div>
+                                                    @endif
+                                                </div>
+                                                <div class="text-end small text-muted">
+                                                    <div>{{ optional($history->created_at)->format('d/m/Y H:i') ?? '—' }}</div>
+                                                    <div>{{ $history->user?->name ?? 'Système' }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="rd-empty">Aucun historique disponible pour ce dossier.</div>
+                            @endif
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <div class="rd-sticky-actions">
+                <a href="{{ $backUrl ?? route('admin.reservation-dossiers.index') }}" class="btn btn-outline-secondary btn-sm">Retour liste</a>
+                @can('reservations.update')
+                    <button type="submit" form="dossier-update-form" class="btn btn-primary btn-sm" id="rd-save-button">Enregistrer les modifications</button>
+                @endcan
             </div>
         </div>
     </div>
+
+    @push('scripts')
+        <script>
+            (function () {
+                var table = document.getElementById('companions-table');
+                var addButton = document.getElementById('btn-add-companion');
+                if (!table || !addButton) {
+                    return;
+                }
+
+                var body = document.getElementById('companions-container');
+
+                function nextIndex() {
+                    return body ? body.querySelectorAll('.companion-row').length : 0;
+                }
+
+                addButton.addEventListener('click', function () {
+                    if (!body) {
+                        return;
+                    }
+
+                    var index = nextIndex();
+                    var row = document.createElement('tr');
+                    row.className = 'companion-row';
+                    row.innerHTML = '' +
+                        '<td><select name="passengers[' + index + '][type]" class="form-select form-select-sm"><option value="adult">Adulte</option><option value="child">Enfant</option><option value="infant">Bébé</option></select></td>' +
+                        '<td><input type="text" name="passengers[' + index + '][first_name]" class="form-control form-control-sm"></td>' +
+                        '<td><input type="text" name="passengers[' + index + '][last_name]" class="form-control form-control-sm"></td>' +
+                        '<td><input type="date" name="passengers[' + index + '][birth_date]" class="form-control form-control-sm"></td>' +
+                        '<td><input type="text" name="passengers[' + index + '][document_type]" class="form-control form-control-sm"></td>' +
+                        '<td><input type="text" name="passengers[' + index + '][document_number]" class="form-control form-control-sm"></td>' +
+                        '<td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger btn-remove-companion">Supprimer</button></td>';
+                    body.appendChild(row);
+                });
+
+                body.addEventListener('click', function (event) {
+                    var button = event.target.closest('.btn-remove-companion');
+                    if (!button) {
+                        return;
+                    }
+
+                    var row = button.closest('.companion-row');
+                    if (row) {
+                        row.remove();
+                    }
+                });
+            })();
+
+            (function () {
+                var saveButton = document.getElementById('rd-save-button');
+                if (!saveButton) {
+                    return;
+                }
+
+                saveButton.addEventListener('click', function () {
+                    saveButton.disabled = true;
+                    saveButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Enregistrement...';
+                });
+            })();
+        </script>
+    @endpush
 @endsection
