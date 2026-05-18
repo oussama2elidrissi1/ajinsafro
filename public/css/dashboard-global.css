@@ -53,6 +53,19 @@ body.aj-admin-compact .dashboard-global-page .list-card {
     padding: 18px !important;
 }
 
+body.aj-admin-compact .dashboard-global-page .card-header {
+    background: transparent !important;
+    border: 0 !important;
+    padding: 0 0 10px !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .card-body,
+body.aj-admin-compact .dashboard-global-page .card-footer {
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+}
+
 body.aj-admin-compact .dashboard-global-page .kpi-card {
     min-height: 122px !important;
     display: flex !important;
@@ -111,7 +124,7 @@ body.aj-admin-compact .dashboard-global-page .activity-row {
 body.aj-admin-compact .dashboard-global-page .metric-row span,
 body.aj-admin-compact .dashboard-global-page .activity-row span {
     font-size: 12px !important;
-    font-weight: 600 !important;
+    font-weight: 500 !important;
     color: #6f7f95 !important;
 }
 
@@ -172,6 +185,13 @@ body.aj-admin-compact .dashboard-global-page .client-name {
 body.aj-admin-compact .dashboard-global-page .client-email,
 body.aj-admin-compact .dashboard-global-page .muted-text {
     font-size: 10px !important;
+    font-weight: 500 !important;
+    color: #8a99ab !important;
+}
+
+body.aj-admin-compact .dashboard-global-page small,
+body.aj-admin-compact .dashboard-global-page .text-muted {
+    font-size: 10.5px !important;
     font-weight: 500 !important;
     color: #8a99ab !important;
 }
