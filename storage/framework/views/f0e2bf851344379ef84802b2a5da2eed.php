@@ -33,7 +33,7 @@
     <link href="<?php echo e(URL::asset('css/agent-portal-bootstrap-bridge.css')); ?>" rel="stylesheet" type="text/css" />
     <link href="<?php echo e(URL::asset('css/internal-v2-layout.css')); ?>" rel="stylesheet" type="text/css" />
     <link href="<?php echo e(URL::asset('css/admin-premium.css')); ?>" rel="stylesheet" type="text/css" />
-    <link href="<?php echo e(URL::asset('css/admin-compact.css')); ?>?v=micro-compact-3" rel="stylesheet" type="text/css" />
+    <link href="<?php echo e(URL::asset('css/admin-compact.css')); ?>?v=nano-compact-4" rel="stylesheet" type="text/css" />
 
     <?php echo $__env->yieldPushContent('styles'); ?>
 </head>
@@ -79,7 +79,7 @@
     <link rel="shortcut icon" href="<?php echo e(URL::asset('build/images/favicon.ico')); ?>">
 
     <?php echo $__env->make('layouts.head-css', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
-    <link href="<?php echo e(URL::asset('css/admin-compact.css')); ?>?v=micro-compact-3" rel="stylesheet" type="text/css" />
+    <link href="<?php echo e(URL::asset('css/admin-compact.css')); ?>?v=nano-compact-4" rel="stylesheet" type="text/css" />
     <?php echo $__env->yieldPushContent('styles'); ?>
 </head>
 

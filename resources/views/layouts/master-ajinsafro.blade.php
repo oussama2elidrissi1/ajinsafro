@@ -33,7 +33,7 @@
     <link href="{{ URL::asset('css/agent-portal-bootstrap-bridge.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ URL::asset('css/internal-v2-layout.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ URL::asset('css/admin-premium.css') }}" rel="stylesheet" type="text/css" />
-    <link href="{{ URL::asset('css/admin-compact.css') }}?v=micro-compact-3" rel="stylesheet" type="text/css" />
+    <link href="{{ URL::asset('css/admin-compact.css') }}?v=nano-compact-4" rel="stylesheet" type="text/css" />
 
     @stack('styles')
 </head>
@@ -79,7 +79,7 @@
     <link rel="shortcut icon" href="{{ URL::asset('build/images/favicon.ico') }}">
 
     @include('layouts.head-css')
-    <link href="{{ URL::asset('css/admin-compact.css') }}?v=micro-compact-3" rel="stylesheet" type="text/css" />
+    <link href="{{ URL::asset('css/admin-compact.css') }}?v=nano-compact-4" rel="stylesheet" type="text/css" />
     @stack('styles')
 </head>
 

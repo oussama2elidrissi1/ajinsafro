@@ -14,6 +14,535 @@
     line-height: var(--aj-line-height);
 }
 
+/* Nano compact overrides */
+.aj-admin-compact {
+    --aj-sidebar-width: 178px;
+    --aj-sidebar-width-small: 164px;
+    --aj-topbar-height: 42px;
+    --aj-font-base: 11px;
+    --aj-font-small: 10.5px;
+    --aj-card-padding: 8px;
+    --aj-radius: 8px;
+    font-size: 11px !important;
+    line-height: 1.22 !important;
+}
+
+/* SIDEBAR NANO */
+.aj-admin-compact .admin-sidebar,
+.aj-admin-compact .sidebar,
+.aj-admin-compact aside,
+.aj-admin-compact #sidebar-menu,
+.aj-admin-compact .vertical-menu,
+.aj-admin-compact .aj-sidebar-v2 {
+    width: var(--aj-sidebar-width) !important;
+    max-width: var(--aj-sidebar-width) !important;
+}
+
+.aj-admin-compact .main-content,
+.aj-admin-compact .admin-main,
+.aj-admin-compact .page-content,
+.aj-admin-compact .content-page {
+    margin-left: var(--aj-sidebar-width) !important;
+    padding: 8px 12px !important;
+}
+
+.aj-admin-compact .sidebar-logo,
+.aj-admin-compact .logo,
+.aj-admin-compact .aj-sidebar-v2__brand,
+.aj-admin-compact .sidebar-brand-box {
+    padding: 8px 10px !important;
+    min-height: auto !important;
+}
+
+.aj-admin-compact .sidebar-logo img,
+.aj-admin-compact .logo img,
+.aj-admin-compact .aj-sidebar-v2__brand-logo,
+.aj-admin-compact .admin-sidebar-logo {
+    max-width: 95px !important;
+    height: auto !important;
+}
+
+.aj-admin-compact .profile-card,
+.aj-admin-compact .user-card,
+.aj-admin-compact .sidebar-profile,
+.aj-admin-compact .aj-sidebar-v2__profile,
+.aj-admin-compact .user-wid {
+    padding: 6px !important;
+    margin: 6px 8px !important;
+    border-radius: 10px !important;
+    min-height: auto !important;
+}
+
+.aj-admin-compact .profile-card img,
+.aj-admin-compact .user-card img,
+.aj-admin-compact .sidebar-profile img,
+.aj-admin-compact .user-avatar,
+.aj-admin-compact .avatar,
+.aj-admin-compact .aj-sidebar-v2__avatar-wrap,
+.aj-admin-compact .aj-sidebar-v2__avatar,
+.aj-admin-compact .user-wid .user-img img {
+    width: 30px !important;
+    height: 30px !important;
+}
+
+.aj-admin-compact .profile-card h4,
+.aj-admin-compact .profile-card .name,
+.aj-admin-compact .user-card h4,
+.aj-admin-compact .sidebar-profile h4,
+.aj-admin-compact .aj-sidebar-v2__profile-name,
+.aj-admin-compact .user-wid .text-body {
+    font-size: 11px !important;
+    margin: 2px 0 !important;
+    line-height: 1.1 !important;
+}
+
+.aj-admin-compact .profile-card p,
+.aj-admin-compact .user-card p,
+.aj-admin-compact .sidebar-profile p,
+.aj-admin-compact .aj-sidebar-v2__profile-role,
+.aj-admin-compact .user-wid .text-muted {
+    font-size: 9.5px !important;
+    margin: 0 !important;
+    line-height: 1.1 !important;
+}
+
+.aj-admin-compact .profile-card .btn,
+.aj-admin-compact .user-card .btn,
+.aj-admin-compact .sidebar-profile .btn,
+.aj-admin-compact .aj-sidebar-v2__profile-link {
+    min-height: 24px !important;
+    height: 24px !important;
+    padding: 3px 7px !important;
+    font-size: 10px !important;
+}
+
+.aj-admin-compact .sidebar-menu a,
+.aj-admin-compact .menu-item,
+.aj-admin-compact .metismenu li a,
+.aj-admin-compact #sidebar-menu ul li a,
+.aj-admin-compact .aj-sidebar-v2__link {
+    min-height: 26px !important;
+    padding: 4px 7px !important;
+    font-size: 10.5px !important;
+    border-radius: 6px !important;
+    line-height: 1.15 !important;
+    gap: 5px !important;
+}
+
+.aj-admin-compact .sidebar-menu i,
+.aj-admin-compact .menu-item i,
+.aj-admin-compact .metismenu i,
+.aj-admin-compact #sidebar-menu i,
+.aj-admin-compact .aj-sidebar-v2__icon {
+    font-size: 12px !important;
+    width: 14px !important;
+    min-width: 14px !important;
+}
+
+.aj-admin-compact .sub-menu a,
+.aj-admin-compact .metismenu .sub-menu a,
+.aj-admin-compact #sidebar-menu ul li ul.sub-menu li a,
+.aj-admin-compact .aj-sidebar-v2__list--depth-1 .aj-sidebar-v2__link,
+.aj-admin-compact .aj-sidebar-v2__list--depth-2 .aj-sidebar-v2__link,
+.aj-admin-compact .aj-sidebar-v2__list--depth-3 .aj-sidebar-v2__link {
+    min-height: 24px !important;
+    padding: 3px 6px 3px 18px !important;
+    font-size: 10px !important;
+}
+
+/* TOPBAR NANO */
+.aj-admin-compact .topbar,
+.aj-admin-compact .admin-topbar,
+.aj-admin-compact .aj-topbar,
+.aj-admin-compact .navbar-header {
+    height: var(--aj-topbar-height) !important;
+    min-height: var(--aj-topbar-height) !important;
+    padding: 0 10px !important;
+}
+
+.aj-admin-compact .search-box,
+.aj-admin-compact .top-search,
+.aj-admin-compact .navbar-search,
+.aj-admin-compact .aj-topbar-search {
+    height: 28px !important;
+    min-height: 28px !important;
+}
+
+.aj-admin-compact .search-box input,
+.aj-admin-compact .top-search input,
+.aj-admin-compact .navbar-search input,
+.aj-admin-compact .aj-topbar-search input {
+    height: 28px !important;
+    min-height: 28px !important;
+    font-size: 10.5px !important;
+    padding: 4px 8px !important;
+}
+
+.aj-admin-compact .notification-btn,
+.aj-admin-compact .message-btn,
+.aj-admin-compact .topbar .btn,
+.aj-admin-compact .admin-topbar .btn,
+.aj-admin-compact .aj-topbar-notif,
+.aj-admin-compact .aj-hamburger {
+    width: 28px !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+}
+
+.aj-admin-compact .topbar .avatar,
+.aj-admin-compact .admin-topbar .avatar,
+.aj-admin-compact .topbar img,
+.aj-admin-compact .admin-topbar__avatar,
+.aj-admin-compact .aj-topbar-profile-avatar-shell,
+.aj-admin-compact .aj-topbar-profile-avatar {
+    width: 26px !important;
+    height: 26px !important;
+}
+
+.aj-admin-compact .topbar .user-name,
+.aj-admin-compact .admin-topbar .user-name,
+.aj-admin-compact .topbar strong,
+.aj-admin-compact .admin-topbar__user-btn,
+.aj-admin-compact .aj-topbar-profile-name {
+    font-size: 11px !important;
+    line-height: 1.1 !important;
+}
+
+/* TITRES NANO */
+.aj-admin-compact h1,
+.aj-admin-compact .page-title,
+.aj-admin-compact .dashboard-title,
+.aj-admin-compact .page-title-box .page-title,
+.aj-admin-compact .admin-topbar__page-title,
+.aj-admin-compact .aj-page-title h1 {
+    font-size: 19px !important;
+    line-height: 1.05 !important;
+    margin: 0 0 3px 0 !important;
+}
+
+.aj-admin-compact h2,
+.aj-admin-compact .section-title,
+.aj-admin-compact .card-title,
+.aj-admin-compact .aj-card-title {
+    font-size: 14px !important;
+    line-height: 1.1 !important;
+    margin-bottom: 5px !important;
+}
+
+.aj-admin-compact .page-subtitle,
+.aj-admin-compact .text-muted,
+.aj-admin-compact .lead,
+.aj-admin-compact p {
+    font-size: 10.5px !important;
+    line-height: 1.25 !important;
+    margin-bottom: 5px !important;
+}
+
+/* CARTES NANO */
+.aj-admin-compact .card,
+.aj-admin-compact .dashboard-card,
+.aj-admin-compact .kpi-card,
+.aj-admin-compact .stat-card,
+.aj-admin-compact .summary-card,
+.aj-admin-compact .filter-card,
+.aj-admin-compact .search-filter-card,
+.aj-admin-compact .aj-card {
+    padding: var(--aj-card-padding) !important;
+    border-radius: var(--aj-radius) !important;
+}
+
+.aj-admin-compact .kpi-card,
+.aj-admin-compact .stat-card,
+.aj-admin-compact .summary-card,
+.aj-admin-compact .aj-kpi-card {
+    min-height: 66px !important;
+}
+
+.aj-admin-compact .kpi-value,
+.aj-admin-compact .stat-value,
+.aj-admin-compact .dashboard-card .number,
+.aj-admin-compact .summary-card strong,
+.aj-admin-compact .aj-kpi-value {
+    font-size: 18px !important;
+    line-height: 1 !important;
+}
+
+.aj-admin-compact .kpi-label,
+.aj-admin-compact .stat-label,
+.aj-admin-compact .dashboard-card .label,
+.aj-admin-compact .summary-card span,
+.aj-admin-compact .aj-kpi-label {
+    font-size: 9.5px !important;
+    line-height: 1.1 !important;
+}
+
+.aj-admin-compact .kpi-icon,
+.aj-admin-compact .stat-icon,
+.aj-admin-compact .dashboard-card .icon,
+.aj-admin-compact .aj-kpi-icon {
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    font-size: 12px !important;
+    border-radius: 7px !important;
+}
+
+/* FORMULAIRES / BOUTONS NANO */
+.aj-admin-compact .btn,
+.aj-admin-compact button,
+.aj-admin-compact .nav-link,
+.aj-admin-compact .aj-btn {
+    min-height: 26px !important;
+    padding: 4px 7px !important;
+    font-size: 10.5px !important;
+    border-radius: 6px !important;
+    line-height: 1.15 !important;
+}
+
+.aj-admin-compact input,
+.aj-admin-compact select,
+.aj-admin-compact textarea,
+.aj-admin-compact .form-control,
+.aj-admin-compact .form-select,
+.aj-admin-compact .select2-container--default .select2-selection--single,
+.aj-admin-compact .select2-container--default .select2-selection--multiple {
+    min-height: 26px !important;
+    height: 26px !important;
+    padding: 3px 7px !important;
+    font-size: 10.5px !important;
+    border-radius: 6px !important;
+}
+
+.aj-admin-compact textarea {
+    height: auto !important;
+}
+
+.aj-admin-compact label,
+.aj-admin-compact .form-label {
+    font-size: 10.5px !important;
+    margin-bottom: 3px !important;
+}
+
+.aj-admin-compact .nav-tabs .nav-link,
+.aj-admin-compact .view-switcher .btn,
+.aj-admin-compact .tabs .btn {
+    min-height: 26px !important;
+    height: 26px !important;
+    padding: 3px 7px !important;
+    font-size: 10.5px !important;
+}
+
+/* TABLEAUX NANO */
+.aj-admin-compact table,
+.aj-admin-compact .table,
+.aj-admin-compact .aj-table {
+    font-size: 10.5px !important;
+}
+
+.aj-admin-compact th,
+.aj-admin-compact td,
+.aj-admin-compact .table > :not(caption) > * > *,
+.aj-admin-compact .aj-table th,
+.aj-admin-compact .aj-table td {
+    padding: 3px 5px !important;
+    line-height: 1.18 !important;
+    vertical-align: middle !important;
+}
+
+.aj-admin-compact thead th,
+.aj-admin-compact .table thead th {
+    font-size: 9.5px !important;
+    letter-spacing: .015em !important;
+}
+
+.aj-admin-compact .table .fw-bold,
+.aj-admin-compact .table strong {
+    font-size: 10.5px !important;
+}
+
+.aj-admin-compact td,
+.aj-admin-compact .table td {
+    max-height: 34px !important;
+}
+
+.aj-admin-compact .table .travel-title,
+.aj-admin-compact .table .offer-title,
+.aj-admin-compact .table .voyage-title {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    font-size: 10.5px !important;
+    line-height: 1.15 !important;
+}
+
+/* BADGES NANO */
+.aj-admin-compact .badge,
+.aj-admin-compact .label {
+    font-size: 9.5px !important;
+    padding: 2px 5px !important;
+    border-radius: 999px !important;
+}
+
+/* SPACING GLOBAL */
+.aj-admin-compact .row,
+.aj-admin-compact .dashboard-grid,
+.aj-admin-compact .stats-grid,
+.aj-admin-compact .kpi-grid,
+.aj-admin-compact .aj-kpi-grid {
+    row-gap: 6px !important;
+}
+
+.aj-admin-compact .gap-5,
+.aj-admin-compact .gap-4 {
+    gap: 8px !important;
+}
+
+.aj-admin-compact .gap-3 {
+    gap: 6px !important;
+}
+
+.aj-admin-compact .mb-5,
+.aj-admin-compact .mb-4 {
+    margin-bottom: 8px !important;
+}
+
+.aj-admin-compact .mb-3 {
+    margin-bottom: 6px !important;
+}
+
+.aj-admin-compact .mt-5,
+.aj-admin-compact .mt-4 {
+    margin-top: 8px !important;
+}
+
+.aj-admin-compact .mt-3 {
+    margin-top: 6px !important;
+}
+
+.aj-admin-compact .p-4 {
+    padding: 8px !important;
+}
+
+.aj-admin-compact .p-3 {
+    padding: 6px !important;
+}
+
+/* MODE 1366PX ENCORE PLUS PETIT */
+@media (max-width: 1366px) {
+    .aj-admin-compact {
+        --aj-sidebar-width: var(--aj-sidebar-width-small);
+        --aj-topbar-height: 40px;
+        --aj-font-base: 10.5px;
+        --aj-card-padding: 7px;
+        font-size: 10.5px !important;
+    }
+
+    .aj-admin-compact .admin-sidebar,
+    .aj-admin-compact .sidebar,
+    .aj-admin-compact aside,
+    .aj-admin-compact #sidebar-menu,
+    .aj-admin-compact .vertical-menu,
+    .aj-admin-compact .aj-sidebar-v2 {
+        width: var(--aj-sidebar-width-small) !important;
+        max-width: var(--aj-sidebar-width-small) !important;
+    }
+
+    .aj-admin-compact .main-content,
+    .aj-admin-compact .admin-main,
+    .aj-admin-compact .page-content,
+    .aj-admin-compact .content-page {
+        margin-left: var(--aj-sidebar-width-small) !important;
+        padding: 6px 8px !important;
+    }
+
+    .aj-admin-compact h1,
+    .aj-admin-compact .page-title,
+    .aj-admin-compact .dashboard-title {
+        font-size: 17px !important;
+    }
+
+    .aj-admin-compact h2,
+    .aj-admin-compact .section-title {
+        font-size: 13px !important;
+    }
+
+    .aj-admin-compact .page-subtitle,
+    .aj-admin-compact .text-muted,
+    .aj-admin-compact .lead,
+    .aj-admin-compact p {
+        font-size: 10px !important;
+    }
+
+    .aj-admin-compact .kpi-card,
+    .aj-admin-compact .stat-card,
+    .aj-admin-compact .summary-card {
+        min-height: 58px !important;
+    }
+
+    .aj-admin-compact .kpi-value,
+    .aj-admin-compact .stat-value,
+    .aj-admin-compact .dashboard-card .number {
+        font-size: 16px !important;
+    }
+
+    .aj-admin-compact .kpi-icon,
+    .aj-admin-compact .stat-icon,
+    .aj-admin-compact .dashboard-card .icon {
+        width: 24px !important;
+        height: 24px !important;
+        min-width: 24px !important;
+    }
+
+    .aj-admin-compact .sidebar-logo img,
+    .aj-admin-compact .logo img {
+        max-width: 82px !important;
+    }
+
+    .aj-admin-compact .profile-card img,
+    .aj-admin-compact .user-card img,
+    .aj-admin-compact .sidebar-profile img,
+    .aj-admin-compact .user-avatar,
+    .aj-admin-compact .avatar {
+        width: 28px !important;
+        height: 28px !important;
+    }
+
+    .aj-admin-compact .sidebar-menu a,
+    .aj-admin-compact .menu-item,
+    .aj-admin-compact .metismenu li a,
+    .aj-admin-compact #sidebar-menu ul li a {
+        min-height: 24px !important;
+        padding: 3px 6px !important;
+        font-size: 10px !important;
+    }
+
+    .aj-admin-compact .btn,
+    .aj-admin-compact button,
+    .aj-admin-compact .nav-link,
+    .aj-admin-compact input,
+    .aj-admin-compact select,
+    .aj-admin-compact .form-control,
+    .aj-admin-compact .form-select {
+        min-height: 24px !important;
+        height: 24px !important;
+        font-size: 10px !important;
+        padding: 3px 6px !important;
+    }
+
+    .aj-admin-compact table,
+    .aj-admin-compact .table {
+        font-size: 10px !important;
+    }
+
+    .aj-admin-compact th,
+    .aj-admin-compact td {
+        padding: 2px 4px !important;
+    }
+}
+
 .aj-admin-compact,
 .aj-admin-compact button,
 .aj-admin-compact input,
@@ -1862,5 +2391,567 @@
     .aj-admin-compact th,
     .aj-admin-compact td {
         padding: 4px 6px !important;
+    }
+}
+
+/* Nano compact overrides - final */
+.aj-admin-compact {
+    --aj-sidebar-width: 178px;
+    --aj-sidebar-width-small: 164px;
+    --aj-topbar-height: 42px;
+    --aj-font-base: 11px;
+    --aj-font-small: 10.5px;
+    --aj-card-padding: 8px;
+    --aj-radius: 8px;
+    font-size: 11px !important;
+    line-height: 1.22 !important;
+}
+
+.aj-admin-compact .admin-sidebar,
+.aj-admin-compact .sidebar,
+.aj-admin-compact aside,
+.aj-admin-compact #sidebar-menu,
+.aj-admin-compact .vertical-menu,
+.aj-admin-compact .aj-sidebar-v2,
+.aj-admin-v2-body.aj-admin-compact .aj-admin-v2-sidebar {
+    width: var(--aj-sidebar-width) !important;
+    max-width: var(--aj-sidebar-width) !important;
+}
+
+.aj-admin-compact .main-content,
+.aj-admin-compact .admin-main,
+.aj-admin-compact .page-content,
+.aj-admin-compact .content-page {
+    margin-left: var(--aj-sidebar-width) !important;
+    padding: 8px 12px !important;
+}
+
+.aj-admin-v2-body.aj-admin-compact .aj-admin-v2-main {
+    margin-left: var(--aj-sidebar-width) !important;
+    width: calc(100% - var(--aj-sidebar-width)) !important;
+}
+
+.aj-admin-compact .aj-sidebar-v2__brand,
+.aj-admin-compact .sidebar-brand-box,
+.aj-admin-compact .sidebar-logo,
+.aj-admin-compact .logo {
+    padding: 6px 8px !important;
+    min-height: auto !important;
+}
+
+.aj-admin-compact .aj-sidebar-v2__brand-logo,
+.aj-admin-compact .admin-sidebar-logo,
+.aj-admin-compact .sidebar-logo img,
+.aj-admin-compact .logo img {
+    max-width: 95px !important;
+    max-height: 22px !important;
+    height: auto !important;
+}
+
+.aj-admin-compact .aj-sidebar-v2__profile,
+.aj-admin-compact .user-wid,
+.aj-admin-compact .profile-card,
+.aj-admin-compact .user-card,
+.aj-admin-compact .sidebar-profile {
+    padding: 6px !important;
+    margin: 6px 8px !important;
+    border-radius: 10px !important;
+    min-height: auto !important;
+    box-shadow: none !important;
+}
+
+.aj-admin-compact .aj-sidebar-v2__avatar-wrap,
+.aj-admin-compact .aj-sidebar-v2__avatar,
+.aj-admin-compact .user-wid .user-img img,
+.aj-admin-compact .profile-card img,
+.aj-admin-compact .user-card img,
+.aj-admin-compact .sidebar-profile img,
+.aj-admin-compact .user-avatar,
+.aj-admin-compact .avatar {
+    width: 30px !important;
+    height: 30px !important;
+}
+
+.aj-admin-compact .aj-sidebar-v2__profile-name,
+.aj-admin-compact .user-wid .text-body,
+.aj-admin-compact .profile-card h4,
+.aj-admin-compact .user-card h4,
+.aj-admin-compact .sidebar-profile h4 {
+    font-size: 11px !important;
+    margin: 2px 0 !important;
+    line-height: 1.1 !important;
+}
+
+.aj-admin-compact .aj-sidebar-v2__profile-role,
+.aj-admin-compact .user-wid .text-muted,
+.aj-admin-compact .profile-card p,
+.aj-admin-compact .user-card p,
+.aj-admin-compact .sidebar-profile p {
+    font-size: 9.5px !important;
+    margin: 0 !important;
+    line-height: 1.1 !important;
+}
+
+.aj-admin-compact .aj-sidebar-v2__profile-link,
+.aj-admin-compact .profile-card .btn,
+.aj-admin-compact .user-card .btn,
+.aj-admin-compact .sidebar-profile .btn {
+    min-height: 24px !important;
+    height: 24px !important;
+    padding: 3px 7px !important;
+    font-size: 10px !important;
+}
+
+.aj-admin-compact .aj-sidebar-v2__link,
+.aj-admin-compact #sidebar-menu ul li a,
+.aj-admin-compact .sidebar-menu a,
+.aj-admin-compact .menu-item,
+.aj-admin-compact .metismenu li a {
+    min-height: 26px !important;
+    padding: 4px 7px !important;
+    font-size: 10.5px !important;
+    border-radius: 6px !important;
+    line-height: 1.15 !important;
+    gap: 5px !important;
+}
+
+.aj-admin-compact .aj-sidebar-v2__icon,
+.aj-admin-compact #sidebar-menu i,
+.aj-admin-compact .sidebar-menu i,
+.aj-admin-compact .menu-item i,
+.aj-admin-compact .metismenu i {
+    font-size: 12px !important;
+    width: 14px !important;
+    min-width: 14px !important;
+}
+
+.aj-admin-compact .aj-sidebar-v2__list--depth-1 .aj-sidebar-v2__link,
+.aj-admin-compact .aj-sidebar-v2__list--depth-2 .aj-sidebar-v2__link,
+.aj-admin-compact .aj-sidebar-v2__list--depth-3 .aj-sidebar-v2__link,
+.aj-admin-compact #sidebar-menu ul li ul.sub-menu li a,
+.aj-admin-compact .sub-menu a {
+    min-height: 24px !important;
+    padding: 3px 6px 3px 18px !important;
+    font-size: 10px !important;
+}
+
+.aj-admin-compact .aj-topbar,
+.aj-admin-compact .admin-topbar,
+.aj-admin-compact .topbar,
+.aj-admin-compact .navbar-header,
+.aj-admin-compact .admin-topbar__inner,
+.aj-admin-compact .aj-topbar--internal-v2 .aj-topbar__inner {
+    height: var(--aj-topbar-height) !important;
+    min-height: var(--aj-topbar-height) !important;
+    padding: 0 10px !important;
+}
+
+.aj-admin-v2-body.aj-admin-compact .aj-topbar {
+    left: var(--aj-sidebar-width) !important;
+}
+
+.aj-admin-compact .aj-topbar-search,
+.aj-admin-compact .search-box,
+.aj-admin-compact .top-search,
+.aj-admin-compact .navbar-search {
+    height: 28px !important;
+    min-height: 28px !important;
+}
+
+.aj-admin-compact .aj-topbar-search input,
+.aj-admin-compact .search-box input,
+.aj-admin-compact .top-search input,
+.aj-admin-compact .navbar-search input {
+    height: 28px !important;
+    min-height: 28px !important;
+    font-size: 10.5px !important;
+    padding: 4px 8px !important;
+}
+
+.aj-admin-compact .aj-topbar-notif,
+.aj-admin-compact .aj-hamburger,
+.aj-admin-compact .notification-btn,
+.aj-admin-compact .message-btn,
+.aj-admin-compact .topbar .btn,
+.aj-admin-compact .admin-topbar .btn {
+    width: 28px !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+}
+
+.aj-admin-compact .admin-topbar__avatar,
+.aj-admin-compact .aj-topbar-profile-avatar-shell,
+.aj-admin-compact .aj-topbar-profile-avatar,
+.aj-admin-compact .topbar .avatar,
+.aj-admin-compact .admin-topbar .avatar,
+.aj-admin-compact .topbar img {
+    width: 26px !important;
+    height: 26px !important;
+}
+
+.aj-admin-compact .admin-topbar__user-btn,
+.aj-admin-compact .aj-topbar-profile-name,
+.aj-admin-compact .topbar .user-name,
+.aj-admin-compact .admin-topbar .user-name,
+.aj-admin-compact .topbar strong {
+    font-size: 10.5px !important;
+    line-height: 1.1 !important;
+}
+
+.aj-admin-compact .aj-topbar-profile,
+.aj-admin-compact .admin-topbar__user-btn {
+    padding: 1px 4px 1px 1px !important;
+    gap: 4px !important;
+    border-radius: 8px !important;
+}
+
+.aj-admin-compact h1,
+.aj-admin-compact .page-title,
+.aj-admin-compact .dashboard-title,
+.aj-admin-compact .page-title-box .page-title,
+.aj-admin-compact .admin-topbar__page-title,
+.aj-admin-compact .aj-page-title h1 {
+    font-size: 19px !important;
+    line-height: 1.05 !important;
+    margin: 0 0 3px 0 !important;
+}
+
+.aj-admin-compact h2,
+.aj-admin-compact .section-title,
+.aj-admin-compact .card-title,
+.aj-admin-compact .aj-card-title {
+    font-size: 14px !important;
+    line-height: 1.1 !important;
+    margin-bottom: 5px !important;
+}
+
+.aj-admin-compact .page-subtitle,
+.aj-admin-compact .text-muted,
+.aj-admin-compact .lead,
+.aj-admin-compact p {
+    font-size: 10.5px !important;
+    line-height: 1.25 !important;
+    margin-bottom: 5px !important;
+}
+
+.aj-admin-compact .card,
+.aj-admin-compact .dashboard-card,
+.aj-admin-compact .kpi-card,
+.aj-admin-compact .stat-card,
+.aj-admin-compact .summary-card,
+.aj-admin-compact .filter-card,
+.aj-admin-compact .search-filter-card,
+.aj-admin-compact .aj-card {
+    padding: var(--aj-card-padding) !important;
+    border-radius: var(--aj-radius) !important;
+}
+
+.aj-admin-compact .kpi-card,
+.aj-admin-compact .stat-card,
+.aj-admin-compact .summary-card,
+.aj-admin-compact .aj-kpi-card {
+    min-height: 66px !important;
+}
+
+.aj-admin-compact .kpi-value,
+.aj-admin-compact .stat-value,
+.aj-admin-compact .dashboard-card .number,
+.aj-admin-compact .summary-card strong,
+.aj-admin-compact .aj-kpi-value {
+    font-size: 18px !important;
+    line-height: 1 !important;
+}
+
+.aj-admin-compact .kpi-label,
+.aj-admin-compact .stat-label,
+.aj-admin-compact .dashboard-card .label,
+.aj-admin-compact .summary-card span,
+.aj-admin-compact .aj-kpi-label {
+    font-size: 9.5px !important;
+    line-height: 1.1 !important;
+}
+
+.aj-admin-compact .kpi-icon,
+.aj-admin-compact .stat-icon,
+.aj-admin-compact .dashboard-card .icon,
+.aj-admin-compact .aj-kpi-icon {
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    font-size: 12px !important;
+    border-radius: 7px !important;
+}
+
+.aj-admin-compact .btn,
+.aj-admin-compact button,
+.aj-admin-compact .nav-link,
+.aj-admin-compact .aj-btn {
+    min-height: 26px !important;
+    padding: 4px 7px !important;
+    font-size: 10.5px !important;
+    border-radius: 6px !important;
+    line-height: 1.15 !important;
+}
+
+.aj-admin-compact input,
+.aj-admin-compact select,
+.aj-admin-compact textarea,
+.aj-admin-compact .form-control,
+.aj-admin-compact .form-select,
+.aj-admin-compact .select2-container--default .select2-selection--single,
+.aj-admin-compact .select2-container--default .select2-selection--multiple {
+    min-height: 26px !important;
+    height: 26px !important;
+    padding: 3px 7px !important;
+    font-size: 10.5px !important;
+    border-radius: 6px !important;
+}
+
+.aj-admin-compact textarea {
+    height: auto !important;
+}
+
+.aj-admin-compact label,
+.aj-admin-compact .form-label {
+    font-size: 10.5px !important;
+    margin-bottom: 3px !important;
+}
+
+.aj-admin-compact .nav-tabs .nav-link,
+.aj-admin-compact .view-switcher .btn,
+.aj-admin-compact .tabs .btn {
+    min-height: 26px !important;
+    height: 26px !important;
+    padding: 3px 7px !important;
+    font-size: 10.5px !important;
+}
+
+.aj-admin-compact table,
+.aj-admin-compact .table,
+.aj-admin-compact .aj-table {
+    font-size: 10.5px !important;
+}
+
+.aj-admin-compact th,
+.aj-admin-compact td,
+.aj-admin-compact .table > :not(caption) > * > *,
+.aj-admin-compact .aj-table th,
+.aj-admin-compact .aj-table td {
+    padding: 3px 5px !important;
+    line-height: 1.18 !important;
+    vertical-align: middle !important;
+}
+
+.aj-admin-compact thead th,
+.aj-admin-compact .table thead th {
+    font-size: 9.5px !important;
+    letter-spacing: .015em !important;
+}
+
+.aj-admin-compact .table .travel-title,
+.aj-admin-compact .table .offer-title,
+.aj-admin-compact .table .voyage-title,
+.aj-admin-compact .table .tour-title,
+.aj-admin-compact .table .trip-title {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    font-size: 10.5px !important;
+    line-height: 1.15 !important;
+}
+
+.aj-admin-compact .badge,
+.aj-admin-compact .label,
+.aj-admin-compact .aj-badge,
+.aj-admin-compact .aj-status-badge {
+    font-size: 9.5px !important;
+    padding: 2px 5px !important;
+    border-radius: 999px !important;
+}
+
+.aj-admin-compact .row,
+.aj-admin-compact .dashboard-grid,
+.aj-admin-compact .stats-grid,
+.aj-admin-compact .kpi-grid,
+.aj-admin-compact .aj-kpi-grid {
+    row-gap: 6px !important;
+}
+
+.aj-admin-compact .gap-5,
+.aj-admin-compact .gap-4 {
+    gap: 8px !important;
+}
+
+.aj-admin-compact .gap-3 {
+    gap: 6px !important;
+}
+
+.aj-admin-compact .mb-5,
+.aj-admin-compact .mb-4 {
+    margin-bottom: 8px !important;
+}
+
+.aj-admin-compact .mb-3 {
+    margin-bottom: 6px !important;
+}
+
+.aj-admin-compact .mt-5,
+.aj-admin-compact .mt-4 {
+    margin-top: 8px !important;
+}
+
+.aj-admin-compact .mt-3 {
+    margin-top: 6px !important;
+}
+
+.aj-admin-compact .p-4 {
+    padding: 8px !important;
+}
+
+.aj-admin-compact .p-3 {
+    padding: 6px !important;
+}
+
+@media (max-width: 1366px) {
+    .aj-admin-compact {
+        --aj-sidebar-width: var(--aj-sidebar-width-small);
+        --aj-topbar-height: 40px;
+        --aj-font-base: 10.5px;
+        --aj-card-padding: 7px;
+        font-size: 10.5px !important;
+    }
+
+    .aj-admin-compact .admin-sidebar,
+    .aj-admin-compact .sidebar,
+    .aj-admin-compact aside,
+    .aj-admin-compact #sidebar-menu,
+    .aj-admin-compact .vertical-menu,
+    .aj-admin-compact .aj-sidebar-v2,
+    .aj-admin-v2-body.aj-admin-compact .aj-admin-v2-sidebar {
+        width: var(--aj-sidebar-width-small) !important;
+        max-width: var(--aj-sidebar-width-small) !important;
+    }
+
+    .aj-admin-compact .main-content,
+    .aj-admin-compact .admin-main,
+    .aj-admin-compact .page-content,
+    .aj-admin-compact .content-page {
+        margin-left: var(--aj-sidebar-width-small) !important;
+        padding: 6px 8px !important;
+    }
+
+    .aj-admin-v2-body.aj-admin-compact .aj-admin-v2-main {
+        margin-left: var(--aj-sidebar-width-small) !important;
+        width: calc(100% - var(--aj-sidebar-width-small)) !important;
+    }
+
+    .aj-admin-v2-body.aj-admin-compact .aj-topbar {
+        left: var(--aj-sidebar-width-small) !important;
+        height: 40px !important;
+        min-height: 40px !important;
+    }
+
+    .aj-admin-compact h1,
+    .aj-admin-compact .page-title,
+    .aj-admin-compact .dashboard-title {
+        font-size: 17px !important;
+    }
+
+    .aj-admin-compact h2,
+    .aj-admin-compact .section-title {
+        font-size: 13px !important;
+    }
+
+    .aj-admin-compact .page-subtitle,
+    .aj-admin-compact .text-muted,
+    .aj-admin-compact .lead,
+    .aj-admin-compact p {
+        font-size: 10px !important;
+    }
+
+    .aj-admin-compact .kpi-card,
+    .aj-admin-compact .stat-card,
+    .aj-admin-compact .summary-card,
+    .aj-admin-compact .aj-kpi-card {
+        min-height: 58px !important;
+    }
+
+    .aj-admin-compact .kpi-value,
+    .aj-admin-compact .stat-value,
+    .aj-admin-compact .dashboard-card .number,
+    .aj-admin-compact .aj-kpi-value {
+        font-size: 16px !important;
+    }
+
+    .aj-admin-compact .kpi-icon,
+    .aj-admin-compact .stat-icon,
+    .aj-admin-compact .dashboard-card .icon,
+    .aj-admin-compact .aj-kpi-icon {
+        width: 24px !important;
+        height: 24px !important;
+        min-width: 24px !important;
+    }
+
+    .aj-admin-compact .sidebar-logo img,
+    .aj-admin-compact .logo img,
+    .aj-admin-compact .aj-sidebar-v2__brand-logo,
+    .aj-admin-compact .admin-sidebar-logo {
+        max-width: 82px !important;
+    }
+
+    .aj-admin-compact .profile-card img,
+    .aj-admin-compact .user-card img,
+    .aj-admin-compact .sidebar-profile img,
+    .aj-admin-compact .user-avatar,
+    .aj-admin-compact .avatar,
+    .aj-admin-compact .aj-sidebar-v2__avatar-wrap,
+    .aj-admin-compact .aj-sidebar-v2__avatar,
+    .aj-admin-compact .user-wid .user-img img,
+    .aj-admin-compact .admin-topbar__avatar,
+    .aj-admin-compact .aj-topbar-profile-avatar-shell,
+    .aj-admin-compact .aj-topbar-profile-avatar {
+        width: 28px !important;
+        height: 28px !important;
+    }
+
+    .aj-admin-compact .sidebar-menu a,
+    .aj-admin-compact .menu-item,
+    .aj-admin-compact .metismenu li a,
+    .aj-admin-compact #sidebar-menu ul li a,
+    .aj-admin-compact .aj-sidebar-v2__link {
+        min-height: 24px !important;
+        padding: 3px 6px !important;
+        font-size: 10px !important;
+    }
+
+    .aj-admin-compact .btn,
+    .aj-admin-compact button,
+    .aj-admin-compact .nav-link,
+    .aj-admin-compact input,
+    .aj-admin-compact select,
+    .aj-admin-compact .form-control,
+    .aj-admin-compact .form-select,
+    .aj-admin-compact .aj-btn {
+        min-height: 24px !important;
+        height: 24px !important;
+        font-size: 10px !important;
+        padding: 3px 6px !important;
+    }
+
+    .aj-admin-compact table,
+    .aj-admin-compact .table,
+    .aj-admin-compact .aj-table {
+        font-size: 10px !important;
+    }
+
+    .aj-admin-compact th,
+    .aj-admin-compact td,
+    .aj-admin-compact .table > :not(caption) > * > *,
+    .aj-admin-compact .aj-table th,
+    .aj-admin-compact .aj-table td {
+        padding: 2px 4px !important;
     }
 }
