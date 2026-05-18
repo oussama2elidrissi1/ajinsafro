@@ -271,6 +271,93 @@ body.aj-admin-compact .dashboard-global-page section {
     margin: 14px 0 !important;
 }
 
+/* Typography rebalance: lighter default, bold only for key emphasis */
+body.aj-admin-compact .dashboard-global-page {
+    font-weight: 400 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page h1,
+body.aj-admin-compact .dashboard-global-page .dashboard-title {
+    font-weight: 800 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .dashboard-subtitle,
+body.aj-admin-compact .dashboard-global-page .page-subtitle,
+body.aj-admin-compact .dashboard-global-page .text-muted,
+body.aj-admin-compact .dashboard-global-page p,
+body.aj-admin-compact .dashboard-global-page span {
+    font-weight: 400 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page h2,
+body.aj-admin-compact .dashboard-global-page .section-title,
+body.aj-admin-compact .dashboard-global-page .card-title {
+    font-weight: 700 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .kpi-label,
+body.aj-admin-compact .dashboard-global-page .stat-label,
+body.aj-admin-compact .dashboard-global-page .label {
+    font-weight: 600 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .kpi-value,
+body.aj-admin-compact .dashboard-global-page .stat-value,
+body.aj-admin-compact .dashboard-global-page .number,
+body.aj-admin-compact .dashboard-global-page .main-value {
+    font-weight: 800 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .metric-row span,
+body.aj-admin-compact .dashboard-global-page .activity-row span {
+    font-weight: 400 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .metric-row strong,
+body.aj-admin-compact .dashboard-global-page .activity-row strong {
+    font-weight: 600 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page table th {
+    font-weight: 600 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page table td {
+    font-weight: 400 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page table td strong,
+body.aj-admin-compact .dashboard-global-page .client-name {
+    font-weight: 600 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .client-email,
+body.aj-admin-compact .dashboard-global-page .muted-text,
+body.aj-admin-compact .dashboard-global-page .list-item-subtitle {
+    font-weight: 400 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .list-item-title {
+    font-weight: 600 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .list-item-value {
+    font-weight: 700 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .btn,
+body.aj-admin-compact .dashboard-global-page button,
+body.aj-admin-compact .dashboard-global-page .dashboard-btn,
+body.aj-admin-compact .dashboard-global-page .btn-link-card,
+body.aj-admin-compact .dashboard-global-page .card-footer-link {
+    font-weight: 600 !important;
+}
+
+body.aj-admin-compact .dashboard-global-page .badge,
+body.aj-admin-compact .dashboard-global-page .status-badge {
+    font-weight: 700 !important;
+}
+
 @media (max-width: 1366px) {
     body.aj-admin-compact .dashboard-global-page h1,
     body.aj-admin-compact .dashboard-global-page .dashboard-title {
