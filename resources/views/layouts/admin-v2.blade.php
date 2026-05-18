@@ -54,7 +54,7 @@
     {{-- Admin V2 system — loaded last to override Qovex layout rules --}}
     <link href="{{ URL::asset('css/admin-sidebar-v2.css') }}" rel="stylesheet">
     <link href="{{ URL::asset('css/admin-v2.css') }}" rel="stylesheet">
-    <link href="{{ URL::asset('css/admin-compact.css') }}" rel="stylesheet">
+    <link href="{{ URL::asset('css/admin-compact.css') }}?v=micro-compact-3" rel="stylesheet">
 
     @stack('styles')
 </head>

@@ -54,7 +54,7 @@
     
     <link href="<?php echo e(URL::asset('css/admin-sidebar-v2.css')); ?>" rel="stylesheet">
     <link href="<?php echo e(URL::asset('css/admin-v2.css')); ?>" rel="stylesheet">
-    <link href="<?php echo e(URL::asset('css/admin-compact.css')); ?>" rel="stylesheet">
+    <link href="<?php echo e(URL::asset('css/admin-compact.css')); ?>?v=micro-compact-3" rel="stylesheet">
 
     <?php echo $__env->yieldPushContent('styles'); ?>
 </head>
