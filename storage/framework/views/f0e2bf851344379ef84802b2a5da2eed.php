@@ -33,10 +33,11 @@
     <link href="<?php echo e(URL::asset('css/agent-portal-bootstrap-bridge.css')); ?>" rel="stylesheet" type="text/css" />
     <link href="<?php echo e(URL::asset('css/internal-v2-layout.css')); ?>" rel="stylesheet" type="text/css" />
     <link href="<?php echo e(URL::asset('css/admin-premium.css')); ?>" rel="stylesheet" type="text/css" />
+    <link href="<?php echo e(URL::asset('css/admin-compact.css')); ?>" rel="stylesheet" type="text/css" />
 
     <?php echo $__env->yieldPushContent('styles'); ?>
 </head>
-<body class="partner-v2 admin-premium-ui text-gray-800 antialiased font-sans<?php echo e($voyageLayoutPage ? ' voyage-layout-page' : ''); ?><?php echo e($hideInternalV2Topbar ? ' internal-v2-topbar-hidden' : ''); ?>">
+<body class="partner-v2 admin-premium-ui aj-admin aj-admin-compact text-gray-800 antialiased font-sans<?php echo e($voyageLayoutPage ? ' voyage-layout-page' : ''); ?><?php echo e($hideInternalV2Topbar ? ' internal-v2-topbar-hidden' : ''); ?>">
     <?php if($hideInternalV2Topbar): ?>
         <?php echo $__env->make('layouts.partials.internal-v2-topbar', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
     <?php else: ?>
@@ -78,10 +79,11 @@
     <link rel="shortcut icon" href="<?php echo e(URL::asset('build/images/favicon.ico')); ?>">
 
     <?php echo $__env->make('layouts.head-css', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+    <link href="<?php echo e(URL::asset('css/admin-compact.css')); ?>" rel="stylesheet" type="text/css" />
     <?php echo $__env->yieldPushContent('styles'); ?>
 </head>
 
-<body class="admin-premium-ui<?php echo e($voyageLayoutPage ? ' voyage-layout-page' : ''); ?><?php echo e($hideInternalV2Topbar ? ' internal-v2-topbar-hidden' : ''); ?>" data-layout="detached" data-topbar="colored">
+<body class="admin-premium-ui aj-admin aj-admin-compact<?php echo e($voyageLayoutPage ? ' voyage-layout-page' : ''); ?><?php echo e($hideInternalV2Topbar ? ' internal-v2-topbar-hidden' : ''); ?>" data-layout="detached" data-topbar="colored">
     <!-- Begin page -->
     <div class="container-fluid">
         <div id="layout-wrapper">

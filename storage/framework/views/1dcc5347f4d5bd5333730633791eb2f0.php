@@ -54,10 +54,11 @@
     
     <link href="<?php echo e(URL::asset('css/admin-sidebar-v2.css')); ?>" rel="stylesheet">
     <link href="<?php echo e(URL::asset('css/admin-v2.css')); ?>" rel="stylesheet">
+    <link href="<?php echo e(URL::asset('css/admin-compact.css')); ?>" rel="stylesheet">
 
     <?php echo $__env->yieldPushContent('styles'); ?>
 </head>
-<body class="aj-admin-v2-body">
+<body class="aj-admin-v2-body aj-admin aj-admin-compact">
 
 <div class="aj-admin-v2-layout" id="aj-admin-v2-root">
 

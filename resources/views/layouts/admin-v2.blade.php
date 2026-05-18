@@ -54,10 +54,11 @@
     {{-- Admin V2 system — loaded last to override Qovex layout rules --}}
     <link href="{{ URL::asset('css/admin-sidebar-v2.css') }}" rel="stylesheet">
     <link href="{{ URL::asset('css/admin-v2.css') }}" rel="stylesheet">
+    <link href="{{ URL::asset('css/admin-compact.css') }}" rel="stylesheet">
 
     @stack('styles')
 </head>
-<body class="aj-admin-v2-body">
+<body class="aj-admin-v2-body aj-admin aj-admin-compact">
 
 <div class="aj-admin-v2-layout" id="aj-admin-v2-root">
 
