@@ -1391,11 +1391,6 @@
 
         {{-- Vue liste (tableau) — défaut --}}
         <div id="ws-view-table" class="ws-table-card {{ $workspaceView === 'list' ? '' : 'hidden' }}">
-            @if(config('app.debug'))
-                <div style="background:#fff3cd;padding:6px 12px;font-size:12px;border-bottom:1px solid #e2e8f0;">
-                    sort={{ request('sort') }} | direction={{ request('direction') }} | currentSort={{ $currentSort ?? 'null' }} | currentDirection={{ $currentDirection ?? 'null' }}
-                </div>
-            @endif
             <div class="ws-table-card__head">
                 <h2 class="ws-table-card__title">Vue liste</h2>
                 <p class="ws-table-card__sub">Référence, voyage, départ, capacité et actions.</p>
