@@ -5803,3 +5803,184 @@ body[data-layout="detached"] #page-topbar .header-item span {
         justify-content: space-between;
     }
 }
+
+/* Workspace list view: keep the list card as wide as the filter bar */
+body.aj-admin-compact .ws-page,
+body.aj-admin-compact .workspace-page,
+body.aj-admin-compact .reservation-workspace-page,
+body.aj-admin-compact .reservation-workspace,
+body.aj-admin-compact .workspace-content,
+body.aj-admin-compact .workspace-main,
+body.aj-admin-compact .workspace-container,
+body.aj-admin-compact .workspace-shell {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+body.aj-admin-compact #reservations-main-content,
+body.aj-admin-compact #ws-view-table,
+body.aj-admin-compact .ws-page #ws-view-table.ws-table-card,
+body.aj-admin-compact .workspace-list-section,
+body.aj-admin-compact .workspace-list-card,
+body.aj-admin-compact .ws-list-card,
+body.aj-admin-compact .list-view-card,
+body.aj-admin-compact .table-card {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    align-self: stretch !important;
+}
+
+body.aj-admin-compact .workspace-grid,
+body.aj-admin-compact .workspace-layout,
+body.aj-admin-compact .workspace-body {
+    width: 100% !important;
+    max-width: none !important;
+    display: block !important;
+}
+
+body.aj-admin-compact .workspace-list-table-wrapper,
+body.aj-admin-compact .workspace-list-table,
+body.aj-admin-compact .ws-data-table,
+body.aj-admin-compact table.workspace-list-table {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: none !important;
+    table-layout: auto !important;
+}
+
+body.aj-admin-compact #ws-view-table .ws-table-scroll,
+body.aj-admin-compact #ws-view-table .workspace-list-table-wrapper {
+    width: 100% !important;
+    max-width: none !important;
+}
+
+body.aj-admin-compact #ws-view-table .ws-data-table__th-ref,
+body.aj-admin-compact #ws-view-table .ws-td--ref {
+    width: 7% !important;
+    min-width: 72px !important;
+}
+
+body.aj-admin-compact #ws-view-table .ws-data-table__th-offer,
+body.aj-admin-compact #ws-view-table .ws-td--offer,
+body.aj-admin-compact .workspace-list-table th:nth-child(2),
+body.aj-admin-compact .workspace-list-table td:nth-child(2),
+body.aj-admin-compact .ws-data-table th:nth-child(2),
+body.aj-admin-compact .ws-data-table td:nth-child(2) {
+    width: 38% !important;
+    min-width: 320px !important;
+    max-width: none !important;
+}
+
+body.aj-admin-compact #ws-view-table .ws-data-table__th-destination,
+body.aj-admin-compact #ws-view-table .ws-td--destination {
+    width: 10% !important;
+    min-width: 110px !important;
+}
+
+body.aj-admin-compact #ws-view-table .ws-data-table__th-dep,
+body.aj-admin-compact #ws-view-table .ws-td--dep {
+    width: 10% !important;
+    min-width: 110px !important;
+}
+
+body.aj-admin-compact #ws-view-table .ws-data-table__th-sold,
+body.aj-admin-compact #ws-view-table .ws-td--sold {
+    width: 12% !important;
+    min-width: 120px !important;
+}
+
+body.aj-admin-compact #ws-view-table .ws-data-table__th-remain,
+body.aj-admin-compact #ws-view-table .ws-td--remain {
+    width: 8% !important;
+    min-width: 90px !important;
+}
+
+body.aj-admin-compact #ws-view-table .ws-data-table__th-cap,
+body.aj-admin-compact #ws-view-table .ws-td--cap {
+    width: 8% !important;
+    min-width: 95px !important;
+}
+
+body.aj-admin-compact .workspace-list-table td:nth-child(2),
+body.aj-admin-compact .ws-data-table td:nth-child(2),
+body.aj-admin-compact #ws-view-table td[data-label="Voyage"],
+body.aj-admin-compact #ws-view-table td.ws-td--offer {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    max-width: none !important;
+}
+
+body.aj-admin-compact .workspace-list-table td:nth-child(2) .ws-td__offer-compact,
+body.aj-admin-compact .ws-data-table td:nth-child(2) .ws-td__offer-compact,
+body.aj-admin-compact #ws-view-table .ws-td__offer-compact {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.2rem !important;
+    min-width: 0 !important;
+}
+
+body.aj-admin-compact .workspace-list-table td:nth-child(2) .ws-td__title,
+body.aj-admin-compact .workspace-list-table td:nth-child(2) .ws-td__title--clamp,
+body.aj-admin-compact .workspace-list-table td:nth-child(2) .travel-title,
+body.aj-admin-compact .workspace-list-table td:nth-child(2) .offer-title,
+body.aj-admin-compact .workspace-list-table td:nth-child(2) .voyage-title,
+body.aj-admin-compact .ws-data-table td:nth-child(2) .ws-td__title,
+body.aj-admin-compact .ws-data-table td:nth-child(2) .ws-td__title--clamp,
+body.aj-admin-compact .ws-data-table td:nth-child(2) .travel-title,
+body.aj-admin-compact .ws-data-table td:nth-child(2) .offer-title,
+body.aj-admin-compact .ws-data-table td:nth-child(2) .voyage-title,
+body.aj-admin-compact #ws-view-table .ws-td__title,
+body.aj-admin-compact #ws-view-table .ws-td__title--clamp {
+    display: block !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    -webkit-line-clamp: unset !important;
+    line-clamp: unset !important;
+    -webkit-box-orient: unset !important;
+    max-height: none !important;
+    word-break: normal !important;
+    overflow-wrap: anywhere !important;
+    line-height: 1.25 !important;
+}
+
+body.aj-admin-compact .workspace-list-table td,
+body.aj-admin-compact .ws-data-table td {
+    height: auto !important;
+    max-height: none !important;
+    vertical-align: middle !important;
+}
+
+body.aj-admin-compact .workspace-list-table td:last-child,
+body.aj-admin-compact .ws-data-table td:last-child,
+body.aj-admin-compact #ws-view-table .ws-data-table__th-actions,
+body.aj-admin-compact #ws-view-table .ws-td--actions {
+    white-space: nowrap !important;
+    width: 140px !important;
+    min-width: 140px !important;
+    max-width: 140px !important;
+}
+
+body.aj-admin-compact .workspace-list-table td:last-child .btn,
+body.aj-admin-compact .ws-data-table td:last-child .btn,
+body.aj-admin-compact #ws-view-table .ws-td__actions,
+body.aj-admin-compact #ws-view-table .ws-td__actions .ws-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+body.aj-admin-compact #ws-view-table .ws-td__actions {
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+}
+
+/* Temporary debug marker: should appear if the final workspace CSS is loaded */
+body.aj-admin-compact #ws-view-table.ws-table-card {
+    outline: 4px solid red !important;
+}

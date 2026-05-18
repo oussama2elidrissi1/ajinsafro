@@ -54,9 +54,9 @@
     
     <link href="<?php echo e(URL::asset('css/admin-sidebar-v2.css')); ?>" rel="stylesheet">
     <link href="<?php echo e(URL::asset('css/admin-v2.css')); ?>" rel="stylesheet">
-    <link href="<?php echo e(URL::asset('css/admin-compact.css')); ?>?v=nano-compact-4" rel="stylesheet">
 
     <?php echo $__env->yieldPushContent('styles'); ?>
+    <link href="<?php echo e(URL::asset('css/admin-compact.css')); ?>?v=workspace-list-fullwidth-6" rel="stylesheet">
 </head>
 <body class="aj-admin-v2-body aj-admin aj-admin-compact">
 

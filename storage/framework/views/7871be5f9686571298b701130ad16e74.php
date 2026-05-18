@@ -12,7 +12,7 @@
 
     <?php echo $__env->make('layouts.head-css', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
     <link href="<?php echo e(URL::asset('css/admin-premium.css')); ?>" rel="stylesheet" type="text/css" />
-    <link href="<?php echo e(URL::asset('css/admin-compact.css')); ?>?v=nano-compact-4" rel="stylesheet" type="text/css" />
+    <link href="<?php echo e(URL::asset('css/admin-compact.css')); ?>?v=workspace-list-fullwidth-6" rel="stylesheet" type="text/css" />
 </head>
 
 <body class="admin-premium-ui internal-v2-topbar-hidden aj-admin aj-admin-compact" data-layout="detached" data-topbar="colored">

@@ -54,9 +54,9 @@
     {{-- Admin V2 system — loaded last to override Qovex layout rules --}}
     <link href="{{ URL::asset('css/admin-sidebar-v2.css') }}" rel="stylesheet">
     <link href="{{ URL::asset('css/admin-v2.css') }}" rel="stylesheet">
-    <link href="{{ URL::asset('css/admin-compact.css') }}?v=nano-compact-4" rel="stylesheet">
 
     @stack('styles')
+    <link href="{{ URL::asset('css/admin-compact.css') }}?v=workspace-list-fullwidth-6" rel="stylesheet">
 </head>
 <body class="aj-admin-v2-body aj-admin aj-admin-compact">
 
