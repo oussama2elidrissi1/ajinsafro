@@ -70,7 +70,17 @@ class ReservationWorkspaceController extends Controller
         ];
 
         $rows = $this->catalog->filterWorkspaceRows($scoped, $workspaceFilters);
-        $rows = $this->catalog->sortCatalogRowsForWorkspaceDisplay($rows);
+
+        $sort = $request->query('sort');
+        $direction = strtolower(trim((string) $request->query('direction', 'asc')));
+        $allowedSorts = ['ref', 'voyage', 'destination', 'departure_date', 'sold_pending', 'remaining', 'capacity'];
+        if (! in_array($sort, $allowedSorts, true)) {
+            $sort = null;
+        }
+        if (! in_array($direction, ['asc', 'desc'], true)) {
+            $direction = 'asc';
+        }
+        $rows = $this->catalog->sortCatalogRowsForWorkspaceDisplay($rows, $sort, $direction);
 
         $wsModalSettings = [
             'show_commission' => Setting::getValue('ws_modal_show_commission', '1') === '1',
@@ -98,6 +108,8 @@ class ReservationWorkspaceController extends Controller
             'workspaceFilters' => $workspaceFilters,
             'workspaceFilterOptions' => $workspaceFilterOptions,
             'workspaceResetUrl' => route('admin.reservations.workspace', ['view' => 'list']),
+            'currentSort' => $sort,
+            'currentDirection' => $direction,
         ]);
     }
 

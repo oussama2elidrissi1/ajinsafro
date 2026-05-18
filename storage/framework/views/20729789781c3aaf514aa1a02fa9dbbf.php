@@ -5,7 +5,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
-<link rel="stylesheet" href="<?php echo e(asset('css/front-voyage-kiosk.css')); ?>">
+<link rel="stylesheet" href="<?php echo e(asset('css/front-voyage-kiosk.css')); ?>?v=booking-2step-1">
 <?php $__env->stopPush(); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -28,13 +28,12 @@
     $hasHighlights = isset($highlights) && count($highlights) > 0;
 ?>
     <?php
-        // Dynamic step indices (keep flow consistent when places/extras are absent)
-        $stepDate = 1;
-        $stepCity = $hasPlaces ? 2 : null;
-        $stepClient = $hasPlaces ? 3 : 2;
-        $stepRoom = $hasPlaces ? 4 : 3;
-        $stepExtras = $hasExtras ? ($hasPlaces ? 5 : 4) : null;
-        $stepSummary = $hasExtras ? ($hasPlaces ? 6 : 5) : ($hasPlaces ? 5 : 4);
+        $stepBooking = 1;
+        $stepConfirmation = 2;
+        $stepClient = 11;
+        $stepRoom = 12;
+        $stepExtras = 13;
+        $stepSummary = $stepConfirmation;
     ?>
 
 
@@ -187,20 +186,13 @@
 
                 
                 <nav class="ksk-steps" id="ksk-steps-nav">
-                    <button class="ksk-step is-active" data-step="1"><span class="ksk-step__num">1</span><span class="ksk-step__label">Date</span></button>
-                    <?php if($hasPlaces): ?>
-                        <button class="ksk-step" data-step="2"><span class="ksk-step__num">2</span><span class="ksk-step__label">Ville</span></button>
-                    <?php endif; ?>
-                    <button class="ksk-step" data-step="<?php echo e($stepClient); ?>"><span class="ksk-step__num"><?php echo e($stepClient); ?></span><span class="ksk-step__label">Client</span></button>
-                    <button class="ksk-step" data-step="<?php echo e($stepRoom); ?>"><span class="ksk-step__num"><?php echo e($stepRoom); ?></span><span class="ksk-step__label">Chambre</span></button>
-                    <?php if($hasExtras): ?>
-                        <button class="ksk-step" data-step="<?php echo e($stepExtras); ?>"><span class="ksk-step__num"><?php echo e($stepExtras); ?></span><span class="ksk-step__label">Extras</span></button>
-                    <?php endif; ?>
+                    <button class="ksk-step is-active" data-step="<?php echo e($stepBooking); ?>"><span class="ksk-step__num">1</span><span class="ksk-step__label">Infos & voyageurs</span></button>
+                    <button class="ksk-step" data-step="<?php echo e($stepConfirmation); ?>"><span class="ksk-step__num">2</span><span class="ksk-step__label">Confirmation</span></button>
                     <button class="ksk-step" data-step="<?php echo e($stepSummary); ?>"><span class="ksk-step__num"><i class="fas fa-check"></i></span><span class="ksk-step__label">Résumé</span></button>
                 </nav>
 
                 
-                <section class="ksk-panel is-active" data-panel="1" id="ksk-panel-date">
+                <section class="ksk-panel is-active" data-panel="<?php echo e($stepBooking); ?>" id="ksk-panel-booking">
                     <div class="ksk-panel__head">
                         <h2><i class="fas fa-calendar-alt"></i> Choisissez votre date de départ</h2>
                         <p>Sélectionnez la date qui vous convient parmi les départs disponibles.</p>
@@ -208,9 +200,101 @@
                     <div class="ksk-dates" id="ksk-dates-grid">
                         
                     </div>
+                    <div class="ksk-compact-trip">
+                        <?php if($heroSrc): ?>
+                            <img src="<?php echo e($heroSrc); ?>" alt="<?php echo e($voyageName); ?>" class="ksk-compact-trip__img">
+                        <?php endif; ?>
+                        <div class="ksk-compact-trip__body">
+                            <h3><?php echo e($voyageName); ?></h3>
+                            <div class="ksk-compact-trip__meta">
+                                <span><i class="fas fa-calendar"></i> <strong id="ksk-compact-date">Date à choisir</strong></span>
+                                <span <?php if(! $hasPlaces): ?> hidden <?php endif; ?> id="ksk-compact-city-wrap"><i class="fas fa-plane-departure"></i> <strong id="ksk-compact-city"><?php echo e($hasPlaces ? 'Ville à choisir' : '—'); ?></strong></span>
+                                <span><i class="fas fa-users"></i> <strong id="ksk-compact-pax">1 adulte</strong></span>
+                                <span><i class="fas fa-tag"></i> <strong id="ksk-compact-total">— <?php echo e($cur); ?></strong></span>
+                            </div>
+                        </div>
+                    </div>
+                    <?php if($hasPlaces): ?>
+                        <div class="ksk-simple-section__subhead">
+                            <h4>Ville de départ</h4>
+                        </div>
+                        <div class="ksk-cities" id="ksk-cities-grid-inline"></div>
+                        <div id="ksk-flight-info-inline" class="ksk-flight-info" hidden></div>
+                    <?php endif; ?>
+                    <div class="ksk-form">
+                        <section class="ksk-simple-section">
+                            <div class="ksk-simple-section__head">
+                                <h3><i class="fas fa-user"></i> Client principal</h3>
+                                <p>Renseignez uniquement les informations nécessaires pour enregistrer la demande.</p>
+                            </div>
+                            <div class="ksk-grid ksk-grid--two">
+                                <div class="ksk-field">
+                                    <label>Prénom <span class="ksk-req">*</span></label>
+                                    <input type="text" id="ksk-booking-client-first" class="ksk-input" autocomplete="given-name">
+                                </div>
+                                <div class="ksk-field">
+                                    <label>Nom <span class="ksk-req">*</span></label>
+                                    <input type="text" id="ksk-booking-client-last" class="ksk-input" autocomplete="family-name">
+                                </div>
+                                <div class="ksk-field">
+                                    <label>Téléphone <span class="ksk-req">*</span></label>
+                                    <input type="text" id="ksk-booking-client-phone" class="ksk-input" autocomplete="tel">
+                                </div>
+                                <div class="ksk-field">
+                                    <label>Email</label>
+                                    <input type="email" id="ksk-booking-client-email" class="ksk-input" autocomplete="email">
+                                </div>
+                                <div class="ksk-field ksk-field--full">
+                                    <label>Notes / demande spéciale</label>
+                                    <textarea id="ksk-booking-client-notes" class="ksk-input ksk-input--textarea" rows="3" placeholder="Indiquez ici toute précision utile pour l’équipe Ajinsafro."></textarea>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="ksk-simple-section">
+                            <div class="ksk-travelers__head">
+                                <div>
+                                    <h3><i class="fas fa-users"></i> Accompagnants</h3>
+                                    <p>Le client principal compte déjà comme 1 voyageur. Ajoutez seulement les accompagnants.</p>
+                                </div>
+                                <div class="ksk-travelers__actions">
+                                    <button type="button" class="ksk-btn ksk-btn--ghost ksk-btn--sm" id="ksk-booking-add-adult">
+                                        <i class="fas fa-user-plus"></i> + Adulte
+                                    </button>
+                                    <button type="button" class="ksk-btn ksk-btn--ghost ksk-btn--sm" id="ksk-booking-add-child">
+                                        <i class="fas fa-child-reaching"></i> + Enfant
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="ksk-booking-companions"></div>
+                            <p class="ksk-empty" id="ksk-booking-no-companion">Aucun accompagnant pour le moment.</p>
+                        </section>
+
+                        <?php if($hasExtras): ?>
+                            <section class="ksk-simple-section">
+                                <div class="ksk-simple-section__head">
+                                    <h3><i class="fas fa-star"></i> Extras</h3>
+                                    <p>Affichés uniquement si des options sont réellement disponibles pour ce voyage.</p>
+                                </div>
+                                <div class="ksk-extras" id="ksk-booking-extras-grid"></div>
+                            </section>
+                        <?php endif; ?>
+
+                        <section class="ksk-simple-section">
+                            <div class="ksk-simple-section__head">
+                                <h3><i class="fas fa-bed"></i> Chambre / hébergement</h3>
+                                <p>L’affectation finale sera gérée par l’équipe Ajinsafro.</p>
+                            </div>
+                            <div class="ksk-field">
+                                <label>Préférence chambre / demande spéciale</label>
+                                <textarea id="ksk-booking-room-preference" class="ksk-input ksk-input--textarea" rows="3" placeholder="Exemples : chambre double, chambre familiale, proche famille, autre demande."></textarea>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="ksk-form-alert" id="ksk-form-error" hidden></div>
                     <div class="ksk-panel__foot">
                         <button type="button" class="ksk-btn ksk-btn--next" id="ksk-next-1" disabled>
-                            Continuer <i class="fas fa-arrow-right"></i>
+                            Continuer vers la confirmation <i class="fas fa-arrow-right"></i>
                         </button>
                     </div>
                 </section>
@@ -371,8 +455,17 @@
                     <div class="ksk-summary-detail" id="ksk-summary-detail">
                         
                     </div>
+                    <div class="ksk-confirm-card">
+                        <label class="ksk-check">
+                            <input type="checkbox" id="ksk-accept-terms">
+                            <span>J’accepte les conditions de réservation.</span>
+                        </label>
+                        <p class="ksk-confirm-card__note">
+                            Votre demande sera enregistrée. L’équipe Ajinsafro vous contactera pour validation finale.
+                        </p>
+                    </div>
                     <div class="ksk-panel__foot ksk-panel__foot--final">
-                        <button type="button" class="ksk-btn ksk-btn--back" onclick="ksk.goStep(<?php echo e($hasExtras ? $stepExtras : $stepRoom); ?>)"><i class="fas fa-arrow-left"></i> Modifier</button>
+                        <button type="button" class="ksk-btn ksk-btn--back" id="ksk-back-summary"><i class="fas fa-arrow-left"></i> Modifier</button>
                         <a href="#" class="ksk-btn ksk-btn--reserve" id="ksk-reserve-btn">
                             <i class="fas fa-bolt"></i> Réserver maintenant
                         </a>
@@ -438,11 +531,26 @@
         <div class="ksk-prose"><?php echo $voyage->description; ?></div>
         <?php endif; ?>
 
+        <?php if(!empty($includes)): ?>
+        <details class="ksk-info-accordion">
+            <summary><i class="fas fa-check-circle"></i> Voir les prestations incluses</summary>
+            <div class="ksk-info-accordion__body">
+                <ul class="ksk-info-list">
+                    <?php $__currentLoopData = $includes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <li><?php echo e(e($item)); ?></li>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </ul>
+            </div>
+        </details>
+        <?php endif; ?>
+
         <?php if($hasProgram): ?>
-        <h3 class="ksk-details__sub"><i class="fas fa-route"></i> Programme jour par jour</h3>
+        <details class="ksk-info-accordion">
+            <summary><i class="fas fa-route"></i> Voir le programme du voyage</summary>
+            <div class="ksk-info-accordion__body">
         <div class="ksk-program">
             <?php $__currentLoopData = $voyage->programDays; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $day): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <details class="ksk-day" <?php echo e($loop->first ? 'open' : ''); ?>>
+                <details class="ksk-day">
                     <summary>
                         <span class="ksk-day__num">J<?php echo e($day->day_number); ?></span>
                         <span class="ksk-day__title"><?php echo e(e($day->title ?: 'Jour '.$day->day_number)); ?></span>
@@ -462,6 +570,8 @@
                 </details>
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </div>
+            </div>
+        </details>
         <?php endif; ?>
     </div>
 </section>
@@ -521,34 +631,745 @@
     var HAS_EXTRAS = EXTRAS.length > 0;
     var BASE_PRICE = <?php echo e((float)($priceFrom ?? 0)); ?>;
 
-    var STEP_DATE = 1;
-    var STEP_CITY = HAS_PLACES ? 2 : null;
-    var STEP_CLIENT = HAS_PLACES ? 3 : 2;
-    var STEP_ROOM = HAS_PLACES ? 4 : 3;
-    var STEP_EXTRAS = HAS_EXTRAS ? (HAS_PLACES ? 5 : 4) : null;
-    var STEP_SUMMARY = HAS_EXTRAS ? (HAS_PLACES ? 6 : 5) : (HAS_PLACES ? 5 : 4);
+    var STEP_BOOKING = 1;
+    var STEP_CONFIRMATION = 2;
 
     var state = {
         step: 1,
         departureIdx: null,
         placeIdx: null,
-        roomIdx: null,
         paxAdults: 1,
         paxChildren: 0,
-        // extras selection: { [extraId:number]: { [travelerId:string]: true } }
         extras: {},
-        clientMode: 'new', // new|existing
-        clientExternalId: null,
         client: {
             first_name: '',
             last_name: '',
             phone: '',
             email: '',
-            document_type: '',
-            document_number: ''
+            notes: '',
+            room_preference: ''
         },
-        passengers: [] // companions only (principal is the client)
+        passengers: [],
+        acceptTerms: false
     };
+
+    initTwoStepBooking();
+    return;
+
+    function initTwoStepBooking() {
+        hideLegacyPanels();
+        bindBookingFields();
+        bindStepper();
+        bindReserve();
+        bindMobileBar();
+        bindLightbox();
+        bindHeroGallery();
+        tsRenderDates();
+        if (HAS_PLACES) tsRenderCities();
+        if (HAS_EXTRAS) tsRenderExtras();
+        tsRenderCompanions();
+        tsRecalcPax();
+        tsUpdateCart();
+        tsUpdateCompactTrip();
+        window.ksk = {
+            goStep: tsGoStep,
+            scrollToBuilder: function () {
+                document.getElementById('ksk-builder').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        };
+    }
+
+    function hideLegacyPanels() {
+        ['ksk-panel-city', 'ksk-panel-client', 'ksk-panel-room', 'ksk-panel-extras'].forEach(function (id) {
+            var node = document.getElementById(id);
+            if (node) node.style.display = 'none';
+        });
+        var extraStep = document.querySelector('#ksk-steps-nav .ksk-step:nth-child(3)');
+        if (extraStep) extraStep.style.display = 'none';
+        var bookingTitle = document.querySelector('#ksk-panel-booking .ksk-panel__head h2');
+        var bookingText = document.querySelector('#ksk-panel-booking .ksk-panel__head p');
+        var summaryTitle = document.querySelector('#ksk-panel-summary .ksk-panel__head h2');
+        var summaryText = document.querySelector('#ksk-panel-summary .ksk-panel__head p');
+        if (bookingTitle) bookingTitle.innerHTML = '<i class="fas fa-bolt"></i> Infos de réservation';
+        if (bookingText) bookingText.textContent = 'Choisissez l’essentiel, ajoutez les voyageurs, puis confirmez votre demande.';
+        if (summaryTitle) summaryTitle.innerHTML = '<i class="fas fa-clipboard-check"></i> Confirmation';
+        if (summaryText) summaryText.textContent = 'Vérifiez les informations utiles, acceptez les conditions, puis envoyez votre demande.';
+        var oldCartBtn = document.getElementById('ksk-cart-reserve');
+        if (oldCartBtn) oldCartBtn.innerHTML = '<i class="fas fa-arrow-right"></i> Continuer';
+    }
+
+    function bindBookingFields() {
+        bindClientField('ksk-booking-client-first', 'first_name');
+        bindClientField('ksk-booking-client-last', 'last_name');
+        bindClientField('ksk-booking-client-phone', 'phone');
+        bindClientField('ksk-booking-client-email', 'email');
+        bindClientField('ksk-booking-client-notes', 'notes');
+        bindClientField('ksk-booking-room-preference', 'room_preference');
+
+        var addAdult = document.getElementById('ksk-booking-add-adult');
+        if (addAdult) {
+            addAdult.addEventListener('click', function () {
+                state.passengers.push({ first_name: '', last_name: '', type: 'adult', birth_date: '' });
+                tsRenderCompanions();
+                tsRecalcPax();
+                tsValidateBooking();
+                tsUpdateCart();
+            });
+        }
+
+        var addChild = document.getElementById('ksk-booking-add-child');
+        if (addChild) {
+            addChild.addEventListener('click', function () {
+                state.passengers.push({ first_name: '', last_name: '', type: 'child', birth_date: '' });
+                tsRenderCompanions();
+                tsRecalcPax();
+                tsValidateBooking();
+                tsUpdateCart();
+            });
+        }
+
+        var nextBtn = document.getElementById('ksk-next-1');
+        if (nextBtn) {
+            nextBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (!tsValidateBooking(true)) return;
+                tsGoStep(STEP_CONFIRMATION);
+            });
+        }
+
+        var backBtn = document.getElementById('ksk-back-summary');
+        if (backBtn) {
+            backBtn.addEventListener('click', function () {
+                tsGoStep(STEP_BOOKING);
+            });
+        }
+
+        var terms = document.getElementById('ksk-accept-terms');
+        if (terms) {
+            terms.addEventListener('change', function () {
+                state.acceptTerms = !!terms.checked;
+            });
+        }
+    }
+
+    function bindClientField(id, key) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('input', function () {
+            state.client[key] = el.value;
+            tsRecalcPax();
+            tsValidateBooking();
+            tsUpdateCart();
+        });
+    }
+
+    function bindStepper() {
+        document.querySelectorAll('#ksk-steps-nav .ksk-step').forEach(function (stepBtn) {
+            stepBtn.addEventListener('click', function () {
+                var step = parseInt(stepBtn.dataset.step || '1', 10);
+                if (step === STEP_BOOKING) {
+                    tsGoStep(STEP_BOOKING);
+                } else if (step === STEP_CONFIRMATION && tsValidateBooking(true)) {
+                    tsGoStep(STEP_CONFIRMATION);
+                }
+            });
+        });
+    }
+
+    function tsRecalcPax() {
+        var adults = 1;
+        var children = 0;
+        activePassengers().forEach(function (p) {
+            if ((p.type || 'adult') === 'child') children++;
+            else adults++;
+        });
+        state.paxAdults = adults;
+        state.paxChildren = children;
+    }
+
+    function activePassengers() {
+        return (state.passengers || []).filter(function (p) {
+            return String(p.first_name || '').trim() !== '' || String(p.last_name || '').trim() !== '';
+        });
+    }
+
+    function tsTravelerRows() {
+        var principal = [String(state.client.first_name || '').trim(), String(state.client.last_name || '').trim()].filter(Boolean).join(' ') || 'Client principal';
+        var rows = [{
+            id: 'main',
+            label: principal,
+            type: 'adult',
+            typeLabel: 'Adulte'
+        }];
+        activePassengers().forEach(function (p, idx) {
+            var label = [String(p.first_name || '').trim(), String(p.last_name || '').trim()].filter(Boolean).join(' ') || ('Accompagnant #' + (idx + 1));
+            var type = String(p.type || 'adult') === 'child' ? 'child' : 'adult';
+            rows.push({
+                id: 'comp_' + idx,
+                label: label,
+                type: type,
+                typeLabel: type === 'child' ? 'Enfant' : 'Adulte'
+            });
+        });
+        return rows;
+    }
+
+    function tsRenderCompanions() {
+        var container = document.getElementById('ksk-booking-companions');
+        var empty = document.getElementById('ksk-booking-no-companion');
+        if (!container || !empty) return;
+        container.innerHTML = '';
+
+        state.passengers.forEach(function (p, idx) {
+            var type = String(p.type || 'adult') === 'child' ? 'child' : 'adult';
+            var wrap = document.createElement('div');
+            wrap.className = 'ksk-companion';
+            wrap.innerHTML = '' +
+                '<div class="ksk-companion__head">' +
+                '  <strong>' + (type === 'child' ? 'Enfant' : 'Adulte') + ' #' + (idx + 1) + '</strong>' +
+                '  <button type="button" class="ksk-icon-btn" data-remove="' + idx + '" aria-label="Supprimer">×</button>' +
+                '</div>' +
+                '<div class="ksk-grid ksk-grid--two">' +
+                '  <div class="ksk-field"><label>Prénom</label><input class="ksk-input" data-passenger-key="first_name" data-passenger-index="' + idx + '" autocomplete="given-name" value="' + esc(String(p.first_name || '')) + '"></div>' +
+                '  <div class="ksk-field"><label>Nom</label><input class="ksk-input" data-passenger-key="last_name" data-passenger-index="' + idx + '" autocomplete="family-name" value="' + esc(String(p.last_name || '')) + '"></div>' +
+                '  <div class="ksk-field"><label>Type</label><select class="ksk-input" data-passenger-key="type" data-passenger-index="' + idx + '">' +
+                '      <option value="adult"' + (type === 'adult' ? ' selected' : '') + '>Adulte</option>' +
+                '      <option value="child"' + (type === 'child' ? ' selected' : '') + '>Enfant</option>' +
+                '  </select></div>' +
+                '  <div class="ksk-field' + (type === 'child' ? '' : ' is-hidden') + '" data-birth-wrapper="' + idx + '">' +
+                '      <label>Date de naissance</label><input type="date" class="ksk-input" data-passenger-key="birth_date" data-passenger-index="' + idx + '" value="' + esc(String(p.birth_date || '')) + '">' +
+                '  </div>' +
+                '</div>';
+            container.appendChild(wrap);
+        });
+
+        empty.style.display = state.passengers.length ? 'none' : '';
+
+        container.querySelectorAll('[data-remove]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var idx = parseInt(btn.getAttribute('data-remove') || '0', 10);
+                state.passengers.splice(idx, 1);
+                tsRenderCompanions();
+                tsRecalcPax();
+                tsValidateBooking();
+                if (HAS_EXTRAS) tsRenderExtras();
+                tsUpdateCart();
+            });
+        });
+
+        container.querySelectorAll('[data-passenger-key]').forEach(function (input) {
+            input.addEventListener('input', function () {
+                var idx = parseInt(input.getAttribute('data-passenger-index') || '0', 10);
+                var key = input.getAttribute('data-passenger-key');
+                if (!state.passengers[idx]) state.passengers[idx] = { first_name: '', last_name: '', type: 'adult', birth_date: '' };
+                state.passengers[idx][key] = input.value;
+                if (key === 'type') tsRenderCompanions();
+                tsRecalcPax();
+                tsValidateBooking();
+                if (HAS_EXTRAS) tsRenderExtras();
+                tsUpdateCart();
+            });
+        });
+    }
+
+    function tsValidateBooking(showError) {
+        var valid = state.departureIdx !== null
+            && (!HAS_PLACES || state.placeIdx !== null)
+            && String(state.client.first_name || '').trim() !== ''
+            && String(state.client.last_name || '').trim() !== ''
+            && String(state.client.phone || '').trim() !== ''
+            && (state.paxAdults + state.paxChildren) >= 1;
+
+        var nextBtn = document.getElementById('ksk-next-1');
+        if (nextBtn) nextBtn.disabled = !valid;
+
+        var cartBtn = document.getElementById('ksk-cart-reserve');
+        if (cartBtn) {
+            cartBtn.style.display = valid ? '' : 'none';
+            cartBtn.setAttribute('href', '#');
+        }
+
+        var errorBox = document.getElementById('ksk-form-error');
+        if (errorBox) {
+            if (showError && !valid) {
+                errorBox.hidden = false;
+                errorBox.textContent = 'Renseignez la date, la ville de départ si nécessaire, le prénom, le nom et le téléphone avant de continuer.';
+            } else {
+                errorBox.hidden = true;
+                errorBox.textContent = '';
+            }
+        }
+
+        return valid;
+    }
+
+    function tsUpdateCompactTrip() {
+        var dep = DEPARTURES[state.departureIdx];
+        var place = state.placeIdx !== null ? PLACES[state.placeIdx] : null;
+        var dateEl = document.getElementById('ksk-compact-date');
+        var cityEl = document.getElementById('ksk-compact-city');
+        var paxEl = document.getElementById('ksk-compact-pax');
+        var totalEl = document.getElementById('ksk-compact-total');
+        if (dateEl) dateEl.textContent = dep ? dep.start_label : 'Date à choisir';
+        if (cityEl) cityEl.textContent = place ? place.name : 'Ville à choisir';
+        if (paxEl) paxEl.textContent = state.paxAdults + ' adulte' + (state.paxAdults > 1 ? 's' : '') + (state.paxChildren ? ' + ' + state.paxChildren + ' enfant' + (state.paxChildren > 1 ? 's' : '') : '');
+        if (totalEl) totalEl.textContent = (dep ? fmt(tsCalcTotal()) : '—') + ' ' + CURRENCY;
+    }
+
+    function tsRenderDates() {
+        var grid = document.getElementById('ksk-dates-grid');
+        if (!grid) return;
+        var html = '';
+        DEPARTURES.forEach(function (d, i) {
+            var disabled = d.status === 'full' || d.status === 'closed' || d.status === 'canceled' || d.status === 'cancelled';
+            var statusLabel = { open: 'Disponible', limited: 'Dernières places', full: 'Complet', closed: 'Fermé', canceled: 'Fermé', cancelled: 'Fermé', draft: 'Bientôt' }[d.status] || d.status;
+            var statusClass = { open: 'ok', limited: 'warn', full: 'full', closed: 'full', canceled: 'full', cancelled: 'full' }[d.status] || 'ok';
+            var price = d.sale_price > 0 ? d.sale_price : (d.base_price > 0 ? d.base_price : BASE_PRICE);
+            html += '<button type="button" class="ksk-date-card' + (disabled ? ' is-disabled' : '') + '" data-dep="' + i + '"' + (disabled ? ' disabled' : '') + '>';
+            html += '<div class="ksk-date-card__date">' + esc(d.start_label) + '</div>';
+            if (d.end_label) html += '<div class="ksk-date-card__range">→ ' + esc(d.end_label) + '</div>';
+            html += '<span class="ksk-status ksk-status--' + statusClass + '">' + esc(statusLabel) + '</span>';
+            if (!disabled && d.available_capacity > 0) html += '<div class="ksk-date-card__seats">' + d.available_capacity + ' place(s)</div>';
+            if (price > 0) html += '<div class="ksk-date-card__price">' + fmt(price) + ' ' + CURRENCY + '</div>';
+            html += '</button>';
+        });
+        grid.innerHTML = html || '<p class="ksk-empty">Aucun départ disponible actuellement.</p>';
+        grid.querySelectorAll('.ksk-date-card:not(.is-disabled)').forEach(function (card) {
+            card.addEventListener('click', function () {
+                state.departureIdx = parseInt(card.dataset.dep || '0', 10);
+                grid.querySelectorAll('.ksk-date-card').forEach(function (node) { node.classList.remove('is-selected'); });
+                card.classList.add('is-selected');
+                tsValidateBooking();
+                tsUpdateCart();
+            });
+        });
+    }
+
+    function tsRenderCities() {
+        var grid = document.getElementById('ksk-cities-grid-inline');
+        if (!grid) return;
+        var html = '';
+        PLACES.forEach(function (place, i) {
+            html += '<button type="button" class="ksk-city-card" data-place="' + i + '">';
+            html += '<i class="fas fa-plane-departure ksk-city-card__icon"></i>';
+            html += '<div class="ksk-city-card__name">' + esc(place.name) + '</div>';
+            if (place.code) html += '<div class="ksk-city-card__code">' + esc(place.code) + '</div>';
+            if (place.price > 0) html += '<div class="ksk-city-card__sup">+' + fmt(place.price) + ' ' + CURRENCY + '</div>';
+            html += '</button>';
+        });
+        grid.innerHTML = html;
+        grid.querySelectorAll('.ksk-city-card').forEach(function (card) {
+            card.addEventListener('click', function () {
+                state.placeIdx = parseInt(card.dataset.place || '0', 10);
+                grid.querySelectorAll('.ksk-city-card').forEach(function (node) { node.classList.remove('is-selected'); });
+                card.classList.add('is-selected');
+                tsShowFlightInfo();
+                tsValidateBooking();
+                tsUpdateCart();
+            });
+        });
+    }
+
+    function tsShowFlightInfo() {
+        var el = document.getElementById('ksk-flight-info-inline');
+        if (!el) return;
+        var place = state.placeIdx !== null ? PLACES[state.placeIdx] : null;
+        if (!place) {
+            el.hidden = true;
+            return;
+        }
+        var flights = FLIGHTS_BY_PLACE[String(place.id)] || [];
+        if (!flights.length) {
+            el.hidden = true;
+            return;
+        }
+        var html = '<div class="ksk-flight-cards">';
+        flights.forEach(function (flight) {
+            var typeLabel = flight.type === 'outbound' ? 'Aller' : (flight.type === 'return' ? 'Retour' : 'Interne');
+            html += '<div class="ksk-flight-mini">';
+            html += '<span class="ksk-flight-mini__type">' + typeLabel + '</span>';
+            html += '<span>' + esc(flight.from_city || '—') + ' → ' + esc(flight.to_city || '—') + '</span>';
+            if (flight.depart_at) html += '<span><i class="far fa-clock"></i> ' + flight.depart_at + '</span>';
+            if (flight.airline) html += '<span><i class="fas fa-building"></i> ' + esc(flight.airline) + '</span>';
+            html += '</div>';
+        });
+        html += '</div>';
+        el.innerHTML = html;
+        el.hidden = false;
+    }
+
+    function tsRenderExtras() {
+        var grid = document.getElementById('ksk-booking-extras-grid');
+        if (!grid) return;
+        var travelers = tsTravelerRows();
+        var html = '';
+        EXTRAS.forEach(function (extra) {
+            var icon = extra.icon || 'fa-plus-circle';
+            var perTraveler = state.extras[String(extra.id)] || {};
+            var selectedCount = 0;
+            var selectedTotal = 0;
+            travelers.forEach(function (traveler) {
+                if (perTraveler[traveler.id]) {
+                    selectedCount++;
+                    selectedTotal += tsExtraUnitPrice(extra, traveler.type);
+                }
+            });
+
+            html += '<details class="ksk-extra2"' + (selectedCount ? ' open' : '') + '>';
+            html += '<summary class="ksk-extra2__head">';
+            html += '<div class="ksk-extra2__title"><i class="fas ' + esc(icon) + '"></i> ' + esc(extra.name) + '</div>';
+            html += '<div class="ksk-extra2__meta"><span class="ksk-extra2__unit">' + (extra.price_adult > 0 ? (fmt(extra.price_adult) + ' ' + CURRENCY + '/pers') : 'Gratuit') + '</span>';
+            html += '<span class="ksk-extra2__total">' + (selectedCount ? (fmt(selectedTotal) + ' ' + CURRENCY) : '—') + '</span></div>';
+            html += '</summary>';
+            if (extra.description) html += '<div class="ksk-extra2__desc">' + esc(extra.description) + '</div>';
+            html += '<div class="ksk-extra2__trav">';
+            travelers.forEach(function (traveler) {
+                var unit = tsExtraUnitPrice(extra, traveler.type);
+                html += '<label class="ksk-extra2__row">';
+                html += '<span class="ksk-extra2__who"><input type="checkbox" class="ksk-extra2__cb" data-extra="' + extra.id + '" data-trav="' + traveler.id + '"' + (perTraveler[traveler.id] ? ' checked' : '') + '>';
+                html += '<span>' + esc(traveler.label) + '</span><small>' + esc(traveler.typeLabel) + '</small></span>';
+                html += '<span class="ksk-extra2__price">' + (unit > 0 ? (fmt(unit) + ' ' + CURRENCY) : '0 ' + CURRENCY) + '</span>';
+                html += '</label>';
+            });
+            html += '</div></details>';
+        });
+        grid.innerHTML = html || '<p class="ksk-empty">Aucun extra disponible.</p>';
+
+        grid.querySelectorAll('.ksk-extra2__cb').forEach(function (checkbox) {
+            checkbox.addEventListener('change', function () {
+                var extraId = String(checkbox.getAttribute('data-extra') || '');
+                var travelerId = String(checkbox.getAttribute('data-trav') || '');
+                if (!state.extras[extraId]) state.extras[extraId] = {};
+                if (checkbox.checked) state.extras[extraId][travelerId] = true;
+                else delete state.extras[extraId][travelerId];
+                if (state.extras[extraId] && Object.keys(state.extras[extraId]).length === 0) delete state.extras[extraId];
+                tsRenderExtras();
+                tsUpdateCart();
+            });
+        });
+    }
+
+    function tsCalcTotal() {
+        var dep = DEPARTURES[state.departureIdx];
+        if (!dep) return 0;
+        var perPerson = dep.sale_price > 0 ? dep.sale_price : (dep.base_price > 0 ? dep.base_price : BASE_PRICE);
+        var place = state.placeIdx !== null ? PLACES[state.placeIdx] : null;
+        if (place) perPerson += Number(place.price || 0);
+        return (perPerson * Math.max(1, state.paxAdults + state.paxChildren)) + tsExtrasTotal();
+    }
+
+    function tsUpdateCart() {
+        var body = document.getElementById('ksk-cart-body');
+        var totalEl = document.getElementById('ksk-cart-total');
+        var mobileTotal = document.getElementById('ksk-mobile-total');
+        var cartBtn = document.getElementById('ksk-cart-reserve');
+        var dep = DEPARTURES[state.departureIdx];
+
+        if (!dep) {
+            if (body) body.innerHTML = '<p class="ksk-cart__empty">Commencez par choisir une date de départ.</p>';
+            if (totalEl) totalEl.textContent = '— ' + CURRENCY;
+            if (mobileTotal) mobileTotal.textContent = '—';
+            if (cartBtn) cartBtn.style.display = 'none';
+            tsUpdateCompactTrip();
+            return;
+        }
+
+        var html = '';
+        html += '<div class="ksk-cart__line"><span><i class="fas fa-calendar"></i> Départ</span><strong>' + esc(dep.start_label) + '</strong></div>';
+        var place = state.placeIdx !== null ? PLACES[state.placeIdx] : null;
+        if (place) html += '<div class="ksk-cart__line"><span><i class="fas fa-plane"></i> Ville</span><strong>' + esc(place.name) + '</strong></div>';
+        html += '<div class="ksk-cart__line"><span><i class="fas fa-users"></i> Voyageurs</span><strong>' + state.paxAdults + ' ad.' + (state.paxChildren ? ' + ' + state.paxChildren + ' enf.' : '') + '</strong></div>';
+
+        var extraLines = tsExtrasSelectionLines();
+        if (extraLines.length) {
+            var grouped = {};
+            extraLines.forEach(function (line) {
+                var key = String(line.voyage_extra_id);
+                if (!grouped[key]) grouped[key] = { name: line.extra_name, count: 0, total: 0 };
+                grouped[key].count++;
+                grouped[key].total += Number(line.total_price || 0);
+            });
+            var labels = Object.keys(grouped).map(function (key) {
+                var item = grouped[key];
+                return item.name + ' (' + item.count + ' pers) → ' + fmt(item.total) + ' ' + CURRENCY;
+            });
+            html += '<div class="ksk-cart__line"><span><i class="fas fa-star"></i> Extras</span><strong>' + esc(labels.join(', ')) + '</strong></div>';
+        }
+
+        if (body) body.innerHTML = html;
+        if (totalEl) totalEl.textContent = fmt(tsCalcTotal()) + ' ' + CURRENCY;
+        if (mobileTotal) mobileTotal.textContent = fmt(tsCalcTotal());
+        if (cartBtn) {
+            cartBtn.style.display = tsValidateBooking() ? '' : 'none';
+            cartBtn.onclick = function (e) {
+                e.preventDefault();
+                if (tsValidateBooking(true)) tsGoStep(STEP_CONFIRMATION);
+            };
+        }
+
+        tsUpdateCompactTrip();
+    }
+
+    function tsRenderSummary() {
+        var el = document.getElementById('ksk-summary-detail');
+        if (!el) return;
+        var dep = DEPARTURES[state.departureIdx] || {};
+        var place = state.placeIdx !== null ? PLACES[state.placeIdx] : null;
+        var html = '<div class="ksk-summary-grid">';
+        html += tsSumRow('Voyage', <?php echo json_encode($voyageName, 15, 512) ?>, 'fa-suitcase');
+        html += tsSumRow('Date de départ', dep.start_label || '—', 'fa-calendar');
+        if (place) html += tsSumRow('Ville de départ', place.name, 'fa-plane-departure');
+        html += tsSumRow('Voyageurs', state.paxAdults + ' adulte(s)' + (state.paxChildren ? ', ' + state.paxChildren + ' enfant(s)' : ''), 'fa-users');
+        if (state.client.room_preference) html += tsSumRow('Préférence chambre', state.client.room_preference, 'fa-bed');
+        if (state.client.notes) html += tsSumRow('Demande spéciale', state.client.notes, 'fa-note-sticky');
+        html += tsSumRow('Statut', 'En attente de validation', 'fa-hourglass-half');
+        html += '</div>';
+        html += '<div class="ksk-summary-total"><span>Total estimé</span><strong>' + fmt(tsCalcTotal()) + ' ' + CURRENCY + '</strong></div>';
+        el.innerHTML = html;
+    }
+
+    function tsSumRow(label, value, icon) {
+        return '<div class="ksk-sum-row"><span class="ksk-sum-row__label"><i class="fas ' + icon + '"></i> ' + esc(label) + '</span><span class="ksk-sum-row__value">' + esc(value) + '</span></div>';
+    }
+
+    function tsGoStep(step) {
+        state.step = step;
+        var bookingPanel = document.getElementById('ksk-panel-booking');
+        var summaryPanel = document.getElementById('ksk-panel-summary');
+        if (bookingPanel) bookingPanel.classList.toggle('is-active', step === STEP_BOOKING);
+        if (summaryPanel) summaryPanel.classList.toggle('is-active', step === STEP_CONFIRMATION);
+        document.querySelectorAll('#ksk-steps-nav .ksk-step').forEach(function (btn, idx) {
+            var btnStep = idx === 0 ? STEP_BOOKING : STEP_CONFIRMATION;
+            btn.classList.toggle('is-active', btnStep === step);
+            btn.classList.toggle('is-done', btnStep < step);
+        });
+        if (step === STEP_CONFIRMATION) tsRenderSummary();
+        document.getElementById('ksk-builder').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        tsUpdateCart();
+    }
+
+    async function tsSubmitReservation() {
+        if (!tsValidateBooking(true)) return;
+        var terms = document.getElementById('ksk-accept-terms');
+        if (!terms || !terms.checked) {
+            alert('Veuillez accepter les conditions de réservation avant de confirmer.');
+            return;
+        }
+
+        var dep = DEPARTURES[state.departureIdx];
+        if (!dep) return;
+
+        var place = state.placeIdx !== null ? PLACES[state.placeIdx] : null;
+        var payload = {
+            departure_id: dep.id,
+            travel_date_id: dep.wp_travel_date_id,
+            client_first_name: state.client.first_name,
+            client_last_name: state.client.last_name,
+            client_phone: state.client.phone,
+            client_email: state.client.email,
+            notes: state.client.notes,
+            room_preference: state.client.room_preference,
+            departure_place_id: place ? place.id : null,
+            departure_place_name: place ? place.name : null,
+            accept_terms: true,
+            passengers: activePassengers().map(function (p) {
+                return {
+                    first_name: p.first_name,
+                    last_name: p.last_name,
+                    type: p.type,
+                    birth_date: p.birth_date || null
+                };
+            }),
+            extras_json: JSON.stringify(tsExtrasSelectionLines().map(function (line) {
+                return {
+                    voyage_extra_id: line.voyage_extra_id,
+                    name: line.extra_name + ' (' + line.traveler_label + ')',
+                    unit_price: line.unit_price,
+                    total_price: line.total_price,
+                    quantity: 1,
+                    pax: line.traveler_id
+                };
+            }))
+        };
+
+        var btn = document.getElementById('ksk-reserve-btn');
+        if (btn) {
+            btn.classList.add('is-loading');
+            btn.setAttribute('aria-disabled', 'true');
+        }
+
+        try {
+            var res = await fetch(window.location.pathname + '/reserve', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': <?php echo json_encode(csrf_token(), 15, 512) ?>
+                },
+                body: JSON.stringify(payload)
+            });
+            var json = await res.json();
+            if (!res.ok || !json.ok) {
+                var message = 'Erreur lors de la réservation.';
+                if (json && json.errors) {
+                    var firstKey = Object.keys(json.errors)[0];
+                    if (firstKey && json.errors[firstKey] && json.errors[firstKey][0]) {
+                        message = json.errors[firstKey][0];
+                    }
+                } else if (json && json.message) {
+                    message = json.message;
+                }
+                throw new Error(message);
+            }
+            window.location.href = json.redirect_url;
+        } catch (error) {
+            alert(error && error.message ? error.message : 'Erreur lors de la réservation.');
+        } finally {
+            if (btn) {
+                btn.classList.remove('is-loading');
+                btn.removeAttribute('aria-disabled');
+            }
+        }
+    }
+
+    function bindReserve() {
+        var reserveBtn = document.getElementById('ksk-reserve-btn');
+        if (reserveBtn) {
+            reserveBtn.innerHTML = '<i class="fas fa-check-circle"></i> Confirmer ma demande';
+            reserveBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                tsSubmitReservation();
+            });
+        }
+    }
+
+    function tsExtraUnitPrice(extra, travelerType) {
+        if (!extra) return 0;
+        if (travelerType === 'child') return Number(extra.price_child || 0);
+        return Number(extra.price_adult || 0);
+    }
+
+    function tsExtrasSelectionLines() {
+        var travelers = tsTravelerRows();
+        var lines = [];
+        Object.keys(state.extras || {}).forEach(function (extraIdStr) {
+            var extraId = parseInt(extraIdStr, 10);
+            var extra = EXTRAS.find(function (item) { return item.id === extraId; });
+            if (!extra) return;
+            var perTraveler = state.extras[extraIdStr] || {};
+            Object.keys(perTraveler).forEach(function (travelerId) {
+                if (!perTraveler[travelerId]) return;
+                var traveler = travelers.find(function (item) { return item.id === travelerId; });
+                var travelerType = traveler ? traveler.type : 'adult';
+                var unit = tsExtraUnitPrice(extra, travelerType);
+                lines.push({
+                    voyage_extra_id: extraId,
+                    extra_name: extra.name,
+                    traveler_id: travelerId,
+                    traveler_label: traveler ? traveler.label : travelerId,
+                    traveler_type: travelerType,
+                    unit_price: unit,
+                    total_price: unit
+                });
+            });
+        });
+        return lines;
+    }
+
+    function tsExtrasTotal() {
+        return tsExtrasSelectionLines().reduce(function (sum, line) {
+            return sum + Number(line.total_price || 0);
+        }, 0);
+    }
+
+    function bindMobileBar() {
+        var mobileBar = document.getElementById('ksk-mobile-bar');
+        var heroEl = document.getElementById('ksk-hero');
+        if (mobileBar && heroEl) {
+            var observer = new IntersectionObserver(function (entries) {
+                mobileBar.classList.toggle('is-visible', !entries[0].isIntersecting);
+            }, { threshold: 0 });
+            observer.observe(heroEl);
+        }
+    }
+
+    function bindLightbox() {
+        var lb = document.getElementById('ksk-lightbox');
+        if (!lb) return;
+        var imgs = <?php echo json_encode(array_values($galleryImages), 15, 512) ?>;
+        var current = 0;
+        var img = lb.querySelector('.ksk-lightbox__img');
+        var counter = lb.querySelector('.ksk-lightbox__counter');
+
+        function show(index) {
+            current = ((index % imgs.length) + imgs.length) % imgs.length;
+            img.src = imgs[current];
+            counter.textContent = (current + 1) + '/' + imgs.length;
+        }
+
+        window.__kskShowLb = show;
+        window.__kskLb = lb;
+
+        document.querySelectorAll('[data-ksk-lb]').forEach(function (a) {
+            a.addEventListener('click', function (e) {
+                e.preventDefault();
+                show(parseInt(a.dataset.index || '0', 10));
+                lb.hidden = false;
+                document.body.style.overflow = 'hidden';
+            });
+        });
+
+        lb.querySelector('.ksk-lightbox__close').addEventListener('click', function () {
+            lb.hidden = true;
+            document.body.style.overflow = '';
+        });
+        lb.querySelector('.ksk-lightbox__prev').addEventListener('click', function () { show(current - 1); });
+        lb.querySelector('.ksk-lightbox__next').addEventListener('click', function () { show(current + 1); });
+        lb.addEventListener('click', function (e) {
+            if (e.target === lb) {
+                lb.hidden = true;
+                document.body.style.overflow = '';
+            }
+        });
+        document.addEventListener('keydown', function (e) {
+            if (lb.hidden) return;
+            if (e.key === 'Escape') {
+                lb.hidden = true;
+                document.body.style.overflow = '';
+            }
+            if (e.key === 'ArrowLeft') show(current - 1);
+            if (e.key === 'ArrowRight') show(current + 1);
+        });
+    }
+
+    function bindHeroGallery() {
+        var slides = document.querySelectorAll('.ksk-hero2__mobile-slide');
+        if (slides.length > 1) {
+            var current = 0;
+            function show(index) {
+                current = ((index % slides.length) + slides.length) % slides.length;
+                slides.forEach(function (slide, idx) {
+                    slide.classList.toggle('is-active', idx === current);
+                });
+            }
+            show(0);
+            var prevBtn = document.getElementById('ksk-hero-prev');
+            var nextBtn = document.getElementById('ksk-hero-next');
+            if (prevBtn) prevBtn.addEventListener('click', function (e) { e.preventDefault(); show(current - 1); });
+            if (nextBtn) nextBtn.addEventListener('click', function (e) { e.preventDefault(); show(current + 1); });
+        }
+
+        document.querySelectorAll('[data-ksk-lb-open]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var lb = window.__kskLb;
+                var show = window.__kskShowLb;
+                if (!lb || typeof show !== 'function') return;
+                show(parseInt(btn.dataset.index || '0', 10));
+                lb.hidden = false;
+                document.body.style.overflow = 'hidden';
+            });
+        });
+    }
 
     function esc(s) {
         var d = document.createElement('div'); d.textContent = s; return d.innerHTML;

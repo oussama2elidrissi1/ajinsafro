@@ -5222,6 +5222,38 @@ body[data-layout="detached"] #page-topbar .header-item span {
     text-align: right;
 }
 
+/* 4b. Sort links in table headers */
+.ws-page .workspace-list-table thead th .table-sort-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: inherit;
+    text-decoration: none;
+    font-weight: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    cursor: pointer;
+}
+
+.ws-page .workspace-list-table thead th .table-sort-link:hover {
+    color: #0f172a;
+}
+
+.ws-page .workspace-list-table thead th .table-sort-link.is-active {
+    color: #0f172a;
+}
+
+.ws-page .workspace-list-table thead th .table-sort-icon {
+    font-size: 0.65rem;
+    color: #94a3b8;
+    transition: color 0.15s ease;
+}
+
+.ws-page .workspace-list-table thead th .table-sort-link.is-active .table-sort-icon {
+    color: #0f172a;
+}
+
 /* 5. Cells — uniform, compact, no per-cell backgrounds */
 .ws-page .workspace-list-table .ws-catalog-table-row td {
     vertical-align: middle;

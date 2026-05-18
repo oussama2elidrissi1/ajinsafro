@@ -14,97 +14,6 @@
         return Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
     }
 
-    function initStepper() {
-        var stepButtons = document.querySelectorAll(".ajtb-step-btn");
-        var stepContents = document.querySelectorAll(".ajtb-step-content");
-        var prevBtn = document.getElementById("ajtb-prev-btn");
-        var nextBtn = document.getElementById("ajtb-next-btn");
-        var currentStepText = document.getElementById("ajtb-current-step-text");
-        var bottomNavigation = document.getElementById("ajtb-bottom-navigation");
-
-        if (!stepButtons.length || !stepContents.length || !nextBtn) {
-            return;
-        }
-
-        var currentStep = 1;
-        var totalSteps = 4;
-
-        function updateStep(step) {
-            currentStep = step;
-
-            stepButtons.forEach(function (btn) {
-                var target = parseInt(btn.getAttribute("data-step-target") || "0", 10);
-                var isActive = target === currentStep;
-                btn.classList.toggle("is-active", isActive);
-                btn.setAttribute("aria-selected", isActive ? "true" : "false");
-            });
-
-            stepContents.forEach(function (content) {
-                var target = parseInt(content.getAttribute("data-step") || "0", 10);
-                content.classList.toggle("is-active", target === currentStep);
-            });
-
-            if (currentStepText) {
-                currentStepText.textContent = currentStep;
-            }
-
-            if (prevBtn) {
-                if (currentStep === 1) {
-                    prevBtn.style.display = "none";
-                    bottomNavigation.classList.add("is-first-step");
-                } else {
-                    prevBtn.style.display = "inline-flex";
-                    bottomNavigation.classList.remove("is-first-step");
-                }
-            }
-
-            if (nextBtn) {
-                if (currentStep === totalSteps) {
-                    nextBtn.textContent = "Confirmer la reservation →";
-                } else {
-                    nextBtn.textContent = "Suivant →";
-                }
-            }
-
-            var stepper = document.querySelector(".ajtb-stepper");
-            if (stepper) {
-                window.scrollTo({
-                    top: stepper.offsetTop - 20,
-                    behavior: "smooth"
-                });
-            }
-        }
-
-        stepButtons.forEach(function (btn) {
-            btn.addEventListener("click", function () {
-                var target = parseInt(btn.getAttribute("data-step-target") || "0", 10);
-                if (target > 0) {
-                    updateStep(target);
-                }
-            });
-        });
-
-        if (prevBtn) {
-            prevBtn.addEventListener("click", function () {
-                if (currentStep > 1) {
-                    updateStep(currentStep - 1);
-                }
-            });
-        }
-
-        if (nextBtn) {
-            nextBtn.addEventListener("click", function () {
-                if (currentStep < totalSteps) {
-                    updateStep(currentStep + 1);
-                } else {
-                    submitReservation();
-                }
-            });
-        }
-
-        updateStep(currentStep);
-    }
-
     function initGuestsPicker() {
         var picker = document.getElementById("ajtb-v1-guests-picker");
         if (!picker) { return; }
@@ -332,19 +241,6 @@
             return total;
         }
 
-        function getRoomSupplementTotal() {
-            var total = 0;
-            document.querySelectorAll("[data-ajtb-room-id]").forEach(function (el) {
-                var qty = parseInt(el.querySelector("[data-room-qty]") ? el.querySelector("[data-room-qty]").textContent : "0", 10);
-                var supplement = parseFloat(el.getAttribute("data-room-supplement") || "0");
-                var capacity = parseInt(el.getAttribute("data-room-capacity") || "1", 10);
-                if (isFinite(qty) && isFinite(supplement) && isFinite(capacity)) {
-                    total += qty * supplement * capacity;
-                }
-            });
-            return total;
-        }
-
         function recalculate() {
             var adults = adultsInput ? Math.max(1, parseInt(adultsInput.value || "2", 10) || 2) : 2;
             var children = childrenInput ? Math.max(0, parseInt(childrenInput.value || "0", 10) || 0) : 0;
@@ -356,7 +252,7 @@
 
             var childUnit = baseChildPrice > 0 ? baseChildPrice : adultUnit;
             var extrasTotal = getExtrasTotal();
-            var roomTotal = getRoomSupplementTotal();
+            var roomTotal = 0;
             var activitiesTotal = 0;
 
             var total = adults * adultUnit + children * childUnit + extrasTotal + roomTotal + activitiesTotal;
@@ -410,7 +306,6 @@
         var date = dateSelect ? dateSelect.value : "";
         if (!tourId || !date) { return; }
 
-        var roomContainer = document.getElementById("ajtb-v1-room-picker");
         var extrasContainer = document.getElementById("ajtb-v1-extras-picker");
 
         var formData = new FormData();
@@ -426,76 +321,15 @@
             .then(function (res) { return res.json(); })
             .then(function (data) {
                 if (!data.success) { return; }
-                var rooms = data.data && data.data.rooms ? data.data.rooms : [];
                 var extras = data.data && data.data.extras ? data.data.extras : [];
-                renderRooms(rooms, roomContainer);
                 renderExtras(extras, extrasContainer);
-                document.dispatchEvent(new CustomEvent("ajtb:v1:rooms-changed"));
                 document.dispatchEvent(new CustomEvent("ajtb:v1:extras-changed"));
             })
             .catch(function () {
-                if (roomContainer) {
-                    roomContainer.innerHTML = "<p class='ajtb-muted'>Impossible de charger les chambres. Veuillez reessayer.</p>";
+                if (extrasContainer) {
+                    extrasContainer.innerHTML = "<p class='ajtb-muted'>Impossible de charger les extras. Veuillez reessayer.</p>";
                 }
             });
-    }
-
-    function renderRooms(rooms, container) {
-        if (!container) { return; }
-        if (!rooms || !rooms.length) {
-            container.innerHTML = "<p class='ajtb-muted'>Aucune chambre disponible pour cette date.</p>";
-            return;
-        }
-
-        var html = "";
-        rooms.forEach(function (room) {
-            var rid = room.id || 0;
-            var type = room.room_type || "Chambre";
-            var qty = room.quantity || 0;
-            var cap = room.capacity_per_room || 1;
-            var supplement = room.supplement || 0;
-            var availableRooms = room.available_rooms || 0;
-
-            html +=
-                '<div class="ajtb-room-card" data-ajtb-room-id="' + rid + '" data-room-supplement="' + supplement + '" data-room-capacity="' + cap + '">' +
-                '<div>' +
-                '<div class="ajtb-room-title">' + escapeHtml(type) + '</div>' +
-                '<div class="ajtb-room-meta">' +
-                "Pour " + cap + " personne(s) · Stock disponible : " + availableRooms + " chambre(s)<br>" +
-                (supplement > 0 ? "Supplement : +" + formatAmount(supplement) + " MAD/personne" : "Prix : Inclus") +
-                "</div>" +
-                (type.toLowerCase().indexOf("demi") !== -1 || type.toLowerCase().indexOf("half") !== -1
-                    ? '<span class="ajtb-badge-orange">En attente de jumelage</span>'
-                    : "") +
-                "</div>" +
-                '<div class="ajtb-qty">' +
-                '<button type="button" data-ajtb-room-action="minus">-</button>' +
-                '<span data-room-qty>0</span>' +
-                '<button type="button" data-ajtb-room-action="plus">+</button>' +
-                "</div>" +
-                "</div>";
-        });
-
-        container.innerHTML = html;
-
-        container.querySelectorAll("[data-ajtb-room-action]").forEach(function (btn) {
-            btn.addEventListener("click", function () {
-                var card = btn.closest("[data-ajtb-room-id]");
-                var qtyEl = card.querySelector("[data-room-qty]");
-                var action = btn.getAttribute("data-ajtb-room-action");
-                var current = parseInt(qtyEl.textContent || "0", 10);
-                var max = parseInt(card.querySelector(".ajtb-room-meta").textContent.match(/Stock disponible : (\d+)/) ? RegExp.$1 : "99", 10);
-
-                if (action === "plus") {
-                    if (current < max) { current += 1; }
-                } else if (action === "minus") {
-                    if (current > 0) { current -= 1; }
-                }
-
-                qtyEl.textContent = String(current);
-                document.dispatchEvent(new CustomEvent("ajtb:v1:rooms-changed"));
-            });
-        });
     }
 
     function renderExtras(extras, container) {
@@ -511,7 +345,6 @@
             var name = extra.name || "Extra";
             var desc = extra.description || "";
             var priceAdult = extra.price_adult || 0;
-            var priceChild = extra.price_child || 0;
 
             html +=
                 '<div class="ajtb-option" data-ajtb-extra-id="' + eid + '" data-extra-price="' + priceAdult + '" title="' + escapeHtml(desc) + '">' +
@@ -565,19 +398,6 @@
         return passengers;
     }
 
-    function getRoomAllocation() {
-        var allocation = [];
-        document.querySelectorAll("[data-ajtb-room-id]").forEach(function (card) {
-            var rid = card.getAttribute("data-ajtb-room-id");
-            var qtyEl = card.querySelector("[data-room-qty]");
-            var qty = qtyEl ? parseInt(qtyEl.textContent || "0", 10) : 0;
-            if (qty > 0) {
-                allocation.push({ room_id: parseInt(rid, 10), room_count: qty });
-            }
-        });
-        return allocation;
-    }
-
     function getSelectedExtras() {
         var extras = [];
         document.querySelectorAll(".ajtb-option.is-selected").forEach(function (el) {
@@ -589,7 +409,57 @@
         return extras;
     }
 
-    function submitReservation() {
+    function validateForm() {
+        var first = document.getElementById("ajtb-client-first");
+        var last = document.getElementById("ajtb-client-last");
+        var phone = document.getElementById("ajtb-client-phone");
+
+        if (!first || !last || first.value.trim() === "" || last.value.trim() === "") {
+            alert("Veuillez saisir le prenom et le nom du client.");
+            return false;
+        }
+        if (phone && phone.value.trim() === "") {
+            alert("Veuillez saisir le telephone du client.");
+            return false;
+        }
+        return true;
+    }
+
+    function showConfirmModal() {
+        if (!validateForm()) { return; }
+
+        var dateSelect = document.getElementById("ajtb-v1-search-date");
+        var fromSelect = document.getElementById("ajtb-v1-search-from");
+        var adultsInput = document.getElementById("ajtb-v1-guest-adults-input");
+        var childrenInput = document.getElementById("ajtb-v1-guest-children-input");
+        var totalEl = document.querySelector("[data-ajtb-recap-field='total']");
+
+        var dateLabel = dateSelect && dateSelect.selectedIndex >= 0 ? dateSelect.options[dateSelect.selectedIndex].textContent : "-";
+        var adults = adultsInput ? Math.max(1, parseInt(adultsInput.value || "2", 10) || 2) : 2;
+        var children = childrenInput ? Math.max(0, parseInt(childrenInput.value || "0", 10) || 0) : 0;
+        var peopleTxt = adults + " " + (adults > 1 ? "adultes" : "adulte");
+        if (children > 0) peopleTxt += ", " + children + " " + (children > 1 ? "enfants" : "enfant");
+        var totalTxt = totalEl ? totalEl.textContent + " MAD" : "-";
+
+        var confirmDate = document.getElementById("ajtb-confirm-date");
+        var confirmPeople = document.getElementById("ajtb-confirm-people");
+        var confirmTotal = document.getElementById("ajtb-confirm-total");
+        if (confirmDate) confirmDate.textContent = dateLabel;
+        if (confirmPeople) confirmPeople.textContent = peopleTxt;
+        if (confirmTotal) confirmTotal.textContent = totalTxt;
+
+        var modalEl = document.getElementById("ajtb-confirm-modal");
+        if (modalEl && typeof bootstrap !== "undefined") {
+            var modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        } else {
+            if (window.confirm("Confirmer cette demande de reservation ?")) {
+                doSubmit();
+            }
+        }
+    }
+
+    function doSubmit() {
         var base = window.ajtbRecapBase || {};
         var tourId = base.tourId || 0;
         var dateSelect = document.getElementById("ajtb-v1-search-date");
@@ -600,6 +470,7 @@
         var last = document.getElementById("ajtb-client-last");
         var phone = document.getElementById("ajtb-client-phone");
         var email = document.getElementById("ajtb-client-email");
+        var specialReq = document.getElementById("ajtb-special-request");
 
         if (!first || !last || first.value.trim() === "" || last.value.trim() === "") {
             alert("Veuillez saisir le prenom et le nom du client.");
@@ -607,7 +478,6 @@
         }
 
         var passengers = collectPassengers();
-        var allocation = getRoomAllocation();
 
         var formData = new FormData();
         formData.append("action", "ajtb_v1_create_reservation");
@@ -622,13 +492,21 @@
         formData.append("client_phone", phone ? phone.value.trim() : "");
         formData.append("client_email", email ? email.value.trim() : "");
         formData.append("passengers", JSON.stringify(passengers));
-        formData.append("room_allocation_json", JSON.stringify(allocation));
+        formData.append("room_allocation_json", JSON.stringify([]));
         formData.append("extras_json", JSON.stringify(getSelectedExtras()));
+        if (specialReq) {
+            formData.append("special_request", specialReq.value.trim());
+        }
 
         var confirmBtn = document.getElementById("ajtb-final-submit");
+        var mobileBtn = document.getElementById("ajtb-mobile-submit");
         if (confirmBtn) {
             confirmBtn.disabled = true;
             confirmBtn.textContent = "Envoi en cours...";
+        }
+        if (mobileBtn) {
+            mobileBtn.disabled = true;
+            mobileBtn.textContent = "Envoi...";
         }
 
         fetch(window.ajtbData && window.ajtbData.ajaxUrl ? window.ajtbData.ajaxUrl : "/wp-admin/admin-ajax.php", {
@@ -639,7 +517,11 @@
             .then(function (data) {
                 if (confirmBtn) {
                     confirmBtn.disabled = false;
-                    confirmBtn.textContent = "Confirmer la reservation";
+                    confirmBtn.textContent = "Confirmer ma reservation";
+                }
+                if (mobileBtn) {
+                    mobileBtn.disabled = false;
+                    mobileBtn.textContent = "Confirmer";
                 }
 
                 if (!data.success) {
@@ -664,10 +546,51 @@
             .catch(function () {
                 if (confirmBtn) {
                     confirmBtn.disabled = false;
-                    confirmBtn.textContent = "Confirmer la reservation";
+                    confirmBtn.textContent = "Confirmer ma reservation";
+                }
+                if (mobileBtn) {
+                    mobileBtn.disabled = false;
+                    mobileBtn.textContent = "Confirmer";
                 }
                 alert("Une erreur reseau est survenue. Veuillez reessayer.");
             });
+    }
+
+    function initMobileBar() {
+        var bar = document.getElementById("ajtb-mobile-bar");
+        if (!bar) { return; }
+
+        function updateVisibility() {
+            if (window.innerWidth <= 1100) {
+                bar.removeAttribute("hidden");
+            } else {
+                bar.setAttribute("hidden", "");
+            }
+        }
+
+        updateVisibility();
+        window.addEventListener("resize", updateVisibility);
+    }
+
+    function initConfirmButtons() {
+        document.querySelectorAll("[data-ajtb-recap-action='final-submit']").forEach(function (btn) {
+            btn.addEventListener("click", function (e) {
+                e.preventDefault();
+                showConfirmModal();
+            });
+        });
+
+        var confirmOk = document.getElementById("ajtb-confirm-ok");
+        if (confirmOk) {
+            confirmOk.addEventListener("click", function () {
+                var modalEl = document.getElementById("ajtb-confirm-modal");
+                if (modalEl && typeof bootstrap !== "undefined") {
+                    var modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+                }
+                doSubmit();
+            });
+        }
     }
 
     function initCopyButtons() {
@@ -696,10 +619,11 @@
     }
 
     function init() {
-        initStepper();
         initGuestsPicker();
         initCompanions();
         initPriceCalculation();
+        initMobileBar();
+        initConfirmButtons();
         initCopyButtons();
     }
 

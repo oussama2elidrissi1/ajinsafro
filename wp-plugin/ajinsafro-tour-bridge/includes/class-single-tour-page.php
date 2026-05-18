@@ -583,6 +583,7 @@ class AJTB_Single_Tour_Page
         $client_email = isset($_POST['client_email']) ? sanitize_email((string) $_POST['client_email']) : '';
         $client_document_type = isset($_POST['client_document_type']) ? sanitize_text_field((string) $_POST['client_document_type']) : '';
         $client_document_number = isset($_POST['client_document_number']) ? sanitize_text_field((string) $_POST['client_document_number']) : '';
+        $special_request = isset($_POST['special_request']) ? sanitize_textarea_field((string) $_POST['special_request']) : '';
 
         $passengers_json = isset($_POST['passengers']) ? (string) wp_unslash($_POST['passengers']) : '[]';
         $extras_json = isset($_POST['extras_json']) ? (string) wp_unslash($_POST['extras_json']) : '[]';
@@ -954,6 +955,9 @@ class AJTB_Single_Tour_Page
             . ($room_id > 0 ? (' room_id=' . $room_id) : '')
             . ' room_alloc=' . wp_json_encode($normalizedLines, JSON_UNESCAPED_UNICODE)
             . ($hasHalfDouble ? (' half_double_pending=' . wp_json_encode($halfDoublePendingKeys, JSON_UNESCAPED_UNICODE)) : '');
+        if ($special_request !== '') {
+            $notes .= ' | Demande speciale: ' . $special_request;
+        }
 
         $reservation_payload = [
             'tour_id' => $voyage_id,

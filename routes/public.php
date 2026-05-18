@@ -7,6 +7,7 @@ use App\Http\Controllers\Front\GroupDealsController as FrontGroupDealsController
 use App\Http\Controllers\Front\HomeController as FrontHomeController;
 use App\Http\Controllers\Front\SearchController as FrontSearchController;
 use App\Http\Controllers\Front\VoyageController as FrontVoyageController;
+use App\Http\Controllers\Front\VoyageReservationController;
 use App\Http\Controllers\Internal\SyncInboundController;
 use App\Http\Controllers\RatehawkHotelController;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +29,8 @@ Route::get('/group-deals', [FrontGroupDealsController::class, 'index'])->name('f
 Route::get('/group-deals/{slug}', [FrontGroupDealsController::class, 'show'])->name('front.group-deals.show');
 Route::post('/group-deals/{slug}/participate', [FrontGroupDealsController::class, 'participate'])->name('front.group-deals.participate');
 Route::get('/voyages/{slug}', [FrontVoyageController::class, 'show'])->name('front.voyages.show');
+Route::post('/voyages/{slug}/reserve', [VoyageReservationController::class, 'store'])->name('front.voyages.reserve');
+Route::get('/voyages/{slug}/reservation/success/{reference}', [VoyageReservationController::class, 'success'])->name('front.voyages.reserve.success');
 
 Route::get('/ratehawk/hotels', [RatehawkHotelController::class, 'index'])->name('ratehawk.hotels.index');
 Route::get('/ratehawk/hotels/autocomplete', [RatehawkHotelController::class, 'autocomplete'])->name('ratehawk.hotels.autocomplete');

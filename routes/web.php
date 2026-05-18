@@ -81,6 +81,8 @@ Route::get('/voyages', [FrontVoyageController::class, 'index'])->name('front.voy
 Route::get('/voyages/{slug}', [FrontVoyageController::class, 'show'])->name('front.voyages.show');
 Route::post('/voyages/{slug}/reserve', [\App\Http\Controllers\Front\VoyageReservationController::class, 'store'])
     ->name('front.voyages.reserve');
+Route::get('/voyages/{slug}/reservation/success/{reference}', [\App\Http\Controllers\Front\VoyageReservationController::class, 'success'])
+    ->name('front.voyages.reserve.success');
 
 Route::get('/booking/start', StartBookingController::class)->name('booking.start');
 Route::get('/booking/checkout/{token}', [CheckoutController::class, 'show'])->name('booking.checkout');

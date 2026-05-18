@@ -678,36 +678,116 @@ class ReservationWorkspaceCatalogService
     }
 
     /**
-     * Tri workspace (PHP, catalogue agr+�g+� hors d���une seule requ+�te SQL).
+     * Tri workspace (PHP, catalogue agrégé hors d'une seule requête SQL).
      *
-     * Ordre :
-     * 1) type : package (circuit) ��� h+�bergement ��� vol ��� autre
-     * 2) d+�part : futur / aujourd���hui ��� sans date ��� pass+�
+     * Ordre par défaut (commercial) :
+     * 1) type : package (circuit) → hébergement → vol → autre
+     * 2) départ : futur / aujourd'hui → sans date → passé
      * 3) departure_date ASC, puis code
+     *
+     * Colonnes de tri manuel : ref, voyage, destination, departure_date,
+     * sold_pending, remaining, capacity.
      *
      * @param  Collection<int, array<string, mixed>>  $rows
      * @return Collection<int, array<string, mixed>>
      */
-    public function sortCatalogRowsForWorkspaceDisplay(Collection $rows): Collection
+    public function sortCatalogRowsForWorkspaceDisplay(Collection $rows, ?string $sort = null, string $direction = 'asc'): Collection
+    {
+        $allowed = ['ref', 'voyage', 'destination', 'departure_date', 'sold_pending', 'remaining', 'capacity'];
+        $sort = in_array($sort, $allowed, true) ? $sort : null;
+        $direction = strtolower($direction) === 'desc' ? 'desc' : 'asc';
+
+        if ($sort === null) {
+            $sort = 'departure_date';
+            $direction = 'asc';
+        }
+
+        $sorted = $rows->sort(function (array $a, array $b) use ($sort, $direction) {
+            $cmp = 0;
+
+            switch ($sort) {
+                case 'ref':
+                    $cmp = strcasecmp((string) ($a['code'] ?? ''), (string) ($b['code'] ?? ''));
+                    break;
+                case 'voyage':
+                    $cmp = strcasecmp((string) ($a['name'] ?? ''), (string) ($b['name'] ?? ''));
+                    break;
+                case 'destination':
+                    $cmp = strcasecmp((string) ($a['voyage_destination'] ?? ''), (string) ($b['voyage_destination'] ?? ''));
+                    break;
+                case 'departure_date':
+                    $dateA = $this->normalizeCatalogRowDepartureDate($a);
+                    $dateB = $this->normalizeCatalogRowDepartureDate($b);
+                    if ($dateA === null && $dateB === null) {
+                        $cmp = 0;
+                    } elseif ($dateA === null) {
+                        $cmp = 1;
+                    } elseif ($dateB === null) {
+                        $cmp = -1;
+                    } else {
+                        $cmp = $dateA->timestamp <=> $dateB->timestamp;
+                    }
+                    break;
+                case 'sold_pending':
+                    $valA = (int) ($a['stats']['validee'] ?? 0) + (int) ($a['stats']['en_cours'] ?? 0);
+                    $valB = (int) ($b['stats']['validee'] ?? 0) + (int) ($b['stats']['en_cours'] ?? 0);
+                    $cmp = $valA <=> $valB;
+                    break;
+                case 'remaining':
+                    $remA = $a['commercial']['places_restantes'] ?? null;
+                    $remB = $b['commercial']['places_restantes'] ?? null;
+                    if ($remA === null && $remB === null) {
+                        $cmp = 0;
+                    } elseif ($remA === null) {
+                        $cmp = 1;
+                    } elseif ($remB === null) {
+                        $cmp = -1;
+                    } else {
+                        $cmp = $remA <=> $remB;
+                    }
+                    break;
+                case 'capacity':
+                    $capA = $a['commercial']['capacity_total'] ?? null;
+                    $capB = $b['commercial']['capacity_total'] ?? null;
+                    if ($capA === null && $capB === null) {
+                        $cmp = 0;
+                    } elseif ($capA === null) {
+                        $cmp = 1;
+                    } elseif ($capB === null) {
+                        $cmp = -1;
+                    } else {
+                        $cmp = $capA <=> $capB;
+                    }
+                    break;
+            }
+
+            if ($cmp === 0) {
+                $cmp = strcasecmp((string) ($a['code'] ?? ''), (string) ($b['code'] ?? ''));
+            }
+
+            return $direction === 'desc' ? -$cmp : $cmp;
+        });
+
+        return $sorted->values();
+    }
+
+    private function applyDefaultCommercialSort(Collection $rows): Collection
     {
         $today = Carbon::today()->startOfDay();
 
         return $rows->sort(function (array $a, array $b) use ($today) {
-            // 1. Sellable items first
             $sellableA = $a['commercial']['is_sellable'] ?? false;
             $sellableB = $b['commercial']['is_sellable'] ?? false;
             if ($sellableA !== $sellableB) {
                 return $sellableA ? -1 : 1;
             }
 
-            // 2. Commercial score DESC
             $scoreA = $a['commercial']['score'] ?? 0;
             $scoreB = $b['commercial']['score'] ?? 0;
             if ($scoreA !== $scoreB) {
                 return $scoreB <=> $scoreA;
             }
 
-            // 3. Days until departure ASC
             $daysA = $a['commercial']['jours_avant_depart'] ?? null;
             $daysB = $b['commercial']['jours_avant_depart'] ?? null;
             if ($daysA !== null && $daysB !== null && $daysA !== $daysB) {
@@ -720,7 +800,6 @@ class ReservationWorkspaceCatalogService
                 return 1;
             }
 
-            // 4. Remaining seats ASC
             $remainingA = $a['commercial']['places_restantes'] ?? null;
             $remainingB = $b['commercial']['places_restantes'] ?? null;
             if ($remainingA !== null && $remainingB !== null && $remainingA !== $remainingB) {
@@ -733,14 +812,12 @@ class ReservationWorkspaceCatalogService
                 return 1;
             }
 
-            // 5. Sold seats DESC
             $soldA = $a['commercial']['places_vendues'] ?? 0;
             $soldB = $b['commercial']['places_vendues'] ?? 0;
             if ($soldA !== $soldB) {
                 return $soldB <=> $soldA;
             }
 
-            // 6. Type tier
             $typeA = $this->workspaceCatalogTypeTier($a);
             $typeB = $this->workspaceCatalogTypeTier($b);
             if ($typeA !== $typeB) {

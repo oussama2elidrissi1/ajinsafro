@@ -1319,6 +1319,12 @@
             @if(request()->filled('catalog'))
                 <input type="hidden" name="catalog" value="{{ request()->query('catalog') }}">
             @endif
+            @if(request()->filled('sort'))
+                <input type="hidden" name="sort" value="{{ request()->query('sort') }}">
+            @endif
+            @if(request()->filled('direction'))
+                <input type="hidden" name="direction" value="{{ request()->query('direction') }}">
+            @endif
             <div class="ws-toolbar__row ws-toolbar__row--search">
                 <div class="ws-field ws-field--grow">
                     <label class="ws-field__label" for="ws-filter-search">Recherche rapide</label>
@@ -1403,13 +1409,48 @@
     </colgroup>
     <thead>
         <tr>
-            <th scope="col" class="ws-data-table__th-ref">Réf</th>
-            <th scope="col" class="ws-data-table__th-offer">Voyage</th>
-            <th scope="col" class="ws-data-table__th-destination">Destination</th>
-            <th scope="col" class="ws-data-table__th-dep">Départ</th>
-            <th scope="col" class="ws-data-table__th-sold">Vendu / En attente</th>
-            <th scope="col" class="ws-data-table__th-remain">Restant</th>
-            <th scope="col" class="ws-data-table__th-cap">Capacité</th>
+            <th scope="col" class="ws-data-table__th-ref">
+                <a href="{{ request()->fullUrlWithQuery(['sort' => 'ref', 'direction' => ($currentSort === 'ref' && $currentDirection === 'asc' ? 'desc' : 'asc')]) }}" class="table-sort-link {{ $currentSort === 'ref' ? 'is-active' : '' }}">
+                    Réf
+                    <i class="fas {{ $currentSort === 'ref' ? ($currentDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort' }} table-sort-icon" aria-hidden="true"></i>
+                </a>
+            </th>
+            <th scope="col" class="ws-data-table__th-offer">
+                <a href="{{ request()->fullUrlWithQuery(['sort' => 'voyage', 'direction' => ($currentSort === 'voyage' && $currentDirection === 'asc' ? 'desc' : 'asc')]) }}" class="table-sort-link {{ $currentSort === 'voyage' ? 'is-active' : '' }}">
+                    Voyage
+                    <i class="fas {{ $currentSort === 'voyage' ? ($currentDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort' }} table-sort-icon" aria-hidden="true"></i>
+                </a>
+            </th>
+            <th scope="col" class="ws-data-table__th-destination">
+                <a href="{{ request()->fullUrlWithQuery(['sort' => 'destination', 'direction' => ($currentSort === 'destination' && $currentDirection === 'asc' ? 'desc' : 'asc')]) }}" class="table-sort-link {{ $currentSort === 'destination' ? 'is-active' : '' }}">
+                    Destination
+                    <i class="fas {{ $currentSort === 'destination' ? ($currentDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort' }} table-sort-icon" aria-hidden="true"></i>
+                </a>
+            </th>
+            <th scope="col" class="ws-data-table__th-dep">
+                <a href="{{ request()->fullUrlWithQuery(['sort' => 'departure_date', 'direction' => ($currentSort === 'departure_date' && $currentDirection === 'asc' ? 'desc' : 'asc')]) }}" class="table-sort-link {{ $currentSort === 'departure_date' ? 'is-active' : '' }}">
+                    Départ
+                    <i class="fas {{ $currentSort === 'departure_date' ? ($currentDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort' }} table-sort-icon" aria-hidden="true"></i>
+                </a>
+            </th>
+            <th scope="col" class="ws-data-table__th-sold">
+                <a href="{{ request()->fullUrlWithQuery(['sort' => 'sold_pending', 'direction' => ($currentSort === 'sold_pending' && $currentDirection === 'asc' ? 'desc' : 'asc')]) }}" class="table-sort-link {{ $currentSort === 'sold_pending' ? 'is-active' : '' }}">
+                    Vendu / En attente
+                    <i class="fas {{ $currentSort === 'sold_pending' ? ($currentDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort' }} table-sort-icon" aria-hidden="true"></i>
+                </a>
+            </th>
+            <th scope="col" class="ws-data-table__th-remain">
+                <a href="{{ request()->fullUrlWithQuery(['sort' => 'remaining', 'direction' => ($currentSort === 'remaining' && $currentDirection === 'asc' ? 'desc' : 'asc')]) }}" class="table-sort-link {{ $currentSort === 'remaining' ? 'is-active' : '' }}">
+                    Restant
+                    <i class="fas {{ $currentSort === 'remaining' ? ($currentDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort' }} table-sort-icon" aria-hidden="true"></i>
+                </a>
+            </th>
+            <th scope="col" class="ws-data-table__th-cap">
+                <a href="{{ request()->fullUrlWithQuery(['sort' => 'capacity', 'direction' => ($currentSort === 'capacity' && $currentDirection === 'asc' ? 'desc' : 'asc')]) }}" class="table-sort-link {{ $currentSort === 'capacity' ? 'is-active' : '' }}">
+                    Capacité
+                    <i class="fas {{ $currentSort === 'capacity' ? ($currentDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort' }} table-sort-icon" aria-hidden="true"></i>
+                </a>
+            </th>
             <th scope="col" class="ws-data-table__th-actions">Actions</th>
         </tr>
     </thead>
