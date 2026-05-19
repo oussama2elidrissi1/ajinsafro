@@ -158,7 +158,7 @@
         width: 286px;
         min-width: 286px;
         max-width: 286px;
-        padding: 28px 20px;
+        padding: 18px 14px;
         color: #fff;
         background:
             radial-gradient(circle at 20% 10%, rgba(216, 164, 58, 0.22), transparent 25%),
@@ -166,6 +166,7 @@
         overflow-x: hidden;
         overflow-y: auto;
         z-index: 30;
+        transition: width .25s ease, min-width .25s ease, max-width .25s ease, padding .25s ease;
     }
 
     .aj-v4-sidebar::after {
@@ -190,6 +191,21 @@
         display: flex;
         align-items: center;
         gap: 14px;
+        justify-content: space-between;
+    }
+
+    .aj-v4-sidebar__toggle {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex: none;
     }
 
     .aj-v4-sidebar__brand-badge {
@@ -220,8 +236,8 @@
         display: flex;
         align-items: center;
         gap: 12px;
-        margin: 30px 0 24px;
-        padding: 14px;
+        margin: 16px 0 14px;
+        padding: 10px;
         border: 1px solid rgba(255, 255, 255, 0.09);
         border-radius: 22px;
         background: rgba(255, 255, 255, 0.045);
@@ -257,7 +273,7 @@
     .aj-v4-sidebar__nav-title {
         position: relative;
         z-index: 1;
-        margin: 0 0 12px 4px;
+        margin: 0 0 8px 4px;
         font-size: 11px;
         color: var(--aj-gold-300);
         font-weight: 800;
@@ -269,7 +285,7 @@
         position: relative;
         z-index: 1;
         display: grid;
-        gap: 7px;
+        gap: 5px;
     }
 
     .aj-v4-sidebar__item,
@@ -281,8 +297,8 @@
         border: 0;
         color: rgba(255, 255, 255, 0.86);
         background: transparent;
-        border-radius: 15px;
-        padding: 12px 13px;
+        border-radius: 12px;
+        padding: 9px 10px;
         cursor: pointer;
         text-align: left;
         transition: 0.2s ease;
@@ -310,16 +326,16 @@
     }
 
     .aj-v4-sidebar__subnav {
-        margin: 4px 0 8px 28px;
+        margin: 2px 0 6px 24px;
         padding-left: 14px;
         border-left: 2px solid rgba(216, 164, 58, 0.75);
         display: grid;
-        gap: 4px;
+        gap: 2px;
     }
 
     .aj-v4-sidebar__subitem {
-        padding: 10px 12px;
-        font-size: 13px;
+        padding: 8px 10px;
+        font-size: 12px;
     }
 
     .aj-v4-sidebar__subitem.is-active {
@@ -331,9 +347,9 @@
     .aj-v4-sidebar__premium {
         position: relative;
         z-index: 1;
-        margin-top: 32px;
-        padding: 18px;
-        border-radius: 22px;
+        margin-top: 16px;
+        padding: 12px;
+        border-radius: 16px;
         border: 1px solid rgba(216, 164, 58, 0.42);
         background: rgba(255, 255, 255, 0.055);
     }
@@ -366,8 +382,9 @@
         margin-left: 286px;
         width: calc(100% - 286px);
         max-width: none !important;
-        padding: 28px 34px 38px;
+        padding: 18px 24px 28px;
         overflow: visible;
+        transition: width .25s ease, margin-left .25s ease;
     }
 
     .aj-v4-content {
@@ -380,14 +397,14 @@
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        gap: 24px;
-        margin-bottom: 22px;
+        gap: 14px;
+        margin-bottom: 16px;
     }
 
     .aj-v4-topbar__title h1 {
         margin: 0;
         font-family: Georgia, "Times New Roman", serif;
-        font-size: clamp(30px, 3vw, 42px);
+        font-size: clamp(24px, 2vw, 28px);
         letter-spacing: -0.8px;
         color: #0b1320;
     }
@@ -396,8 +413,8 @@
         display: flex;
         gap: 9px;
         align-items: center;
-        margin-top: 8px;
-        font-size: 13px;
+        margin-top: 5px;
+        font-size: 11px;
         color: var(--muted);
         flex-wrap: wrap;
     }
@@ -430,10 +447,10 @@
 
     .aj-v4-search input {
         width: 100%;
-        height: 48px;
-        padding: 0 18px 0 45px;
+        height: 38px;
+        padding: 0 12px 0 34px;
         border: 1px solid var(--border);
-        border-radius: 18px;
+        border-radius: 12px;
         background: rgba(255, 255, 255, 0.96);
         outline: none;
         box-shadow: 0 8px 26px rgba(6, 25, 45, 0.06);
@@ -441,7 +458,7 @@
 
     .aj-v4-search i {
         position: absolute;
-        left: 16px;
+        left: 12px;
         top: 50%;
         transform: translateY(-50%);
         color: #98a2b3;
@@ -450,16 +467,16 @@
     .aj-v4-icon-btn,
     .aj-v4-control-btn,
     .aj-v4-primary-btn {
-        height: 44px;
+        height: 38px;
         border: 1px solid var(--border);
-        border-radius: 15px;
+        border-radius: 12px;
         background: #fff;
         color: var(--text);
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 9px;
-        padding: 0 15px;
+        padding: 0 13px;
         box-shadow: 0 8px 26px rgba(6, 25, 45, 0.06);
         cursor: pointer;
         font-weight: 700;
@@ -469,7 +486,7 @@
     }
 
     .aj-v4-icon-btn {
-        width: 44px;
+        width: 38px;
         padding: 0;
         position: relative;
     }
@@ -524,18 +541,18 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 26px;
-        min-height: 138px;
-        border-radius: 28px;
+        gap: 14px;
+        min-height: 115px;
+        border-radius: 22px;
         overflow: hidden;
-        padding: 34px 38px 34px 40px;
+        padding: 20px 26px;
         color: #fff;
         background:
             linear-gradient(90deg, rgba(6, 25, 45, 0.98) 0%, rgba(8, 33, 61, 0.95) 40%, rgba(6, 25, 45, 0.48) 100%),
             radial-gradient(circle at 82% 34%, rgba(255, 143, 43, 0.72), transparent 22%),
             linear-gradient(135deg, #08213d, #1268b3 55%, #f47b20);
         box-shadow: 0 16px 50px rgba(6, 25, 45, 0.10);
-        margin-bottom: 18px;
+        margin-bottom: 14px;
     }
 
     .aj-v4-hero::before {
@@ -552,9 +569,9 @@
     .aj-v4-hero::after {
         content: "☼";
         position: absolute;
-        right: 32px;
-        top: 25px;
-        font-size: 78px;
+        right: 24px;
+        top: 16px;
+        font-size: 56px;
         color: rgba(216, 164, 58, 0.35);
         font-family: Georgia, serif;
     }
@@ -618,15 +635,15 @@
     .aj-v4-hero h2 {
         margin: 0 0 8px;
         font-family: Georgia, "Times New Roman", serif;
-        font-size: clamp(24px, 2vw, 33px);
+        font-size: clamp(19px, 1.5vw, 24px);
         font-weight: 500;
     }
 
     .aj-v4-hero p {
         margin: 0;
         color: rgba(255, 255, 255, 0.82);
-        font-size: 15px;
-        line-height: 1.6;
+        font-size: 12px;
+        line-height: 1.35;
     }
 
     .aj-v4-hero__actions {
@@ -668,55 +685,65 @@
     .aj-v4-grid,
     .aj-v4-kpis {
         display: grid;
-        gap: 18px;
+        gap: 14px;
     }
 
     .aj-v4-kpi-grid,
     .aj-v4-kpis {
         grid-template-columns: repeat(4, minmax(0, 1fr));
-        margin-bottom: 18px;
+        margin-bottom: 14px;
     }
 
     .aj-v4-card {
         background: rgba(255, 255, 255, 0.94);
         border: 1px solid rgba(232, 237, 243, 0.94);
-        border-radius: 22px;
+        border-radius: 20px;
         box-shadow: 0 8px 26px rgba(6, 25, 45, 0.06);
     }
 
     .aj-v4-kpi-card {
-        min-height: 146px;
-        padding: 20px;
+        min-height: 110px;
+        padding: 16px;
         display: grid;
-        grid-template-columns: auto 1fr;
-        gap: 16px;
+        grid-template-columns: 48px 1fr auto;
+        gap: 12px;
         align-items: center;
     }
 
-    .aj-v4-kpi-card__icon {
-        width: 54px;
-        height: 54px;
+    .aj-v4-kpi-icon {
+        width: 46px;
+        height: 46px;
         display: grid;
         place-items: center;
-        border-radius: 18px;
+        border-radius: 14px;
         color: #fff;
         flex: 0 0 auto;
-        font-size: 24px;
+        font-size: 20px;
     }
 
-    .aj-v4-kpi-card__icon.blue { background: linear-gradient(135deg, var(--aj-blue-900), var(--aj-blue-600)); }
-    .aj-v4-kpi-card__icon.orange { background: linear-gradient(135deg, var(--aj-orange-600), #ffb34d); }
-    .aj-v4-kpi-card__icon.green { background: linear-gradient(135deg, var(--aj-green-600), #65c48e); }
-    .aj-v4-kpi-card__icon.gold { background: linear-gradient(135deg, #bd7a00, var(--aj-gold-300)); }
+    .aj-v4-kpi-icon.blue { background: linear-gradient(135deg, var(--aj-blue-900), var(--aj-blue-600)); }
+    .aj-v4-kpi-icon.orange { background: linear-gradient(135deg, var(--aj-orange-600), #ffb34d); }
+    .aj-v4-kpi-icon.green { background: linear-gradient(135deg, var(--aj-green-600), #65c48e); }
+    .aj-v4-kpi-icon.gold { background: linear-gradient(135deg, #bd7a00, var(--aj-gold-300)); }
 
-    .aj-v4-kpi-card small { display:block; color:var(--muted); font-size:13px; }
-    .aj-v4-kpi-card strong {
+    .aj-v4-kpi-title { display:block; color:var(--muted); font-size:12px; line-height:1.2; }
+    .aj-v4-kpi-value {
         display:block;
-        margin:7px 0 12px;
+        margin:4px 0 0;
         font-family: Georgia, "Times New Roman", serif;
-        font-size:27px;
+        font-size:24px;
+        line-height: 1.1;
         font-weight:500;
         color:#0b1320;
+    }
+
+    .aj-v4-kpi-trend {
+        display:inline-flex;
+        align-items:center;
+        gap:5px;
+        color:var(--aj-green-600);
+        font-weight:800;
+        font-size:11px;
     }
 
     .aj-v4-trend {
@@ -725,27 +752,27 @@
         gap:5px;
         color:var(--aj-green-600);
         font-weight:800;
-        font-size:12px;
+        font-size:11px;
     }
 
-    .aj-v4-sparkline {
-        margin-top:2px;
-        width:100%;
+    .aj-v4-kpi-sparkline {
+        width:90px;
+        min-width:90px;
         height:32px;
     }
 
     .aj-v4-analytics-grid,
     .aj-v4-grid--top {
-        grid-template-columns: 1.65fr 0.95fr 0.72fr;
+        grid-template-columns: 1.55fr .9fr .75fr;
         align-items: stretch;
-        margin-bottom: 18px;
+        margin-bottom: 14px;
     }
 
     .aj-v4-activity-grid,
     .aj-v4-grid--bottom {
-        grid-template-columns: 1.22fr 1.02fr 0.96fr;
+        grid-template-columns: 1.2fr 1fr 1fr;
         align-items: stretch;
-        margin-bottom: 18px;
+        margin-bottom: 14px;
     }
 
     .aj-v4-metrics-grid,
@@ -754,28 +781,28 @@
         align-items: start;
     }
 
-    .aj-v4-panel { padding: 22px; }
+    .aj-v4-panel { padding: 16px 18px; }
 
     .aj-v4-panel__head {
         display:flex;
         align-items:flex-start;
         justify-content:space-between;
         gap:14px;
-        margin-bottom:18px;
+        margin-bottom:12px;
     }
 
     .aj-v4-panel__title {
         margin:0;
-        font-size:18px;
+        font-size:16px;
         font-weight:900;
         letter-spacing:-0.2px;
         color:#0b1320;
     }
 
     .aj-v4-panel__subtitle {
-        margin:6px 0 0;
+        margin:3px 0 0;
         color:var(--muted);
-        font-size:13px;
+        font-size:12px;
         line-height:1.5;
     }
 
@@ -791,23 +818,23 @@
     .aj-v4-chip {
         border:1px solid var(--border);
         background:#fff;
-        border-radius:12px;
+        border-radius:10px;
         color:#344054;
-        padding:9px 12px;
-        font-size:12px;
+        padding:7px 10px;
+        font-size:11px;
         font-weight:700;
         text-decoration:none;
     }
 
     .aj-v4-chart {
-        height: 248px;
-        border-radius:18px;
+        height: 230px;
+        border-radius:14px;
         background: linear-gradient(180deg, rgba(255, 255, 255, 0.90), rgba(255, 248, 238, 0.35));
         overflow:hidden;
-        padding: 12px 14px 8px;
+        padding: 8px 10px 6px;
     }
 
-    .aj-v4-destination-card { min-height: 322px; }
+    .aj-v4-destination-card { min-height: 260px; }
 
     .aj-v4-donut-wrap {
         display:grid;
@@ -1113,6 +1140,45 @@
         line-height:1.6;
     }
 
+    .aj-dashboard-v4-page.is-sidebar-collapsed .aj-v4-sidebar {
+        width: 78px;
+        min-width: 78px;
+        max-width: 78px;
+        padding: 14px 8px;
+    }
+
+    .aj-dashboard-v4-page.is-sidebar-collapsed .aj-v4-main {
+        margin-left: 78px;
+        width: calc(100% - 78px);
+    }
+
+    .aj-dashboard-v4-page.is-sidebar-collapsed .aj-v4-sidebar__brand img,
+    .aj-dashboard-v4-page.is-sidebar-collapsed .aj-v4-sidebar__profile > div,
+    .aj-dashboard-v4-page.is-sidebar-collapsed .aj-v4-sidebar__profile > span,
+    .aj-dashboard-v4-page.is-sidebar-collapsed .aj-v4-sidebar__nav-title,
+    .aj-dashboard-v4-page.is-sidebar-collapsed .aj-v4-sidebar__item .aj-v4-nav-label,
+    .aj-dashboard-v4-page.is-sidebar-collapsed .aj-v4-sidebar__item .aj-v4-nav-caret,
+    .aj-dashboard-v4-page.is-sidebar-collapsed .aj-v4-sidebar__subnav,
+    .aj-dashboard-v4-page.is-sidebar-collapsed .aj-v4-sidebar__premium {
+        display: none !important;
+    }
+
+    .aj-dashboard-v4-page.is-sidebar-collapsed .aj-v4-sidebar__brand {
+        justify-content: center;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .aj-dashboard-v4-page.is-sidebar-collapsed .aj-v4-sidebar__profile {
+        justify-content: center;
+        margin: 10px 0 12px;
+    }
+
+    .aj-dashboard-v4-page.is-sidebar-collapsed .aj-v4-sidebar__item {
+        justify-content: center;
+        padding: 10px 8px;
+    }
+
     @media (max-width: 1280px) {
         .aj-v4-kpi-grid,
         .aj-v4-kpis {
@@ -1154,8 +1220,17 @@
             padding: 18px 18px 28px;
         }
 
+        .aj-dashboard-v4-page.is-sidebar-collapsed .aj-v4-sidebar {
+            transform: translateX(-100%);
+        }
+
+        .aj-dashboard-v4-page.is-sidebar-collapsed .aj-v4-main {
+            margin-left: 0;
+            width: 100%;
+        }
+
         .aj-v4-hero {
-            padding: 28px 24px;
+            padding: 16px 18px;
         }
 
         .aj-v4-donut-wrap {
@@ -1171,7 +1246,7 @@
         }
 
         .aj-v4-kpi-card {
-            grid-template-columns: 1fr;
+            grid-template-columns: 46px 1fr;
         }
 
         .aj-v4-search {
@@ -1199,12 +1274,15 @@
 <?php $__env->stopPush(); ?>
 
 <?php $__env->startSection('content'); ?>
-<div class="aj-dashboard-v4-page">
+<div class="aj-dashboard-v4-page" id="ajDashboardV4Page">
     <div class="aj-dashboard-v4-layout">
         <aside class="aj-v4-sidebar" aria-label="Navigation principale">
             <div class="aj-v4-sidebar__brand">
                 <div class="aj-v4-sidebar__brand-badge">☼</div>
                 <img src="<?php echo e($dashboardBrandLogo); ?>" alt="<?php echo e($dashboardBrandName); ?>">
+                <button type="button" class="aj-v4-sidebar__toggle" id="ajV4SidebarToggle" aria-label="Basculer la sidebar">
+                    <i class="bx bx-menu"></i>
+                </button>
             </div>
 
             <div class="aj-v4-sidebar__profile">
@@ -1220,8 +1298,8 @@
             <nav class="aj-v4-sidebar__nav">
                 <a href="<?php echo e(route('admin.dashboard.v4')); ?>" class="aj-v4-sidebar__item is-active">
                     <span>⌂</span>
-                    Tableau de bord
-                    <span style="margin-left:auto;color:var(--aj-gold-300);">⌃</span>
+                    <span class="aj-v4-nav-label">Tableau de bord</span>
+                    <span class="aj-v4-nav-caret" style="margin-left:auto;color:var(--aj-gold-300);">⌃</span>
                 </a>
                 <div class="aj-v4-sidebar__subnav">
                     <a href="<?php echo e(route('admin.dashboard.vue-globale')); ?>" class="aj-v4-sidebar__subitem <?php echo e($dashboardRouteIs('admin.dashboard.vue-globale') ? 'is-active' : ''); ?>">Vue d'ensemble</a>
@@ -1234,14 +1312,14 @@
 
                 <a href="<?php echo e(route('admin.reservations.workspace')); ?>" class="aj-v4-sidebar__item">
                     <span>▣</span>
-                    Réservations
-                    <span style="margin-left:auto;color:var(--aj-gold-300);">⌄</span>
+                    <span class="aj-v4-nav-label">Réservations</span>
+                    <span class="aj-v4-nav-caret" style="margin-left:auto;color:var(--aj-gold-300);">⌄</span>
                 </a>
-                <a href="#" class="aj-v4-sidebar__item"><span>✈</span> Départs <span style="margin-left:auto;color:var(--aj-gold-300);">⌄</span></a>
-                <a href="#" class="aj-v4-sidebar__item"><span>♙</span> Clients <span style="margin-left:auto;color:var(--aj-gold-300);">⌄</span></a>
-                <a href="#" class="aj-v4-sidebar__item"><span>⌖</span> Destinations</a>
-                <a href="#" class="aj-v4-sidebar__item"><span>▤</span> Rapports <span style="margin-left:auto;color:var(--aj-gold-300);">⌄</span></a>
-                <a href="#" class="aj-v4-sidebar__item"><span>⚙</span> Paramètres <span style="margin-left:auto;color:var(--aj-gold-300);">⌄</span></a>
+                <a href="#" class="aj-v4-sidebar__item"><span>✈</span><span class="aj-v4-nav-label">Départs</span><span class="aj-v4-nav-caret" style="margin-left:auto;color:var(--aj-gold-300);">⌄</span></a>
+                <a href="#" class="aj-v4-sidebar__item"><span>♙</span><span class="aj-v4-nav-label">Clients</span><span class="aj-v4-nav-caret" style="margin-left:auto;color:var(--aj-gold-300);">⌄</span></a>
+                <a href="#" class="aj-v4-sidebar__item"><span>⌖</span><span class="aj-v4-nav-label">Destinations</span></a>
+                <a href="#" class="aj-v4-sidebar__item"><span>▤</span><span class="aj-v4-nav-label">Rapports</span><span class="aj-v4-nav-caret" style="margin-left:auto;color:var(--aj-gold-300);">⌄</span></a>
+                <a href="#" class="aj-v4-sidebar__item"><span>⚙</span><span class="aj-v4-nav-label">Paramètres</span><span class="aj-v4-nav-caret" style="margin-left:auto;color:var(--aj-gold-300);">⌄</span></a>
             </nav>
 
             <div class="aj-v4-sidebar__premium">
@@ -1255,7 +1333,7 @@
             <div class="aj-v4-content">
                 <header class="aj-v4-topbar">
                 <div class="aj-v4-topbar__title">
-                    <h1>Tableau de bord</h1>
+                    <h1 class="aj-v4-page-title">Dashboard V4</h1>
                     <div class="aj-v4-topbar__breadcrumb">
                         <span>Accueil</span><span>›</span><span>Tableau de bord</span><span>›</span><strong>Dashboard V4</strong>
                     </div>
@@ -1298,43 +1376,43 @@
 
                 <section class="aj-v4-kpi-grid" aria-label="Indicateurs principaux">
                 <article class="aj-v4-card aj-v4-kpi-card">
-                    <div class="aj-v4-kpi-card__icon blue"><i class="bx bx-briefcase-alt-2"></i></div>
+                    <div class="aj-v4-kpi-icon blue"><i class="bx bx-briefcase-alt-2"></i></div>
                     <div>
-                        <small>Chiffre d'affaires</small>
-                        <strong><?php echo e($revenueDisplay); ?></strong>
-                        <span class="aj-v4-trend">↗ <?php echo e(number_format($monthEvolution, 1, ',', ' ')); ?>% vs semaine précédente</span>
-                        <svg class="aj-v4-sparkline" viewBox="0 0 160 36" fill="none"><path d="M4 28 C22 24 24 16 40 20 C56 24 58 5 78 12 C96 19 102 2 119 9 C135 16 139 22 156 12" stroke="#0f4f8f" stroke-width="3"/><path d="M4 28 C22 24 24 16 40 20 C56 24 58 5 78 12 C96 19 102 2 119 9 C135 16 139 22 156 12 L156 36 L4 36 Z" fill="#0f4f8f" opacity="0.10"/></svg>
+                        <small class="aj-v4-kpi-title">Chiffre d'affaires</small>
+                        <strong class="aj-v4-kpi-value"><?php echo e($revenueDisplay); ?></strong>
+                        <span class="aj-v4-kpi-trend">↗ <?php echo e(number_format($monthEvolution, 1, ',', ' ')); ?>%</span>
                     </div>
+                    <svg class="aj-v4-kpi-sparkline" viewBox="0 0 160 36" fill="none"><path d="M4 28 C22 24 24 16 40 20 C56 24 58 5 78 12 C96 19 102 2 119 9 C135 16 139 22 156 12" stroke="#0f4f8f" stroke-width="3"/><path d="M4 28 C22 24 24 16 40 20 C56 24 58 5 78 12 C96 19 102 2 119 9 C135 16 139 22 156 12 L156 36 L4 36 Z" fill="#0f4f8f" opacity="0.10"/></svg>
                 </article>
 
                 <article class="aj-v4-card aj-v4-kpi-card">
-                    <div class="aj-v4-kpi-card__icon orange"><i class="bx bx-layer"></i></div>
+                    <div class="aj-v4-kpi-icon orange"><i class="bx bx-layer"></i></div>
                     <div>
-                        <small>Réservations</small>
-                        <strong><?php echo e(number_format($reservationsTotal, 0, ',', ' ')); ?></strong>
-                        <span class="aj-v4-trend">↗ 12,4% vs semaine précédente</span>
-                        <svg class="aj-v4-sparkline" viewBox="0 0 160 36" fill="none"><path d="M4 27 C25 27 28 23 42 25 C58 27 59 12 75 16 C88 20 94 8 108 10 C124 12 123 26 138 24 C148 23 151 16 156 18" stroke="#f47b20" stroke-width="3"/><path d="M4 27 C25 27 28 23 42 25 C58 27 59 12 75 16 C88 20 94 8 108 10 C124 12 123 26 138 24 C148 23 151 16 156 18 L156 36 L4 36 Z" fill="#f47b20" opacity="0.10"/></svg>
+                        <small class="aj-v4-kpi-title">Réservations</small>
+                        <strong class="aj-v4-kpi-value"><?php echo e(number_format($reservationsTotal, 0, ',', ' ')); ?></strong>
+                        <span class="aj-v4-kpi-trend">↗ 12,4%</span>
                     </div>
+                    <svg class="aj-v4-kpi-sparkline" viewBox="0 0 160 36" fill="none"><path d="M4 27 C25 27 28 23 42 25 C58 27 59 12 75 16 C88 20 94 8 108 10 C124 12 123 26 138 24 C148 23 151 16 156 18" stroke="#f47b20" stroke-width="3"/><path d="M4 27 C25 27 28 23 42 25 C58 27 59 12 75 16 C88 20 94 8 108 10 C124 12 123 26 138 24 C148 23 151 16 156 18 L156 36 L4 36 Z" fill="#f47b20" opacity="0.10"/></svg>
                 </article>
 
                 <article class="aj-v4-card aj-v4-kpi-card">
-                    <div class="aj-v4-kpi-card__icon green"><i class="bx bx-plane-alt"></i></div>
+                    <div class="aj-v4-kpi-icon green"><i class="bx bx-plane-alt"></i></div>
                     <div>
-                        <small>Départs actifs</small>
-                        <strong><?php echo e(number_format($departuresActive, 0, ',', ' ')); ?></strong>
-                        <span class="aj-v4-trend">↗ 8,1% vs semaine précédente</span>
-                        <svg class="aj-v4-sparkline" viewBox="0 0 160 36" fill="none"><path d="M4 29 C19 26 24 22 36 24 C50 26 54 15 68 16 C82 17 87 8 100 12 C116 17 119 4 132 7 C144 10 149 18 156 15" stroke="#19a463" stroke-width="3"/><path d="M4 29 C19 26 24 22 36 24 C50 26 54 15 68 16 C82 17 87 8 100 12 C116 17 119 4 132 7 C144 10 149 18 156 15 L156 36 L4 36 Z" fill="#19a463" opacity="0.10"/></svg>
+                        <small class="aj-v4-kpi-title">Départs actifs</small>
+                        <strong class="aj-v4-kpi-value"><?php echo e(number_format($departuresActive, 0, ',', ' ')); ?></strong>
+                        <span class="aj-v4-kpi-trend">↗ 8,1%</span>
                     </div>
+                    <svg class="aj-v4-kpi-sparkline" viewBox="0 0 160 36" fill="none"><path d="M4 29 C19 26 24 22 36 24 C50 26 54 15 68 16 C82 17 87 8 100 12 C116 17 119 4 132 7 C144 10 149 18 156 15" stroke="#19a463" stroke-width="3"/><path d="M4 29 C19 26 24 22 36 24 C50 26 54 15 68 16 C82 17 87 8 100 12 C116 17 119 4 132 7 C144 10 149 18 156 15 L156 36 L4 36 Z" fill="#19a463" opacity="0.10"/></svg>
                 </article>
 
                 <article class="aj-v4-card aj-v4-kpi-card">
-                    <div class="aj-v4-kpi-card__icon gold"><i class="bx bx-group"></i></div>
+                    <div class="aj-v4-kpi-icon gold"><i class="bx bx-group"></i></div>
                     <div>
-                        <small>Clients</small>
-                        <strong><?php echo e(number_format($clientsCount, 0, ',', ' ')); ?></strong>
-                        <span class="aj-v4-trend">↗ 15,7% vs semaine précédente</span>
-                        <svg class="aj-v4-sparkline" viewBox="0 0 160 36" fill="none"><path d="M4 28 C22 17 31 23 45 20 C60 18 60 28 76 23 C91 18 94 5 110 9 C125 13 128 25 142 21 C151 19 153 14 156 15" stroke="#d8a43a" stroke-width="3"/><path d="M4 28 C22 17 31 23 45 20 C60 18 60 28 76 23 C91 18 94 5 110 9 C125 13 128 25 142 21 C151 19 153 14 156 15 L156 36 L4 36 Z" fill="#d8a43a" opacity="0.13"/></svg>
+                        <small class="aj-v4-kpi-title">Clients</small>
+                        <strong class="aj-v4-kpi-value"><?php echo e(number_format($clientsCount, 0, ',', ' ')); ?></strong>
+                        <span class="aj-v4-kpi-trend">↗ 15,7%</span>
                     </div>
+                    <svg class="aj-v4-kpi-sparkline" viewBox="0 0 160 36" fill="none"><path d="M4 28 C22 17 31 23 45 20 C60 18 60 28 76 23 C91 18 94 5 110 9 C125 13 128 25 142 21 C151 19 153 14 156 15" stroke="#d8a43a" stroke-width="3"/><path d="M4 28 C22 17 31 23 45 20 C60 18 60 28 76 23 C91 18 94 5 110 9 C125 13 128 25 142 21 C151 19 153 14 156 15 L156 36 L4 36 Z" fill="#d8a43a" opacity="0.13"/></svg>
                 </article>
                 </section>
 
@@ -1587,5 +1665,36 @@
     </div>
 </div>
 <?php $__env->stopSection(); ?>
+
+<?php $__env->startPush('scripts'); ?>
+<script>
+    (function () {
+        var page = document.getElementById('ajDashboardV4Page');
+        var toggle = document.getElementById('ajV4SidebarToggle');
+        if (!page || !toggle) {
+            return;
+        }
+
+        var storageKey = 'aj-dashboard-v4-sidebar-collapsed';
+        var apply = function (collapsed) {
+            page.classList.toggle('is-sidebar-collapsed', collapsed);
+        };
+
+        try {
+            apply(localStorage.getItem(storageKey) === '1');
+        } catch (e) {
+            apply(false);
+        }
+
+        toggle.addEventListener('click', function () {
+            var next = !page.classList.contains('is-sidebar-collapsed');
+            apply(next);
+            try {
+                localStorage.setItem(storageKey, next ? '1' : '0');
+            } catch (e) {}
+        });
+    })();
+</script>
+<?php $__env->stopPush(); ?>
 
 <?php echo $__env->make('layouts.dashboard-v4', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\dashboard\v4\index.blade.php ENDPATH**/ ?>
