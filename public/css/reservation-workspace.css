@@ -5387,14 +5387,14 @@ body[data-layout="detached"] #page-topbar .header-item span {
 .ws-page .workspace-list-table .ws-progress-bar--mini {
     display: flex;
     align-items: center;
-    gap: 6px;
-    margin-top: 4px;
+    gap: 5px;
+    margin-top: 3px;
 }
 
 .ws-page .workspace-list-table .ws-progress-bar--mini__track {
     flex: none;
-    width: 80px;
-    height: 5px;
+    width: 62px;
+    height: 4px;
     background: #e5edf5;
     border-radius: 999px;
     overflow: hidden;
@@ -5406,10 +5406,10 @@ body[data-layout="detached"] #page-topbar .header-item span {
 }
 
 .ws-page .workspace-list-table .ws-progress-bar--mini__label {
-    font-size: 0.65rem;
-    font-weight: 800;
+    font-size: 0.60rem;
+    font-weight: 700;
     color: #64748b;
-    min-width: 1.8rem;
+    min-width: 1.4rem;
     text-align: right;
 }
 

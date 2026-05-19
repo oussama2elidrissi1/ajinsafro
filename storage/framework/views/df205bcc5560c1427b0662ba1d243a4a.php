@@ -112,7 +112,8 @@
 ?>
 
 
-<?php $__env->startSection('title', 'Espace réservation — Catalogue'); ?>
+<?php $__env->startSection('title', 'Espace de réservation'); ?>
+<?php $__env->startSection('page_title', 'Espace de réservation'); ?>
 
 <?php $__env->startPush('styles'); ?>
 <?php if(!$usePortalTailwind): ?>
