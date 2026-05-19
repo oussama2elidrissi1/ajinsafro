@@ -14,6 +14,7 @@
     ];
     $workspaceFilterOptions = $workspaceFilterOptions ?? ['destinations' => []];
     $workspaceResetUrl = $workspaceResetUrl ?? route('admin.reservations.workspace', ['view' => 'list']);
+    $catalogRows = $workspaceSellableRows ?? $catalogRows;
 
     $workspaceCalendarEvents = $catalogRows->flatMap(function ($r) {
         $type = (string) ($r['type'] ?? 'package');
@@ -1549,7 +1550,6 @@
                 return $currentDirection === 'desc' ? -$cmp : $cmp;
             })->values();
             $sellableDepRows = $sortedDepRows->filter(fn($i) => $i['is_sellable']);
-            $nonSellableDepRows = $sortedDepRows->filter(fn($i) => ! $i['is_sellable']);
         @endphp
 
         @if($sellableDepRows->isNotEmpty())
@@ -1558,19 +1558,7 @@
             @endforeach
         @endif
 
-        @if($nonSellableDepRows->isNotEmpty())
-            <tr class="ws-catalog-section-divider">
-                <td colspan="8" class="ws-catalog-section-divider__cell">
-                    <span class="ws-catalog-section-divider__label">Voyages non disponibles / à configurer</span>
-                </td>
-            </tr>
-
-            @foreach($nonSellableDepRows as $depItem)
-                @include('admin.reservations.workspace.partials.catalog-row', ['row' => $depItem['row'], 'mode' => 'table', 'departure' => $depItem['departure']])
-            @endforeach
-        @endif
-
-        @if($catalogRows->isEmpty())
+        @if($sellableDepRows->isEmpty())
             <tr>
                 <td colspan="8" class="ws-table-empty-cell">
                     <div class="ws-catalog-empty ws-catalog-empty--inline">
@@ -1580,18 +1568,8 @@
                             </div>
 
                             <p class="text-brand-dark font-bold text-base mb-2">
-                                Aucun voyage dans le catalogue
+                                Aucune offre réservable disponible pour le moment.
                             </p>
-
-                            <p class="text-gray-500 text-sm mb-5">
-                                Créez ou liez des fiches voyages depuis Circuits / voyages.
-                            </p>
-
-                            <a href="{{ route('admin.circuits.voyages.index') }}"
-                               class="inline-flex items-center gap-2 rounded-xl bg-brand-blue text-white font-bold text-sm px-5 py-2.5 hover:bg-brand-dark transition-colors">
-                                <i class="fas fa-plus-circle"></i>
-                                Gérer les voyages
-                            </a>
                         </div>
                     </div>
                 </td>

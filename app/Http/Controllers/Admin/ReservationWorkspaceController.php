@@ -82,6 +82,9 @@ class ReservationWorkspaceController extends Controller
             $direction = 'asc';
         }
         $rows = $this->catalog->sortCatalogRowsForWorkspaceDisplay($rows, $sort, $direction);
+        $sellableRows = $rows
+            ->filter(fn (array $row): bool => $this->isWorkspaceRowSellableForList($row))
+            ->values();
 
         $wsModalSettings = [
             'show_commission' => Setting::getValue('ws_modal_show_commission', '1') === '1',
@@ -97,6 +100,7 @@ class ReservationWorkspaceController extends Controller
 
         return view('admin.reservations.workspace.index', [
             'catalogRows' => $rows,
+            'workspaceSellableRows' => $sellableRows,
             'catalogMeta' => $catalogMeta,
             'catalogScope' => $catalogScope,
             'catalogFullCount' => $allRows->count(),
@@ -558,5 +562,45 @@ class ReservationWorkspaceController extends Controller
             str_contains($l, 'cash') || str_contains($l, 'cashplus') => Reservation::PAYMENT_CASHPLUS,
             default => Reservation::PAYMENT_ESPECE,
         };
+    }
+
+    /**
+     * Keep only reservation-ready sales offers for workspace list/catalog/calendar.
+     *
+     * @param  array<string, mixed>  $row
+     */
+    private function isWorkspaceRowSellableForList(array $row): bool
+    {
+        if (($row['type'] ?? 'package') !== 'package') {
+            return false;
+        }
+
+        if (! (bool) data_get($row, 'commercial.is_sellable', false)) {
+            return false;
+        }
+
+        $departures = collect(data_get($row, 'modal_detail.departures', []));
+        if ($departures->isEmpty()) {
+            return false;
+        }
+
+        return $departures->contains(function ($departure): bool {
+            if (! is_array($departure)) {
+                return false;
+            }
+
+            if (empty($departure['date_iso']) || ! empty($departure['is_past'])) {
+                return false;
+            }
+
+            $statusKey = (string) ($departure['status_key'] ?? '');
+            if ($statusKey === 'full') {
+                return false;
+            }
+
+            $remaining = $departure['remaining'] ?? null;
+
+            return $remaining === null || (int) $remaining > 0;
+        });
     }
 }
