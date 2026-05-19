@@ -13,6 +13,7 @@
     @include('layouts.head-css')
     <link href="{{ URL::asset('css/admin-premium.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ URL::asset('css/admin-compact.css') }}?v=workspace-fixed-v7" rel="stylesheet" type="text/css" />
+    @stack('styles')
 </head>
 
 <body class="admin-premium-ui internal-v2-topbar-hidden aj-admin aj-admin-compact" data-layout="detached" data-topbar="colored">

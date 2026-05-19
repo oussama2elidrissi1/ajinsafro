@@ -34,8 +34,8 @@
     <link href="{{ URL::asset('css/internal-v2-layout.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ URL::asset('css/admin-premium.css') }}" rel="stylesheet" type="text/css" />
 
-    @stack('styles')
     <link href="{{ URL::asset('css/admin-compact.css') }}?v=workspace-fixed-v7" rel="stylesheet" type="text/css" />
+    @stack('styles')
 </head>
 <body class="partner-v2 admin-premium-ui aj-admin aj-admin-compact text-gray-800 antialiased font-sans{{ $voyageLayoutPage ? ' voyage-layout-page' : '' }}{{ $hideInternalV2Topbar ? ' internal-v2-topbar-hidden' : '' }}">
     @if($hideInternalV2Topbar)
@@ -79,8 +79,8 @@
     <link rel="shortcut icon" href="{{ URL::asset('build/images/favicon.ico') }}">
 
     @include('layouts.head-css')
-    @stack('styles')
     <link href="{{ URL::asset('css/admin-compact.css') }}?v=workspace-fixed-v7" rel="stylesheet" type="text/css" />
+    @stack('styles')
 </head>
 
 <body class="admin-premium-ui aj-admin aj-admin-compact{{ $voyageLayoutPage ? ' voyage-layout-page' : '' }}{{ $hideInternalV2Topbar ? ' internal-v2-topbar-hidden' : '' }}" data-layout="detached" data-topbar="colored">

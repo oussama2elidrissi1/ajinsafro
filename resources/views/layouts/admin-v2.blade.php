@@ -13,6 +13,7 @@
     );
     if ($adminV2Initials === '') { $adminV2Initials = 'AD'; }
     $adminV2AvatarUrl = $adminV2User?->avatar_url;
+    $voyageLayoutPage = request()->routeIs('admin.circuits.voyages.create', 'admin.circuits.voyages.edit');
 
     // Compute notification counts once — passed to header partial
     $adminV2UnreadCount  = 0;
@@ -55,10 +56,10 @@
     <link href="{{ URL::asset('css/admin-sidebar-v2.css') }}" rel="stylesheet">
     <link href="{{ URL::asset('css/admin-v2.css') }}" rel="stylesheet">
 
-    @stack('styles')
     <link href="{{ URL::asset('css/admin-compact.css') }}?v=workspace-fixed-v7" rel="stylesheet">
+    @stack('styles')
 </head>
-<body class="aj-admin-v2-body aj-admin aj-admin-compact">
+<body class="aj-admin-v2-body aj-admin aj-admin-compact{{ $voyageLayoutPage ? ' voyage-layout-page' : '' }}">
 
 <div class="aj-admin-v2-layout" id="aj-admin-v2-root">
 

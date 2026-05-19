@@ -67,7 +67,7 @@
 @endpush
 
 @section('content')
-<div class="voyage-edit-page">
+<div class="voyage-edit-page voyage-workflow-page">
     <div class="ve-shell">
         @include('admin.circuits.voyages.partials._voyage_page_header', [
             'isCreate' => $isCreate,
