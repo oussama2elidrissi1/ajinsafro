@@ -31,7 +31,7 @@
 
 .voyage-studio-v3 .v3-hero-card {
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr) 320px;
+  grid-template-columns: 220px minmax(0, 1fr) 300px;
   gap: 24px;
   align-items: center;
   background: var(--v3-card);
@@ -222,9 +222,89 @@
 }
 
 .voyage-studio-v3 .v3-hero-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  display: block;
+}
+
+.voyage-studio-v3 .v3-header-workflow-card {
+  border: 1px solid var(--v3-border);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: var(--v3-shadow-soft);
+  padding: 14px;
+}
+
+.voyage-studio-v3 .v3-header-workflow-card__kicker {
+  margin: 0 0 6px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--v3-muted);
+  font-weight: 800;
+}
+
+.voyage-studio-v3 .v3-header-workflow-card__value {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #35516f;
+  font-weight: 500;
+}
+
+.voyage-studio-v3 .v3-header-workflow-card__value strong {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--v3-blue);
+}
+
+.voyage-studio-v3 .v3-header-workflow-card__progress {
+  height: 9px;
+  border-radius: 999px;
+  background: #edf3fa;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.voyage-studio-v3 .v3-header-workflow-card__progress > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--v3-blue-2), var(--v3-green));
+}
+
+.voyage-studio-v3 .v3-header-workflow-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.voyage-studio-v3 .v3-header-workflow-card__footer > span {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--v3-text);
+}
+
+.voyage-studio-v3 .v3-header-workflow-card__footer > a {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--v3-blue-2);
+  text-decoration: none;
+}
+
+.voyage-studio-v3 .v3-header-workflow-card__links {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--v3-border-soft);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.voyage-studio-v3 .v3-header-workflow-card__links a {
+  font-size: 11px;
+  font-weight: 700;
+  color: #476887;
+  text-decoration: none;
 }
 
 .voyage-studio-v3 .v3-btn {
@@ -279,9 +359,15 @@
 }
 
 .voyage-studio-v3 .v3-workspace {
-  grid-template-columns: 250px minmax(0, 1fr) 310px;
-  gap: 24px;
+  grid-template-columns: 180px minmax(0, 1fr) !important;
+  gap: 18px;
   padding: 0;
+}
+
+.voyage-studio-v3 .v2-sidebar {
+  width: 180px;
+  min-width: 180px;
+  max-width: 180px;
 }
 
 .voyage-studio-v3 .v2-sidebar,
@@ -778,7 +864,21 @@
 
   .voyage-studio-v3 .v3-hero-actions {
     grid-column: 1 / -1;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    max-width: 340px;
+    justify-self: end;
+  }
+}
+
+@media (max-width: 1366px) {
+  .voyage-studio-v3 .v3-workspace {
+    grid-template-columns: 160px minmax(0, 1fr) !important;
+    gap: 12px;
+  }
+
+  .voyage-studio-v3 .v2-sidebar {
+    width: 160px;
+    min-width: 160px;
+    max-width: 160px;
   }
 }
 
@@ -803,7 +903,6 @@
     grid-template-columns: 1fr;
   }
 
-  .voyage-studio-v3 .v3-hero-actions,
   .voyage-studio-v3 .v3-editor-tabs {
     grid-template-columns: 1fr 1fr;
   }
@@ -814,7 +913,6 @@
 }
 
 @media (max-width: 640px) {
-  .voyage-studio-v3 .v3-hero-actions,
   .voyage-studio-v3 .v3-editor-tabs {
     grid-template-columns: 1fr;
   }

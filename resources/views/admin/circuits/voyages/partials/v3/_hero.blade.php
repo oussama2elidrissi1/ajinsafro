@@ -40,40 +40,29 @@
     </div>
 
     <div class="v3-hero-actions">
-        <a href="{{ route('admin.circuits.voyages.index') }}" class="v3-btn v3-btn-muted">
-            <i class="bx bx-arrow-back"></i>
-            <span>Retour catalogue</span>
-        </a>
-
-        @if($frontPreviewUrl)
-            <a href="{{ $frontPreviewUrl }}" class="v3-btn v3-btn-muted" target="_blank" rel="noopener">
-                <i class="bx bx-show-alt"></i>
-                <span>Apercu public</span>
-            </a>
-        @else
-            <button type="button" class="v3-btn v3-btn-muted" disabled>
-                <i class="bx bx-show-alt"></i>
-                <span>Apercu public</span>
-            </button>
-        @endif
-
-        @if(!$isCreate)
-            <a href="{{ route('admin.circuits.voyages.edit', $veWpId) }}" class="v3-btn v3-btn-muted" data-v2-classic-link>
-                <i class="bx bx-transfer-alt"></i>
-                <span>Version classique</span>
-            </a>
-        @endif
-
-        <button type="button" class="v3-btn v3-btn-primary" data-v2-save>
-            <i class="bx bx-save"></i>
-            <span>{{ $isCreate ? 'Creer le brouillon' : 'Enregistrer maintenant' }}</span>
-        </button>
-
-        @if(!empty($nextActionSection))
-            <a href="#{{ $nextActionSection['id'] }}" class="v3-btn v3-btn-ghost">
-                <span>Continuer le workflow</span>
-                <i class="bx bx-chevron-right"></i>
-            </a>
-        @endif
+        <div class="v3-header-workflow-card">
+            <p class="v3-header-workflow-card__kicker">Workflow</p>
+            <p class="v3-header-workflow-card__value">
+                <strong>{{ $completedSteps }}</strong> / {{ $sectionsCount }} étapes validées
+            </p>
+            <div class="v3-header-workflow-card__progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ $progressPercent }}">
+                <span id="v2-progress-bar" style="width: {{ $progressPercent }}%"></span>
+            </div>
+            <div class="v3-header-workflow-card__footer">
+                <span id="v2-progress-text">{{ $progressPercent }}%</span>
+                @if(!empty($nextActionSection))
+                    <a href="#{{ $nextActionSection['id'] }}">Reprendre le workflow</a>
+                @endif
+            </div>
+            <div class="v3-header-workflow-card__links">
+                <a href="{{ route('admin.circuits.voyages.index') }}">Retour catalogue</a>
+                @if($frontPreviewUrl)
+                    <a href="{{ $frontPreviewUrl }}" target="_blank" rel="noopener">Aperçu public</a>
+                @endif
+                @if(!$isCreate)
+                    <a href="{{ route('admin.circuits.voyages.edit', $veWpId) }}" data-v2-classic-link>Version classique</a>
+                @endif
+            </div>
+        </div>
     </div>
 </section>
