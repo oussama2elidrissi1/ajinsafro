@@ -193,6 +193,67 @@
         ]));
     }
 
+    if ($sidebarUser?->hasRole(\App\Services\BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY)) {
+        $adminGroups = array_values(array_filter([
+            $makeLeaf(
+                'sales_workspace_only',
+                'Vente',
+                'admin.reservations.workspace',
+                'bx bx-briefcase-alt',
+                [
+                    'admin.reservations.workspace*',
+                    'admin.reservations.create',
+                    'admin.reservations.store',
+                ],
+                [],
+                null,
+                'reservations.view'
+            ),
+            $makeLeaf(
+                'reservations_index_only_flat',
+                'RÃ©servations',
+                'admin.reservations.index',
+                'bx bx-calendar-check',
+                [
+                    'admin.reservations.index',
+                    'admin.reservation-dossiers.*',
+                    'admin.reservations.show',
+                    'admin.reservations.edit',
+                    'admin.reservations.update',
+                    'admin.reservations.destroy',
+                ],
+                [],
+                null,
+                'reservations.view'
+            ),
+        ]));
+    }
+
+    if ($sidebarUser?->hasRole(\App\Services\BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY)) {
+        $adminGroups = array_values(array_filter([
+            $makeLeaf(
+                'sales_workspace_only_final',
+                'Vente',
+                'admin.reservations.workspace',
+                'bx bx-briefcase-alt',
+                ['admin.reservations.workspace*', 'admin.reservations.create', 'admin.reservations.store'],
+                [],
+                null,
+                'reservations.view'
+            ),
+            $makeLeaf(
+                'reservations_index_only_final',
+                'Reservations',
+                'admin.reservations.index',
+                'bx bx-calendar-check',
+                ['admin.reservations.index', 'admin.reservation-dossiers.*', 'admin.reservations.show', 'admin.reservations.edit', 'admin.reservations.update', 'admin.reservations.destroy'],
+                [],
+                null,
+                'reservations.view'
+            ),
+        ]));
+    }
+
     $renderNodes = function (array $nodes, int $depth = 0) use (&$renderNodes): string {
         if ($nodes === []) {
             return '';

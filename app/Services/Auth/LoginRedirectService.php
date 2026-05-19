@@ -60,7 +60,7 @@ class LoginRedirectService
         if ($user->hasRole([
             BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY,
         ])) {
-            return $adminUrl . '/admin/reservations';
+            return $adminUrl . '/admin/reservations/workspace';
         }
 
         // Explicit mapping for admin roles.

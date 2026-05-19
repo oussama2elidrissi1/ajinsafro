@@ -249,6 +249,11 @@ return [
         'admin.profile.avatar' => ['dashboard.view', 'reservations.view'],
         'admin.reservation-dossiers.index' => 'reservations.view',
         'admin.reservation-dossiers.show' => 'reservations.view',
+        'admin.reservations.workspace' => 'reservations.view',
+        'admin.reservations.workspace.store' => 'reservations.view',
+        'admin.reservations.workspace.prestation.participants' => 'reservations.view',
+        'admin.reservations.workspace.prestation.pdf' => 'reservations.view',
+        'admin.reservations.workspace.reservation.pdf' => 'reservations.view',
 
         'admin.circuits.index' => 'circuits.voyages.view',
         'admin.circuits.circuits' => 'circuits.voyages.view',
