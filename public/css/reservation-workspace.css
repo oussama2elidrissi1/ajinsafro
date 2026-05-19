@@ -5570,7 +5570,7 @@ body[data-layout="detached"] #page-topbar .header-item span {
 .ws-toolbar__row--filters-grid {
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr)) auto;
-    gap: 0.65rem;
+    gap: 0.5rem;
     align-items: end;
     width: 100%;
 }
@@ -5586,6 +5586,59 @@ body[data-layout="detached"] #page-topbar .header-item span {
     font-weight: 500;
 }
 
+.ws-toolbar {
+    padding: 0.7rem 0.85rem;
+}
+
+.ws-toolbar__row {
+    gap: 0.5rem;
+}
+
+.ws-toolbar__row + .ws-toolbar__row {
+    margin-top: 0.5rem;
+}
+
+.ws-toolbar__row--filters-grid .ws-field__label {
+    margin-bottom: 0.25rem;
+    font-size: 0.64rem;
+    letter-spacing: 0.02em;
+}
+
+.ws-toolbar__row--filters-grid .ws-input,
+.ws-toolbar__row--filters-grid .ws-select,
+.ws-toolbar__row--filters-grid .ws-btn-filter,
+.ws-toolbar__row--filters-grid .ws-btn-reset {
+    min-height: 2.15rem;
+    font-size: 0.76rem;
+}
+
+.ws-toolbar__row--filters-grid .ws-input {
+    padding-top: 0.42rem;
+    padding-bottom: 0.42rem;
+}
+
+.ws-filter-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+}
+
+.ws-btn-filter,
+.ws-btn-reset {
+    padding: 0.42rem 0.75rem;
+}
+
+.ws-field--budget-range .ws-budget-range__labels {
+    font-size: 0.7rem;
+    line-height: 1.1;
+}
+
+.ws-field--budget-range input[type="range"] {
+    height: 22px;
+}
+
 .ws-field {
     min-width: 0;
 }
@@ -5599,13 +5652,13 @@ body[data-layout="detached"] #page-topbar .header-item span {
 .ws-select,
 .ws-btn-filter,
 .ws-btn-reset {
-    min-height: 2.45rem;
-    font-size: 0.8rem;
+    min-height: 2.15rem;
+    font-size: 0.76rem;
 }
 
 .ws-input {
-    padding-top: 0.55rem;
-    padding-bottom: 0.55rem;
+    padding-top: 0.42rem;
+    padding-bottom: 0.42rem;
 }
 
 .ws-budget-inline {
