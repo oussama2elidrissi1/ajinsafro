@@ -778,7 +778,7 @@
 @endpush
 
 @section('content')
-    <div class="dashboard-global-page">
+    <div class="dashboard-global-page dashboard-v3">
         <link rel="stylesheet" href="{{ asset('css/dashboard-global.css') }}">
 {{-- DIAG_MARKER: DASHBOARD_VIEW_ACTIVE [admin.dashboard.vue-globale.index] rendered at {{ now('Africa/Casablanca')->format('Y-m-d H:i:s T') }} --}}
 @php
@@ -794,12 +794,12 @@
 <div class="aj-dash-2026">
 
     {{-- ═══════════ PAGE HEAD ═══════════ --}}
-    <div class="page-head fade-in d1">
+    <div class="page-head dashboard-header fade-in d1">
         <div class="page-title">
             <div class="page-title-icon"><i class="bx bx-grid-alt"></i></div>
             <div>
-                <h1>Tableau de bord</h1>
-                <p>Vue d'ensemble de votre activité — {{ $dateTime }}</p>
+                <h1 class="dashboard-title">Tableau de bord</h1>
+                <p class="dashboard-subtitle">Vue d'ensemble de votre activité — {{ $dateTime }}</p>
             </div>
         </div>
 
@@ -816,7 +816,7 @@
     {{-- ═══════════ KPI GRID ═══════════ --}}
     <div class="kpi-grid">
 
-        <div class="d-card kpi-card fade-in d1">
+        <div class="d-card dashboard-card kpi-card fade-in d1">
             <div>
                 <div class="kpi-icon blue"><i class="bx bx-map-alt"></i></div>
                 <div class="kpi-label">Voyages</div>
@@ -829,7 +829,7 @@
             <a href="{{ route('admin.circuits.voyages.index') }}" class="stretched"></a>
         </div>
 
-        <div class="d-card kpi-card fade-in d2">
+        <div class="d-card dashboard-card kpi-card fade-in d2">
             <div>
                 <div class="kpi-icon green"><i class="bx bx-buildings"></i></div>
                 <div class="kpi-label">Agences</div>
@@ -842,7 +842,7 @@
             <a href="{{ route('admin.agencies.index') }}" class="stretched"></a>
         </div>
 
-        <div class="d-card kpi-card fade-in d3">
+        <div class="d-card dashboard-card kpi-card fade-in d3">
             <div>
                 <div class="kpi-icon orange"><i class="bx bx-calendar-event"></i></div>
                 <div class="kpi-label">Réservations</div>
@@ -861,7 +861,7 @@
             <a href="{{ route('admin.reservations.index') }}" class="stretched"></a>
         </div>
 
-        <div class="d-card kpi-card fade-in d4">
+        <div class="d-card dashboard-card kpi-card fade-in d4">
             <div>
                 <div class="kpi-icon purple"><i class="bx bx-group"></i></div>
                 <div class="kpi-label">Clients</div>
@@ -877,13 +877,13 @@
     </div>
 
     {{-- ═══════════ TOP WIDGETS ═══════════ --}}
-    <div class="top-widgets">
+    <div class="top-widgets ops-grid">
 
         {{-- Activité récente --}}
-        <div class="d-card widget fade-in d2">
+        <div class="d-card dashboard-card widget fade-in d2">
             <div class="widget-head">
                 <div class="widget-icon"><i class="bx bx-time-five"></i></div>
-                <h3>Activité récente</h3>
+                <h3 class="card-title">Activité récente</h3>
             </div>
 
             <div class="metric-list">
@@ -907,10 +907,10 @@
         </div>
 
         {{-- Chiffre d'affaires --}}
-        <div class="d-card widget fade-in d3">
+        <div class="d-card dashboard-card widget fade-in d3">
             <div class="widget-head">
                 <div class="widget-icon"><i class="bx bx-euro"></i></div>
-                <h3>Chiffre d'affaires</h3>
+                <h3 class="card-title">Chiffre d'affaires</h3>
             </div>
 
             <p style="color:var(--d-muted);font-weight:700;margin:0 0 4px;font-size:12px;">Total validé</p>
@@ -932,12 +932,12 @@
         </div>
 
         {{-- Messages --}}
-        <div class="d-card widget fade-in d4">
+        <div class="d-card dashboard-card widget fade-in d4">
             <div class="messages-box">
                 <div style="flex:1;">
                     <div class="widget-head">
                         <div class="widget-icon"><i class="bx bx-envelope"></i></div>
-                        <h3>Messages</h3>
+                        <h3 class="card-title">Messages</h3>
                     </div>
                     <p style="color:var(--d-muted);font-weight:700;margin:0;font-size:13px;">Boîte Réservations</p>
                     <div class="message-number">{{ $stats['messages_count'] ?? 0 }}</div>
@@ -952,8 +952,8 @@
     </div>
 
     {{-- ═══════════ STATUS CARD ═══════════ --}}
-    <div class="d-card status-card fade-in d3">
-        <h3>Répartition des réservations</h3>
+    <div class="d-card dashboard-card status-card fade-in d3">
+        <h3 class="card-title">Répartition des réservations</h3>
 
         <div class="status-grid">
             @php
@@ -1008,17 +1008,17 @@
     {{-- ═══════════ CHARTS GRID ═══════════ --}}
     <div class="charts-grid">
 
-        <div class="d-card chart-card fade-in d4">
+        <div class="d-card dashboard-card chart-card fade-in d4">
             <div class="card-head">
-                <h3>Évolution des réservations & du chiffre d'affaires</h3>
+                <h3 class="card-title">Évolution des réservations & du chiffre d'affaires</h3>
                 <span class="pill-select">6 derniers mois</span>
             </div>
             <div id="aj-chart-line" class="chart-area"></div>
         </div>
 
-        <div class="d-card chart-card fade-in d5">
+        <div class="d-card dashboard-card chart-card fade-in d5">
             <div class="card-head">
-                <h3>Statut des réservations</h3>
+                <h3 class="card-title">Statut des réservations</h3>
             </div>
             <div id="aj-chart-donut" class="chart-area"></div>
         </div>
@@ -1026,12 +1026,12 @@
     </div>
 
     {{-- ═══════════ LOWER GRID : Paiements + Dernières réservations ═══════════ --}}
-    <div class="lower-grid">
+    <div class="lower-grid bottom-grid">
 
         {{-- Paiements --}}
-        <div class="d-card chart-card fade-in d4">
+        <div class="d-card dashboard-card chart-card fade-in d4">
             <div class="card-head">
-                <h3>Paiements validés</h3>
+                <h3 class="card-title">Paiements validés</h3>
             </div>
 
             <div class="payments-chart">
@@ -1054,9 +1054,9 @@
         </div>
 
         {{-- Dernières réservations --}}
-        <div class="d-card table-card fade-in d5">
+        <div class="d-card dashboard-card table-card fade-in d5">
             <div class="card-head">
-                <h3>Dernières réservations</h3>
+                <h3 class="card-title">Dernières réservations</h3>
                 <a href="{{ route('admin.reservations.index') }}" class="pill-select">Voir toutes →</a>
             </div>
 
@@ -1137,12 +1137,12 @@
     </div>
 
     {{-- ═══════════ BOTTOM GRID : Voyages + Agences ═══════════ --}}
-    <div class="bottom-grid">
+    <div class="bottom-grid lists-grid">
 
         {{-- Voyages les plus réservés --}}
-        <div class="d-card table-card fade-in d4">
+        <div class="d-card dashboard-card list-card table-card fade-in d4">
             <div class="card-head">
-                <h3>Voyages les plus réservés</h3>
+                <h3 class="card-title">Voyages les plus réservés</h3>
                 <a href="{{ route('admin.circuits.voyages.index') }}" class="pill-select">Voir tous</a>
             </div>
 
@@ -1153,14 +1153,14 @@
                         $count  = $tv['total'];
                         $img    = $voyage->main_image_url ?? null;
                     @endphp
-                    <div class="trip-item">
+                    <div class="trip-item list-item">
                         @if($img)
                             <img class="trip-img" src="{{ $img }}" alt="">
                         @else
                             <div class="trip-img"><i class="bx bx-map"></i></div>
                         @endif
-                        <div class="trip-title">{{ \Illuminate\Support\Str::limit($voyage->name ?? 'Voyage', 50) }}</div>
-                        <strong class="trip-count">{{ $count }}</strong>
+                        <div class="trip-title list-item-title">{{ \Illuminate\Support\Str::limit($voyage->name ?? 'Voyage', 50) }}</div>
+                        <strong class="trip-count list-item-value">{{ $count }}</strong>
                     </div>
                 @empty
                     <div class="empty-row">Aucun voyage réservé pour le moment.</div>
@@ -1169,23 +1169,23 @@
         </div>
 
         {{-- Agences actives --}}
-        <div class="d-card table-card fade-in d5">
+        <div class="d-card dashboard-card list-card table-card fade-in d5">
             <div class="card-head">
-                <h3>Agences actives</h3>
+                <h3 class="card-title">Agences actives</h3>
                 <a href="{{ route('admin.agencies.index') }}" class="pill-select">Voir toutes</a>
             </div>
 
             <div class="agency-list">
                 @forelse($recentBranches as $b)
-                    <div class="agency-item">
+                    <div class="agency-item list-item">
                         <div class="agency-icon"><i class="bx bx-buildings"></i></div>
                         <div>
-                            <div class="agency-title">{{ $b->name }}</div>
+                            <div class="agency-title list-item-title">{{ $b->name }}</div>
                             @if($b->city || $b->code)
-                                <div class="agency-city">{{ $b->city }}{{ $b->code ? ' • '.$b->code : '' }}</div>
+                                <div class="agency-city list-item-subtitle">{{ $b->city }}{{ $b->code ? ' • '.$b->code : '' }}</div>
                             @endif
                         </div>
-                        <a href="{{ route('admin.agencies.show', $b) }}" class="agency-action" title="Voir">→</a>
+                        <a href="{{ route('admin.agencies.show', $b) }}" class="agency-action list-item-value" title="Voir">→</a>
                     </div>
                 @empty
                     <div class="empty-row">Aucune agence à afficher.</div>
