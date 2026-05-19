@@ -1438,7 +1438,89 @@
             </tbody></table></div>
         </div>
 
-        <div id="ws-view-catalog" class="commercial-v2-panel {{ $workspaceView === 'catalog' ? '' : 'hidden' }}"><div class="commercial-v2-cards-grid">@foreach($sellableRows as $row)@include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'card'])@endforeach</div></div>
+        <div id="ws-view-catalog" class="commercial-v2-panel {{ $workspaceView === 'catalog' ? '' : 'hidden' }}">
+            <div class="commercial-v2-cards-grid catalogue-grid">
+                @forelse($sellableRows as $row)
+                    @php
+                        $img = !empty($row['image_url']) ? (string) $row['image_url'] : asset('build/images/placeholder.png');
+                        $typeLabel = strtoupper($row['type_label'] ?? $row['type'] ?? 'CIRCUIT');
+                        $code = $row['code'] ?? 'N/A';
+                        $dest = $row['voyage_destination'] ?? data_get($row, 'modal_detail.destination', '-');
+                        $price = $row['price_label'] ?? data_get($row, 'modal_detail.prices.adult_label', '-');
+                        $com = $row['commercial'] ?? [];
+                        $cap = $com['capacity_total'] ?? null;
+                        $rest = $com['places_restantes'] ?? null;
+                        $sold = $com['places_vendues'] ?? 0;
+                        $departures = collect(data_get($row, 'modal_detail.departures', []));
+                    @endphp
+                    @if($departures->isNotEmpty())
+                        @foreach($departures as $dep)
+                            @php
+                                $reserveUrl = data_get($dep, 'routes.reserve') ?: route('admin.reservations.create', array_filter([
+                                    'tour_id' => (int) ($row['voyage_id'] ?? 0),
+                                    'travel_date_id' => data_get($dep, 'travel_date_id'),
+                                ]));
+                            @endphp
+                            <article class="voyage-card commercial-voyage-card">
+                                <div class="voyage-card-image">
+                                    <img src="{{ $img }}" alt="{{ $row['name'] ?? 'Voyage' }}" loading="lazy">
+                                </div>
+                                <div class="voyage-card-body">
+                                    <div class="voyage-card-badges">
+                                        <span class="voyage-chip">{{ $typeLabel }}</span>
+                                        <span class="voyage-chip voyage-chip-ref">#{{ $code }}</span>
+                                    </div>
+                                    <h3>{{ $row['name'] ?? 'Voyage' }}</h3>
+                                    <p class="voyage-card-destination"><i class="fas fa-map-marker-alt"></i> {{ $dest }}</p>
+                                    <div class="voyage-card-meta">
+                                        <span>Prix à partir de</span>
+                                        <strong>{{ $price }}</strong>
+                                    </div>
+                                    <div class="voyage-card-stats">
+                                        <span>Capacité: <strong>{{ $cap ?? '-' }}</strong></span>
+                                        <span>Vendu: <strong>{{ $sold }}</strong></span>
+                                        <span>Restant: <strong>{{ $rest ?? '-' }}</strong></span>
+                                    </div>
+                                    <div class="voyage-card-actions">
+                                        <button type="button" class="btn-view" data-ws-detail-trigger data-row-code="{{ $code }}" data-travel-date-id="{{ data_get($dep, 'travel_date_id', '') }}">Voir</button>
+                                        <a href="{{ $reserveUrl }}" class="btn-reserve">Réserver</a>
+                                    </div>
+                                </div>
+                            </article>
+                        @endforeach
+                    @else
+                        <article class="voyage-card commercial-voyage-card">
+                            <div class="voyage-card-image">
+                                <img src="{{ $img }}" alt="{{ $row['name'] ?? 'Voyage' }}" loading="lazy">
+                            </div>
+                            <div class="voyage-card-body">
+                                <div class="voyage-card-badges">
+                                    <span class="voyage-chip">{{ $typeLabel }}</span>
+                                    <span class="voyage-chip voyage-chip-ref">#{{ $code }}</span>
+                                </div>
+                                <h3>{{ $row['name'] ?? 'Voyage' }}</h3>
+                                <p class="voyage-card-destination"><i class="fas fa-map-marker-alt"></i> {{ $dest }}</p>
+                                <div class="voyage-card-meta">
+                                    <span>Prix à partir de</span>
+                                    <strong>{{ $price }}</strong>
+                                </div>
+                                <div class="voyage-card-stats">
+                                    <span>Capacité: <strong>{{ $cap ?? '-' }}</strong></span>
+                                    <span>Vendu: <strong>{{ $sold }}</strong></span>
+                                    <span>Restant: <strong>{{ $rest ?? '-' }}</strong></span>
+                                </div>
+                                <div class="voyage-card-actions">
+                                    <button type="button" class="btn-view" data-ws-detail-trigger data-row-code="{{ $code }}">Voir</button>
+                                    <a href="{{ route('admin.reservations.create', array_filter(['tour_id' => (int) ($row['voyage_id'] ?? 0)])) }}" class="btn-reserve">Réserver</a>
+                                </div>
+                            </div>
+                        </article>
+                    @endif
+                @empty
+                    <div class="commercial-v2-empty">Aucune offre réservable disponible.</div>
+                @endforelse
+            </div>
+        </div>
         <div id="reservations-calendar-view" class="commercial-v2-panel {{ $workspaceView === 'calendar' ? '' : 'hidden' }}"><div class="ws-calendar-panel"><div id="workspace-calendar" class="w-full min-h-[540px] fc-workspace" data-reset-url="{{ $workspaceResetUrl }}"></div></div></div>
     </div>
     @else
