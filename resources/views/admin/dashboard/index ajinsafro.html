@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-[#f8fafc]">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajinsafro.ma - Tableau de bord</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                            800: '#0c4a6e',
+                            900: '#032b45',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts: Montserrat -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+        }
+        /* Custom thin scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* Custom side menu interactive classes */
+        .sidebar-item {
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .sidebar-item:hover {
+            transform: translateX(4px);
+        }
+    </style>
+</head>
+<body class="h-full text-slate-700 antialiased overflow-hidden">
+
+    <div class="flex h-screen w-screen overflow-hidden">
+        
+        <!-- SIDEBAR NAVIGATION (Height to absolute top of viewport with unified white background) -->
+        <aside class="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 hidden lg:flex h-full z-30">
+            <!-- Sidebar Brand Header at absolute top -->
+            <div class="h-14 bg-white flex items-center justify-center px-4 shrink-0 border-b border-slate-200 shadow-sm">
+                <a href="#" class="flex items-center justify-center shrink-0">
+                    <img src="https://booking.ajinsafro.net/storage/home-settings/header/6hZldTmcYICYg6eP8O52lt8GnBe8iuHSi5xiWrdQ.png" alt="Ajinsafro.ma" class="h-8 w-auto max-w-[170px] object-contain transition-opacity duration-300 hover:opacity-95" onerror="this.onerror=null; this.src='https://via.placeholder.com/150x32/0b548b/ffffff?text=Ajinsafro.ma';">
+                </a>
+            </div>
+
+            <!-- Mini User Profile Widget inside Sidebar (Mon profil button removed as requested) -->
+            <div class="p-5 border-b border-slate-100 flex flex-col items-center text-center bg-white">
+                <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-[#0081bc] to-[#005a84] flex items-center justify-center text-base font-bold text-white mb-2 shadow-md">
+                    M
+                </div>
+                <div class="text-sm font-bold text-slate-800">Manager</div>
+                <div class="text-[11px] font-semibold text-slate-400">chef_commercial</div>
+            </div>
+
+            <!-- Navigation Links List with enhanced styles and interactive animations -->
+            <nav class="flex-1 overflow-y-auto p-4 space-y-1.5 bg-white">
+                <!-- Dashboard Collapsible Group -->
+                <div class="space-y-1">
+                    <button class="w-full flex items-center justify-between py-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        <span class="flex items-center space-x-2">
+                            <i data-lucide="layout-dashboard" class="w-4 h-4 text-[#0081bc]"></i>
+                            <span>Tableau de bord</span>
+                        </span>
+                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+                    </button>
+                    <div class="ml-2 pl-4 border-l border-slate-200 space-y-1">
+                        <a href="#" class="block py-2 px-3 text-xs font-bold rounded-lg bg-[#e8f4fc] text-[#0b548b] shadow-sm">
+                            Vue d'ensemble
+                        </a>
+                        <a href="#" class="sidebar-item block py-2 px-3 text-xs font-semibold text-slate-500 rounded-lg hover:bg-slate-50 hover:text-slate-900">
+                            Statistiques
+                        </a>
+                        <a href="#" class="sidebar-item block py-2 px-3 text-xs font-semibold text-slate-500 rounded-lg hover:bg-slate-50 hover:text-slate-900">
+                            Alertes
+                        </a>
+                        <a href="#" class="sidebar-item block py-2 px-3 text-xs font-semibold text-slate-500 rounded-lg hover:bg-slate-50 hover:text-slate-900">
+                            Dashboard V2
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Spacer -->
+                <div class="h-2"></div>
+
+                <!-- Vertical Menu Link Elements: Réservations Collapsible Dropdown (Matches screenshot style) -->
+                <div class="space-y-1">
+                    <button onclick="toggleDropdown('reservations-menu', 'reservations-arrow')" class="w-full flex items-center justify-between py-2.5 px-3 text-xs font-bold rounded-lg border-l-4 border-[#0081bc] bg-[#e8f4fc] text-[#0b548b] transition-all duration-200 focus:outline-none">
+                        <span class="flex items-center space-x-2.5">
+                            <i data-lucide="calendar" class="w-4 h-4 text-[#0b548b]"></i>
+                            <span>Réservations</span>
+                        </span>
+                        <i id="reservations-arrow" data-lucide="chevron-down" class="w-3.5 h-3.5 text-[#0b548b] transition-transform duration-200"></i>
+                    </button>
+                    <!-- Expandable sub-menu sections matching requested image -->
+                    <div id="reservations-menu" class="ml-2 pl-4 border-l border-slate-200 space-y-1 mt-1">
+                        <a href="#" class="sidebar-item flex items-center space-x-2.5 py-2 px-3 text-xs font-semibold text-slate-600 hover:text-[#0b548b] hover:bg-slate-50 rounded-lg">
+                            <i data-lucide="calendar-check" class="w-4 h-4 text-slate-400"></i>
+                            <span>Toutes les réservations</span>
+                        </a>
+                        <a href="#" class="sidebar-item flex items-center space-x-2.5 py-2 px-3 text-xs font-semibold text-slate-600 hover:text-[#0b548b] hover:bg-slate-50 rounded-lg">
+                            <i data-lucide="briefcase" class="w-4 h-4 text-slate-400"></i>
+                            <span>Vente</span>
+                        </a>
+                        <a href="#" class="sidebar-item flex items-center space-x-2.5 py-2 px-3 text-xs font-semibold text-slate-600 hover:text-[#0b548b] hover:bg-slate-50 rounded-lg">
+                            <i data-lucide="user" class="w-4 h-4 text-slate-400"></i>
+                            <span>Réservation en ligne</span>
+                        </a>
+                        <a href="#" class="sidebar-item flex items-center space-x-2.5 py-2 px-3 text-xs font-semibold text-slate-600 hover:text-[#0b548b] hover:bg-slate-50 rounded-lg">
+                            <i data-lucide="pen-tool" class="w-4 h-4 text-slate-400"></i>
+                            <span>Demande à la carte</span>
+                        </a>
+                        <a href="#" class="sidebar-item flex items-center space-x-2.5 py-2 px-3 text-xs font-semibold text-slate-600 hover:text-[#0b548b] hover:bg-slate-50 rounded-lg">
+                            <i data-lucide="arrow-left-right" class="w-4 h-4 text-slate-400"></i>
+                            <span>Affectations</span>
+                        </a>
+                        <a href="#" class="sidebar-item flex items-center space-x-2.5 py-2 px-3 text-xs font-semibold text-slate-600 hover:text-[#0b548b] hover:bg-slate-50 rounded-lg">
+                            <i data-lucide="mail" class="w-4 h-4 text-slate-400"></i>
+                            <span>Messagerie</span>
+                        </a>
+                    </div>
+                </div>
+
+                <a href="#" class="sidebar-item flex items-center justify-between py-2.5 px-3 text-xs font-semibold text-slate-600 hover:text-[#0b548b] hover:bg-[#e8f4fc]/50 rounded-lg">
+                    <span class="flex items-center space-x-2.5">
+                        <i data-lucide="package" class="w-4 h-4 text-slate-400"></i>
+                        <span>Produits & Services</span>
+                    </span>
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
+                </a>
+
+                <a href="#" class="sidebar-item flex items-center justify-between py-2.5 px-3 text-xs font-semibold text-slate-600 hover:text-[#0b548b] hover:bg-[#e8f4fc]/50 rounded-lg">
+                    <span class="flex items-center space-x-2.5">
+                        <i data-lucide="users" class="w-4 h-4 text-slate-400"></i>
+                        <span>Clients</span>
+                    </span>
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
+                </a>
+
+                <a href="#" class="sidebar-item flex items-center justify-between py-2.5 px-3 text-xs font-semibold text-slate-600 hover:text-[#0b548b] hover:bg-[#e8f4fc]/50 rounded-lg">
+                    <span class="flex items-center space-x-2.5">
+                        <i data-lucide="map-pin" class="w-4 h-4 text-slate-400"></i>
+                        <span>Points de vente</span>
+                    </span>
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
+                </a>
+
+                <a href="#" class="sidebar-item flex items-center justify-between py-2.5 px-3 text-xs font-semibold text-slate-600 hover:text-[#0b548b] hover:bg-[#e8f4fc]/50 rounded-lg">
+                    <span class="flex items-center space-x-2.5">
+                        <i data-lucide="activity" class="w-4 h-4 text-slate-400"></i>
+                        <span>Opérations</span>
+                    </span>
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
+                </a>
+
+                <a href="#" class="sidebar-item flex items-center justify-between py-2.5 px-3 text-xs font-semibold text-slate-600 hover:text-[#0b548b] hover:bg-[#e8f4fc]/50 rounded-lg">
+                    <span class="flex items-center space-x-2.5">
+                        <i data-lucide="pie-chart" class="w-4 h-4 text-slate-400"></i>
+                        <span>Finance & Reporting</span>
+                    </span>
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
+                </a>
+
+                <a href="#" class="sidebar-item flex items-center justify-between py-2.5 px-3 text-xs font-semibold text-slate-600 hover:text-[#0b548b] hover:bg-[#e8f4fc]/50 rounded-lg">
+                    <span class="flex items-center space-x-2.5">
+                        <i data-lucide="settings" class="w-4 h-4 text-slate-400"></i>
+                        <span>Administration</span>
+                    </span>
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
+                </a>
+
+                <!-- Account section header -->
+                <div class="pt-5 border-t border-slate-100 mt-4 space-y-1">
+                    <span class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Compte</span>
+                    <a href="#" class="sidebar-item flex items-center space-x-2.5 py-2 px-3 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg">
+                        <i data-lucide="user-check" class="w-4 h-4 text-slate-400"></i>
+                        <span>Mon profil</span>
+                    </a>
+                    <a href="#" class="sidebar-item flex items-center space-x-2.5 py-2 px-3 text-xs font-semibold text-rose-500 hover:bg-rose-50 rounded-lg">
+                        <i data-lucide="power" class="w-4 h-4"></i>
+                        <span>Déconnexion</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- MAIN WORKSPACE CONTENT CONTAINER (To the right of the Sidebar) -->
+        <div class="flex-1 flex flex-col overflow-hidden h-full bg-[#f8fafc]">
+            
+            <!-- TOP HEADER BAR (Positioned to the right of sidebar, matching height) -->
+            <header class="bg-[#0b548b] text-white h-14 flex items-center justify-between px-6 shrink-0 z-20 shadow-sm border-b border-white/10">
+                <!-- Left Section (Hamburger on mobile & Search Input) -->
+                <div class="flex items-center space-x-3">
+                    <button id="mobileMenuBtn" class="lg:hidden p-1.5 hover:bg-white/10 rounded-lg transition mr-2">
+                        <i data-lucide="menu" class="w-5.5 h-5.5 text-white"></i>
+                    </button>
+                    <!-- Search Input -->
+                    <div class="relative w-80 hidden sm:block">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-white/60">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                        </span>
+                        <input type="text" placeholder="Rechercher (voyage, agence, réservation...)" class="bg-[#0a4877] text-sm text-white placeholder-white/60 pl-9 pr-4 py-1.5 rounded-md w-full focus:outline-none focus:ring-1 focus:ring-white/50 border border-white/10 font-medium">
+                    </div>
+                </div>
+
+                <!-- User Controls / Notifications (Right Section) -->
+                <div class="flex items-center space-x-3 sm:space-x-4">
+                    <!-- Messages Icon -->
+                    <button class="relative p-1.5 hover:bg-white/10 rounded-full transition" title="Messages">
+                        <i data-lucide="mail" class="w-5 h-5 text-white/90"></i>
+                        <span class="absolute top-1 right-1 w-2 h-2 bg-cyan-400 rounded-full"></span>
+                    </button>
+
+                    <!-- Notifications Bell -->
+                    <button class="relative p-1.5 hover:bg-white/10 rounded-full transition" title="Notifications">
+                        <i data-lucide="bell" class="w-5 h-5 text-white/90"></i>
+                        <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-amber-500 rounded-full"></span>
+                    </button>
+                    
+                    <!-- User Info Badge -->
+                    <div class="flex items-center space-x-2 sm:space-x-3 border-l border-white/20 pl-3 sm:pl-4">
+                        <div class="text-right hidden md:block">
+                            <div class="text-xs font-semibold">Manager</div>
+                            <div class="text-[10px] text-white/70">chef_commercial</div>
+                        </div>
+                        <!-- Profile Image Fallback (Initial) -->
+                        <div class="w-8 h-8 rounded-full bg-cyan-600 border border-white/30 flex items-center justify-center text-xs font-bold text-white shadow shrink-0">
+                            MC
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- SCROLLABLE CORE CONTENT -->
+            <main class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+
+                <!-- MOBILE MENU HEADER (Only visible on small viewport widths) -->
+                <div class="lg:hidden flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-sm mb-4">
+                    <!-- Small screen mobile branding backup logo (White background matches side menu style) -->
+                    <div class="flex items-center">
+                        <img src="https://booking.ajinsafro.net/storage/home-settings/header/6hZldTmcYICYg6eP8O52lt8GnBe8iuHSi5xiWrdQ.png" alt="Ajinsafro" class="h-6 w-auto object-contain bg-white px-2 py-0.5 rounded border border-slate-100">
+                    </div>
+                    <div class="text-xs text-slate-500 font-medium">Mardi 19 mai 2026</div>
+                </div>
+
+                <!-- DASHBOARD TITLE & ACTIONS -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-extrabold text-slate-800 flex items-center space-x-2 tracking-tight">
+                            <span>Tableau de bord</span>
+                        </h1>
+                        <p class="text-xs font-semibold text-slate-400 mt-1">Vue d'ensemble de votre activité — mardi 19 mai 2026 - 09:53</p>
+                    </div>
+                    
+                    <!-- Action Buttons right -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <!-- Date Selector Button -->
+                        <button class="flex items-center space-x-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition shadow-sm">
+                            <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
+                            <span>Mardi 19 mai 2026</span>
+                        </button>
+                        <!-- CTA Primary -->
+                        <button class="bg-[#0b548b] hover:bg-[#0a4877] text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold transition shadow flex items-center space-x-1.5">
+                            <span class="relative flex h-2 w-2">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                            </span>
+                            <span>Réservations</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- FOUR KPI CARDS GRID (Glassmorphic & Exactly Identical in Size & Geometry) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                    
+                    <!-- Card 1: VOYAGES (#0081bc Palette Glass Gradient) -->
+                    <div class="bg-gradient-to-br from-[#0081bc]/90 to-[#005a84]/95 text-white p-5 rounded-2xl shadow-lg shadow-sky-500/10 border border-white/20 backdrop-blur-md relative overflow-hidden flex flex-col justify-between min-h-[150px] transition-all duration-300 hover:scale-[1.01] hover:shadow-xl">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] uppercase font-bold text-white/75 tracking-wider">Voyages</span>
+                                <div class="text-2xl sm:text-3xl font-extrabold mt-1">45</div>
+                            </div>
+                            <div class="p-2.5 bg-white/10 border border-white/10 rounded-xl text-white backdrop-blur-sm">
+                                <i data-lucide="plane" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="pt-2">
+                            <span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-white/10 text-white backdrop-blur-sm">
+                                <i data-lucide="check" class="w-3 h-3"></i>
+                                <span>Catalogue actif</span>
+                            </span>
+                        </div>
+                        <div class="pt-3 border-t border-white/10 flex items-center justify-between">
+                            <span class="text-[11px] text-white/80">Tous les voyages</span>
+                            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-white/60"></i>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: AGENCES (Emerald-Teal Green Glass Gradient) -->
+                    <div class="bg-gradient-to-br from-emerald-500/90 to-teal-600/95 text-white p-5 rounded-2xl shadow-lg shadow-emerald-500/10 border border-white/20 backdrop-blur-md relative overflow-hidden flex flex-col justify-between min-h-[150px] transition-all duration-300 hover:scale-[1.01] hover:shadow-xl">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] uppercase font-bold text-white/75 tracking-wider">Agences</span>
+                                <div class="text-2xl sm:text-3xl font-extrabold mt-1">1</div>
+                            </div>
+                            <div class="p-2.5 bg-white/10 border border-white/10 rounded-xl text-white backdrop-blur-sm">
+                                <i data-lucide="building-2" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="pt-2">
+                            <span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-white/10 text-white backdrop-blur-sm">
+                                <i data-lucide="shield-check" class="w-3 h-3"></i>
+                                <span>1 active</span>
+                            </span>
+                        </div>
+                        <div class="pt-3 border-t border-white/10 flex items-center justify-between">
+                            <span class="text-[11px] text-white/80">Gestion des agences</span>
+                            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-white/60"></i>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: RESERVATIONS (Amber-Orange Glass Gradient) -->
+                    <div class="bg-gradient-to-br from-amber-500/90 to-orange-600/95 text-white p-5 rounded-2xl shadow-lg shadow-orange-500/10 border border-white/20 backdrop-blur-md relative overflow-hidden flex flex-col justify-between min-h-[150px] transition-all duration-300 hover:scale-[1.01] hover:shadow-xl">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] uppercase font-bold text-white/75 tracking-wider">Réservations</span>
+                                <div class="text-2xl sm:text-3xl font-extrabold mt-1">27</div>
+                            </div>
+                            <div class="p-2.5 bg-white/10 border border-white/10 rounded-xl text-white backdrop-blur-sm">
+                                <i data-lucide="calendar" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="pt-2">
+                            <span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-white/15 text-white backdrop-blur-sm">
+                                <i data-lucide="trending-down" class="w-3 h-3"></i>
+                                <span>-87.5% ce mois</span>
+                            </span>
+                        </div>
+                        <div class="pt-3 border-t border-white/10 flex items-center justify-between">
+                            <span class="text-[11px] text-white/80">Total enregistré</span>
+                            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-white/60"></i>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: CLIENTS (Light Blue / Teal #0081bc Palette Glass Gradient) -->
+                    <div class="bg-gradient-to-br from-[#0096c7]/90 to-[#0077b6]/95 text-white p-5 rounded-2xl shadow-lg shadow-sky-600/10 border border-white/20 backdrop-blur-md relative overflow-hidden flex flex-col justify-between min-h-[150px] transition-all duration-300 hover:scale-[1.01] hover:shadow-xl">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] uppercase font-bold text-white/75 tracking-wider">Clients</span>
+                                <div class="text-2xl sm:text-3xl font-extrabold mt-1">0</div>
+                            </div>
+                            <div class="p-2.5 bg-white/10 border border-white/10 rounded-xl text-white backdrop-blur-sm">
+                                <i data-lucide="users" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="pt-2">
+                            <span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-white/10 text-white backdrop-blur-sm">
+                                <i data-lucide="user-plus" class="w-3 h-3"></i>
+                                <span>Aucun nouveau</span>
+                            </span>
+                        </div>
+                        <div class="pt-3 border-t border-white/10 flex items-center justify-between">
+                            <span class="text-[11px] text-white/80">Clients enregistrés</span>
+                            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-white/60"></i>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- MIDDLE THREE PANEL PANELS (Activité récente, Chiffre d'affaires, Messages) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    
+                    <!-- Panel 1: Activité récente -->
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between overflow-hidden">
+                        <div class="p-5">
+                            <div class="flex items-center space-x-2 text-slate-700 font-bold text-sm mb-4">
+                                <i data-lucide="clock" class="w-4 h-4 text-blue-500"></i>
+                                <span>Activité récente</span>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between py-1.5 border-b border-slate-50">
+                                    <span class="text-xs text-slate-500 font-medium">Aujourd'hui</span>
+                                    <span class="text-xs font-bold text-slate-800">0 résa</span>
+                                </div>
+                                <div class="flex items-center justify-between py-1.5 border-b border-slate-50">
+                                    <span class="text-xs text-slate-500 font-medium">Cette semaine</span>
+                                    <span class="text-xs font-bold text-slate-800">1 résa</span>
+                                </div>
+                                <div class="flex items-center justify-between py-1.5">
+                                    <span class="text-xs text-slate-500 font-medium">Ce mois</span>
+                                    <span class="text-xs font-bold text-slate-800">2 réservations</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 px-5 py-3 border-t border-slate-100 flex items-center justify-between">
+                            <button class="text-[11px] text-[#0b548b] font-bold hover:underline flex items-center space-x-1">
+                                <span>Voir le détail</span>
+                            </button>
+                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+                        </div>
+                    </div>
+
+                    <!-- Panel 2: Chiffre d'affaires -->
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between overflow-hidden">
+                        <div class="p-5">
+                            <div class="flex items-center space-x-2 text-slate-700 font-bold text-sm mb-3">
+                                <i data-lucide="wallet" class="w-4 h-4 text-emerald-500"></i>
+                                <span>Chiffre d'affaires</span>
+                            </div>
+                            <div>
+                                <span class="text-xs text-slate-400 font-medium">Total validé</span>
+                                <div class="text-2xl font-bold text-slate-800 mt-0.5">151 370 €</div>
+                            </div>
+                            <div class="mt-2.5 flex items-center justify-between text-xs">
+                                <span class="text-slate-400 font-medium">Ce mois : <b class="text-slate-700 font-bold">0 €</b></span>
+                                <span class="text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded flex items-center space-x-1">
+                                    <i data-lucide="arrow-up-right" class="w-3 h-3"></i>
+                                    <span>+0% vs mois dernier</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 px-5 py-3 border-t border-slate-100 flex items-center justify-between">
+                            <button class="text-[11px] text-[#0b548b] font-bold hover:underline flex items-center space-x-1">
+                                <span>Voir le détail</span>
+                            </button>
+                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+                        </div>
+                    </div>
+
+                    <!-- Panel 3: Messages (Spans across full row width on medium sized tablets, aligns beautifully) -->
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 flex flex-col justify-between relative overflow-hidden md:col-span-2 lg:col-span-1">
+                        <div>
+                            <div class="flex items-center space-x-2 text-slate-700 font-bold text-sm mb-4">
+                                <i data-lucide="mail" class="w-4 h-4 text-violet-500"></i>
+                                <span>Messages</span>
+                            </div>
+                            <div>
+                                <span class="text-xs text-slate-400 font-medium">Boîte Réservations</span>
+                                <div class="text-3xl font-extrabold text-slate-800 mt-1">0</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Decorative Envelope Icon Placement -->
+                        <div class="absolute right-6 top-10 opacity-10 text-slate-400">
+                            <i data-lucide="mail-open" class="w-20 h-20"></i>
+                        </div>
+
+                        <div class="pt-4 mt-2">
+                            <button class="w-full bg-[#0b548b] hover:bg-[#0a4877] text-white text-xs font-semibold py-2.5 px-4 rounded-lg shadow-sm transition flex items-center justify-center space-x-1.5">
+                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                                <span>Ouvrir la messagerie</span>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- REPARTITION BAR BLOCK -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                        <h3 class="font-bold text-slate-800 text-sm">Répartition des réservations</h3>
+                        <!-- Summary Badges inline -->
+                        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+                            <div class="flex items-center space-x-1.5">
+                                <span class="w-2.5 h-2.5 rounded-full bg-amber-400 block"></span>
+                                <span class="text-slate-500 font-medium">En attente : <b class="text-slate-700 font-bold">11</b></span>
+                            </div>
+                            <div class="flex items-center space-x-1.5">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 block"></span>
+                                <span class="text-slate-500 font-medium">Validées : <b class="text-slate-700 font-bold">13</b></span>
+                            </div>
+                            <div class="flex items-center space-x-1.5">
+                                <span class="w-2.5 h-2.5 rounded-full bg-rose-500 block"></span>
+                                <span class="text-slate-500 font-medium">Annulées : <b class="text-slate-700 font-bold">2</b></span>
+                            </div>
+                            <div class="border-l border-slate-200 pl-3 flex items-center space-x-1 font-medium">
+                                <span class="text-slate-400">Total :</span>
+                                <span class="font-bold text-slate-800">27</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Horizontal Progress Split Bar -->
+                    <div class="w-full h-3.5 bg-slate-100 rounded-full flex overflow-hidden">
+                        <!-- Wait: 11/27 = 40.7% -->
+                        <div class="h-full bg-amber-400 transition-all duration-500" style="width: 40.7%;" title="En attente (11)"></div>
+                        <!-- Valid: 13/27 = 48.1% -->
+                        <div class="h-full bg-emerald-500 transition-all duration-500" style="width: 48.1%;" title="Validées (13)"></div>
+                        <!-- Cancelled: 2/27 = 7.4% -->
+                        <div class="h-full bg-rose-500 transition-all duration-500" style="width: 7.4%;" title="Annulées (2)"></div>
+                        <!-- Remaining / Empty spacing: 3.8% -->
+                        <div class="h-full bg-slate-200 transition-all duration-500" style="width: 3.8%;" title="Non défini (1)"></div>
+                    </div>
+                </div>
+
+                <!-- CHARTS SECTION: Dual Axis Evolution & Doughnut Chart -->
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                    
+                    <!-- Left Chart: Evolution (6 derniers mois) -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm xl:col-span-2 flex flex-col justify-between overflow-hidden">
+                        <div>
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
+                                <div>
+                                    <h3 class="font-bold text-slate-800 text-sm">Évolution des réservations & du chiffre d'affaires</h3>
+                                    <p class="text-[11px] text-slate-400 mt-0.5 font-medium">Aperçu interactif des performances</p>
+                                </div>
+                                <!-- Small Period Selector Badge -->
+                                <span class="self-start sm:self-center bg-blue-50 text-[#0b548b] text-[10px] font-bold px-2.5 py-1 rounded-full border border-blue-100">
+                                    6 derniers mois
+                                </span>
+                            </div>
+
+                            <!-- Legend alignment matches the image top-right of chart -->
+                            <div class="flex justify-end space-x-4 mb-4 text-xs font-semibold">
+                                <div class="flex items-center space-x-1.5">
+                                    <span class="w-3.5 h-3.5 rounded bg-blue-600 block"></span>
+                                    <span class="text-slate-500">Réservations</span>
+                                </div>
+                                <div class="flex items-center space-x-1.5">
+                                    <span class="w-3.5 h-1.5 rounded-full bg-amber-500 block"></span>
+                                    <span class="text-slate-500">Chiffre d'affaires (€)</span>
+                                </div>
+                            </div>
+
+                            <!-- Dual-Axis Chart SVG + HTML -->
+                            <div class="relative w-full h-64 mt-2">
+                                <!-- Background Grid Lines -->
+                                <div class="absolute inset-x-0 top-0 h-full flex flex-col justify-between pointer-events-none">
+                                    <div class="border-b border-dashed border-slate-100 w-full h-0"></div>
+                                    <div class="border-b border-dashed border-slate-100 w-full h-0"></div>
+                                    <div class="border-b border-dashed border-slate-100 w-full h-0"></div>
+                                    <div class="border-b border-dashed border-slate-100 w-full h-0"></div>
+                                    <div class="border-b border-slate-100 w-full h-0"></div>
+                                </div>
+
+                                <!-- Left Axis Labels: Reserv (0 to 20) -->
+                                <div class="absolute left-0 top-0 h-full flex flex-col justify-between text-[10px] font-bold text-slate-400 pb-6 pr-2">
+                                    <span>20</span>
+                                    <span>15</span>
+                                    <span>10</span>
+                                    <span>5</span>
+                                    <span>0</span>
+                                </div>
+
+                                <!-- Right Axis Labels: CA (0 to 200k) -->
+                                <div class="absolute right-0 top-0 h-full flex flex-col justify-between text-[10px] font-bold text-slate-400 pb-6 pl-2 text-right">
+                                    <span>200k</span>
+                                    <span>150k</span>
+                                    <span>100k</span>
+                                    <span>50k</span>
+                                    <span>0</span>
+                                </div>
+
+                                <!-- SVG Overlay for Spline Line (CA) - Built responsively using percentages inside viewbox grid -->
+                                <svg class="absolute inset-0 w-full h-full" viewBox="0 0 600 256" preserveAspectRatio="none">
+                                    <defs>
+                                        <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stop-color="#f97316" stop-opacity="0.2"/>
+                                            <stop offset="100%" stop-color="#f97316" stop-opacity="0.0"/>
+                                        </linearGradient>
+                                    </defs>
+                                    <!-- Area under spline -->
+                                    <path d="M 50,220 C 120,220 170,220 250,90 C 270,50 310,140 350,220 L 550,220 L 550,220 L 50,220 Z" fill="url(#lineGrad)" />
+                                    <!-- The Spline Line -->
+                                    <path d="M 50,220 C 120,220 170,220 250,90 C 270,50 310,140 350,220 L 550,220" fill="none" stroke="#f97316" stroke-width="2.5" />
+                                    <!-- Points indicators -->
+                                    <circle cx="254" cy="94" r="4.5" fill="#f97316" stroke="#ffffff" stroke-width="1.5" />
+                                </svg>
+
+                                <!-- Responsive Columns Container overlay (Bars for Réservations) -->
+                                <div class="absolute inset-x-0 top-0 h-full flex justify-between px-8 sm:px-12 pb-6 pt-2 z-10">
+                                    <!-- Dec -->
+                                    <div class="flex flex-col items-center justify-end h-full w-8 sm:w-12 group">
+                                        <div class="h-0 w-full bg-blue-600 rounded-t-md group-hover:bg-blue-500 transition-all duration-300"></div>
+                                    </div>
+                                    <!-- Jan -->
+                                    <div class="flex flex-col items-center justify-end h-full w-8 sm:w-12 group">
+                                        <div class="h-0 w-full bg-blue-600 rounded-t-md group-hover:bg-blue-500 transition-all duration-300"></div>
+                                    </div>
+                                    <!-- Feb -->
+                                    <div class="flex flex-col items-center justify-end h-full w-8 sm:w-12 group">
+                                        <div class="h-0 w-full bg-blue-600 rounded-t-md group-hover:bg-blue-500 transition-all duration-300"></div>
+                                    </div>
+                                    <!-- Mar (7) -->
+                                    <div class="flex flex-col items-center justify-end h-full w-8 sm:w-12 group">
+                                        <div class="text-[10px] font-bold text-blue-600 mb-1 opacity-0 group-hover:opacity-100 transition-opacity">7</div>
+                                        <div class="w-full bg-blue-600 rounded-t-md group-hover:bg-blue-500 transition-all duration-300" style="height: 35%;"></div>
+                                    </div>
+                                    <!-- Apr (15) -->
+                                    <div class="flex flex-col items-center justify-end h-full w-8 sm:w-12 group">
+                                        <div class="text-[10px] font-bold text-blue-600 mb-1 opacity-100 transition-opacity">15</div>
+                                        <div class="w-full bg-[#0c6ebb] rounded-t-md group-hover:bg-blue-500 transition-all duration-300" style="height: 75%;"></div>
+                                    </div>
+                                    <!-- May (2) -->
+                                    <div class="flex flex-col items-center justify-end h-full w-8 sm:w-12 group">
+                                        <div class="text-[10px] font-bold text-blue-600 mb-1 opacity-0 group-hover:opacity-100 transition-opacity">2</div>
+                                        <div class="w-full bg-blue-600 rounded-t-md group-hover:bg-blue-500 transition-all duration-300" style="height: 10%;"></div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- X Axis Labels underneath chart canvas -->
+                            <div class="flex justify-between px-6 sm:px-10 text-[10px] font-bold text-slate-400 border-t border-slate-100 pt-2">
+                                <span class="w-12 text-center truncate">déc. 2025</span>
+                                <span class="w-12 text-center truncate">janv. 2026</span>
+                                <span class="w-12 text-center truncate">févr. 2026</span>
+                                <span class="w-12 text-center truncate">mars 2026</span>
+                                <span class="w-12 text-center truncate">avr. 2026</span>
+                                <span class="w-12 text-center truncate">mai 2026</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Chart: Statut des réservations Doughnut -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-sm mb-1">Statut des réservations</h3>
+                            <p class="text-[11px] text-slate-400 mb-6 font-medium">Proportions d'états récents</p>
+                            
+                            <!-- Main Central Circular Doughnut SVG Chart -->
+                            <div class="relative flex justify-center items-center my-6">
+                                <svg class="w-36 h-36 sm:w-40 sm:h-40 transform -rotate-90" viewBox="0 0 36 36">
+                                    <circle cx="18" cy="18" r="15.915" fill="none" stroke="#f1f5f9" stroke-width="4.5"></circle>
+                                    <circle cx="18" cy="18" r="15.915" fill="none" stroke="#f59e0b" stroke-width="4.5"
+                                            stroke-dasharray="42 58" stroke-dashoffset="0"></circle>
+                                    <circle cx="18" cy="18" r="15.915" fill="none" stroke="#10b981" stroke-width="4.5"
+                                            stroke-dasharray="50 50" stroke-dashoffset="-42"></circle>
+                                    <circle cx="18" cy="18" r="15.915" fill="none" stroke="#ef4444" stroke-width="4.5"
+                                            stroke-dasharray="8 92" stroke-dashoffset="-92"></circle>
+                                </svg>
+
+                                <div class="absolute text-center">
+                                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total</span>
+                                    <div class="text-2xl sm:text-3xl font-extrabold text-slate-800">26</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Compact Legend indicators below -->
+                        <div class="border-t border-slate-50 pt-4 flex items-center justify-around text-[10px] sm:text-[11px] font-bold text-slate-500">
+                            <div class="flex items-center space-x-1">
+                                <span class="w-2 h-2 rounded-full bg-amber-500 block"></span>
+                                <span>En cours</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 block"></span>
+                                <span>Validés</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <span class="w-2 h-2 rounded-full bg-rose-500 block"></span>
+                                <span>Annulés</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- LOWER GRID: Paiements Validés & Dernières Réservations -->
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                    
+                    <!-- Left: Paiements validés -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="font-bold text-slate-800 text-sm">Paiements validés</h3>
+                                <span class="text-[10px] text-slate-400 uppercase font-bold">Méthodes</span>
+                            </div>
+
+                            <!-- Structured custom progress bars -->
+                            <div class="space-y-4">
+                                <!-- Row 1: Non renseigné -->
+                                <div>
+                                    <div class="flex justify-between items-center text-xs mb-1">
+                                        <span class="text-slate-500 font-semibold">Non renseigné</span>
+                                        <span class="font-bold text-slate-800">3</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                        <div class="bg-[#0b548b] h-full rounded-full" style="width: 33.3%;"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Row 2: CASHPLUS -->
+                                <div>
+                                    <div class="flex justify-between items-center text-xs mb-1">
+                                        <span class="text-slate-500 font-semibold">CASHPLUS</span>
+                                        <span class="font-bold text-slate-800">3</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                        <div class="bg-[#0b548b] h-full rounded-full" style="width: 33.3%;"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Row 3: ESPECE -->
+                                <div>
+                                    <div class="flex justify-between items-center text-xs mb-1">
+                                        <span class="text-slate-500 font-semibold">ESPECE</span>
+                                        <span class="font-bold text-slate-800">8</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                        <div class="bg-emerald-500 h-full rounded-full" style="width: 88.8%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer Details Link inside Paiements Validés -->
+                        <div class="border-t border-slate-100 pt-4 mt-6 flex items-center justify-between">
+                            <button class="text-[11px] text-[#0b548b] font-bold hover:underline flex items-center space-x-1">
+                                <span>Voir le détail</span>
+                            </button>
+                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+                        </div>
+                    </div>
+
+                    <!-- Right: Dernières réservations (Highly responsive scrolling viewports) -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm xl:col-span-2 overflow-hidden flex flex-col justify-between">
+                        <div>
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                                <div>
+                                    <h3 class="font-bold text-slate-800 text-sm">Dernières réservations</h3>
+                                    <p class="text-[11px] text-slate-400 mt-0.5 font-medium">Historique et états de paiements des derniers inscrits</p>
+                                </div>
+                                <button class="self-start sm:self-center text-[11px] bg-slate-50 hover:bg-slate-100 text-slate-600 px-3 py-1 rounded-md border border-slate-200 flex items-center space-x-1 font-semibold">
+                                    <span>Voir toutes</span>
+                                    <i data-lucide="arrow-up-right" class="w-3 h-3"></i>
+                                </button>
+                            </div>
+
+                            <!-- Responsive Data Table Container with absolute safety width boundaries -->
+                            <div class="overflow-x-auto w-full border border-slate-50 rounded-lg">
+                                <table class="w-full text-left text-xs text-slate-600 border-collapse min-w-[750px]">
+                                    <thead>
+                                        <tr class="bg-slate-50/50 border-b border-slate-100 text-[10px] text-slate-400 uppercase tracking-wider">
+                                            <th class="py-3 px-3 font-bold">#</th>
+                                            <th class="py-3 px-3 font-bold">Client</th>
+                                            <th class="py-3 px-3 font-bold">Voyage</th>
+                                            <th class="py-3 px-3 font-bold">Statut</th>
+                                            <th class="py-3 px-3 font-bold">Paiement</th>
+                                            <th class="py-3 px-3 font-bold">Montant</th>
+                                            <th class="py-3 px-3 font-bold">Date</th>
+                                            <th class="py-3 px-3 font-bold text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-50 font-medium">
+                                        
+                                        <!-- Row 1 -->
+                                        <tr class="hover:bg-slate-50/50 transition-colors">
+                                            <td class="py-2.5 px-3 font-bold text-slate-400">472</td>
+                                            <td class="py-2.5 px-3">
+                                                <div class="font-bold text-slate-800">Oussama Idrissi</div>
+                                                <div class="text-[10px] text-slate-400 font-semibold">oussama2idrissi@gmail.com</div>
+                                            </td>
+                                            <td class="py-2.5 px-3 truncate max-w-[150px]" title="Séjour 4 jours à Dakhla à partir de...">Séjour 4 jours à Dakhla à part...</td>
+                                            <td class="py-2.5 px-3">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-100">
+                                                    En cours
+                                                </span>
+                                            </td>
+                                            <td class="py-2.5 px-3 text-slate-400">—</td>
+                                            <td class="py-2.5 px-3 text-slate-400">—</td>
+                                            <td class="py-2.5 px-3 text-[11px] text-slate-500 whitespace-nowrap">18/05/2026 21:11</td>
+                                            <td class="py-2.5 px-3 text-right">
+                                                <button class="text-slate-400 hover:text-slate-600 p-1 rounded hover:bg-slate-100">
+                                                    <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Row 2 -->
+                                        <tr class="hover:bg-slate-50/50 transition-colors">
+                                            <td class="py-2.5 px-3 font-bold text-slate-400">468</td>
+                                            <td class="py-2.5 px-3">
+                                                <div class="font-bold text-slate-800">Oussama Idrissi</div>
+                                                <div class="text-[10px] text-slate-400 font-semibold">oussama2idrissi@gmail.com</div>
+                                            </td>
+                                            <td class="py-2.5 px-3 truncate max-w-[150px]">Séjour 4 jours à Dakhla à part...</td>
+                                            <td class="py-2.5 px-3">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">
+                                                    Validée
+                                                </span>
+                                            </td>
+                                            <td class="py-2.5 px-3 text-slate-400">—</td>
+                                            <td class="py-2.5 px-3 text-slate-400">—</td>
+                                            <td class="py-2.5 px-3 text-[11px] text-slate-500 whitespace-nowrap">16/05/2026 20:10</td>
+                                            <td class="py-2.5 px-3 text-right">
+                                                <button class="text-slate-400 hover:text-slate-600 p-1 rounded hover:bg-slate-100">
+                                                    <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Row 3 -->
+                                        <tr class="hover:bg-slate-50/50 transition-colors">
+                                            <td class="py-2.5 px-3 font-bold text-slate-400">451</td>
+                                            <td class="py-2.5 px-3">
+                                                <div class="font-bold text-slate-800">Démo TNG</div>
+                                                <div class="text-[10px] text-slate-400 font-semibold">demo.awd.tng.branch@ajinsafro.ma</div>
+                                            </td>
+                                            <td class="py-2.5 px-3 truncate max-w-[150px]">Séjour Dubaï 7 jours (6 nuits)</td>
+                                            <td class="py-2.5 px-3">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-100">
+                                                    En cours
+                                                </span>
+                                            </td>
+                                            <td class="py-2.5 px-3"><span class="font-bold text-slate-700">ESPÈCE</span></td>
+                                            <td class="py-2.5 px-3 text-slate-400">—</td>
+                                            <td class="py-2.5 px-3 text-[11px] text-slate-500 whitespace-nowrap">28/04/2026 19:34</td>
+                                            <td class="py-2.5 px-3 text-right">
+                                                <button class="text-slate-400 hover:text-slate-600 p-1 rounded hover:bg-slate-100">
+                                                    <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Row 4 -->
+                                        <tr class="hover:bg-slate-50/50 transition-colors">
+                                            <td class="py-2.5 px-3 font-bold text-slate-400">447</td>
+                                            <td class="py-2.5 px-3">
+                                                <div class="font-bold text-slate-800">Oussama Idrissi</div>
+                                                <div class="text-[10px] text-slate-400 font-semibold">oussama2idrissi@gmail.com</div>
+                                            </td>
+                                            <td class="py-2.5 px-3 truncate max-w-[150px]">Séjour 4 jours à Dakhla à part...</td>
+                                            <td class="py-2.5 px-3">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-100">
+                                                    En cours
+                                                </span>
+                                            </td>
+                                            <td class="py-2.5 px-3 text-slate-400">—</td>
+                                            <td class="py-2.5 px-3 text-slate-400">—</td>
+                                            <td class="py-2.5 px-3 text-[11px] text-slate-500 whitespace-nowrap">24/04/2026 14:29</td>
+                                            <td class="py-2.5 px-3 text-right">
+                                                <button class="text-slate-400 hover:text-slate-600 p-1 rounded hover:bg-slate-100">
+                                                    <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Row 5 -->
+                                        <tr class="hover:bg-slate-50/50 transition-colors">
+                                            <td class="py-2.5 px-3 font-bold text-slate-400">446</td>
+                                            <td class="py-2.5 px-3">
+                                                <div class="font-bold text-slate-800">test mof</div>
+                                                <div class="text-[10px] text-slate-400 font-semibold">oussama2idrissi@gmail.com</div>
+                                            </td>
+                                            <td class="py-2.5 px-3 truncate max-w-[150px]">Séjour 4 jours à Dakhla à part...</td>
+                                            <td class="py-2.5 px-3">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-100">
+                                                    En cours
+                                                </span>
+                                            </td>
+                                            <td class="py-2.5 px-3 text-slate-400">—</td>
+                                            <td class="py-2.5 px-3 text-slate-400">—</td>
+                                            <td class="py-2.5 px-3 text-[11px] text-slate-500 whitespace-nowrap">23/04/2026 01:50</td>
+                                            <td class="py-2.5 px-3 text-right">
+                                                <button class="text-slate-400 hover:text-slate-600 p-1 rounded hover:bg-slate-100">
+                                                    <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Row 6 -->
+                                        <tr class="hover:bg-slate-50/50 transition-colors">
+                                            <td class="py-2.5 px-3 font-bold text-slate-400">444</td>
+                                            <td class="py-2.5 px-3">
+                                                <div class="font-bold text-slate-800">test mof 2</div>
+                                                <div class="text-[10px] text-slate-400 font-semibold">oussama2idrissi@gmail.com</div>
+                                            </td>
+                                            <td class="py-2.5 px-3 truncate max-w-[150px]">Séjour 4 jours à Dakhla à part...</td>
+                                            <td class="py-2.5 px-3">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-100">
+                                                    Annulée
+                                                </span>
+                                            </td>
+                                            <td class="py-2.5 px-3 text-slate-400">—</td>
+                                            <td class="py-2.5 px-3 text-slate-400">—</td>
+                                            <td class="py-2.5 px-3 text-[11px] text-slate-500 whitespace-nowrap">22/04/2026 09:40</td>
+                                            <td class="py-2.5 px-3 text-right">
+                                                <button class="text-slate-400 hover:text-slate-600 p-1 rounded hover:bg-slate-100">
+                                                    <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- TWO LAST PANELS: Voyages les plus réservés & Agences actives -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    <!-- Voyages les plus réservés -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-bold text-slate-800 text-sm">Voyages les plus réservés</h3>
+                                <button class="text-[11px] text-[#0b548b] font-bold hover:underline">Voir tous</button>
+                            </div>
+                            
+                            <!-- List Group -->
+                            <div class="space-y-3">
+                                <!-- Item 1 -->
+                                <div class="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg hover:bg-slate-100/70 transition-colors">
+                                    <div class="flex items-center space-x-3 overflow-hidden">
+                                        <div class="w-8 h-8 rounded-lg bg-[#e8f4fc] flex items-center justify-center shrink-0">
+                                            <i data-lucide="map-pin" class="w-4 h-4 text-[#0b548b]"></i>
+                                        </div>
+                                        <span class="text-xs font-semibold text-slate-700 truncate" title="Séjour 4 jours à Dakhla à partir de 3980 DHs!">
+                                            Séjour 4 jours à Dakhla à partir de 3980 DHs!
+                                        </span>
+                                    </div>
+                                    <span class="text-xs font-bold text-[#0b548b] bg-blue-50 px-2 py-1 rounded-md shrink-0">15</span>
+                                </div>
+
+                                <!-- Item 2 -->
+                                <div class="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg hover:bg-slate-100/70 transition-colors">
+                                    <div class="flex items-center space-x-3 overflow-hidden">
+                                        <div class="w-8 h-8 rounded-lg bg-[#e8f4fc] flex items-center justify-center shrink-0">
+                                            <i data-lucide="map-pin" class="w-4 h-4 text-[#0b548b]"></i>
+                                        </div>
+                                        <span class="text-xs font-semibold text-slate-700 truncate">
+                                            America's National Parks with Denver
+                                        </span>
+                                    </div>
+                                    <span class="text-xs font-bold text-[#0b548b] bg-blue-50 px-2 py-1 rounded-md shrink-0">4</span>
+                                </div>
+
+                                <!-- Item 3 -->
+                                <div class="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg hover:bg-slate-100/70 transition-colors">
+                                    <div class="flex items-center space-x-3 overflow-hidden">
+                                        <div class="w-8 h-8 rounded-lg bg-[#e8f4fc] flex items-center justify-center shrink-0">
+                                            <i data-lucide="map-pin" class="w-4 h-4 text-[#0b548b]"></i>
+                                        </div>
+                                        <span class="text-xs font-semibold text-slate-700 truncate">
+                                            Séjour 5 Jours / 4 Nuits à Barcelone, la capitale...
+                                        </span>
+                                    </div>
+                                    <span class="text-xs font-bold text-[#0b548b] bg-blue-50 px-2 py-1 rounded-md shrink-0">3</span>
+                                </div>
+
+                                <!-- Item 4 -->
+                                <div class="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg hover:bg-slate-100/70 transition-colors">
+                                    <div class="flex items-center space-x-3 overflow-hidden">
+                                        <div class="w-8 h-8 rounded-lg bg-[#e8f4fc] flex items-center justify-center shrink-0">
+                                            <i data-lucide="map-pin" class="w-4 h-4 text-[#0b548b]"></i>
+                                        </div>
+                                        <span class="text-xs font-semibold text-slate-700 truncate">
+                                            Grand Voyage en Chine : De Shanghai à Canton, entr...
+                                        </span>
+                                    </div>
+                                    <span class="text-xs font-bold text-[#0b548b] bg-blue-50 px-2 py-1 rounded-md shrink-0">2</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Agences actives -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-bold text-slate-800 text-sm">Agences actives</h3>
+                                <button class="text-[11px] text-[#0b548b] font-bold hover:underline">Voir toutes</button>
+                            </div>
+                            
+                            <!-- List Group -->
+                            <div class="space-y-3">
+                                <!-- Agency 1 -->
+                                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100">
+                                            <i data-lucide="building-2" class="w-5 h-5 text-emerald-600"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-xs font-bold text-slate-800">Ajinsafro Tanger</div>
+                                            <div class="text-[10px] text-slate-400 font-semibold">Tanger - TNG</div>
+                                        </div>
+                                    </div>
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-emerald-50"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- MOBILE SIDEBAR NAVIGATION SLIDEOUT OVERLAY -->
+    <div id="mobileSidebarOverlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 hidden transition-opacity duration-300"></div>
+    <div id="mobileSidebar" class="fixed inset-y-0 left-0 w-64 bg-white z-50 transform -translate-x-full transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col shadow-2xl">
+        <!-- Close bar -->
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-white text-slate-800">
+            <div class="font-bold text-slate-800">
+                <img src="https://booking.ajinsafro.net/storage/home-settings/header/6hZldTmcYICYg6eP8O52lt8GnBe8iuHSi5xiWrdQ.png" alt="Ajinsafro.ma" class="h-7 w-auto object-contain">
+            </div>
+            <button id="closeMobileMenuBtn" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition-all duration-300">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        <!-- Scrollable copy of sidebar menu -->
+        <div class="flex-1 overflow-y-auto p-3 space-y-2 bg-white" id="mobileMenuContainer">
+            <!-- Mobile Menu Links are cloned from desktop sidebar via JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Responsive Mobile Menu Drawer Logic
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const closeMobileMenuBtn = document.getElementById('closeMobileMenuBtn');
+        const mobileSidebar = document.getElementById('mobileSidebar');
+        const mobileSidebarOverlay = document.getElementById('mobileSidebarOverlay');
+        const mobileMenuContainer = document.getElementById('mobileMenuContainer');
+        const desktopSidebarNav = document.querySelector('aside nav');
+
+        // Copy desktop nav links to mobile menu on load
+        if (desktopSidebarNav && mobileMenuContainer) {
+            mobileMenuContainer.innerHTML = desktopSidebarNav.innerHTML;
+        }
+
+        // Dropdown toggle functionality for Reservaitons or other collapsible items
+        function toggleDropdown(menuId, arrowId) {
+            const menu = document.getElementById(menuId);
+            const arrow = document.getElementById(arrowId);
+            
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                arrow.classList.add('rotate-180');
+            } else {
+                menu.classList.add('hidden');
+                arrow.classList.remove('rotate-180');
+            }
+        }
+
+        function toggleMobileMenu(isOpen) {
+            if (isOpen) {
+                mobileSidebarOverlay.classList.remove('hidden');
+                setTimeout(() => mobileSidebarOverlay.classList.add('opacity-100'), 10);
+                mobileSidebar.classList.remove('-translate-x-full');
+            } else {
+                mobileSidebarOverlay.classList.remove('opacity-100');
+                mobileSidebarOverlay.classList.add('hidden');
+                mobileSidebar.classList.add('-translate-x-full');
+            }
+        }
+
+        mobileMenuBtn.addEventListener('click', () => toggleMobileMenu(true));
+        closeMobileMenuBtn.addEventListener('click', () => toggleMobileMenu(false));
+        mobileSidebarOverlay.addEventListener('click', () => toggleMobileMenu(false));
+    </script>
+</body>
+</html>

@@ -208,6 +208,20 @@
         flex: none;
     }
 
+    .aj-v4-sidebar-toggle {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex: none;
+    }
+
     .aj-v4-sidebar__brand-badge {
         width: 42px;
         height: 42px;
@@ -1179,6 +1193,80 @@
         padding: 10px 8px;
     }
 
+    .aj-dashboard-v4-page .aj-v4-sidebar {
+      width: 286px !important;
+      min-width: 286px !important;
+      max-width: 286px !important;
+      transition: width .25s ease;
+    }
+
+    .aj-dashboard-v4-page .aj-v4-main {
+      margin-left: 286px !important;
+      width: calc(100% - 286px) !important;
+      transition: margin-left .25s ease, width .25s ease;
+    }
+
+    .aj-dashboard-v4-page.is-sidebar-collapsed .aj-v4-sidebar {
+      width: 78px !important;
+      min-width: 78px !important;
+      max-width: 78px !important;
+    }
+
+    .aj-dashboard-v4-page.is-sidebar-collapsed .aj-v4-main {
+      margin-left: 78px !important;
+      width: calc(100% - 78px) !important;
+    }
+
+    .aj-dashboard-v4-page.is-sidebar-collapsed .aj-v4-sidebar .aj-v4-logo-text,
+    .aj-dashboard-v4-page.is-sidebar-collapsed .aj-v4-sidebar .aj-v4-profile-info,
+    .aj-dashboard-v4-page.is-sidebar-collapsed .aj-v4-sidebar .aj-v4-nav-label,
+    .aj-dashboard-v4-page.is-sidebar-collapsed .aj-v4-sidebar .aj-v4-sub-nav,
+    .aj-dashboard-v4-page.is-sidebar-collapsed .aj-v4-sidebar .aj-v4-premium-box {
+      display: none !important;
+    }
+
+    .aj-dashboard-v4-page .aj-v4-kpi-grid {
+      display: grid !important;
+      grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+      gap: 14px !important;
+      width: 100% !important;
+      margin: 14px 0 !important;
+    }
+
+    .aj-dashboard-v4-page .aj-v4-kpi-card {
+      width: auto !important;
+      max-width: none !important;
+      min-height: 108px !important;
+      padding: 14px 16px !important;
+      display: grid !important;
+      grid-template-columns: 46px minmax(0, 1fr) 90px !important;
+      align-items: center !important;
+      gap: 12px !important;
+      border-radius: 18px !important;
+    }
+
+    .aj-dashboard-v4-page .aj-v4-kpi-icon {
+      width: 46px !important;
+      height: 46px !important;
+      border-radius: 14px !important;
+    }
+
+    .aj-dashboard-v4-page .aj-v4-kpi-value {
+      font-size: 22px !important;
+      line-height: 1.1 !important;
+    }
+
+    .aj-dashboard-v4-page .aj-v4-kpi-trend {
+      font-size: 11px !important;
+      line-height: 1.2 !important;
+    }
+
+    .aj-dashboard-v4-page .aj-v4-kpi-sparkline {
+      width: 90px !important;
+      height: 30px !important;
+      justify-self: end !important;
+    }
+
     @media (max-width: 1280px) {
         .aj-v4-kpi-grid,
         .aj-v4-kpis {
@@ -1270,24 +1358,44 @@
             overflow-x: auto;
         }
     }
+
+    @media (max-width: 1200px) {
+      .aj-dashboard-v4-page .aj-v4-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .aj-dashboard-v4-page .aj-v4-kpi-grid {
+        grid-template-columns: 1fr !important;
+      }
+
+      .aj-dashboard-v4-page .aj-v4-kpi-card {
+        grid-template-columns: 46px 1fr !important;
+      }
+
+      .aj-dashboard-v4-page .aj-v4-kpi-sparkline {
+        display: none !important;
+      }
+    }
 </style>
 <?php $__env->stopPush(); ?>
 
 <?php $__env->startSection('content'); ?>
-<div class="aj-dashboard-v4-page" id="ajDashboardV4Page">
+<div id="ajDashboardV4Page" class="aj-dashboard-v4-page">
     <div class="aj-dashboard-v4-layout">
         <aside class="aj-v4-sidebar" aria-label="Navigation principale">
             <div class="aj-v4-sidebar__brand">
                 <div class="aj-v4-sidebar__brand-badge">☼</div>
-                <img src="<?php echo e($dashboardBrandLogo); ?>" alt="<?php echo e($dashboardBrandName); ?>">
-                <button type="button" class="aj-v4-sidebar__toggle" id="ajV4SidebarToggle" aria-label="Basculer la sidebar">
+                <img src="<?php echo e($dashboardBrandLogo); ?>" alt="<?php echo e($dashboardBrandName); ?>" class="aj-v4-logo-text">
+                <button type="button" class="aj-v4-sidebar__toggle aj-v4-sidebar-toggle" id="ajV4SidebarToggle" aria-label="Basculer la sidebar">
                     <i class="bx bx-menu"></i>
                 </button>
             </div>
 
             <div class="aj-v4-sidebar__profile">
                 <div class="aj-v4-sidebar__avatar"><?php echo e($dashboardInitials); ?></div>
-                <div>
+                <div class="aj-v4-profile-info">
                     <strong><?php echo e($dashboardUserName); ?></strong>
                     <span><?php echo e($dashboardUserRole); ?></span>
                 </div>
@@ -1301,7 +1409,7 @@
                     <span class="aj-v4-nav-label">Tableau de bord</span>
                     <span class="aj-v4-nav-caret" style="margin-left:auto;color:var(--aj-gold-300);">⌃</span>
                 </a>
-                <div class="aj-v4-sidebar__subnav">
+                <div class="aj-v4-sidebar__subnav aj-v4-sub-nav">
                     <a href="<?php echo e(route('admin.dashboard.vue-globale')); ?>" class="aj-v4-sidebar__subitem <?php echo e($dashboardRouteIs('admin.dashboard.vue-globale') ? 'is-active' : ''); ?>">Vue d'ensemble</a>
                     <a href="<?php echo e(route('admin.dashboard.statistiques')); ?>" class="aj-v4-sidebar__subitem <?php echo e($dashboardRouteIs('admin.dashboard.statistiques') ? 'is-active' : ''); ?>">Statistiques</a>
                     <a href="<?php echo e(route('admin.dashboard.alertes')); ?>" class="aj-v4-sidebar__subitem <?php echo e($dashboardRouteIs('admin.dashboard.alertes') ? 'is-active' : ''); ?>">Alertes</a>
@@ -1322,7 +1430,7 @@
                 <a href="#" class="aj-v4-sidebar__item"><span>⚙</span><span class="aj-v4-nav-label">Paramètres</span><span class="aj-v4-nav-caret" style="margin-left:auto;color:var(--aj-gold-300);">⌄</span></a>
             </nav>
 
-            <div class="aj-v4-sidebar__premium">
+            <div class="aj-v4-sidebar__premium aj-v4-premium-box">
                 <h3>♛ Service Premium</h3>
                 <p>Accédez aux analyses avancées, au suivi commercial et au pilotage opérationnel.</p>
                 <button type="button">Découvrir</button>
@@ -1668,32 +1776,31 @@
 
 <?php $__env->startPush('scripts'); ?>
 <script>
-    (function () {
-        var page = document.getElementById('ajDashboardV4Page');
-        var toggle = document.getElementById('ajV4SidebarToggle');
-        if (!page || !toggle) {
-            return;
-        }
+document.addEventListener('DOMContentLoaded', function () {
+    const page = document.getElementById('ajDashboardV4Page');
+    const toggle = document.getElementById('ajV4SidebarToggle');
 
-        var storageKey = 'aj-dashboard-v4-sidebar-collapsed';
-        var apply = function (collapsed) {
-            page.classList.toggle('is-sidebar-collapsed', collapsed);
-        };
+    if (!page || !toggle) {
+        console.warn('[Dashboard V4] sidebar toggle not found');
+        return;
+    }
 
-        try {
-            apply(localStorage.getItem(storageKey) === '1');
-        } catch (e) {
-            apply(false);
-        }
+    const storageKey = 'aj-dashboard-v4-sidebar-collapsed';
 
-        toggle.addEventListener('click', function () {
-            var next = !page.classList.contains('is-sidebar-collapsed');
-            apply(next);
-            try {
-                localStorage.setItem(storageKey, next ? '1' : '0');
-            } catch (e) {}
-        });
-    })();
+    if (localStorage.getItem(storageKey) === '1') {
+        page.classList.add('is-sidebar-collapsed');
+    }
+
+    toggle.addEventListener('click', function (event) {
+        event.preventDefault();
+        page.classList.toggle('is-sidebar-collapsed');
+
+        localStorage.setItem(
+            storageKey,
+            page.classList.contains('is-sidebar-collapsed') ? '1' : '0'
+        );
+    });
+});
 </script>
 <?php $__env->stopPush(); ?>
 
