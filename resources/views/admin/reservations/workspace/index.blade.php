@@ -112,7 +112,8 @@
 @endphp
 @extends('layouts.admin-v6')
 
-@section('title', 'Espace réservation — Catalogue')
+@section('title', 'Espace de réservation')
+@section('page_title', 'Espace de réservation')
 
 @push('styles')
 @if(!$usePortalTailwind)
