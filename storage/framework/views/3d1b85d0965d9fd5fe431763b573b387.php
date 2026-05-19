@@ -17,6 +17,14 @@
     $v6Body = $bodyMatch[1] ?? '';
 
     $v6Body = preg_replace('/<script>[\s\S]*?<\/script>\s*$/i', '', $v6Body);
+    $v6SidebarHtml = view('admin.partials.sidebar-v2', ['sidebarContext' => 'dashboard-v6'])->render();
+    $v6AsideReplacement = '<aside class="sidebar dashboard-v6-sidebar" aria-label="Navigation Ajinsafro">'
+        . '<button class="sidebar-toggle" type="button" id="sidebarToggle" title="Ouvrir / fermer le menu" aria-label="Ouvrir ou fermer le menu">'
+        . '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>'
+        . '</button>'
+        . $v6SidebarHtml
+        . '</aside>';
+    $v6Body = preg_replace('/<aside class="sidebar"[\s\S]*?<\/aside>/i', $v6AsideReplacement, $v6Body, 1);
 
     $v6Body = str_replace(
         '<div class="brand-mark" aria-hidden="true">▰</div>',
@@ -38,6 +46,7 @@
 ?>
 
 <?php $__env->startPush('styles'); ?>
+<link href="<?php echo e(asset('css/admin-sidebar-v2.css')); ?>" rel="stylesheet">
 <style>
 <?php echo e($v6Css); ?>
 
@@ -64,20 +73,19 @@ html[data-sidebar="collapsed"] .sidebar:hover ~ .main {
   margin-left: var(--sidebar-closed) !important;
 }
 
-html[data-sidebar="collapsed"] .sidebar .brand-name,
-html[data-sidebar="collapsed"] .sidebar .menu-label,
-html[data-sidebar="collapsed"] .sidebar .nav-section-title,
-html[data-sidebar="collapsed"] .sidebar .user-meta,
-html[data-sidebar="collapsed"] .sidebar .nav-chevron,
-html[data-sidebar="collapsed"] .sidebar .premium-box,
-html[data-sidebar="collapsed"] .sidebar .submenu {
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__label,
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__section-title,
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__profile,
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__account,
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__submenu,
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__badge,
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__chevron {
   display: none !important;
 }
 
-html[data-sidebar="collapsed"] .sidebar .sidebar-brand,
-html[data-sidebar="collapsed"] .sidebar .sidebar-user,
-html[data-sidebar="collapsed"] .sidebar .nav-item,
-html[data-sidebar="collapsed"] .sidebar .nav-parent {
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__brand,
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__link,
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__toggle {
   justify-content: center !important;
   padding-left: 0 !important;
   padding-right: 0 !important;
@@ -86,6 +94,37 @@ html[data-sidebar="collapsed"] .sidebar .nav-parent {
 
 html[data-sidebar="collapsed"] .sidebar .sidebar-toggle {
   right: 20px !important;
+}
+
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__brand {
+  border-bottom: 0 !important;
+}
+
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__brand-logo {
+  height: 38px !important;
+}
+
+.dashboard-v6-sidebar .aj-sidebar-v2 {
+  min-height: 100%;
+  padding-top: 1.1rem;
+}
+
+.dashboard-v6-sidebar .aj-sidebar-v2__brand-logo {
+  filter: brightness(0) invert(1);
+}
+
+.dashboard-v6-sidebar .aj-sidebar-v2__profile,
+.dashboard-v6-sidebar .aj-sidebar-v2__link,
+.dashboard-v6-sidebar .aj-sidebar-v2__item.is-active > .aj-sidebar-v2__link,
+.dashboard-v6-sidebar .aj-sidebar-v2__item.is-open > .aj-sidebar-v2__link {
+  border-radius: 14px;
+}
+
+.dashboard-v6-sidebar .aj-sidebar-v2__item.is-active > .aj-sidebar-v2__link,
+.dashboard-v6-sidebar .aj-sidebar-v2__item.is-open > .aj-sidebar-v2__link,
+.dashboard-v6-sidebar .aj-sidebar-v2__item.is-active > .aj-sidebar-v2__link-group > .aj-sidebar-v2__link,
+.dashboard-v6-sidebar .aj-sidebar-v2__item.is-open > .aj-sidebar-v2__link-group > .aj-sidebar-v2__link {
+  box-shadow: inset 3px 0 0 #18a9dc;
 }
 
 .topbar {
@@ -185,6 +224,7 @@ html[data-sidebar="collapsed"] .sidebar .sidebar-toggle {
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startPush('scripts'); ?>
+<script src="<?php echo e(asset('js/admin-sidebar-v2.js')); ?>"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     if (window.lucide && typeof window.lucide.createIcons === 'function') {
@@ -208,15 +248,9 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('sidebarToggle')?.addEventListener('click', toggle);
     document.getElementById('mobileToggle')?.addEventListener('click', toggle);
 
-    document.querySelectorAll('.nav-parent').forEach(function (button) {
-        button.addEventListener('click', function (event) {
-            if (root.dataset.sidebar === 'collapsed') {
-                event.preventDefault();
-                root.dataset.sidebar = 'expanded';
-                localStorage.setItem('aj-v6-sidebar', 'expanded');
-            }
-        });
-    });
+    if (window.AjSidebarV2 && typeof window.AjSidebarV2.init === 'function') {
+        window.AjSidebarV2.init();
+    }
 });
 </script>
 <?php $__env->stopPush(); ?>
