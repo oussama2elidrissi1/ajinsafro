@@ -1615,16 +1615,6 @@
                         </div>
                     </div>
                 @endif
-                @if($nonSellableRows->isNotEmpty())
-                    <div class="ws-catalog-section ws-catalog-section--configure">
-                        <h3 class="ws-catalog-section__title ws-catalog-section__title--configure">Voyages non disponibles / à configurer</h3>
-                        <div class="ws-catalog-grid ws-catalog-grid--compact">
-                            @foreach($nonSellableRows as $row)
-                                @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'card'])
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
                 @if($catalogRows->isEmpty())
                     <div class="ws-catalog-empty">
                         <div class="max-w-md mx-auto text-center py-12 px-6">
@@ -2098,9 +2088,22 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!tbody) return;
         var allRows = tbody.querySelectorAll('tr');
         var visibleRows = [];
+        var emptyRowId = 'ws-table-empty-sellable-row';
+        var existingEmptyRow = document.getElementById(emptyRowId);
+        if (existingEmptyRow) {
+            existingEmptyRow.remove();
+        }
         allRows.forEach(function (row) {
             if (row.classList.contains('ws-table-empty-cell')) return;
-            if (row.classList.contains('ws-catalog-section-divider')) return;
+            if (row.classList.contains('ws-catalog-section-divider')) {
+                row.style.display = 'none';
+                return;
+            }
+            var isSellable = row.getAttribute('data-is-sellable');
+            if (isSellable === '0') {
+                row.style.display = 'none';
+                return;
+            }
             if (!row.classList.contains('hidden')) visibleRows.push(row);
         });
 
@@ -2119,6 +2122,13 @@ document.addEventListener('DOMContentLoaded', function () {
         visibleRows.forEach(function (row, index) {
             row.style.display = (index >= start && index < end) ? '' : 'none';
         });
+
+        if (total === 0) {
+            var emptyRow = document.createElement('tr');
+            emptyRow.id = emptyRowId;
+            emptyRow.innerHTML = '<td colspan="8" class="ws-table-empty-cell"><div class="ws-catalog-empty ws-catalog-empty--inline"><div class="max-w-md mx-auto text-center py-10 px-6"><div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 mb-3 text-xl"><i class="fas fa-inbox"></i></div><p class="text-brand-dark font-bold text-base mb-2">Aucune offre réservable disponible pour le moment.</p></div></div></td>';
+            tbody.appendChild(emptyRow);
+        }
 
         renderPaginationControls(total, perPage, currentPage, totalPages);
     }
