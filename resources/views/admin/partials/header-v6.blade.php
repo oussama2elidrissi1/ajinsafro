@@ -7,7 +7,10 @@
     $adminV2UnreadCount   = $adminV2UnreadCount   ?? 0;
     $adminV2PendingCount  = $adminV2PendingCount  ?? 0;
 
-    $v6Title = trim((string) View::yieldContent('page_title', View::yieldContent('title', 'Espace Admin')));
+    $v6Title = $pageTitle ?? trim((string) View::yieldContent('page_title', View::yieldContent('title', 'Espace Admin')));
+    $v6Breadcrumbs = $breadcrumbs ?? null;
+    $primaryActionLabel = $primaryActionLabel ?? null;
+    $primaryActionRoute = $primaryActionRoute ?? null;
     $v6DateLabel = now('Africa/Casablanca')->locale('fr')->translatedFormat('l d F Y');
 @endphp
 
@@ -19,7 +22,20 @@
 
         <div class="aj-v6-page-meta">
             <h1 class="aj-v6-page-title">{{ $v6Title }}</h1>
-            <div class="aj-v6-page-breadcrumb">Accueil <span>›</span> Tableau de bord</div>
+            @if(is_array($v6Breadcrumbs) && count($v6Breadcrumbs))
+                <div class="aj-v6-page-breadcrumb">
+                    @foreach($v6Breadcrumbs as $index => $crumb)
+                        @if($index > 0)<span>›</span>@endif
+                        @if(!empty($crumb['url']))
+                            <a href="{{ $crumb['url'] }}">{{ $crumb['label'] ?? '' }}</a>
+                        @else
+                            {{ $crumb['label'] ?? '' }}
+                        @endif
+                    @endforeach
+                </div>
+            @else
+                <div class="aj-v6-page-breadcrumb">Accueil <span>›</span> Tableau de bord</div>
+            @endif
         </div>
     </div>
 
@@ -60,6 +76,11 @@
 
         @hasSection('header_primary_action')
             @yield('header_primary_action')
+        @elseif($primaryActionLabel && $primaryActionRoute && \Illuminate\Support\Facades\Route::has($primaryActionRoute))
+            <a href="{{ route($primaryActionRoute) }}" class="aj-v6-primary-btn">
+                <i class="bx bx-plus"></i>
+                <span>{{ $primaryActionLabel }}</span>
+            </a>
         @elseif(\Illuminate\Support\Facades\Route::has('admin.reservations.create'))
             <a href="{{ route('admin.reservations.create') }}" class="aj-v6-primary-btn">
                 <i class="bx bx-plus"></i>

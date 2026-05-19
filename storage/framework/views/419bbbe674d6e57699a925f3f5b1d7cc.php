@@ -1,4 +1,5 @@
 <?php $__env->startSection('title', 'Mes commissions'); ?>
+<?php $__env->startSection('page_title', 'Commissions'); ?>
 
 <?php $__env->startPush('styles'); ?>
     <style>
@@ -142,4 +143,4 @@
     </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.master-ajinsafro', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\agent-commissions\index.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\agent-commissions\index.blade.php ENDPATH**/ ?>

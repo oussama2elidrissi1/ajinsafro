@@ -1,6 +1,7 @@
-@extends('layouts.master-ajinsafro')
+@extends('layouts.admin-v6')
 
 @section('title', 'Mes commissions')
+@section('page_title', 'Commissions')
 
 @push('styles')
     <style>

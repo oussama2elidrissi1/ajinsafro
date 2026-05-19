@@ -7,7 +7,10 @@
     $adminV2UnreadCount   = $adminV2UnreadCount   ?? 0;
     $adminV2PendingCount  = $adminV2PendingCount  ?? 0;
 
-    $v6Title = trim((string) View::yieldContent('page_title', View::yieldContent('title', 'Espace Admin')));
+    $v6Title = $pageTitle ?? trim((string) View::yieldContent('page_title', View::yieldContent('title', 'Espace Admin')));
+    $v6Breadcrumbs = $breadcrumbs ?? null;
+    $primaryActionLabel = $primaryActionLabel ?? null;
+    $primaryActionRoute = $primaryActionRoute ?? null;
     $v6DateLabel = now('Africa/Casablanca')->locale('fr')->translatedFormat('l d F Y');
 ?>
 
@@ -19,7 +22,21 @@
 
         <div class="aj-v6-page-meta">
             <h1 class="aj-v6-page-title"><?php echo e($v6Title); ?></h1>
-            <div class="aj-v6-page-breadcrumb">Accueil <span>›</span> Tableau de bord</div>
+            <?php if(is_array($v6Breadcrumbs) && count($v6Breadcrumbs)): ?>
+                <div class="aj-v6-page-breadcrumb">
+                    <?php $__currentLoopData = $v6Breadcrumbs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $crumb): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php if($index > 0): ?><span>›</span><?php endif; ?>
+                        <?php if(!empty($crumb['url'])): ?>
+                            <a href="<?php echo e($crumb['url']); ?>"><?php echo e($crumb['label'] ?? ''); ?></a>
+                        <?php else: ?>
+                            <?php echo e($crumb['label'] ?? ''); ?>
+
+                        <?php endif; ?>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </div>
+            <?php else: ?>
+                <div class="aj-v6-page-breadcrumb">Accueil <span>›</span> Tableau de bord</div>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -60,6 +77,11 @@
 
         <?php if (! empty(trim($__env->yieldContent('header_primary_action')))): ?>
             <?php echo $__env->yieldContent('header_primary_action'); ?>
+        <?php elseif($primaryActionLabel && $primaryActionRoute && \Illuminate\Support\Facades\Route::has($primaryActionRoute)): ?>
+            <a href="<?php echo e(route($primaryActionRoute)); ?>" class="aj-v6-primary-btn">
+                <i class="bx bx-plus"></i>
+                <span><?php echo e($primaryActionLabel); ?></span>
+            </a>
         <?php elseif(\Illuminate\Support\Facades\Route::has('admin.reservations.create')): ?>
             <a href="<?php echo e(route('admin.reservations.create')); ?>" class="aj-v6-primary-btn">
                 <i class="bx bx-plus"></i>

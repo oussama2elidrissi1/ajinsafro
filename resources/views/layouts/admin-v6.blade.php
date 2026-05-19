@@ -52,15 +52,15 @@
     <link href="{{ URL::asset('css/admin-v6.css') }}" rel="stylesheet">
     @stack('styles')
 </head>
-<body class="aj-admin-v2-body aj-admin aj-admin-v6">
-<div class="aj-admin-v2-layout" id="aj-admin-v2-root">
-    <aside class="aj-admin-v2-sidebar" id="aj-admin-v2-sidebar">
-        @include('admin.partials.sidebar-v2', ['sidebarContext' => 'admin-v6'])
+<body class="aj-admin-v2-body aj-admin aj-admin-v6 admin-v6">
+<div class="aj-admin-v2-layout admin-v6-shell" id="aj-admin-v2-root">
+    <aside class="aj-admin-v2-sidebar admin-v6-sidebar" id="aj-admin-v2-sidebar">
+        @include('admin.partials.sidebar-v6', ['sidebarContext' => 'admin-v6'])
     </aside>
 
     <div class="aj-admin-v2-overlay" id="aj-admin-v2-overlay"></div>
 
-    <div class="aj-admin-v2-main">
+    <div class="aj-admin-v2-main admin-v6-page">
         @include('admin.partials.header-v6', [
             'adminV2User'         => $adminV2User,
             'adminV2UserName'     => $adminV2UserName,
@@ -71,9 +71,9 @@
             'adminV2PendingCount' => $adminV2PendingCount,
         ])
 
-        <div class="aj-admin-v2-content">
+        <main class="aj-admin-v2-content admin-v6-content">
             @yield('content')
-        </div>
+        </main>
 
         @unless(View::hasSection('hide_admin_footer'))
             @include('admin.partials.footer-v2', [
@@ -87,6 +87,7 @@
 <script src="{{ URL::asset('build/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <script src="{{ URL::asset('js/admin-sidebar-v2.js') }}"></script>
 <script src="{{ URL::asset('js/admin-v2.js') }}"></script>
+<script src="{{ URL::asset('js/admin-v6.js') }}"></script>
 @stack('scripts')
 </body>
 </html>
