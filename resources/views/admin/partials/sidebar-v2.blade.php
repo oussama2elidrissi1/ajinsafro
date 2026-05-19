@@ -3,13 +3,14 @@
     $sidebarUser = auth()->user();
     $sidebarBrandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');
     $sidebarBrandLogo = \App\Models\Setting::brandLogoUrl('dark');
-    $sidebarBrandHref = request()->routeIs('admin.dashboard.v2') && \Illuminate\Support\Facades\Route::has('admin.dashboard.v2')
-        ? route('admin.dashboard.v2')
-        : (request()->routeIs('admin.dashboard.v4') && \Illuminate\Support\Facades\Route::has('admin.dashboard.v4')
-            ? route('admin.dashboard.v4')
-            : (request()->routeIs('admin.dashboard.v5') && \Illuminate\Support\Facades\Route::has('admin.dashboard.v5')
-                ? route('admin.dashboard.v5')
-            : route('admin.dashboard'));
+    $sidebarBrandHref = route('admin.dashboard');
+    if (request()->routeIs('admin.dashboard.v2') && \Illuminate\Support\Facades\Route::has('admin.dashboard.v2')) {
+        $sidebarBrandHref = route('admin.dashboard.v2');
+    } elseif (request()->routeIs('admin.dashboard.v4') && \Illuminate\Support\Facades\Route::has('admin.dashboard.v4')) {
+        $sidebarBrandHref = route('admin.dashboard.v4');
+    } elseif (request()->routeIs('admin.dashboard.v5') && \Illuminate\Support\Facades\Route::has('admin.dashboard.v5')) {
+        $sidebarBrandHref = route('admin.dashboard.v5');
+    }
     $sidebarRole = $sidebarUser?->getRoleNames()->first() ?? 'Administrateur';
     $sidebarInitials = strtoupper(collect(preg_split('/\s+/', trim((string) ($sidebarUser?->name ?? 'Admin'))))->filter()->take(2)->map(fn ($part) => mb_substr($part, 0, 1))->implode(''));
     if ($sidebarInitials === '') {
