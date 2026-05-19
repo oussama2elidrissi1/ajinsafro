@@ -1585,7 +1585,7 @@
                 <div class="ws-field ws-field--budget-range full">
                     <label class="ws-field__label" for="ws-budget-range-max">Segment budget</label>
                     <div class="ws-budget-range">
-                        <div class="ws-budget-range__labels"><span></span><span>MAX</span></div>
+                        <div class="ws-budget-range__labels"><span>MAX</span><span id="ws-budget-range-value">{{ (int) ($workspaceFilters['budget_max'] ?? 30000) }} MAD</span></div>
                         <input type="range" id="ws-budget-range-max" min="0" max="100000" step="500" value="{{ (int) ($workspaceFilters['budget_max'] ?? 30000) }}">
                     </div>
                 </div>
@@ -2269,6 +2269,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var budgetMinEl = document.getElementById('ws-filter-budget-min');
     var budgetMaxEl = document.getElementById('ws-filter-budget-max');
     var budgetRangeMaxEl = document.getElementById('ws-budget-range-max');
+    var budgetRangeValueEl = document.getElementById('ws-budget-range-value');
     var applyBtn = document.getElementById('ws-filters-apply');
 
     if (budgetRangeMaxEl && budgetMinEl && budgetMaxEl) {
@@ -2278,6 +2279,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (isNaN(maxVal) || maxVal < 0) maxVal = 0;
             budgetMinEl.value = '0';
             budgetMaxEl.value = String(maxVal);
+            if (budgetRangeValueEl) budgetRangeValueEl.textContent = maxVal + ' MAD';
         });
 
         budgetMaxEl.addEventListener('input', function () {
@@ -2286,12 +2288,14 @@ document.addEventListener('DOMContentLoaded', function () {
             budgetMinEl.value = '0';
             budgetMaxEl.value = String(maxVal);
             budgetRangeMaxEl.value = String(maxVal);
+            if (budgetRangeValueEl) budgetRangeValueEl.textContent = maxVal + ' MAD';
         });
 
         if (!budgetMaxEl.value) {
             budgetMaxEl.value = String(parseInt(budgetRangeMaxEl.value || '30000', 10));
         }
         budgetRangeMaxEl.value = budgetMaxEl.value;
+        if (budgetRangeValueEl) budgetRangeValueEl.textContent = (parseInt(budgetMaxEl.value || '0', 10) || 0) + ' MAD';
     }
 
     function wsActivateView(mode) {
