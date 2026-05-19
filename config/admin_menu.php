@@ -14,6 +14,7 @@ return [
                 ['label' => 'Dashboard V2', 'route' => 'admin.dashboard.v2', 'permission' => 'dashboard.overview.view'],
                 ['label' => 'Dashboard V3', 'route' => 'admin.dashboard.v3', 'permission' => 'dashboard.overview.view'],
                 ['label' => 'Dashboard V4', 'route' => 'admin.dashboard.v4', 'permission' => 'dashboard.overview.view'],
+                ['label' => 'Dashboard V5', 'route' => 'admin.dashboard.v5', 'permission' => 'dashboard.overview.view'],
             ],
         ],
         [
@@ -248,6 +249,7 @@ return [
         'admin.dashboard' => 'dashboard.view',
         'admin.dashboard.v4' => 'dashboard.view',
         'admin.dashboard.v3' => 'dashboard.view',
+        'admin.dashboard.v5' => 'dashboard.view',
         'admin.profile.edit' => ['dashboard.view', 'reservations.view'],
         'admin.profile.update' => ['dashboard.view', 'reservations.view'],
         'admin.profile.avatar' => ['dashboard.view', 'reservations.view'],

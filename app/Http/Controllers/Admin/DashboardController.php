@@ -251,4 +251,15 @@ class DashboardController extends Controller
 
         return view('admin.dashboard.v4.index', $data);
     }
+
+    /**
+     * Dashboard V5 — page autonome fidèle à la maquette HTML fournie.
+     */
+    public function v5(Request $request)
+    {
+        $response = $this->vueGlobale($request);
+        $data = $response->getData();
+
+        return view('admin.dashboard.v5.index', $data);
+    }
 }

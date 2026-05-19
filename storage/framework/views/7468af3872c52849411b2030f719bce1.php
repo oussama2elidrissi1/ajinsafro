@@ -7,6 +7,8 @@
         ? route('admin.dashboard.v2')
         : (request()->routeIs('admin.dashboard.v4') && \Illuminate\Support\Facades\Route::has('admin.dashboard.v4')
             ? route('admin.dashboard.v4')
+            : (request()->routeIs('admin.dashboard.v5') && \Illuminate\Support\Facades\Route::has('admin.dashboard.v5')
+                ? route('admin.dashboard.v5')
             : route('admin.dashboard'));
     $sidebarRole = $sidebarUser?->getRoleNames()->first() ?? 'Administrateur';
     $sidebarInitials = strtoupper(collect(preg_split('/\s+/', trim((string) ($sidebarUser?->name ?? 'Admin'))))->filter()->take(2)->map(fn ($part) => mb_substr($part, 0, 1))->implode(''));
@@ -143,6 +145,28 @@
 
             if ($dashboardV4Leaf) {
                 $dashboardChildren[] = $dashboardV4Leaf;
+            }
+        }
+    }
+    if (\Illuminate\Support\Facades\Route::has('admin.dashboard.v5')) {
+        $dashboardV5Exists = collect($dashboardChildren)->contains(function ($child) {
+            return ($child['route'] ?? null) === 'admin.dashboard.v5' || (($child['href'] ?? null) === route('admin.dashboard.v5'));
+        });
+
+        if (! $dashboardV5Exists) {
+            $dashboardV5Leaf = $makeLeaf(
+                'dashboard_v5',
+                'Dashboard V5',
+                'admin.dashboard.v5',
+                null,
+                ['admin.dashboard.v5'],
+                [],
+                null,
+                'dashboard.overview.view'
+            );
+
+            if ($dashboardV5Leaf) {
+                $dashboardChildren[] = $dashboardV5Leaf;
             }
         }
     }
