@@ -243,6 +243,16 @@
         $makeLeaf('finance_commissions', 'Comission', 'admin.finance.commissions', 'bx bx-pie-chart-alt-2', ['admin.finance.commissions'], [], null, 'finance.view'),
     ]));
 
+    $administrationChildren = array_values(array_filter([
+        $makeLeaf('admin_settings_index', 'Vue generale', 'admin.settings.index', 'bx bx-cog', ['admin.settings.index'], [], null, 'settings.view'),
+        $makeLeaf('admin_users', 'Utilisateurs', 'admin.settings.utilisateurs', 'bx bx-user-pin', ['admin.settings.utilisateurs*'], [], null, 'settings.users.manage'),
+        $makeLeaf('admin_roles', 'Roles & permissions', 'admin.settings.roles-permissions', 'bx bx-shield-quarter', ['admin.settings.roles-permissions*'], [], null, 'settings.roles.manage'),
+        $makeLeaf('admin_general', 'Parametres generaux', 'admin.settings.parametres-generaux', 'bx bx-slider-alt', ['admin.settings.parametres-generaux*'], [], null, 'settings.general.manage'),
+        $makeLeaf('admin_referentials', 'Referentiels metier', 'admin.settings.referentiels-metier', 'bx bx-list-ul', ['admin.settings.referentiels-metier*'], [], null, 'settings.general.manage'),
+        $makeLeaf('admin_home_page', 'Home page', 'admin.settings.home-page.edit', 'bx bx-home-heart', ['admin.settings.home-page.*'], [], null, 'settings.general.manage'),
+        $makeLeaf('admin_security', 'Securite', 'admin.settings.securite', 'bx bx-lock-alt', ['admin.settings.securite*'], [], null, 'settings.security.manage'),
+    ]));
+
     $adminGroups = array_values(array_filter([
         $makeGroup('grp_dashboard', 'Tableau de board', $dashboardChildren, 'bx bx-home-circle'),
         $makeGroup('grp_reservations', 'Reservation', $reservationsChildren, 'bx bx-calendar-check'),
@@ -251,7 +261,7 @@
         $makeGroup('grp_points_of_sale', 'Points de vente', $pointsOfSaleChildren, 'bx bx-buildings'),
         $makeLeaf('grp_rh', 'Gestion Rh', 'admin.menu-hubs.rh', 'bx bx-user-voice', ['admin.menu-hubs.rh', 'admin.settings.utilisateurs', 'admin.settings.roles-permissions'], [], null, 'settings.users.manage'),
         $makeGroup('grp_finance', 'Finace reporting', $financeChildren, 'bx bx-wallet'),
-        $makeGroup('grp_admin', 'Administration', $settingsNode['children'] ?? [], 'bx bx-cog'),
+        $makeGroup('grp_admin', 'Administration', $administrationChildren, 'bx bx-cog'),
     ]));
 
     if ($sidebarUser?->hasRole(\App\Services\BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY)) {
