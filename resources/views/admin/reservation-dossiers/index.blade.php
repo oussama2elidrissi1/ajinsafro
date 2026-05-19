@@ -486,6 +486,17 @@
             width: 100%;
         }
     }
+    .reservation-dossiers-page .rd-mini-btn--danger {
+        background: #fff1f2;
+        color: #dc2626;
+        border-color: #fecdd3;
+    }
+
+    .reservation-dossiers-page .rd-mini-btn--danger:hover {
+        background: #dc2626;
+        color: #ffffff;
+        border-color: #dc2626;
+    }
 </style>
 @endpush
 
@@ -684,6 +695,23 @@
                                                             @endcan
                                                             <a href="{{ $paymentFollowUrl }}" class="rd-mini-btn"><i class="bx bx-wallet"></i><span>Suivre paiement</span></a>
                                                             <a href="{{ route('admin.reservations.dossier.pdf', $reservation) }}" target="_blank" class="rd-mini-btn"><i class="bx bx-printer"></i><span>Imprimer</span></a>
+                                                            @php
+                                                                $canDeleteReservation = auth()->user()->isBranchAdmin()
+                                                                    || auth()->user()->isManager()
+                                                                    || auth()->user()->isChefCommercial()
+                                                                    || auth()->user()->hasRole('super_admin')
+                                                                    || auth()->user()->hasRole('siege_admin')
+                                                                    || auth()->user()->can('reservations.delete');
+                                                            @endphp
+                                                            @if($canDeleteReservation)
+                                                                <form method="POST" action="{{ route('admin.reservation-dossiers.destroy', $reservation) }}" class="js-delete-reservation-form" style="display:inline;">
+                                                                    @csrf
+                                                                    @method('DELETE')
+                                                                    <button type="submit" class="rd-mini-btn rd-mini-btn--danger" data-confirm-delete="Voulez-vous vraiment supprimer cette reservation ? Cette action est irreversible.">
+                                                                        <i class="bx bx-trash"></i><span>Supprimer</span>
+                                                                    </button>
+                                                                </form>
+                                                            @endif
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -719,3 +747,20 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    document.querySelectorAll('.js-delete-reservation-form').forEach(function (form) {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var message = form.querySelector('[data-confirm-delete]')?.dataset.confirmDelete
+                || 'Voulez-vous vraiment supprimer cette reservation ?';
+            if (confirm(message)) {
+                form.submit();
+            }
+        });
+    });
+})();
+</script>
+@endpush

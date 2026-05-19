@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ajinsafro - Dashboard V3</title>
+  <style>
+    :root {
+      --aj-blue-950: #06192d;
+      --aj-blue-900: #08213d;
+      --aj-blue-800: #0b315c;
+      --aj-blue-700: #0f4f8f;
+      --aj-blue-600: #1268b3;
+      --aj-orange-600: #f47b20;
+      --aj-orange-500: #ff8f2b;
+      --aj-orange-100: #fff1e5;
+      --aj-green-600: #19a463;
+      --aj-green-100: #e9f8f0;
+      --aj-gold-500: #d8a43a;
+      --aj-gold-300: #f1cf7a;
+      --aj-gold-100: #fff6d9;
+      --text: #101828;
+      --muted: #667085;
+      --border: #e8edf3;
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --radius-xl: 28px;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --shadow-sm: 0 8px 26px rgba(6, 25, 45, 0.06);
+      --shadow-md: 0 16px 50px rgba(6, 25, 45, 0.10);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 80% 0%, rgba(244, 123, 32, 0.08), transparent 28%),
+        linear-gradient(180deg, #fbfcfe 0%, var(--bg) 100%);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: fixed;
+      inset: 0 auto 0 0;
+      width: 286px;
+      padding: 28px 20px;
+      color: #fff;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(216, 164, 58, 0.22), transparent 25%),
+        linear-gradient(180deg, #05172b 0%, #08213d 55%, #06192d 100%);
+      overflow: hidden;
+      z-index: 30;
+    }
+
+    .sidebar::after {
+      content: "";
+      position: absolute;
+      left: -80px;
+      right: -80px;
+      bottom: -120px;
+      height: 310px;
+      background:
+        radial-gradient(circle at 30% 45%, rgba(216, 164, 58, 0.42) 0 3px, transparent 4px),
+        radial-gradient(circle at 60% 25%, rgba(255, 143, 43, 0.30) 0 2px, transparent 3px),
+        linear-gradient(150deg, rgba(18, 104, 179, 0.12), transparent 50%),
+        radial-gradient(circle at 65% 62%, rgba(216, 164, 58, 0.34), transparent 18%);
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .brand {
+      position: relative;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      z-index: 1;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(241, 207, 122, 0.8);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--aj-gold-300);
+      box-shadow: 0 0 30px rgba(216, 164, 58, 0.24);
+    }
+
+    .brand-title {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 25px;
+      letter-spacing: 4px;
+      line-height: 1;
+    }
+
+    .brand-subtitle {
+      margin-top: 6px;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--aj-gold-300);
+      text-transform: uppercase;
+    }
+
+    .profile-card {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 30px 0 24px;
+      padding: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.045);
+      z-index: 1;
+    }
+
+    .avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 255, 255, 0.12);
+      font-weight: 800;
+    }
+
+    .profile-card strong {
+      display: block;
+      font-size: 14px;
+    }
+
+    .profile-card span {
+      display: block;
+      margin-top: 3px;
+      color: rgba(255, 255, 255, 0.62);
+      font-size: 12px;
+    }
+
+    .nav-title {
+      position: relative;
+      z-index: 1;
+      margin: 0 0 12px 4px;
+      font-size: 11px;
+      color: var(--aj-gold-300);
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    .nav {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 7px;
+    }
+
+    .nav-item,
+    .sub-item {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      width: 100%;
+      border: 0;
+      color: rgba(255, 255, 255, 0.86);
+      background: transparent;
+      border-radius: 15px;
+      padding: 12px 13px;
+      cursor: pointer;
+      text-align: left;
+      transition: 0.2s ease;
+    }
+
+    .nav-item:hover,
+    .sub-item:hover {
+      background: rgba(255, 255, 255, 0.07);
+      color: #fff;
+    }
+
+    .nav-item.active {
+      background: linear-gradient(90deg, rgba(18, 104, 179, 0.96), rgba(8, 33, 61, 0.88));
+      box-shadow: inset 3px 0 0 var(--aj-gold-500), 0 14px 30px rgba(3, 11, 24, 0.22);
+      color: #fff;
+    }
+
+    .nav-item .chevron {
+      margin-left: auto;
+      color: var(--aj-gold-300);
+    }
+
+    .sub-nav {
+      margin: 4px 0 8px 28px;
+      padding-left: 14px;
+      border-left: 2px solid rgba(216, 164, 58, 0.75);
+      display: grid;
+      gap: 4px;
+    }
+
+    .sub-item {
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+
+    .sub-item.active {
+      color: #fff;
+      background: linear-gradient(90deg, rgba(244, 123, 32, 0.92), rgba(216, 164, 58, 0.80));
+      box-shadow: 0 10px 28px rgba(244, 123, 32, 0.24);
+    }
+
+    .premium-box {
+      position: relative;
+      z-index: 1;
+      margin-top: 32px;
+      padding: 18px;
+      border-radius: 22px;
+      border: 1px solid rgba(216, 164, 58, 0.42);
+      background: rgba(255, 255, 255, 0.055);
+    }
+
+    .premium-box h3 {
+      margin: 0 0 8px;
+      color: var(--aj-gold-300);
+      font-size: 15px;
+    }
+
+    .premium-box p {
+      margin: 0 0 14px;
+      color: rgba(255, 255, 255, 0.70);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .premium-box button {
+      width: 100%;
+      padding: 11px 14px;
+      border: 0;
+      border-radius: 14px;
+      color: #111827;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--aj-gold-300), var(--aj-gold-500));
+      cursor: pointer;
+    }
+
+    .main {
+      width: calc(100% - 286px);
+      margin-left: 286px;
+      padding: 28px 34px 38px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 22px;
+    }
+
+    .page-title h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(30px, 3vw, 42px);
+      letter-spacing: -0.8px;
+      color: #0b1320;
+    }
+
+    .breadcrumb {
+      display: flex;
+      gap: 9px;
+      align-items: center;
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .top-actions {
+      display: grid;
+      justify-items: end;
+      gap: 14px;
+      flex: 1;
+    }
+
+    .search-row,
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .search {
+      position: relative;
+      width: min(590px, 100%);
+    }
+
+    .search input {
+      width: 100%;
+      height: 48px;
+      padding: 0 18px 0 45px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.78);
+      outline: none;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .search svg {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #98a2b3;
+    }
+
+    .icon-btn,
+    .control-btn,
+    .primary-btn {
+      height: 44px;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      background: #fff;
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 0 15px;
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .icon-btn {
+      width: 44px;
+      padding: 0;
+      position: relative;
+    }
+
+    .badge-dot {
+      position: absolute;
+      top: -5px;
+      right: -4px;
+      width: 18px;
+      height: 18px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--aj-orange-600);
+      color: white;
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .primary-btn {
+      border-color: rgba(216, 164, 58, 0.55);
+      color: white;
+      background: linear-gradient(135deg, var(--aj-blue-950), var(--aj-blue-800));
+    }
+
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .user-photo {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0b315c, #d8a43a);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 900;
+      border: 3px solid #fff;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .hero {
+      position: relative;
+      min-height: 138px;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      padding: 34px 38px;
+      color: #fff;
+      background:
+        linear-gradient(90deg, rgba(6, 25, 45, 0.98) 0%, rgba(8, 33, 61, 0.92) 38%, rgba(6, 25, 45, 0.42) 100%),
+        radial-gradient(circle at 82% 34%, rgba(255, 143, 43, 0.70), transparent 22%),
+        linear-gradient(135deg, #08213d, #1268b3 55%, #f47b20);
+      box-shadow: var(--shadow-md);
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 88% 35%, rgba(255, 255, 255, 0.22), transparent 3%),
+        linear-gradient(160deg, transparent 0 55%, rgba(255, 255, 255, 0.14) 56%, transparent 57%),
+        linear-gradient(14deg, transparent 0 70%, rgba(216, 164, 58, 0.35) 72%, transparent 73%);
+      opacity: 0.8;
+    }
+
+    .hero::after {
+      content: "☼";
+      position: absolute;
+      right: 32px;
+      top: 25px;
+      font-size: 78px;
+      color: rgba(216, 164, 58, 0.35);
+      font-family: Georgia, serif;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 660px;
+    }
+
+    .hero h2 {
+      margin: 0 0 8px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(24px, 2vw, 33px);
+      font-weight: 500;
+    }
+
+    .hero p {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.82);
+      font-size: 15px;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+      margin: 22px 0;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(232, 237, 243, 0.92);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .kpi-card {
+      min-height: 146px;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .kpi-icon {
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      border-radius: 18px;
+      color: #fff;
+      flex: 0 0 auto;
+    }
+
+    .kpi-icon.blue { background: linear-gradient(135deg, var(--aj-blue-900), var(--aj-blue-600)); }
+    .kpi-icon.orange { background: linear-gradient(135deg, var(--aj-orange-600), #ffb34d); }
+    .kpi-icon.green { background: linear-gradient(135deg, var(--aj-green-600), #65c48e); }
+    .kpi-icon.gold { background: linear-gradient(135deg, #bd7a00, var(--aj-gold-300)); }
+
+    .kpi-card small {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .kpi-card strong {
+      display: block;
+      margin: 7px 0 12px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 27px;
+      font-weight: 500;
+      color: #0b1320;
+    }
+
+    .trend {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--aj-green-600);
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    .sparkline {
+      margin-top: 2px;
+      width: 100%;
+      height: 32px;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1.6fr 0.85fr 0.75fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .section-card {
+      padding: 22px;
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .card-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: -0.2px;
+    }
+
+    .mini-controls {
+      display: flex;
+      gap: 9px;
+      flex-wrap: wrap;
+    }
+
+    .mini-select {
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 12px;
+      color: #344054;
+      padding: 9px 12px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .chart-box {
+      height: 250px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.90), rgba(255, 248, 238, 0.35));
+      overflow: hidden;
+    }
+
+    .destination-card {
+      min-height: 322px;
+    }
+
+    .donut-wrap {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .donut {
+      --p1: #0b315c;
+      width: 162px;
+      height: 162px;
+      border-radius: 50%;
+      background: conic-gradient(var(--aj-blue-800) 0 28%, #8ecae6 28% 52%, var(--aj-green-600) 52% 70%, var(--aj-orange-500) 70% 84%, #d1d5db 84% 100%);
+      position: relative;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+    }
+
+    .donut::after {
+      content: "342\A Réservations";
+      white-space: pre;
+      position: absolute;
+      inset: 34px;
+      border-radius: 50%;
+      background: #fff;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      font-family: Georgia, serif;
+      font-size: 27px;
+      line-height: 1.1;
+      color: #0b1320;
+      box-shadow: inset 0 0 0 1px var(--border);
+    }
+
+    .legend {
+      display: grid;
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    .legend-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      color: #344054;
+    }
+
+    .legend-name {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--aj-blue-800);
+    }
+
+    .dot.sky { background: #8ecae6; }
+    .dot.green { background: var(--aj-green-600); }
+    .dot.orange { background: var(--aj-orange-500); }
+    .dot.gray { background: #d1d5db; }
+
+    .confirmation {
+      min-height: 322px;
+    }
+
+    .gauge {
+      margin: 18px auto 8px;
+      width: min(240px, 100%);
+      height: 140px;
+      position: relative;
+    }
+
+    .gauge svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .gauge-center {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 3px;
+      text-align: center;
+    }
+
+    .gauge-center strong {
+      display: block;
+      font-family: Georgia, serif;
+      font-size: 45px;
+      font-weight: 500;
+    }
+
+    .gauge-center span {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .lower-grid {
+      display: grid;
+      grid-template-columns: 1.35fr 1.05fr 1fr;
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .table-card {
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead th {
+      padding: 12px 10px;
+      background: #f8fafc;
+      color: #667085;
+      font-size: 11px;
+      text-align: left;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    tbody td {
+      padding: 12px 10px;
+      border-top: 1px solid #eef2f6;
+      color: #344054;
+    }
+
+    tbody tr:hover td {
+      background: #fcfdff;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .status.ok { color: #087443; background: #e7f8ef; }
+    .status.low { color: #b54708; background: #fff2d7; }
+    .status.full { color: #b42318; background: #fee4e2; }
+    .status.wait { color: #c25a00; background: #fff1e5; }
+
+    .link-more {
+      color: var(--aj-orange-600);
+      text-decoration: none;
+      font-weight: 900;
+      font-size: 13px;
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .reservation-item,
+    .alert-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 11px 0;
+      border-bottom: 1px solid #eef2f6;
+    }
+
+    .reservation-item:last-child,
+    .alert-item:last-child {
+      border-bottom: 0;
+    }
+
+    .mini-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--aj-blue-800), var(--aj-gold-500));
+    }
+
+    .item-main strong {
+      display: block;
+      font-size: 13px;
+      color: #111827;
+    }
+
+    .item-main span,
+    .amount small,
+    .alert-time {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .amount {
+      text-align: right;
+      font-weight: 900;
+      color: #111827;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .alert-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: var(--aj-green-100);
+      color: var(--aj-green-600);
+      font-weight: 900;
+    }
+
+    .alert-icon.warning {
+      color: var(--aj-orange-600);
+      background: var(--aj-orange-100);
+    }
+
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 50;
+      width: 45px;
+      height: 45px;
+      border: 0;
+      border-radius: 14px;
+      color: #fff;
+      background: var(--aj-blue-900);
+      box-shadow: var(--shadow-md);
+    }
+
+    @media (max-width: 1420px) {
+      .dashboard-grid,
+      .lower-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .confirmation,
+      .alerts-card {
+        grid-column: span 2;
+      }
+    }
+
+    @media (max-width: 1180px) {
+      .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .topbar {
+        flex-direction: column;
+      }
+      .top-actions {
+        width: 100%;
+        justify-items: stretch;
+      }
+      .search-row,
+      .control-row {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .mobile-menu {
+        display: grid;
+        place-items: center;
+      }
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .main {
+        width: 100%;
+        margin-left: 0;
+        padding: 78px 18px 28px;
+      }
+      .dashboard-grid,
+      .lower-grid {
+        grid-template-columns: 1fr;
+      }
+      .confirmation,
+      .alerts-card {
+        grid-column: auto;
+      }
+      .hero {
+        padding: 28px 24px;
+      }
+      .donut-wrap {
+        grid-template-columns: 1fr;
+        justify-items: center;
+      }
+    }
+
+    @media (max-width: 660px) {
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+      .kpi-card {
+        grid-template-columns: 1fr;
+      }
+      .control-row > *,
+      .primary-btn,
+      .control-btn {
+        width: 100%;
+      }
+      .search-row {
+        align-items: stretch;
+      }
+      .search {
+        width: 100%;
+      }
+      .user-chip span {
+        display: none;
+      }
+      .section-card {
+        padding: 18px;
+      }
+      table {
+        min-width: 640px;
+      }
+      .table-scroll {
+        overflow-x: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button class="mobile-menu" aria-label="Menu">☰</button>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">☼</div>
+        <div>
+          <h1 class="brand-title">AJINSAFRO</h1>
+          <div class="brand-subtitle">Voyages d'exception</div>
+        </div>
+      </div>
+
+      <div class="profile-card">
+        <div class="avatar">AA</div>
+        <div>
+          <strong>Admin Ajinsafro</strong>
+          <span>Administrateur</span>
+        </div>
+        <span style="margin-left:auto;color:var(--aj-gold-300);">⌄</span>
+      </div>
+
+      <p class="nav-title">Navigation</p>
+      <nav class="nav" aria-label="Navigation principale">
+        <button class="nav-item active"><span>⌂</span> Tableau de bord <span class="chevron">⌃</span></button>
+        <div class="sub-nav">
+          <button class="sub-item">Vue d'ensemble</button>
+          <button class="sub-item">Statistiques</button>
+          <button class="sub-item">Alertes</button>
+          <button class="sub-item">Dashboard V2</button>
+          <button class="sub-item active">Dashboard V3</button>
+        </div>
+        <button class="nav-item"><span>▣</span> Réservations <span class="chevron">⌄</span></button>
+        <button class="nav-item"><span>✈</span> Départs <span class="chevron">⌄</span></button>
+        <button class="nav-item"><span>♙</span> Clients <span class="chevron">⌄</span></button>
+        <button class="nav-item"><span>⌖</span> Destinations</button>
+        <button class="nav-item"><span>▤</span> Rapports <span class="chevron">⌄</span></button>
+        <button class="nav-item"><span>⚙</span> Paramètres <span class="chevron">⌄</span></button>
+      </nav>
+
+      <div class="premium-box">
+        <h3>♛ Service Premium</h3>
+        <p>Accédez aux analyses avancées, suivi commercial et pilotage opérationnel.</p>
+        <button>Découvrir</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="page-title">
+          <h1>Tableau de bord</h1>
+          <div class="breadcrumb"><span>Accueil</span><span>›</span><span>Tableau de bord</span><span>›</span><strong>Dashboard V3</strong></div>
+        </div>
+
+        <div class="top-actions">
+          <div class="search-row">
+            <label class="search">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+              <input type="search" placeholder="Rechercher (réservations, clients, départs...)" />
+            </label>
+            <button class="icon-btn" aria-label="Notifications">🔔<span class="badge-dot">3</span></button>
+            <div class="user-chip"><div class="user-photo">A</div><span>Admin Ajinsafro</span>⌄</div>
+          </div>
+          <div class="control-row">
+            <button class="control-btn">📅 18 mai – 24 mai 2025 ⌄</button>
+            <button class="control-btn">☷ Filtres ⌄</button>
+            <button class="primary-btn">＋ Nouvelle réservation</button>
+          </div>
+        </div>
+      </header>
+
+      <section class="hero">
+        <div class="hero-content">
+          <h2>Bienvenue sur Ajinsafro, Admin ✨</h2>
+          <p>Voici un aperçu clair des performances commerciales, départs, réservations et alertes de votre activité cette semaine.</p>
+        </div>
+      </section>
+
+      <section class="kpi-grid" aria-label="Indicateurs principaux">
+        <article class="card kpi-card">
+          <div class="kpi-icon blue">💼</div>
+          <div>
+            <small>Chiffre d'affaires</small>
+            <strong>128,4 M FCFA</strong>
+            <span class="trend">↗ 18,6% vs semaine précédente</span>
+            <svg class="sparkline" viewBox="0 0 160 36" fill="none"><path d="M4 28 C22 24 24 16 40 20 C56 24 58 5 78 12 C96 19 102 2 119 9 C135 16 139 22 156 12" stroke="#0f4f8f" stroke-width="3"/><path d="M4 28 C22 24 24 16 40 20 C56 24 58 5 78 12 C96 19 102 2 119 9 C135 16 139 22 156 12 L156 36 L4 36 Z" fill="#0f4f8f" opacity="0.10"/></svg>
+          </div>
+        </article>
+
+        <article class="card kpi-card">
+          <div class="kpi-icon orange">▣</div>
+          <div>
+            <small>Réservations</small>
+            <strong>342</strong>
+            <span class="trend">↗ 12,4% vs semaine précédente</span>
+            <svg class="sparkline" viewBox="0 0 160 36" fill="none"><path d="M4 27 C25 27 28 23 42 25 C58 27 59 12 75 16 C88 20 94 8 108 10 C124 12 123 26 138 24 C148 23 151 16 156 18" stroke="#f47b20" stroke-width="3"/><path d="M4 27 C25 27 28 23 42 25 C58 27 59 12 75 16 C88 20 94 8 108 10 C124 12 123 26 138 24 C148 23 151 16 156 18 L156 36 L4 36 Z" fill="#f47b20" opacity="0.10"/></svg>
+          </div>
+        </article>
+
+        <article class="card kpi-card">
+          <div class="kpi-icon green">✈</div>
+          <div>
+            <small>Départs actifs</small>
+            <strong>27</strong>
+            <span class="trend">↗ 8,1% vs semaine précédente</span>
+            <svg class="sparkline" viewBox="0 0 160 36" fill="none"><path d="M4 29 C19 26 24 22 36 24 C50 26 54 15 68 16 C82 17 87 8 100 12 C116 17 119 4 132 7 C144 10 149 18 156 15" stroke="#19a463" stroke-width="3"/><path d="M4 29 C19 26 24 22 36 24 C50 26 54 15 68 16 C82 17 87 8 100 12 C116 17 119 4 132 7 C144 10 149 18 156 15 L156 36 L4 36 Z" fill="#19a463" opacity="0.10"/></svg>
+          </div>
+        </article>
+
+        <article class="card kpi-card">
+          <div class="kpi-icon gold">☷</div>
+          <div>
+            <small>Clients</small>
+            <strong>1 842</strong>
+            <span class="trend">↗ 15,7% vs semaine précédente</span>
+            <svg class="sparkline" viewBox="0 0 160 36" fill="none"><path d="M4 28 C22 17 31 23 45 20 C60 18 60 28 76 23 C91 18 94 5 110 9 C125 13 128 25 142 21 C151 19 153 14 156 15" stroke="#d8a43a" stroke-width="3"/><path d="M4 28 C22 17 31 23 45 20 C60 18 60 28 76 23 C91 18 94 5 110 9 C125 13 128 25 142 21 C151 19 153 14 156 15 L156 36 L4 36 Z" fill="#d8a43a" opacity="0.13"/></svg>
+          </div>
+        </article>
+      </section>
+
+      <section class="dashboard-grid">
+        <article class="card section-card">
+          <div class="card-head">
+            <h2 class="card-title">Performance commerciale <span style="color:#98a2b3;font-size:14px;">ⓘ</span></h2>
+            <div class="mini-controls">
+              <select class="mini-select"><option>Chiffre d'affaires</option></select>
+              <select class="mini-select"><option>7 derniers jours</option></select>
+            </div>
+          </div>
+          <div class="chart-box">
+            <svg viewBox="0 0 760 250" width="100%" height="100%" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="orangeFill" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stop-color="#f47b20" stop-opacity="0.28" />
+                  <stop offset="100%" stop-color="#f47b20" stop-opacity="0.02" />
+                </linearGradient>
+              </defs>
+              <g stroke="#e8edf3" stroke-width="1">
+                <line x1="70" y1="35" x2="730" y2="35"/><line x1="70" y1="82" x2="730" y2="82"/><line x1="70" y1="129" x2="730" y2="129"/><line x1="70" y1="176" x2="730" y2="176"/><line x1="70" y1="220" x2="730" y2="220"/>
+              </g>
+              <g fill="#667085" font-size="12">
+                <text x="20" y="39">40M</text><text x="20" y="86">30M</text><text x="20" y="133">20M</text><text x="20" y="180">10M</text><text x="30" y="224">0</text>
+                <text x="70" y="242">12 mai</text><text x="178" y="242">13 mai</text><text x="286" y="242">14 mai</text><text x="394" y="242">15 mai</text><text x="502" y="242">16 mai</text><text x="610" y="242">17 mai</text><text x="705" y="242">18 mai</text>
+              </g>
+              <path d="M70 178 C130 154 152 120 188 128 C235 138 254 168 296 156 C342 142 365 95 408 92 C452 88 485 45 520 52 C568 62 585 129 632 128 C674 127 693 105 730 94 L730 220 L70 220 Z" fill="url(#orangeFill)"/>
+              <path d="M70 178 C130 154 152 120 188 128 C235 138 254 168 296 156 C342 142 365 95 408 92 C452 88 485 45 520 52 C568 62 585 129 632 128 C674 127 693 105 730 94" fill="none" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+              <circle cx="520" cy="52" r="7" fill="#d8a43a" stroke="#fff" stroke-width="3"/>
+              <rect x="532" y="28" width="82" height="28" rx="8" fill="#06192d"/><text x="545" y="47" fill="#fff" font-size="12" font-weight="700">34,6 M</text>
+            </svg>
+          </div>
+        </article>
+
+        <article class="card section-card destination-card">
+          <div class="card-head">
+            <h2 class="card-title">Réservations par destination</h2>
+          </div>
+          <div class="donut-wrap">
+            <div class="donut" aria-hidden="true"></div>
+            <div class="legend">
+              <div class="legend-row"><span class="legend-name"><i class="dot"></i>Zanzibar</span><strong>28%</strong></div>
+              <div class="legend-row"><span class="legend-name"><i class="dot sky"></i>Maurice</span><strong>24%</strong></div>
+              <div class="legend-row"><span class="legend-name"><i class="dot green"></i>Sénégal</span><strong>18%</strong></div>
+              <div class="legend-row"><span class="legend-name"><i class="dot orange"></i>Maroc</span><strong>14%</strong></div>
+              <div class="legend-row"><span class="legend-name"><i class="dot gray"></i>Autres</span><strong>16%</strong></div>
+            </div>
+          </div>
+          <a href="#" class="link-more" style="margin-top:20px;">Voir le détail des destinations →</a>
+        </article>
+
+        <article class="card section-card confirmation">
+          <div class="card-head">
+            <h2 class="card-title">Taux de confirmation <span style="color:#98a2b3;font-size:14px;">ⓘ</span></h2>
+          </div>
+          <div class="gauge">
+            <svg viewBox="0 0 260 150">
+              <path d="M35 125 A95 95 0 0 1 225 125" fill="none" stroke="#e6e8eb" stroke-width="18" stroke-linecap="round" />
+              <path d="M35 125 A95 95 0 0 1 207 72" fill="none" stroke="url(#gaugeGrad)" stroke-width="18" stroke-linecap="round" />
+              <defs>
+                <linearGradient id="gaugeGrad" x1="0" x2="1" y1="0" y2="0">
+                  <stop offset="0%" stop-color="#d8a43a" />
+                  <stop offset="70%" stop-color="#f59e0b" />
+                  <stop offset="100%" stop-color="#19a463" />
+                </linearGradient>
+              </defs>
+              <circle cx="207" cy="72" r="8" fill="#d8a43a" />
+            </svg>
+            <div class="gauge-center"><strong>92%</strong><span>Confirmées</span></div>
+          </div>
+          <div class="trend" style="justify-content:center;margin-top:18px;">↗ 6% vs semaine précédente</div>
+        </article>
+      </section>
+
+      <section class="lower-grid">
+        <article class="card section-card table-card">
+          <div class="card-head"><h2 class="card-title">✈ Départs à venir</h2></div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Date</th><th>Destination</th><th>Circuit</th><th>Places dispo.</th><th>Statut</th></tr></thead>
+              <tbody>
+                <tr><td>20 mai 2025</td><td>Zanzibar</td><td>Évasion à Zanzibar</td><td>8 / 20</td><td><span class="status ok">Disponible</span></td></tr>
+                <tr><td>22 mai 2025</td><td>Maurice</td><td>Luxe & Détente</td><td>3 / 25</td><td><span class="status low">Faible</span></td></tr>
+                <tr><td>25 mai 2025</td><td>Sénégal</td><td>Terre de Teranga</td><td>0 / 20</td><td><span class="status full">Complet</span></td></tr>
+                <tr><td>28 mai 2025</td><td>Maroc</td><td>Trésors du Maroc</td><td>5 / 18</td><td><span class="status ok">Disponible</span></td></tr>
+                <tr><td>30 mai 2025</td><td>Égypte</td><td>Merveilles d'Égypte</td><td>6 / 22</td><td><span class="status ok">Disponible</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="text-align:center;margin-top:18px;"><a href="#" class="link-more">Voir tous les départs →</a></div>
+        </article>
+
+        <article class="card section-card">
+          <div class="card-head"><h2 class="card-title">▦ Réservations récentes</h2><a href="#" class="link-more">Voir tout</a></div>
+          <div class="list">
+            <div class="reservation-item"><div class="mini-avatar">AD</div><div class="item-main"><strong>Aïssatou Diallo</strong><span>Zanzibar • 20 mai 2025</span></div><div class="amount">1 250 000 FCFA<small class="status ok">Confirmée</small></div></div>
+            <div class="reservation-item"><div class="mini-avatar">JP</div><div class="item-main"><strong>Jean-Pierre Martin</strong><span>Maurice • 22 mai 2025</span></div><div class="amount">2 180 000 FCFA<small class="status ok">Confirmée</small></div></div>
+            <div class="reservation-item"><div class="mini-avatar">FN</div><div class="item-main"><strong>Fatou Ndiaye</strong><span>Sénégal • 25 mai 2025</span></div><div class="amount">980 000 FCFA<small class="status wait">En attente</small></div></div>
+            <div class="reservation-item"><div class="mini-avatar">MC</div><div class="item-main"><strong>Mohamed Camara</strong><span>Maroc • 28 mai 2025</span></div><div class="amount">1 560 000 FCFA<small class="status ok">Confirmée</small></div></div>
+          </div>
+        </article>
+
+        <article class="card section-card alerts-card">
+          <div class="card-head"><h2 class="card-title">♙ Alertes & tâches</h2><a href="#" class="link-more">Voir tout</a></div>
+          <div class="list">
+            <div class="alert-item"><div class="alert-icon warning">!</div><div class="item-main"><strong>Départ Sénégal complet</strong><span>Liste d'attente activée</span></div><div class="alert-time">10 min</div></div>
+            <div class="alert-item"><div class="alert-icon">i</div><div class="item-main"><strong>Paiement en attente</strong><span>3 réservations à relancer</span></div><div class="alert-time">35 min</div></div>
+            <div class="alert-item"><div class="alert-icon">📅</div><div class="item-main"><strong>Rappel programme</strong><span>Mise à jour du circuit Maurice</span></div><div class="alert-time">1 h</div></div>
+            <div class="alert-item"><div class="alert-icon">+</div><div class="item-main"><strong>Nouveau client inscrit</strong><span>Ibrahima K. a rejoint Ajinsafro</span></div><div class="alert-time">2 h</div></div>
+          </div>
+          <div style="text-align:center;margin-top:18px;"><a href="#" class="link-more">Voir toutes les alertes →</a></div>
+        </article>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

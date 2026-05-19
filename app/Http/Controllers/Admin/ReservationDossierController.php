@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Voyage;
 use App\Services\BranchScopeService;
 use App\Services\ReservationListQueryService;
+use App\Services\ReservationService;
 use App\Services\ReservationVisibilityService;
 use App\Services\Wp\WpHeroImageService;
 use Carbon\Carbon;
@@ -28,6 +29,7 @@ class ReservationDossierController extends Controller
         protected BranchScopeService $branchScope,
         protected ReservationVisibilityService $reservationVisibility,
         protected ReservationListQueryService $reservationListQuery,
+        protected ReservationService $reservationService,
     ) {}
 
     public function index(Request $request): View
@@ -450,6 +452,28 @@ class ReservationDossierController extends Controller
             'notesContent' => $notesContent,
             'voyages' => $voyages,
         ]);
+    }
+
+    /**
+     * Suppression d'une reservation depuis la liste des dossiers.
+     */
+    public function destroy(Request $request, Reservation $reservation): RedirectResponse
+    {
+        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'Acces non autorise a cette reservation.');
+
+        $canDelete = $this->branchScope->canSeeAllBranches($request->user())
+            || $request->user()->isBranchAdmin()
+            || $request->user()->isManager()
+            || $request->user()->isChefCommercial()
+            || $request->user()->can('reservations.delete');
+
+        abort_unless($canDelete, 403, 'Vous n\'avez pas l\'autorisation de supprimer cette reservation.');
+
+        $this->reservationService->delete($reservation);
+
+        return redirect()
+            ->route('admin.reservation-dossiers.index')
+            ->with('success', 'Reservation supprimee avec succes.');
     }
 
     private function resolveDepartureTravelDateId(Departure $departure): ?int

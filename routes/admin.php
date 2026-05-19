@@ -148,6 +148,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('reservations', [ReservationsController::class, 'index'])->name('reservations.index');
         Route::get('reservation-dossiers', [ReservationDossierController::class, 'index'])->name('reservation-dossiers.index');
         Route::get('reservation-dossiers/{reservationDossier}', [ReservationDossierController::class, 'show'])->name('reservation-dossiers.show');
+        Route::delete('reservation-dossiers/{reservation}', [ReservationDossierController::class, 'destroy'])->name('reservation-dossiers.destroy');
         Route::get('reservations/clients', function (\Illuminate\Http\Request $request) {
             $query = $request->query();
             $query['channel'] = 'client';
