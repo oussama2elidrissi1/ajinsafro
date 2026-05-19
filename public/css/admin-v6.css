@@ -26,6 +26,14 @@ body.aj-admin-v6 .aj-admin-v2-content {
 .admin-v6-shell { min-height: 100vh; }
 .admin-v6-sidebar { width: 286px !important; min-width: 286px !important; max-width: 286px !important; }
 .admin-v6-page { margin-left: 286px !important; width: calc(100% - 286px) !important; }
+body.aj-admin-v6 .admin-v6-sidebar,
+body.aj-admin-v6 #aj-admin-v2-sidebar {
+    height: 100vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
 
 body.aj-admin-v6 .aj-v6-topbar {
     min-height: 68px;
