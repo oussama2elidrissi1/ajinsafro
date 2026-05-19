@@ -265,4 +265,17 @@ class DashboardController extends Controller
             'dashboardV5' => $dashboardV5,
         ]);
     }
+
+    /**
+     * Dashboard V6 — base technique V5, structure visuelle inspirée V4.
+     */
+    public function v6(Request $request)
+    {
+        $service = app(DashboardV5StatsService::class);
+        $dashboardV5 = $service->build($request->user());
+
+        return view('admin.dashboard.v6.index', [
+            'dashboardV5' => $dashboardV5,
+        ]);
+    }
 }
