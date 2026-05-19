@@ -147,6 +147,9 @@
     </script>
 @endif
 <link rel="stylesheet" href="{{ asset('css/reservation-workspace.css') }}?v=workspace-fixed-v7">
+@if(auth()->user()?->hasRole('commercial_reservations_only'))
+<link rel="stylesheet" href="{{ asset('css/commercial-reservations-workspace.css') }}?v=1">
+@endif
 <style>
     .ws-ring-pulse { animation: wsPulse 1.6s ease-out 1; }
     @keyframes wsPulse {
@@ -1290,8 +1293,58 @@
 @section('content')
 @php
     $catalogFullCount = $catalogFullCount ?? $catalogRows->count();
+    $workspaceUser = auth()->user();
+    $isCommercialReservationsOnly = $workspaceUser && $workspaceUser->hasRole('commercial_reservations_only');
+    $workspaceUserRole = $workspaceUser?->getRoleNames()->first() ?? 'commercial_reservations_only';
+    $workspaceBrandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');
+    $workspaceBrandLogo = \App\Models\Setting::brandLogoUrl('dark');
+    $workspaceUserInitials = strtoupper(collect(preg_split('/\s+/', trim((string) ($workspaceUser?->name ?? 'OA'))))->filter()->take(2)->map(fn ($part) => mb_substr($part, 0, 1))->implode(''));
+    if ($workspaceUserInitials === '') { $workspaceUserInitials = 'OA'; }
 @endphp
-<div class="fade-in ws-page max-w-[1680px] mx-auto pb-10 overflow-x-hidden">
+@if($isCommercialReservationsOnly)
+<div class="commercial-workspace-page" id="commercialWorkspacePage">
+    <aside class="commercial-workspace-sidebar" id="commercialWorkspaceSidebar">
+        <div class="commercial-workspace-brand">
+            <a href="{{ route('admin.reservations.workspace', ['view' => 'catalog']) }}" class="commercial-workspace-brand-link">
+                <img src="{{ $workspaceBrandLogo }}" alt="{{ $workspaceBrandName }}" class="commercial-workspace-brand-logo">
+            </a>
+        </div>
+        <div class="commercial-workspace-profile">
+            <div class="commercial-workspace-profile-avatar">{{ $workspaceUserInitials }}</div>
+            <div class="commercial-workspace-profile-meta">
+                <strong>{{ $workspaceUser?->name ?? 'Oumayma Ajinsafro' }}</strong>
+                <span>{{ $workspaceUserRole }}</span>
+            </div>
+            <a href="{{ route('admin.profile.edit') }}" class="commercial-workspace-profile-btn">Mon profil</a>
+        </div>
+        <nav class="commercial-workspace-nav" aria-label="Navigation commerciale">
+            <a href="{{ route('admin.reservations.workspace', array_filter(['view' => 'catalog'] + request()->query())) }}" class="commercial-workspace-nav-link {{ $workspaceView === 'catalog' ? 'is-active' : '' }}" data-commercial-view="catalog">Vente / Catalogue</a>
+            <a href="{{ route('admin.reservations.workspace', array_filter(['view' => 'list'] + request()->query())) }}" class="commercial-workspace-nav-link {{ $workspaceView === 'list' ? 'is-active' : '' }}" data-commercial-view="list">Réservations</a>
+            <a href="{{ route('admin.profile.edit') }}" class="commercial-workspace-nav-link">Mon profil</a>
+            <a href="{{ route('logout.get') }}" class="commercial-workspace-nav-link is-logout">Déconnexion</a>
+        </nav>
+    </aside>
+    <div class="commercial-workspace-main">
+        <header class="commercial-workspace-topbar">
+            <button type="button" class="commercial-workspace-sidebar-toggle" id="commercialWorkspaceSidebarToggle" aria-label="Afficher/masquer la barre latérale">
+                <i class="fas fa-bars" aria-hidden="true"></i>
+            </button>
+            <div class="commercial-workspace-search">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input type="text" id="commercialWorkspaceTopSearch" placeholder="Recherche globale...">
+            </div>
+            <div class="commercial-workspace-top-actions">
+                <button type="button" class="commercial-workspace-icon-btn" aria-label="Notifications"><i class="far fa-bell"></i></button>
+                <button type="button" class="commercial-workspace-icon-btn" aria-label="Messages"><i class="far fa-envelope"></i></button>
+                <div class="commercial-workspace-top-profile">
+                    <strong>{{ $workspaceUser?->name ?? 'Oumayma Ajinsafro' }}</strong>
+                    <span>{{ $workspaceUserRole }}</span>
+                </div>
+            </div>
+        </header>
+        <div class="commercial-workspace-content">
+@endif
+<div class="fade-in ws-page {{ $isCommercialReservationsOnly ? 'ws-page--commercial' : 'max-w-[1680px] mx-auto' }} pb-10 overflow-x-hidden">
     @if(session('workspace_store_error'))
         <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 text-red-900 px-4 py-3 text-sm shadow-sm" role="alert">
             <strong class="font-semibold">Enregistrement impossible.</strong>
@@ -1641,6 +1694,11 @@
         </div>
     </div>
 </div>
+@if($isCommercialReservationsOnly)
+        </div>
+    </div>
+</div>
+@endif
 
 <script type="application/json" id="workspace-calendar-json">{!! json_encode($workspaceCalendarEvents, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
 <script type="application/json" id="workspace-calendar-meta-json">{!! json_encode(['seed_date' => $workspaceCalendarSeedDate, 'reset_url' => $workspaceResetUrl], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
@@ -1693,15 +1751,15 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     /* Modal détail : enregistré en premier (avant FullCalendar) pour éviter qu’une erreur JS bloque le clic. */
-    var wsModalJson = document.getElementById('ws-modal-detail-json’);
-    var wsModalEl = document.getElementById('ws-voyage-detail-modal’);
-    var wsMdTitle = document.getElementById('ws-md-title’);
-    var wsMdSub = document.getElementById('ws-md-sub’);
-    var wsMdBody = document.getElementById('ws-md-body’);
-    var wsMdFooter = document.getElementById('ws-md-footer’);
+    var wsModalJson = document.getElementById('ws-modal-detail-json');
+    var wsModalEl = document.getElementById('ws-voyage-detail-modal');
+    var wsMdTitle = document.getElementById('ws-md-title');
+    var wsMdSub = document.getElementById('ws-md-sub');
+    var wsMdBody = document.getElementById('ws-md-body');
+    var wsMdFooter = document.getElementById('ws-md-footer');
     function parseWsDetailMap() {
         if (!wsModalJson) return {};
-        try { return JSON.parse(wsModalJson.textContent || '{}’); } catch (err) { return {}; }
+        try { return JSON.parse(wsModalJson.textContent || '{}'); } catch (err) { return {}; }
     }
     var wsDetailMap = parseWsDetailMap();
     var wsModalSettings = window.wsModalSettings || {};
@@ -2899,4 +2957,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }, true);
 });
 </script>
+@if(auth()->user()?->hasRole('commercial_reservations_only'))
+<script src="{{ asset('js/commercial-reservations-workspace.js') }}?v=1"></script>
+@endif
 @endpush

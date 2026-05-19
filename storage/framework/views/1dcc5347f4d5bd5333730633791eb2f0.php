@@ -1,6 +1,9 @@
 <?php
     $adminV2User     = auth()->user();
     $adminV2BrandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');
+    $isCommercialWorkspaceOnly = $adminV2User
+        && $adminV2User->hasRole('commercial_reservations_only')
+        && request()->routeIs('admin.reservations.workspace');
 
     $adminV2UserName = $adminV2User?->name ?? 'Admin';
     $adminV2UserRole = $adminV2User?->getRoleNames()->first() ?? 'Administrateur';
@@ -58,8 +61,11 @@
     <?php echo $__env->yieldPushContent('styles'); ?>
     <link href="<?php echo e(URL::asset('css/admin-compact.css')); ?>?v=workspace-fixed-v7" rel="stylesheet">
 </head>
-<body class="aj-admin-v2-body aj-admin aj-admin-compact">
+<body class="aj-admin-v2-body aj-admin aj-admin-compact<?php echo e($isCommercialWorkspaceOnly ? ' commercial-reservations-only' : ''); ?>">
 
+<?php if($isCommercialWorkspaceOnly): ?>
+    <?php echo $__env->yieldContent('content'); ?>
+<?php else: ?>
 <div class="aj-admin-v2-layout" id="aj-admin-v2-root">
 
     
@@ -93,6 +99,7 @@
     </div>
 
 </div>
+<?php endif; ?>
 
 
 <script src="<?php echo e(URL::asset('build/libs/jquery/jquery.min.js')); ?>"></script>
