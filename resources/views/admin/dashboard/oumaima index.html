@@ -1,0 +1,1881 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Espace réservation — Catalogue — Ajinsafro.ma Admin</title>
+  
+  <!-- Montserrat Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    * {
+      font-family: 'Montserrat', sans-serif !important;
+    }
+    
+    /* Premium glassmorphic effects & transitions */
+    .card-glow-sky:hover {
+      box-shadow: 0 10px 25px -5px rgba(14, 165, 233, 0.15), 0 8px 10px -6px rgba(14, 165, 233, 0.15);
+      border-color: rgba(14, 165, 233, 0.4);
+    }
+    .card-glow-indigo:hover {
+      box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.15), 0 8px 10px -6px rgba(99, 102, 241, 0.15);
+      border-color: rgba(99, 102, 241, 0.4);
+    }
+    .card-glow-emerald:hover {
+      box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.15), 0 8px 10px -6px rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+    .card-glow-amber:hover {
+      box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.15), 0 8px 10px -6px rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.4);
+    }
+    .card-glow-rose:hover {
+      box-shadow: 0 10px 25px -5px rgba(244, 63, 94, 0.15), 0 8px 10px -6px rgba(244, 63, 94, 0.15);
+      border-color: rgba(244, 63, 94, 0.4);
+    }
+    .card-glow-purple:hover {
+      box-shadow: 0 10px 25px -5px rgba(168, 85, 247, 0.15), 0 8px 10px -6px rgba(168, 85, 247, 0.15);
+      border-color: rgba(168, 85, 247, 0.4);
+    }
+
+    /* Elegant Custom Scrollbar for non-wrapping single-row filters */
+    .scrollbar-thin::-webkit-scrollbar {
+      height: 6px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 10px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 10px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Animation helper classes */
+    .animate-slide-in {
+      animation: slideIn 0.3s ease-out forwards;
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.2s ease-out forwards;
+    }
+    
+    @keyframes slideIn {
+      from { transform: translateY(-1rem); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-[#f8fafc] flex flex-col antialiased selection:bg-[#0081bc] selection:text-white">
+
+  <!-- Dynamic Notification Toast -->
+  <div id="toast" class="hidden fixed top-4 right-4 z-50 bg-slate-900 text-white px-4 py-3 rounded-lg shadow-xl flex items-center space-x-3 border border-slate-700 animate-slide-in">
+    <div class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></div>
+    <span id="toast-message" class="text-sm font-semibold">Message</span>
+  </div>
+
+  <!-- Floating Demo Assistant Bar -->
+  <div class="bg-slate-900 text-white px-4 py-2.5 text-xs flex flex-col sm:flex-row items-center justify-between gap-2 shadow-inner z-30 relative border-b border-slate-800 shrink-0">
+    <div class="flex items-center space-x-2">
+      <span class="bg-[#0081bc] text-[10px] uppercase font-bold px-1.5 py-0.5 rounded text-white shrink-0">Contrôle de Démo</span>
+      <span class="text-slate-300">Basculez entre l'état d'origine vide et des données de réservation pré-remplies :</span>
+    </div>
+    <div class="flex items-center space-x-3 shrink-0">
+      <button 
+        onclick="loadDemoData()" 
+        class="bg-[#0081bc] hover:bg-sky-500 text-white px-3 py-1 rounded-lg font-bold flex items-center gap-1.5 transition-all"
+      >
+        <i data-lucide="database" class="w-3.5 h-3.5"></i> Charger des dossiers de test
+      </button>
+      <button 
+        onclick="clearData()" 
+        class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1 rounded-lg font-bold flex items-center gap-1.5 transition-all border border-slate-700"
+      >
+        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Vider l'écran (Screenshot)
+      </button>
+    </div>
+  </div>
+
+  <div class="flex flex-1 relative min-h-0">
+    
+    <!-- Left Sidebar - White background with #0081bc accents -->
+    <aside id="sidebar" class="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 transition-transform duration-300 z-20 shadow-xs">
+      
+      <!-- Official Logo Section - EXACTLY matching the top menu header height (68px) -->
+      <div class="h-[68px] border-b border-slate-100 flex items-center justify-center bg-white px-4.5 shrink-0">
+        <img 
+          src="https://booking.ajinsafro.net/storage/home-settings/header/6hZldTmcYICYg6eP8O52lt8GnBe8iuHSi5xiWrdQ.png" 
+          alt="Ajinsafro.ma Logo" 
+          class="h-8 w-auto object-contain max-w-full"
+          onerror="handleLogoError(this)"
+        />
+        <div id="logo-fallback" class="hidden items-center space-x-2">
+          <span class="text-xl font-extrabold text-[#0081bc] tracking-tight">
+            Aji<span class="text-[#f15a24]">nsafro</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- User Profile Summary Card -->
+      <div class="p-5 border-b border-slate-100 flex flex-col items-center text-center bg-slate-50/50 shrink-0">
+        <div class="relative mb-3">
+          <div class="w-16 h-16 rounded-full overflow-hidden border border-slate-200 shadow-sm bg-slate-100 flex items-center justify-center">
+            <div class="w-full h-full bg-gradient-to-tr from-[#0081bc] to-sky-400 flex items-center justify-center text-white text-xl font-bold">
+              OA
+            </div>
+          </div>
+          <div class="absolute bottom-0 right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full"></div>
+        </div>
+        <h4 class="text-sm font-bold text-slate-800">Oumayma Ajinsafro</h4>
+        <span class="text-[10px] text-slate-400 font-mono mt-0.5 uppercase tracking-tight block">
+          commercial_reservations_only
+        </span>
+        <button class="mt-3.5 px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-lg font-bold shadow-xs transition-all flex items-center justify-center gap-1.5 w-full">
+          <i data-lucide="user" class="w-3.5 h-3.5 text-slate-400"></i>
+          <span>Mon profil</span>
+        </button>
+      </div>
+
+      <!-- Sidebar Navigation with interactive view-switching tabs -->
+      <nav class="p-3 flex-1 space-y-1 overflow-y-auto">
+        <span class="px-3 py-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase block mb-1">
+          Actions principales
+        </span>
+        
+        <!-- Tab: Vente (Catalogue) -->
+        <button 
+          id="btn-nav-vente"
+          onclick="switchView('vente')"
+          class="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-600 hover:text-[#0081bc] hover:bg-slate-50 rounded-lg group transition-all"
+        >
+          <div class="flex items-center space-x-3">
+            <i data-lucide="tag" class="w-4 h-4 text-slate-400 group-hover:text-[#0081bc] nav-icon"></i>
+            <span class="font-medium nav-text">Vente / Catalogue</span>
+          </div>
+        </button>
+
+        <!-- Tab: Reservations (Workspace) -->
+        <button 
+          id="btn-nav-reservations"
+          onclick="switchView('reservations')"
+          class="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-600 hover:text-[#0081bc] hover:bg-slate-50 rounded-lg group transition-all"
+        >
+          <div class="flex items-center space-x-3">
+            <i data-lucide="calendar" class="w-4 h-4 text-slate-400 group-hover:text-[#0081bc] nav-icon"></i>
+            <span class="font-medium nav-text">Reservations</span>
+          </div>
+        </button>
+
+        <div class="pt-6">
+          <span class="px-3 py-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase block mb-1">
+            Compte
+          </span>
+          <a href="#profil" class="flex items-center justify-between px-3 py-2 text-sm text-slate-600 hover:text-[#0081bc] hover:bg-slate-50 rounded-lg group transition-all">
+            <div class="flex items-center space-x-3">
+              <i data-lucide="user" class="w-4 h-4 text-slate-400 group-hover:text-[#0081bc]"></i>
+              <span class="font-medium">Mon profil</span>
+            </div>
+          </a>
+          <button 
+            onclick="clearData()"
+            class="w-full flex items-center justify-between px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 rounded-lg group transition-all text-left font-medium"
+          >
+            <div class="flex items-center space-x-3">
+              <i data-lucide="log-out" class="w-4 h-4 text-rose-500 group-hover:text-rose-600"></i>
+              <span>Déconnexion</span>
+            </div>
+          </button>
+        </div>
+      </nav>
+
+      <!-- Quick Stats sidebar footer helper -->
+      <div class="p-4 border-t border-slate-100 bg-slate-50/80 text-[11px] text-slate-400 shrink-0">
+        <div class="flex items-center justify-between mb-1">
+          <span>Heure système:</span>
+          <span class="font-mono text-slate-600 font-semibold">12:35</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span>Date:</span>
+          <span class="font-mono text-slate-600 font-semibold">19 Mai 2026</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace Frame -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+      
+      <!-- Top Navigation / Global Search Header - Fixed matching height (68px) -->
+      <header class="bg-[#0c4a6e] text-white px-6 h-[68px] flex items-center justify-between shadow-md shrink-0">
+        
+        <!-- Left side: Search bar -->
+        <div class="flex items-center space-x-4 w-full max-w-xl">
+          <div class="relative w-full">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300"></i>
+            <input 
+              type="text" 
+              placeholder="Rechercher (voyage, agence, réservation...)" 
+              class="w-full pl-10 pr-16 py-2 bg-white/10 hover:bg-white/15 focus:bg-white focus:text-slate-950 rounded-lg border border-white/10 focus:border-white text-xs placeholder-slate-300 outline-none transition-all"
+            />
+            <div class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] bg-white/20 px-1.5 py-0.5 rounded font-mono font-bold tracking-tight text-white/90">
+              ⌘ K
+            </div>
+          </div>
+        </div>
+
+        <!-- Right side: Notifications, Messages & Fullscreen mode buttons -->
+        <div class="flex items-center space-x-3 sm:space-x-4">
+          
+          <!-- Fullscreen Action Toggle -->
+          <button onclick="toggleFullscreen()" class="p-2 hover:bg-white/10 rounded-full transition-colors" title="Plein écran">
+            <i id="fullscreen-icon" data-lucide="maximize" class="w-5 h-5 text-white"></i>
+          </button>
+
+          <!-- Messages icon -->
+          <button class="relative p-2 hover:bg-white/10 rounded-full transition-colors" title="Discussion">
+            <i data-lucide="message-square-more" class="w-5 h-5 text-white"></i>
+          </button>
+
+          <!-- Notifications bell badge with refined icon and pulse ring -->
+          <button class="relative p-2 hover:bg-white/10 rounded-full transition-colors" title="Notifications">
+            <i data-lucide="bell" class="w-5 h-5 text-white animate-wiggle"></i>
+            <span class="absolute top-1 right-1 bg-[#f15a24] text-white text-[9px] font-black w-4.5 h-4.5 flex items-center justify-center rounded-full border border-sky-900 shadow-sm">
+              21
+            </span>
+          </button>
+
+          <!-- Custom divider -->
+          <div class="h-6 w-px bg-white/15"></div>
+
+          <!-- User Profile Dropdown -->
+          <div class="flex items-center space-x-2.5 cursor-pointer hover:bg-white/10 p-1.5 rounded-lg transition-colors">
+            <div class="w-8 h-8 rounded-full overflow-hidden bg-white/20 border border-white/20 flex items-center justify-center">
+              <div class="w-full h-full bg-gradient-to-tr from-[#0081bc] to-sky-400 flex items-center justify-center text-white text-xs font-bold">
+                OA
+              </div>
+            </div>
+            <div class="hidden lg:block text-left">
+              <p class="text-xs font-bold leading-none">Oumayma Ajinsafro</p>
+              <span class="text-[9px] text-sky-200 font-mono mt-0.5 block leading-none">commercial_reservations_only</span>
+            </div>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-sky-200"></i>
+          </div>
+
+        </div>
+      </header>
+
+      <!-- ============================================ -->
+      <!-- VIEW 1: RESERVATIONS TABLE WORKSPACE         -->
+      <!-- ============================================ -->
+      <div id="view-reservations" class="view-panel hidden flex-col">
+        <main class="p-6 max-w-[1600px] w-full mx-auto space-y-6 flex-1">
+          
+          <!-- Title Block & Primary Action -->
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 class="text-2xl font-extrabold text-[#0081bc] tracking-tight">
+                Dossiers de reservation
+              </h1>
+              <p class="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
+                Vue V3 orientee departs: identifiez d'abord les departs qui bougent, puis ouvrez au clic toutes les reservations qui demandent une action.
+              </p>
+            </div>
+            <button 
+              onclick="openCreateModal()"
+              class="bg-[#0081bc] hover:bg-[#0081bc]/90 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 shrink-0"
+            >
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span>Créer un dossier</span>
+            </button>
+          </div>
+
+          <!-- PREMIUM REDESIGNED METRICS COUNTERS BAR -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5">
+            
+            <!-- Card 1: Departs Actifs -->
+            <div class="bg-white p-5 rounded-2xl shadow-xs border border-slate-100 flex flex-col justify-between h-36 relative overflow-hidden transition-all duration-300 card-glow-sky hover:-translate-y-1">
+              <div class="flex items-center justify-between">
+                <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
+                  <i data-lucide="map-pin" class="w-5 h-5"></i>
+                </div>
+                <span class="text-[9px] font-extrabold text-sky-600 bg-sky-50 px-2 py-0.5 rounded-full uppercase tracking-wider">Actifs</span>
+              </div>
+              <div class="mt-4">
+                <span class="text-2xl font-black text-slate-850 font-mono block leading-none" id="metric-departs">0</span>
+                <span class="text-[10px] font-semibold text-slate-400 mt-1.5 block">DÉPARTS ACTIFS <span class="text-slate-300">•</span> 15 jrs</span>
+              </div>
+              <div class="absolute right-0 bottom-0 translate-x-3 translate-y-3 opacity-[0.03] text-sky-900 pointer-events-none">
+                <i data-lucide="map-pin" class="w-24 h-24"></i>
+              </div>
+            </div>
+
+            <!-- Card 2: Total Reservations -->
+            <div class="bg-white p-5 rounded-2xl shadow-xs border border-slate-100 flex flex-col justify-between h-36 relative overflow-hidden transition-all duration-300 card-glow-indigo hover:-translate-y-1">
+              <div class="flex items-center justify-between">
+                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                  <i data-lucide="inbox" class="w-5 h-5"></i>
+                </div>
+                <span class="text-[9px] font-extrabold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full uppercase tracking-wider">Volume</span>
+              </div>
+              <div class="mt-4">
+                <span class="text-2xl font-black text-slate-850 font-mono block leading-none" id="metric-reservations">0</span>
+                <span class="text-[10px] font-semibold text-slate-400 mt-1.5 block">RÉSERVATIONS <span class="text-slate-300">•</span> Global</span>
+              </div>
+              <div class="absolute right-0 bottom-0 translate-x-3 translate-y-3 opacity-[0.03] text-indigo-900 pointer-events-none">
+                <i data-lucide="inbox" class="w-24 h-24"></i>
+              </div>
+            </div>
+
+            <!-- Card 3: En Option -->
+            <div class="bg-white p-5 rounded-2xl shadow-xs border border-slate-100 flex flex-col justify-between h-36 relative overflow-hidden transition-all duration-300 card-glow-amber hover:-translate-y-1">
+              <div class="flex items-center justify-between">
+                <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                  <i data-lucide="clock" class="w-5 h-5"></i>
+                </div>
+                <span class="text-[9px] font-extrabold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full uppercase tracking-wider">Options</span>
+              </div>
+              <div class="mt-4">
+                <span class="text-2xl font-black text-slate-850 font-mono block leading-none" id="metric-en-attente">0</span>
+                <span class="text-[10px] font-semibold text-slate-400 mt-1.5 block">EN OPTION <span class="text-slate-300">•</span> À relancer</span>
+              </div>
+              <div class="absolute right-0 bottom-0 translate-x-3 translate-y-3 opacity-[0.03] text-amber-900 pointer-events-none">
+                <i data-lucide="clock" class="w-24 h-24"></i>
+              </div>
+            </div>
+
+            <!-- Card 4: Confirmés -->
+            <div class="bg-white p-5 rounded-2xl shadow-xs border border-slate-100 flex flex-col justify-between h-36 relative overflow-hidden transition-all duration-300 card-glow-emerald hover:-translate-y-1">
+              <div class="flex items-center justify-between">
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <i data-lucide="check-circle" class="w-5 h-5"></i>
+                </div>
+                <span class="text-[9px] font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-wider">Validés</span>
+              </div>
+              <div class="mt-4">
+                <span class="text-2xl font-black text-slate-850 font-mono block leading-none" id="metric-payees">0</span>
+                <span class="text-[10px] font-semibold text-slate-400 mt-1.5 block">DOSSIERS CONFIRMÉS</span>
+              </div>
+              <div class="absolute right-0 bottom-0 translate-x-3 translate-y-3 opacity-[0.03] text-emerald-900 pointer-events-none">
+                <i data-lucide="check-circle" class="w-24 h-24"></i>
+              </div>
+            </div>
+
+            <!-- Card 5: Annulés -->
+            <div class="bg-white p-5 rounded-2xl shadow-xs border border-slate-100 flex flex-col justify-between h-36 relative overflow-hidden transition-all duration-300 card-glow-rose hover:-translate-y-1">
+              <div class="flex items-center justify-between">
+                <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                  <i data-lucide="x-circle" class="w-5 h-5"></i>
+                </div>
+                <span class="text-[9px] font-extrabold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full uppercase tracking-wider">Annulés</span>
+              </div>
+              <div class="mt-4">
+                <span class="text-2xl font-black text-slate-850 font-mono block leading-none" id="metric-annules">0</span>
+                <span class="text-[10px] font-semibold text-slate-400 mt-1.5 block">ANNULÉS <span class="text-slate-300">•</span> Non facturé</span>
+              </div>
+              <div class="absolute right-0 bottom-0 translate-x-3 translate-y-3 opacity-[0.03] text-rose-900 pointer-events-none">
+                <i data-lucide="x-circle" class="w-24 h-24"></i>
+              </div>
+            </div>
+
+            <!-- Card 6: Restant DH -->
+            <div class="bg-white p-5 rounded-2xl shadow-xs border border-slate-100 flex flex-col justify-between h-36 relative overflow-hidden transition-all duration-300 card-glow-purple hover:-translate-y-1">
+              <div class="flex items-center justify-between">
+                <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                  <i data-lucide="wallet" class="w-5 h-5"></i>
+                </div>
+                <span class="text-[9px] font-extrabold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full uppercase tracking-wider">Caisse</span>
+              </div>
+              <div class="mt-4">
+                <span class="text-xl font-black text-slate-850 font-mono block leading-none" id="metric-restant">0 DH</span>
+                <span class="text-[10px] font-semibold text-slate-400 mt-1.5 block">RESTE À ENCAISSER</span>
+              </div>
+              <div class="absolute right-0 bottom-0 translate-x-3 translate-y-3 opacity-[0.03] text-purple-900 pointer-events-none">
+                <i data-lucide="wallet" class="w-24 h-24"></i>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Main Workspace Filter Table Container -->
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            
+            <!-- Header Tab Filter Menu -->
+            <div class="p-4 border-b border-slate-100 bg-slate-50/20 flex flex-wrap gap-2 items-center justify-between">
+              <div class="flex flex-wrap items-center gap-1.5" id="tabs-container">
+                <button onclick="setActiveTab('Tous')" id="tab-Tous" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-[#0081bc] text-white shadow-sm">Toutes les réservations</button>
+                <button onclick="setActiveTab('Confirmé')" id="tab-Confirmé" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Dossiers Confirmés</button>
+                <button onclick="setActiveTab('Option')" id="tab-Option" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">En Option</button>
+                <button onclick="setActiveTab('Annulé')" id="tab-Annulé" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Annulés</button>
+              </div>
+
+              <div class="text-[11px] text-slate-400 flex items-center gap-1 font-semibold">
+                <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
+                <span>Filtres rapides de statut</span>
+              </div>
+            </div>
+
+            <!-- RESPONSIVE SINGLE ROW RESERVATIONS FILTERS -->
+            <div class="p-5 border-b border-slate-100">
+              <div class="flex flex-nowrap overflow-x-auto items-end gap-4 pb-2.5 scrollbar-thin">
+                
+                <!-- Search field -->
+                <div class="min-w-[280px] shrink-0">
+                  <label class="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">
+                    Recherche voyage / client / dossier / commercial
+                  </label>
+                  <div class="relative">
+                    <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input 
+                      type="text" 
+                      id="search-input"
+                      oninput="handleSearch(this.value)"
+                      placeholder="Ex: AJ-26-4839, Oussama Alami..."
+                      class="w-full pl-10 pr-10 py-2.5 bg-white border border-slate-200 focus:border-[#0081bc] rounded-xl text-xs font-semibold placeholder-slate-400 focus:ring-1 focus:ring-[#0081bc] outline-none transition-all"
+                    />
+                    <button 
+                      id="clear-search-btn"
+                      onclick="clearSearch()"
+                      class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Voyage Selector -->
+                <div class="min-w-[180px] shrink-0">
+                  <label class="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">Voyage / Destination</label>
+                  <div class="relative">
+                    <select 
+                      id="select-voyage"
+                      onchange="handleVoyageFilter(this.value)"
+                      class="w-full pl-3 pr-10 py-2.5 bg-white border border-slate-200 focus:border-[#0081bc] rounded-xl text-xs font-semibold text-slate-700 outline-none appearance-none cursor-pointer"
+                    >
+                      <option value="Tous">Tous</option>
+                    </select>
+                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                  </div>
+                </div>
+
+                <!-- Statut Paiement Selector -->
+                <div class="min-w-[180px] shrink-0">
+                  <label class="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">Statut Paiement</label>
+                  <div class="relative">
+                    <select 
+                      id="select-paiement"
+                      onchange="handlePaiementFilter(this.value)"
+                      class="w-full pl-3 pr-10 py-2.5 bg-white border border-slate-200 focus:border-[#0081bc] rounded-xl text-xs font-semibold text-slate-700 outline-none appearance-none cursor-pointer"
+                    >
+                      <option value="Tous">Tous les paiements</option>
+                      <option value="Payé">Payé</option>
+                      <option value="Avance">Avance (Acompte)</option>
+                      <option value="En attente">En attente</option>
+                    </select>
+                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                  </div>
+                </div>
+
+                <!-- Commercial Selector -->
+                <div class="min-w-[180px] shrink-0">
+                  <label class="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">Commercial</label>
+                  <div class="relative">
+                    <select 
+                      id="select-commercial"
+                      onchange="handleCommercialFilter(this.value)"
+                      class="w-full pl-3 pr-10 py-2.5 bg-white border border-slate-200 focus:border-[#0081bc] rounded-xl text-xs font-semibold text-slate-700 outline-none appearance-none cursor-pointer"
+                    >
+                      <option value="Tous">Tous les commerciaux</option>
+                    </select>
+                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Table Container with the requested real structure columns -->
+            <div class="overflow-x-auto">
+              
+              <!-- Empty state element -->
+              <div id="empty-state" class="py-24 px-6 flex flex-col items-center justify-center text-center">
+                <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-300 mb-4 shadow-inner">
+                  <i data-lucide="map-pin" class="w-7 h-7"></i>
+                </div>
+                <h3 class="text-base font-bold text-slate-800">Aucun dossier de réservation trouvé</h3>
+                <p class="text-xs text-slate-400 mt-2 max-w-sm leading-relaxed">
+                  Aucun départ ne correspond aux filtres actuels. Chargez les données d'exemples de test ou créez manuellement un dossier de réservation.
+                </p>
+                <div class="mt-6 flex flex-wrap gap-3 justify-center">
+                  <button 
+                    onclick="loadDemoData()"
+                    class="px-4 py-2 bg-blue-50 text-[#0081bc] hover:bg-blue-100 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5"
+                  >
+                    <i data-lucide="database" class="w-3.5 h-3.5"></i>
+                    Charger des données de démonstration
+                  </button>
+                  <button 
+                    onclick="openCreateModal()"
+                    class="px-4 py-2 bg-[#0081bc] text-white hover:bg-[#0081bc]/90 font-bold text-xs rounded-xl transition-all"
+                  >
+                    Créer un dossier manuellement
+                  </button>
+                </div>
+              </div>
+
+              <!-- Authentic table element -->
+              <table id="data-table" class="w-full text-left border-collapse hidden">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-150 text-slate-400 uppercase text-[10px] tracking-wider font-extrabold">
+                    <th class="py-3 px-5">Dossier</th>
+                    <th class="py-3 px-5">Client</th>
+                    <th class="py-3 px-5">Voyage / Destination</th>
+                    <th class="py-3 px-5">Statut Dossier</th>
+                    <th class="py-3 px-5">Statut Paiement</th>
+                    <th class="py-3 px-5">Commercial</th>
+                    <th class="py-3 px-5 text-right">Total</th>
+                    <th class="py-3 px-5 text-right">Reste</th>
+                    <th class="py-3 px-5 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="table-body" class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                  <!-- Javascript populated table rows -->
+                </tbody>
+              </table>
+
+            </div>
+
+          </div>
+
+        </main>
+      </div>
+
+      <!-- ============================================ -->
+      <!-- VIEW 2: VENTE / CATALOGUE OF VOYAGES         -->
+      <!-- ============================================ -->
+      <div id="view-vente" class="view-panel hidden flex-col">
+        <main class="p-6 max-w-[1600px] w-full mx-auto space-y-6 flex-1 animate-fade-in">
+          
+          <!-- Header, search criteria and Switch Display modes -->
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+              <h1 class="text-2xl font-extrabold text-[#0081bc] tracking-tight">
+                Catalogue des Voyages & Départs
+              </h1>
+              <p class="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
+                Recherchez les départs programmés et initiez un dossier de vente directe en un seul clic.
+              </p>
+            </div>
+            
+            <!-- Switch mode selector (Grid / List / Calendar) -->
+            <div class="flex items-center bg-slate-100 p-1 rounded-xl self-start lg:self-auto shrink-0 font-semibold shadow-xs">
+              <button 
+                onclick="setCatalogueDisplayMode('grid')" 
+                id="btn-mode-grid" 
+                class="px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 bg-white text-slate-800 shadow-xs"
+              >
+                <i data-lucide="grid" class="w-3.5 h-3.5"></i>
+                <span>Catalogue</span>
+              </button>
+              <button 
+                onclick="setCatalogueDisplayMode('list')" 
+                id="btn-mode-list" 
+                class="px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 text-slate-500 hover:text-slate-800"
+              >
+                <i data-lucide="list" class="w-3.5 h-3.5"></i>
+                <span>Liste</span>
+              </button>
+              <button 
+                onclick="setCatalogueDisplayMode('calendar')" 
+                id="btn-mode-calendar" 
+                class="px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 text-slate-500 hover:text-slate-800"
+              >
+                <i data-lucide="calendar-days" class="w-3.5 h-3.5"></i>
+                <span>Calendrier</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- REFINED ADVANCED FILTERS BOX - strictly non-wrapping responsive row always in one line -->
+          <div id="catalog-filters-box" class="bg-white rounded-2xl p-5 shadow-xs border border-slate-100">
+            <div class="flex flex-nowrap overflow-x-auto items-end gap-4 pb-2.5 scrollbar-thin">
+              
+              <!-- Filter 1: Destination Search -->
+              <div class="min-w-[220px] shrink-0">
+                <label class="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">Destination / Titre</label>
+                <input 
+                  type="text" 
+                  id="catalog-search"
+                  oninput="filterCatalog()"
+                  placeholder="Ex: Dakhla, Sahara, Marrakech..."
+                  class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0081bc] rounded-xl text-xs font-semibold outline-none transition-all"
+                />
+              </div>
+
+              <!-- Filter 2: Type (Package, Vol, Hébergement) -->
+              <div class="min-w-[160px] shrink-0">
+                <label class="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">Type de voyage</label>
+                <div class="relative">
+                  <select 
+                    id="catalog-type"
+                    onchange="filterCatalog()"
+                    class="w-full pl-3 pr-10 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0081bc] rounded-xl text-xs font-semibold text-slate-700 outline-none appearance-none cursor-pointer"
+                  >
+                    <option value="Tous">Tous types</option>
+                    <option value="Package">Package</option>
+                    <option value="Vol">Vol</option>
+                    <option value="Hébergement">Hébergement</option>
+                  </select>
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                </div>
+              </div>
+
+              <!-- Filter 3: Date From -->
+              <div class="min-w-[160px] shrink-0">
+                <label class="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">Départ après le</label>
+                <input 
+                  type="date" 
+                  id="catalog-date-from"
+                  onchange="filterCatalog()"
+                  class="w-full px-3 py-2 bg-slate-50 border border-slate-200 focus:border-[#0081bc] rounded-xl text-xs font-semibold outline-none transition-all"
+                />
+              </div>
+
+              <!-- Filter 4: Date To -->
+              <div class="min-w-[160px] shrink-0">
+                <label class="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">Départ avant le</label>
+                <input 
+                  type="date" 
+                  id="catalog-date-to"
+                  onchange="filterCatalog()"
+                  class="w-full px-3 py-2 bg-slate-50 border border-slate-200 focus:border-[#0081bc] rounded-xl text-xs font-semibold outline-none transition-all"
+                />
+              </div>
+
+              <!-- Filter 5: Budget Min -->
+              <div class="min-w-[130px] shrink-0">
+                <label class="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">Budget Min (DH)</label>
+                <input 
+                  type="number" 
+                  id="catalog-budget-min"
+                  oninput="filterCatalog()"
+                  placeholder="0"
+                  class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0081bc] rounded-xl text-xs font-semibold outline-none transition-all"
+                />
+              </div>
+
+              <!-- Filter 6: Budget Max -->
+              <div class="min-w-[130px] shrink-0">
+                <label class="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">Budget Max (DH)</label>
+                <input 
+                  type="number" 
+                  id="catalog-budget-max"
+                  oninput="filterCatalog()"
+                  placeholder="Max"
+                  class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0081bc] rounded-xl text-xs font-semibold outline-none transition-all"
+                />
+              </div>
+
+              <!-- Action Reset -->
+              <div class="min-w-[200px] shrink-0">
+                <button 
+                  onclick="resetCatalogFilters()"
+                  class="w-full py-2.5 px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border border-slate-200"
+                >
+                  <i data-lucide="refresh-cw" class="w-3.5 h-3.5 shrink-0"></i>
+                  <span>Réinitialiser les filtres</span>
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- SUB-VIEW A: CATALOGUE GRID VIEW (Default) with premium fixed paddings -->
+          <div id="catalog-grid-subview" class="catalog-subview">
+            <div id="catalog-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              <!-- Dynamically populated card nodes with optimized internal spacing -->
+            </div>
+          </div>
+
+          <!-- SUB-VIEW B: CATALOGUE LIST TABLE VIEW - ENHANCED STRUCTURE AS REQUESTED -->
+          <div id="catalog-list-subview" class="catalog-subview hidden">
+            <div class="bg-white rounded-2xl shadow-xs border border-slate-100 overflow-hidden">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-150 text-slate-400 uppercase text-[10px] tracking-wider font-extrabold">
+                    <th class="py-3.5 px-5">Réf</th>
+                    <th class="py-3.5 px-5">Voyage & Type</th>
+                    <th class="py-3.5 px-5">Destination</th>
+                    <th class="py-3.5 px-5">Dates (Aller/Retour)</th>
+                    <th class="py-3.5 px-5 text-center">Vendu / En attente</th>
+                    <th class="py-3.5 px-5 text-center">Remplissage</th>
+                    <th class="py-3.5 px-5 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="catalog-list-table-body" class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                  <!-- Dynamically populated list rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- SUB-VIEW C: INTERACTIVE PLANNER CALENDAR VIEW -->
+          <div id="catalog-calendar-subview" class="catalog-subview hidden">
+            <div class="bg-white rounded-2xl p-6 shadow-xs border border-slate-100 space-y-4">
+              
+              <!-- Month toggles -->
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <i data-lucide="calendar" class="w-5 h-5 text-[#0081bc]"></i>
+                  <h2 id="calendar-month-title" class="text-base font-extrabold text-slate-800">Mai 2026</h2>
+                </div>
+                <div class="flex items-center bg-slate-100 p-0.5 rounded-lg shrink-0">
+                  <button onclick="prevCalendarMonth()" class="p-1.5 hover:bg-white rounded-md text-slate-600 hover:text-slate-900 transition-all">
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                  </button>
+                  <button onclick="nextCalendarMonth()" class="p-1.5 hover:bg-white rounded-md text-slate-600 hover:text-slate-900 transition-all">
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Calendar Days Grid -->
+              <div class="grid grid-cols-7 gap-2 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                <div>Lun</div>
+                <div>Mar</div>
+                <div>Mer</div>
+                <div>Jeu</div>
+                <div>Ven</div>
+                <div>Sam</div>
+                <div>Dim</div>
+              </div>
+
+              <!-- Calendar numeric day container -->
+              <div id="calendar-days-container" class="grid grid-cols-7 gap-2 min-h-[350px]">
+                <!-- Dynamically constructed days squares -->
+              </div>
+
+              <!-- Legend of statuses -->
+              <div class="pt-4 border-t border-slate-100 flex flex-wrap gap-4 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <div class="flex items-center gap-1.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                  <span>Départ garanti</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                  <span>Remplissage actif</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                  <span>Presque complet</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-blue-400"></span>
+                  <span>En attente</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Empty catalog view -->
+          <div id="catalog-empty" class="hidden py-16 px-6 flex flex-col items-center justify-center text-center bg-white rounded-2xl border border-slate-100">
+            <div class="w-14 h-14 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 mb-3">
+              <i data-lucide="search-slash" class="w-6 h-6 text-slate-400"></i>
+            </div>
+            <h3 class="text-sm font-bold text-slate-800">Aucun départ correspondant</h3>
+            <p class="text-xs text-slate-400 mt-1 max-w-xs">Ajustez vos filtres de recherche, de date, de type, ou de budget.</p>
+          </div>
+
+        </main>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Fully functional Create Dossier modal (React Design Elements but in raw CSS/JS) -->
+  <div id="create-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-slate-100 overflow-hidden transform scale-95 duration-150 animate-fade-in">
+      
+      <!-- Modal header -->
+      <div class="bg-[#0081bc] text-white p-4.5 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="calendar" class="w-5 h-5"></i>
+          <h3 class="font-bold text-sm">Nouveau dossier de réservation</h3>
+        </div>
+        <button 
+          onclick="closeCreateModal()"
+          class="text-white/80 hover:text-white p-1 hover:bg-white/10 rounded-full transition-colors"
+        >
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal body & form -->
+      <form id="create-form" onsubmit="handleCreateDossier(event)" class="p-5 space-y-4">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Client name -->
+          <div class="col-span-1 md:col-span-2">
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">
+              Nom Complet du Client *
+            </label>
+            <input 
+              type="text"
+              id="modal-client"
+              required
+              placeholder="Ex. Oussama Alami"
+              class="w-full border border-slate-200 focus:border-[#0081bc] p-2.5 text-xs rounded-xl outline-none font-semibold text-slate-800"
+            />
+          </div>
+
+          <!-- Client phone -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">
+              Numéro Téléphone
+            </label>
+            <input 
+              type="text"
+              id="modal-phone"
+              placeholder="+212 661-458920"
+              class="w-full border border-slate-200 focus:border-[#0081bc] p-2.5 text-xs rounded-xl outline-none font-semibold text-slate-800"
+            />
+          </div>
+
+          <!-- Commercial -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">
+              Commercial affecté
+            </label>
+            <select
+              id="modal-commercial"
+              class="w-full border border-slate-200 focus:border-[#0081bc] p-2.5 text-xs rounded-xl outline-none font-semibold text-slate-800"
+            >
+              <option value="Oumayma">Oumayma</option>
+              <option value="Anass">Anass</option>
+              <option value="Ghita">Ghita</option>
+            </select>
+          </div>
+
+          <!-- Voyage select -->
+          <div class="col-span-1 md:col-span-2">
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">
+              Voyage / Destination *
+            </label>
+            <select
+              id="modal-voyage"
+              class="w-full border border-slate-200 focus:border-[#0081bc] p-2.5 text-xs rounded-xl outline-none font-semibold text-slate-800"
+            >
+              <option value="Dakhla Evasion Premium">Dakhla Evasion Premium</option>
+              <option value="Merzouga Dunes Adventure">Merzouga Dunes Adventure</option>
+              <option value="Marrakech Luxury Escape">Marrakech Luxury Escape</option>
+              <option value="Dakhla Surf & Kitesurf">Dakhla Surf & Kitesurf</option>
+              <option value="Chefchaouen Blue Pearl Walk">Chefchaouen Blue Pearl Walk</option>
+            </select>
+          </div>
+
+          <!-- Statut Dossier -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">
+              Statut Dossier *
+            </label>
+            <select
+              id="modal-statut-dossier"
+              class="w-full border border-slate-200 focus:border-[#0081bc] p-2.5 text-xs rounded-xl outline-none font-semibold text-slate-800"
+            >
+              <option value="Confirmé">Confirmé</option>
+              <option value="Option">Option</option>
+              <option value="Annulé">Annulé</option>
+            </select>
+          </div>
+
+          <!-- Statut Paiement -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">
+              Statut Paiement *
+            </label>
+            <select
+              id="modal-statut-paiement"
+              class="w-full border border-slate-200 focus:border-[#0081bc] p-2.5 text-xs rounded-xl outline-none font-semibold text-slate-800"
+            >
+              <option value="Payé">Payé</option>
+              <option value="Avance">Avance</option>
+              <option value="En attente">En attente</option>
+            </select>
+          </div>
+
+          <!-- Total Global -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">
+              Total Global (DH) *
+            </label>
+            <input 
+              type="number"
+              id="modal-total"
+              required
+              placeholder="Ex. 4500"
+              class="w-full border border-slate-200 focus:border-[#0081bc] p-2.5 text-xs rounded-xl outline-none font-semibold text-slate-800"
+            />
+          </div>
+
+          <!-- Reste à Payer -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">
+              Reste à Payer (DH)
+            </label>
+            <input 
+              type="number"
+              id="modal-reste"
+              placeholder="Ex. 2000"
+              class="w-full border border-slate-200 focus:border-[#0081bc] p-2.5 text-xs rounded-xl outline-none font-semibold text-slate-800"
+            />
+          </div>
+
+          <!-- Departure Date -->
+          <div class="col-span-1 md:col-span-2">
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">
+              Date de Départ *
+            </label>
+            <input 
+              type="date"
+              id="modal-date"
+              required
+              value="2026-05-25"
+              class="w-full border border-slate-200 focus:border-[#0081bc] p-2.5 text-xs rounded-xl outline-none font-semibold text-slate-800"
+            />
+          </div>
+
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="pt-4 flex items-center justify-end space-x-3 border-t border-slate-100">
+          <button 
+            type="button"
+            onclick="closeCreateModal()"
+            class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold text-xs rounded-xl transition-colors"
+          >
+            Annuler
+          </button>
+          <button 
+            type="submit"
+            class="px-4 py-2 bg-[#0081bc] hover:bg-sky-500 text-white font-bold text-xs rounded-xl shadow-md transition-colors"
+          >
+            Enregistrer le dossier
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- Real schema demo dataset matches the oumaima index.html structure -->
+  <script>
+    const INITIAL_DEMO_DATA = [
+      {
+        id: 'AJ-26-4839',
+        client: 'Oussama Alami',
+        phone: '+212 661-458920',
+        voyage: 'Dakhla Evasion Premium',
+        departDate: '2026-05-25',
+        statutDossier: 'Confirmé',
+        statutPaiement: 'Payé',
+        commercial: 'Oumayma',
+        total: 4500,
+        reste: 0,
+        created: '2026-05-18'
+      },
+      {
+        id: 'AJ-26-4840',
+        client: 'Yassine Mansouri',
+        phone: '+212 663-889911',
+        voyage: 'Merzouga Dunes Adventure',
+        departDate: '2026-05-28',
+        statutDossier: 'Confirmé',
+        statutPaiement: 'Avance',
+        commercial: 'Anass',
+        total: 3200,
+        reste: 1200,
+        created: '2026-05-19'
+      },
+      {
+        id: 'AJ-26-4841',
+        client: 'Fatima Zahra',
+        phone: '+212 667-123456',
+        voyage: 'Marrakech Luxury Escape',
+        departDate: '2026-06-02',
+        statutDossier: 'Option',
+        statutPaiement: 'En attente',
+        commercial: 'Ghita',
+        total: 7800,
+        reste: 7800,
+        created: '2026-05-17'
+      },
+      {
+        id: 'AJ-26-4842',
+        client: 'Amine Bennani',
+        phone: '+212 660-998877',
+        voyage: 'Dakhla Surf & Kitesurf',
+        departDate: '2026-05-24',
+        statutDossier: 'Confirmé',
+        statutPaiement: 'Payé',
+        commercial: 'Oumayma',
+        total: 5100,
+        reste: 0,
+        created: '2026-05-15'
+      },
+      {
+        id: 'AJ-26-4843',
+        client: 'Salma El Fassi',
+        phone: '+212 661-223344',
+        voyage: 'Chefchaouen Blue Pearl Walk',
+        departDate: '2026-05-30',
+        statutDossier: 'Annulé',
+        statutPaiement: 'En attente',
+        commercial: 'Anass',
+        total: 2400,
+        reste: 2400,
+        created: '2026-05-19'
+      }
+    ];
+
+    // Travel Catalog list dataset enriched with 'type' field mapping (Package, Vol, Hébergement)
+    const CATALOGUE_VOYAGES_DATA = [
+      {
+        id: 'CAT-DKH-01',
+        title: 'Dakhla Evasion Premium',
+        destination: 'Dakhla, Maroc',
+        type: 'Package',
+        departDate: '2026-05-25',
+        endDate: '2026-05-30',
+        duration: '6 jours / 5 nuits',
+        price: 4500,
+        maxSeats: 24,
+        reservedSeats: 16,
+        status: 'Départ garanti',
+        gradient: 'from-sky-400 to-blue-600',
+        description: 'Évasion inoubliable entre lagon bleu azur et dunes blanches. Idéal sports de glisse et farniente.'
+      },
+      {
+        id: 'CAT-MRZ-02',
+        title: 'Merzouga Dunes Adventure',
+        destination: 'Merzouga, Sahara',
+        type: 'Package',
+        departDate: '2026-05-28',
+        endDate: '2026-06-01',
+        duration: '5 jours / 4 nuits',
+        price: 3200,
+        maxSeats: 30,
+        reservedSeats: 12,
+        status: 'Remplissage actif',
+        gradient: 'from-amber-500 to-orange-600',
+        description: 'Nuit magique sous les étoiles du Sahara marocain. Randonnées en chameau et feu de camp traditionnel.'
+      },
+      {
+        id: 'CAT-RAK-03',
+        title: 'Marrakech Luxury Escape',
+        destination: 'Marrakech, Maroc',
+        type: 'Hébergement',
+        departDate: '2026-06-02',
+        endDate: '2026-06-06',
+        duration: '5 jours / 4 nuits',
+        price: 7800,
+        maxSeats: 15,
+        reservedSeats: 14,
+        status: 'Presque complet',
+        gradient: 'from-purple-500 to-indigo-700',
+        description: 'Palace de prestige, rituels bien-être de hammams traditionnels, dîner aux chandelles dans la Médina.'
+      },
+      {
+        id: 'CAT-DKH-04',
+        title: 'Dakhla Surf & Kitesurf',
+        destination: 'Dakhla, Maroc',
+        type: 'Package',
+        departDate: '2026-05-24',
+        endDate: '2026-05-29',
+        duration: '6 jours / 5 nuits',
+        price: 5100,
+        maxSeats: 20,
+        reservedSeats: 15,
+        status: 'Départ garanti',
+        gradient: 'from-teal-400 to-emerald-600',
+        description: 'Stages intensifs avec coachs certifiés. Ambiance sportive et conviviale au bord du lagon.'
+      },
+      {
+        id: 'CAT-XAO-05',
+        title: 'Chefchaouen Blue Pearl Walk',
+        destination: 'Chefchaouen, Maroc',
+        type: 'Hébergement',
+        departDate: '2026-05-30',
+        endDate: '2026-06-02',
+        duration: '4 jours / 3 nuits',
+        price: 2400,
+        maxSeats: 40,
+        reservedSeats: 8,
+        status: 'En attente',
+        gradient: 'from-blue-400 to-cyan-500',
+        description: 'Promenade poétique au cœur des ruelles bleues pittoresques et randonnée jusqu\'aux cascades d\'Akchour.'
+      },
+      {
+        id: 'CAT-VOL-06',
+        title: 'Vol direct Casablanca — Dakhla',
+        destination: 'Casablanca / Dakhla',
+        type: 'Vol',
+        departDate: '2026-05-22',
+        endDate: '2026-05-22',
+        duration: 'Aller simple - Vol direct',
+        price: 1800,
+        maxSeats: 180,
+        reservedSeats: 142,
+        status: 'Départ garanti',
+        gradient: 'from-indigo-400 to-sky-600',
+        description: 'Billet d\'avion aller simple direct opéré par la compagnie nationale, franchise bagages 23kg incluse.'
+      }
+    ];
+
+    // State management
+    const state = {
+      currentView: 'vente', // Default active view of the application
+      catalogueDisplayMode: 'grid', // 'grid', 'list', 'calendar'
+      currentCalendarYear: 2026,
+      currentCalendarMonth: 4, // 0-indexed (4 = May)
+      reservations: [], // Empty as in screenshots initially
+      activeTab: 'Tous',
+      searchQuery: '',
+      filterVoyage: 'Tous',
+      filterPaiement: 'Tous',
+      filterCommercial: 'Tous'
+    };
+
+    // Initialize logic
+    window.onload = function() {
+      lucide.createIcons();
+      switchView('vente'); // Start on Vente direct view per request
+      updateDashboard();
+    };
+
+    // Fullscreen Mode Interactive Toggle
+    function toggleFullscreen() {
+      const fsIcon = document.getElementById('fullscreen-icon');
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().then(() => {
+          fsIcon.setAttribute('data-lucide', 'minimize');
+          lucide.createIcons();
+          triggerNotification("Plein écran activé");
+        }).catch(err => {
+          console.error("Erreur d'activation du plein écran:", err);
+        });
+      } else {
+        document.exitFullscreen().then(() => {
+          fsIcon.setAttribute('data-lucide', 'maximize');
+          lucide.createIcons();
+          triggerNotification("Plein écran désactivé");
+        });
+      }
+    }
+
+    // Navigation Switcher
+    function switchView(viewName) {
+      state.currentView = viewName;
+      
+      // Hide all views
+      document.querySelectorAll('.view-panel').forEach(panel => {
+        panel.classList.add('hidden');
+        panel.classList.remove('flex');
+      });
+
+      // Show chosen view
+      const activePanel = document.getElementById(`view-${viewName}`);
+      activePanel.classList.remove('hidden');
+      activePanel.classList.add('flex');
+
+      // Update sidebar nav anchors
+      const btnVente = document.getElementById('btn-nav-vente');
+      const btnReservations = document.getElementById('btn-nav-reservations');
+
+      if (viewName === 'vente') {
+        btnVente.className = "w-full flex items-center justify-between px-3 py-2 text-sm font-bold text-[#0081bc] bg-[#0081bc]/10 border-l-4 border-[#0081bc] rounded-r-lg group transition-all";
+        btnReservations.className = "w-full flex items-center justify-between px-3 py-2 text-sm text-slate-600 hover:text-[#0081bc] hover:bg-slate-50 rounded-lg group transition-all";
+      } else {
+        btnReservations.className = "w-full flex items-center justify-between px-3 py-2 text-sm font-bold text-[#0081bc] bg-[#0081bc]/10 border-l-4 border-[#0081bc] rounded-r-lg group transition-all";
+        btnVente.className = "w-full flex items-center justify-between px-3 py-2 text-sm text-slate-600 hover:text-[#0081bc] hover:bg-slate-50 rounded-lg group transition-all";
+      }
+      
+      // Re-trigger icon updates
+      lucide.createIcons();
+      
+      if (viewName === 'vente') {
+        renderTravelCatalogue();
+      }
+    }
+
+    // Switch between Grid, List and Calendar Display Modes inside "Vente" view
+    function setCatalogueDisplayMode(mode) {
+      state.catalogueDisplayMode = mode;
+
+      const modes = ['grid', 'list', 'calendar'];
+      modes.forEach(m => {
+        const btn = document.getElementById(`btn-mode-${m}`);
+        const subview = document.getElementById(`catalog-${m}-subview`);
+        
+        if (m === mode) {
+          // Highlight active button
+          btn.className = "px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 bg-white text-slate-800 shadow-xs";
+          subview.classList.remove('hidden');
+        } else {
+          // Fade unactive button
+          btn.className = "px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 text-slate-500 hover:text-slate-800";
+          subview.classList.add('hidden');
+        }
+      });
+
+      // Hide filters container box if we are looking at the calendar (as filters don't apply there)
+      const filtersBox = document.getElementById('catalog-filters-box');
+      if (mode === 'calendar') {
+        filtersBox.classList.add('hidden');
+      } else {
+        filtersBox.classList.remove('hidden');
+      }
+
+      renderTravelCatalogue();
+    }
+
+    function handleLogoError(img) {
+      img.style.display = 'none';
+      document.getElementById('logo-fallback').style.display = 'flex';
+    }
+
+    function triggerNotification(message) {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      toastMessage.textContent = message;
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 4000);
+    }
+
+    function loadDemoData() {
+      state.reservations = JSON.parse(JSON.stringify(INITIAL_DEMO_DATA));
+      triggerNotification("Données d'exemples chargées avec succès !");
+      updateDashboard();
+      if (state.currentView === 'vente') {
+        renderTravelCatalogue();
+      }
+    }
+
+    function clearData() {
+      state.reservations = [];
+      triggerNotification("Écran vidé, retour à l'état vierge.");
+      updateDashboard();
+      if (state.currentView === 'vente') {
+        renderTravelCatalogue();
+      }
+    }
+
+    function setActiveTab(tabName) {
+      state.activeTab = tabName;
+      
+      const tabs = ['Tous', 'Confirmé', 'Option', 'Annulé'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tab-${t}`);
+        if (t === tabName) {
+          btn.className = "px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-[#0081bc] text-white shadow-sm";
+        } else {
+          btn.className = "px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-white border border-slate-200 text-slate-600 hover:bg-slate-50";
+        }
+      });
+      updateDashboard();
+    }
+
+    function handleSearch(val) {
+      state.searchQuery = val;
+      const clearBtn = document.getElementById('clear-search-btn');
+      if (val.trim() !== '') {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+      updateDashboard();
+    }
+
+    function clearSearch() {
+      document.getElementById('search-input').value = '';
+      handleSearch('');
+    }
+
+    function handleVoyageFilter(val) {
+      state.filterVoyage = val;
+      updateDashboard();
+    }
+
+    // Active filters triggers inside 'Reservations' view
+    function handlePaiementFilter(val) {
+      state.filterPaiement = val;
+      updateDashboard();
+    }
+
+    // Active filters triggers inside 'Reservations' view
+    function handleCommercialFilter(val) {
+      state.filterCommercial = val;
+      updateDashboard();
+    }
+
+    function openCreateModal(preselectedVoyage = '') {
+      if (preselectedVoyage) {
+        document.getElementById('modal-voyage').value = preselectedVoyage;
+        // Preset prices based on destination choice
+        const found = CATALOGUE_VOYAGES_DATA.find(v => v.title === preselectedVoyage);
+        if (found) {
+          document.getElementById('modal-total').value = found.price;
+          document.getElementById('modal-reste').value = found.price;
+          document.getElementById('modal-date').value = found.departDate;
+        }
+      }
+      document.getElementById('create-modal').classList.remove('hidden');
+    }
+
+    function closeCreateModal() {
+      document.getElementById('create-modal').classList.add('hidden');
+      document.getElementById('create-form').reset();
+    }
+
+    function handleCreateDossier(event) {
+      event.preventDefault();
+      
+      const client = document.getElementById('modal-client').value;
+      const phone = document.getElementById('modal-phone').value || '+212 600-000000';
+      const voyage = document.getElementById('modal-voyage').value;
+      const commercial = document.getElementById('modal-commercial').value;
+      const statutDossier = document.getElementById('modal-statut-dossier').value;
+      const statutPaiement = document.getElementById('modal-statut-paiement').value;
+      const total = parseFloat(document.getElementById('modal-total').value);
+      const reste = parseFloat(document.getElementById('modal-reste').value) || 0;
+      const date = document.getElementById('modal-date').value;
+
+      if (!client.trim() || isNaN(total)) {
+        alert("Veuillez remplir les informations obligatoires.");
+        return;
+      }
+
+      const randomId = `AJ-26-${Math.floor(4000 + Math.random() * 5999)}`;
+      const newRecord = {
+        id: randomId,
+        client: client,
+        phone: phone,
+        voyage: voyage,
+        departDate: date,
+        statutDossier: statutDossier,
+        statutPaiement: statutPaiement,
+        commercial: commercial,
+        total: total,
+        reste: reste,
+        created: new Date().toISOString().split('T')[0]
+      };
+
+      state.reservations.unshift(newRecord);
+      closeCreateModal();
+      triggerNotification(`Dossier ${randomId} créé avec succès !`);
+      
+      // Go to reservations view to see new row
+      switchView('reservations');
+      updateDashboard();
+    }
+
+    function cancelReservation(id) {
+      state.reservations = state.reservations.filter(r => r.id !== id);
+      triggerNotification(`Dossier ${id} supprimé.`);
+      updateDashboard();
+    }
+
+    // View Detailed Voyage Information
+    function viewVoyageDetails(id) {
+      const found = CATALOGUE_VOYAGES_DATA.find(v => v.id === id);
+      if (found) {
+        triggerNotification(`Voyage : ${found.title} - Tarif: ${found.price} DH. Places dispo: ${found.maxSeats - found.reservedSeats}`);
+      }
+    }
+
+    // Dynamic calculations updating
+    function updateDashboard() {
+      updateMetrics();
+      updateFilterDropdowns();
+      renderFilteredTable();
+    }
+
+    function updateMetrics() {
+      const active = state.reservations.filter(r => {
+        const date = new Date(r.departDate);
+        const today = new Date('2026-05-19');
+        const diffTime = date - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays >= 0 && diffDays <= 15;
+      }).length;
+
+      const total = state.reservations.length;
+      const confirmes = state.reservations.filter(r => r.statutDossier === 'Confirmé').length;
+      const options = state.reservations.filter(r => r.statutDossier === 'Option').length;
+      const annules = state.reservations.filter(r => r.statutDossier === 'Annulé').length;
+      
+      const restantDH = state.reservations
+        .filter(r => r.statutDossier !== 'Annulé')
+        .reduce((sum, r) => sum + r.reste, 0);
+
+      document.getElementById('metric-departs').textContent = active;
+      document.getElementById('metric-reservations').textContent = total;
+      document.getElementById('metric-en-attente').textContent = options;
+      document.getElementById('metric-payees').textContent = confirmes;
+      document.getElementById('metric-annules').textContent = annules;
+      document.getElementById('metric-restant').textContent = `${restantDH.toLocaleString('fr-FR')} DH`;
+    }
+
+    function updateFilterDropdowns() {
+      // Voyage list
+      const voyagesSelect = document.getElementById('select-voyage');
+      const curVoyage = state.filterVoyage;
+      const listVoyages = ['Tous', ...Array.from(new Set(state.reservations.map(r => r.voyage)))];
+      voyagesSelect.innerHTML = '';
+      listVoyages.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v;
+        opt.textContent = v === 'Tous' ? 'Toutes les destinations' : v;
+        if (v === curVoyage) opt.selected = true;
+        voyagesSelect.appendChild(opt);
+      });
+
+      // Commercial list
+      const commSelect = document.getElementById('select-commercial');
+      const curComm = state.filterCommercial;
+      const listComm = ['Tous', ...Array.from(new Set(state.reservations.map(r => r.commercial)))];
+      commSelect.innerHTML = '';
+      listComm.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c === 'Tous' ? 'Tous les commerciaux' : c;
+        if (c === curComm) opt.selected = true;
+        commSelect.appendChild(opt);
+      });
+    }
+
+    function renderFilteredTable() {
+      const emptyStateEl = document.getElementById('empty-state');
+      const tableEl = document.getElementById('data-table');
+      const tableBody = document.getElementById('table-body');
+
+      const filtered = state.reservations.filter(res => {
+        if (state.activeTab !== 'Tous' && res.statutDossier !== state.activeTab) return false;
+        if (state.filterVoyage !== 'Tous' && res.voyage !== state.filterVoyage) return false;
+        if (state.filterPaiement !== 'Tous' && res.statutPaiement !== state.filterPaiement) return false;
+        if (state.filterCommercial !== 'Tous' && res.commercial !== state.filterCommercial) return false;
+
+        if (state.searchQuery.trim() !== '') {
+          const query = state.searchQuery.toLowerCase();
+          const matchesClient = res.client.toLowerCase().includes(query);
+          const matchesVoyage = res.voyage.toLowerCase().includes(query);
+          const matchesId = res.id.toLowerCase().includes(query);
+          const matchesComm = res.commercial.toLowerCase().includes(query);
+          if (!matchesClient && !matchesVoyage && !matchesId && !matchesComm) return false;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        tableEl.classList.add('hidden');
+        emptyStateEl.classList.remove('hidden');
+      } else {
+        emptyStateEl.classList.add('hidden');
+        tableEl.classList.remove('hidden');
+
+        tableBody.innerHTML = '';
+        filtered.forEach(res => {
+          const tr = document.createElement('tr');
+          tr.className = "hover:bg-slate-50/70 transition-colors border-b border-slate-100";
+
+          let dossierBadge = "bg-rose-50 text-rose-700 border border-rose-100";
+          if (res.statutDossier === 'Confirmé') {
+            dossierBadge = "bg-emerald-50 text-emerald-700 border border-emerald-100";
+          } else if (res.statutDossier === 'Option') {
+            dossierBadge = "bg-amber-50 text-amber-700 border border-amber-100";
+          }
+
+          let paiementBadge = "bg-rose-100 text-rose-800";
+          if (res.statutPaiement === 'Payé') {
+            paiementBadge = "bg-emerald-100 text-emerald-800";
+          } else if (res.statutPaiement === 'Avance') {
+            paiementBadge = "bg-blue-100 text-blue-800";
+          }
+
+          tr.innerHTML = `
+            <td class="py-4 px-5">
+              <span class="font-mono text-[#0081bc] bg-blue-50 px-2.5 py-1 rounded-xl font-bold">
+                ${res.id}
+              </span>
+            </td>
+            <td class="py-4 px-5">
+              <div class="font-bold text-slate-800">${res.client}</div>
+              <span class="text-[10px] text-slate-400 block mt-0.5 font-mono">${res.phone}</span>
+            </td>
+            <td class="py-4 px-5">
+              <div class="text-slate-800 flex items-center gap-1 font-semibold">
+                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+                <span>${res.voyage}</span>
+              </div>
+              <span class="text-[10px] text-slate-400 block mt-0.5 font-mono">Départ: ${res.departDate}</span>
+            </td>
+            <td class="py-4 px-5">
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-wide uppercase ${dossierBadge}">
+                ${res.statutDossier}
+              </span>
+            </td>
+            <td class="py-4 px-5">
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-wide uppercase ${paiementBadge}">
+                ${res.statutPaiement}
+              </span>
+            </td>
+            <td class="py-4 px-5">
+              <span class="text-slate-600 bg-slate-100 px-2 py-1 rounded-lg text-[11px] font-bold">
+                ${res.commercial}
+              </span>
+            </td>
+            <td class="py-4 px-5 text-right font-black text-slate-800 font-mono">
+              ${res.total.toLocaleString('fr-FR')} DH
+            </td>
+            <td class="py-4 px-5 text-right font-black font-mono ${res.reste > 0 ? 'text-rose-600' : 'text-emerald-600'}">
+              ${res.reste.toLocaleString('fr-FR')} DH
+            </td>
+            <td class="py-4 px-5 text-center">
+              <button 
+                onclick="cancelReservation('${res.id}')"
+                class="text-slate-400 hover:text-red-600 font-bold hover:underline px-2"
+              >
+                Annuler
+              </button>
+            </td>
+          `;
+          tableBody.appendChild(tr);
+        });
+        lucide.createIcons();
+      }
+    }
+
+    // ============================================
+    // VENTE CATALOGUE VIEW RENDERING FUNCTIONS
+    // ============================================
+    function renderTravelCatalogue() {
+      const searchVal = document.getElementById('catalog-search').value.toLowerCase();
+      const typeVal = document.getElementById('catalog-type').value;
+      const dateFromVal = document.getElementById('catalog-date-from').value;
+      const dateToVal = document.getElementById('catalog-date-to').value;
+      const budgetMinVal = parseFloat(document.getElementById('catalog-budget-min').value) || 0;
+      const budgetMaxVal = parseFloat(document.getElementById('catalog-budget-max').value) || Infinity;
+
+      // Filter catalog data
+      const filtered = CATALOGUE_VOYAGES_DATA.filter(item => {
+        // Destination Search
+        if (searchVal && !item.title.toLowerCase().includes(searchVal) && !item.description.toLowerCase().includes(searchVal)) return false;
+        
+        // Type filter (Package, Vol, Hébergement)
+        if (typeVal !== 'Tous' && item.type !== typeVal) return false;
+        
+        // Date From filter
+        if (dateFromVal && item.departDate < dateFromVal) return false;
+        
+        // Date To filter
+        if (dateToVal && item.departDate > dateToVal) return false;
+        
+        // Budget constraints
+        if (item.price < budgetMinVal) return false;
+        if (budgetMaxVal !== Infinity && item.price > budgetMaxVal) return false;
+        
+        return true;
+      });
+
+      const empty = document.getElementById('catalog-empty');
+      if (filtered.length === 0 && state.catalogueDisplayMode !== 'calendar') {
+        empty.classList.remove('hidden');
+      } else {
+        empty.classList.add('hidden');
+      }
+
+      // Route rendering based on display mode
+      if (state.catalogueDisplayMode === 'grid') {
+        renderGridView(filtered);
+      } else if (state.catalogueDisplayMode === 'list') {
+        renderListView(filtered);
+      } else if (state.catalogueDisplayMode === 'calendar') {
+        renderCalendarView();
+      }
+    }
+
+    // 1. Grid rendering (Card-view) - FIXED INTERNAL PADDINGS AND ALIGNMENT
+    function renderGridView(filtered) {
+      const grid = document.getElementById('catalog-grid');
+      grid.innerHTML = '';
+
+      filtered.forEach(item => {
+        const pct = Math.round((item.reservedSeats / item.maxSeats) * 100);
+        let badgeColor = "bg-amber-500 text-white";
+        if (item.status === "Départ garanti") badgeColor = "bg-emerald-500 text-white";
+        if (item.status === "Presque complet") badgeColor = "bg-rose-500 text-white";
+
+        const card = document.createElement('div');
+        card.className = "bg-white rounded-2xl shadow-xs border border-slate-100 overflow-hidden hover:shadow-md transition-all duration-300 flex flex-col";
+        card.innerHTML = `
+          <div class="h-36 bg-gradient-to-tr ${item.gradient} p-5 flex flex-col justify-between text-white relative shrink-0">
+            <div class="flex items-center justify-between">
+              <span class="text-[9px] font-extrabold bg-white/20 backdrop-blur-xs px-2.5 py-0.5 rounded-full uppercase tracking-wider">${item.type}</span>
+              <span class="text-[9px] font-extrabold ${badgeColor} px-2.5 py-0.5 rounded-full uppercase tracking-wider">${item.status}</span>
+            </div>
+            <div>
+              <h3 class="font-extrabold text-base leading-tight">${item.title}</h3>
+              <span class="text-[10px] text-white/80 font-semibold block mt-0.5">${item.duration}</span>
+            </div>
+          </div>
+          <div class="p-6 flex-1 flex flex-col justify-between space-y-4.5">
+            <p class="text-xs text-slate-500 leading-relaxed line-clamp-3">${item.description}</p>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between text-xs text-slate-700">
+                <span class="font-bold flex items-center gap-1.5"><i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i> Dates :</span>
+                <span class="font-mono font-semibold text-[11px]">Du ${formatDateFrench(item.departDate)} au ${formatDateFrench(item.endDate)}</span>
+              </div>
+              <div class="space-y-1.5">
+                <div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  <span>Remplissage</span>
+                  <span>${item.reservedSeats}/${item.maxSeats} Places (${pct}%)</span>
+                </div>
+                <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div class="h-full bg-[#0081bc] rounded-full" style="width: ${pct}%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-between shrink-0">
+              <div>
+                <span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">Tarif Global</span>
+                <span class="text-lg font-black text-slate-800 font-mono">${item.price.toLocaleString('fr-FR')} <span class="text-xs font-bold">DH</span></span>
+              </div>
+              <button 
+                onclick="openCreateModal('${item.title}')"
+                class="bg-[#0081bc] hover:bg-sky-500 text-white font-bold text-xs py-2.5 px-4 rounded-xl transition-all flex items-center gap-1.5 shadow-xs"
+              >
+                <i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i>
+                Créer dossier
+              </button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+      lucide.createIcons();
+    }
+
+    // 2. List table rendering - NEW ENHANCED DESIGN AND COLUMNS MAPPING
+    function renderListView(filtered) {
+      const tableBody = document.getElementById('catalog-list-table-body');
+      tableBody.innerHTML = '';
+
+      filtered.forEach(item => {
+        const pct = Math.round((item.reservedSeats / item.maxSeats) * 100);
+        const remainingSeats = item.maxSeats - item.reservedSeats;
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/70 transition-colors border-b border-slate-100";
+        tr.innerHTML = `
+          <!-- Column 1: Réf -->
+          <td class="py-4 px-5">
+            <span class="font-mono text-xs font-bold text-[#0081bc] bg-blue-50 px-2 py-1 rounded-lg">
+              ${item.id}
+            </span>
+          </td>
+          
+          <!-- Column 2: Voyage Name & Type -->
+          <td class="py-4 px-5">
+            <div class="flex items-center space-x-2">
+              <span class="font-extrabold text-slate-900 text-sm">${item.title}</span>
+              <span class="px-2 py-0.5 bg-blue-50 text-[#0081bc] rounded-md text-[9px] font-extrabold uppercase tracking-wider">${item.type}</span>
+            </div>
+            <span class="text-[10px] text-slate-400 block mt-0.5">${item.duration}</span>
+          </td>
+          
+          <!-- Column 3: Destination -->
+          <td class="py-4 px-5 text-slate-700 font-bold">
+            <div class="flex items-center gap-1">
+              <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i>
+              <span>${item.destination}</span>
+            </div>
+          </td>
+          
+          <!-- Column 4: Departure/Return Date -->
+          <td class="py-4 px-5 font-mono text-[11px] text-slate-600">
+            <div class="font-bold text-slate-800">Du ${formatDateFrench(item.departDate)}</div>
+            <div class="text-[10px] text-slate-400">Au ${formatDateFrench(item.endDate)}</div>
+          </td>
+          
+          <!-- Column 5: Vendu / En attente -->
+          <td class="py-4 px-5 text-center font-mono">
+            <div class="text-emerald-600 font-extrabold">Vendu: ${item.reservedSeats}</div>
+            <div class="text-amber-500 font-extrabold">Dispo: ${remainingSeats}</div>
+          </td>
+          
+          <!-- Column 6: Remplissage -->
+          <td class="py-4 px-5">
+            <div class="w-40 space-y-1 mx-auto text-center">
+              <div class="flex justify-between text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                <span>Rempli</span>
+                <span>${pct}%</span>
+              </div>
+              <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full bg-[#0081bc] rounded-full" style="width: ${pct}%"></div>
+              </div>
+            </div>
+          </td>
+          
+          <!-- Column 7: Actions (Voir & Réserver) -->
+          <td class="py-4 px-5 text-center">
+            <div class="flex items-center justify-center space-x-2">
+              <button 
+                onclick="viewVoyageDetails('${item.id}')"
+                class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-[10px] transition-all"
+              >
+                Voir
+              </button>
+              <button 
+                onclick="openCreateModal('${item.title}')"
+                class="px-2.5 py-1.5 bg-[#0081bc] hover:bg-sky-600 text-white font-bold rounded-lg text-[10px] shadow-xs transition-all"
+              >
+                Réserver
+              </button>
+            </div>
+          </td>
+        `;
+        tableBody.appendChild(tr);
+      });
+      lucide.createIcons();
+    }
+
+    // 3. Planning Calendar View rendering
+    function renderCalendarView() {
+      const container = document.getElementById('calendar-days-container');
+      const monthTitle = document.getElementById('calendar-month-title');
+      container.innerHTML = '';
+
+      const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+      monthTitle.textContent = `${monthNames[state.currentCalendarMonth]} ${state.currentCalendarYear}`;
+
+      // Build grid details of target month
+      const firstDay = new Date(state.currentCalendarYear, state.currentCalendarMonth, 1);
+      // Adjust standard 0-indexed day where Sunday is 0 -> Monday is 0
+      let startOffset = firstDay.getDay() - 1;
+      if (startOffset === -1) startOffset = 6; // Sunday fix
+
+      const daysInMonth = new Date(state.currentCalendarYear, state.currentCalendarMonth + 1, 0).getDate();
+
+      // Empty grids placeholder for offset days
+      for (let i = 0; i < startOffset; i++) {
+        const spacer = document.createElement('div');
+        spacer.className = "bg-slate-50/50 rounded-xl border border-slate-100";
+        container.appendChild(spacer);
+      }
+
+      // Draw day cells
+      for (let day = 1; day <= daysInMonth; day++) {
+        const cellDateString = `${state.currentCalendarYear}-${String(state.currentCalendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        
+        // Find matching voyages
+        const dayVoyages = CATALOGUE_VOYAGES_DATA.filter(v => v.departDate === cellDateString);
+
+        const dayCard = document.createElement('div');
+        dayCard.className = "bg-white p-2 rounded-xl border border-slate-200/70 flex flex-col justify-between min-h-[75px] group hover:border-[#0081bc] hover:bg-[#0081bc]/5 transition-all cursor-pointer";
+        dayCard.onclick = () => {
+          if (dayVoyages.length > 0) {
+            openCreateModal(dayVoyages[0].title);
+          } else {
+            // General modal open with default select
+            openCreateModal();
+          }
+        };
+
+        // Date index top-right corner
+        let dayHeaderHtml = `<span class="text-xs font-bold text-slate-500 self-end">${day}</span>`;
+        
+        // Voyage badges inside cell
+        let badgesHtml = '';
+        dayVoyages.forEach(v => {
+          let badgeDotColor = "bg-amber-500";
+          if (v.status === "Départ garanti") badgeDotColor = "bg-emerald-500";
+          if (v.status === "Presque complet") badgeDotColor = "bg-rose-500";
+          if (v.status === "En attente") badgeDotColor = "bg-blue-400";
+
+          badgesHtml += `
+            <div class="mt-1 p-1 bg-[#0081bc]/10 hover:bg-[#0081bc]/20 rounded-md text-[9px] font-bold text-slate-800 flex items-center gap-1 truncate" title="${v.title}">
+              <span class="w-1.5 h-1.5 rounded-full ${badgeDotColor} shrink-0"></span>
+              <span class="truncate leading-none">${v.title.split(' ')[0]}...</span>
+            </div>
+          `;
+        });
+
+        dayCard.innerHTML = `
+          <div class="w-full flex justify-between items-center">
+            ${dayVoyages.length > 0 ? `<span class="w-2 h-2 rounded-full bg-[#0081bc]" title="${dayVoyages.length} départs"></span>` : '<span></span>'}
+            ${dayHeaderHtml}
+          </div>
+          <div class="w-full">
+            ${badgesHtml}
+          </div>
+        `;
+        container.appendChild(dayCard);
+      }
+    }
+
+    // Calendar navigators
+    function prevCalendarMonth() {
+      state.currentCalendarMonth--;
+      if (state.currentCalendarMonth < 0) {
+        state.currentCalendarMonth = 11;
+        state.currentCalendarYear--;
+      }
+      renderCalendarView();
+    }
+
+    // Calendar navigators
+    function nextCalendarMonth() {
+      state.currentCalendarMonth++;
+      if (state.currentCalendarMonth > 11) {
+        state.currentCalendarMonth = 0;
+        state.currentCalendarYear++;
+      }
+      renderCalendarView();
+    }
+
+    function resetCatalogFilters() {
+      document.getElementById('catalog-search').value = '';
+      document.getElementById('catalog-type').value = 'Tous';
+      document.getElementById('catalog-date-from').value = '';
+      document.getElementById('catalog-date-to').value = '';
+      document.getElementById('catalog-budget-min').value = '';
+      document.getElementById('catalog-budget-max').value = '';
+      renderTravelCatalogue();
+    }
+
+    function formatDateFrench(dateString) {
+      const parts = dateString.split('-');
+      if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}`;
+      }
+      return dateString;
+    }
+  </script>
+</body>
+</html>

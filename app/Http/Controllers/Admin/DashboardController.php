@@ -11,6 +11,7 @@ use App\Models\GroupDealParticipant;
 use App\Models\Reservation;
 use App\Models\ReservationMessage;
 use App\Models\Voyage;
+use App\Services\Admin\DashboardV5StatsService;
 use App\Services\BranchScopeService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -257,9 +258,11 @@ class DashboardController extends Controller
      */
     public function v5(Request $request)
     {
-        $response = $this->vueGlobale($request);
-        $data = $response->getData();
+        $service = app(DashboardV5StatsService::class);
+        $dashboardV5 = $service->build($request->user());
 
-        return view('admin.dashboard.v5.index', $data);
+        return view('admin.dashboard.v5.index', [
+            'dashboardV5' => $dashboardV5,
+        ]);
     }
 }
