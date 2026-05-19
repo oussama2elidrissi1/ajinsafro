@@ -1,4 +1,4 @@
-@extends('layouts.admin-v2')
+@extends('layouts.dashboard-v4')
 
 @section('title', 'Dashboard V4')
 
@@ -74,31 +74,37 @@
 
 @push('styles')
 <style>
-    body.aj-admin-v2-body .aj-admin-v2-sidebar,
-    body.aj-admin-v2-body .aj-topbar,
-    body.aj-admin-v2-body .aj-footer {
+    body.aj-dashboard-v4-body {
+        margin: 0;
+        background: #f6f8fb;
+        overflow-x: hidden;
+    }
+
+    body.aj-dashboard-v4-body .aj-admin-v2-sidebar,
+    body.aj-dashboard-v4-body .aj-topbar,
+    body.aj-dashboard-v4-body .aj-footer {
         display: none !important;
     }
 
-    body.aj-admin-v2-body .aj-admin-v2-layout {
+    body.aj-dashboard-v4-body .aj-admin-v2-layout {
         display: block;
         min-height: 100vh;
         background: #f6f8fb;
     }
 
-    body.aj-admin-v2-body .aj-admin-v2-main {
+    body.aj-dashboard-v4-body .aj-admin-v2-main {
         margin-left: 0 !important;
         width: 100% !important;
         padding: 0 !important;
         min-height: 100vh;
     }
 
-    body.aj-admin-v2-body .aj-admin-v2-content {
+    body.aj-dashboard-v4-body .aj-admin-v2-content {
         padding: 0 !important;
         margin: 0 !important;
     }
 
-    body.aj-admin-v2-body .aj-admin-v2-overlay {
+    body.aj-dashboard-v4-body .aj-admin-v2-overlay {
         display: none !important;
     }
 
@@ -1213,7 +1219,7 @@
 
         <main class="aj-v4-main">
             <div class="aj-v4-content">
-            <header class="aj-v4-topbar">
+                <header class="aj-v4-topbar">
                 <div class="aj-v4-topbar__title">
                     <h1>Tableau de bord</h1>
                     <div class="aj-v4-topbar__breadcrumb">
@@ -1245,8 +1251,8 @@
                 </div>
             </header>
 
-            <section class="aj-v4-hero">
-                <div class="aj-v4-hero__content">
+                <section class="aj-v4-hero">
+                    <div class="aj-v4-hero__content">
                     <div class="aj-v4-hero__logo">
                         <img src="{{ $dashboardBrandLogo }}" alt="{{ $dashboardBrandName }}">
                     </div>
@@ -1257,9 +1263,10 @@
                         <a href="{{ route('admin.dashboard.v3') }}" class="aj-v4-hero__btn is-secondary">Voir Dashboard V3</a>
                     </div>
                 </div>
-            </section>
+                    </div>
+                </section>
 
-            <section class="aj-v4-kpi-grid" aria-label="Indicateurs principaux">
+                <section class="aj-v4-kpi-grid" aria-label="Indicateurs principaux">
                 <article class="aj-v4-card aj-v4-kpi-card">
                     <div class="aj-v4-kpi-card__icon blue"><i class="bx bx-briefcase-alt-2"></i></div>
                     <div>
@@ -1299,9 +1306,9 @@
                         <svg class="aj-v4-sparkline" viewBox="0 0 160 36" fill="none"><path d="M4 28 C22 17 31 23 45 20 C60 18 60 28 76 23 C91 18 94 5 110 9 C125 13 128 25 142 21 C151 19 153 14 156 15" stroke="#d8a43a" stroke-width="3"/><path d="M4 28 C22 17 31 23 45 20 C60 18 60 28 76 23 C91 18 94 5 110 9 C125 13 128 25 142 21 C151 19 153 14 156 15 L156 36 L4 36 Z" fill="#d8a43a" opacity="0.13"/></svg>
                     </div>
                 </article>
-            </section>
+                </section>
 
-            <section class="aj-v4-grid aj-v4-analytics-grid">
+                <section class="aj-v4-grid aj-v4-analytics-grid">
                 <article class="aj-v4-card aj-v4-panel">
                     <div class="aj-v4-panel__head">
                         <div>
@@ -1385,9 +1392,9 @@
                     </div>
                     <div class="aj-v4-trend" style="justify-content:center;margin-top:18px;">↗ 6% vs semaine précédente</div>
                 </article>
-            </section>
+                </section>
 
-            <section class="aj-v4-grid aj-v4-activity-grid">
+                <section class="aj-v4-grid aj-v4-activity-grid">
                 <article class="aj-v4-card aj-v4-panel">
                     <div class="aj-v4-panel__head">
                         <div>
@@ -1472,9 +1479,9 @@
                         <p class="aj-v4-objective__note">Encore 186 000 DH pour atteindre l’objectif fixé sur le mois en cours.</p>
                     </div>
                 </article>
-            </section>
+                </section>
 
-            <section class="aj-v4-grid aj-v4-metrics-grid" style="margin-top:18px;">
+                <section class="aj-v4-grid aj-v4-metrics-grid" style="margin-top:18px;">
                 <article class="aj-v4-card aj-v4-panel">
                     <div class="aj-v4-panel__head">
                         <div>
@@ -1544,7 +1551,7 @@
                         <p class="aj-v4-objective__note">Encore 186 000 DH pour atteindre l’objectif fixé sur le mois en cours.</p>
                     </div>
                 </article>
-            </section>
+                </section>
             </div>
         </main>
     </div>
