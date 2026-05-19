@@ -251,6 +251,7 @@
         $makeGroup('grp_points_of_sale', 'Points de vente', $pointsOfSaleChildren, 'bx bx-buildings'),
         $makeLeaf('grp_rh', 'Gestion Rh', 'admin.menu-hubs.rh', 'bx bx-user-voice', ['admin.menu-hubs.rh', 'admin.settings.utilisateurs', 'admin.settings.roles-permissions'], [], null, 'settings.users.manage'),
         $makeGroup('grp_finance', 'Finace reporting', $financeChildren, 'bx bx-wallet'),
+        $makeGroup('grp_admin', 'Administration', $settingsNode['children'] ?? [], 'bx bx-cog'),
     ]));
 
     if ($sidebarUser?->hasRole(\App\Services\BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY)) {
