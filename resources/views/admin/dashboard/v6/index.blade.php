@@ -1,6 +1,6 @@
 @extends('layouts.dashboard-v5')
 
-@section('title', 'Dashboard V6')
+@section('title', 'Espace Client')
 
 @php
     $dashboardUser = auth()->user();
@@ -38,10 +38,10 @@
     $v6Body = str_replace('<div class="avatar">A</div>', '<div class="avatar">' . e($dashboardInitials) . '</div>', $v6Body);
     $v6Body = str_replace('<strong>Admin</strong>', '<strong>' . e($dashboardUserName) . '</strong>', $v6Body);
     $v6Body = str_replace('<span>Administrateur</span>', '<span>' . e($dashboardUserRole) . '</span>', $v6Body);
-    $v6Body = str_replace('<h1>Dashboard V6</h1>', '<h1>Dashboard V6</h1>', $v6Body);
+    $v6Body = str_replace('<h1>Dashboard V6</h1>', '<h1>Espace client</h1>', $v6Body);
     $v6Body = str_replace('📅 mardi 19 mai 2026', '📅 ' . e($dashboardDateLabel), $v6Body);
     $v6Body = str_replace('<button class="primary-btn" type="button">+ Réservations</button>', '<a class="primary-btn" href="' . e(route('admin.reservations.create')) . '">+ Réservations</a>', $v6Body);
-    $v6Body = str_replace('<a href="#" class="active">Dashboard V6</a>', '<a href="' . e(route('admin.dashboard.v6')) . '" class="active">Dashboard V6</a>', $v6Body);
+    $v6Body = str_replace('<a href="#" class="active">Dashboard V6</a>', '<a href="' . e(route('admin.dashboard.v6')) . '" class="active">Espace client</a>', $v6Body);
     $v6Body = str_replace('<a href="#">Dashboard V5</a>', '<a href="' . e(route('admin.dashboard.v5')) . '">Dashboard V5</a>', $v6Body);
     $v6Body = str_replace('<a href="#">Dashboard V4</a>', '<a href="' . e(route('admin.dashboard.v4')) . '">Dashboard V4</a>', $v6Body);
     $v6Body = str_replace('<a href="#">Dashboard V3</a>', '<a href="' . e(route('admin.dashboard.v3')) . '">Dashboard V3</a>', $v6Body);
