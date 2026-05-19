@@ -1580,24 +1580,12 @@
                     <label class="ws-field__label" for="ws-filter-date-to">Date départ Au</label>
                     <input type="date" id="ws-filter-date-to" name="date_to" value="<?php echo e($workspaceFilters['date_to'] ?? ''); ?>" class="ws-input">
                 </div>
-                <div class="ws-field">
-                    <label class="ws-field__label" for="ws-filter-budget-min">Budget min</label>
-                    <div class="ws-budget-inline">
-                        <input type="number" id="ws-filter-budget-min" name="budget_min" value="<?php echo e($workspaceFilters['budget_min'] ?? 0); ?>" class="ws-input" min="0" step="500" inputmode="numeric" placeholder="0" readonly>
-                        <span class="ws-budget-inline__suffix">MAD</span>
-                    </div>
-                </div>
-                <div class="ws-field">
-                    <label class="ws-field__label" for="ws-filter-budget-max">Budget max</label>
-                    <div class="ws-budget-inline">
-                        <input type="number" id="ws-filter-budget-max" name="budget_max" value="<?php echo e($workspaceFilters['budget_max'] ?? ''); ?>" class="ws-input" min="0" step="500" inputmode="numeric" placeholder="30000">
-                        <span class="ws-budget-inline__suffix">MAD</span>
-                    </div>
-                </div>
+                <input type="hidden" id="ws-filter-budget-min" name="budget_min" value="<?php echo e($workspaceFilters['budget_min'] ?? 0); ?>">
+                <input type="hidden" id="ws-filter-budget-max" name="budget_max" value="<?php echo e($workspaceFilters['budget_max'] ?? 30000); ?>">
                 <div class="ws-field ws-field--budget-range full">
-                    <label class="ws-field__label" for="ws-budget-range-min">Segment budget (0 à max)</label>
+                    <label class="ws-field__label" for="ws-budget-range-max">Segment budget</label>
                     <div class="ws-budget-range">
-                        <div class="ws-budget-range__labels"><span>0</span><span>MAX</span></div>
+                        <div class="ws-budget-range__labels"><span></span><span>MAX</span></div>
                         <input type="range" id="ws-budget-range-max" min="0" max="100000" step="500" value="<?php echo e((int) ($workspaceFilters['budget_max'] ?? 30000)); ?>">
                     </div>
                 </div>
