@@ -5,14 +5,14 @@ body.commercial-reservations-only {
 body.commercial-reservations-only .commercial-workspace-page {
     min-height: 100vh;
     display: grid;
-    grid-template-columns: 232px minmax(0, 1fr);
+    grid-template-columns: 250px minmax(0, 1fr);
     background: #f8fafc;
 }
 
 body.commercial-reservations-only .commercial-workspace-sidebar {
     background: #fff;
     border-right: 1px solid #e2e8f0;
-    padding: 16px;
+    padding: 0;
     position: sticky;
     top: 0;
     height: 100vh;
@@ -20,20 +20,26 @@ body.commercial-reservations-only .commercial-workspace-sidebar {
 }
 
 body.commercial-reservations-only .commercial-workspace-brand {
-    padding: 6px 8px 14px;
+    padding: 0 18px;
+    height: 68px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 body.commercial-reservations-only .commercial-workspace-brand-logo {
-    max-width: 150px;
+    max-width: 170px;
     width: 100%;
     height: auto;
     object-fit: contain;
 }
 
 body.commercial-reservations-only .commercial-workspace-profile {
+    margin: 0 14px 14px;
     border: 1px solid #e2e8f0;
     border-radius: 14px;
-    padding: 12px;
+    padding: 16px 14px;
     margin-bottom: 14px;
 }
 
@@ -75,6 +81,7 @@ body.commercial-reservations-only .commercial-workspace-profile-btn {
 }
 
 body.commercial-reservations-only .commercial-workspace-nav {
+    padding: 0 12px 12px;
     display: grid;
     gap: 8px;
 }
@@ -106,7 +113,7 @@ body.commercial-reservations-only .commercial-workspace-main {
 }
 
 body.commercial-reservations-only .commercial-workspace-topbar {
-    height: 56px;
+    height: 68px;
     background: #0c4a6e;
     color: #fff;
     display: grid;
@@ -133,7 +140,7 @@ body.commercial-reservations-only .commercial-workspace-search {
     align-items: center;
     gap: 8px;
     background: rgba(255, 255, 255, 0.15);
-    border-radius: 11px;
+    border-radius: 10px;
     padding: 0 10px;
     min-width: 0;
 }
@@ -141,7 +148,7 @@ body.commercial-reservations-only .commercial-workspace-search {
 body.commercial-reservations-only .commercial-workspace-search input {
     flex: 1;
     min-width: 0;
-    height: 36px;
+    height: 40px;
     border: 0;
     background: transparent;
     color: #fff;
@@ -181,7 +188,7 @@ body.commercial-reservations-only .commercial-workspace-top-profile span {
 }
 
 body.commercial-reservations-only .commercial-workspace-content {
-    padding: 16px;
+    padding: 24px;
 }
 
 body.commercial-reservations-only .commercial-workspace-content .ws-page--commercial {
@@ -231,7 +238,7 @@ body.commercial-reservations-only .commercial-workspace-page.is-sidebar-collapse
         position: fixed;
         left: 0;
         top: 0;
-        width: 232px;
+        width: 250px;
         max-width: calc(100vw - 64px);
         transform: translateX(-100%);
         transition: transform .2s ease;
@@ -241,4 +248,187 @@ body.commercial-reservations-only .commercial-workspace-page.is-sidebar-collapse
     body.commercial-reservations-only .commercial-workspace-page.is-sidebar-open-mobile .commercial-workspace-sidebar {
         transform: translateX(0);
     }
+}
+
+body.commercial-reservations-only .commercial-v2-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+body.commercial-reservations-only .commercial-v2-header h1 {
+    margin: 0;
+    color: #0081bc;
+    font-size: 30px;
+    line-height: 1.15;
+    font-weight: 800;
+}
+
+body.commercial-reservations-only .commercial-v2-header p {
+    margin: 6px 0 0;
+    color: #64748b;
+    font-size: 12px;
+    max-width: 720px;
+}
+
+body.commercial-reservations-only .commercial-v2-view-switch {
+    background: #f1f5f9;
+    border-radius: 12px;
+    padding: 4px;
+    display: inline-flex;
+    gap: 4px;
+}
+
+body.commercial-reservations-only .commercial-v2-view-switch button {
+    border: 0;
+    background: transparent;
+    color: #64748b;
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 8px 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+body.commercial-reservations-only .commercial-v2-view-switch button.is-active {
+    background: #fff;
+    color: #0f172a;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+
+body.commercial-reservations-only .commercial-v2-filters-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 22px 24px;
+}
+
+body.commercial-reservations-only .commercial-v2-filters-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px;
+}
+
+body.commercial-reservations-only .commercial-v2-filters-grid label {
+    display: block;
+    margin-bottom: 6px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+body.commercial-reservations-only .commercial-v2-filters-grid input,
+body.commercial-reservations-only .commercial-v2-filters-grid select {
+    width: 100%;
+    height: 42px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+body.commercial-reservations-only .commercial-v2-filters-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+body.commercial-reservations-only .commercial-v2-apply-btn,
+body.commercial-reservations-only .commercial-v2-reset-btn {
+    height: 40px;
+    border-radius: 10px;
+    padding: 0 14px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    text-decoration: none;
+}
+
+body.commercial-reservations-only .commercial-v2-apply-btn { border: 0; background: #0081bc; color: #fff; }
+body.commercial-reservations-only .commercial-v2-reset-btn { border: 1px solid #e2e8f0; background: #f8fafc; color: #475569; }
+
+body.commercial-reservations-only .commercial-v2-panel {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+body.commercial-reservations-only .commercial-v2-list-table-wrap {
+    overflow-x: auto;
+}
+
+body.commercial-reservations-only .commercial-v2-list-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+body.commercial-reservations-only .commercial-v2-list-table thead th {
+    background: #f8fafc;
+    color: #94a3b8;
+    font-size: 10px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    font-weight: 800;
+    padding: 14px 14px;
+}
+
+body.commercial-reservations-only .commercial-v2-list-table tbody td {
+    padding: 14px;
+    border-top: 1px solid #f1f5f9;
+    font-size: 12px;
+    color: #334155;
+    vertical-align: middle;
+}
+
+body.commercial-reservations-only .commercial-v2-ref {
+    background: #e0f2fe;
+    color: #0369a1;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 9px;
+}
+
+body.commercial-reservations-only .commercial-v2-voyage-title { font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+body.commercial-reservations-only .commercial-v2-voyage-meta { display: flex; gap: 8px; font-size: 11px; color: #64748b; align-items: center; }
+body.commercial-reservations-only .commercial-v2-type { background: #eff6ff; color: #1d4ed8; border-radius: 999px; padding: 2px 7px; font-weight: 800; font-size: 10px; }
+body.commercial-reservations-only .commercial-v2-destination { display: inline-flex; gap: 6px; align-items: center; }
+body.commercial-reservations-only .commercial-v2-destination i { color: #0081bc; }
+body.commercial-reservations-only .commercial-v2-dates { display: grid; gap: 4px; font-size: 11px; }
+body.commercial-reservations-only .commercial-v2-sold { display: block; color: #059669; font-weight: 800; font-size: 11px; }
+body.commercial-reservations-only .commercial-v2-pending { display: block; color: #f97316; font-weight: 800; font-size: 11px; }
+body.commercial-reservations-only .commercial-v2-fill-bar { background: #e2e8f0; height: 7px; border-radius: 999px; overflow: hidden; }
+body.commercial-reservations-only .commercial-v2-fill-bar span { display: block; height: 100%; background: #0081bc; border-radius: 999px; }
+body.commercial-reservations-only .commercial-v2-fill small { color: #64748b; font-size: 10px; font-weight: 700; display: block; margin-top: 6px; }
+body.commercial-reservations-only .commercial-v2-actions { display: inline-flex; gap: 8px; }
+body.commercial-reservations-only .commercial-v2-btn { border-radius: 9px; padding: 7px 10px; font-size: 11px; font-weight: 700; text-decoration: none; border: 1px solid transparent; }
+body.commercial-reservations-only .commercial-v2-btn-view { border-color: #cbd5e1; color: #334155; background: #fff; }
+body.commercial-reservations-only .commercial-v2-btn-book { background: #0081bc; color: #fff; }
+body.commercial-reservations-only .commercial-v2-empty { text-align: center; color: #64748b; padding: 28px 18px; }
+body.commercial-reservations-only .commercial-v2-cards-grid { padding: 16px; }
+
+@media (max-width: 1450px) {
+    body.commercial-reservations-only .commercial-v2-filters-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 980px) {
+    body.commercial-reservations-only .commercial-v2-header { flex-direction: column; }
+    body.commercial-reservations-only .commercial-v2-filters-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 700px) {
+    body.commercial-reservations-only .commercial-v2-filters-grid { grid-template-columns: 1fr; }
+    body.commercial-reservations-only .commercial-workspace-content { padding: 12px; }
 }

@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="fr" data-sidebar="expanded">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AjinSafro.ma — Dashboard V6</title>
+  <style>
+    :root {
+      --aj-blue: #0f5d8d;
+      --aj-blue-2: #0a7fb5;
+      --aj-cyan: #18a9dc;
+      --aj-green: #21c59a;
+      --aj-orange: #ff8a1f;
+      --aj-orange-2: #ff6b00;
+      --aj-navy: #061f36;
+      --aj-navy-2: #092f52;
+      --aj-bg: #f5f8fb;
+      --aj-card: #ffffff;
+      --aj-text: #0f2542;
+      --aj-muted: #71829a;
+      --aj-line: #e6edf5;
+      --aj-shadow: 0 18px 45px rgba(6, 31, 54, 0.08);
+      --aj-shadow-sm: 0 10px 24px rgba(6, 31, 54, 0.06);
+      --sidebar-open: 266px;
+      --sidebar-closed: 78px;
+      --topbar: 70px;
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --ease: cubic-bezier(.2,.8,.2,1);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      color: var(--aj-text);
+      background:
+        radial-gradient(circle at 95% 2%, rgba(24, 169, 220, .10), transparent 30%),
+        radial-gradient(circle at 20% 0%, rgba(255, 138, 31, .08), transparent 26%),
+        var(--aj-bg);
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button, input, select { font: inherit; }
+
+    .app-shell { min-height: 100vh; }
+
+    /* Sidebar V4 style: retractable, icons always visible */
+    .sidebar {
+      position: fixed;
+      inset: 0 auto 0 0;
+      width: var(--sidebar-open);
+      background: linear-gradient(180deg, #ffffff 0%, #fbfdff 45%, #f4f9fd 100%);
+      border-right: 1px solid var(--aj-line);
+      box-shadow: 12px 0 30px rgba(6, 31, 54, .06);
+      z-index: 40;
+      transition: width .28s var(--ease), background .28s var(--ease);
+      overflow: hidden;
+    }
+    html[data-sidebar="collapsed"] .sidebar { width: var(--sidebar-closed); }
+    html[data-sidebar="collapsed"] .sidebar:hover { width: var(--sidebar-open); }
+
+    .sidebar-brand {
+      height: var(--topbar);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--aj-line);
+      white-space: nowrap;
+    }
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--aj-blue), var(--aj-cyan));
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 23px;
+      box-shadow: 0 10px 20px rgba(15, 93, 141, .25);
+      flex: 0 0 42px;
+    }
+    .brand-name { display: grid; line-height: 1.05; transition: opacity .2s var(--ease); }
+    .brand-name strong { font-size: 18px; letter-spacing: -.4px; }
+    .brand-name span { color: var(--aj-orange); font-weight: 800; font-size: 12px; justify-self: end; }
+    html[data-sidebar="collapsed"] .sidebar:not(:hover) .brand-name,
+    html[data-sidebar="collapsed"] .sidebar:not(:hover) .menu-label,
+    html[data-sidebar="collapsed"] .sidebar:not(:hover) .nav-section-title,
+    html[data-sidebar="collapsed"] .sidebar:not(:hover) .user-meta,
+    html[data-sidebar="collapsed"] .sidebar:not(:hover) .nav-chevron,
+    html[data-sidebar="collapsed"] .sidebar:not(:hover) .premium-box {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .sidebar-toggle {
+      position: absolute;
+      right: 12px;
+      top: 84px;
+      width: 38px;
+      height: 38px;
+      border-radius: 13px;
+      border: 1px solid rgba(15, 93, 141, .16);
+      background: #fff;
+      color: var(--aj-blue);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      box-shadow: var(--aj-shadow-sm);
+      z-index: 3;
+      transition: transform .25s var(--ease), background .25s var(--ease);
+    }
+    .sidebar-toggle:hover { transform: translateY(-1px); background: #f3faff; }
+    html[data-sidebar="collapsed"] .sidebar:not(:hover) .sidebar-toggle { right: 20px; }
+
+    .sidebar-user {
+      margin: 26px 14px 18px;
+      padding: 14px 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(15, 93, 141, .08), rgba(24, 169, 220, .05));
+      border: 1px solid rgba(15, 93, 141, .10);
+      min-width: 238px;
+    }
+    .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--aj-blue), var(--aj-cyan));
+      box-shadow: 0 12px 24px rgba(15, 93, 141, .22);
+      flex: 0 0 44px;
+    }
+    .user-meta { display: grid; gap: 2px; transition: opacity .2s var(--ease); }
+    .user-meta strong { font-size: 14px; }
+    .user-meta span { color: var(--aj-muted); font-size: 12px; }
+
+    .sidebar-scroll {
+      height: calc(100vh - var(--topbar) - 6px);
+      overflow-y: auto;
+      padding: 0 10px 26px;
+      scrollbar-width: thin;
+      scrollbar-color: #cbd8e6 transparent;
+    }
+    .nav-section-title {
+      margin: 20px 12px 10px;
+      color: #8ca0b8;
+      font-size: 10px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      font-weight: 900;
+      transition: opacity .2s var(--ease);
+      white-space: nowrap;
+    }
+    .nav-list { display: grid; gap: 6px; }
+    .nav-item,
+    .nav-parent {
+      height: 44px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 12px;
+      border-radius: 14px;
+      color: #3f5670;
+      border: 1px solid transparent;
+      background: transparent;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .2s var(--ease), color .2s var(--ease), border-color .2s var(--ease), transform .2s var(--ease);
+    }
+    .nav-item:hover,
+    .nav-parent:hover { background: rgba(15, 93, 141, .06); color: var(--aj-blue); transform: translateX(2px); }
+    .nav-item.active,
+    .nav-parent.active {
+      background: linear-gradient(135deg, rgba(15, 93, 141, .12), rgba(24, 169, 220, .10));
+      color: var(--aj-blue);
+      border-color: rgba(15, 93, 141, .12);
+      font-weight: 800;
+    }
+    .nav-icon {
+      width: 24px;
+      height: 24px;
+      flex: 0 0 24px;
+      display: grid;
+      place-items: center;
+      color: currentColor;
+    }
+    .nav-icon svg { width: 18px; height: 18px; stroke-width: 2.2; }
+    .menu-label { font-size: 13px; font-weight: 700; transition: opacity .2s var(--ease); }
+    .nav-chevron { margin-left: auto; color: #91a3b8; transition: opacity .2s var(--ease), transform .2s var(--ease); }
+
+    .submenu {
+      margin: 5px 0 6px 46px;
+      display: grid;
+      gap: 4px;
+      min-width: 190px;
+      transition: opacity .2s var(--ease);
+    }
+    .submenu a {
+      padding: 8px 10px;
+      border-radius: 11px;
+      color: #667991;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .submenu a:hover,
+    .submenu a.active { background: #eef7fd; color: var(--aj-blue); }
+    html[data-sidebar="collapsed"] .sidebar:not(:hover) .submenu { display: none; }
+
+    .premium-box {
+      margin: 22px 4px 0;
+      padding: 16px;
+      border-radius: 20px;
+      color: #fff;
+      background: linear-gradient(145deg, var(--aj-blue), #063e6b 74%);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 16px 34px rgba(15, 93, 141, .22);
+      min-width: 236px;
+      transition: opacity .2s var(--ease);
+    }
+    .premium-box::after {
+      content: "";
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      right: -42px;
+      bottom: -48px;
+      background: rgba(255, 138, 31, .32);
+    }
+    .premium-box small { color: rgba(255,255,255,.72); font-weight: 700; }
+    .premium-box strong { display: block; margin: 5px 0 12px; font-size: 14px; }
+    .premium-box button {
+      border: 0;
+      height: 36px;
+      border-radius: 12px;
+      padding: 0 14px;
+      background: linear-gradient(135deg, #ffd269, var(--aj-orange));
+      color: #09233c;
+      font-weight: 900;
+      cursor: pointer;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Main layout */
+    .main {
+      min-height: 100vh;
+      margin-left: var(--sidebar-open);
+      transition: margin-left .28s var(--ease);
+    }
+    html[data-sidebar="collapsed"] .main { margin-left: var(--sidebar-closed); }
+    html[data-sidebar="collapsed"] .sidebar:hover ~ .main { margin-left: var(--sidebar-open); }
+
+    .topbar {
+      height: var(--topbar);
+      display: grid;
+      grid-template-columns: minmax(190px, 280px) minmax(260px, 1fr) auto;
+      align-items: center;
+      gap: 18px;
+      padding: 0 28px;
+      background: rgba(245, 248, 251, .84);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(230, 237, 245, .9);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .page-title { display: grid; gap: 2px; }
+    .page-title h1 { margin: 0; font-size: 24px; letter-spacing: -.7px; line-height: 1.1; }
+    .page-title span { color: var(--aj-muted); font-size: 12px; font-weight: 700; }
+    .search-box {
+      height: 42px;
+      border-radius: 15px;
+      background: #fff;
+      border: 1px solid var(--aj-line);
+      box-shadow: 0 8px 18px rgba(6, 31, 54, .04);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+      min-width: 260px;
+    }
+    .search-box svg { color: #8da0b7; width: 18px; height: 18px; }
+    .search-box input {
+      border: 0;
+      outline: 0;
+      width: 100%;
+      color: var(--aj-text);
+      background: transparent;
+      font-weight: 600;
+    }
+    .search-box input::placeholder { color: #95a5b8; font-weight: 500; }
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+    .chip,
+    .icon-btn,
+    .primary-btn {
+      height: 42px;
+      border-radius: 14px;
+      border: 1px solid var(--aj-line);
+      background: #fff;
+      color: var(--aj-text);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 13px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(6, 31, 54, .04);
+    }
+    .icon-btn { width: 42px; padding: 0; justify-content: center; position: relative; }
+    .icon-btn .dot {
+      position: absolute;
+      top: 7px;
+      right: 7px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--aj-orange);
+      border: 2px solid #fff;
+    }
+    .primary-btn {
+      border: 0;
+      color: #fff;
+      background: linear-gradient(135deg, var(--aj-blue), var(--aj-blue-2));
+      box-shadow: 0 14px 28px rgba(15, 93, 141, .24);
+    }
+    .profile-mini { display: flex; align-items: center; gap: 9px; margin-left: 2px; }
+    .profile-mini .avatar { width: 38px; height: 38px; flex-basis: 38px; font-size: 13px; background: linear-gradient(135deg, #c89338, #16476e); }
+    .profile-mini strong { font-size: 13px; display: block; }
+    .profile-mini span { font-size: 11px; color: var(--aj-muted); display: block; }
+
+    .content {
+      padding: 24px 28px 42px;
+      display: grid;
+      gap: 20px;
+      max-width: 1640px;
+      margin: 0 auto;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .kpi-card {
+      min-height: 96px;
+      border-radius: 18px;
+      padding: 17px 18px;
+      background: #fff;
+      border: 1px solid var(--aj-line);
+      box-shadow: var(--aj-shadow-sm);
+      color: var(--aj-text);
+      display: grid;
+      grid-template-columns: 1fr 96px;
+      align-items: center;
+      gap: 14px;
+      overflow: hidden;
+      position: relative;
+    }
+    .kpi-card::before,
+    .kpi-card::after { display: none; }
+    .kpi-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+    .kpi-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 50px;
+      color: #fff;
+      box-shadow: 0 12px 24px rgba(6, 31, 54, .12);
+    }
+    .kpi-card.kpi-blue .kpi-icon { background: linear-gradient(135deg, #0a4778, #0f73a9); }
+    .kpi-card.kpi-green .kpi-icon { background: linear-gradient(135deg, #2dbb7d, #19a56f); }
+    .kpi-card.kpi-orange .kpi-icon { background: linear-gradient(135deg, #ff9a2e, #ff6b00); }
+    .kpi-card.kpi-cyan .kpi-icon { background: linear-gradient(135deg, #d49a25, #f1ad25); }
+    .kpi-icon svg { width: 22px; height: 22px; stroke-width: 2.2; }
+    .kpi-info { min-width: 0; display: grid; gap: 3px; }
+    .kpi-title {
+      color: #647790;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .kpi-number {
+      font-size: 25px;
+      font-weight: 950;
+      letter-spacing: -.7px;
+      line-height: 1.05;
+      color: #081f36;
+      position: relative;
+      z-index: 1;
+    }
+    .kpi-bottom { display: block; position: relative; z-index: 1; }
+    .kpi-change {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: #079465;
+      font-size: 11px;
+      font-weight: 950;
+      line-height: 1.1;
+    }
+    .kpi-note {
+      margin-top: 1px;
+      color: #8b9ab0;
+      font-size: 10.5px;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .kpi-sparkline {
+      width: 96px;
+      height: 38px;
+      justify-self: end;
+      overflow: visible;
+    }
+    .kpi-sparkline path {
+      fill: none;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .kpi-sparkline .area { stroke: none; opacity: .13; }
+    .kpi-card.kpi-blue .kpi-sparkline .line { stroke: #0f5d8d; }
+    .kpi-card.kpi-blue .kpi-sparkline .area { fill: #0f5d8d; }
+    .kpi-card.kpi-green .kpi-sparkline .line { stroke: #19a56f; }
+    .kpi-card.kpi-green .kpi-sparkline .area { fill: #19a56f; }
+    .kpi-card.kpi-orange .kpi-sparkline .line { stroke: #ff6b00; }
+    .kpi-card.kpi-orange .kpi-sparkline .area { fill: #ff6b00; }
+    .kpi-card.kpi-cyan .kpi-sparkline .line { stroke: #d49a25; }
+    .kpi-card.kpi-cyan .kpi-sparkline .area { fill: #d49a25; }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1.4fr .88fr .72fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+    .dashboard-grid.middle { grid-template-columns: 1.12fr .96fr .82fr; }
+    .dashboard-grid.bottom { grid-template-columns: 1.2fr .88fr .82fr; }
+
+    .panel {
+      background: var(--aj-card);
+      border: 1px solid var(--aj-line);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--aj-shadow-sm);
+      overflow: hidden;
+      min-width: 0;
+    }
+    .panel-inner { padding: 20px; height: 100%; }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .panel-title { margin: 0; font-size: 18px; letter-spacing: -.35px; line-height: 1.1; }
+    .panel-subtitle { color: var(--aj-muted); font-size: 12px; font-weight: 700; margin-top: 4px; }
+    .panel-actions { display: flex; gap: 8px; align-items: center; }
+    .select-mini,
+    .btn-mini {
+      height: 34px;
+      border-radius: 12px;
+      border: 1px solid var(--aj-line);
+      background: #fff;
+      padding: 0 12px;
+      color: #334d68;
+      font-weight: 800;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .link-orange { color: var(--aj-orange-2); font-weight: 900; font-size: 13px; }
+
+    .chart-wrap { min-height: 260px; padding-top: 6px; }
+    .chart-svg { width: 100%; height: 260px; display: block; }
+    .grid-line { stroke: #e9eff6; stroke-width: 1; }
+    .axis-label { fill: #8ca0b8; font-size: 10px; font-weight: 700; }
+    .area-fill { fill: url(#orangeAreaV6); opacity: .72; }
+    .line-main { fill: none; stroke: #ff9300; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .line-blue { fill: none; stroke: #126da1; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; opacity: .75; }
+    .tooltip-box { fill: #061f36; }
+    .tooltip-text { fill: #fff; font-size: 11px; font-weight: 900; }
+
+    .destination-layout { display: grid; grid-template-columns: 170px 1fr; gap: 18px; align-items: center; }
+    .donut {
+      width: 162px;
+      height: 162px;
+      border-radius: 50%;
+      background: conic-gradient(#0b4778 0 36%, #86cce7 36% 60%, #1eae7d 60% 78%, #ff7b1b 78% 92%, #cdd5df 92% 100%);
+      display: grid;
+      place-items: center;
+      position: relative;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.7);
+    }
+    .donut::after {
+      content: "";
+      width: 92px;
+      height: 92px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: inset 0 0 0 1px #edf2f7;
+      position: absolute;
+    }
+    .donut-center { position: relative; z-index: 1; text-align: center; line-height: 1; }
+    .donut-center strong { display: block; font-size: 28px; font-weight: 950; letter-spacing: -.8px; }
+    .donut-center span { color: var(--aj-muted); font-size: 12px; font-weight: 700; }
+    .legend { display: grid; gap: 12px; }
+    .legend-row { display: grid; grid-template-columns: 14px 1fr auto; align-items: center; gap: 9px; font-size: 13px; font-weight: 800; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .legend-value { color: #263e59; }
+
+    .gauge-wrap { display: grid; place-items: center; min-height: 230px; }
+    .gauge {
+      width: 220px;
+      height: 122px;
+      position: relative;
+      overflow: hidden;
+    }
+    .gauge::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 220px 220px 0 0;
+      background: conic-gradient(from 270deg at 50% 100%, var(--aj-orange) 0 54deg, var(--aj-green) 54deg 70deg, #e5eaf0 70deg 180deg, transparent 180deg 360deg);
+    }
+    .gauge::after {
+      content: "";
+      position: absolute;
+      left: 30px;
+      right: 30px;
+      bottom: -76px;
+      height: 154px;
+      background: #fff;
+      border-radius: 160px 160px 0 0;
+    }
+    .gauge-value { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; z-index: 1; }
+    .gauge-value strong { font-size: 40px; font-weight: 950; letter-spacing: -1.3px; display: block; }
+    .gauge-value span { color: #42607c; font-size: 12px; font-weight: 800; }
+    .success-note { display: inline-flex; gap: 6px; align-items: center; color: #079465; font-size: 12px; font-weight: 900; margin-top: 8px; }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 560px; }
+    th, td { padding: 14px 10px; border-bottom: 1px solid var(--aj-line); text-align: left; font-size: 12px; }
+    th { color: #8ca0b8; text-transform: uppercase; letter-spacing: .08em; font-size: 10px; font-weight: 950; }
+    td { font-weight: 750; color: #2a405a; }
+    tr:last-child td { border-bottom: 0; }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      height: 26px;
+      padding: 0 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+    .status.green { color: #079465; background: rgba(33, 197, 154, .13); }
+    .status.orange { color: #d66a00; background: rgba(255, 138, 31, .16); }
+    .status.red { color: #c4461e; background: rgba(255, 106, 47, .14); }
+    .status.blue { color: var(--aj-blue); background: rgba(24, 169, 220, .13); }
+
+    .reservation-list, .alert-list, .quality-list, .channel-list, .agency-list { display: grid; gap: 12px; }
+    .reservation-item {
+      display: grid;
+      grid-template-columns: 44px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 8px 0 12px;
+      border-bottom: 1px solid var(--aj-line);
+    }
+    .reservation-item:last-child { border-bottom: 0; padding-bottom: 0; }
+    .mini-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 950;
+      background: linear-gradient(135deg, #d6aa45, var(--aj-blue));
+      flex: 0 0 42px;
+    }
+    .item-title { font-size: 13px; font-weight: 950; color: #203954; }
+    .item-subtitle { color: var(--aj-muted); font-size: 11px; font-weight: 700; margin-top: 3px; }
+    .item-amount { text-align: right; font-size: 13px; font-weight: 950; color: #09233c; white-space: nowrap; }
+
+    .alert-item,
+    .quality-item,
+    .agency-item {
+      display: grid;
+      grid-template-columns: 40px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid var(--aj-line);
+      background: #fff;
+    }
+    .soft-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-weight: 950;
+      font-size: 13px;
+    }
+    .soft-icon.green { background: rgba(33, 197, 154, .13); color: #079465; }
+    .soft-icon.orange { background: rgba(255, 138, 31, .15); color: #d66a00; }
+    .soft-icon.blue { background: rgba(24, 169, 220, .14); color: var(--aj-blue); }
+    .soft-icon.gray { background: #eef3f8; color: #72849a; }
+    .metric-pill { min-width: 34px; height: 28px; padding: 0 9px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; background: #f6f9fc; color: #42607c; font-size: 12px; font-weight: 950; border: 1px solid var(--aj-line); }
+
+    .objective-card {
+      background: linear-gradient(145deg, var(--aj-blue), #0e70aa);
+      color: #fff;
+      border-radius: 20px;
+      padding: 20px;
+      min-height: 170px;
+      display: grid;
+      align-content: center;
+      gap: 12px;
+      box-shadow: 0 18px 36px rgba(15, 93, 141, .22);
+    }
+    .objective-label { text-transform: uppercase; letter-spacing: .13em; font-size: 11px; font-weight: 950; color: rgba(255,255,255,.78); }
+    .objective-value { display: flex; align-items: baseline; gap: 9px; }
+    .objective-value strong { font-size: 34px; line-height: 1; letter-spacing: -1px; }
+    .objective-value span { color: rgba(255,255,255,.82); font-size: 12px; font-weight: 800; }
+    .progress-bar { height: 9px; border-radius: 999px; background: rgba(255,255,255,.22); overflow: hidden; }
+    .progress-bar span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #ffd166, var(--aj-orange)); }
+    .objective-note { color: rgba(255,255,255,.8); font-size: 12px; font-weight: 700; line-height: 1.5; }
+
+    .channel-item { padding: 15px; border-radius: 18px; border: 1px solid var(--aj-line); background: #fff; }
+    .channel-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .channel-head strong { font-size: 14px; }
+    .channel-head span { font-size: 12px; color: var(--aj-muted); font-weight: 800; }
+    .track { height: 9px; border-radius: 999px; background: #eaf1f7; overflow: hidden; }
+    .track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--aj-blue), var(--aj-green)); }
+
+    .status-donut-small {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: conic-gradient(var(--aj-orange) 0 0%, var(--aj-green) 0 0%, #eef3f8 0 100%);
+      margin: 18px auto 22px;
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+    .status-donut-small::after {
+      content: "";
+      width: 116px;
+      height: 116px;
+      border-radius: 50%;
+      background: #fff;
+      position: absolute;
+    }
+    .status-donut-small div { position: relative; z-index: 1; text-align: center; }
+    .status-donut-small strong { display: block; font-size: 30px; font-weight: 950; }
+    .status-donut-small span { color: #8ca0b8; text-transform: uppercase; font-size: 10px; letter-spacing: .12em; font-weight: 950; }
+    .mini-legend { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; color: #647891; font-size: 11px; font-weight: 850; }
+    .mini-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+
+    .empty-state {
+      min-height: 170px;
+      display: grid;
+      place-items: center;
+      color: #8ca0b8;
+      font-size: 13px;
+      font-weight: 750;
+      border: 1px dashed #dbe5ef;
+      border-radius: 18px;
+      background: #fbfdff;
+    }
+
+    @media (max-width: 1380px) {
+      .dashboard-grid,
+      .dashboard-grid.middle,
+      .dashboard-grid.bottom { grid-template-columns: 1fr 1fr; }
+      .dashboard-grid > .panel:first-child { grid-column: span 1; }
+      .topbar { grid-template-columns: minmax(170px, 230px) minmax(220px, 1fr) auto; padding: 0 20px; }
+      .content { padding: 20px; }
+    }
+
+    @media (max-width: 1120px) {
+      .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .dashboard-grid,
+      .dashboard-grid.middle,
+      .dashboard-grid.bottom { grid-template-columns: 1fr; }
+      .destination-layout { grid-template-columns: 1fr; justify-items: center; }
+      .legend { width: 100%; max-width: 340px; }
+      .topbar { grid-template-columns: 1fr auto; height: auto; min-height: var(--topbar); padding: 14px 18px; }
+      .search-box { grid-column: 1 / -1; order: 3; }
+      .top-actions { justify-content: flex-end; }
+    }
+
+    @media (max-width: 760px) {
+      :root { --sidebar-closed: 0px; }
+      .sidebar { transform: translateX(0); }
+      html[data-sidebar="collapsed"] .sidebar { width: 0; border: 0; }
+      html[data-sidebar="collapsed"] .sidebar:hover { width: 0; }
+      .main,
+      html[data-sidebar="collapsed"] .main,
+      html[data-sidebar="collapsed"] .sidebar:hover ~ .main { margin-left: 0; }
+      .mobile-toggle {
+        display: inline-flex !important;
+      }
+      .topbar { grid-template-columns: 1fr auto; }
+      .page-title h1 { font-size: 20px; }
+      .chip { display: none; }
+      .profile-mini div:not(.avatar) { display: none; }
+      .kpi-grid { grid-template-columns: 1fr; }
+      .content { padding: 16px; gap: 16px; }
+      .panel-inner { padding: 16px; }
+      .panel-header { flex-direction: column; }
+      .panel-actions { width: 100%; flex-wrap: wrap; }
+      .select-mini, .btn-mini { flex: 1; }
+      .chart-svg { height: 220px; }
+      .chart-wrap { min-height: 220px; }
+    }
+    .mobile-toggle { display: none; }
+
+    @media print {
+      .sidebar, .topbar { display: none; }
+      .main { margin-left: 0 !important; }
+      body { background: #fff; }
+      .panel, .kpi-card { box-shadow: none; break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Navigation AjinSafro">
+      <div class="sidebar-brand">
+        <div class="brand-mark" aria-hidden="true">▰</div>
+        <div class="brand-name">
+          <strong>AjinSafro.ma</strong>
+          <span>سفرك بأمان</span>
+        </div>
+      </div>
+
+      <button class="sidebar-toggle" type="button" id="sidebarToggle" title="Ouvrir / fermer le menu" aria-label="Ouvrir ou fermer le menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+
+      <div class="sidebar-scroll">
+        <div class="sidebar-user">
+          <div class="avatar">A</div>
+          <div class="user-meta">
+            <strong>Admin</strong>
+            <span>Administrateur</span>
+          </div>
+        </div>
+
+        <div class="nav-section-title">Navigation</div>
+        <nav class="nav-list">
+          <button class="nav-parent active" type="button">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 13h8V3H3v10Zm10 8h8V3h-8v18ZM3 21h8v-6H3v6Z"/></svg></span>
+            <span class="menu-label">Tableau de bord</span>
+            <span class="nav-chevron">⌄</span>
+          </button>
+          <div class="submenu">
+            <a href="#">Vue d’ensemble</a>
+            <a href="#">Statistiques</a>
+            <a href="#">Alertes</a>
+            <a href="#">Dashboard V2</a>
+            <a href="#">Dashboard V3</a>
+            <a href="#">Dashboard V4</a>
+            <a href="#" class="active">Dashboard V6</a>
+          </div>
+
+          <button class="nav-parent active" type="button">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 7h10M7 11h10M7 15h7"/><path d="M5 3h14a2 2 0 0 1 2 2v15l-4-3H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/></svg></span>
+            <span class="menu-label">Réservations</span>
+            <span class="nav-chevron">⌄</span>
+          </button>
+          <div class="submenu">
+            <a href="#">Toutes les réservations</a>
+            <a href="#">Vente</a>
+            <a href="#">Réservation en ligne</a>
+            <a href="#">Demande à la carte</a>
+            <a href="#">Affectations</a>
+            <a href="#">Messagerie</a>
+          </div>
+
+          <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="M3.3 7 12 12l8.7-5M12 22V12"/></svg></span><span class="menu-label">Produits & Services</span></a>
+          <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="menu-label">Clients</span></a>
+          <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9v.01M9 12v.01M9 15v.01M9 18v.01"/></svg></span><span class="menu-label">Points de vente</span></a>
+          <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 1 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg></span><span class="menu-label">Destinations</span></a>
+          <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></span><span class="menu-label">Rapports</span></a>
+          <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1.82 2 2 0 0 1-3.34 0A1.65 1.65 0 0 0 10 20a1.65 1.65 0 0 0-1-.6 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33 2 2 0 0 1 0-3.34A1.65 1.65 0 0 0 4 10a1.65 1.65 0 0 0 .6-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1.82 2 2 0 0 1 3.34 0A1.65 1.65 0 0 0 14 4a1.65 1.65 0 0 0 1 .6 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.42.2.77.55 1 1 .2.36.4.78.6 1a2 2 0 0 1 0 2c-.2.22-.4.64-.6 1Z"/></svg></span><span class="menu-label">Paramètres</span></a>
+        </nav>
+
+        <div class="premium-box">
+          <small>Service Premium</small>
+          <strong>Accès aux analyses avancées et au pilotage opérationnel.</strong>
+          <button type="button">Découvrir</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="page-title">
+          <h1>Dashboard V6</h1>
+          <span>Accueil › Tableau de bord › Dashboard V6</span>
+        </div>
+
+        <label class="search-box" aria-label="Recherche globale">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="search" placeholder="Rechercher (voyage, agence, réservation, client…)" />
+        </label>
+
+        <div class="top-actions">
+          <button class="icon-btn mobile-toggle" type="button" id="mobileToggle" title="Menu"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+          <button class="chip" type="button">📅 mardi 19 mai 2026</button>
+          <button class="chip" type="button">☷ Filtres</button>
+          <button class="icon-btn" type="button" aria-label="Messages">✉</button>
+          <button class="icon-btn" type="button" aria-label="Notifications">🔔<span class="dot"></span></button>
+          <button class="primary-btn" type="button">+ Réservations</button>
+          <div class="profile-mini">
+            <div>
+              <strong>Admin</strong>
+              <span>Admin</span>
+            </div>
+            <div class="avatar">A</div>
+          </div>
+        </div>
+      </header>
+
+      <section class="content">
+        <!-- Start directly with cards, no hero/welcome block -->
+        <section class="kpi-grid" aria-label="Indicateurs principaux">
+          <article class="kpi-card kpi-blue">
+            <div class="kpi-left">
+              <div class="kpi-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19V7.5A2.5 2.5 0 0 1 6.5 5H9l2-2h2l2 2h2.5A2.5 2.5 0 0 1 20 7.5V19a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M4 10h16"/><path d="M9 5v16"/><path d="M15 5v16"/></svg>
+              </div>
+              <div class="kpi-info">
+                <div class="kpi-title">Voyages</div>
+                <div class="kpi-number">0</div>
+                <div class="kpi-change">↗ Catalogue actif</div>
+                <div class="kpi-note">Tous les voyages</div>
+              </div>
+            </div>
+            <svg class="kpi-sparkline" viewBox="0 0 100 42" aria-hidden="true">
+              <path class="area" d="M2 34 C14 29 20 31 30 24 S48 27 58 19 S76 20 88 13 S96 18 100 15 L100 42 L2 42 Z"/>
+              <path class="line" d="M2 34 C14 29 20 31 30 24 S48 27 58 19 S76 20 88 13 S96 18 100 15"/>
+            </svg>
+          </article>
+
+          <article class="kpi-card kpi-green">
+            <div class="kpi-left">
+              <div class="kpi-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 21V7l8-4 8 4v14"/><path d="M9 21v-7h6v7"/><path d="M8 9h.01"/><path d="M12 9h.01"/><path d="M16 9h.01"/></svg>
+              </div>
+              <div class="kpi-info">
+                <div class="kpi-title">Agences</div>
+                <div class="kpi-number">5</div>
+                <div class="kpi-change">↗ 0,0%</div>
+                <div class="kpi-note">Points de vente actifs</div>
+              </div>
+            </div>
+            <svg class="kpi-sparkline" viewBox="0 0 100 42" aria-hidden="true">
+              <path class="area" d="M2 31 C12 28 20 29 30 26 S45 22 54 23 S70 14 80 18 S92 10 100 14 L100 42 L2 42 Z"/>
+              <path class="line" d="M2 31 C12 28 20 29 30 26 S45 22 54 23 S70 14 80 18 S92 10 100 14"/>
+            </svg>
+          </article>
+
+          <article class="kpi-card kpi-orange">
+            <div class="kpi-left">
+              <div class="kpi-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3 4 7l8 4 8-4-8-4Z"/><path d="M4 12l8 4 8-4"/><path d="M4 17l8 4 8-4"/></svg>
+              </div>
+              <div class="kpi-info">
+                <div class="kpi-title">Réservations</div>
+                <div class="kpi-number">0</div>
+                <div class="kpi-change">↗ 0,0% ce mois</div>
+                <div class="kpi-note">Total enregistré</div>
+              </div>
+            </div>
+            <svg class="kpi-sparkline" viewBox="0 0 100 42" aria-hidden="true">
+              <path class="area" d="M2 27 C15 26 22 25 33 24 S45 17 57 20 S68 10 80 12 S92 23 100 18 L100 42 L2 42 Z"/>
+              <path class="line" d="M2 27 C15 26 22 25 33 24 S45 17 57 20 S68 10 80 12 S92 23 100 18"/>
+            </svg>
+          </article>
+
+          <article class="kpi-card kpi-cyan">
+            <div class="kpi-left">
+              <div class="kpi-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <div class="kpi-info">
+                <div class="kpi-title">Clients</div>
+                <div class="kpi-number">22</div>
+                <div class="kpi-change">↗ 15,7%</div>
+                <div class="kpi-note">Clients enregistrés</div>
+              </div>
+            </div>
+            <svg class="kpi-sparkline" viewBox="0 0 100 42" aria-hidden="true">
+              <path class="area" d="M2 26 C14 23 22 24 33 23 S48 27 58 19 S70 8 80 15 S92 27 100 17 L100 42 L2 42 Z"/>
+              <path class="line" d="M2 26 C14 23 22 24 33 23 S48 27 58 19 S70 8 80 15 S92 27 100 17"/>
+            </svg>
+          </article>
+        </section>
+
+        <section class="dashboard-grid">
+          <article class="panel">
+            <div class="panel-inner">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">Performance commerciale</h2>
+                  <div class="panel-subtitle">CA et volume de réservations par mois</div>
+                </div>
+                <div class="panel-actions">
+                  <select class="select-mini"><option>Chiffre d’affaires</option><option>Réservations</option></select>
+                  <select class="select-mini"><option>6 derniers mois</option><option>7 derniers jours</option></select>
+                </div>
+              </div>
+              <div class="chart-wrap">
+                <svg class="chart-svg" viewBox="0 0 760 300" role="img" aria-label="Courbe de performance commerciale">
+                  <defs>
+                    <linearGradient id="orangeAreaV6" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#ff9300" stop-opacity="0.34" />
+                      <stop offset="100%" stop-color="#ff9300" stop-opacity="0.04" />
+                    </linearGradient>
+                  </defs>
+                  <line class="grid-line" x1="62" y1="46" x2="728" y2="46" />
+                  <line class="grid-line" x1="62" y1="96" x2="728" y2="96" />
+                  <line class="grid-line" x1="62" y1="146" x2="728" y2="146" />
+                  <line class="grid-line" x1="62" y1="196" x2="728" y2="196" />
+                  <line class="grid-line" x1="62" y1="246" x2="728" y2="246" />
+                  <text class="axis-label" x="20" y="50">40M</text>
+                  <text class="axis-label" x="20" y="100">30M</text>
+                  <text class="axis-label" x="20" y="150">20M</text>
+                  <text class="axis-label" x="20" y="200">10M</text>
+                  <text class="axis-label" x="35" y="250">0</text>
+                  <path class="area-fill" d="M62,220 C110,196 128,160 178,154 C226,149 245,204 292,202 C350,199 360,135 412,116 C462,98 496,62 550,78 C604,94 595,174 650,180 C692,185 704,152 728,146 L728,246 L62,246 Z" />
+                  <path class="line-main" d="M62,220 C110,196 128,160 178,154 C226,149 245,204 292,202 C350,199 360,135 412,116 C462,98 496,62 550,78 C604,94 595,174 650,180 C692,185 704,152 728,146" />
+                  <path class="line-blue" d="M62,224 C120,214 160,172 196,166 C232,161 250,205 296,208 C356,212 374,150 430,126 C470,110 508,88 548,94 C588,102 606,176 648,190 C684,200 710,166 728,158" />
+                  <circle cx="506" cy="70" r="7" fill="#fff" stroke="#ff9300" stroke-width="4" />
+                  <rect class="tooltip-box" x="520" y="48" width="70" height="30" rx="7" />
+                  <text class="tooltip-text" x="536" y="67">34,6 M</text>
+                  <text class="axis-label" x="62" y="280">Jan</text>
+                  <text class="axis-label" x="174" y="280">Fév</text>
+                  <text class="axis-label" x="287" y="280">Mar</text>
+                  <text class="axis-label" x="398" y="280">Avr</text>
+                  <text class="axis-label" x="510" y="280">Mai</text>
+                  <text class="axis-label" x="622" y="280">Juin</text>
+                  <text class="axis-label" x="715" y="280">Juil</text>
+                </svg>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-inner">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">Réservations par destination</h2>
+                  <div class="panel-subtitle">Répartition commerciale</div>
+                </div>
+              </div>
+              <div class="destination-layout">
+                <div class="donut"><div class="donut-center"><strong>342</strong><span>Réservations</span></div></div>
+                <div class="legend">
+                  <div class="legend-row"><span class="legend-dot" style="background:#0b4778"></span><span>Dakhla</span><span class="legend-value">36%</span></div>
+                  <div class="legend-row"><span class="legend-dot" style="background:#86cce7"></span><span>Istanbul</span><span class="legend-value">24%</span></div>
+                  <div class="legend-row"><span class="legend-dot" style="background:#1eae7d"></span><span>Marrakech</span><span class="legend-value">18%</span></div>
+                  <div class="legend-row"><span class="legend-dot" style="background:#ff7b1b"></span><span>Omra</span><span class="legend-value">14%</span></div>
+                  <div class="legend-row"><span class="legend-dot" style="background:#cdd5df"></span><span>Autres</span><span class="legend-value">8%</span></div>
+                </div>
+              </div>
+              <div style="margin-top:18px"><a class="link-orange" href="#">Voir le détail des destinations →</a></div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-inner">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">Taux de confirmation</h2>
+                  <div class="panel-subtitle">Confirmées / en attente</div>
+                </div>
+              </div>
+              <div class="gauge-wrap">
+                <div>
+                  <div class="gauge"><div class="gauge-value"><strong>0%</strong><span>Confirmées</span></div></div>
+                  <div class="success-note">↗ 6% vs semaine précédente</div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section class="dashboard-grid middle">
+          <article class="panel">
+            <div class="panel-inner">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">Départs à venir</h2>
+                  <div class="panel-subtitle">Suivi capacité, ventes, urgence et disponibilité</div>
+                </div>
+                <button class="btn-mini" type="button">Calendrier</button>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Date</th><th>Destination</th><th>Circuit</th><th>Places dispo.</th><th>Statut</th></tr></thead>
+                  <tbody>
+                    <tr><td>23 Mai 2026</td><td>Tanger</td><td>Dakhla Premium</td><td>18 / 24</td><td><span class="status green">Ouvert</span></td></tr>
+                    <tr><td>01 Juin 2026</td><td>Casablanca</td><td>Omra Ramadan</td><td>42 / 50</td><td><span class="status orange">Urgent</span></td></tr>
+                    <tr><td>08 Juin 2026</td><td>Rabat</td><td>Istanbul Express</td><td>29 / 32</td><td><span class="status red">Presque complet</span></td></tr>
+                    <tr><td>15 Juin 2026</td><td>Tanger</td><td>Marrakech Groupe</td><td>11 / 20</td><td><span class="status green">Ouvert</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div style="text-align:center;margin-top:14px"><a class="link-orange" href="#">Voir tous les départs →</a></div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-inner">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">Réservations récentes</h2>
+                  <div class="panel-subtitle">Dernières ventes et demandes client</div>
+                </div>
+                <a class="link-orange" href="#">Voir tout</a>
+              </div>
+              <div class="reservation-list">
+                <div class="reservation-item"><div class="mini-avatar">NA</div><div><div class="item-title">Nadia El Amrani</div><div class="item-subtitle">Dakhla Premium · Oumayma</div></div><div class="item-amount">7 960 DH<br><span class="status green">Confirmée</span></div></div>
+                <div class="reservation-item"><div class="mini-avatar">YO</div><div><div class="item-title">Youssef Berrada</div><div class="item-subtitle">Omra Ramadan · Agence Tanger</div></div><div class="item-amount">16 900 DH<br><span class="status orange">En attente</span></div></div>
+                <div class="reservation-item"><div class="mini-avatar">SA</div><div><div class="item-title">Salma Bennis</div><div class="item-subtitle">Istanbul Express · Karim</div></div><div class="item-amount">15 600 DH<br><span class="status green">Acompte</span></div></div>
+                <div class="reservation-item"><div class="mini-avatar">MO</div><div><div class="item-title">Mohamed Alaoui</div><div class="item-subtitle">Marrakech Groupe · Direct</div></div><div class="item-amount">4 900 DH<br><span class="status blue">Client web</span></div></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-inner">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">Alertes & tâches</h2>
+                  <div class="panel-subtitle">Suivi du pilotage quotidien</div>
+                </div>
+                <a class="link-orange" href="#">Voir tout</a>
+              </div>
+              <div class="alert-list">
+                <div class="alert-item"><div class="soft-icon green">✓</div><div><div class="item-title">Dossiers validés</div><div class="item-subtitle">Suivi du pilotage quotidien</div></div><div class="metric-pill">82%</div></div>
+                <div class="alert-item"><div class="soft-icon orange">!</div><div><div class="item-title">Acomptes à suivre</div><div class="item-subtitle">Suivi du pilotage quotidien</div></div><div class="metric-pill">17</div></div>
+                <div class="alert-item"><div class="soft-icon green">○</div><div><div class="item-title">Rooming incomplet</div><div class="item-subtitle">Suivi du pilotage quotidien</div></div><div class="metric-pill">6</div></div>
+                <div class="alert-item"><div class="soft-icon blue">□</div><div><div class="item-title">Commissions à approuver</div><div class="item-subtitle">Suivi du pilotage quotidien</div></div><div class="metric-pill">12</div></div>
+              </div>
+              <div style="margin-top:16px" class="objective-card">
+                <div class="objective-label">Objectif mensuel</div>
+                <div class="objective-value"><strong>0%</strong><span>de confirmation</span></div>
+                <div class="progress-bar"><span style="width:30%"></span></div>
+                <div class="objective-note">Encore 186 000 DH pour atteindre l’objectif fixé sur le mois en cours.</div>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section class="dashboard-grid bottom">
+          <article class="panel">
+            <div class="panel-inner">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">Ventes par canal</h2>
+                  <div class="panel-subtitle">Agence, commercial, client web et group deals</div>
+                </div>
+                <button class="btn-mini" type="button">Comparer V3</button>
+              </div>
+              <div class="channel-list">
+                <div class="channel-item"><div class="channel-head"><div><strong>Agence</strong><br><span>Répartition commerciale</span></div><div class="metric-pill">48</div></div><div class="track"><span style="width:76%"></span></div></div>
+                <div class="channel-item"><div class="channel-head"><div><strong>Commercial</strong><br><span>Répartition commerciale</span></div><div class="metric-pill">63</div></div><div class="track"><span style="width:91%"></span></div></div>
+                <div class="channel-item"><div class="channel-head"><div><strong>Client web</strong><br><span>Répartition commerciale</span></div><div class="metric-pill">31</div></div><div class="track"><span style="width:49%"></span></div></div>
+                <div class="channel-item"><div class="channel-head"><div><strong>Group deals</strong><br><span>Répartition commerciale</span></div><div class="metric-pill">19</div></div><div class="track"><span style="width:31%"></span></div></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-inner">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">Qualité opérationnelle</h2>
+                  <div class="panel-subtitle">Indicateurs de contrôle</div>
+                </div>
+              </div>
+              <div class="quality-list">
+                <div class="quality-item"><div class="soft-icon green">✓</div><div><div class="item-title">Dossiers validés</div><div class="item-subtitle">Suivi du pilotage quotidien</div></div><div class="metric-pill">82%</div></div>
+                <div class="quality-item"><div class="soft-icon orange">!</div><div><div class="item-title">Acomptes à suivre</div><div class="item-subtitle">Suivi du pilotage quotidien</div></div><div class="metric-pill">17</div></div>
+                <div class="quality-item"><div class="soft-icon green">○</div><div><div class="item-title">Rooming incomplet</div><div class="item-subtitle">Suivi du pilotage quotidien</div></div><div class="metric-pill">6</div></div>
+                <div class="quality-item"><div class="soft-icon blue">□</div><div><div class="item-title">Commissions à approuver</div><div class="item-subtitle">Suivi du pilotage quotidien</div></div><div class="metric-pill">12</div></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-inner">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">Chiffre d’affaires</h2>
+                  <div class="panel-subtitle">Objectif mensuel</div>
+                </div>
+              </div>
+              <div class="objective-card">
+                <div class="objective-label">Objectif mensuel</div>
+                <div class="objective-value"><strong>0 DH</strong><span>CA cumulé</span></div>
+                <div class="progress-bar"><span style="width:34%"></span></div>
+                <div class="objective-note">Encore 186 000 DH pour atteindre l’objectif fixé sur le mois en cours.</div>
+              </div>
+              <div class="status-donut-small"><div><span>Total</span><strong>0</strong></div></div>
+              <div class="mini-legend"><span><i style="background:var(--aj-orange)"></i>En cours</span><span><i style="background:var(--aj-green)"></i>Validés</span><span><i style="background:#ff4d7d"></i>Annulés</span></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="dashboard-grid bottom">
+          <article class="panel">
+            <div class="panel-inner">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">Paiements validés</h2>
+                  <div class="panel-subtitle">Méthodes et montants encaissés</div>
+                </div>
+                <button class="btn-mini" type="button">Méthodes</button>
+              </div>
+              <div class="empty-state">Aucune donnée de paiement disponible.</div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-inner">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">Voyages les plus réservés</h2>
+                  <div class="panel-subtitle">Top destinations commerciales</div>
+                </div>
+                <a class="link-orange" href="#">Voir tous</a>
+              </div>
+              <div class="empty-state">Aucun voyage réservé.</div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-inner">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">Agences actives</h2>
+                  <div class="panel-subtitle">Points de vente avec activité</div>
+                </div>
+                <a class="link-orange" href="#">Voir toutes</a>
+              </div>
+              <div class="agency-list">
+                <div class="agency-item"><div class="soft-icon green">▦</div><div><div class="item-title">Ajinsafro Bruxelles</div><div class="item-subtitle">Bruxelles · BRU · 0 résa</div></div><div class="status green">●</div></div>
+                <div class="agency-item"><div class="soft-icon green">▦</div><div><div class="item-title">Ajinsafro Casablanca</div><div class="item-subtitle">Casablanca · CAS · 0 résa</div></div><div class="status green">●</div></div>
+                <div class="agency-item"><div class="soft-icon green">▦</div><div><div class="item-title">Ajinsafro Fès</div><div class="item-subtitle">Fès · FES · 0 résa</div></div><div class="status green">●</div></div>
+                <div class="agency-item"><div class="soft-icon green">▦</div><div><div class="item-title">Ajinsafro Marrakech</div><div class="item-subtitle">Marrakech · MAR · 0 résa</div></div><div class="status green">●</div></div>
+              </div>
+            </div>
+          </article>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const saved = localStorage.getItem('aj-v6-sidebar');
+      if (saved === 'collapsed' || saved === 'expanded') root.dataset.sidebar = saved;
+
+      const toggle = () => {
+        const next = root.dataset.sidebar === 'collapsed' ? 'expanded' : 'collapsed';
+        root.dataset.sidebar = next;
+        localStorage.setItem('aj-v6-sidebar', next);
+      };
+
+      document.getElementById('sidebarToggle')?.addEventListener('click', toggle);
+      document.getElementById('mobileToggle')?.addEventListener('click', toggle);
+
+      document.querySelectorAll('.nav-parent').forEach((button) => {
+        button.addEventListener('click', () => {
+          if (root.dataset.sidebar === 'collapsed' && !button.closest('.sidebar')?.matches(':hover')) {
+            root.dataset.sidebar = 'expanded';
+            localStorage.setItem('aj-v6-sidebar', 'expanded');
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

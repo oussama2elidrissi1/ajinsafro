@@ -1367,6 +1367,81 @@
         <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-900 px-4 py-3 text-sm font-medium shadow-sm"><?php echo e(session('success')); ?></div>
     <?php endif; ?>
 
+    <?php
+        $sellableRows = $catalogRows->filter(fn($r) => $r['commercial']['is_sellable'] ?? false)->values();
+        $allDepRowsV2 = collect();
+        foreach ($catalogRows as $rowV2) {
+            $isVoyageSellableV2 = $rowV2['commercial']['is_sellable'] ?? false;
+            foreach (collect($rowV2['modal_detail']['departures'] ?? [])->values() as $departureV2) {
+                $depDateV2 = !empty($departureV2['date_iso']) ? \Carbon\Carbon::parse($departureV2['date_iso']) : null;
+                $remainingV2 = $departureV2['remaining'] ?? null;
+                $isDepSellableV2 = $isVoyageSellableV2
+                    && $depDateV2 !== null
+                    && empty($departureV2['is_past'])
+                    && ($departureV2['status_key'] ?? 'unknown') !== 'full'
+                    && ($remainingV2 === null || $remainingV2 > 0);
+                $allDepRowsV2->push(['row' => $rowV2, 'departure' => $departureV2, 'is_sellable' => $isDepSellableV2]);
+            }
+        }
+        $sellableDepRowsV2 = $allDepRowsV2->filter(fn ($i) => $i['is_sellable'])->values();
+    ?>
+
+    <?php if($isCommercialReservationsOnly): ?>
+    <div id="reservations-main-content" class="commercial-v2-main space-y-6">
+        <form id="catalogue-workspace" method="GET" action="<?php echo e(route('admin.reservations.workspace')); ?>" class="commercial-v2-filters-wrap">
+            <input type="hidden" name="view" id="ws-filter-view" value="<?php echo e($workspaceView); ?>">
+            <div class="commercial-v2-header">
+                <div>
+                    <h1>Catalogue des Voyages &amp; Départs</h1>
+                    <p>Recherchez les départs programmés et initiez un dossier de vente directe en un seul clic.</p>
+                </div>
+                <div class="commercial-v2-view-switch" role="group" aria-label="Mode d'affichage">
+                    <button type="button" id="btn-view-catalog" class="<?php echo e($workspaceView === 'catalog' ? 'is-active' : ''); ?>"><i class="fas fa-th-large"></i><span>Catalogue</span></button>
+                    <button type="button" id="btn-view-list" class="<?php echo e($workspaceView === 'list' ? 'is-active' : ''); ?>"><i class="fas fa-list"></i><span>Liste</span></button>
+                    <button type="button" id="btn-view-calendar" class="<?php echo e($workspaceView === 'calendar' ? 'is-active' : ''); ?>"><i class="far fa-calendar-alt"></i><span>Calendrier</span></button>
+                </div>
+            </div>
+            <div class="commercial-v2-filters-card">
+                <div class="commercial-v2-filters-grid">
+                    <div><label for="ws-filter-search">Destination / Titre</label><input type="text" id="ws-filter-search" name="search" value="<?php echo e($workspaceFilters['search'] ?? ''); ?>" placeholder="Ex: Dakhla, Marrakech..."></div>
+                    <div><label for="ws-filter-type">Type de voyage</label><select id="ws-filter-type" name="type"><option value="" <?php echo e(($workspaceFilters['type'] ?? '') === '' ? 'selected' : ''); ?>>Tous types</option><option value="package" <?php echo e(($workspaceFilters['type'] ?? '') === 'package' ? 'selected' : ''); ?>>Package</option><option value="vol" <?php echo e(($workspaceFilters['type'] ?? '') === 'vol' ? 'selected' : ''); ?>>Vol</option><option value="hebergement" <?php echo e(($workspaceFilters['type'] ?? '') === 'hebergement' ? 'selected' : ''); ?>>Hébergement</option></select></div>
+                    <div><label for="ws-filter-date-from">Départ après le</label><input type="date" id="ws-filter-date-from" name="date_from" value="<?php echo e($workspaceFilters['date_from'] ?? ''); ?>"></div>
+                    <div><label for="ws-filter-date-to">Départ avant le</label><input type="date" id="ws-filter-date-to" name="date_to" value="<?php echo e($workspaceFilters['date_to'] ?? ''); ?>"></div>
+                    <div><label for="ws-filter-budget-min">Budget min</label><input type="number" id="ws-filter-budget-min" name="budget_min" value="<?php echo e($workspaceFilters['budget_min'] ?? ''); ?>" placeholder="0"></div>
+                    <div><label for="ws-filter-budget-max">Budget max</label><input type="number" id="ws-filter-budget-max" name="budget_max" value="<?php echo e($workspaceFilters['budget_max'] ?? ''); ?>" placeholder="Max"></div>
+                </div>
+                <div class="commercial-v2-filters-actions">
+                    <button type="submit" class="commercial-v2-apply-btn"><i class="fas fa-filter"></i><span>Filtrer</span></button>
+                    <a href="<?php echo e($workspaceResetUrl); ?>" class="commercial-v2-reset-btn">Réinitialiser les filtres</a>
+                </div>
+            </div>
+        </form>
+
+        <div id="ws-view-table" class="commercial-v2-panel <?php echo e($workspaceView === 'list' ? '' : 'hidden'); ?>">
+            <div class="commercial-v2-list-table-wrap"><table class="commercial-v2-list-table"><thead><tr><th>Réf</th><th>Voyage &amp; Type</th><th>Destination</th><th>Dates (Aller/Retour)</th><th>Vendu / En attente</th><th>Remplissage</th><th>Actions</th></tr></thead><tbody id="ws-catalog-table-body">
+                <?php $__empty_1 = true; $__currentLoopData = $sellableDepRowsV2; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $depItemV2): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                    <?php
+                        $rowV2 = $depItemV2['row']; $departureV2 = $depItemV2['departure'];
+                        $depDateV2 = !empty($departureV2['date_iso']) ? \Carbon\Carbon::parse($departureV2['date_iso']) : null;
+                        $retDateV2 = !empty($departureV2['return_date_iso']) ? \Carbon\Carbon::parse($departureV2['return_date_iso']) : null;
+                        $confirmedV2 = (int) data_get($departureV2, 'pax.validee', $rowV2['stats']['validee'] ?? 0);
+                        $pendingV2 = (int) data_get($departureV2, 'pax.en_cours', $rowV2['stats']['en_cours'] ?? 0);
+                        $capacityV2 = data_get($departureV2, 'capacity', $rowV2['commercial']['capacity_total'] ?? null);
+                        $remainingV2 = data_get($departureV2, 'remaining', $rowV2['commercial']['places_restantes'] ?? null);
+                        $fillPctV2 = ($capacityV2 && $capacityV2 > 0) ? min(100, (int) round((($confirmedV2 + $pendingV2) / $capacityV2) * 100)) : 0;
+                        $reserveUrlV2 = data_get($departureV2, 'routes.reserve') ?: route('admin.reservations.create', array_filter(['tour_id' => (int) ($rowV2['voyage_id'] ?? 0), 'travel_date_id' => data_get($departureV2, 'travel_date_id')]));
+                    ?>
+                    <tr><td><span class="commercial-v2-ref"><?php echo e($rowV2['code'] ?? 'N/A'); ?></span></td><td><div class="commercial-v2-voyage-title"><?php echo e($rowV2['name'] ?? 'Voyage'); ?></div><div class="commercial-v2-voyage-meta"><span class="commercial-v2-type"><?php echo e(strtoupper($rowV2['type_label'] ?? $rowV2['type'] ?? 'PACKAGE')); ?></span><span><?php echo e($rowV2['duration_label'] ?? ($rowV2['duration'] ?? 'Durée non renseignée')); ?></span></div></td><td><span class="commercial-v2-destination"><i class="fas fa-map-marker-alt"></i><?php echo e($rowV2['voyage_destination'] ?? '-'); ?></span></td><td><div class="commercial-v2-dates"><span>Du: <?php echo e($depDateV2 ? $depDateV2->format('d/m/Y') : '-'); ?></span><span>Au: <?php echo e($retDateV2 ? $retDateV2->format('d/m/Y') : '-'); ?></span></div></td><td class="text-center"><span class="commercial-v2-sold">Vendu: <?php echo e($confirmedV2); ?></span><span class="commercial-v2-pending">En attente: <?php echo e($pendingV2); ?></span></td><td><div class="commercial-v2-fill"><div class="commercial-v2-fill-bar"><span style="width: <?php echo e($fillPctV2); ?>%"></span></div><small><?php echo e($remainingV2 !== null ? ('Dispo: '.$remainingV2) : 'Dispo: -'); ?></small></div></td><td class="text-center"><div class="commercial-v2-actions"><button type="button" class="commercial-v2-btn commercial-v2-btn-view" data-ws-detail-trigger data-row-code="<?php echo e($rowV2['code'] ?? ''); ?>" data-travel-date-id="<?php echo e(data_get($departureV2, 'travel_date_id', '')); ?>">Voir</button><a href="<?php echo e($reserveUrlV2); ?>" class="commercial-v2-btn commercial-v2-btn-book">Réserver</a></div></td></tr>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                    <tr><td colspan="7" class="commercial-v2-empty">Aucune offre réservable disponible.</td></tr>
+                <?php endif; ?>
+            </tbody></table></div>
+        </div>
+
+        <div id="ws-view-catalog" class="commercial-v2-panel <?php echo e($workspaceView === 'catalog' ? '' : 'hidden'); ?>"><div class="commercial-v2-cards-grid"><?php $__currentLoopData = $sellableRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php echo $__env->make('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'card'], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?></div></div>
+        <div id="reservations-calendar-view" class="commercial-v2-panel <?php echo e($workspaceView === 'calendar' ? '' : 'hidden'); ?>"><div class="ws-calendar-panel"><div id="workspace-calendar" class="w-full min-h-[540px] fc-workspace" data-reset-url="<?php echo e($workspaceResetUrl); ?>"></div></div></div>
+    </div>
+    <?php else: ?>
     <div id="reservations-main-content" class="space-y-4">
         <form id="catalogue-workspace" class="ws-toolbar" method="GET" action="<?php echo e(route('admin.reservations.workspace')); ?>">
             <input type="hidden" name="view" id="ws-filter-view" value="<?php echo e($workspaceView); ?>">
@@ -1693,6 +1768,7 @@
             </div>
         </div>
     </div>
+    <?php endif; ?>
 </div>
 <?php if($isCommercialReservationsOnly): ?>
         </div>
