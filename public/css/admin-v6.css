@@ -208,6 +208,17 @@ body.aj-admin-v6 .admin-v6-sidebar .aj-sidebar-v2__link * {
     font-weight: 400 !important;
 }
 
+body.aj-admin-v6 .admin-v6-sidebar .aj-sidebar-v2__toggle,
+body.aj-admin-v6 .admin-v6-sidebar .aj-sidebar-v2__toggle *,
+body.aj-admin-v6 .admin-v6-sidebar .aj-sidebar-v2__item.is-active > .aj-sidebar-v2__link,
+body.aj-admin-v6 .admin-v6-sidebar .aj-sidebar-v2__item.is-active > .aj-sidebar-v2__link *,
+body.aj-admin-v6 .admin-v6-sidebar .aj-sidebar-v2__item.is-open > .aj-sidebar-v2__link,
+body.aj-admin-v6 .admin-v6-sidebar .aj-sidebar-v2__item.is-open > .aj-sidebar-v2__link *,
+body.aj-admin-v6 .admin-v6-sidebar .aj-sidebar-v2__profile-link,
+body.aj-admin-v6 .admin-v6-sidebar .aj-sidebar-v2__profile-link * {
+    font-weight: 400 !important;
+}
+
 body.aj-admin-v6 .admin-v6-sidebar-head {
     position: sticky;
     top: 0;
