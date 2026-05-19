@@ -48,6 +48,7 @@
 @endphp
 
 @push('styles')
+<link href="{{ asset('build/css/icons.min.css') }}" rel="stylesheet">
 <link href="{{ asset('css/admin-sidebar-v2.css') }}" rel="stylesheet">
 <style>
 {{ $v6Css }}
@@ -108,6 +109,15 @@ html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__item {
   display: block !important;
 }
 
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__item.has-direct-link .aj-sidebar-v2__toggle {
+  display: none !important;
+}
+
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__item.has-direct-link .aj-sidebar-v2__link--parent {
+  width: 44px !important;
+  margin: 0 auto !important;
+}
+
 html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__link,
 html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__toggle {
   min-height: 44px !important;
@@ -136,6 +146,12 @@ html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__icon {
   visibility: visible !important;
 }
 
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__icon i {
+  display: inline-block !important;
+  font-size: 1.15rem !important;
+  line-height: 1 !important;
+}
+
 html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__brand-link {
   justify-content: center !important;
 }
@@ -146,10 +162,13 @@ html[data-sidebar="collapsed"] .sidebar .sidebar-toggle {
 
 html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__brand {
   border-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  margin-bottom: 10px !important;
 }
 
 html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__brand-logo {
   height: 38px !important;
+  max-width: 42px !important;
 }
 
 .dashboard-v6-sidebar .aj-sidebar-v2 {
@@ -173,6 +192,15 @@ html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__brand-logo 
 .dashboard-v6-sidebar .aj-sidebar-v2__item.is-active > .aj-sidebar-v2__link-group > .aj-sidebar-v2__link,
 .dashboard-v6-sidebar .aj-sidebar-v2__item.is-open > .aj-sidebar-v2__link-group > .aj-sidebar-v2__link {
   box-shadow: inset 3px 0 0 #18a9dc;
+}
+
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__item.is-active > .aj-sidebar-v2__link,
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__item.is-open > .aj-sidebar-v2__link,
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__item.is-active > .aj-sidebar-v2__link-group > .aj-sidebar-v2__link,
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__item.is-open > .aj-sidebar-v2__link-group > .aj-sidebar-v2__link {
+  box-shadow: none !important;
+  background: rgba(24, 169, 220, .16) !important;
+  border: 1px solid rgba(15, 93, 141, .2) !important;
 }
 
 .topbar {
@@ -297,6 +325,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (window.AjSidebarV2 && typeof window.AjSidebarV2.init === 'function') {
         window.AjSidebarV2.init();
+    }
+
+    const sidebarRoot = document.querySelector('.dashboard-v6-sidebar [data-aj-sidebar-v2]');
+    if (sidebarRoot) {
+        sidebarRoot.addEventListener('click', function (event) {
+            const target = event.target.closest('.aj-sidebar-v2__link, .aj-sidebar-v2__toggle');
+            if (!target || root.dataset.sidebar !== 'collapsed') return;
+            const isLeafLink = target.matches('a.aj-sidebar-v2__link') && target.getAttribute('href') && target.getAttribute('href') !== 'javascript:void(0);';
+            if (isLeafLink) return;
+            root.dataset.sidebar = 'expanded';
+            localStorage.setItem('aj-v6-sidebar', 'expanded');
+        });
     }
 });
 </script>
