@@ -44,6 +44,9 @@ class DashboardController extends Controller
      */
     public function vueGlobale(Request $request)
     {
+        // Vue globale alignée sur le design officiel V6.
+        return $this->v6($request);
+
         $user = $request->user();
         $branchIds = $this->branchScope->visibleBranchIds($user);
         $canSeeAllBranches = $this->branchScope->canSeeAllBranches($user);
