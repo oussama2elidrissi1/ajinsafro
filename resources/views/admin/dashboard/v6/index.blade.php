@@ -88,6 +88,10 @@
 .dashboard-v6 .topbar .actions .chip{
   display: none !important;
 }
+.dashboard-v6 .topbar .actions button.chip,
+.dashboard-v6 .topbar .actions .date-chip{
+  display: none !important;
+}
 
 @media (max-width: 900px){
   .dashboard-v6 .topbar{
