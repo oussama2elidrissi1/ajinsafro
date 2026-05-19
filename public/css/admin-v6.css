@@ -117,6 +117,7 @@ body.aj-admin-v6 .aj-topbar-profile-caret { display: none; }
 body.aj-admin-v6 .aj-admin-v2-content {
     padding: calc(68px + 12px) 14px 18px;
     font-size: 13px;
+    overflow-x: hidden;
 }
 
 body.aj-admin-v6 .aj-footer {
@@ -278,4 +279,42 @@ html[data-admin-v6-sidebar="collapsed"] .admin-v6-sidebar .aj-sidebar-v2__brand-
     html[data-admin-v6-sidebar="collapsed"] .admin-v6-sidebar { width: 286px !important; min-width: 286px !important; max-width: 286px !important; }
     html[data-admin-v6-sidebar="collapsed"] body.aj-admin-v6 .aj-v6-topbar { left: 0; }
     body.aj-admin-v6 .aj-admin-v2-content { padding: calc(68px + 10px) 10px 14px !important; }
+    body.aj-admin-v6 .admin-v6-sidebar-head { display: none; }
+}
+
+@media (max-width: 767.98px) {
+    body.aj-admin-v6 .aj-v6-topbar {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+    body.aj-admin-v6 .aj-v6-page-title {
+        font-size: 16px;
+        line-height: 1.1;
+    }
+    body.aj-admin-v6 .aj-v6-page-breadcrumb {
+        font-size: 11px;
+        line-height: 1.2;
+    }
+    body.aj-admin-v6 .aj-v6-topbar-actions {
+        gap: 6px;
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 2px;
+    }
+    body.aj-admin-v6 .aj-v6-date-chip {
+        display: none;
+    }
+    body.aj-admin-v6 .aj-topbar-profile-info {
+        display: none;
+    }
+    body.aj-admin-v6 .aj-topbar-profile {
+        padding: 0;
+    }
+    body.aj-admin-v6 .aj-v6-primary-btn span {
+        white-space: nowrap;
+    }
+    body.aj-admin-v6 .aj-admin-v2-content {
+        padding-top: calc(68px + 8px) !important;
+    }
 }

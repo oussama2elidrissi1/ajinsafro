@@ -298,6 +298,43 @@ html[data-sidebar="collapsed"] .dashboard-grid.bottom {
 }
 
 @media (max-width: 760px) {
+  .topbar {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    padding: 8px 10px !important;
+  }
+
+  .top-actions {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    overflow-x: auto !important;
+  }
+
+  .top-actions .date-chip {
+    display: none !important;
+  }
+
+  .kpi-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .kpi-card {
+    min-height: 86px !important;
+    grid-template-columns: 46px 1fr !important;
+    gap: 10px !important;
+  }
+
+  .kpi-sparkline {
+    display: none !important;
+  }
+
+  .content {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
   html[data-sidebar="collapsed"] .content {
     padding-left: 12px !important;
     padding-right: 12px !important;
@@ -416,11 +453,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     const root = document.documentElement;
+    const isMobile = window.matchMedia('(max-width: 760px)').matches;
     const saved = localStorage.getItem('aj-v6-sidebar');
     if (saved === 'collapsed' || saved === 'expanded') {
         root.dataset.sidebar = saved;
     } else if (!root.dataset.sidebar) {
         root.dataset.sidebar = 'expanded';
+    }
+    if (isMobile) {
+        root.dataset.sidebar = 'collapsed';
     }
 
     const toggle = function () {
@@ -445,6 +486,14 @@ document.addEventListener('DOMContentLoaded', function () {
             if (isLeafLink) return;
             root.dataset.sidebar = 'expanded';
             localStorage.setItem('aj-v6-sidebar', 'expanded');
+        });
+
+        sidebarRoot.querySelectorAll('a.aj-sidebar-v2__link').forEach(function (link) {
+            link.addEventListener('click', function () {
+                if (window.matchMedia('(max-width: 760px)').matches) {
+                    root.dataset.sidebar = 'collapsed';
+                }
+            });
         });
     }
 });
