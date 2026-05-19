@@ -143,6 +143,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('dashboard/statistiques', [DashboardController::class, 'page'])->name('dashboard.statistiques')->defaults('submenu', 'statistiques');
         Route::get('dashboard/alertes', [DashboardController::class, 'page'])->name('dashboard.alertes')->defaults('submenu', 'alertes');
         Route::get('dashboard/v2', [DashboardController::class, 'v2'])->name('dashboard.v2');
+        Route::get('dashboard/v3', [DashboardController::class, 'v3'])->name('dashboard.v3');
 
         Route::get('reservations', [ReservationsController::class, 'index'])->name('reservations.index');
         Route::get('reservation-dossiers', [ReservationDossierController::class, 'index'])->name('reservation-dossiers.index');

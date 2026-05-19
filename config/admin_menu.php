@@ -12,6 +12,7 @@ return [
                 ['label' => 'Statistiques', 'route' => 'admin.dashboard.statistiques', 'permission' => 'dashboard.stats.view'],
                 ['label' => 'Alertes', 'route' => 'admin.dashboard.alertes', 'permission' => 'dashboard.alerts.view'],
                 ['label' => 'Dashboard V2', 'route' => 'admin.dashboard.v2', 'permission' => 'dashboard.overview.view'],
+                ['label' => 'Dashboard V3', 'route' => 'admin.dashboard.v3', 'permission' => 'dashboard.overview.view'],
             ],
         ],
         [
@@ -244,6 +245,7 @@ return [
 
     'route_permissions' => [
         'admin.dashboard' => 'dashboard.view',
+        'admin.dashboard.v3' => 'dashboard.view',
         'admin.profile.edit' => ['dashboard.view', 'reservations.view'],
         'admin.profile.update' => ['dashboard.view', 'reservations.view'],
         'admin.profile.avatar' => ['dashboard.view', 'reservations.view'],

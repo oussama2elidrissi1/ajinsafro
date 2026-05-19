@@ -229,4 +229,15 @@ class DashboardController extends Controller
 
         return view('admin.dashboard.v2.index', $data);
     }
+
+    /**
+     * Dashboard V3 — nouvelle page autonome sans impact sur les dashboards existants.
+     */
+    public function v3(Request $request)
+    {
+        $response = $this->vueGlobale($request);
+        $data = $response->getData();
+
+        return view('admin.dashboard.v3.index', $data);
+    }
 }
