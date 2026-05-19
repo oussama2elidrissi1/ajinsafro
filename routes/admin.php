@@ -62,6 +62,7 @@ use App\Http\Controllers\Agent\DashboardController as AgentDashboardController;
 use App\Http\Controllers\Auth\LockScreenController;
 use App\Http\Controllers\Front\GroupDealsController as FrontGroupDealsController;
 use App\Http\Controllers\Front\VoyageController as FrontVoyageController;
+use App\Http\Controllers\Admin\MenuHubController;
 use App\Http\Controllers\DemoController;
 use App\Http\Controllers\MessagerieController as AgentMessagerieController;
 use Illuminate\Support\Facades\Route;
@@ -239,6 +240,14 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('products/options', [ProductsController::class, 'page'])->name('products.options')->defaults('submenu', 'options');
         Route::get('products/tarifs', [ProductsController::class, 'page'])->name('products.tarifs')->defaults('submenu', 'tarifs');
         Route::get('products/conditions', [ProductsController::class, 'page'])->name('products.conditions')->defaults('submenu', 'conditions');
+        Route::get('menu-hubs/billetterie', [MenuHubController::class, 'show'])->name('menu-hubs.billetterie')->defaults('page', 'billetterie');
+        Route::get('menu-hubs/hebergement', [MenuHubController::class, 'show'])->name('menu-hubs.hebergement')->defaults('page', 'hebergement');
+        Route::get('menu-hubs/hajj-omra', [MenuHubController::class, 'show'])->name('menu-hubs.hajj-omra')->defaults('page', 'hajj-omra');
+        Route::get('menu-hubs/low-cost', [MenuHubController::class, 'show'])->name('menu-hubs.low-cost')->defaults('page', 'low-cost');
+        Route::get('menu-hubs/activites', [MenuHubController::class, 'show'])->name('menu-hubs.activites')->defaults('page', 'activites');
+        Route::get('menu-hubs/transfers', [MenuHubController::class, 'show'])->name('menu-hubs.transfers')->defaults('page', 'transfers');
+        Route::get('menu-hubs/visa', [MenuHubController::class, 'show'])->name('menu-hubs.visa')->defaults('page', 'visa');
+        Route::get('menu-hubs/rh', [MenuHubController::class, 'show'])->name('menu-hubs.rh')->defaults('page', 'rh');
 
         Route::get('circuits', [CircuitsController::class, 'index'])->name('circuits.index');
         Route::get('circuits/circuits', [CircuitsController::class, 'page'])->name('circuits.circuits')->defaults('submenu', 'circuits');

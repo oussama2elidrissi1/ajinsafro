@@ -335,6 +335,33 @@ body.commercial-reservations-only .commercial-v2-filters-grid select {
     color: #1e293b;
 }
 
+body.commercial-reservations-only .commercial-v2-budget-range {
+    grid-column: span 2;
+    min-width: 0;
+}
+
+body.commercial-reservations-only .commercial-v2-budget-range__labels {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0 0 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+body.commercial-reservations-only .commercial-v2-budget-range__labels span:first-child {
+    color: #64748b;
+    font-weight: 800;
+    letter-spacing: .03em;
+}
+
+body.commercial-reservations-only .commercial-v2-budget-range input[type="range"] {
+    width: 100%;
+    height: 24px;
+}
+
 body.commercial-reservations-only .commercial-v2-filters-actions {
     display: flex;
     justify-content: flex-end;

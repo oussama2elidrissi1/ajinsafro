@@ -59,35 +59,43 @@
         && $adminV2User->hasRole('commercial_reservations_only')
         && $isWorkspaceRoute;
 @endphp
-<body class="aj-admin-v2-body aj-admin aj-admin-v6 admin-v6{{ $isWorkspaceRoute ? ' aj-admin-compact' : '' }}{{ $isCommercialWorkspaceOnly ? ' commercial-reservations-only' : '' }}">
+<body class="aj-admin-v2-body aj-admin aj-admin-v6 admin-v6{{ $isWorkspaceRoute ? ' aj-admin-compact' : '' }}{{ $isCommercialWorkspaceOnly ? ' commercial-reservations-only aj-admin-v6-no-chrome' : '' }}">
 <div class="aj-admin-v2-layout admin-v6-shell" id="aj-admin-v2-root">
-    <aside class="aj-admin-v2-sidebar admin-v6-sidebar" id="aj-admin-v2-sidebar">
-        @include('admin.partials.sidebar-v6', ['sidebarContext' => 'admin-v6'])
-    </aside>
+    @if($isCommercialWorkspaceOnly)
+        <div class="aj-admin-v2-main admin-v6-page" style="margin-left:0 !important;width:100% !important;">
+            <main class="aj-admin-v2-content admin-v6-content" style="padding:0 !important;">
+                @yield('content')
+            </main>
+        </div>
+    @else
+        <aside class="aj-admin-v2-sidebar admin-v6-sidebar" id="aj-admin-v2-sidebar">
+            @include('admin.partials.sidebar-v6', ['sidebarContext' => 'admin-v6'])
+        </aside>
 
-    <div class="aj-admin-v2-overlay" id="aj-admin-v2-overlay"></div>
+        <div class="aj-admin-v2-overlay" id="aj-admin-v2-overlay"></div>
 
-    <div class="aj-admin-v2-main admin-v6-page">
-        @include('admin.partials.header-v6', [
-            'adminV2User'         => $adminV2User,
-            'adminV2UserName'     => $adminV2UserName,
-            'adminV2UserRole'     => $adminV2UserRole,
-            'adminV2Initials'     => $adminV2Initials,
-            'adminV2AvatarUrl'    => $adminV2AvatarUrl,
-            'adminV2UnreadCount'  => $adminV2UnreadCount,
-            'adminV2PendingCount' => $adminV2PendingCount,
-        ])
-
-        <main class="aj-admin-v2-content admin-v6-content">
-            @yield('content')
-        </main>
-
-        @unless(View::hasSection('hide_admin_footer'))
-            @include('admin.partials.footer-v2', [
-                'adminV2BrandName' => $adminV2BrandName,
+        <div class="aj-admin-v2-main admin-v6-page">
+            @include('admin.partials.header-v6', [
+                'adminV2User'         => $adminV2User,
+                'adminV2UserName'     => $adminV2UserName,
+                'adminV2UserRole'     => $adminV2UserRole,
+                'adminV2Initials'     => $adminV2Initials,
+                'adminV2AvatarUrl'    => $adminV2AvatarUrl,
+                'adminV2UnreadCount'  => $adminV2UnreadCount,
+                'adminV2PendingCount' => $adminV2PendingCount,
             ])
-        @endunless
-    </div>
+
+            <main class="aj-admin-v2-content admin-v6-content">
+                @yield('content')
+            </main>
+
+            @unless(View::hasSection('hide_admin_footer'))
+                @include('admin.partials.footer-v2', [
+                    'adminV2BrandName' => $adminV2BrandName,
+                ])
+            @endunless
+        </div>
+    @endif
 </div>
 
 <script src="{{ URL::asset('build/libs/jquery/jquery.min.js') }}"></script>

@@ -1408,8 +1408,16 @@
                     <div><label for="ws-filter-type">Type de voyage</label><select id="ws-filter-type" name="type"><option value="" {{ ($workspaceFilters['type'] ?? '') === '' ? 'selected' : '' }}>Tous types</option><option value="package" {{ ($workspaceFilters['type'] ?? '') === 'package' ? 'selected' : '' }}>Package</option><option value="vol" {{ ($workspaceFilters['type'] ?? '') === 'vol' ? 'selected' : '' }}>Vol</option><option value="hebergement" {{ ($workspaceFilters['type'] ?? '') === 'hebergement' ? 'selected' : '' }}>Hébergement</option></select></div>
                     <div><label for="ws-filter-date-from">Départ après le</label><input type="date" id="ws-filter-date-from" name="date_from" value="{{ $workspaceFilters['date_from'] ?? '' }}"></div>
                     <div><label for="ws-filter-date-to">Départ avant le</label><input type="date" id="ws-filter-date-to" name="date_to" value="{{ $workspaceFilters['date_to'] ?? '' }}"></div>
-                    <div><label for="ws-filter-budget-min">Budget min</label><input type="number" id="ws-filter-budget-min" name="budget_min" value="{{ $workspaceFilters['budget_min'] ?? '' }}" placeholder="0"></div>
-                    <div><label for="ws-filter-budget-max">Budget max</label><input type="number" id="ws-filter-budget-max" name="budget_max" value="{{ $workspaceFilters['budget_max'] ?? '' }}" placeholder="Max"></div>
+                    <input type="hidden" id="ws-filter-budget-min" name="budget_min" value="{{ $workspaceFilters['budget_min'] ?? 0 }}">
+                    <input type="hidden" id="ws-filter-budget-max" name="budget_max" value="{{ $workspaceFilters['budget_max'] ?? 30000 }}">
+                    <div class="commercial-v2-budget-range">
+                        <label for="ws-budget-range-max">Segment budget</label>
+                        <div class="commercial-v2-budget-range__labels">
+                            <span>MAX</span>
+                            <span id="ws-budget-range-value">{{ (int) ($workspaceFilters['budget_max'] ?? 30000) }} MAD</span>
+                        </div>
+                        <input type="range" id="ws-budget-range-max" min="0" max="100000" step="500" value="{{ (int) ($workspaceFilters['budget_max'] ?? 30000) }}">
+                    </div>
                 </div>
                 <div class="commercial-v2-filters-actions">
                     <button type="submit" class="commercial-v2-apply-btn"><i class="fas fa-filter"></i><span>Filtrer</span></button>
