@@ -49,6 +49,8 @@
     // Remove date + filters chips from the V6 template header.
     $v6Body = preg_replace('/<button class="chip"[^>]*>[\s\S]*?mardi[\s\S]*?<\/button>/i', '', $v6Body, 1);
     $v6Body = preg_replace('/<button class="chip"[^>]*>[\s\S]*?Filtres[\s\S]*?<\/button>/i', '', $v6Body, 1);
+    // Remove "+ Réservations" primary action from the template header.
+    $v6Body = preg_replace('/<(?:a|button)\s+[^>]*class="[^"]*primary-btn[^"]*"[^>]*>[\s\S]*?RÃ©servations[\s\S]*?<\/(?:a|button)>/i', '', $v6Body, 1);
     // Keep V6 topbar structure (title + search + actions) as in the reference HTML.
 @endphp
 
