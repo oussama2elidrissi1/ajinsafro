@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Support\AdminMenuPermissionRegistry;
+use App\Services\BranchScopeService;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Schema;
@@ -34,6 +35,7 @@ class AdminPermissionsSeeder extends Seeder
         $managerRole = Role::findOrCreate('Manager', 'web');
         $agentRole = Role::findOrCreate('Agent', 'web');
         $accountantRole = Role::findOrCreate('Comptable', 'web');
+        $commercialReservationsOnlyRole = Role::findOrCreate(BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY, 'web');
         Role::findOrCreate('Partenaire', 'web');
 
         $adminRole->syncPermissions(Permission::query()->pluck('name')->all());
@@ -72,6 +74,17 @@ class AdminPermissionsSeeder extends Seeder
                 || str_starts_with($permission, 'reporting.')
                 || str_starts_with($permission, 'reservations.payments.')
                 || str_starts_with($permission, 'commissions.');
+        })));
+
+        $commercialReservationsOnlyRole->syncPermissions(array_values(array_filter($permissions, static function (string $permission): bool {
+            return in_array($permission, [
+                'reservations.view',
+                'reservations.create',
+                'reservations.store',
+                'reservations.edit',
+                'reservations.update',
+                'reservations.destroy',
+            ], true);
         })));
 
         $adminUsers = User::query()->where('is_admin', true)->get();

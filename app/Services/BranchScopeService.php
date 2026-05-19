@@ -26,6 +26,8 @@ class BranchScopeService
 
     public const ROLE_AGENT = 'agent';
 
+    public const ROLE_COMMERCIAL_RESERVATIONS_ONLY = 'commercial_reservations_only';
+
     /**
      * Comptes avec accès global (toutes les agences) : super_admin, siege_admin, ou is_admin (legacy).
      */
@@ -36,6 +38,11 @@ class BranchScopeService
             || $user->hasRole('Super Admin')
             || $user->hasRole('Admin Siège')
             || $user->is_admin;
+    }
+
+    public function isCommercialReservationsOnly(User $user): bool
+    {
+        return $user->hasRole(self::ROLE_COMMERCIAL_RESERVATIONS_ONLY);
     }
 
     /**
@@ -185,6 +192,13 @@ class BranchScopeService
      */
     public function scopeReservations(Builder $query, User $user, array $context = []): Builder
     {
+        if ($this->isCommercialReservationsOnly($user)) {
+            return $query->where(function (Builder $builder) use ($user): void {
+                $builder->where('created_by', $user->id)
+                    ->orWhere('created_by_user_id', $user->id);
+            });
+        }
+
         if ($this->shouldBypassBranchScopeForSharedOperationalView($user, $context)) {
             return $query;
         }
@@ -314,6 +328,15 @@ class BranchScopeService
      */
     public function constrainReservationQueryForPortalUser(Builder $query, User $user, array $context = []): void
     {
+        if ($this->isCommercialReservationsOnly($user)) {
+            $query->where(function (Builder $q) use ($user): void {
+                $q->where('created_by', $user->id)
+                    ->orWhere('created_by_user_id', $user->id);
+            });
+
+            return;
+        }
+
         if (! \App\Services\View\AgentPortalLayout::shouldUse($user)) {
             return;
         }

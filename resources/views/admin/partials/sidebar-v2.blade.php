@@ -174,6 +174,25 @@
         $makeGroup('grp_admin', 'Administration', $settingsNode['children'] ?? [], 'bx bx-cog'),
     ]));
 
+    if ($sidebarUser?->hasRole(\App\Services\BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY)) {
+        $reservationsOnlyChildren = array_values(array_filter([
+            $makeLeaf(
+                'reservations_index_only',
+                'Réservations',
+                'admin.reservations.index',
+                'bx bx-calendar-check',
+                ['admin.reservations.*', 'admin.reservation-dossiers.*'],
+                [],
+                null,
+                'reservations.view'
+            ),
+        ]));
+
+        $adminGroups = array_values(array_filter([
+            $makeGroup('grp_reservations', 'Réservations', $reservationsOnlyChildren, 'bx bx-calendar-check'),
+        ]));
+    }
+
     $renderNodes = function (array $nodes, int $depth = 0) use (&$renderNodes): string {
         if ($nodes === []) {
             return '';

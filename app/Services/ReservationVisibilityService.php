@@ -44,6 +44,10 @@ class ReservationVisibilityService
 
     public function usesLimitedPresentation(User $user): bool
     {
+        if ($this->branchScope->isCommercialReservationsOnly($user)) {
+            return true;
+        }
+
         if ($this->branchScope->canSeeAllBranches($user)) {
             return false;
         }
@@ -62,6 +66,13 @@ class ReservationVisibilityService
 
     public function applyScope(Builder $query, User $user): Builder
     {
+        if ($this->branchScope->isCommercialReservationsOnly($user)) {
+            return $query->where(function (Builder $builder) use ($user): void {
+                $builder->where('created_by', $user->id)
+                    ->orWhere('created_by_user_id', $user->id);
+            });
+        }
+
         if ($this->branchScope->canSeeAllBranches($user)) {
             return $query;
         }

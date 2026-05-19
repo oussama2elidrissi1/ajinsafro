@@ -87,8 +87,13 @@ class LoginRedirectService
             return $adminUrl . '/agent/dashboard';
         }
 
+        if ($user->hasRole([
+            BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY,
+        ])) {
+            return $adminUrl . '/admin/reservations';
+        }
+
         // Fallback for users without back-office roles (e.g. WP-only synced accounts).
         return rtrim((string) config('app.public_url', 'https://ajinsafro.net'), '/');
     }
 }
-

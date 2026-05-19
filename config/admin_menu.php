@@ -244,9 +244,11 @@ return [
 
     'route_permissions' => [
         'admin.dashboard' => 'dashboard.view',
-        'admin.profile.edit' => 'dashboard.view',
-        'admin.profile.update' => 'dashboard.view',
-        'admin.profile.avatar' => 'dashboard.view',
+        'admin.profile.edit' => ['dashboard.view', 'reservations.view'],
+        'admin.profile.update' => ['dashboard.view', 'reservations.view'],
+        'admin.profile.avatar' => ['dashboard.view', 'reservations.view'],
+        'admin.reservation-dossiers.index' => 'reservations.view',
+        'admin.reservation-dossiers.show' => 'reservations.view',
 
         'admin.circuits.index' => 'circuits.voyages.view',
         'admin.circuits.circuits' => 'circuits.voyages.view',

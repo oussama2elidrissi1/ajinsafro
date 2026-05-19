@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             GroupDealsSeeder::class,
             HajjOmraSeeder::class,
             EconomicOfferSeeder::class,
+            OumaymaReservationsOnlySeeder::class,
         ]);
     }
 }

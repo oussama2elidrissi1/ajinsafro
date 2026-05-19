@@ -59,6 +59,17 @@ class AjinsafroRolesSeeder extends Seeder
         }));
         $agent = array_values(array_diff($agent, self::RESTRICTED_RESERVATION_PERMISSIONS));
 
+        $commercialReservationsOnly = array_values(array_filter($allPermissions, static function (string $permission): bool {
+            return in_array($permission, [
+                'reservations.view',
+                'reservations.create',
+                'reservations.store',
+                'reservations.edit',
+                'reservations.update',
+                'reservations.destroy',
+            ], true);
+        }));
+
         $this->createRole(BranchScopeService::ROLE_SUPER_ADMIN, $allPermissions);
         $this->createRole(BranchScopeService::ROLE_SIEGE_ADMIN, $allPermissions);
         $this->createRole(BranchScopeService::ROLE_BRANCH_ADMIN, $exceptRolesSecurity);
@@ -66,6 +77,7 @@ class AjinsafroRolesSeeder extends Seeder
         $this->createRole(BranchScopeService::ROLE_COMMERCIAL, $commercial);
         $this->createRole(BranchScopeService::ROLE_MANAGER, $commercial);
         $this->createRole(BranchScopeService::ROLE_AGENT, $agent);
+        $this->createRole(BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY, $commercialReservationsOnly);
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }

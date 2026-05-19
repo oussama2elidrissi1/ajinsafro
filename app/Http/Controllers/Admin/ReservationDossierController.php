@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Branch;
 use App\Models\Departure;
 use App\Models\Reservation;
 use App\Models\ReservationDossier;
 use App\Models\TravelDate;
 use App\Models\User;
 use App\Models\Voyage;
+use App\Services\BranchScopeService;
 use App\Services\ReservationListQueryService;
 use App\Services\ReservationVisibilityService;
 use App\Services\Wp\WpHeroImageService;
@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Storage;
 class ReservationDossierController extends Controller
 {
     public function __construct(
+        protected BranchScopeService $branchScope,
         protected ReservationVisibilityService $reservationVisibility,
         protected ReservationListQueryService $reservationListQuery,
     ) {}
@@ -274,6 +275,12 @@ class ReservationDossierController extends Controller
             ]
         );
 
+        $agentOptionsQuery = User::query()->orderBy('name')->limit(200);
+        $this->branchScope->scopeUsers($agentOptionsQuery, $request->user());
+        if ($this->branchScope->isCommercialReservationsOnly($request->user())) {
+            $agentOptionsQuery->whereKey($request->user()->id);
+        }
+
         return view('admin.reservation-dossiers.index', [
             'voyages' => $voyagePaginator,
             'stats' => $stats,
@@ -293,8 +300,8 @@ class ReservationDossierController extends Controller
                 'per_page' => $perPage,
             ],
             'voyageOptions' => Voyage::query()->orderBy('name')->limit(300)->get(['id', 'name']),
-            'agentOptions' => User::query()->orderBy('name')->limit(200)->get(['id', 'name']),
-            'branchOptions' => Branch::query()->orderBy('name')->limit(200)->get(['id', 'name']),
+            'agentOptions' => $agentOptionsQuery->get(['id', 'name']),
+            'branchOptions' => $this->branchScope->branchesForSelect($request->user()),
         ]);
     }
 

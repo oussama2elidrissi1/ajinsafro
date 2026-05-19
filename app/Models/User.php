@@ -182,6 +182,11 @@ class User extends Authenticatable
         return $this->hasRole(\App\Services\BranchScopeService::ROLE_AGENT) || $this->hasRole('Agent');
     }
 
+    public function isCommercialReservationsOnly(): bool
+    {
+        return $this->hasRole(\App\Services\BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY);
+    }
+
     public function isComptable(): bool
     {
         return $this->hasRole('Comptable');
@@ -226,6 +231,7 @@ class User extends Authenticatable
             \App\Services\BranchScopeService::ROLE_MANAGER,
             \App\Services\BranchScopeService::ROLE_COMMERCIAL,
             \App\Services\BranchScopeService::ROLE_AGENT,
+            \App\Services\BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY,
             'Super Admin',
             'Admin Siège',
             'Chef Commercial',
