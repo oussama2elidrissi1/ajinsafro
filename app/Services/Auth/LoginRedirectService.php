@@ -56,6 +56,13 @@ class LoginRedirectService
             return $partnerUrl . '/en-attente';
         }
 
+        // Reservations-only commercial role must never land on global dashboard.
+        if ($user->hasRole([
+            BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY,
+        ])) {
+            return $adminUrl . '/admin/reservations';
+        }
+
         // Explicit mapping for admin roles.
         if ($user->hasRole([
             BranchScopeService::ROLE_SUPER_ADMIN,
@@ -85,12 +92,6 @@ class LoginRedirectService
             'Agent',
         ])) {
             return $adminUrl . '/agent/dashboard';
-        }
-
-        if ($user->hasRole([
-            BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY,
-        ])) {
-            return $adminUrl . '/admin/reservations';
         }
 
         // Fallback for users without back-office roles (e.g. WP-only synced accounts).
