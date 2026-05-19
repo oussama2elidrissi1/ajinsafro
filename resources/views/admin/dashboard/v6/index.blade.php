@@ -60,6 +60,15 @@
   overflow: hidden;
 }
 
+.sidebar,
+.dashboard-v6-sidebar {
+  height: 100vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
 .main {
   height: 100vh;
   overflow-y: auto;
