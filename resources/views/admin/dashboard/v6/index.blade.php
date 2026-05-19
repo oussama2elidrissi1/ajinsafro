@@ -322,61 +322,61 @@ html[data-sidebar="collapsed"] .dashboard-grid.bottom {
 }
 
 /* Dashboard V6 compact mode (no zoom/scale, pure sizing compaction). */
-.dashboard-v6 { --topbar: 66px; }
-.dashboard-v6 .topbar { padding: 0 18px !important; gap: 10px !important; }
+.dashboard-v6 { --topbar: 62px; }
+.dashboard-v6 .topbar { padding: 0 14px !important; gap: 8px !important; }
 .dashboard-v6 .chip,
 .dashboard-v6 .icon-btn,
-.dashboard-v6 .primary-btn { height: 38px !important; border-radius: 12px !important; }
-.dashboard-v6 .search-box { height: 38px !important; border-radius: 12px !important; }
-.dashboard-v6 .page-title h1 { font-size: 22px !important; }
+.dashboard-v6 .primary-btn { height: 34px !important; border-radius: 10px !important; font-size: 12px !important; }
+.dashboard-v6 .search-box { height: 34px !important; border-radius: 10px !important; }
+.dashboard-v6 .page-title h1 { font-size: 18px !important; line-height: 1.15 !important; }
 
 .dashboard-v6 .content {
-  max-width: 1540px !important;
-  padding: 16px 20px 24px !important;
-  gap: 14px !important;
+  max-width: none !important;
+  padding: 12px 14px 18px !important;
+  gap: 10px !important;
 }
 
-.dashboard-v6 .kpi-grid { gap: 12px !important; }
+.dashboard-v6 .kpi-grid { gap: 10px !important; }
 .dashboard-v6 .kpi-card {
-  min-height: 92px !important;
-  padding: 12px 14px !important;
-  border-radius: 16px !important;
-  grid-template-columns: 1fr 70px !important;
+  min-height: 82px !important;
+  padding: 10px 12px !important;
+  border-radius: 14px !important;
+  grid-template-columns: 1fr 62px !important;
 }
-.dashboard-v6 .kpi-icon { width: 42px !important; height: 42px !important; flex-basis: 42px !important; border-radius: 12px !important; }
-.dashboard-v6 .kpi-number { font-size: 34px !important; }
+.dashboard-v6 .kpi-icon { width: 38px !important; height: 38px !important; flex-basis: 38px !important; border-radius: 10px !important; }
+.dashboard-v6 .kpi-number { font-size: 24px !important; }
 .dashboard-v6 .kpi-title { font-size: 11px !important; }
 .dashboard-v6 .kpi-change, .dashboard-v6 .kpi-note { font-size: 10px !important; }
-.dashboard-v6 .kpi-sparkline { width: 70px !important; height: 28px !important; }
+.dashboard-v6 .kpi-sparkline { width: 62px !important; height: 24px !important; }
 
 .dashboard-v6 .dashboard-grid,
 .dashboard-v6 .dashboard-grid.middle,
-.dashboard-v6 .dashboard-grid.bottom { gap: 14px !important; }
-.dashboard-v6 .panel { border-radius: 18px !important; }
-.dashboard-v6 .panel-inner { padding: 16px !important; }
-.dashboard-v6 .panel-header { margin-bottom: 10px !important; gap: 10px !important; }
-.dashboard-v6 .panel-title { font-size: 16px !important; }
-.dashboard-v6 .panel-subtitle { font-size: 11px !important; margin-top: 2px !important; }
-.dashboard-v6 .select-mini, .dashboard-v6 .btn-mini { height: 32px !important; border-radius: 10px !important; font-size: 11px !important; }
+.dashboard-v6 .dashboard-grid.bottom { gap: 10px !important; }
+.dashboard-v6 .panel { border-radius: 14px !important; }
+.dashboard-v6 .panel-inner { padding: 12px !important; }
+.dashboard-v6 .panel-header { margin-bottom: 8px !important; gap: 8px !important; }
+.dashboard-v6 .panel-title { font-size: 14px !important; }
+.dashboard-v6 .panel-subtitle { font-size: 10px !important; margin-top: 1px !important; }
+.dashboard-v6 .select-mini, .dashboard-v6 .btn-mini { height: 28px !important; border-radius: 8px !important; font-size: 10px !important; }
 
-.dashboard-v6 .chart-wrap { min-height: 250px !important; }
-.dashboard-v6 .chart-svg { height: 250px !important; }
-.dashboard-v6 .donut { width: 156px !important; height: 156px !important; }
-.dashboard-v6 .donut::after { width: 88px !important; height: 88px !important; }
-.dashboard-v6 .gauge-wrap { min-height: 165px !important; }
-.dashboard-v6 .gauge { width: 176px !important; height: 98px !important; }
+.dashboard-v6 .chart-wrap { min-height: 214px !important; }
+.dashboard-v6 .chart-svg { height: 214px !important; }
+.dashboard-v6 .donut { width: 140px !important; height: 140px !important; }
+.dashboard-v6 .donut::after { width: 78px !important; height: 78px !important; }
+.dashboard-v6 .gauge-wrap { min-height: 144px !important; }
+.dashboard-v6 .gauge { width: 156px !important; height: 86px !important; }
 .dashboard-v6 .gauge::after { left: 24px !important; right: 24px !important; bottom: -62px !important; height: 126px !important; }
-.dashboard-v6 .gauge-value strong { font-size: 28px !important; }
+.dashboard-v6 .gauge-value strong { font-size: 24px !important; }
 
 .dashboard-v6 table th,
-.dashboard-v6 table td { padding: 10px 9px !important; font-size: 12px !important; }
-.dashboard-v6 .status { height: 23px !important; padding: 0 8px !important; font-size: 10px !important; }
+.dashboard-v6 table td { padding: 8px 8px !important; font-size: 11px !important; }
+.dashboard-v6 .status { height: 21px !important; padding: 0 7px !important; font-size: 10px !important; }
 
 .dashboard-v6 .reservation-list,
 .dashboard-v6 .alert-list,
 .dashboard-v6 .quality-list,
 .dashboard-v6 .channel-list,
-.dashboard-v6 .agency-list { gap: 9px !important; }
+.dashboard-v6 .agency-list { gap: 7px !important; }
 .dashboard-v6 .reservation-item { grid-template-columns: 36px 1fr auto !important; gap: 10px !important; padding: 6px 0 9px !important; }
 .dashboard-v6 .mini-avatar { width: 34px !important; height: 34px !important; flex-basis: 34px !important; font-size: 10px !important; }
 .dashboard-v6 .item-title { font-size: 12px !important; }
@@ -385,20 +385,20 @@ html[data-sidebar="collapsed"] .dashboard-grid.bottom {
 .dashboard-v6 .alert-item,
 .dashboard-v6 .quality-item,
 .dashboard-v6 .agency-item,
-.dashboard-v6 .channel-item { padding: 10px !important; border-radius: 14px !important; }
+.dashboard-v6 .channel-item { padding: 8px !important; border-radius: 12px !important; }
 .dashboard-v6 .soft-icon { width: 32px !important; height: 32px !important; border-radius: 10px !important; font-size: 11px !important; }
 .dashboard-v6 .metric-pill { height: 24px !important; min-width: 30px !important; font-size: 11px !important; }
 
-.dashboard-v6 .objective-card { min-height: 140px !important; padding: 14px !important; border-radius: 16px !important; gap: 9px !important; }
-.dashboard-v6 .objective-value strong { font-size: 28px !important; }
+.dashboard-v6 .objective-card { min-height: 120px !important; padding: 10px !important; border-radius: 14px !important; gap: 8px !important; }
+.dashboard-v6 .objective-value strong { font-size: 24px !important; }
 .dashboard-v6 .objective-note { font-size: 11px !important; }
-.dashboard-v6 .status-donut-small { width: 148px !important; height: 148px !important; margin: 14px auto 14px !important; }
-.dashboard-v6 .status-donut-small::after { width: 90px !important; height: 90px !important; }
+.dashboard-v6 .status-donut-small { width: 132px !important; height: 132px !important; margin: 10px auto !important; }
+.dashboard-v6 .status-donut-small::after { width: 80px !important; height: 80px !important; }
 
 @media (max-width: 1366px) {
-  .dashboard-v6 .content { padding: 14px 14px 20px !important; gap: 12px !important; }
+  .dashboard-v6 .content { padding: 10px 10px 14px !important; gap: 9px !important; }
   .dashboard-v6 .kpi-grid { gap: 10px !important; }
-  .dashboard-v6 .kpi-card { min-height: 88px !important; }
+  .dashboard-v6 .kpi-card { min-height: 78px !important; }
 }
 </style>
 @endpush
