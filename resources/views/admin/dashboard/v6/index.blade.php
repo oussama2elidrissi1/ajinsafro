@@ -63,7 +63,7 @@
 
 .dashboard-v6 .topbar{
   display: grid !important;
-  grid-template-columns: auto minmax(320px, 1fr) auto !important;
+  grid-template-columns: 1fr auto !important;
   align-items: center !important;
   gap: 12px !important;
 }
@@ -73,7 +73,7 @@
 }
 
 .dashboard-v6 .topbar .search-box{
-  min-width: 0 !important;
+  display: none !important;
 }
 
 .dashboard-v6 .topbar .actions{
@@ -82,6 +82,11 @@
   align-items: center !important;
   gap: 10px !important;
   flex-wrap: nowrap !important;
+}
+
+/* Remove "date" + "Filtres" chips without affecting other actions */
+.dashboard-v6 .topbar .actions .chip{
+  display: none !important;
 }
 
 @media (max-width: 900px){
