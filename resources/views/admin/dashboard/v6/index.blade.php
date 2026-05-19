@@ -177,7 +177,10 @@ html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__brand-logo 
 }
 
 .dashboard-v6-sidebar .aj-sidebar-v2__brand-logo {
-  filter: brightness(0) invert(1);
+  filter: none;
+  height: 40px !important;
+  max-width: 170px !important;
+  object-fit: contain;
 }
 
 .dashboard-v6-sidebar .aj-sidebar-v2__profile,
