@@ -5575,6 +5575,17 @@ body[data-layout="detached"] #page-topbar .header-item span {
     width: 100%;
 }
 
+.ws-toolbar__row--filters-grid .ws-select {
+    min-height: 2.15rem;
+    padding: 0.42rem 0.6rem;
+    font-size: 0.76rem;
+    font-weight: 500;
+}
+
+.ws-toolbar__row--filters-grid .ws-select option {
+    font-weight: 500;
+}
+
 .ws-field {
     min-width: 0;
 }
