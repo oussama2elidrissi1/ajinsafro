@@ -11,6 +11,7 @@ body.aj-admin-compact .voyage-edit-page.voyage-workflow-page * {
 body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-shell,
 body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-main,
 body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .voyage-editor-main,
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .editor-main,
 body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .editor-card {
     min-width: 0 !important;
     max-width: 100% !important;
@@ -40,6 +41,88 @@ body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .voyage-title {
     margin-bottom: 4px;
 }
 
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-header-main--compact {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-header-main__actions--workflow {
+    width: 100%;
+    max-width: 300px;
+    flex: 0 0 300px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .voyage-header-workflow-card {
+    width: 100%;
+    background: #fff;
+    border: 1px solid #dce8f6;
+    border-radius: 14px;
+    padding: 10px 12px;
+    box-shadow: 0 8px 20px rgba(15, 39, 66, 0.08);
+}
+
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-card-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #5f7691;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: 6px;
+}
+
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-card-value {
+    font-size: 12px;
+    font-weight: 500;
+    color: #2a4663;
+    margin-bottom: 8px;
+}
+
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-card-value strong {
+    font-size: 18px;
+    font-weight: 800;
+    color: #0b2545;
+}
+
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-progress {
+    width: 100%;
+    height: 7px;
+    border-radius: 999px;
+    background: #e8f0f9;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-progress-bar {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #0b5ed7 0%, #3f8cff 100%);
+}
+
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-card-footer span {
+    font-size: 11px;
+    font-weight: 700;
+    color: #0b2545;
+}
+
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-card-footer a {
+    font-size: 11px;
+    font-weight: 600;
+    color: #0b5ed7;
+    text-decoration: none;
+}
+
 body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-actions,
 body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .header-actions-grid {
     display: grid;
@@ -49,11 +132,10 @@ body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .header-actions-gri
 }
 
 /* Main layout */
-body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .voyage-editor-grid,
-body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-main {
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .voyage-editor-grid {
     display: grid;
-    grid-template-columns: 170px minmax(0, 1fr) 240px !important;
-    gap: 16px !important;
+    grid-template-columns: 180px minmax(0, 1fr) !important;
+    gap: 18px !important;
     align-items: start;
     width: 100% !important;
     max-width: 100% !important;
@@ -66,6 +148,27 @@ body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-steps {
     top: 72px;
     max-height: calc(100vh - 100px);
     overflow-y: auto;
+}
+
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-sidebar .ve-tabs-wrapper--workflow {
+    position: sticky;
+    top: 72px;
+    margin-bottom: 0;
+}
+
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-sidebar .ve-stepper {
+    display: grid;
+    grid-template-columns: 1fr;
+}
+
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-sidebar .ve-stepper__step {
+    min-height: 42px;
+}
+
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-sidebar .ve-stepper-nav {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
 }
 
 body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-step,
@@ -124,22 +227,20 @@ body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-basic-layout {
     align-items: start;
 }
 
-/* Right panel */
-body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .editor-right-panel,
-body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-sticky-column {
-    position: sticky;
-    top: 72px;
-    max-height: calc(100vh - 90px) !important;
-    overflow-y: auto;
-    min-width: 0 !important;
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-basic-layout > [class*="col-"] {
+    width: auto !important;
+    max-width: none !important;
+    flex: initial !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
 }
 
-body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .editor-right-panel .card,
-body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-sticky-column .card,
-body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-sidebar-card {
-    padding: 12px;
-    border-radius: 14px;
-    margin-bottom: 12px;
+/* Right panel */
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .editor-right-panel,
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-aside,
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .edit-aside,
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-right {
+    display: none !important;
 }
 
 /* Controls / inputs */
@@ -187,19 +288,11 @@ body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .destination-list {
 }
 
 /* Keep right panel from forcing overflow */
-body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-right,
-body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-aside,
-body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .edit-aside {
-    width: 240px !important;
-    min-width: 240px !important;
-    max-width: 240px !important;
-}
-
 body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-left,
 body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-sidebar {
-    width: 170px !important;
-    min-width: 170px !important;
-    max-width: 170px !important;
+    width: 180px !important;
+    min-width: 180px !important;
+    max-width: 180px !important;
 }
 
 /* Responsive */
@@ -209,55 +302,59 @@ body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-sidebar {
         font-size: 18px;
     }
 
-    body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .voyage-editor-grid,
-    body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-main {
-        grid-template-columns: 150px minmax(0, 1fr) 210px !important;
+    body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .voyage-editor-grid {
+        grid-template-columns: 160px minmax(0, 1fr) !important;
         gap: 12px !important;
-    }
-
-    body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-right,
-    body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-aside,
-    body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .edit-aside {
-        width: 210px !important;
-        min-width: 210px !important;
-        max-width: 210px !important;
     }
 
     body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-left,
     body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-sidebar {
-        width: 150px !important;
-        min-width: 150px !important;
-        max-width: 150px !important;
+        width: 160px !important;
+        min-width: 160px !important;
+        max-width: 160px !important;
+    }
+
+    body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-header-main__actions--workflow {
+        max-width: 260px;
+        flex-basis: 260px;
     }
 
     body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .form-two-columns,
     body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-basic-layout {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1.5fr) minmax(260px, .75fr);
     }
 }
 
 @media (max-width: 1200px) {
-    body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .voyage-editor-grid,
-    body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-main {
+    body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .voyage-editor-grid {
         grid-template-columns: 1fr;
     }
 
     body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-left,
-    body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-right,
-    body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-sidebar,
-    body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-aside,
-    body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .edit-aside {
+    body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-sidebar {
         width: 100%;
         min-width: 0;
         max-width: 100%;
     }
 
-    body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .editor-right-panel,
-    body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-sticky-column,
     body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-stepper,
     body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-steps {
         position: static;
         max-height: none;
         overflow: visible;
+    }
+
+    body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-header-main--compact {
+        flex-direction: column;
+    }
+
+    body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-header-main__actions--workflow {
+        max-width: 100%;
+        flex-basis: auto;
+    }
+
+    body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .form-two-columns,
+    body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-basic-layout {
+        grid-template-columns: 1fr;
     }
 }

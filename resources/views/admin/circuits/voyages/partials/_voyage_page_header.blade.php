@@ -20,6 +20,9 @@
     $publicShowUrl = (!$isCreate && $laravelV && !empty($laravelV->slug))
         ? url('/voyages/' . $laravelV->slug)
         : null;
+    $workflowTotalSteps = 14;
+    $workflowValidatedSteps = 10;
+    $workflowProgressPercent = 71;
 @endphp
 
 <div class="ve-page-header">
@@ -61,17 +64,20 @@
             </div>
         </div>
 
-        <div class="ve-header-main__actions">
-            <span class="ve-status-badge status-{{ $currentStatus }} align-self-center">
-                <span class="status-dot"></span>
-                {{ $statusLabel }}
-            </span>
-
-            @if($publicShowUrl)
-                <a href="{{ $publicShowUrl }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary">
-                    <i class="bx bx-link-external"></i> Voir la page client
-                </a>
-            @endif
+        <div class="ve-header-main__actions ve-header-main__actions--workflow">
+            <div class="voyage-header-workflow-card" id="workflow">
+                <div class="workflow-card-title">Workflow</div>
+                <div class="workflow-card-value">
+                    <strong>{{ $workflowValidatedSteps }}</strong> / {{ $workflowTotalSteps }} étapes validées
+                </div>
+                <div class="workflow-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ $workflowProgressPercent }}">
+                    <span class="workflow-progress-bar" style="width: {{ $workflowProgressPercent }}%"></span>
+                </div>
+                <div class="workflow-card-footer">
+                    <span>{{ $workflowProgressPercent }}%</span>
+                    <a href="#basic" data-ve-resume-workflow>Reprendre le workflow</a>
+                </div>
+            </div>
         </div>
     </div>
 
