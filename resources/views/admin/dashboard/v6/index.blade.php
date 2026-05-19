@@ -200,6 +200,19 @@ html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__brand-logo 
   border-radius: 14px;
 }
 
+.dashboard-v6-sidebar .aj-sidebar-v2__label,
+.dashboard-v6-sidebar .aj-sidebar-v2__section-title,
+.dashboard-v6-sidebar .aj-sidebar-v2__profile-name,
+.dashboard-v6-sidebar .aj-sidebar-v2__profile-role,
+.dashboard-v6-sidebar .aj-sidebar-v2__link,
+.dashboard-v6-sidebar .aj-sidebar-v2__link *,
+.dashboard-v6-sidebar .aj-sidebar-v2__toggle,
+.dashboard-v6-sidebar .aj-sidebar-v2__toggle *,
+.dashboard-v6-sidebar .aj-sidebar-v2__profile-link,
+.dashboard-v6-sidebar .aj-sidebar-v2__profile-link * {
+  font-weight: 400 !important;
+}
+
 .dashboard-v6-sidebar .aj-sidebar-v2__item.is-active > .aj-sidebar-v2__link,
 .dashboard-v6-sidebar .aj-sidebar-v2__item.is-open > .aj-sidebar-v2__link,
 .dashboard-v6-sidebar .aj-sidebar-v2__item.is-active > .aj-sidebar-v2__link-group > .aj-sidebar-v2__link,
