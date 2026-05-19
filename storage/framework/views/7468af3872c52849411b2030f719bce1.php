@@ -1,4 +1,4 @@
-@php
+<?php
     $sidebarContext = $sidebarContext ?? 'default';
     $sidebarUser = auth()->user();
     $sidebarBrandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');
@@ -347,53 +347,55 @@
 
         return $html;
     };
-@endphp
+?>
 
-<div class="aj-sidebar-v2" data-aj-sidebar-v2 data-sidebar-context="{{ $sidebarContext }}">
+<div class="aj-sidebar-v2" data-aj-sidebar-v2 data-sidebar-context="<?php echo e($sidebarContext); ?>">
     <div class="aj-sidebar-v2__brand">
-        <a href="{{ $sidebarBrandHref }}" class="aj-sidebar-v2__brand-link" aria-label="{{ $sidebarBrandName }}">
-            <img src="{{ $sidebarBrandLogo }}" alt="{{ $sidebarBrandName }}" class="aj-sidebar-v2__brand-logo">
+        <a href="<?php echo e($sidebarBrandHref); ?>" class="aj-sidebar-v2__brand-link" aria-label="<?php echo e($sidebarBrandName); ?>">
+            <img src="<?php echo e($sidebarBrandLogo); ?>" alt="<?php echo e($sidebarBrandName); ?>" class="aj-sidebar-v2__brand-logo">
         </a>
     </div>
 
     <div class="aj-sidebar-v2__profile">
         <div class="aj-sidebar-v2__avatar-wrap">
-            <img src="{{ $sidebarUser?->avatar_url }}" alt="{{ $sidebarUser?->name ?? 'Admin' }}" class="aj-sidebar-v2__avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';">
-            <span class="aj-sidebar-v2__avatar-fallback">{{ $sidebarInitials }}</span>
+            <img src="<?php echo e($sidebarUser?->avatar_url); ?>" alt="<?php echo e($sidebarUser?->name ?? 'Admin'); ?>" class="aj-sidebar-v2__avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';">
+            <span class="aj-sidebar-v2__avatar-fallback"><?php echo e($sidebarInitials); ?></span>
         </div>
-        <div class="aj-sidebar-v2__profile-name">{{ $sidebarUser?->name ?? 'Admin' }}</div>
-        <div class="aj-sidebar-v2__profile-role">{{ $sidebarRole }}</div>
-        @if(\Illuminate\Support\Facades\Route::has('admin.profile.edit'))
-            <a href="{{ route('admin.profile.edit') }}" class="aj-sidebar-v2__profile-link">
+        <div class="aj-sidebar-v2__profile-name"><?php echo e($sidebarUser?->name ?? 'Admin'); ?></div>
+        <div class="aj-sidebar-v2__profile-role"><?php echo e($sidebarRole); ?></div>
+        <?php if(\Illuminate\Support\Facades\Route::has('admin.profile.edit')): ?>
+            <a href="<?php echo e(route('admin.profile.edit')); ?>" class="aj-sidebar-v2__profile-link">
                 <i class="bx bx-user-circle"></i>
                 <span>Mon profil</span>
             </a>
-        @endif
+        <?php endif; ?>
     </div>
 
     <nav class="aj-sidebar-v2__nav" aria-label="Navigation administration">
-        {!! $renderNodes($adminGroups) !!}
+        <?php echo $renderNodes($adminGroups); ?>
+
 
         <div class="aj-sidebar-v2__account">
             <div class="aj-sidebar-v2__section-title">Compte</div>
             <ul class="aj-sidebar-v2__list aj-sidebar-v2__list--depth-0">
-                @if(\Illuminate\Support\Facades\Route::has('admin.profile.edit'))
-                    <li class="aj-sidebar-v2__item {{ request()->routeIs('admin.profile.*') ? 'is-active' : '' }}">
-                        <a href="{{ route('admin.profile.edit') }}" class="aj-sidebar-v2__link">
+                <?php if(\Illuminate\Support\Facades\Route::has('admin.profile.edit')): ?>
+                    <li class="aj-sidebar-v2__item <?php echo e(request()->routeIs('admin.profile.*') ? 'is-active' : ''); ?>">
+                        <a href="<?php echo e(route('admin.profile.edit')); ?>" class="aj-sidebar-v2__link">
                             <span class="aj-sidebar-v2__icon"><i class="bx bx-user-circle"></i></span>
                             <span class="aj-sidebar-v2__label">Mon profil</span>
                         </a>
                     </li>
-                @endif
-                @if(\Illuminate\Support\Facades\Route::has('logout.get'))
+                <?php endif; ?>
+                <?php if(\Illuminate\Support\Facades\Route::has('logout.get')): ?>
                     <li class="aj-sidebar-v2__item is-danger">
-                        <a href="{{ route('logout.get') }}" class="aj-sidebar-v2__link">
+                        <a href="<?php echo e(route('logout.get')); ?>" class="aj-sidebar-v2__link">
                             <span class="aj-sidebar-v2__icon"><i class="bx bx-power-off"></i></span>
                             <span class="aj-sidebar-v2__label">Déconnexion</span>
                         </a>
                     </li>
-                @endif
+                <?php endif; ?>
             </ul>
         </div>
     </nav>
 </div>
+<?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\partials\sidebar-v2.blade.php ENDPATH**/ ?>

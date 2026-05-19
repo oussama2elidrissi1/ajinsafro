@@ -1,8 +1,8 @@
-@extends('layouts.admin-v2')
 
-@section('title', 'Dashboard V3')
 
-@php
+<?php $__env->startSection('title', 'Dashboard V3'); ?>
+
+<?php
     $revenueData = [
         ['month' => 'Jan', 'ca' => 180000, 'reservations' => 45],
         ['month' => 'Fev', 'ca' => 220000, 'reservations' => 53],
@@ -56,9 +56,9 @@
         'Urgent' => 'is-danger',
         'Presque complet' => 'is-warn',
     ];
-@endphp
+?>
 
-@push('styles')
+<?php $__env->startPush('styles'); ?>
 <style>
     body.aj-admin-compact .dashboard-v3-page {
         max-width: 1460px;
@@ -372,9 +372,9 @@
         }
     }
 </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="dashboard-v3-page">
         <section class="dashboard-v3-header">
             <div class="dashboard-v3-header-top">
@@ -393,12 +393,12 @@
         <section class="dashboard-v3-grid-kpi">
             <article class="dashboard-v3-card dashboard-v3-kpi">
                 <span class="dashboard-v3-kpi-label">Chiffre d'affaires</span>
-                <strong class="dashboard-v3-kpi-value">{{ number_format($totalRevenue, 0, ',', ' ') }} DH</strong>
+                <strong class="dashboard-v3-kpi-value"><?php echo e(number_format($totalRevenue, 0, ',', ' ')); ?> DH</strong>
                 <span class="dashboard-v3-kpi-sub">CA consolide ventes + web</span>
             </article>
             <article class="dashboard-v3-card dashboard-v3-kpi">
                 <span class="dashboard-v3-kpi-label">Reservations</span>
-                <strong class="dashboard-v3-kpi-value">{{ number_format($totalReservations, 0, ',', ' ') }}</strong>
+                <strong class="dashboard-v3-kpi-value"><?php echo e(number_format($totalReservations, 0, ',', ' ')); ?></strong>
                 <span class="dashboard-v3-kpi-sub">Confirmees, acomptes et web</span>
             </article>
             <article class="dashboard-v3-card dashboard-v3-kpi">
@@ -423,16 +423,16 @@
                 </div>
                 <div class="dashboard-v3-card-body">
                     <div class="dashboard-v3-revenue-bars">
-                        @foreach($revenueData as $row)
-                            @php
+                        <?php $__currentLoopData = $revenueData; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php
                                 $height = (int) round(($row['ca'] / max(1, $maxRevenue)) * 190);
-                            @endphp
+                            ?>
                             <div class="dashboard-v3-revenue-col">
-                                <span class="dashboard-v3-revenue-val">{{ number_format($row['ca'] / 1000, 0, ',', ' ') }}k</span>
-                                <div class="dashboard-v3-bar" style="height: {{ max(24, $height) }}px;"></div>
-                                <span class="dashboard-v3-revenue-label">{{ $row['month'] }}</span>
+                                <span class="dashboard-v3-revenue-val"><?php echo e(number_format($row['ca'] / 1000, 0, ',', ' ')); ?>k</span>
+                                <div class="dashboard-v3-bar" style="height: <?php echo e(max(24, $height)); ?>px;"></div>
+                                <span class="dashboard-v3-revenue-label"><?php echo e($row['month']); ?></span>
                             </div>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </div>
                 </div>
             </article>
@@ -447,12 +447,12 @@
                 <div class="dashboard-v3-card-body">
                     <div class="dashboard-v3-donut"></div>
                     <div class="dashboard-v3-legend">
-                        @foreach($destinationData as $row)
+                        <?php $__currentLoopData = $destinationData; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <div class="dashboard-v3-legend-row">
-                                <span><i class="dashboard-v3-dot" style="background: {{ $row['color'] }};"></i>{{ $row['name'] }}</span>
-                                <strong>{{ $row['value'] }}%</strong>
+                                <span><i class="dashboard-v3-dot" style="background: <?php echo e($row['color']); ?>;"></i><?php echo e($row['name']); ?></span>
+                                <strong><?php echo e($row['value']); ?>%</strong>
                             </div>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </div>
                 </div>
             </article>
@@ -479,25 +479,25 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($departures as $row)
-                                    @php
+                                <?php $__currentLoopData = $departures; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <?php
                                         $percentage = (int) round(($row['sold'] / max(1, $row['capacity'])) * 100);
                                         $statusClass = $statusClasses[$row['status']] ?? 'is-info';
-                                    @endphp
+                                    ?>
                                     <tr>
                                         <td>
-                                            <strong>{{ $row['name'] }}</strong><br>
-                                            <small class="text-muted">{{ $row['city'] }} • {{ $row['price'] }}</small>
+                                            <strong><?php echo e($row['name']); ?></strong><br>
+                                            <small class="text-muted"><?php echo e($row['city']); ?> • <?php echo e($row['price']); ?></small>
                                         </td>
-                                        <td>{{ $row['date'] }}</td>
-                                        <td><span class="dashboard-v3-status {{ $statusClass }}">{{ $row['status'] }}</span></td>
+                                        <td><?php echo e($row['date']); ?></td>
+                                        <td><span class="dashboard-v3-status <?php echo e($statusClass); ?>"><?php echo e($row['status']); ?></span></td>
                                         <td>
-                                            <div class="small text-muted mb-1">{{ $row['sold'] }}/{{ $row['capacity'] }} vendus</div>
-                                            <div class="dashboard-v3-progress"><span style="width: {{ min(100, $percentage) }}%;"></span></div>
+                                            <div class="small text-muted mb-1"><?php echo e($row['sold']); ?>/<?php echo e($row['capacity']); ?> vendus</div>
+                                            <div class="dashboard-v3-progress"><span style="width: <?php echo e(min(100, $percentage)); ?>%;"></span></div>
                                         </td>
                                         <td><a href="#" class="dashboard-v3-btn">Details</a></td>
                                     </tr>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </tbody>
                         </table>
                     </div>
@@ -550,24 +550,24 @@
                 </div>
                 <div class="dashboard-v3-card-body">
                     <div class="d-grid gap-2">
-                        @foreach($recentReservations as $row)
-                            @php
+                        <?php $__currentLoopData = $recentReservations; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php
                                 $statusClass = $statusClasses[$row['status']] ?? 'is-info';
-                            @endphp
+                            ?>
                             <div class="border rounded-3 p-3">
                                 <div class="d-flex justify-content-between gap-2 align-items-center flex-wrap">
                                     <div>
-                                        <strong>{{ $row['client'] }}</strong>
-                                        <div class="small text-muted">{{ $row['trip'] }} • {{ $row['agent'] }}</div>
+                                        <strong><?php echo e($row['client']); ?></strong>
+                                        <div class="small text-muted"><?php echo e($row['trip']); ?> • <?php echo e($row['agent']); ?></div>
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
-                                        <span class="dashboard-v3-status {{ $statusClass }}">{{ $row['status'] }}</span>
-                                        <strong>{{ $row['amount'] }}</strong>
+                                        <span class="dashboard-v3-status <?php echo e($statusClass); ?>"><?php echo e($row['status']); ?></span>
+                                        <strong><?php echo e($row['amount']); ?></strong>
                                     </div>
                                 </div>
-                                <div class="small text-muted mt-1">{{ $row['time'] }}</div>
+                                <div class="small text-muted mt-1"><?php echo e($row['time']); ?></div>
                             </div>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </div>
                 </div>
             </article>
@@ -580,18 +580,19 @@
                     </div>
                 </div>
                 <div class="dashboard-v3-card-body">
-                    @foreach($salesChannels as $row)
-                        @php
+                    <?php $__currentLoopData = $salesChannels; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php
                             $channelPercentage = (int) round(($row['value'] / max(1, $maxSalesChannel)) * 100);
-                        @endphp
+                        ?>
                         <div class="dashboard-v3-channel-row">
-                            <span>{{ $row['name'] }}</span>
-                            <div class="dashboard-v3-channel-track"><span style="width: {{ min(100, $channelPercentage) }}%;"></span></div>
-                            <strong>{{ $row['value'] }}</strong>
+                            <span><?php echo e($row['name']); ?></span>
+                            <div class="dashboard-v3-channel-track"><span style="width: <?php echo e(min(100, $channelPercentage)); ?>%;"></span></div>
+                            <strong><?php echo e($row['value']); ?></strong>
                         </div>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
             </article>
         </section>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\dashboard\v3\index.blade.php ENDPATH**/ ?>

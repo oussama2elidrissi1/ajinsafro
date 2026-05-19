@@ -1,0 +1,226 @@
+<?php
+    // Certaines installs WP exposent "language" ou "languages". On n'affiche qu'un seul bloc "Langue".
+    $taxonomyConfig = [
+        'st_tour_type' => 'Type de tour',
+        'durations'    => 'Durée',
+        'language'     => 'Langue',
+    ];
+    $availableTaxonomies = $availableTaxonomies ?? [];
+    $assignedTaxonomies = $assignedTaxonomies ?? [];
+
+    // Fallback compat : si la clé principale n'existe pas mais "languages" est remplie.
+    if (empty($availableTaxonomies['language']) && ! empty($availableTaxonomies['languages'])) {
+        $availableTaxonomies['language'] = $availableTaxonomies['languages'];
+    }
+    if (empty($assignedTaxonomies['language']) && ! empty($assignedTaxonomies['languages'])) {
+        $assignedTaxonomies['language'] = $assignedTaxonomies['languages'];
+    }
+?>
+<div class="row">
+    <?php $__currentLoopData = $taxonomyConfig; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $taxKey => $taxLabel): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+    <div class="col-lg-3 mb-3" data-taxonomy-block="<?php echo e($taxKey); ?>">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <h5 class="mb-0"><?php echo e($taxLabel); ?></h5>
+            <button type="button" class="btn btn-sm btn-outline-primary ve-taxonomy-add" data-taxonomy="<?php echo e($taxKey); ?>" data-label="<?php echo e($taxLabel); ?>">
+                <i class="bx bx-plus"></i> Ajouter
+            </button>
+        </div>
+        <div class="ve-taxonomy-terms-list border rounded p-2 bg-light" data-taxonomy="<?php echo e($taxKey); ?>" data-assigned-ids="<?php echo e(implode(',', $assignedTaxonomies[$taxKey] ?? [])); ?>">
+            <?php $__currentLoopData = $availableTaxonomies[$taxKey] ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $term): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+            <div class="d-flex align-items-center gap-2 mb-2 ve-term-row" data-term-id="<?php echo e($term->term_id); ?>">
+                <div class="form-check mb-0 flex-grow-1">
+                    <input class="form-check-input" type="checkbox" name="<?php echo e($taxKey); ?>[]" value="<?php echo e($term->term_id); ?>" id="<?php echo e($taxKey); ?>_<?php echo e($term->term_id); ?>" <?php echo e(in_array($term->term_id, $assignedTaxonomies[$taxKey] ?? []) ? 'checked' : ''); ?>>
+                    <label class="form-check-label" for="<?php echo e($taxKey); ?>_<?php echo e($term->term_id); ?>"><?php echo e($term->name); ?></label>
+                </div>
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-secondary ve-taxonomy-edit" data-taxonomy="<?php echo e($taxKey); ?>" data-term-id="<?php echo e($term->term_id); ?>" data-name="<?php echo e(e($term->name)); ?>" data-slug="<?php echo e(e($term->slug)); ?>" title="Modifier">
+                        <i class="bx bx-edit"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger ve-taxonomy-delete" data-taxonomy="<?php echo e($taxKey); ?>" data-term-id="<?php echo e($term->term_id); ?>" data-name="<?php echo e(e($term->name)); ?>" title="Supprimer">
+                        <i class="bx bx-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            <?php if(empty($availableTaxonomies[$taxKey]) || $availableTaxonomies[$taxKey]->isEmpty()): ?>
+            <p class="text-muted small mb-0 ve-taxonomy-empty">Aucune catégorie. Cliquez sur Ajouter.</p>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+</div>
+
+
+<div class="modal fade" id="taxonomyTermModal" tabindex="-1" aria-labelledby="taxonomyTermModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="taxonomyTermModalLabel">Ajouter une catégorie</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <form id="taxonomyTermForm">
+                    <input type="hidden" name="taxonomy" id="taxonomyTermTaxonomy">
+                    <input type="hidden" name="term_id" id="taxonomyTermId">
+                    <div class="mb-3">
+                        <label for="taxonomyTermName" class="form-label">Nom <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="taxonomyTermName" name="name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="taxonomyTermSlug" class="form-label">Slug (optionnel)</label>
+                        <input type="text" class="form-control" id="taxonomyTermSlug" name="slug" placeholder="auto si vide">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" id="taxonomyTermSubmit">
+                    <i class="bx bx-save"></i> Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const baseUrl = "<?php echo e(url('admin/circuits/taxonomy-terms')); ?>";
+    const csrf = "<?php echo e(csrf_token()); ?>";
+    const taxonomyLabels = <?php echo json_encode($taxonomyConfig, 15, 512) ?>;
+
+    function getCheckedIds(container) {
+        return Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+    }
+
+    function renderTermsList(taxonomy, terms, assignedIds) {
+        assignedIds = assignedIds || [];
+        const listEl = document.querySelector('.ve-taxonomy-terms-list[data-taxonomy="' + taxonomy + '"]');
+        if (!listEl) return;
+        const names = (terms || []).map(t => t.name);
+        const slugs = (terms || []).map(t => t.slug || '');
+        let html = '';
+        (terms || []).forEach((term, i) => {
+            const checked = assignedIds.indexOf(String(term.term_id)) !== -1 ? ' checked' : '';
+            const safeName = (term.name || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+            const safeSlug = (term.slug || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+            html += '<div class="d-flex align-items-center gap-2 mb-2 ve-term-row" data-term-id="' + term.term_id + '">' +
+                '<div class="form-check mb-0 flex-grow-1">' +
+                '<input class="form-check-input" type="checkbox" name="' + taxonomy + '[]" value="' + term.term_id + '" id="' + taxonomy + '_' + term.term_id + '"' + checked + '>' +
+                '<label class="form-check-label" for="' + taxonomy + '_' + term.term_id + '">' + safeName + '</label></div>' +
+                '<div class="btn-group btn-group-sm">' +
+                '<button type="button" class="btn btn-outline-secondary ve-taxonomy-edit" data-taxonomy="' + taxonomy + '" data-term-id="' + term.term_id + '" data-name="' + safeName + '" data-slug="' + safeSlug + '" title="Modifier"><i class="bx bx-edit"></i></button>' +
+                '<button type="button" class="btn btn-outline-danger ve-taxonomy-delete" data-taxonomy="' + taxonomy + '" data-term-id="' + term.term_id + '" data-name="' + safeName + '" title="Supprimer"><i class="bx bx-trash"></i></button>' +
+                '</div></div>';
+        });
+        listEl.innerHTML = html || '<p class="text-muted small mb-0 ve-taxonomy-empty">Aucune catégorie. Cliquez sur Ajouter.</p>';
+        listEl.setAttribute('data-assigned-ids', assignedIds.join(','));
+        bindTaxonomyListEvents(listEl);
+    }
+
+    function refreshTaxonomy(taxonomy) {
+        const listEl = document.querySelector('.ve-taxonomy-terms-list[data-taxonomy="' + taxonomy + '"]');
+        const assignedIds = listEl ? getCheckedIds(listEl) : [];
+        fetch(baseUrl + '?taxonomy=' + encodeURIComponent(taxonomy), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        }).then(r => r.json()).then(data => {
+            if (data.success && data.terms) {
+                renderTermsList(taxonomy, data.terms, assignedIds);
+            }
+        }).catch(() => {});
+    }
+
+    function bindTaxonomyListEvents(container) {
+        if (!container) return;
+        container.querySelectorAll('.ve-taxonomy-edit').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const modal = document.getElementById('taxonomyTermModal');
+                document.getElementById('taxonomyTermModalLabel').textContent = 'Modifier la catégorie';
+                document.getElementById('taxonomyTermTaxonomy').value = this.dataset.taxonomy;
+                document.getElementById('taxonomyTermId').value = this.dataset.termId;
+                document.getElementById('taxonomyTermName').value = this.dataset.name || '';
+                document.getElementById('taxonomyTermSlug').value = this.dataset.slug || '';
+                (window.bootstrap && bootstrap.Modal.getOrCreateInstance(modal)).show();
+            });
+        });
+        container.querySelectorAll('.ve-taxonomy-delete').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const taxonomy = this.dataset.taxonomy;
+                const termId = this.dataset.termId;
+                const name = this.dataset.name || termId;
+                if (!confirm('Supprimer la catégorie « ' + name + ' » ?')) return;
+                fetch(baseUrl + '/' + termId, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrf,
+                        'Content-Type': 'application/json'
+                    }
+                }).then(r => r.json()).then(data => {
+                    if (data.success) {
+                        refreshTaxonomy(taxonomy);
+                    } else {
+                        alert(data.message || 'Erreur');
+                    }
+                }).catch(() => alert('Erreur réseau'));
+            });
+        });
+    }
+
+    document.querySelectorAll('.ve-taxonomy-add').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const taxonomy = this.dataset.taxonomy;
+            const modal = document.getElementById('taxonomyTermModal');
+            document.getElementById('taxonomyTermModalLabel').textContent = 'Ajouter une catégorie — ' + (this.dataset.label || taxonomy);
+            document.getElementById('taxonomyTermTaxonomy').value = taxonomy;
+            document.getElementById('taxonomyTermId').value = '';
+            document.getElementById('taxonomyTermName').value = '';
+            document.getElementById('taxonomyTermSlug').value = '';
+            (window.bootstrap && bootstrap.Modal.getOrCreateInstance(modal)).show();
+        });
+    });
+
+    document.querySelectorAll('.ve-taxonomy-terms-list').forEach(listEl => {
+        bindTaxonomyListEvents(listEl);
+    });
+
+    document.getElementById('taxonomyTermSubmit').addEventListener('click', function() {
+        const form = document.getElementById('taxonomyTermForm');
+        const name = document.getElementById('taxonomyTermName').value.trim();
+        const termId = document.getElementById('taxonomyTermId').value;
+        const taxonomy = document.getElementById('taxonomyTermTaxonomy').value;
+        const slug = document.getElementById('taxonomyTermSlug').value.trim();
+        if (!name) {
+            document.getElementById('taxonomyTermName').focus();
+            return;
+        }
+        const isEdit = !!termId;
+        const url = isEdit ? baseUrl + '/' + termId : baseUrl;
+        const method = isEdit ? 'PUT' : 'POST';
+        const body = isEdit ? { name: name, slug: slug, _token: csrf } : { name: name, taxonomy: taxonomy, slug: slug, _token: csrf };
+        this.disabled = true;
+        fetch(url, {
+            method: method,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrf
+            },
+            body: JSON.stringify(body)
+        }).then(r => r.json()).then(data => {
+            this.disabled = false;
+            if (data.success) {
+                (window.bootstrap && bootstrap.Modal.getOrCreateInstance(document.getElementById('taxonomyTermModal'))).hide();
+                refreshTaxonomy(taxonomy);
+            } else {
+                alert(data.message || 'Erreur');
+            }
+        }).catch(() => {
+            this.disabled = false;
+            alert('Erreur réseau');
+        });
+    });
+})();
+</script>
+<?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\circuits\voyages\partials\_taxonomies_crud.blade.php ENDPATH**/ ?>
