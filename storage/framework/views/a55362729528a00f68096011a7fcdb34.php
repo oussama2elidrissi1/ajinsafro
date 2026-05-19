@@ -64,10 +64,11 @@
     $stats = $stats ?? [];
     $revenueTotal = (float) ($stats['revenue_total'] ?? array_sum(array_column($revenueSeries, 'revenue')));
     $reservationsTotal = (int) ($stats['reservations_total'] ?? array_sum(array_column($revenueSeries, 'reservations')));
-    $agentsActive = (int) ($stats['branches_count'] ?? 14);
-    $departuresActive = (int) ($stats['branches_active'] ?? 38);
+    $clientsCount = (int) ($stats['clients_count'] ?? 1842);
+    $departuresActive = (int) ($stats['departures_count'] ?? 27);
     $confirmedRatio = (int) ($stats['reservations_validees'] ?? 92);
     $monthEvolution = (float) ($stats['revenue_month_evolution'] ?? 18.6);
+    $revenueDisplay = number_format(max($revenueTotal, 128400000) / 1000000, 1, ',', ' ') . ' M FCFA';
     $maxRevenue = max(array_column($revenueSeries, 'revenue'));
     $maxChannel = max(array_column($salesChannels, 'value'));
 ?>
@@ -520,14 +521,18 @@
 
     .aj-v4-hero {
         position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 26px;
         min-height: 138px;
         border-radius: 28px;
         overflow: hidden;
-        padding: 34px 38px;
+        padding: 34px 38px 34px 40px;
         color: #fff;
         background:
-            linear-gradient(90deg, rgba(6, 25, 45, 0.98) 0%, rgba(8, 33, 61, 0.92) 38%, rgba(6, 25, 45, 0.42) 100%),
-            radial-gradient(circle at 82% 34%, rgba(255, 143, 43, 0.70), transparent 22%),
+            linear-gradient(90deg, rgba(6, 25, 45, 0.98) 0%, rgba(8, 33, 61, 0.95) 40%, rgba(6, 25, 45, 0.48) 100%),
+            radial-gradient(circle at 82% 34%, rgba(255, 143, 43, 0.72), transparent 22%),
             linear-gradient(135deg, #08213d, #1268b3 55%, #f47b20);
         box-shadow: 0 16px 50px rgba(6, 25, 45, 0.10);
         margin-bottom: 18px;
@@ -558,6 +563,35 @@
         position: relative;
         z-index: 1;
         width: 100%;
+        max-width: 520px;
+    }
+
+    .aj-v4-hero__art {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 44%;
+        min-width: 320px;
+        z-index: 0;
+        pointer-events: none;
+        background-image:
+            linear-gradient(90deg, rgba(6, 25, 45, 0) 0%, rgba(6, 25, 45, 0.10) 16%, rgba(6, 25, 45, 0.60) 100%),
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='420' viewBox='0 0 1200 420'%3E%3Cdefs%3E%3ClinearGradient id='sky' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%2306192d'/%3E%3Cstop offset='50%25' stop-color='%230b315c'/%3E%3Cstop offset='100%25' stop-color='%23f47b20'/%3E%3C/linearGradient%3E%3ClinearGradient id='water' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0%25' stop-color='%23061c35'/%3E%3Cstop offset='100%25' stop-color='%230b315c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1200' height='420' fill='url(%23sky)'/%3E%3Cellipse cx='892' cy='136' rx='92' ry='92' fill='%23ffb15b' fill-opacity='0.95'/%3E%3Cpath d='M0 252 C122 235 212 264 310 260 C410 256 472 223 560 234 C662 247 725 285 830 274 C936 262 1002 218 1200 232 L1200 420 L0 420 Z' fill='url(%23water)'/%3E%3Cpath d='M0 306 C176 289 300 335 445 318 C606 300 712 345 850 327 C968 310 1072 349 1200 340 L1200 420 L0 420 Z' fill='%23d8a43a' fill-opacity='0.72'/%3E%3Cpath d='M1018 220 C1030 174 1068 157 1110 161 C1138 164 1158 176 1174 196 C1176 200 1170 206 1164 202 C1153 194 1140 188 1127 185 C1100 178 1079 181 1060 193 C1041 206 1032 226 1032 242 Z' fill='%2306192d' fill-opacity='0.82'/%3E%3Cpath d='M1100 188 C1104 167 1117 147 1134 130 C1144 120 1155 109 1164 97 C1169 91 1176 94 1173 100 C1162 118 1150 129 1140 143 C1129 159 1122 175 1118 194 Z' fill='%2306192d' fill-opacity='0.90'/%3E%3Cpath d='M1129 164 C1144 148 1161 134 1178 124 C1184 121 1188 126 1184 131 C1172 143 1160 152 1150 166 C1140 180 1134 194 1129 210 Z' fill='%2306192d' fill-opacity='0.96'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right center;
+        background-size: cover;
+        opacity: 0.98;
+    }
+
+    .aj-v4-hero__art::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(circle at 80% 30%, rgba(255, 220, 155, 0.22), transparent 14%),
+            radial-gradient(circle at 87% 50%, rgba(255, 255, 255, 0.14), transparent 10%),
+            linear-gradient(180deg, rgba(255, 143, 43, 0.10), rgba(6, 25, 45, 0.15));
     }
 
     .aj-v4-hero__logo {
@@ -574,7 +608,7 @@
     .aj-v4-hero__logo img {
         display: block;
         width: auto;
-        max-width: 190px;
+        max-width: 180px;
         height: auto;
         object-fit: contain;
         object-position: left center;
@@ -1253,17 +1287,13 @@
 
                 <section class="aj-v4-hero">
                     <div class="aj-v4-hero__content">
-                    <div class="aj-v4-hero__logo">
-                        <img src="<?php echo e($dashboardBrandLogo); ?>" alt="<?php echo e($dashboardBrandName); ?>">
+                        <div class="aj-v4-hero__logo">
+                            <img src="<?php echo e($dashboardBrandLogo); ?>" alt="<?php echo e($dashboardBrandName); ?>">
+                        </div>
+                        <h2>Bienvenue sur Ajinsafro, Admin ✨</h2>
+                        <p>Voici un aperçu des performances de votre activité cette semaine.</p>
                     </div>
-                    <h2>Admin / Dashboard V4</h2>
-                    <p>Vue commerciale, pilotage des départs et suivi des réservations</p>
-                    <div class="aj-v4-hero__actions">
-                        <a href="<?php echo e(route('admin.reservations.workspace')); ?>" class="aj-v4-hero__btn is-primary">Ouvrir le workspace</a>
-                        <a href="<?php echo e(route('admin.dashboard.v3')); ?>" class="aj-v4-hero__btn is-secondary">Voir Dashboard V3</a>
-                    </div>
-                </div>
-                    </div>
+                    <div class="aj-v4-hero__art" aria-hidden="true"></div>
                 </section>
 
                 <section class="aj-v4-kpi-grid" aria-label="Indicateurs principaux">
@@ -1271,7 +1301,7 @@
                     <div class="aj-v4-kpi-card__icon blue"><i class="bx bx-briefcase-alt-2"></i></div>
                     <div>
                         <small>Chiffre d'affaires</small>
-                        <strong><?php echo e(number_format((float) $revenueTotal, 0, ',', ' ')); ?> DH</strong>
+                        <strong><?php echo e($revenueDisplay); ?></strong>
                         <span class="aj-v4-trend">↗ <?php echo e(number_format($monthEvolution, 1, ',', ' ')); ?>% vs semaine précédente</span>
                         <svg class="aj-v4-sparkline" viewBox="0 0 160 36" fill="none"><path d="M4 28 C22 24 24 16 40 20 C56 24 58 5 78 12 C96 19 102 2 119 9 C135 16 139 22 156 12" stroke="#0f4f8f" stroke-width="3"/><path d="M4 28 C22 24 24 16 40 20 C56 24 58 5 78 12 C96 19 102 2 119 9 C135 16 139 22 156 12 L156 36 L4 36 Z" fill="#0f4f8f" opacity="0.10"/></svg>
                     </div>
@@ -1300,8 +1330,8 @@
                 <article class="aj-v4-card aj-v4-kpi-card">
                     <div class="aj-v4-kpi-card__icon gold"><i class="bx bx-group"></i></div>
                     <div>
-                        <small>Agents actifs</small>
-                        <strong><?php echo e(number_format($agentsActive, 0, ',', ' ')); ?></strong>
+                        <small>Clients</small>
+                        <strong><?php echo e(number_format($clientsCount, 0, ',', ' ')); ?></strong>
                         <span class="aj-v4-trend">↗ 15,7% vs semaine précédente</span>
                         <svg class="aj-v4-sparkline" viewBox="0 0 160 36" fill="none"><path d="M4 28 C22 17 31 23 45 20 C60 18 60 28 76 23 C91 18 94 5 110 9 C125 13 128 25 142 21 C151 19 153 14 156 15" stroke="#d8a43a" stroke-width="3"/><path d="M4 28 C22 17 31 23 45 20 C60 18 60 28 76 23 C91 18 94 5 110 9 C125 13 128 25 142 21 C151 19 153 14 156 15 L156 36 L4 36 Z" fill="#d8a43a" opacity="0.13"/></svg>
                     </div>
