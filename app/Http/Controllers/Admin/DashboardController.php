@@ -26,29 +26,8 @@ class DashboardController extends Controller
 
     public function index(Request $request)
     {
-        $user = $request->user();
-        $branchIds = $this->branchScope->visibleBranchIds($user);
-
-        $reservationsQuery = Reservation::query();
-        $this->branchScope->scopeReservations($reservationsQuery, $user);
-        $clientsQuery = Client::query();
-        $this->branchScope->scopeClients($clientsQuery, $user);
-
-        $stats = [
-            'reservations_total' => (clone $reservationsQuery)->count(),
-            'reservations_en_cours' => (clone $reservationsQuery)->where('status', Reservation::STATUS_EN_COURS)->count(),
-            'reservations_validees' => (clone $reservationsQuery)->where('status', Reservation::STATUS_VALIDEE)->count(),
-            'clients_count' => (clone $clientsQuery)->count(),
-        ];
-        $stats['can_see_all_branches'] = $this->branchScope->canSeeAllBranches($user);
-
-        $groupDealStats = [
-            'voyages'    => GroupDeal::count(),
-            'open'       => GroupDeal::whereIn('status', [GroupDeal::STATUS_PUBLISHED, GroupDeal::STATUS_GUARANTEED])->count(),
-            'guaranteed' => GroupDeal::where('status', GroupDeal::STATUS_GUARANTEED)->count(),
-        ];
-
-        return view('admin.dashboard.index', compact('stats', 'groupDealStats'));
+        // Dashboard principal = Dashboard V6 (design system officiel).
+        return $this->v6($request);
     }
 
     public function page(Request $request)
