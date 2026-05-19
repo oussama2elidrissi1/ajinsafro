@@ -52,7 +52,14 @@
     <link href="{{ URL::asset('css/admin-v6.css') }}" rel="stylesheet">
     @stack('styles')
 </head>
-<body class="aj-admin-v2-body aj-admin aj-admin-v6 admin-v6">
+@php
+    $isWorkspaceRoute = request()->routeIs('admin.reservations.workspace');
+    $isCommercialWorkspaceOnly = $adminV2User
+        && method_exists($adminV2User, 'hasRole')
+        && $adminV2User->hasRole('commercial_reservations_only')
+        && $isWorkspaceRoute;
+@endphp
+<body class="aj-admin-v2-body aj-admin aj-admin-v6 admin-v6{{ $isWorkspaceRoute ? ' aj-admin-compact' : '' }}{{ $isCommercialWorkspaceOnly ? ' commercial-reservations-only' : '' }}">
 <div class="aj-admin-v2-layout admin-v6-shell" id="aj-admin-v2-root">
     <aside class="aj-admin-v2-sidebar admin-v6-sidebar" id="aj-admin-v2-sidebar">
         @include('admin.partials.sidebar-v6', ['sidebarContext' => 'admin-v6'])
