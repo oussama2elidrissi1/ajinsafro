@@ -43,9 +43,11 @@
     $v6Body = str_replace('<a href="#">Dashboard V4</a>', '<a href="' . e(route('admin.dashboard.v4')) . '">Dashboard V4</a>', $v6Body);
     $v6Body = str_replace('<a href="#">Dashboard V3</a>', '<a href="' . e(route('admin.dashboard.v3')) . '">Dashboard V3</a>', $v6Body);
     $v6Body = str_replace('<a href="#">Dashboard V2</a>', '<a href="' . e(route('admin.dashboard.v2')) . '">Dashboard V2</a>', $v6Body);
+    $v6Body = preg_replace('/<article class="panel">[\s\S]*?<h2 class="panel-title">Taux de confirmation<\/h2>[\s\S]*?<\/article>/i', '', $v6Body, 1);
 ?>
 
 <?php $__env->startPush('styles'); ?>
+<link href="<?php echo e(asset('build/css/icons.min.css')); ?>" rel="stylesheet">
 <link href="<?php echo e(asset('css/admin-sidebar-v2.css')); ?>" rel="stylesheet">
 <style>
 <?php echo e($v6Css); ?>
@@ -107,6 +109,15 @@ html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__item {
   display: block !important;
 }
 
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__item.has-direct-link .aj-sidebar-v2__toggle {
+  display: none !important;
+}
+
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__item.has-direct-link .aj-sidebar-v2__link--parent {
+  width: 44px !important;
+  margin: 0 auto !important;
+}
+
 html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__link,
 html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__toggle {
   min-height: 44px !important;
@@ -135,6 +146,12 @@ html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__icon {
   visibility: visible !important;
 }
 
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__icon i {
+  display: inline-block !important;
+  font-size: 1.15rem !important;
+  line-height: 1 !important;
+}
+
 html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__brand-link {
   justify-content: center !important;
 }
@@ -145,10 +162,13 @@ html[data-sidebar="collapsed"] .sidebar .sidebar-toggle {
 
 html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__brand {
   border-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  margin-bottom: 10px !important;
 }
 
 html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__brand-logo {
   height: 38px !important;
+  max-width: 42px !important;
 }
 
 .dashboard-v6-sidebar .aj-sidebar-v2 {
@@ -157,7 +177,10 @@ html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__brand-logo 
 }
 
 .dashboard-v6-sidebar .aj-sidebar-v2__brand-logo {
-  filter: brightness(0) invert(1);
+  filter: none;
+  height: 40px !important;
+  max-width: 170px !important;
+  object-fit: contain;
 }
 
 .dashboard-v6-sidebar .aj-sidebar-v2__profile,
@@ -172,6 +195,15 @@ html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__brand-logo 
 .dashboard-v6-sidebar .aj-sidebar-v2__item.is-active > .aj-sidebar-v2__link-group > .aj-sidebar-v2__link,
 .dashboard-v6-sidebar .aj-sidebar-v2__item.is-open > .aj-sidebar-v2__link-group > .aj-sidebar-v2__link {
   box-shadow: inset 3px 0 0 #18a9dc;
+}
+
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__item.is-active > .aj-sidebar-v2__link,
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__item.is-open > .aj-sidebar-v2__link,
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__item.is-active > .aj-sidebar-v2__link-group > .aj-sidebar-v2__link,
+html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__item.is-open > .aj-sidebar-v2__link-group > .aj-sidebar-v2__link {
+  box-shadow: none !important;
+  background: rgba(24, 169, 220, .16) !important;
+  border: 1px solid rgba(15, 93, 141, .2) !important;
 }
 
 .topbar {
@@ -297,6 +329,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (window.AjSidebarV2 && typeof window.AjSidebarV2.init === 'function') {
         window.AjSidebarV2.init();
+    }
+
+    const sidebarRoot = document.querySelector('.dashboard-v6-sidebar [data-aj-sidebar-v2]');
+    if (sidebarRoot) {
+        sidebarRoot.addEventListener('click', function (event) {
+            const target = event.target.closest('.aj-sidebar-v2__link, .aj-sidebar-v2__toggle');
+            if (!target || root.dataset.sidebar !== 'collapsed') return;
+            const isLeafLink = target.matches('a.aj-sidebar-v2__link') && target.getAttribute('href') && target.getAttribute('href') !== 'javascript:void(0);';
+            if (isLeafLink) return;
+            root.dataset.sidebar = 'expanded';
+            localStorage.setItem('aj-v6-sidebar', 'expanded');
+        });
     }
 });
 </script>

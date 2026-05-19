@@ -45,6 +45,7 @@
     $v6Body = str_replace('<a href="#">Dashboard V4</a>', '<a href="' . e(route('admin.dashboard.v4')) . '">Dashboard V4</a>', $v6Body);
     $v6Body = str_replace('<a href="#">Dashboard V3</a>', '<a href="' . e(route('admin.dashboard.v3')) . '">Dashboard V3</a>', $v6Body);
     $v6Body = str_replace('<a href="#">Dashboard V2</a>', '<a href="' . e(route('admin.dashboard.v2')) . '">Dashboard V2</a>', $v6Body);
+    $v6Body = preg_replace('/<article class="panel">[\s\S]*?<h2 class="panel-title">Taux de confirmation<\/h2>[\s\S]*?<\/article>/i', '', $v6Body, 1);
 @endphp
 
 @push('styles')
