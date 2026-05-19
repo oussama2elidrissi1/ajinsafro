@@ -1,4 +1,4 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 @section('title')
     {{ $isEdit ? 'Modifier agence' : 'Nouvelle agence' }}
 @endsection
@@ -12,7 +12,7 @@
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
                         <li class="breadcrumb-item"><a href="{{ route('admin.branches.index') }}">Agences</a></li>
-                        <li class="breadcrumb-item active">{{ $isEdit ? 'Modifier' : 'Créer' }}</li>
+                        <li class="breadcrumb-item active">{{ $isEdit ? 'Modifier' : 'CrÃ©er' }}</li>
                     </ol>
                 </div>
             </div>
@@ -44,7 +44,7 @@
                                 <label class="form-label">Type <span class="text-danger">*</span></label>
                                 <select name="type" class="form-select @error('type') is-invalid @enderror" required>
                                     <option value="branch" {{ old('type', $branch->type) === 'branch' ? 'selected' : '' }}>Point de vente</option>
-                                    <option value="head_office" {{ old('type', $branch->type) === 'head_office' ? 'selected' : '' }}>Siège</option>
+                                    <option value="head_office" {{ old('type', $branch->type) === 'head_office' ? 'selected' : '' }}>SiÃ¨ge</option>
                                 </select>
                                 @error('type') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
@@ -61,7 +61,7 @@
                             <div class="col-md-4">
                                 <label class="form-label">Responsable</label>
                                 <select name="manager_user_id" class="form-select @error('manager_user_id') is-invalid @enderror">
-                                    <option value="">– Aucun –</option>
+                                    <option value="">â€“ Aucun â€“</option>
                                     @foreach($users as $u)
                                         <option value="{{ $u->id }}" {{ old('manager_user_id', $branch->manager_user_id) == $u->id ? 'selected' : '' }}>{{ $u->name }} ({{ $u->email }})</option>
                                     @endforeach
@@ -74,7 +74,7 @@
                                 @error('address') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Téléphone</label>
+                                <label class="form-label">TÃ©lÃ©phone</label>
                                 <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone', $branch->phone) }}">
                                 @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
@@ -92,7 +92,7 @@
                         </div>
 
                         <div class="mt-4">
-                            <button type="submit" class="btn btn-primary">{{ $isEdit ? 'Enregistrer' : 'Créer' }}</button>
+                            <button type="submit" class="btn btn-primary">{{ $isEdit ? 'Enregistrer' : 'CrÃ©er' }}</button>
                             <a href="{{ route('admin.branches.index') }}" class="btn btn-secondary">Annuler</a>
                         </div>
                     </form>
@@ -101,3 +101,4 @@
         </div>
     </div>
 @endsection
+

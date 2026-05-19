@@ -1,4 +1,4 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 @section('title', 'WordPress - Transferts')
 @section('content')
     <div class="row">
@@ -20,12 +20,12 @@
         <div class="card-body">
             <form method="GET" class="row g-3 mb-4">
                 <div class="col-md-5">
-                    <input type="text" name="search" class="form-control" value="{{ $filters['search'] }}" placeholder="Nom, départ, arrivée, type, ville">
+                    <input type="text" name="search" class="form-control" value="{{ $filters['search'] }}" placeholder="Nom, dÃ©part, arrivÃ©e, type, ville">
                 </div>
                 <div class="col-md-3">
                     <select name="status" class="form-select">
                         <option value="">Tous les statuts</option>
-                        <option value="publish" @selected($filters['status'] === 'publish')>Publié</option>
+                        <option value="publish" @selected($filters['status'] === 'publish')>PubliÃ©</option>
                         <option value="draft" @selected($filters['status'] === 'draft')>Brouillon</option>
                     </select>
                 </div>
@@ -67,35 +67,35 @@
                                     @if($thumb)
                                         <img src="{{ $thumb }}" alt="" class="rounded" style="width:50px;height:50px;object-fit:cover;">
                                     @else
-                                        <span class="text-muted">—</span>
+                                        <span class="text-muted">â€”</span>
                                     @endif
                                 </td>
                                 <td>
                                     <div class="fw-semibold">{{ $transfer->post_title }}</div>
                                     <div class="text-muted small">{{ $transfer->post_name }}</div>
                                 </td>
-                                <td>{{ $detail->cars_address ?: '—' }}</td>
+                                <td>{{ $detail->cars_address ?: 'â€”' }}</td>
                                 <td>
-                                    {{ $transfer->getMeta('aj_transfer_from') ?: '—' }}
-                                    →
-                                    {{ $transfer->getMeta('aj_transfer_to') ?: '—' }}
+                                    {{ $transfer->getMeta('aj_transfer_from') ?: 'â€”' }}
+                                    â†’
+                                    {{ $transfer->getMeta('aj_transfer_to') ?: 'â€”' }}
                                 </td>
-                                <td>{{ $transfer->getMeta('aj_transfer_vehicle_type') ?: ($transfer->getMeta('aj_transfer_type') ?: '—') }}</td>
+                                <td>{{ $transfer->getMeta('aj_transfer_vehicle_type') ?: ($transfer->getMeta('aj_transfer_type') ?: 'â€”') }}</td>
                                 <td>
                                     @if($detail && ($detail->cars_price || $detail->min_price))
                                         {{ number_format((float) ($detail->cars_price ?: $detail->min_price), 0, ',', ' ') }} MAD
                                     @else
-                                        —
+                                        â€”
                                     @endif
                                 </td>
                                 <td>
                                     <span class="badge bg-{{ $transfer->post_status === 'publish' ? 'success' : 'secondary' }}">
-                                        {{ $transfer->post_status === 'publish' ? 'Publié' : 'Brouillon' }}
+                                        {{ $transfer->post_status === 'publish' ? 'PubliÃ©' : 'Brouillon' }}
                                     </span>
                                 </td>
                                 <td class="text-end">
                                     <a href="{{ route('admin.wordpress.transfers.edit', $transfer) }}" class="btn btn-sm btn-soft-primary">Modifier</a>
-                                    <form action="{{ route('admin.wordpress.transfers.destroy', $transfer) }}" method="POST" class="d-inline" onsubmit="return confirm('Déplacer ce transfert dans la corbeille ?');">
+                                    <form action="{{ route('admin.wordpress.transfers.destroy', $transfer) }}" method="POST" class="d-inline" onsubmit="return confirm('DÃ©placer ce transfert dans la corbeille ?');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-soft-danger">Supprimer</button>
@@ -104,7 +104,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-4">Aucun transfert trouvé.</td>
+                                <td colspan="8" class="text-center text-muted py-4">Aucun transfert trouvÃ©.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -115,3 +115,4 @@
         </div>
     </div>
 @endsection
+

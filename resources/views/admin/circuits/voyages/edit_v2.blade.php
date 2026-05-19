@@ -1,4 +1,4 @@
-@php
+﻿@php
     $isCreate = isset($voyage->ID) && (int) $voyage->ID === 0;
     $veWpId = isset($voyage->ID) ? (int) $voyage->ID : 0;
     $laravelV = $laravelVoyage ?? null;
@@ -17,7 +17,7 @@
             $vePriceLabel = number_format((float) $priceFrom, 0, ',', ' ') . ' ' . ($cur !== '' ? $cur : 'MAD');
         }
     }
-    // Résolution destination : priorité meta WP address > multi_location > Laravel destination
+    // RÃ©solution destination : prioritÃ© meta WP address > multi_location > Laravel destination
     $veDestination = null;
     $veWpId = isset($voyage->ID) ? (int) $voyage->ID : 0;
     if ($veWpId > 0) {
@@ -117,7 +117,7 @@
         ['label' => 'Vols', 'step' => 's-flights', 'icon' => 'bx-trip'],
     ], fn (array $item) => collect($sections)->contains(fn (array $sec) => $sec['id'] === $item['step'])));
 @endphp
-@extends('layouts.admin-v2')
+@extends('layouts.admin-v6')
 
 @section('title'){{ $isCreate ? 'Creer un voyage - Studio V3' : 'Modifier - ' . $headerTitle }}@endsection
 
@@ -254,3 +254,4 @@
     </script>
     <script src="{{ URL::asset('js/voyage-v2.js?v=' . $jsV2) }}"></script>
 @endpush
+

@@ -1,3 +1,5 @@
+﻿
+
 <?php $__env->startSection('title', 'Detail commission'); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -19,7 +21,7 @@
                             <dt class="col-sm-4 text-muted">Agent</dt><dd class="col-sm-8 fw-semibold"><?php echo e($entry->agent?->name ?: 'Agent non renseigne'); ?></dd>
                             <dt class="col-sm-4 text-muted">Point de vente</dt><dd class="col-sm-8 fw-semibold"><?php echo e($entry->branch?->name ?: 'Non renseigne'); ?></dd>
                             <dt class="col-sm-4 text-muted">Voyage</dt><dd class="col-sm-8 fw-semibold"><?php echo e($entry->voyage?->name ?: 'Voyage non renseigne'); ?></dd>
-                            <dt class="col-sm-4 text-muted">Date depart</dt><dd class="col-sm-8 fw-semibold"><?php echo e($entry->departureDateLabel() ?: '—'); ?></dd>
+                            <dt class="col-sm-4 text-muted">Date depart</dt><dd class="col-sm-8 fw-semibold"><?php echo e($entry->departureDateLabel() ?: 'â€”'); ?></dd>
                             <dt class="col-sm-4 text-muted">Client</dt><dd class="col-sm-8 fw-semibold"><?php echo e($entry->client_name ?: 'Client non renseigne'); ?></dd>
                             <dt class="col-sm-4 text-muted">Montant reservation</dt><dd class="col-sm-8 fw-semibold"><?php echo e(number_format((float) $entry->reservation_total, 2, ',', ' ')); ?> DH</dd>
                             <dt class="col-sm-4 text-muted">Base commission</dt><dd class="col-sm-8 fw-semibold"><?php echo e(number_format((float) $entry->commission_base_amount, 2, ',', ' ')); ?> DH</dd>
@@ -69,11 +71,11 @@
                                 <?php endif; ?>
                                 <div class="small text-muted mt-1">
                                     <?php if($log->old_status || $log->new_status): ?>
-                                        <?php echo e($log->old_status ?: '—'); ?> → <?php echo e($log->new_status ?: '—'); ?>
+                                        <?php echo e($log->old_status ?: 'â€”'); ?> â†’ <?php echo e($log->new_status ?: 'â€”'); ?>
 
                                     <?php endif; ?>
                                     <?php if($log->old_amount !== null || $log->new_amount !== null): ?>
-                                        | <?php echo e(number_format((float) ($log->old_amount ?? 0), 2, ',', ' ')); ?> DH → <?php echo e(number_format((float) ($log->new_amount ?? 0), 2, ',', ' ')); ?> DH
+                                        | <?php echo e(number_format((float) ($log->old_amount ?? 0), 2, ',', ' ')); ?> DH â†’ <?php echo e(number_format((float) ($log->new_amount ?? 0), 2, ',', ' ')); ?> DH
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -87,4 +89,5 @@
     </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\finance\commissions\show.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\finance\commissions\show.blade.php ENDPATH**/ ?>

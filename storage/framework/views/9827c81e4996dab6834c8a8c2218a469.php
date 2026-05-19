@@ -1,3 +1,5 @@
+﻿
+
 <?php $__env->startSection('title', $isEdit ? "Modifier employe du point de vente" : "Creer employe du point de vente"); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -6,7 +8,7 @@
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => $isEdit ? 'Modifier employe' : 'Creer un employe','subtitle' => 'Rattachement point de vente, poste, statut et eventuel acces login.','breadcrumbs' => [
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
             ['label' => 'Employes des points de vente', 'url' => route('admin.agency-employees.index')],
-            ['label' => $isEdit ? 'Modifier' : 'Créer'],
+            ['label' => $isEdit ? 'Modifier' : 'CrÃ©er'],
         ]]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('admin.page-header'); ?>
 <?php if ($component->shouldRender()): ?>
@@ -17,7 +19,7 @@
 <?php $component->withAttributes(['title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($isEdit ? 'Modifier employe' : 'Creer un employe'),'subtitle' => 'Rattachement point de vente, poste, statut et eventuel acces login.','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
             ['label' => 'Employes des points de vente', 'url' => route('admin.agency-employees.index')],
-            ['label' => $isEdit ? 'Modifier' : 'Créer'],
+            ['label' => $isEdit ? 'Modifier' : 'CrÃ©er'],
         ])]); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
@@ -61,7 +63,7 @@
 
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <label class="form-label">Prénom</label>
+                        <label class="form-label">PrÃ©nom</label>
                         <input type="text" name="first_name" class="form-control" value="<?php echo e(old('first_name', $employee->first_name)); ?>" required>
                     </div>
                     <div class="col-md-4">
@@ -71,7 +73,7 @@
                     <div class="col-md-4">
                         <label class="form-label">Point de vente</label>
                         <select name="branch_id" class="form-select" required>
-                            <option value="">Sélectionner</option>
+                            <option value="">SÃ©lectionner</option>
                             <?php $__currentLoopData = $branches; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $branch): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <option value="<?php echo e($branch->id); ?>" <?php if((int) old('branch_id', $employee->branch_id) === (int) $branch->id): echo 'selected'; endif; ?>><?php echo e($branch->name); ?></option>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -82,7 +84,7 @@
                         <input type="email" name="email" class="form-control" value="<?php echo e(old('email', $employee->email)); ?>">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Téléphone</label>
+                        <label class="form-label">TÃ©lÃ©phone</label>
                         <input type="text" name="phone" class="form-control" value="<?php echo e(old('phone', $employee->phone)); ?>">
                     </div>
                     <div class="col-md-4">
@@ -92,7 +94,7 @@
                     <div class="col-md-4">
                         <label class="form-label">Poste</label>
                         <select name="position" class="form-select">
-                            <option value="">Sélectionner</option>
+                            <option value="">SÃ©lectionner</option>
                             <?php $__currentLoopData = $positionOptions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $option): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <option value="<?php echo e($option); ?>" <?php if(old('position', $employee->position) === $option): echo 'selected'; endif; ?>><?php echo e($option); ?></option>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -184,7 +186,7 @@
                 </div>
 
                 <div class="d-flex flex-wrap gap-2 mt-4">
-                    <button type="submit" class="aj-btn aj-btn-primary"><?php echo e($isEdit ? 'Mettre à jour' : 'Créer'); ?></button>
+                    <button type="submit" class="aj-btn aj-btn-primary"><?php echo e($isEdit ? 'Mettre Ã  jour' : 'CrÃ©er'); ?></button>
                     <a href="<?php echo e(route('admin.agency-employees.index')); ?>" class="aj-btn aj-btn-soft">Annuler</a>
                 </div>
             </form>
@@ -192,4 +194,5 @@
     </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\agency-employees\form.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\agency-employees\form.blade.php ENDPATH**/ ?>

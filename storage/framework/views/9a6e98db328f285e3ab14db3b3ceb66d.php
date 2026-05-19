@@ -1,3 +1,4 @@
+﻿
 <?php $__env->startSection('title'); ?>
     Messagerie interne
 <?php $__env->stopSection(); ?>
@@ -25,7 +26,7 @@
                 </button>
                 <h6 class="mt-4">Conversations</h6>
                 <div id="channel-list" class="list-group mail-list mt-2">
-                    <p class="text-muted small">Chargement…</p>
+                    <p class="text-muted small">Chargementâ€¦</p>
                 </div>
             </div>
 
@@ -33,13 +34,13 @@
                 <div class="card">
                     <div id="message-area-placeholder" class="card-body text-center text-muted py-5">
                         <i class="bx bx-message-detail font-size-48"></i>
-                        <p class="mt-2 mb-0">Sélectionnez une conversation ou créez-en une.</p>
+                        <p class="mt-2 mb-0">SÃ©lectionnez une conversation ou crÃ©ez-en une.</p>
                     </div>
                     <div id="message-area" class="card-body d-none">
                         <h5 id="channel-title" class="mb-3"></h5>
                         <div id="messages-container" style="max-height: 400px; overflow-y: auto;" class="mb-3"></div>
                         <div class="d-flex gap-2">
-                            <input type="text" id="message-input" class="form-control" placeholder="Écrire un message…" maxlength="10000">
+                            <input type="text" id="message-input" class="form-control" placeholder="Ã‰crire un messageâ€¦" maxlength="10000">
                             <button type="button" id="send-btn" class="btn btn-primary">Envoyer</button>
                         </div>
                     </div>
@@ -61,25 +62,25 @@
                             <a class="nav-link active" data-bs-toggle="tab" href="#tab-direct">Direct</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" data-bs-toggle="tab" href="#tab-reservation">Réservation</a>
+                            <a class="nav-link" data-bs-toggle="tab" href="#tab-reservation">RÃ©servation</a>
                         </li>
                     </ul>
                     <div class="tab-content p-3">
                         <div class="tab-pane active" id="tab-direct">
                             <label class="form-label">Utilisateur</label>
                             <select id="new-direct-user" class="form-select">
-                                <option value="">– Choisir –</option>
+                                <option value="">â€“ Choisir â€“</option>
                                 <?php $__currentLoopData = $users ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $u): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <option value="<?php echo e($u->id); ?>"><?php echo e($u->name); ?> (<?php echo e($u->email); ?>)</option>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
                         <div class="tab-pane" id="tab-reservation">
-                            <label class="form-label">Réservation</label>
+                            <label class="form-label">RÃ©servation</label>
                             <select id="new-reservation-id" class="form-select">
-                                <option value="">– Choisir –</option>
+                                <option value="">â€“ Choisir â€“</option>
                                 <?php $__currentLoopData = $reservations ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                    <option value="<?php echo e($r->id); ?>">#<?php echo e($r->id); ?> – <?php echo e($r->client_first_name); ?> <?php echo e($r->client_last_name); ?></option>
+                                    <option value="<?php echo e($r->id); ?>">#<?php echo e($r->id); ?> â€“ <?php echo e($r->client_first_name); ?> <?php echo e($r->client_last_name); ?></option>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
@@ -218,7 +219,7 @@
                     bootstrap.Modal.getInstance(document.getElementById('newChannelModal')).hide();
                     fetchChannels();
                     setTimeout(function() {
-                        const name = type === 'reservation' ? 'Réservation #' + (body.reservation_id || '') : (document.querySelector('#new-direct-user option:checked')?.textContent || 'Conversation');
+                        const name = type === 'reservation' ? 'RÃ©servation #' + (body.reservation_id || '') : (document.querySelector('#new-direct-user option:checked')?.textContent || 'Conversation');
                         selectChannel(data.channel_id, name);
                     }, 300);
                 } else if (data.error) {
@@ -237,7 +238,7 @@
             .then(data => {
                 if (data.channel_id) {
                     fetchChannels();
-                    setTimeout(function() { selectChannel(data.channel_id, 'Réservation #' + reservationId); }, 400);
+                    setTimeout(function() { selectChannel(data.channel_id, 'RÃ©servation #' + reservationId); }, 400);
                 }
             });
     }
@@ -254,4 +255,5 @@
     </script>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\messagerie\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\messagerie\index.blade.php ENDPATH**/ ?>

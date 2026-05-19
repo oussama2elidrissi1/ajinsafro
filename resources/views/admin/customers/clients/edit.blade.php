@@ -1,4 +1,4 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 
 @section('title')
     Modifier client
@@ -44,4 +44,5 @@
         </div>
     </form>
 @endsection
+
 

@@ -1,3 +1,4 @@
+﻿
 <?php $__env->startSection('title'); ?>
     <?php echo e($isEdit ? 'Modifier agence' : 'Nouvelle agence'); ?>
 
@@ -12,7 +13,7 @@
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="<?php echo e(route('admin.dashboard')); ?>">Admin</a></li>
                         <li class="breadcrumb-item"><a href="<?php echo e(route('admin.branches.index')); ?>">Agences</a></li>
-                        <li class="breadcrumb-item active"><?php echo e($isEdit ? 'Modifier' : 'Créer'); ?></li>
+                        <li class="breadcrumb-item active"><?php echo e($isEdit ? 'Modifier' : 'CrÃ©er'); ?></li>
                     </ol>
                 </div>
             </div>
@@ -79,7 +80,7 @@ if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>" required>
                                     <option value="branch" <?php echo e(old('type', $branch->type) === 'branch' ? 'selected' : ''); ?>>Point de vente</option>
-                                    <option value="head_office" <?php echo e(old('type', $branch->type) === 'head_office' ? 'selected' : ''); ?>>Siège</option>
+                                    <option value="head_office" <?php echo e(old('type', $branch->type) === 'head_office' ? 'selected' : ''); ?>>SiÃ¨ge</option>
                                 </select>
                                 <?php $__errorArgs = ['type'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
@@ -138,7 +139,7 @@ $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>">
-                                    <option value="">– Aucun –</option>
+                                    <option value="">â€“ Aucun â€“</option>
                                     <?php $__currentLoopData = $users; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $u): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <option value="<?php echo e($u->id); ?>" <?php echo e(old('manager_user_id', $branch->manager_user_id) == $u->id ? 'selected' : ''); ?>><?php echo e($u->name); ?> (<?php echo e($u->email); ?>)</option>
                                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -172,7 +173,7 @@ endif;
 unset($__errorArgs, $__bag); ?>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Téléphone</label>
+                                <label class="form-label">TÃ©lÃ©phone</label>
                                 <input type="text" name="phone" class="form-control <?php $__errorArgs = ['phone'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -218,7 +219,7 @@ unset($__errorArgs, $__bag); ?>
                         </div>
 
                         <div class="mt-4">
-                            <button type="submit" class="btn btn-primary"><?php echo e($isEdit ? 'Enregistrer' : 'Créer'); ?></button>
+                            <button type="submit" class="btn btn-primary"><?php echo e($isEdit ? 'Enregistrer' : 'CrÃ©er'); ?></button>
                             <a href="<?php echo e(route('admin.branches.index')); ?>" class="btn btn-secondary">Annuler</a>
                         </div>
                     </form>
@@ -228,4 +229,5 @@ unset($__errorArgs, $__bag); ?>
     </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\branches\form.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\branches\form.blade.php ENDPATH**/ ?>

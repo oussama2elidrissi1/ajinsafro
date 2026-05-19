@@ -1,3 +1,5 @@
+﻿
+
 <?php
     use Illuminate\Support\Str;
 
@@ -31,7 +33,7 @@
             <div class="aj-catalog-head">
                 <div>
                     <h1 class="aj-catalog-title"><?php echo e($pageTitle); ?></h1>
-                    <p class="aj-catalog-subtitle">Base voyageurs issue de la table <code>clients</code>, utilisée par les réservations et la relation client.</p>
+                    <p class="aj-catalog-subtitle">Base voyageurs issue de la table <code>clients</code>, utilisÃ©e par les rÃ©servations et la relation client.</p>
                 </div>
                 <div>
                     <div class="aj-catalog-breadcrumb">
@@ -44,7 +46,7 @@
                     <div class="d-flex flex-wrap gap-2">
                         <a href="<?php echo e(route('admin.customers.clients.index')); ?>" class="aj-btn aj-btn-soft">
                             <i class="bx bx-list-ul"></i>
-                            <span>Vue complète</span>
+                            <span>Vue complÃ¨te</span>
                         </a>
                         <a href="<?php echo e(route('admin.customers.clients.create')); ?>" class="aj-btn aj-btn-primary">
                             <i class="bx bx-plus"></i>
@@ -69,7 +71,7 @@
                         <div>
                             <span class="aj-kpi-label">Total voyageurs</span>
                             <strong class="aj-kpi-value"><?php echo e(number_format($totalClients, 0, ',', ' ')); ?></strong>
-                            <span class="aj-kpi-note">Base clients filtrée</span>
+                            <span class="aj-kpi-note">Base clients filtrÃ©e</span>
                         </div>
                     </div>
                 </article>
@@ -79,7 +81,7 @@
                         <div>
                             <span class="aj-kpi-label">Actifs</span>
                             <strong class="aj-kpi-value"><?php echo e($activeCount); ?></strong>
-                            <span class="aj-kpi-note">Sur la page affichée</span>
+                            <span class="aj-kpi-note">Sur la page affichÃ©e</span>
                         </div>
                     </div>
                 </article>
@@ -97,7 +99,7 @@
                     <div class="aj-kpi-head">
                         <div class="aj-kpi-icon -orange"><i class="bx bx-receipt"></i></div>
                         <div>
-                            <span class="aj-kpi-label">Avec réservations</span>
+                            <span class="aj-kpi-label">Avec rÃ©servations</span>
                             <strong class="aj-kpi-value"><?php echo e($withReservationsCount); ?></strong>
                             <span class="aj-kpi-note">Historique actif</span>
                         </div>
@@ -111,7 +113,7 @@
                         <div class="aj-field aj-search-wrap aj-col-4">
                             <label for="search">Recherche</label>
                             <span class="aj-search-icon"><i class="bx bx-search"></i></span>
-                            <input id="search" type="text" name="search" class="aj-control" placeholder="Code, nom, téléphone, email, CIN, passeport..." value="<?php echo e(request('search')); ?>">
+                            <input id="search" type="text" name="search" class="aj-control" placeholder="Code, nom, tÃ©lÃ©phone, email, CIN, passeport..." value="<?php echo e(request('search')); ?>">
                         </div>
                         <div class="aj-field aj-col-2">
                             <label for="status">Statut</label>
@@ -119,7 +121,7 @@
                                 <option value="">Tous</option>
                                 <option value="active" <?php echo e(request('status') === 'active' ? 'selected' : ''); ?>>Actif</option>
                                 <option value="inactive" <?php echo e(request('status') === 'inactive' ? 'selected' : ''); ?>>Inactif</option>
-                                <option value="blocked" <?php echo e(request('status') === 'blocked' ? 'selected' : ''); ?>>Bloqué</option>
+                                <option value="blocked" <?php echo e(request('status') === 'blocked' ? 'selected' : ''); ?>>BloquÃ©</option>
                                 <option value="vip" <?php echo e(request('status') === 'vip' ? 'selected' : ''); ?>>VIP</option>
                             </select>
                         </div>
@@ -140,7 +142,7 @@
                         <div class="aj-col-2 d-flex flex-wrap gap-2">
                             <a href="<?php echo e(route('admin.customers.voyageurs')); ?>" class="aj-btn aj-btn-soft w-100">
                                 <i class="bx bx-reset"></i>
-                                <span>Réinitialiser</span>
+                                <span>RÃ©initialiser</span>
                             </a>
                         </div>
                     </div>
@@ -162,9 +164,9 @@
                         <div class="d-flex align-items-center gap-2">
                             <label for="voyageurSortSelect" class="mb-0">Trier localement :</label>
                             <select id="voyageurSortSelect" class="aj-mini-select">
-                                <option value="recent">Plus récents</option>
+                                <option value="recent">Plus rÃ©cents</option>
                                 <option value="name_asc">Nom A-Z</option>
-                                <option value="reservations_desc">Réservations</option>
+                                <option value="reservations_desc">RÃ©servations</option>
                             </select>
                         </div>
                         <button type="button" class="aj-mini-btn" id="voyageurExportBtn">
@@ -183,11 +185,11 @@
 
                 <?php if($clients->isEmpty()): ?>
                     <div class="aj-empty">
-                        <h5 class="mb-2">Aucun voyageur trouvé</h5>
-                        <p class="text-muted mb-3">Créez un voyageur pour enrichir la base clients.</p>
+                        <h5 class="mb-2">Aucun voyageur trouvÃ©</h5>
+                        <p class="text-muted mb-3">CrÃ©ez un voyageur pour enrichir la base clients.</p>
                         <a href="<?php echo e(route('admin.customers.clients.create')); ?>" class="aj-btn aj-btn-primary">
                             <i class="bx bx-plus"></i>
-                            <span>Créer un voyageur</span>
+                            <span>CrÃ©er un voyageur</span>
                         </a>
                     </div>
                 <?php else: ?>
@@ -197,14 +199,14 @@
                                 <tr>
                                     <th>Code</th>
                                     <th>Voyageur</th>
-                                    <th>Téléphone</th>
+                                    <th>TÃ©lÃ©phone</th>
                                     <th>Email</th>
                                     <th>Login</th>
-                                    <th>Réservations</th>
+                                    <th>RÃ©servations</th>
                                     <th>Ville</th>
-                                    <th>Identité</th>
+                                    <th>IdentitÃ©</th>
                                     <th>Statut</th>
-                                    <th>Créé le</th>
+                                    <th>CrÃ©Ã© le</th>
                                     <th class="text-end">Actions</th>
                                 </tr>
                             </thead>
@@ -212,7 +214,7 @@
                                 <?php $__currentLoopData = $clients; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <?php
                                         $idDoc = $c->national_id_number ?: ($c->passport_number ?: null);
-                                        $fullName = $c->full_name ?: trim(($c->first_name ?? '').' '.($c->last_name ?? '')) ?: '—';
+                                        $fullName = $c->full_name ?: trim(($c->first_name ?? '').' '.($c->last_name ?? '')) ?: 'â€”';
                                         $createdTimestamp = $c->created_at?->timestamp ?? 0;
                                         $reservationCount = (int) ($c->reservations_count ?? 0);
                                     ?>
@@ -229,34 +231,34 @@
                                                     <span class="aj-badge -info">VIP</span>
                                                 <?php endif; ?>
                                             </div>
-                                            <div class="aj-meta-text"><?php echo e($c->whatsapp_number ?: 'WhatsApp non renseigné'); ?></div>
+                                            <div class="aj-meta-text"><?php echo e($c->whatsapp_number ?: 'WhatsApp non renseignÃ©'); ?></div>
                                         </td>
-                                        <td><?php echo e($c->phone ?? '—'); ?></td>
-                                        <td><?php echo e($c->email ?? '—'); ?></td>
+                                        <td><?php echo e($c->phone ?? 'â€”'); ?></td>
+                                        <td><?php echo e($c->email ?? 'â€”'); ?></td>
                                         <td>
                                             <?php if($c->portal_username): ?>
                                                 <code><?php echo e($c->portal_username); ?></code>
                                             <?php else: ?>
-                                                <span class="aj-meta-text">—</span>
+                                                <span class="aj-meta-text">â€”</span>
                                             <?php endif; ?>
                                         </td>
                                         <td><span class="aj-badge -neutral"><?php echo e($reservationCount); ?></span></td>
-                                        <td><?php echo e($c->city ?? '—'); ?></td>
-                                        <td><?php echo e($idDoc ?: '—'); ?></td>
+                                        <td><?php echo e($c->city ?? 'â€”'); ?></td>
+                                        <td><?php echo e($idDoc ?: 'â€”'); ?></td>
                                         <td>
                                             <?php if($c->status === 'active'): ?>
                                                 <span class="aj-badge -success">Actif</span>
                                             <?php elseif($c->status === 'inactive'): ?>
                                                 <span class="aj-badge -warning">Inactif</span>
                                             <?php elseif($c->status === 'blocked'): ?>
-                                                <span class="aj-badge -danger">Bloqué</span>
+                                                <span class="aj-badge -danger">BloquÃ©</span>
                                             <?php elseif($c->status === 'vip'): ?>
                                                 <span class="aj-badge -info">VIP</span>
                                             <?php else: ?>
-                                                <span class="aj-badge -neutral"><?php echo e($c->status ?? '—'); ?></span>
+                                                <span class="aj-badge -neutral"><?php echo e($c->status ?? 'â€”'); ?></span>
                                             <?php endif; ?>
                                         </td>
-                                        <td><?php echo e($c->created_at?->format('d/m/Y') ?? '—'); ?></td>
+                                        <td><?php echo e($c->created_at?->format('d/m/Y') ?? 'â€”'); ?></td>
                                         <td class="text-end">
                                             <div class="aj-actions">
                                                 <a href="<?php echo e(route('admin.customers.clients.show', $c)); ?>" class="aj-icon-btn" title="Voir">
@@ -276,7 +278,7 @@
                     <div class="aj-grid" data-catalog-view="grid">
                         <?php $__currentLoopData = $clients; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <?php
-                                $fullName = $c->full_name ?: trim(($c->first_name ?? '').' '.($c->last_name ?? '')) ?: '—';
+                                $fullName = $c->full_name ?: trim(($c->first_name ?? '').' '.($c->last_name ?? '')) ?: 'â€”';
                                 $reservationCount = (int) ($c->reservations_count ?? 0);
                             ?>
                             <article
@@ -295,17 +297,17 @@
                                             <span class="aj-badge -info">VIP</span>
                                         <?php endif; ?>
                                     </div>
-                                    <div class="aj-meta-text mb-2"><?php echo e($c->email ?? 'Email non renseigné'); ?></div>
-                                    <div class="aj-meta-text mb-3"><?php echo e($c->phone ?? 'Téléphone non renseigné'); ?></div>
+                                    <div class="aj-meta-text mb-2"><?php echo e($c->email ?? 'Email non renseignÃ©'); ?></div>
+                                    <div class="aj-meta-text mb-3"><?php echo e($c->phone ?? 'TÃ©lÃ©phone non renseignÃ©'); ?></div>
                                     <div class="d-flex flex-wrap gap-2 mb-3">
-                                        <span class="aj-badge -neutral"><?php echo e($reservationCount); ?> réservation(s)</span>
+                                        <span class="aj-badge -neutral"><?php echo e($reservationCount); ?> rÃ©servation(s)</span>
                                         <span class="aj-badge <?php echo e($c->status === 'active' ? '-success' : ($c->status === 'inactive' ? '-warning' : ($c->status === 'blocked' ? '-danger' : '-neutral'))); ?>">
-                                            <?php echo e($c->status ?? '—'); ?>
+                                            <?php echo e($c->status ?? 'â€”'); ?>
 
                                         </span>
                                     </div>
                                     <div class="aj-card-actions">
-                                        <span class="aj-meta-text"><?php echo e($c->city ?? 'Ville non renseignée'); ?></span>
+                                        <span class="aj-meta-text"><?php echo e($c->city ?? 'Ville non renseignÃ©e'); ?></span>
                                         <div class="aj-actions">
                                             <a href="<?php echo e(route('admin.customers.clients.show', $c)); ?>" class="aj-icon-btn" title="Voir"><i class="bx bx-show"></i></a>
                                             <a href="<?php echo e(route('admin.customers.clients.edit', $c)); ?>" class="aj-icon-btn" title="Modifier"><i class="bx bx-pencil"></i></a>
@@ -317,7 +319,7 @@
                     </div>
 
                     <div class="aj-footer">
-                        <div>Affichage de <?php echo e($clients->firstItem() ?? 0); ?> à <?php echo e($clients->lastItem() ?? 0); ?> sur <?php echo e($totalClients); ?> résultats</div>
+                        <div>Affichage de <?php echo e($clients->firstItem() ?? 0); ?> Ã  <?php echo e($clients->lastItem() ?? 0); ?> sur <?php echo e($totalClients); ?> rÃ©sultats</div>
                         <div><?php echo e($clients->links()); ?></div>
                     </div>
                 <?php endif; ?>
@@ -402,4 +404,5 @@
     </script>
 <?php $__env->stopPush(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\customers\voyageurs\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\customers\voyageurs\index.blade.php ENDPATH**/ ?>

@@ -1,10 +1,11 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 @section('title')
-    Confirmées
+    ConfirmÃ©es
 @endsection
 @section('content')
-    @include('admin._placeholder', ['title' => 'Confirmées'])
+    @include('admin._placeholder', ['title' => 'ConfirmÃ©es'])
 @endsection
 @push('scripts')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
 @endpush
+

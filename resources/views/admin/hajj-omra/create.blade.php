@@ -1,4 +1,4 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 
 @section('title', 'Nouvelle offre Hajj & Omra')
 
@@ -20,3 +20,4 @@
         @include('admin.hajj-omra._form')
     </form>
 @endsection
+

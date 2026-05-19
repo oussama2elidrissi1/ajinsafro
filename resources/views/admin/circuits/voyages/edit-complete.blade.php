@@ -1,4 +1,4 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 @section('title')
     Modifier le tour WordPress
 @endsection
@@ -39,7 +39,7 @@
 
     <div class="alert alert-info mb-3">
         <i class="mdi mdi-information me-2"></i>
-        <strong>Admin aligné avec WordPress Traveler</strong> - Tous les champs ci-dessous écrivent directement dans la DB WordPress (cFdgeZ_postmeta + taxonomies).
+        <strong>Admin alignÃ© avec WordPress Traveler</strong> - Tous les champs ci-dessous Ã©crivent directement dans la DB WordPress (cFdgeZ_postmeta + taxonomies).
     </div>
 
     <form action="{{ route('admin.circuits.voyages.update', $voyage->ID) }}" method="POST">
@@ -70,17 +70,17 @@
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#availability" role="tab">
-                    <i class="bx bx-calendar"></i> Disponibilité
+                    <i class="bx bx-calendar"></i> DisponibilitÃ©
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#media" role="tab">
-                    <i class="bx bx-image"></i> Médias
+                    <i class="bx bx-image"></i> MÃ©dias
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#taxonomies" role="tab">
-                    <i class="bx bx-category"></i> Catégories
+                    <i class="bx bx-category"></i> CatÃ©gories
                 </a>
             </li>
         </ul>
@@ -106,7 +106,7 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="content" class="form-label">Description complète</label>
+                                    <label for="content" class="form-label">Description complÃ¨te</label>
                                     <textarea class="form-control" id="content" name="content" rows="10">{{ old('content', $voyage->post_content) }}</textarea>
                                 </div>
 
@@ -121,19 +121,19 @@
                     <div class="col-lg-4">
                         <div class="card">
                             <div class="card-body">
-                                <h4 class="card-title mb-4">Paramètres généraux</h4>
+                                <h4 class="card-title mb-4">ParamÃ¨tres gÃ©nÃ©raux</h4>
 
                                 <div class="mb-3">
                                     <label for="post_status" class="form-label">Statut</label>
                                     <select class="form-select" id="post_status" name="post_status">
-                                        <option value="publish" {{ old('post_status', $voyage->post_status) === 'publish' ? 'selected' : '' }}>Publié</option>
+                                        <option value="publish" {{ old('post_status', $voyage->post_status) === 'publish' ? 'selected' : '' }}>PubliÃ©</option>
                                         <option value="draft" {{ old('post_status', $voyage->post_status) === 'draft' ? 'selected' : '' }}>Brouillon</option>
                                         <option value="pending" {{ old('post_status', $voyage->post_status) === 'pending' ? 'selected' : '' }}>En attente</option>
                                     </select>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="duration_day" class="form-label">Durée (jours)</label>
+                                    <label for="duration_day" class="form-label">DurÃ©e (jours)</label>
                                     <input type="number" class="form-control" id="duration_day" name="duration_day" value="{{ old('duration_day', $meta['duration_day'] ?? '') }}" min="1">
                                 </div>
 
@@ -150,7 +150,7 @@
                                 <div class="mb-3">
                                     <label for="tour_price_by" class="form-label">Tarification par</label>
                                     <select class="form-select" id="tour_price_by" name="tour_price_by">
-                                        <option value="">-- Sélectionner --</option>
+                                        <option value="">-- SÃ©lectionner --</option>
                                         <option value="person" {{ old('tour_price_by', $meta['tour_price_by'] ?? '') === 'person' ? 'selected' : '' }}>Par personne</option>
                                         <option value="group" {{ old('tour_price_by', $meta['tour_price_by'] ?? '') === 'group' ? 'selected' : '' }}>Par groupe</option>
                                         <option value="fixed" {{ old('tour_price_by', $meta['tour_price_by'] ?? '') === 'fixed' ? 'selected' : '' }}>Prix fixe</option>
@@ -160,7 +160,7 @@
                                 <div class="form-check mb-3">
                                     <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured" value="1" {{ old('is_featured', $meta['is_featured'] ?? '') === 'on' ? 'checked' : '' }}>
                                     <label class="form-check-label" for="is_featured">
-                                        Tour à la une (Featured)
+                                        Tour Ã  la une (Featured)
                                     </label>
                                 </div>
                                 
@@ -172,7 +172,7 @@
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label for="st_tour_external_booking" class="form-label">Lien réservation externe</label>
+                                    <label for="st_tour_external_booking" class="form-label">Lien rÃ©servation externe</label>
                                     <input type="text" class="form-control" id="st_tour_external_booking" name="st_tour_external_booking" value="{{ old('st_tour_external_booking', $meta['st_tour_external_booking'] ?? '') }}" placeholder="https://...">
                                     <small class="text-muted">Optionnel</small>
                                 </div>
@@ -207,13 +207,13 @@
                                     'selectedIds' => $selectedLocationIds ?? []
                                 ])
                             @else
-                                <p class="text-muted mb-0" style="font-size: 13px; color: #646970;">Aucune location disponible. Créez des locations dans WordPress d'abord.</p>
+                                <p class="text-muted mb-0" style="font-size: 13px; color: #646970;">Aucune location disponible. CrÃ©ez des locations dans WordPress d'abord.</p>
                             @endif
                         </div>
                         
                         <small class="text-muted d-block mt-2" id="locationCount" style="font-size: 12px; color: #646970;">
                             <i class="bx bx-info-circle"></i> 
-                            <span id="locationCountText">{{ count($selectedLocationIds ?? []) }} location(s) sélectionnée(s)</span>
+                            <span id="locationCountText">{{ count($selectedLocationIds ?? []) }} location(s) sÃ©lectionnÃ©e(s)</span>
                         </small>
                     </div>
                 </div>
@@ -225,7 +225,7 @@
                         <div class="row">
                             <div class="col-lg-6">
                                 <div class="mb-3">
-                                    <label for="address" class="form-label">Adresse complète</label>
+                                    <label for="address" class="form-label">Adresse complÃ¨te</label>
                                     <input type="text" class="form-control" id="address" name="address" value="{{ old('address', $meta['address'] ?? '') }}">
                                 </div>
                                 
@@ -285,7 +285,7 @@
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label for="phone" class="form-label">Téléphone</label>
+                                    <label for="phone" class="form-label">TÃ©lÃ©phone</label>
                                     <input type="text" class="form-control" id="phone" name="phone" value="{{ old('phone', $meta['phone'] ?? '') }}">
                                 </div>
                             </div>
@@ -311,7 +311,7 @@
             <div class="tab-pane" id="price" role="tabpanel">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title mb-4">Paramètres de prix</h4>
+                        <h4 class="card-title mb-4">ParamÃ¨tres de prix</h4>
                         
                         <div class="row">
                             <div class="col-lg-4">
@@ -326,7 +326,7 @@
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label for="sale_price" class="form-label">Prix soldé (MAD)</label>
+                                    <label for="sale_price" class="form-label">Prix soldÃ© (MAD)</label>
                                     <input type="number" class="form-control" id="sale_price" name="sale_price" value="{{ old('sale_price', $meta['sale_price'] ?? '') }}" step="0.01" min="0">
                                 </div>
                             </div>
@@ -343,19 +343,19 @@
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label for="infant_price" class="form-label">Prix Bébé (MAD)</label>
+                                    <label for="infant_price" class="form-label">Prix BÃ©bÃ© (MAD)</label>
                                     <input type="number" class="form-control" id="infant_price" name="infant_price" value="{{ old('infant_price', $meta['infant_price'] ?? '') }}" step="0.01" min="0">
                                 </div>
                             </div>
                             
                             <div class="col-lg-4">
                                 <div class="mb-3">
-                                    <label for="discount" class="form-label">Réduction</label>
+                                    <label for="discount" class="form-label">RÃ©duction</label>
                                     <input type="text" class="form-control" id="discount" name="discount" value="{{ old('discount', $meta['discount'] ?? '') }}">
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label for="discount_type" class="form-label">Type de réduction</label>
+                                    <label for="discount_type" class="form-label">Type de rÃ©duction</label>
                                     <select class="form-select" id="discount_type" name="discount_type">
                                         <option value="">Aucune</option>
                                         <option value="percent" {{ old('discount_type', $meta['discount_type'] ?? '') === 'percent' ? 'selected' : '' }}>Pourcentage</option>
@@ -364,12 +364,12 @@
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label for="discount_by_people_type" class="form-label">Réduction selon type personne</label>
+                                    <label for="discount_by_people_type" class="form-label">RÃ©duction selon type personne</label>
                                     <input type="text" class="form-control" id="discount_by_people_type" name="discount_by_people_type" value="{{ old('discount_by_people_type', $meta['discount_by_people_type'] ?? '') }}" placeholder="adult,child,infant">
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label for="calculator_discount_by_people_type" class="form-label">Calculateur réduction</label>
+                                    <label for="calculator_discount_by_people_type" class="form-label">Calculateur rÃ©duction</label>
                                     <input type="text" class="form-control" id="calculator_discount_by_people_type" name="calculator_discount_by_people_type" value="{{ old('calculator_discount_by_people_type', $meta['calculator_discount_by_people_type'] ?? '') }}">
                                 </div>
                             </div>
@@ -444,33 +444,33 @@
                         <div class="mb-3">
                             <label for="tours_include" class="form-label">Ce qui est inclus</label>
                             <textarea class="form-control" id="tours_include" name="tours_include" rows="6">{{ old('tours_include', $meta['tours_include'] ?? '') }}</textarea>
-                            <small class="text-muted">HTML accepté</small>
+                            <small class="text-muted">HTML acceptÃ©</small>
                         </div>
                         
                         <div class="mb-3">
                             <label for="tours_exclude" class="form-label">Ce qui n'est pas inclus</label>
                             <textarea class="form-control" id="tours_exclude" name="tours_exclude" rows="6">{{ old('tours_exclude', $meta['tours_exclude'] ?? '') }}</textarea>
-                            <small class="text-muted">HTML accepté</small>
+                            <small class="text-muted">HTML acceptÃ©</small>
                         </div>
                         
                         <div class="mb-3">
                             <label for="tours_highlight" class="form-label">Points forts</label>
                             <textarea class="form-control" id="tours_highlight" name="tours_highlight" rows="6">{{ old('tours_highlight', $meta['tours_highlight'] ?? '') }}</textarea>
-                            <small class="text-muted">HTML accepté</small>
+                            <small class="text-muted">HTML acceptÃ©</small>
                         </div>
                         
                         <div class="mb-3">
                             <label for="tours_faq" class="form-label">FAQ</label>
                             <textarea class="form-control" id="tours_faq" name="tours_faq" rows="6">{{ old('tours_faq', $meta['tours_faq'] ?? '') }}</textarea>
-                            <small class="text-muted">HTML accepté</small>
+                            <small class="text-muted">HTML acceptÃ©</small>
                         </div>
                         
                         <div class="mb-3">
                             <label for="tours_program_style" class="form-label">Style du programme</label>
                             <select class="form-select" id="tours_program_style" name="tours_program_style">
-                                <option value="">Défaut</option>
+                                <option value="">DÃ©faut</option>
                                 <option value="tab" {{ old('tours_program_style', $meta['tours_program_style'] ?? '') === 'tab' ? 'selected' : '' }}>Onglets</option>
-                                <option value="accordion" {{ old('tours_program_style', $meta['tours_program_style'] ?? '') === 'accordion' ? 'selected' : '' }}>Accordéon</option>
+                                <option value="accordion" {{ old('tours_program_style', $meta['tours_program_style'] ?? '') === 'accordion' ? 'selected' : '' }}>AccordÃ©on</option>
                                 <option value="list" {{ old('tours_program_style', $meta['tours_program_style'] ?? '') === 'list' ? 'selected' : '' }}>Liste</option>
                             </select>
                         </div>
@@ -482,15 +482,15 @@
             <div class="tab-pane" id="availability" role="tabpanel">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title mb-4">Disponibilité & Réservation</h4>
+                        <h4 class="card-title mb-4">DisponibilitÃ© & RÃ©servation</h4>
                         
                         <div class="mb-3">
-                            <label for="tours_booking_period" class="form-label">Période de réservation</label>
+                            <label for="tours_booking_period" class="form-label">PÃ©riode de rÃ©servation</label>
                             <input type="text" class="form-control" id="tours_booking_period" name="tours_booking_period" value="{{ old('tours_booking_period', $meta['tours_booking_period'] ?? '') }}">
                         </div>
                         
                         <div class="mb-3">
-                            <label for="st_booking_option_type" class="form-label">Type d'option de réservation</label>
+                            <label for="st_booking_option_type" class="form-label">Type d'option de rÃ©servation</label>
                             <input type="text" class="form-control" id="st_booking_option_type" name="st_booking_option_type" value="{{ old('st_booking_option_type', $meta['st_booking_option_type'] ?? '') }}">
                         </div>
                         
@@ -529,7 +529,7 @@
                             
                             <div class="col-lg-6">
                                 <div class="mb-3">
-                                    <label for="st_cancel_number_day" class="form-label">Nombre de jours avant départ</label>
+                                    <label for="st_cancel_number_day" class="form-label">Nombre de jours avant dÃ©part</label>
                                     <input type="number" class="form-control" id="st_cancel_number_day" name="st_cancel_number_day" value="{{ old('st_cancel_number_day', $meta['st_cancel_number_day'] ?? '') }}" min="0">
                                 </div>
                             </div>
@@ -550,22 +550,22 @@
             <div class="tab-pane" id="media" role="tabpanel">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title mb-4">Images & Vidéos</h4>
+                        <h4 class="card-title mb-4">Images & VidÃ©os</h4>
                         
                         <div class="mb-3">
-                            <label for="thumbnail_id" class="form-label">Image à la une (ID WP)</label>
+                            <label for="thumbnail_id" class="form-label">Image Ã  la une (ID WP)</label>
                             <input type="number" class="form-control" id="thumbnail_id" name="thumbnail_id" value="{{ old('thumbnail_id', $meta['thumbnail_id'] ?? '') }}" placeholder="14434">
-                            <small class="text-muted">ID de l'attachment dans la médiathèque WordPress</small>
+                            <small class="text-muted">ID de l'attachment dans la mÃ©diathÃ¨que WordPress</small>
                         </div>
 
                         <div class="mb-3">
-                            <label for="gallery_ids" class="form-label">Galerie (IDs séparés par virgule)</label>
+                            <label for="gallery_ids" class="form-label">Galerie (IDs sÃ©parÃ©s par virgule)</label>
                             <input type="text" class="form-control" id="gallery_ids" name="gallery_ids" value="{{ old('gallery_ids', $gallery_csv ?? '') }}" placeholder="14435,14436,14437">
                             <small class="text-muted">IDs des images de la galerie WordPress (format: 123,456,789)</small>
                         </div>
                         
                         <div class="mb-3">
-                            <label for="video" class="form-label">URL Vidéo</label>
+                            <label for="video" class="form-label">URL VidÃ©o</label>
                             <input type="text" class="form-control" id="video" name="video" value="{{ old('video', $meta['video'] ?? '') }}" placeholder="https://www.youtube.com/watch?v=...">
                             <small class="text-muted">YouTube, Vimeo, etc. (Optionnel)</small>
                         </div>
@@ -577,8 +577,8 @@
             <div class="tab-pane" id="taxonomies" role="tabpanel">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title mb-4">Catégories & Taxonomies</h4>
-                        <p class="text-muted small">Gérez les catégories (Type de tour, Durée, Langue). Les cases à cocher assignent les catégories au voyage.</p>
+                        <h4 class="card-title mb-4">CatÃ©gories & Taxonomies</h4>
+                        <p class="text-muted small">GÃ©rez les catÃ©gories (Type de tour, DurÃ©e, Langue). Les cases Ã  cocher assignent les catÃ©gories au voyage.</p>
                         @include('admin.circuits.voyages.partials._taxonomies_crud', [
                             'availableTaxonomies' => $availableTaxonomies ?? [],
                             'assignedTaxonomies' => $assignedTaxonomies ?? [],
@@ -600,7 +600,7 @@
                             <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-outline-secondary btn-lg waves-effect">Annuler</a>
                         </div>
                         <div class="text-muted">
-                            <small><i class="bx bx-info-circle"></i> Modifications instantanées dans WordPress</small>
+                            <small><i class="bx bx-info-circle"></i> Modifications instantanÃ©es dans WordPress</small>
                         </div>
                     </div>
                 </div>
@@ -614,14 +614,14 @@
             <div class="card border-danger">
                 <div class="card-body">
                     <h5 class="card-title text-danger">Zone dangereuse</h5>
-                    <p class="text-muted">Cette action supprimera définitivement le tour de WordPress.</p>
+                    <p class="text-muted">Cette action supprimera dÃ©finitivement le tour de WordPress.</p>
                     <form action="{{ route('admin.circuits.voyages.destroy', $voyage->ID) }}" 
                           method="POST" 
-                          onsubmit="return confirm('⚠️ ATTENTION : Supprimer définitivement ce tour de WordPress ?\n\nCette action est irréversible.');">
+                          onsubmit="return confirm('âš ï¸ ATTENTION : Supprimer dÃ©finitivement ce tour de WordPress ?\n\nCette action est irrÃ©versible.');">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-danger waves-effect waves-light">
-                            <i class="bx bx-trash me-1"></i> Supprimer ce tour définitivement
+                            <i class="bx bx-trash me-1"></i> Supprimer ce tour dÃ©finitivement
                         </button>
                     </form>
                 </div>
@@ -673,7 +673,7 @@
                 const checked = document.querySelectorAll('.location-checkbox:checked').length;
                 const countText = document.getElementById('locationCountText');
                 if (countText) {
-                    countText.textContent = checked + ' location(s) sélectionnée(s)';
+                    countText.textContent = checked + ' location(s) sÃ©lectionnÃ©e(s)';
                 }
             };
             
@@ -683,3 +683,4 @@
         });
     </script>
 @endpush
+

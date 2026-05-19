@@ -1,15 +1,15 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 
-@section('title', 'Formule Économique')
+@section('title', 'Formule Ã‰conomique')
 
 @section('content')
     <x-admin.page-header
-        title="Formule Économique"
+        title="Formule Ã‰conomique"
         subtitle="Pilotez les offres petit budget Ajinsafro depuis un espace unique."
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
             ['label' => 'Produits & Services'],
-            ['label' => 'Formule Économique'],
+            ['label' => 'Formule Ã‰conomique'],
         ]"
     >
         <x-slot name="actions">
@@ -88,10 +88,10 @@
     <section class="aj-panel">
         @if($offers->isEmpty())
             <x-admin.empty-state
-                title="Aucune offre économique"
-                message="Créez une première offre puis ajoutez ses départs, tarifs et médias."
+                title="Aucune offre Ã©conomique"
+                message="CrÃ©ez une premiÃ¨re offre puis ajoutez ses dÃ©parts, tarifs et mÃ©dias."
                 :action-url="route('admin.economic-offers.create')"
-                action-label="Créer une offre"
+                action-label="CrÃ©er une offre"
             />
         @else
             <div class="table-responsive" style="overflow-x:auto;">
@@ -124,8 +124,8 @@
                                 <div style="font-size:12px;font-weight:700;color:#7a879a;">{{ $offer->internal_reference ?: 'Sans reference' }}</div>
                             </td>
                             <td><x-admin.badge type="info" :label="$offer->type_label" /></td>
-                            <td>{{ $offer->destination ?: '—' }}</td>
-                            <td>{{ $offer->departure_city ?: '—' }}</td>
+                            <td>{{ $offer->destination ?: 'â€”' }}</td>
+                            <td>{{ $offer->departure_city ?: 'â€”' }}</td>
                             <td>
                                 @if($offer->price_from_value !== null)
                                     <strong>{{ number_format($offer->price_from_value, 0, ',', ' ') }} {{ $offer->currency }}</strong>
@@ -137,10 +137,10 @@
                                 @if($offer->old_price !== null)
                                     <span style="text-decoration:line-through;color:#7a879a;">{{ number_format((float) $offer->old_price, 0, ',', ' ') }} {{ $offer->currency }}</span>
                                 @else
-                                    <span class="text-muted">—</span>
+                                    <span class="text-muted">â€”</span>
                                 @endif
                             </td>
-                            <td>{{ $nextDeparture?->departure_date?->format('d/m/Y') ?? ($offer->departure_date?->format('d/m/Y') ?: '—') }}</td>
+                            <td>{{ $nextDeparture?->departure_date?->format('d/m/Y') ?? ($offer->departure_date?->format('d/m/Y') ?: 'â€”') }}</td>
                             <td>{{ $offer->remaining_places }}</td>
                             <td>
                                 <x-admin.badge
@@ -181,3 +181,4 @@
         @endif
     </section>
 @endsection
+

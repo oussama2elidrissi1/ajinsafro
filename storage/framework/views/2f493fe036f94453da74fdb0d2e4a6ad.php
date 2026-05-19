@@ -1,11 +1,13 @@
-<?php $__env->startSection('title', 'Demandes Formule Économique'); ?>
+﻿
+
+<?php $__env->startSection('title', 'Demandes Formule Ã‰conomique'); ?>
 
 <?php $__env->startSection('content'); ?>
     <?php if (isset($component)) { $__componentOriginalcb19cb35a534439097b02b8af91726ee = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalcb19cb35a534439097b02b8af91726ee = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => 'Demandes Formule Économique','subtitle' => 'Suivez les demandes envoyées depuis la page publique.','breadcrumbs' => [
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => 'Demandes Formule Ã‰conomique','subtitle' => 'Suivez les demandes envoyÃ©es depuis la page publique.','breadcrumbs' => [
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Formule Économique', 'url' => route('admin.economic-offers.index')],
+            ['label' => 'Formule Ã‰conomique', 'url' => route('admin.economic-offers.index')],
             ['label' => 'Demandes'],
         ]]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('admin.page-header'); ?>
@@ -14,9 +16,9 @@
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['title' => 'Demandes Formule Économique','subtitle' => 'Suivez les demandes envoyées depuis la page publique.','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
+<?php $component->withAttributes(['title' => 'Demandes Formule Ã‰conomique','subtitle' => 'Suivez les demandes envoyÃ©es depuis la page publique.','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Formule Économique', 'url' => route('admin.economic-offers.index')],
+            ['label' => 'Formule Ã‰conomique', 'url' => route('admin.economic-offers.index')],
             ['label' => 'Demandes'],
         ])]); ?>
 <?php echo $__env->renderComponent(); ?>
@@ -64,7 +66,7 @@
          <?php $__env->slot('fields', null, []); ?> 
             <div class="col-md-4">
                 <label class="form-label">Recherche</label>
-                <input type="text" name="q" value="<?php echo e($filters['q']); ?>" class="form-control" placeholder="Nom, email, téléphone, offre">
+                <input type="text" name="q" value="<?php echo e($filters['q']); ?>" class="form-control" placeholder="Nom, email, tÃ©lÃ©phone, offre">
             </div>
             <div class="col-md-3">
                 <label class="form-label">Statut</label>
@@ -91,14 +93,14 @@
         <?php if($requests->isEmpty()): ?>
             <?php if (isset($component)) { $__componentOriginal99089f8e2ef4184d7d35db81d60c6521 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal99089f8e2ef4184d7d35db81d60c6521 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.empty-state','data' => ['title' => 'Aucune demande','message' => 'Les demandes du site public apparaîtront ici.']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.empty-state','data' => ['title' => 'Aucune demande','message' => 'Les demandes du site public apparaÃ®tront ici.']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('admin.empty-state'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['title' => 'Aucune demande','message' => 'Les demandes du site public apparaîtront ici.']); ?>
+<?php $component->withAttributes(['title' => 'Aucune demande','message' => 'Les demandes du site public apparaÃ®tront ici.']); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal99089f8e2ef4184d7d35db81d60c6521)): ?>
@@ -117,7 +119,7 @@
                         <th>Date</th>
                         <th>Client</th>
                         <th>Offre</th>
-                        <th>Départ choisi</th>
+                        <th>DÃ©part choisi</th>
                         <th>Statut</th>
                         <th>Agent</th>
                         <th class="text-end">Action</th>
@@ -129,10 +131,10 @@
                             <td><?php echo e($requestItem->created_at?->format('d/m/Y H:i')); ?></td>
                             <td>
                                 <div class="fw-bold"><?php echo e($requestItem->full_name); ?></div>
-                                <div class="text-muted small"><?php echo e($requestItem->phone); ?> · <?php echo e($requestItem->email); ?></div>
+                                <div class="text-muted small"><?php echo e($requestItem->phone); ?> Â· <?php echo e($requestItem->email); ?></div>
                             </td>
-                            <td><?php echo e($requestItem->offer_title ?: optional($requestItem->offer)->title ?: 'Non associée'); ?></td>
-                            <td><?php echo e($requestItem->selected_departure_date?->format('d/m/Y') ?: '—'); ?></td>
+                            <td><?php echo e($requestItem->offer_title ?: optional($requestItem->offer)->title ?: 'Non associÃ©e'); ?></td>
+                            <td><?php echo e($requestItem->selected_departure_date?->format('d/m/Y') ?: 'â€”'); ?></td>
                             <td>
                                 <?php if (isset($component)) { $__componentOriginal92e51077c3bdcbfa01c516c134fd0f33 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal92e51077c3bdcbfa01c516c134fd0f33 = $attributes; } ?>
@@ -165,10 +167,10 @@
 <?php unset($__componentOriginal92e51077c3bdcbfa01c516c134fd0f33); ?>
 <?php endif; ?>
                             </td>
-                            <td><?php echo e($requestItem->responsible_agent ?: '—'); ?></td>
+                            <td><?php echo e($requestItem->responsible_agent ?: 'â€”'); ?></td>
                             <td class="text-end">
                                 <a href="<?php echo e(route('admin.economic-offers.requests.show', $requestItem)); ?>" class="aj-btn aj-btn-soft btn-sm">
-                                    Voir le détail
+                                    Voir le dÃ©tail
                                 </a>
                             </td>
                         </tr>
@@ -200,4 +202,5 @@
     </section>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\economic-offers\requests\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\economic-offers\requests\index.blade.php ENDPATH**/ ?>

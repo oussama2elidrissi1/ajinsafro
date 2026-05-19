@@ -1,17 +1,17 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 @section('title')
-    Compagnies aériennes
+    Compagnies aÃ©riennes
 @endsection
 @section('content')
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">Compagnies aériennes</h4>
+                <h4 class="page-title mb-0 font-size-18">Compagnies aÃ©riennes</h4>
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
                         <li class="breadcrumb-item"><a href="{{ route('admin.circuits.index') }}">Circuits</a></li>
-                        <li class="breadcrumb-item active">Compagnies aériennes</li>
+                        <li class="breadcrumb-item active">Compagnies aÃ©riennes</li>
                     </ol>
                 </div>
             </div>
@@ -30,13 +30,13 @@
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                        <h4 class="card-title mb-0">Compagnies aériennes (vols des voyages)</h4>
+                        <h4 class="card-title mb-0">Compagnies aÃ©riennes (vols des voyages)</h4>
                         <a href="{{ route('admin.circuits.airlines.create') }}" class="btn btn-primary waves-effect waves-light">
                             <i class="bx bx-plus me-1"></i> Nouvelle compagnie
                         </a>
                     </div>
                     @if($airlines->isEmpty())
-                        <p class="text-muted mb-0">Aucune compagnie. <a href="{{ route('admin.circuits.airlines.create') }}">Créer une compagnie</a> pour l’utiliser dans les vols des voyages.</p>
+                        <p class="text-muted mb-0">Aucune compagnie. <a href="{{ route('admin.circuits.airlines.create') }}">CrÃ©er une compagnie</a> pour lâ€™utiliser dans les vols des voyages.</p>
                     @else
                         <div class="table-responsive">
                             <table class="table table-hover table-centered mb-0">
@@ -54,7 +54,7 @@
                                     <tr>
                                         <td>{{ $airline->id }}</td>
                                         <td>{{ $airline->name }}</td>
-                                        <td>{{ $airline->code_iata ?? '—' }}</td>
+                                        <td>{{ $airline->code_iata ?? 'â€”' }}</td>
                                         <td>
                                             @if($airline->is_active)
                                                 <span class="badge bg-success">Active</span>
@@ -84,3 +84,4 @@
         </div>
     </div>
 @endsection
+

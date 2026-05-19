@@ -1,9 +1,11 @@
+﻿
+
 <?php $__env->startSection('title', $agency->name); ?>
 
 <?php $__env->startSection('content'); ?>
     <?php if (isset($component)) { $__componentOriginalcb19cb35a534439097b02b8af91726ee = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalcb19cb35a534439097b02b8af91726ee = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => $agency->name,'subtitle' => 'Vue détaillée du point de vente, de ses équipes et de son activité.','breadcrumbs' => [
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => $agency->name,'subtitle' => 'Vue dÃ©taillÃ©e du point de vente, de ses Ã©quipes et de son activitÃ©.','breadcrumbs' => [
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
             ['label' => 'Points de vente', 'url' => route('admin.agencies.index')],
             ['label' => $agency->name],
@@ -14,7 +16,7 @@
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($agency->name),'subtitle' => 'Vue détaillée du point de vente, de ses équipes et de son activité.','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
+<?php $component->withAttributes(['title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($agency->name),'subtitle' => 'Vue dÃ©taillÃ©e du point de vente, de ses Ã©quipes et de son activitÃ©.','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
             ['label' => 'Points de vente', 'url' => route('admin.agencies.index')],
             ['label' => $agency->name],
@@ -68,12 +70,12 @@
     <?php if (isset($component)) { $__componentOriginaldc8ea6d1c156289736a271a64b9dc41b = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginaldc8ea6d1c156289736a271a64b9dc41b = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.kpi-cards','data' => ['kpis' => [
-        ['label' => 'Réservations', 'value' => number_format($totals['reservations_total'], 0, ',', ' '), 'icon' => 'bx bx-calendar-check', 'color' => '-blue', 'note' => 'Depuis l’ouverture'],
-        ['label' => 'Ce mois', 'value' => number_format($totals['reservations_month'], 0, ',', ' '), 'icon' => 'bx bx-time-five', 'color' => '-green', 'note' => 'Activité mensuelle'],
-        ['label' => 'CA', 'value' => number_format($totals['revenue_total'], 0, ',', ' ') . ' DH', 'icon' => 'bx bx-line-chart', 'color' => '-orange', 'note' => 'Montant estimé'],
+        ['label' => 'RÃ©servations', 'value' => number_format($totals['reservations_total'], 0, ',', ' '), 'icon' => 'bx bx-calendar-check', 'color' => '-blue', 'note' => 'Depuis lâ€™ouverture'],
+        ['label' => 'Ce mois', 'value' => number_format($totals['reservations_month'], 0, ',', ' '), 'icon' => 'bx bx-time-five', 'color' => '-green', 'note' => 'ActivitÃ© mensuelle'],
+        ['label' => 'CA', 'value' => number_format($totals['revenue_total'], 0, ',', ' ') . ' DH', 'icon' => 'bx bx-line-chart', 'color' => '-orange', 'note' => 'Montant estimÃ©'],
         ['label' => 'Commission', 'value' => number_format($totals['estimated_commission'], 0, ',', ' ') . ' DH', 'icon' => 'bx bx-wallet', 'color' => '-violet', 'note' => 'Projection'],
-        ['label' => 'Employés actifs', 'value' => number_format($totals['employees_active'], 0, ',', ' '), 'icon' => 'bx bx-user-check', 'color' => '-blue', 'note' => 'Comptes opérationnels'],
-        ['label' => 'Clients traités', 'value' => number_format($totals['clients_handled'], 0, ',', ' '), 'icon' => 'bx bx-group', 'color' => '-green', 'note' => 'Clients distincts'],
+        ['label' => 'EmployÃ©s actifs', 'value' => number_format($totals['employees_active'], 0, ',', ' '), 'icon' => 'bx bx-user-check', 'color' => '-blue', 'note' => 'Comptes opÃ©rationnels'],
+        ['label' => 'Clients traitÃ©s', 'value' => number_format($totals['clients_handled'], 0, ',', ' '), 'icon' => 'bx bx-group', 'color' => '-green', 'note' => 'Clients distincts'],
     ]]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('admin.kpi-cards'); ?>
 <?php if ($component->shouldRender()): ?>
@@ -82,12 +84,12 @@
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
 <?php $component->withAttributes(['kpis' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
-        ['label' => 'Réservations', 'value' => number_format($totals['reservations_total'], 0, ',', ' '), 'icon' => 'bx bx-calendar-check', 'color' => '-blue', 'note' => 'Depuis l’ouverture'],
-        ['label' => 'Ce mois', 'value' => number_format($totals['reservations_month'], 0, ',', ' '), 'icon' => 'bx bx-time-five', 'color' => '-green', 'note' => 'Activité mensuelle'],
-        ['label' => 'CA', 'value' => number_format($totals['revenue_total'], 0, ',', ' ') . ' DH', 'icon' => 'bx bx-line-chart', 'color' => '-orange', 'note' => 'Montant estimé'],
+        ['label' => 'RÃ©servations', 'value' => number_format($totals['reservations_total'], 0, ',', ' '), 'icon' => 'bx bx-calendar-check', 'color' => '-blue', 'note' => 'Depuis lâ€™ouverture'],
+        ['label' => 'Ce mois', 'value' => number_format($totals['reservations_month'], 0, ',', ' '), 'icon' => 'bx bx-time-five', 'color' => '-green', 'note' => 'ActivitÃ© mensuelle'],
+        ['label' => 'CA', 'value' => number_format($totals['revenue_total'], 0, ',', ' ') . ' DH', 'icon' => 'bx bx-line-chart', 'color' => '-orange', 'note' => 'Montant estimÃ©'],
         ['label' => 'Commission', 'value' => number_format($totals['estimated_commission'], 0, ',', ' ') . ' DH', 'icon' => 'bx bx-wallet', 'color' => '-violet', 'note' => 'Projection'],
-        ['label' => 'Employés actifs', 'value' => number_format($totals['employees_active'], 0, ',', ' '), 'icon' => 'bx bx-user-check', 'color' => '-blue', 'note' => 'Comptes opérationnels'],
-        ['label' => 'Clients traités', 'value' => number_format($totals['clients_handled'], 0, ',', ' '), 'icon' => 'bx bx-group', 'color' => '-green', 'note' => 'Clients distincts'],
+        ['label' => 'EmployÃ©s actifs', 'value' => number_format($totals['employees_active'], 0, ',', ' '), 'icon' => 'bx bx-user-check', 'color' => '-blue', 'note' => 'Comptes opÃ©rationnels'],
+        ['label' => 'Clients traitÃ©s', 'value' => number_format($totals['clients_handled'], 0, ',', ' '), 'icon' => 'bx bx-group', 'color' => '-green', 'note' => 'Clients distincts'],
     ])]); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
@@ -104,20 +106,20 @@
         <div class="col-xl-4">
             <div class="card h-100">
                 <div class="card-body">
-                    <h5 class="mb-3">Informations générales</h5>
+                    <h5 class="mb-3">Informations gÃ©nÃ©rales</h5>
                     <dl class="row mb-0">
                         <dt class="col-sm-5">Code</dt><dd class="col-sm-7"><?php echo e($agency->code); ?></dd>
                         <dt class="col-sm-5">Type</dt><dd class="col-sm-7"><?php echo e(\App\Models\Branch::agencyTypeLabels()[$agency->agency_type] ?? $agency->agency_type); ?></dd>
                         <dt class="col-sm-5">Statut</dt><dd class="col-sm-7"><?php echo e(\App\Models\Branch::statusLabels()[$agency->status] ?? $agency->status); ?></dd>
-                        <dt class="col-sm-5">Ville</dt><dd class="col-sm-7"><?php echo e($agency->city ?: '—'); ?></dd>
-                        <dt class="col-sm-5">Pays</dt><dd class="col-sm-7"><?php echo e($agency->country ?: '—'); ?></dd>
-                        <dt class="col-sm-5">Téléphone</dt><dd class="col-sm-7"><?php echo e($agency->phone ?: '—'); ?></dd>
-                        <dt class="col-sm-5">Email</dt><dd class="col-sm-7"><?php echo e($agency->email ?: '—'); ?></dd>
-                        <dt class="col-sm-5">Manager</dt><dd class="col-sm-7"><?php echo e($agency->manager?->name ?: '—'); ?></dd>
-                        <dt class="col-sm-5">Commission</dt><dd class="col-sm-7"><?php echo e($agency->default_commission_value ? number_format((float) $agency->default_commission_value, 2, ',', ' ') . ' ' . (\App\Models\Branch::commissionTypeLabels()[$agency->default_commission_type] ?? '') : ($agency->default_commission_rate ? number_format($agency->default_commission_rate, 2, ',', ' ') . '%' : '—')); ?></dd>
+                        <dt class="col-sm-5">Ville</dt><dd class="col-sm-7"><?php echo e($agency->city ?: 'â€”'); ?></dd>
+                        <dt class="col-sm-5">Pays</dt><dd class="col-sm-7"><?php echo e($agency->country ?: 'â€”'); ?></dd>
+                        <dt class="col-sm-5">TÃ©lÃ©phone</dt><dd class="col-sm-7"><?php echo e($agency->phone ?: 'â€”'); ?></dd>
+                        <dt class="col-sm-5">Email</dt><dd class="col-sm-7"><?php echo e($agency->email ?: 'â€”'); ?></dd>
+                        <dt class="col-sm-5">Manager</dt><dd class="col-sm-7"><?php echo e($agency->manager?->name ?: 'â€”'); ?></dd>
+                        <dt class="col-sm-5">Commission</dt><dd class="col-sm-7"><?php echo e($agency->default_commission_value ? number_format((float) $agency->default_commission_value, 2, ',', ' ') . ' ' . (\App\Models\Branch::commissionTypeLabels()[$agency->default_commission_type] ?? '') : ($agency->default_commission_rate ? number_format($agency->default_commission_rate, 2, ',', ' ') . '%' : 'â€”')); ?></dd>
                         <dt class="col-sm-5">Devise</dt><dd class="col-sm-7"><?php echo e($agency->currency ?: 'MAD'); ?></dd>
-                        <dt class="col-sm-5">Objectif CA</dt><dd class="col-sm-7"><?php echo e($agency->monthly_revenue_target ? number_format((float) $agency->monthly_revenue_target, 0, ',', ' ') . ' ' . ($agency->currency ?: 'MAD') : '—'); ?></dd>
-                        <dt class="col-sm-5">Objectif reservations</dt><dd class="col-sm-7"><?php echo e($agency->monthly_reservations_target ?: '—'); ?></dd>
+                        <dt class="col-sm-5">Objectif CA</dt><dd class="col-sm-7"><?php echo e($agency->monthly_revenue_target ? number_format((float) $agency->monthly_revenue_target, 0, ',', ' ') . ' ' . ($agency->currency ?: 'MAD') : 'â€”'); ?></dd>
+                        <dt class="col-sm-5">Objectif reservations</dt><dd class="col-sm-7"><?php echo e($agency->monthly_reservations_target ?: 'â€”'); ?></dd>
                     </dl>
                     <?php if($agency->address): ?>
                         <div class="mt-3">
@@ -148,7 +150,7 @@
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
                     <?php else: ?>
-                        <p class="text-muted mb-3">Aucun document chargé.</p>
+                        <p class="text-muted mb-3">Aucun document chargÃ©.</p>
                     <?php endif; ?>
                     <strong>Notes internes</strong>
                     <p class="text-muted mb-0" style="white-space:pre-line;"><?php echo e($agency->internal_notes ?: 'Aucune note interne.'); ?></p>
@@ -164,7 +166,7 @@
                             <thead>
                                 <tr>
                                     <th>Mois</th>
-                                    <th>Réservations</th>
+                                    <th>RÃ©servations</th>
                                     <th>CA</th>
                                 </tr>
                             </thead>
@@ -198,24 +200,24 @@
                                 <tr>
                                     <th>Nom</th>
                                     <th>Poste</th>
-                                    <th>Rôle</th>
+                                    <th>RÃ´le</th>
                                     <th>Statut</th>
                                     <th>Email</th>
-                                    <th>Téléphone</th>
+                                    <th>TÃ©lÃ©phone</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php $__empty_1 = true; $__currentLoopData = $employees; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $employee): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                     <tr>
                                         <td><a href="<?php echo e(route('admin.agency-employees.show', $employee)); ?>"><?php echo e($employee->full_name); ?></a></td>
-                                        <td><?php echo e($employee->position ?: '—'); ?></td>
-                                        <td><?php echo e($employee->user?->roles->pluck('name')->join(', ') ?: '—'); ?></td>
+                                        <td><?php echo e($employee->position ?: 'â€”'); ?></td>
+                                        <td><?php echo e($employee->user?->roles->pluck('name')->join(', ') ?: 'â€”'); ?></td>
                                         <td><?php echo e(\App\Models\AgencyEmployee::statusLabels()[$employee->status] ?? $employee->status); ?></td>
-                                        <td><?php echo e($employee->email ?: '—'); ?></td>
-                                        <td><?php echo e($employee->phone ?: '—'); ?></td>
+                                        <td><?php echo e($employee->email ?: 'â€”'); ?></td>
+                                        <td><?php echo e($employee->phone ?: 'â€”'); ?></td>
                                     </tr>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                                    <tr><td colspan="6" class="text-center text-muted">Aucun employé rattaché.</td></tr>
+                                    <tr><td colspan="6" class="text-center text-muted">Aucun employÃ© rattachÃ©.</td></tr>
                                 <?php endif; ?>
                             </tbody>
                         </table>
@@ -227,7 +229,7 @@
         <div class="col-xl-7">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="mb-3">Dernières réservations</h5>
+                    <h5 class="mb-3">DerniÃ¨res rÃ©servations</h5>
                     <div class="table-responsive">
                         <table class="aj-table" style="width:100%;">
                             <thead>
@@ -244,14 +246,14 @@
                                 <?php $__empty_1 = true; $__currentLoopData = $recentReservations; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $reservation): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                     <tr>
                                         <td>#<?php echo e($reservation->id); ?></td>
-                                        <td><?php echo e(trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? '')) ?: '—'); ?></td>
+                                        <td><?php echo e(trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? '')) ?: 'â€”'); ?></td>
                                         <td><?php echo e($reservation->status); ?></td>
-                                        <td><?php echo e($reservation->payment_type ?: '—'); ?></td>
+                                        <td><?php echo e($reservation->payment_type ?: 'â€”'); ?></td>
                                         <td><?php echo e(number_format((float) $reservation->paid_amount, 0, ',', ' ')); ?> DH</td>
-                                        <td><?php echo e($reservation->created_at?->format('d/m/Y H:i') ?: '—'); ?></td>
+                                        <td><?php echo e($reservation->created_at?->format('d/m/Y H:i') ?: 'â€”'); ?></td>
                                     </tr>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                                    <tr><td colspan="6" class="text-center text-muted">Aucune réservation liée.</td></tr>
+                                    <tr><td colspan="6" class="text-center text-muted">Aucune rÃ©servation liÃ©e.</td></tr>
                                 <?php endif; ?>
                             </tbody>
                         </table>
@@ -263,12 +265,12 @@
         <div class="col-xl-5">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="mb-3">Commissions estimées</h5>
+                    <h5 class="mb-3">Commissions estimÃ©es</h5>
                     <div class="table-responsive">
                         <table class="aj-table" style="width:100%;">
                             <thead>
                                 <tr>
-                                    <th>Réservation</th>
+                                    <th>RÃ©servation</th>
                                     <th>CA</th>
                                     <th>Taux</th>
                                     <th>Commission</th>
@@ -283,11 +285,11 @@
                                     <tr>
                                         <td>#<?php echo e($reservation->id); ?></td>
                                         <td><?php echo e(number_format($reservationRevenue, 0, ',', ' ')); ?> DH</td>
-                                        <td><?php echo e($rate ? number_format($rate, 2, ',', ' ') . '%' : '—'); ?></td>
-                                        <td><?php echo e($rate ? number_format($reservationRevenue * ($rate / 100), 0, ',', ' ') . ' DH' : '—'); ?></td>
+                                        <td><?php echo e($rate ? number_format($rate, 2, ',', ' ') . '%' : 'â€”'); ?></td>
+                                        <td><?php echo e($rate ? number_format($reservationRevenue * ($rate / 100), 0, ',', ' ') . ' DH' : 'â€”'); ?></td>
                                     </tr>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                                    <tr><td colspan="4" class="text-center text-muted">Aucune donnée de commission.</td></tr>
+                                    <tr><td colspan="4" class="text-center text-muted">Aucune donnÃ©e de commission.</td></tr>
                                 <?php endif; ?>
                             </tbody>
                         </table>
@@ -298,4 +300,5 @@
     </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\agencies\show.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\agencies\show.blade.php ENDPATH**/ ?>

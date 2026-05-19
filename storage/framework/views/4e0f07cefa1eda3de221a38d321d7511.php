@@ -1,8 +1,10 @@
+﻿
+
 <?php
     use Illuminate\Support\Str;
 
     $mediaService = app(\App\Services\WordPressMediaService::class);
-    $pageTitle = 'Catalogue des activités';
+    $pageTitle = 'Catalogue des activitÃ©s';
     $currentActivities = $activities->getCollection();
     $totalActivities = $activities->total();
     $activeCount = $currentActivities->where('is_active', true)->count();
@@ -28,7 +30,7 @@
             <div class="aj-catalog-head">
                 <div>
                     <h1 class="aj-catalog-title"><?php echo e($pageTitle); ?></h1>
-                    <p class="aj-catalog-subtitle">Gérez les activités réutilisables par région avec une présentation admin cohérente et plus propre.</p>
+                    <p class="aj-catalog-subtitle">GÃ©rez les activitÃ©s rÃ©utilisables par rÃ©gion avec une prÃ©sentation admin cohÃ©rente et plus propre.</p>
                 </div>
                 <div>
                     <div class="aj-catalog-breadcrumb">
@@ -36,11 +38,11 @@
                         <span>/</span>
                         <span>Circuits</span>
                         <span>/</span>
-                        <strong style="color:#0b1f3a">Activités</strong>
+                        <strong style="color:#0b1f3a">ActivitÃ©s</strong>
                     </div>
                     <a href="<?php echo e(route('admin.circuits.activities.create')); ?>" class="aj-btn aj-btn-primary">
                         <i class="bx bx-plus"></i>
-                        <span>Nouvelle activité</span>
+                        <span>Nouvelle activitÃ©</span>
                     </a>
                 </div>
             </div>
@@ -58,7 +60,7 @@
                     <div class="aj-kpi-head">
                         <div class="aj-kpi-icon -blue"><i class="bx bx-camera-movie"></i></div>
                         <div>
-                            <span class="aj-kpi-label">Total activités</span>
+                            <span class="aj-kpi-label">Total activitÃ©s</span>
                             <strong class="aj-kpi-value"><?php echo e(number_format($totalActivities, 0, ',', ' ')); ?></strong>
                             <span class="aj-kpi-note">Catalogue courant</span>
                         </div>
@@ -70,7 +72,7 @@
                         <div>
                             <span class="aj-kpi-label">Actives</span>
                             <strong class="aj-kpi-value"><?php echo e($activeCount); ?></strong>
-                            <span class="aj-kpi-note">Sur la page affichée</span>
+                            <span class="aj-kpi-note">Sur la page affichÃ©e</span>
                         </div>
                     </div>
                 </article>
@@ -80,7 +82,7 @@
                         <div>
                             <span class="aj-kpi-label">Inactives</span>
                             <strong class="aj-kpi-value"><?php echo e($inactiveCount); ?></strong>
-                            <span class="aj-kpi-note">À vérifier</span>
+                            <span class="aj-kpi-note">Ã€ vÃ©rifier</span>
                         </div>
                     </div>
                 </article>
@@ -90,7 +92,7 @@
                         <div>
                             <span class="aj-kpi-label">Avec galerie</span>
                             <strong class="aj-kpi-value"><?php echo e($withGalleryCount); ?></strong>
-                            <span class="aj-kpi-note">Visuels renseignés</span>
+                            <span class="aj-kpi-note">Visuels renseignÃ©s</span>
                         </div>
                     </div>
                 </article>
@@ -101,18 +103,18 @@
                     <div class="aj-result-meta">
                         <div class="d-flex align-items-center gap-2">
                             <label for="activityFilterInput" class="mb-0">Recherche locale :</label>
-                            <input id="activityFilterInput" type="search" class="aj-mini-select" placeholder="Titre, région, type...">
+                            <input id="activityFilterInput" type="search" class="aj-mini-select" placeholder="Titre, rÃ©gion, type...">
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             <label for="activitySortSelect" class="mb-0">Trier par :</label>
                             <select id="activitySortSelect" class="aj-mini-select">
                                 <option value="title_asc">Titre A-Z</option>
                                 <option value="price_asc">Prix croissant</option>
-                                <option value="price_desc">Prix décroissant</option>
-                                <option value="duration_desc">Durée longue</option>
+                                <option value="price_desc">Prix dÃ©croissant</option>
+                                <option value="duration_desc">DurÃ©e longue</option>
                             </select>
                         </div>
-                        <span><?php echo e($activities->firstItem() ?? 0); ?> - <?php echo e($activities->lastItem() ?? 0); ?> sur <?php echo e($totalActivities); ?> activités</span>
+                        <span><?php echo e($activities->firstItem() ?? 0); ?> - <?php echo e($activities->lastItem() ?? 0); ?> sur <?php echo e($totalActivities); ?> activitÃ©s</span>
                     </div>
                     <div class="aj-result-meta">
                         <button type="button" class="aj-mini-btn" id="activityExportBtn">
@@ -130,11 +132,11 @@
             <section class="aj-panel">
                 <?php if($activities->isEmpty()): ?>
                     <div class="aj-empty">
-                        <h5 class="mb-2">Aucune activité disponible</h5>
-                        <p class="text-muted mb-3">Créez la première activité pour alimenter le catalogue.</p>
+                        <h5 class="mb-2">Aucune activitÃ© disponible</h5>
+                        <p class="text-muted mb-3">CrÃ©ez la premiÃ¨re activitÃ© pour alimenter le catalogue.</p>
                         <a href="<?php echo e(route('admin.circuits.activities.create')); ?>" class="aj-btn aj-btn-primary">
                             <i class="bx bx-plus"></i>
-                            <span>Créer une activité</span>
+                            <span>CrÃ©er une activitÃ©</span>
                         </a>
                     </div>
                 <?php else: ?>
@@ -144,11 +146,11 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Visuel</th>
-                                    <th>Activité</th>
-                                    <th>Région</th>
+                                    <th>ActivitÃ©</th>
+                                    <th>RÃ©gion</th>
                                     <th>Tarifs</th>
-                                    <th>Âges</th>
-                                    <th>Durée</th>
+                                    <th>Ã‚ges</th>
+                                    <th>DurÃ©e</th>
                                     <th>Galerie</th>
                                     <th>Statut</th>
                                     <th class="text-end">Actions</th>
@@ -196,7 +198,7 @@
                                                     <span class="aj-badge -success">Active</span>
                                                 <?php endif; ?>
                                             </div>
-                                            <div class="aj-meta-text"><?php echo e($activity->activity_type ?: 'Type non renseigné'); ?></div>
+                                            <div class="aj-meta-text"><?php echo e($activity->activity_type ?: 'Type non renseignÃ©'); ?></div>
                                             <div class="aj-meta-text"><code><?php echo e($activity->slug); ?></code></div>
                                         </td>
                                         <td><?php echo e($activity->region_name ?: $activity->location_text ?: '-'); ?></td>
@@ -270,7 +272,7 @@
                                 </div>
                                 <div class="aj-card-body">
                                     <h4 class="aj-card-title"><a href="<?php echo e(route('admin.circuits.activities.edit', $activity)); ?>"><?php echo e($activity->title); ?></a></h4>
-                                    <div class="aj-meta-text mb-2"><?php echo e($activity->region_name ?: $activity->location_text ?: 'Région non renseignée'); ?></div>
+                                    <div class="aj-meta-text mb-2"><?php echo e($activity->region_name ?: $activity->location_text ?: 'RÃ©gion non renseignÃ©e'); ?></div>
                                     <div class="d-flex flex-wrap gap-2 mb-3">
                                         <span class="aj-badge -neutral"><?php echo e($activity->activity_type ?: 'Type libre'); ?></span>
                                         <?php if($activity->is_active): ?>
@@ -291,7 +293,7 @@
                     </div>
 
                     <div class="aj-footer">
-                        <div>Affichage de <?php echo e($activities->firstItem() ?? 0); ?> à <?php echo e($activities->lastItem() ?? 0); ?> sur <?php echo e($totalActivities); ?> résultats</div>
+                        <div>Affichage de <?php echo e($activities->firstItem() ?? 0); ?> Ã  <?php echo e($activities->lastItem() ?? 0); ?> sur <?php echo e($totalActivities); ?> rÃ©sultats</div>
                         <div><?php echo e($activities->links()); ?></div>
                     </div>
                 <?php endif; ?>
@@ -400,4 +402,5 @@
     </script>
 <?php $__env->stopPush(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\circuits\activities\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\circuits\activities\index.blade.php ENDPATH**/ ?>

@@ -1,9 +1,11 @@
+﻿
+
 <?php $__env->startSection('title', 'Group Deals'); ?>
 
 <?php $__env->startSection('content'); ?>
     <?php if (isset($component)) { $__componentOriginalcb19cb35a534439097b02b8af91726ee = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalcb19cb35a534439097b02b8af91726ee = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => 'Offres de voyage de groupe','subtitle' => 'Créez des offres autonomes avec progression, garantie et prix par paliers.','breadcrumbs' => [
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => 'Offres de voyage de groupe','subtitle' => 'CrÃ©ez des offres autonomes avec progression, garantie et prix par paliers.','breadcrumbs' => [
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
             ['label' => 'Group Deals'],
         ]]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
@@ -13,7 +15,7 @@
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['title' => 'Offres de voyage de groupe','subtitle' => 'Créez des offres autonomes avec progression, garantie et prix par paliers.','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
+<?php $component->withAttributes(['title' => 'Offres de voyage de groupe','subtitle' => 'CrÃ©ez des offres autonomes avec progression, garantie et prix par paliers.','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
             ['label' => 'Group Deals'],
         ])]); ?>
@@ -58,9 +60,9 @@
     <?php if (isset($component)) { $__componentOriginaldc8ea6d1c156289736a271a64b9dc41b = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginaldc8ea6d1c156289736a271a64b9dc41b = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.kpi-cards','data' => ['kpis' => [
-            ['label' => 'Total offres', 'value' => number_format($groupDeals->total(), 0, ',', ' '), 'icon' => 'bx bx-group', 'color' => '-blue', 'note' => 'Base complète'],
+            ['label' => 'Total offres', 'value' => number_format($groupDeals->total(), 0, ',', ' '), 'icon' => 'bx bx-group', 'color' => '-blue', 'note' => 'Base complÃ¨te'],
             ['label' => 'Actives', 'value' => number_format($groupDeals->where('status', 'active')->count(), 0, ',', ' '), 'icon' => 'bx bx-badge-check', 'color' => '-green', 'note' => 'En cours'],
-            ['label' => 'Complètes', 'value' => number_format($groupDeals->where('status', 'completed')->count(), 0, ',', ' '), 'icon' => 'bx bx-check-double', 'color' => '-orange', 'note' => 'Garanties'],
+            ['label' => 'ComplÃ¨tes', 'value' => number_format($groupDeals->where('status', 'completed')->count(), 0, ',', ' '), 'icon' => 'bx bx-check-double', 'color' => '-orange', 'note' => 'Garanties'],
             ['label' => 'En cours', 'value' => number_format($groupDeals->where('status', 'in_progress')->count(), 0, ',', ' '), 'icon' => 'bx bx-time', 'color' => '-violet', 'note' => 'Recrutement'],
         ]]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('admin.kpi-cards'); ?>
@@ -70,9 +72,9 @@
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
 <?php $component->withAttributes(['kpis' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
-            ['label' => 'Total offres', 'value' => number_format($groupDeals->total(), 0, ',', ' '), 'icon' => 'bx bx-group', 'color' => '-blue', 'note' => 'Base complète'],
+            ['label' => 'Total offres', 'value' => number_format($groupDeals->total(), 0, ',', ' '), 'icon' => 'bx bx-group', 'color' => '-blue', 'note' => 'Base complÃ¨te'],
             ['label' => 'Actives', 'value' => number_format($groupDeals->where('status', 'active')->count(), 0, ',', ' '), 'icon' => 'bx bx-badge-check', 'color' => '-green', 'note' => 'En cours'],
-            ['label' => 'Complètes', 'value' => number_format($groupDeals->where('status', 'completed')->count(), 0, ',', ' '), 'icon' => 'bx bx-check-double', 'color' => '-orange', 'note' => 'Garanties'],
+            ['label' => 'ComplÃ¨tes', 'value' => number_format($groupDeals->where('status', 'completed')->count(), 0, ',', ' '), 'icon' => 'bx bx-check-double', 'color' => '-orange', 'note' => 'Garanties'],
             ['label' => 'En cours', 'value' => number_format($groupDeals->where('status', 'in_progress')->count(), 0, ',', ' '), 'icon' => 'bx bx-time', 'color' => '-violet', 'note' => 'Recrutement'],
         ])]); ?>
 <?php echo $__env->renderComponent(); ?>
@@ -125,14 +127,14 @@
         <?php if($groupDeals->isEmpty()): ?>
             <?php if (isset($component)) { $__componentOriginal99089f8e2ef4184d7d35db81d60c6521 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal99089f8e2ef4184d7d35db81d60c6521 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.empty-state','data' => ['title' => 'Aucune offre Group Deal','message' => 'Créez votre première offre pour lancer un voyage de groupe.','actionUrl' => route('admin.group-deals.create'),'actionLabel' => 'Nouvelle offre']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.empty-state','data' => ['title' => 'Aucune offre Group Deal','message' => 'CrÃ©ez votre premiÃ¨re offre pour lancer un voyage de groupe.','actionUrl' => route('admin.group-deals.create'),'actionLabel' => 'Nouvelle offre']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('admin.empty-state'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['title' => 'Aucune offre Group Deal','message' => 'Créez votre première offre pour lancer un voyage de groupe.','action-url' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('admin.group-deals.create')),'action-label' => 'Nouvelle offre']); ?>
+<?php $component->withAttributes(['title' => 'Aucune offre Group Deal','message' => 'CrÃ©ez votre premiÃ¨re offre pour lancer un voyage de groupe.','action-url' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('admin.group-deals.create')),'action-label' => 'Nouvelle offre']); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal99089f8e2ef4184d7d35db81d60c6521)): ?>
@@ -184,12 +186,12 @@
                                 </td>
                                 <td>
                                     <div style="font-weight:800;color:#102340;"><?php echo e($deal->title); ?></div>
-                                    <div style="font-size:12px;font-weight:700;color:#7a879a;"><?php echo e($deal->destination ?: 'Destination non renseignée'); ?></div>
+                                    <div style="font-size:12px;font-weight:700;color:#7a879a;"><?php echo e($deal->destination ?: 'Destination non renseignÃ©e'); ?></div>
                                 </td>
                                 <td>
                                     <div style="font-weight:700;color:#253754;font-size:13px;"><?php echo e(optional($deal->start_date)->format('d/m/Y') ?: 'N/A'); ?></div>
                                     <?php if($deal->end_date): ?>
-                                        <div style="font-size:12px;font-weight:600;color:#7a879a;">→ <?php echo e($deal->end_date->format('d/m/Y')); ?></div>
+                                        <div style="font-size:12px;font-weight:600;color:#7a879a;">â†’ <?php echo e($deal->end_date->format('d/m/Y')); ?></div>
                                     <?php endif; ?>
                                 </td>
                                 <td>
@@ -285,4 +287,5 @@
     </section>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\group-deals\offers\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\group-deals\offers\index.blade.php ENDPATH**/ ?>

@@ -1,13 +1,14 @@
+﻿
 <?php $__env->startSection('title'); ?>
-    Créer un hébergement
+    CrÃ©er un hÃ©bergement
 <?php $__env->stopSection(); ?>
 <?php $__env->startSection('content'); ?>
     <?php if (isset($component)) { $__componentOriginalcb19cb35a534439097b02b8af91726ee = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalcb19cb35a534439097b02b8af91726ee = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => 'Créer un hébergement','subtitle' => 'Remplissez la fiche pour créer un nouvel hébergement dans le catalogue WordPress.','breadcrumbs' => [
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => 'CrÃ©er un hÃ©bergement','subtitle' => 'Remplissez la fiche pour crÃ©er un nouvel hÃ©bergement dans le catalogue WordPress.','breadcrumbs' => [
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Catalogue Hébergements', 'url' => route('admin.wordpress.hotels.index')],
-            ['label' => 'Créer'],
+            ['label' => 'Catalogue HÃ©bergements', 'url' => route('admin.wordpress.hotels.index')],
+            ['label' => 'CrÃ©er'],
         ]]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('admin.page-header'); ?>
 <?php if ($component->shouldRender()): ?>
@@ -15,15 +16,15 @@
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['title' => 'Créer un hébergement','subtitle' => 'Remplissez la fiche pour créer un nouvel hébergement dans le catalogue WordPress.','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
+<?php $component->withAttributes(['title' => 'CrÃ©er un hÃ©bergement','subtitle' => 'Remplissez la fiche pour crÃ©er un nouvel hÃ©bergement dans le catalogue WordPress.','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Catalogue Hébergements', 'url' => route('admin.wordpress.hotels.index')],
-            ['label' => 'Créer'],
+            ['label' => 'Catalogue HÃ©bergements', 'url' => route('admin.wordpress.hotels.index')],
+            ['label' => 'CrÃ©er'],
         ])]); ?>
          <?php $__env->slot('actions', null, []); ?> 
             <a href="<?php echo e(route('admin.wordpress.hotels.index')); ?>" class="aj-btn aj-btn-soft">
                 <i class="bx bx-arrow-back"></i>
-                <span>Retour à la liste</span>
+                <span>Retour Ã  la liste</span>
             </a>
          <?php $__env->endSlot(); ?>
      <?php echo $__env->renderComponent(); ?>
@@ -64,11 +65,11 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title mb-4">Informations de l'hôtel</h4>
+                        <h4 class="card-title mb-4">Informations de l'hÃ´tel</h4>
                         <?php echo $__env->make('admin.wordpress.hotels._form', ['hotel' => null, 'stHotel' => null, 'meta' => [], 'galleryUrls' => [], 'featuredUrl' => null], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
                     </div>
                     <div class="card-footer">
-                        <button type="submit" class="btn btn-primary waves-effect waves-light">Créer l'hôtel</button>
+                        <button type="submit" class="btn btn-primary waves-effect waves-light">CrÃ©er l'hÃ´tel</button>
                         <a href="<?php echo e(route('admin.wordpress.hotels.index')); ?>" class="btn btn-secondary waves-effect">Annuler</a>
                     </div>
                 </div>
@@ -80,4 +81,5 @@
     <script src="<?php echo e(URL::asset('build/js/app.js')); ?>"></script>
 <?php $__env->stopPush(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\wordpress\hotels\create.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\wordpress\hotels\create.blade.php ENDPATH**/ ?>

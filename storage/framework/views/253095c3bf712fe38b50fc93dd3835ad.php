@@ -1,3 +1,5 @@
+﻿
+
 <?php $__env->startSection('title', 'Demandes Hajj & Omra'); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -137,10 +139,10 @@
                             <td><?php echo e($requestItem->created_at?->format('d/m/Y H:i')); ?></td>
                             <td>
                                 <div class="fw-bold"><?php echo e($requestItem->full_name); ?></div>
-                                <div class="text-muted small"><?php echo e($requestItem->phone); ?> · <?php echo e($requestItem->email); ?></div>
+                                <div class="text-muted small"><?php echo e($requestItem->phone); ?> Â· <?php echo e($requestItem->email); ?></div>
                             </td>
                             <td><?php echo e($requestItem->package_title ?: optional($requestItem->package)->title ?: 'Non associee'); ?></td>
-                            <td><?php echo e($requestItem->selected_departure_date?->format('d/m/Y') ?: '—'); ?></td>
+                            <td><?php echo e($requestItem->selected_departure_date?->format('d/m/Y') ?: 'â€”'); ?></td>
                             <td>
                                 <?php if (isset($component)) { $__componentOriginal92e51077c3bdcbfa01c516c134fd0f33 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal92e51077c3bdcbfa01c516c134fd0f33 = $attributes; } ?>
@@ -207,4 +209,5 @@
     </section>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\hajj-omra\requests\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\hajj-omra\requests\index.blade.php ENDPATH**/ ?>

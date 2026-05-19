@@ -1,4 +1,4 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 
 @section('title')
     Modifier l activite
@@ -39,3 +39,4 @@
         'submitLabel' => 'Enregistrer les modifications',
     ])
 @endsection
+

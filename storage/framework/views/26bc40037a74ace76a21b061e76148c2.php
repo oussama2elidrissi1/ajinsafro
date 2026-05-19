@@ -1,3 +1,4 @@
+﻿
 <?php $__env->startSection('title', 'Revendeurs'); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -8,7 +9,7 @@
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="<?php echo e(route('admin.dashboard')); ?>">Admin</a></li>
-                        <li class="breadcrumb-item"><a href="<?php echo e(route('admin.partners.index')); ?>">Réseau partenaires</a></li>
+                        <li class="breadcrumb-item"><a href="<?php echo e(route('admin.partners.index')); ?>">RÃ©seau partenaires</a></li>
                         <li class="breadcrumb-item active">Revendeurs</li>
                     </ol>
                 </div>
@@ -44,8 +45,8 @@
                                 <select name="status" class="form-select form-select-sm" style="width: auto;">
                                     <option value="">Tous les statuts</option>
                                     <option value="pending" <?php echo e(request('status') === 'pending' ? 'selected' : ''); ?>>En attente</option>
-                                    <option value="validated" <?php echo e(request('status') === 'validated' ? 'selected' : ''); ?>>Validé</option>
-                                    <option value="rejected" <?php echo e(request('status') === 'rejected' ? 'selected' : ''); ?>>Refusé</option>
+                                    <option value="validated" <?php echo e(request('status') === 'validated' ? 'selected' : ''); ?>>ValidÃ©</option>
+                                    <option value="rejected" <?php echo e(request('status') === 'rejected' ? 'selected' : ''); ?>>RefusÃ©</option>
                                     <option value="suspended" <?php echo e(request('status') === 'suspended' ? 'selected' : ''); ?>>Suspendu</option>
                                 </select>
                             </div>
@@ -63,7 +64,7 @@
                                     <th>Raison sociale / Nom</th>
                                     <th>Responsable</th>
                                     <th>Email</th>
-                                    <th>Téléphone</th>
+                                    <th>TÃ©lÃ©phone</th>
                                     <th>Date d'inscription</th>
                                     <th>Statut</th>
                                     <th class="text-end">Actions</th>
@@ -81,7 +82,7 @@
                                         </td>
                                         <td><?php echo e($partner->nom_responsable); ?></td>
                                         <td><?php echo e($partner->email); ?></td>
-                                        <td><?php echo e($partner->telephone ?? '—'); ?></td>
+                                        <td><?php echo e($partner->telephone ?? 'â€”'); ?></td>
                                         <td><?php echo e($partner->created_at?->format('d/m/Y H:i')); ?></td>
                                         <td>
                                             <?php
@@ -124,4 +125,5 @@
     </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\partner-accounts\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\partner-accounts\index.blade.php ENDPATH**/ ?>

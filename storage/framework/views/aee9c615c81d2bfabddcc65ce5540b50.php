@@ -1,11 +1,12 @@
-<?php $__env->startSection('title', 'Règles de commission'); ?>
+﻿
+<?php $__env->startSection('title', 'RÃ¨gles de commission'); ?>
 
 <?php $__env->startSection('content'); ?>
     <div class="row mb-3">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">Règles de commission</h4>
-                <a href="<?php echo e(route('admin.partner-commission-rules.create')); ?>" class="btn btn-primary"><i class="bx bx-plus me-1"></i> Nouvelle règle</a>
+                <h4 class="page-title mb-0 font-size-18">RÃ¨gles de commission</h4>
+                <a href="<?php echo e(route('admin.partner-commission-rules.create')); ?>" class="btn btn-primary"><i class="bx bx-plus me-1"></i> Nouvelle rÃ¨gle</a>
             </div>
         </div>
     </div>
@@ -52,7 +53,7 @@
                             <th>Voyage</th>
                             <th>Type</th>
                             <th>Valeur</th>
-                            <th>Période</th>
+                            <th>PÃ©riode</th>
                             <th>Actif</th>
                             <th class="text-end">Actions</th>
                         </tr>
@@ -60,18 +61,18 @@
                     <tbody>
                         <?php $__empty_1 = true; $__currentLoopData = $rules; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $rule): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                             <tr>
-                                <td><?php echo e($rule->partner ? $rule->partner->display_name : '— Global'); ?></td>
-                                <td><?php echo e($rule->voyage ? $rule->voyage->name : '— Tous'); ?></td>
+                                <td><?php echo e($rule->partner ? $rule->partner->display_name : 'â€” Global'); ?></td>
+                                <td><?php echo e($rule->voyage ? $rule->voyage->name : 'â€” Tous'); ?></td>
                                 <td><?php echo e($rule->type === 'percent' ? '%' : 'Fixe'); ?></td>
                                 <td><?php echo e($rule->type === 'percent' ? $rule->value . ' %' : number_format($rule->value, 0, ',', ' ') . ' DH'); ?></td>
                                 <td>
-                                    <?php echo e($rule->valid_from?->format('d/m/Y') ?? '—'); ?> → <?php echo e($rule->valid_until?->format('d/m/Y') ?? '—'); ?>
+                                    <?php echo e($rule->valid_from?->format('d/m/Y') ?? 'â€”'); ?> â†’ <?php echo e($rule->valid_until?->format('d/m/Y') ?? 'â€”'); ?>
 
                                 </td>
                                 <td><span class="badge bg-<?php echo e($rule->is_active ? 'success' : 'secondary'); ?>"><?php echo e($rule->is_active ? 'Oui' : 'Non'); ?></span></td>
                                 <td class="text-end">
                                     <a href="<?php echo e(route('admin.partner-commission-rules.edit', $rule)); ?>" class="btn btn-sm btn-outline-primary">Modifier</a>
-                                    <form action="<?php echo e(route('admin.partner-commission-rules.destroy', $rule)); ?>" method="post" class="d-inline" onsubmit="return confirm('Supprimer cette règle ?');">
+                                    <form action="<?php echo e(route('admin.partner-commission-rules.destroy', $rule)); ?>" method="post" class="d-inline" onsubmit="return confirm('Supprimer cette rÃ¨gle ?');">
                                         <?php echo csrf_field(); ?>
                                         <?php echo method_field('DELETE'); ?>
                                         <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer</button>
@@ -80,7 +81,7 @@
                             </tr>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <tr>
-                                <td colspan="7" class="text-center text-muted py-4">Aucune règle. Créez une règle globale (sans partenaire ni voyage) ou par partenaire/voyage.</td>
+                                <td colspan="7" class="text-center text-muted py-4">Aucune rÃ¨gle. CrÃ©ez une rÃ¨gle globale (sans partenaire ni voyage) ou par partenaire/voyage.</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -93,4 +94,5 @@
     </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\partner-commission-rules\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\partner-commission-rules\index.blade.php ENDPATH**/ ?>

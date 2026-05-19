@@ -1,16 +1,17 @@
+﻿
 <?php $__env->startSection('title'); ?>
-    Modifier pack hébergement
+    Modifier pack hÃ©bergement
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('content'); ?>
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">Modifier pack hébergement</h4>
+                <h4 class="page-title mb-0 font-size-18">Modifier pack hÃ©bergement</h4>
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="<?php echo e(route('admin.dashboard')); ?>">Admin</a></li>
-                        <li class="breadcrumb-item"><a href="<?php echo e(route('admin.accommodation-packages.index')); ?>">Packs hébergement</a></li>
+                        <li class="breadcrumb-item"><a href="<?php echo e(route('admin.accommodation-packages.index')); ?>">Packs hÃ©bergement</a></li>
                         <li class="breadcrumb-item active">Modifier</li>
                     </ol>
                 </div>
@@ -37,4 +38,5 @@
     </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\accommodation-packages\edit.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\accommodation-packages\edit.blade.php ENDPATH**/ ?>

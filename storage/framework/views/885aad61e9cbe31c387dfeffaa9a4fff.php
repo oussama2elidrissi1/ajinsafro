@@ -1,4 +1,6 @@
-<?php $__env->startSection('title'); ?><?php echo e($isEdit ? 'Modifier rôle' : 'Créer rôle'); ?> — Rôles & Permissions@endsection
+﻿
+
+<?php $__env->startSection('title'); ?><?php echo e($isEdit ? 'Modifier rÃ´le' : 'CrÃ©er rÃ´le'); ?> â€” RÃ´les & Permissions@endsection
 
 <?php $__env->startPush('styles'); ?>
     <style>
@@ -127,12 +129,12 @@
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18"><?php echo e($isEdit ? 'Modifier rôle' : 'Créer rôle'); ?></h4>
+                <h4 class="page-title mb-0 font-size-18"><?php echo e($isEdit ? 'Modifier rÃ´le' : 'CrÃ©er rÃ´le'); ?></h4>
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="<?php echo e(route('admin.dashboard')); ?>">Admin</a></li>
-                        <li class="breadcrumb-item"><a href="<?php echo e(route('admin.settings.roles-permissions')); ?>">Rôles & Permissions</a></li>
-                        <li class="breadcrumb-item active"><?php echo e($isEdit ? 'Modifier' : 'Créer'); ?></li>
+                        <li class="breadcrumb-item"><a href="<?php echo e(route('admin.settings.roles-permissions')); ?>">RÃ´les & Permissions</a></li>
+                        <li class="breadcrumb-item active"><?php echo e($isEdit ? 'Modifier' : 'CrÃ©er'); ?></li>
                     </ol>
                 </div>
             </div>
@@ -150,7 +152,7 @@
                 <div class="card-body">
                     <div class="row g-3 align-items-end">
                         <div class="col-lg-4">
-                            <label class="form-label fw-semibold">Nom du rôle</label>
+                            <label class="form-label fw-semibold">Nom du rÃ´le</label>
                             <input type="text" name="name" class="form-control <?php $__errorArgs = ['name'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -170,13 +172,13 @@ unset($__errorArgs, $__bag); ?>
                         </div>
                         <div class="col-lg-4">
                             <label class="form-label fw-semibold">Recherche de permission</label>
-                            <input type="search" id="permission-search" class="form-control" placeholder="Rechercher un module, un libellé ou une clé technique">
+                            <input type="search" id="permission-search" class="form-control" placeholder="Rechercher un module, un libellÃ© ou une clÃ© technique">
                         </div>
                         <div class="col-lg-4">
                             <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
                                 <button type="button" class="btn btn-primary" id="check-all">Tout cocher</button>
-                                <button type="button" class="btn btn-outline-secondary" id="uncheck-all">Tout décocher</button>
-                                <span class="badge bg-soft-primary text-primary align-self-center px-3 py-2" id="permissions-count">0 sélectionnée(s)</span>
+                                <button type="button" class="btn btn-outline-secondary" id="uncheck-all">Tout dÃ©cocher</button>
+                                <span class="badge bg-soft-primary text-primary align-self-center px-3 py-2" id="permissions-count">0 sÃ©lectionnÃ©e(s)</span>
                             </div>
                         </div>
                     </div>
@@ -219,11 +221,11 @@ unset($__errorArgs, $__bag); ?>
                                         <h5 class="mb-0"><?php echo e($section['label']); ?></h5>
                                         <span class="badge bg-soft-dark text-dark section-count" data-count-for="section:<?php echo e($sectionKey); ?>">0 / 0</span>
                                     </div>
-                                    <p class="text-muted small mb-0 mt-1">Permissions alignées sur la sidebar réelle de l’admin.</p>
+                                    <p class="text-muted small mb-0 mt-1">Permissions alignÃ©es sur la sidebar rÃ©elle de lâ€™admin.</p>
                                 </div>
                                 <div class="d-flex flex-wrap gap-2">
                                     <button type="button" class="btn btn-sm btn-outline-primary check-section" data-section="<?php echo e($sectionKey); ?>">Cocher section</button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary uncheck-section" data-section="<?php echo e($sectionKey); ?>">Décocher section</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary uncheck-section" data-section="<?php echo e($sectionKey); ?>">DÃ©cocher section</button>
                                     <button type="button" class="btn btn-sm btn-light section-toggle" data-section="<?php echo e($sectionKey); ?>" aria-expanded="true">
                                         <span class="toggle-label"></span>
                                     </button>
@@ -271,7 +273,7 @@ unset($__errorArgs, $__bag); ?>
                                             </div>
                                             <div class="d-flex flex-wrap gap-2">
                                                 <button type="button" class="btn btn-sm btn-outline-primary check-module" data-module="<?php echo e($moduleKey); ?>">Cocher module</button>
-                                                <button type="button" class="btn btn-sm btn-outline-secondary uncheck-module" data-module="<?php echo e($moduleKey); ?>">Décocher module</button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary uncheck-module" data-module="<?php echo e($moduleKey); ?>">DÃ©cocher module</button>
                                                 <button type="button" class="btn btn-sm btn-light module-toggle" data-module="<?php echo e($moduleKey); ?>" aria-expanded="true">
                                                     <span class="toggle-label"></span>
                                                 </button>
@@ -319,12 +321,12 @@ unset($__errorArgs, $__bag); ?>
                 <div class="card border-0 shadow-sm">
                     <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                         <div>
-                            <div class="fw-semibold">Enregistrement du rôle</div>
-                            <div class="text-muted small">Les permissions existantes non touchées sont conservées jusqu’à la validation.</div>
+                            <div class="fw-semibold">Enregistrement du rÃ´le</div>
+                            <div class="text-muted small">Les permissions existantes non touchÃ©es sont conservÃ©es jusquâ€™Ã  la validation.</div>
                         </div>
                         <div class="d-flex gap-2">
                             <a href="<?php echo e(route('admin.settings.roles-permissions')); ?>" class="btn btn-light">Annuler</a>
-                            <button type="submit" class="btn btn-primary"><?php echo e($isEdit ? 'Mettre à jour' : 'Créer'); ?></button>
+                            <button type="submit" class="btn btn-primary"><?php echo e($isEdit ? 'Mettre Ã  jour' : 'CrÃ©er'); ?></button>
                         </div>
                     </div>
                 </div>
@@ -359,7 +361,7 @@ unset($__errorArgs, $__bag); ?>
 
             function updateCounters() {
                 const checked = checkboxes.filter((checkbox) => checkbox.checked).length;
-                countEl.textContent = checked + ' sélectionnée(s)';
+                countEl.textContent = checked + ' sÃ©lectionnÃ©e(s)';
 
                 sectionEls.forEach((section) => {
                     updateCounter('.section-count', 'section:' + section.dataset.section);
@@ -463,4 +465,5 @@ unset($__errorArgs, $__bag); ?>
     </script>
 <?php $__env->stopPush(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\settings\roles-permissions\form.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\settings\roles-permissions\form.blade.php ENDPATH**/ ?>

@@ -1,4 +1,4 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 
 @section('title', 'Fiche Group Deal')
 
@@ -7,7 +7,7 @@
     <div class="page-title-box d-flex align-items-center justify-content-between">
         <div>
             <h4 class="mb-1">{{ $groupDeal->title }}</h4>
-            <p class="text-muted mb-0">{{ $groupDeal->destination ?: 'Destination non renseignée' }}</p>
+            <p class="text-muted mb-0">{{ $groupDeal->destination ?: 'Destination non renseignÃ©e' }}</p>
         </div>
         <div class="d-flex gap-2">
             <a href="{{ route('front.group-deals.show', $groupDeal->slug) }}" target="_blank" class="btn btn-light">Voir la page publique</a>
@@ -51,7 +51,7 @@
                     </div>
                     <div class="mt-3 text-muted">
                         @if($stats['remaining_to_guarantee'] > 0)
-                            Il reste {{ $stats['remaining_to_guarantee'] }} personne(s) pour garantir le départ.
+                            Il reste {{ $stats['remaining_to_guarantee'] }} personne(s) pour garantir le dÃ©part.
                         @else
                             Le voyage est garanti.
                         @endif
@@ -69,7 +69,7 @@
                                 <th>Min</th>
                                 <th>Max</th>
                                 <th>Prix</th>
-                                <th>Libellé</th>
+                                <th>LibellÃ©</th>
                                 <th>Ordre</th>
                                 <th></th>
                             </tr>
@@ -123,7 +123,7 @@
                             <thead>
                             <tr>
                                 <th>Participant</th>
-                                <th>Qté</th>
+                                <th>QtÃ©</th>
                                 <th>Prix saisi</th>
                                 <th>Statut</th>
                                 <th>Paiement</th>
@@ -142,14 +142,14 @@
                                     <td>{{ $participant->selected_price ? number_format((float) $participant->selected_price, 0, ',', ' ') . ' DH' : 'N/A' }}</td>
                                     <td>
                                         <select name="status" form="participant-form-{{ $participant->id }}" class="form-select form-select-sm">
-                                            @foreach(['pending' => 'En attente', 'confirmed' => 'Confirmé', 'paid' => 'Payé', 'cancelled' => 'Annulé'] as $key => $label)
+                                            @foreach(['pending' => 'En attente', 'confirmed' => 'ConfirmÃ©', 'paid' => 'PayÃ©', 'cancelled' => 'AnnulÃ©'] as $key => $label)
                                                 <option value="{{ $key }}" @selected($participant->status === $key)>{{ $label }}</option>
                                             @endforeach
                                         </select>
                                     </td>
                                     <td>
                                         <select name="payment_status" form="participant-form-{{ $participant->id }}" class="form-select form-select-sm">
-                                            @foreach(['pending' => 'En attente', 'paid' => 'Payé', 'cancelled' => 'Annulé'] as $key => $label)
+                                            @foreach(['pending' => 'En attente', 'paid' => 'PayÃ©', 'cancelled' => 'AnnulÃ©'] as $key => $label)
                                                 <option value="{{ $key }}" @selected($participant->payment_status === $key)>{{ $label }}</option>
                                             @endforeach
                                         </select>
@@ -159,12 +159,12 @@
                                         <form id="participant-form-{{ $participant->id }}" method="POST" action="{{ route('admin.group-deals.participants.update', [$groupDeal, $participant]) }}">
                                             @csrf
                                             @method('PATCH')
-                                            <button class="btn btn-sm btn-outline-primary">Mettre à jour</button>
+                                            <button class="btn btn-sm btn-outline-primary">Mettre Ã  jour</button>
                                         </form>
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="7" class="text-center text-muted py-4">Aucun participant pour l’instant.</td></tr>
+                                <tr><td colspan="7" class="text-center text-muted py-4">Aucun participant pour lâ€™instant.</td></tr>
                             @endforelse
                             </tbody>
                         </table>
@@ -184,7 +184,7 @@
                             <select name="client_id" class="form-select">
                                 <option value="">Saisie libre</option>
                                 @foreach($clients as $client)
-                                    <option value="{{ $client->id }}">{{ $client->full_name ?: $client->email }}{{ $client->email ? ' · '.$client->email : '' }}</option>
+                                    <option value="{{ $client->id }}">{{ $client->full_name ?: $client->email }}{{ $client->email ? ' Â· '.$client->email : '' }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -194,7 +194,7 @@
                         </div>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">Téléphone</label>
+                                <label class="form-label">TÃ©lÃ©phone</label>
                                 <input type="text" name="phone" class="form-control">
                             </div>
                             <div class="col-md-6">
@@ -211,17 +211,17 @@
                                 <label class="form-label">Statut</label>
                                 <select name="status" class="form-select">
                                     <option value="pending">En attente</option>
-                                    <option value="confirmed">Confirmé</option>
-                                    <option value="paid">Payé</option>
-                                    <option value="cancelled">Annulé</option>
+                                    <option value="confirmed">ConfirmÃ©</option>
+                                    <option value="paid">PayÃ©</option>
+                                    <option value="cancelled">AnnulÃ©</option>
                                 </select>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Paiement</label>
                                 <select name="payment_status" class="form-select">
                                     <option value="pending">En attente</option>
-                                    <option value="paid">Payé</option>
-                                    <option value="cancelled">Annulé</option>
+                                    <option value="paid">PayÃ©</option>
+                                    <option value="cancelled">AnnulÃ©</option>
                                 </select>
                             </div>
                         </div>
@@ -231,17 +231,17 @@
             </div>
 
             <div class="card mb-4">
-                <div class="card-header"><h5 class="mb-0">Résumé</h5></div>
+                <div class="card-header"><h5 class="mb-0">RÃ©sumÃ©</h5></div>
                 <div class="card-body">
                     <ul class="list-unstyled mb-0 vstack gap-2">
-                        <li><strong>Départ:</strong> {{ optional($groupDeal->start_date)->format('d/m/Y') ?: 'N/A' }}</li>
+                        <li><strong>DÃ©part:</strong> {{ optional($groupDeal->start_date)->format('d/m/Y') ?: 'N/A' }}</li>
                         <li><strong>Retour:</strong> {{ optional($groupDeal->end_date)->format('d/m/Y') ?: 'N/A' }}</li>
                         <li><strong>Deadline:</strong> {{ optional($groupDeal->registration_deadline)->format('d/m/Y') ?: 'N/A' }}</li>
-                        <li><strong>Partage client:</strong> {{ $groupDeal->share_enabled ? 'Activé' : 'Désactivé' }}</li>
+                        <li><strong>Partage client:</strong> {{ $groupDeal->share_enabled ? 'ActivÃ©' : 'DÃ©sactivÃ©' }}</li>
                         <li><strong>Meilleur prix:</strong> {{ optional($stats['best_tier'])->price_per_person ? number_format((float) $stats['best_tier']->price_per_person, 0, ',', ' ') . ' DH' : 'N/A' }}</li>
                         <li><strong>Prochain palier:</strong>
                             @if($stats['next_tier'])
-                                {{ $stats['next_tier']->min_participants }} pers. → {{ number_format((float) $stats['next_tier']->price_per_person, 0, ',', ' ') }} DH
+                                {{ $stats['next_tier']->min_participants }} pers. â†’ {{ number_format((float) $stats['next_tier']->price_per_person, 0, ',', ' ') }} DH
                             @else
                                 Aucun
                             @endif
@@ -261,3 +261,4 @@
     </div>
 </div>
 @endsection
+

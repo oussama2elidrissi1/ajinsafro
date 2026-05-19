@@ -1,3 +1,4 @@
+﻿
 <?php $__env->startSection('title'); ?>
     <?php echo e($label); ?>
 
@@ -10,7 +11,7 @@
                     <h4 class="page-title mb-1 font-size-18"><?php echo e($label); ?></h4>
                     <p class="text-muted small mb-0"><code><?php echo e($groupKey); ?></code></p>
                 </div>
-                <a href="<?php echo e(route('admin.settings.referentiels-metier')); ?>" class="btn btn-light btn-sm">← Toutes les familles</a>
+                <a href="<?php echo e(route('admin.settings.referentiels-metier')); ?>" class="btn btn-light btn-sm">â† Toutes les familles</a>
             </div>
         </div>
     </div>
@@ -35,7 +36,7 @@
                 <?php echo csrf_field(); ?>
                 <?php if($groupKey === 'payment_methods'): ?>
                     <div class="col-12">
-                        <label class="form-label">Meta (JSON) — doit contenir <code>meta_key</code></label>
+                        <label class="form-label">Meta (JSON) â€” doit contenir <code>meta_key</code></label>
                         <textarea name="meta_json" class="form-control font-monospace" rows="2" required placeholder='{"meta_key":"is_meta_payment_gateway_st_xxx"}'><?php echo e(old('meta_json', '{"meta_key":""}')); ?></textarea>
                     </div>
                 <?php else: ?>
@@ -45,7 +46,7 @@
                     </div>
                 <?php endif; ?>
                 <div class="col-md-4">
-                    <label class="form-label">Libellé</label>
+                    <label class="form-label">LibellÃ©</label>
                     <input type="text" name="label" class="form-control" value="<?php echo e(old('label')); ?>" required>
                 </div>
                 <div class="col-md-2">
@@ -86,7 +87,7 @@
                                         <?php echo csrf_field(); ?>
                                         <?php echo method_field('PUT'); ?>
                                         <div class="col-md-4">
-                                            <label class="form-label small mb-0">Libellé</label>
+                                            <label class="form-label small mb-0">LibellÃ©</label>
                                             <input type="text" name="label" class="form-control form-control-sm" value="<?php echo e($item->label); ?>">
                                         </div>
                                         <div class="col-md-2">
@@ -127,4 +128,5 @@
     </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\settings\business_references\group.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\settings\business_references\group.blade.php ENDPATH**/ ?>

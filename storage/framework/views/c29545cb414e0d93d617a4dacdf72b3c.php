@@ -1,4 +1,4 @@
-
+﻿
 
 <?php $__env->startSection('title', 'Dashboard V3'); ?>
 
@@ -487,7 +487,7 @@
                                     <tr>
                                         <td>
                                             <strong><?php echo e($row['name']); ?></strong><br>
-                                            <small class="text-muted"><?php echo e($row['city']); ?> • <?php echo e($row['price']); ?></small>
+                                            <small class="text-muted"><?php echo e($row['city']); ?> â€¢ <?php echo e($row['price']); ?></small>
                                         </td>
                                         <td><?php echo e($row['date']); ?></td>
                                         <td><span class="dashboard-v3-status <?php echo e($statusClass); ?>"><?php echo e($row['status']); ?></span></td>
@@ -558,7 +558,7 @@
                                 <div class="d-flex justify-content-between gap-2 align-items-center flex-wrap">
                                     <div>
                                         <strong><?php echo e($row['client']); ?></strong>
-                                        <div class="small text-muted"><?php echo e($row['trip']); ?> • <?php echo e($row['agent']); ?></div>
+                                        <div class="small text-muted"><?php echo e($row['trip']); ?> â€¢ <?php echo e($row['agent']); ?></div>
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
                                         <span class="dashboard-v3-status <?php echo e($statusClass); ?>"><?php echo e($row['status']); ?></span>
@@ -595,4 +595,5 @@
         </section>
     </div>
 <?php $__env->stopSection(); ?>
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\dashboard\v3\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\dashboard\v3\index.blade.php ENDPATH**/ ?>

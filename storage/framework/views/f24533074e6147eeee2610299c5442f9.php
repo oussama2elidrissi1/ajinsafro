@@ -1,4 +1,4 @@
-
+﻿
 
 <?php $__env->startSection('title', 'Comptes points de vente'); ?>
 
@@ -43,7 +43,7 @@
     <div class="aj-card-body">
         <form method="GET" action="<?php echo e(route('admin.agency-accounts.index')); ?>">
             <div class="aj-filter-grid">
-                <input type="text" name="search" class="aj-form-control" value="<?php echo e($filters['search'] ?? ''); ?>" placeholder="Nom, email, téléphone">
+                <input type="text" name="search" class="aj-form-control" value="<?php echo e($filters['search'] ?? ''); ?>" placeholder="Nom, email, tÃ©lÃ©phone">
                 <select name="branch_id" class="aj-select">
                     <option value="">Tous les points de vente</option>
                     <?php $__currentLoopData = $branches; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $branch): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -51,7 +51,7 @@
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </select>
                 <select name="role_name" class="aj-select">
-                    <option value="">Tous les rôles</option>
+                    <option value="">Tous les rÃ´les</option>
                     <?php $__currentLoopData = $roles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $role): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <option value="<?php echo e($role->name); ?>" <?php if(($filters['role_name'] ?? '') === $role->name): echo 'selected'; endif; ?>><?php echo e($role->name); ?></option>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -67,14 +67,14 @@
                     <option value="0" <?php if(($filters['can_login'] ?? '') === '0'): echo 'selected'; endif; ?>>Non</option>
                 </select>
                 <select name="last_login" class="aj-select">
-                    <option value="">Dernière connexion</option>
-                    <option value="recent" <?php if(($filters['last_login'] ?? '') === 'recent'): echo 'selected'; endif; ?>>Déjà connecté</option>
+                    <option value="">DerniÃ¨re connexion</option>
+                    <option value="recent" <?php if(($filters['last_login'] ?? '') === 'recent'): echo 'selected'; endif; ?>>DÃ©jÃ  connectÃ©</option>
                     <option value="never" <?php if(($filters['last_login'] ?? '') === 'never'): echo 'selected'; endif; ?>>Jamais</option>
                 </select>
             </div>
             <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap;">
                 <button type="submit" class="aj-btn primary"><i class="bx bx-filter-alt"></i> Filtrer</button>
-                <a href="<?php echo e(route('admin.agency-accounts.index')); ?>" class="aj-btn"><i class="bx bx-reset"></i> Réinitialiser</a>
+                <a href="<?php echo e(route('admin.agency-accounts.index')); ?>" class="aj-btn"><i class="bx bx-reset"></i> RÃ©initialiser</a>
             </div>
         </form>
     </div>
@@ -84,7 +84,7 @@
     <div class="aj-card-head">
         <div>
             <strong style="font-size:16px;color:#172b4d;">Liste des comptes</strong>
-            <div class="aj-subtle"><?php echo e($accounts->total()); ?> compte(s) trouvé(s)</div>
+            <div class="aj-subtle"><?php echo e($accounts->total()); ?> compte(s) trouvÃ©(s)</div>
         </div>
     </div>
     <div class="aj-card-body" style="padding-top:14px;overflow-x:auto;">
@@ -93,11 +93,11 @@
                 <tr>
                     <th>Compte</th>
                             <th>Point de vente</th>
-                    <th>Employé</th>
-                    <th>Rôle</th>
+                    <th>EmployÃ©</th>
+                    <th>RÃ´le</th>
                     <th>Statut</th>
-                    <th>Dernière connexion</th>
-                    <th>Réservations</th>
+                    <th>DerniÃ¨re connexion</th>
+                    <th>RÃ©servations</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -113,9 +113,9 @@
                                 </div>
                             </div>
                         </td>
-                        <td><?php echo e($account->branch?->display_name ?? '—'); ?></td>
-                        <td><?php echo e($account->agencyEmployee?->full_name ?? '—'); ?></td>
-                        <td><?php echo e($account->roles->first()?->name ?? '—'); ?></td>
+                        <td><?php echo e($account->branch?->display_name ?? 'â€”'); ?></td>
+                        <td><?php echo e($account->agencyEmployee?->full_name ?? 'â€”'); ?></td>
+                        <td><?php echo e($account->roles->first()?->name ?? 'â€”'); ?></td>
                         <td>
                             <?php if($account->is_active): ?>
                                 <span class="aj-badge ok">Actif</span>
@@ -137,14 +137,14 @@
                                     <a href="<?php echo e(route('admin.agency-accounts.show', $account)); ?>" class="aj-btn">Voir</a>
                                 <?php endif; ?>
                                 <?php if(Route::has('admin.agency-accounts.edit')): ?>
-                                    <a href="<?php echo e(route('admin.agency-accounts.edit', $account)); ?>" class="aj-btn">Éditer</a>
+                                    <a href="<?php echo e(route('admin.agency-accounts.edit', $account)); ?>" class="aj-btn">Ã‰diter</a>
                                 <?php endif; ?>
                             </div>
                         </td>
                     </tr>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <tr>
-                        <td colspan="8" style="padding:28px;text-align:center;color:#71829a;font-weight:700;">Aucun compte point de vente trouvé.</td>
+                        <td colspan="8" style="padding:28px;text-align:center;color:#71829a;font-weight:700;">Aucun compte point de vente trouvÃ©.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
@@ -157,4 +157,5 @@
 </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\agency-accounts\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\agency-accounts\index.blade.php ENDPATH**/ ?>

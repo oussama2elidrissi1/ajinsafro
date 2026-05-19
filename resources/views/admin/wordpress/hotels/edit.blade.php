@@ -1,21 +1,21 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 @section('title')
-    Modifier l'hébergement
+    Modifier l'hÃ©bergement
 @endsection
 @section('content')
     <x-admin.page-header
-        title="Modifier l'hébergement"
+        title="Modifier l'hÃ©bergement"
         subtitle="{{ $hotel->post_title }}"
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Catalogue Hébergements', 'url' => route('admin.wordpress.hotels.index')],
+            ['label' => 'Catalogue HÃ©bergements', 'url' => route('admin.wordpress.hotels.index')],
             ['label' => $hotel->post_title],
         ]"
     >
         <x-slot name="actions">
             <a href="{{ route('admin.wordpress.hotels.index') }}" class="aj-btn aj-btn-soft">
                 <i class="bx bx-arrow-back"></i>
-                <span>Retour à la liste</span>
+                <span>Retour Ã  la liste</span>
             </a>
         </x-slot>
     </x-admin.page-header>
@@ -76,19 +76,19 @@
                                 @include('admin.wordpress.hotels._tab_contact', ['meta' => $meta ?? []])
                             </div>
                             <div class="tab-pane fade" id="pane-price" role="tabpanel">
-                                <p class="text-muted mb-0">Prix minimum est géré dans l'onglet Location. Cet onglet peut être étendu plus tard.</p>
+                                <p class="text-muted mb-0">Prix minimum est gÃ©rÃ© dans l'onglet Location. Cet onglet peut Ãªtre Ã©tendu plus tard.</p>
                             </div>
                             <div class="tab-pane fade" id="pane-checkinout" role="tabpanel">
-                                <p class="text-muted mb-0">Check in / Check out — à configurer si nécessaire.</p>
+                                <p class="text-muted mb-0">Check in / Check out â€” Ã  configurer si nÃ©cessaire.</p>
                             </div>
                             <div class="tab-pane fade" id="pane-other" role="tabpanel">
                                 @include('admin.wordpress.hotels._tab_other', ['meta' => $meta ?? []])
                             </div>
                             <div class="tab-pane fade" id="pane-policy" role="tabpanel">
-                                <p class="text-muted mb-0">Hotel policy — à configurer si nécessaire.</p>
+                                <p class="text-muted mb-0">Hotel policy â€” Ã  configurer si nÃ©cessaire.</p>
                             </div>
                             <div class="tab-pane fade" id="pane-inventory" role="tabpanel">
-                                <p class="text-muted mb-0">Inventory — à configurer si nécessaire.</p>
+                                <p class="text-muted mb-0">Inventory â€” Ã  configurer si nÃ©cessaire.</p>
                             </div>
                         </div>
                     </div>
@@ -119,7 +119,7 @@
         if (removeBtn && removeInput) {
             removeBtn.addEventListener('click', function() {
                 removeInput.value = '1';
-                document.getElementById('hotel-logo-preview').innerHTML = '<span class="text-muted">Logo supprimé (enregistrez pour confirmer).</span>';
+                document.getElementById('hotel-logo-preview').innerHTML = '<span class="text-muted">Logo supprimÃ© (enregistrez pour confirmer).</span>';
             });
         }
         // Gallery remove
@@ -129,3 +129,4 @@
     });
     </script>
 @endpush
+

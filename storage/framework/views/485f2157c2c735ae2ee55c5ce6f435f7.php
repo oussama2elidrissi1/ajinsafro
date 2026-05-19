@@ -1,4 +1,5 @@
-<?php $__env->startSection('title'); ?> Group Deal — <?php echo e($voyage->name); ?> <?php $__env->stopSection(); ?>
+﻿
+<?php $__env->startSection('title'); ?> Group Deal â€” <?php echo e($voyage->name); ?> <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('content'); ?>
 <div class="row">
@@ -40,11 +41,11 @@
             <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-2">
                 <div>
                     <span class="text-muted small">Destination :</span>
-                    <strong class="ms-1"><?php echo e($voyage->destination ?? '—'); ?></strong>
-                    <span class="ms-3 text-muted small">Durée :</span>
-                    <strong class="ms-1"><?php echo e($voyage->duration_text ?? '—'); ?></strong>
+                    <strong class="ms-1"><?php echo e($voyage->destination ?? 'â€”'); ?></strong>
+                    <span class="ms-3 text-muted small">DurÃ©e :</span>
+                    <strong class="ms-1"><?php echo e($voyage->duration_text ?? 'â€”'); ?></strong>
                     <span class="ms-3 text-muted small">Prix de base :</span>
-                    <strong class="ms-1"><?php echo e($voyage->price_from ? number_format($voyage->price_from, 0, ',', ' ').' €' : '—'); ?></strong>
+                    <strong class="ms-1"><?php echo e($voyage->price_from ? number_format($voyage->price_from, 0, ',', ' ').' â‚¬' : 'â€”'); ?></strong>
                 </div>
                 <a href="<?php echo e(route('admin.circuits.voyages.edit', $voyage->id)); ?>" class="btn btn-outline-secondary btn-sm">
                     <i class="bx bx-edit me-1"></i> Modifier le voyage
@@ -65,7 +66,7 @@
             <div class="card-body p-0">
                 <?php if($voyage->pricingTiers->isEmpty()): ?>
                     <div class="p-4 text-center text-muted small">
-                        Aucun palier configuré. Ajoutez au moins un palier pour activer la tarification progressive.
+                        Aucun palier configurÃ©. Ajoutez au moins un palier pour activer la tarification progressive.
                     </div>
                 <?php else: ?>
                     <table class="table table-hover mb-0 align-middle">
@@ -80,9 +81,9 @@
                         <tbody>
                         <?php $__currentLoopData = $voyage->pricingTiers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tier): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <tr>
-                                <td><strong>≥ <?php echo e($tier->min_participants); ?></strong> pers.</td>
-                                <td class="text-success fw-semibold"><?php echo e(number_format($tier->price_per_person, 0, ',', ' ')); ?> €</td>
-                                <td class="text-muted small"><?php echo e($tier->label ?? '—'); ?></td>
+                                <td><strong>â‰¥ <?php echo e($tier->min_participants); ?></strong> pers.</td>
+                                <td class="text-success fw-semibold"><?php echo e(number_format($tier->price_per_person, 0, ',', ' ')); ?> â‚¬</td>
+                                <td class="text-muted small"><?php echo e($tier->label ?? 'â€”'); ?></td>
                                 <td class="text-end">
                                     <button class="btn btn-sm btn-outline-secondary me-1"
                                             data-bs-toggle="modal"
@@ -112,15 +113,15 @@
     <div class="col-lg-7">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between">
-                <h6 class="mb-0">Départs Group Deal (<?php echo e($voyage->departures->count()); ?>)</h6>
+                <h6 class="mb-0">DÃ©parts Group Deal (<?php echo e($voyage->departures->count()); ?>)</h6>
                 <a href="<?php echo e(route('admin.group-deals.departures.index', ['voyage_id' => $voyage->id])); ?>"
                    class="btn btn-outline-primary btn-sm">Voir tous</a>
             </div>
             <div class="card-body p-0">
                 <?php if($voyage->departures->isEmpty()): ?>
                     <div class="p-4 text-center text-muted small">
-                        Aucun départ Group Deal pour ce voyage.
-                        <br>Activez l'option Group Deal sur un départ depuis la <a href="<?php echo e(route('admin.circuits.voyages.show', $voyage->id)); ?>">fiche voyage</a>.
+                        Aucun dÃ©part Group Deal pour ce voyage.
+                        <br>Activez l'option Group Deal sur un dÃ©part depuis la <a href="<?php echo e(route('admin.circuits.voyages.show', $voyage->id)); ?>">fiche voyage</a>.
                     </div>
                 <?php else: ?>
                     <table class="table table-hover mb-0 align-middle">
@@ -138,10 +139,10 @@
                         <?php $__currentLoopData = $voyage->departures; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dep): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <tr>
                                 <td class="small">
-                                    <?php echo e($dep->start_date?->format('d/m/Y') ?? '—'); ?>
+                                    <?php echo e($dep->start_date?->format('d/m/Y') ?? 'â€”'); ?>
 
                                     <?php if($dep->end_date): ?>
-                                        <br><span class="text-muted">→ <?php echo e($dep->end_date->format('d/m/Y')); ?></span>
+                                        <br><span class="text-muted">â†’ <?php echo e($dep->end_date->format('d/m/Y')); ?></span>
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-center">
@@ -153,11 +154,11 @@
                                 <td class="text-center text-muted small"><?php echo e($dep->guaranteed_threshold); ?></td>
                                 <td>
                                     <?php if($dep->active_tier_price): ?>
-                                        <span class="text-success fw-semibold"><?php echo e(number_format($dep->active_tier_price, 0, ',', ' ')); ?> €</span>
+                                        <span class="text-success fw-semibold"><?php echo e(number_format($dep->active_tier_price, 0, ',', ' ')); ?> â‚¬</span>
                                     <?php elseif($dep->sale_price): ?>
-                                        <?php echo e(number_format($dep->sale_price, 0, ',', ' ')); ?> €
+                                        <?php echo e(number_format($dep->sale_price, 0, ',', ' ')); ?> â‚¬
                                     <?php else: ?>
-                                        —
+                                        â€”
                                     <?php endif; ?>
                                 </td>
                                 <td>
@@ -169,7 +170,7 @@
                                 </td>
                                 <td>
                                     <a href="<?php echo e(route('admin.group-deals.departures.show', $dep)); ?>"
-                                       class="btn btn-sm btn-outline-primary">Détail</a>
+                                       class="btn btn-sm btn-outline-primary">DÃ©tail</a>
                                 </td>
                             </tr>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -197,7 +198,7 @@
                         <input type="number" name="min_participants" class="form-control form-control-sm" min="1" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small">Prix par personne (€) <span class="text-danger">*</span></label>
+                        <label class="form-label small">Prix par personne (â‚¬) <span class="text-danger">*</span></label>
                         <input type="number" name="price_per_person" class="form-control form-control-sm" step="0.01" min="0" required>
                     </div>
                     <div class="mb-2">
@@ -232,7 +233,7 @@
                                min="1" value="<?php echo e($tier->min_participants); ?>" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small">Prix par personne (€) <span class="text-danger">*</span></label>
+                        <label class="form-label small">Prix par personne (â‚¬) <span class="text-danger">*</span></label>
                         <input type="number" name="price_per_person" class="form-control form-control-sm"
                                step="0.01" min="0" value="<?php echo e($tier->price_per_person); ?>" required>
                     </div>
@@ -257,4 +258,5 @@
     <script src="<?php echo e(URL::asset('build/js/app.js')); ?>"></script>
 <?php $__env->stopPush(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\group-deals\trips\show.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\group-deals\trips\show.blade.php ENDPATH**/ ?>

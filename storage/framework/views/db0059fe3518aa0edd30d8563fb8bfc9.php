@@ -1,15 +1,16 @@
+﻿
 <?php $__env->startSection('title'); ?>
-    Paramètres généraux
+    ParamÃ¨tres gÃ©nÃ©raux
 <?php $__env->stopSection(); ?>
 <?php $__env->startSection('content'); ?>
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">Paramètres généraux</h4>
+                <h4 class="page-title mb-0 font-size-18">ParamÃ¨tres gÃ©nÃ©raux</h4>
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="<?php echo e(route('admin.dashboard')); ?>">Admin</a></li>
-                        <li class="breadcrumb-item active">Paramètres généraux</li>
+                        <li class="breadcrumb-item active">ParamÃ¨tres gÃ©nÃ©raux</li>
                     </ol>
                 </div>
             </div>
@@ -61,10 +62,10 @@
                                 ?>
                                 <div class="mb-2">
                                     <img src="<?php echo e($logoUrl); ?>" alt="Logo" class="img-thumbnail" style="max-height: 60px;">
-                                    <span class="text-muted small d-block"><?php echo e($hasCustomLogo ? 'Logo actuel' : 'Logo par défaut'); ?></span>
+                                    <span class="text-muted small d-block"><?php echo e($hasCustomLogo ? 'Logo actuel' : 'Logo par dÃ©faut'); ?></span>
                                 </div>
                                 <input class="form-control" type="file" name="brand_logo" id="brand_logo" accept="image/jpeg,image/png,image/gif,image/svg+xml,image/webp">
-                                <small class="text-muted">Laisser vide pour conserver l’image actuelle. Stockage : storage/app/public/front/brand/</small>
+                                <small class="text-muted">Laisser vide pour conserver lâ€™image actuelle. Stockage : storage/app/public/front/brand/</small>
                             </div>
                         </div>
                     </div>
@@ -77,11 +78,11 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="card-title mb-0">B) Topbar – Contacts</h5>
+                        <h5 class="card-title mb-0">B) Topbar â€“ Contacts</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3 row">
-                            <label for="topbar_phone" class="col-md-3 col-form-label">Téléphone</label>
+                            <label for="topbar_phone" class="col-md-3 col-form-label">TÃ©lÃ©phone</label>
                             <div class="col-md-9">
                                 <input class="form-control" type="text" name="topbar_phone" id="topbar_phone" value="<?php echo e(old('topbar_phone', $settings['topbar_phone'] ?? '(000) 999 - 656 - 888')); ?>" placeholder="(000) 999 - 656 - 888">
                             </div>
@@ -126,7 +127,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="card-title mb-0">C) Hero (page d’accueil publique)</h5>
+                        <h5 class="card-title mb-0">C) Hero (page dâ€™accueil publique)</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3 row">
@@ -134,7 +135,7 @@
                             <div class="col-md-9">
                                 <select class="form-select" name="hero_type" id="hero_type" required>
                                     <option value="image" <?php echo e(old('hero_type', $settings['hero_type'] ?? 'image') === 'image' ? 'selected' : ''); ?>>Image</option>
-                                    <option value="video" <?php echo e(old('hero_type', $settings['hero_type'] ?? 'image') === 'video' ? 'selected' : ''); ?>>Vidéo</option>
+                                    <option value="video" <?php echo e(old('hero_type', $settings['hero_type'] ?? 'image') === 'video' ? 'selected' : ''); ?>>VidÃ©o</option>
                                 </select>
                             </div>
                         </div>
@@ -149,21 +150,21 @@
                                     </div>
                                 <?php endif; ?>
                                 <input class="form-control" type="file" name="hero_image" id="hero_image" accept="image/jpeg,image/png,image/gif,image/webp">
-                                <small class="text-muted">Utilisée si type = Image. Stockage : storage/app/public/front/hero/</small>
+                                <small class="text-muted">UtilisÃ©e si type = Image. Stockage : storage/app/public/front/hero/</small>
                             </div>
                         </div>
                         <div class="mb-3 row" id="hero_video_row">
-                            <label for="hero_video" class="col-md-3 col-form-label">Vidéo hero</label>
+                            <label for="hero_video" class="col-md-3 col-form-label">VidÃ©o hero</label>
                             <div class="col-md-9">
                                 <?php if(!empty($settings['hero_video'])): ?>
-                                    <p class="text-muted small">Vidéo actuelle enregistrée. Téléversez un nouveau fichier pour remplacer.</p>
+                                    <p class="text-muted small">VidÃ©o actuelle enregistrÃ©e. TÃ©lÃ©versez un nouveau fichier pour remplacer.</p>
                                 <?php endif; ?>
                                 <input class="form-control" type="file" name="hero_video" id="hero_video" accept="video/mp4,video/webm,video/ogg">
-                                <small class="text-muted">Utilisée si type = Vidéo. mp4, webm, ogg. Stockage : storage/app/public/front/hero/</small>
+                                <small class="text-muted">UtilisÃ©e si type = VidÃ©o. mp4, webm, ogg. Stockage : storage/app/public/front/hero/</small>
                             </div>
                         </div>
                         <div class="mb-3 row">
-                            <label for="hero_overlay_opacity" class="col-md-3 col-form-label">Opacité overlay (0–1) <span class="text-danger">*</span></label>
+                            <label for="hero_overlay_opacity" class="col-md-3 col-form-label">OpacitÃ© overlay (0â€“1) <span class="text-danger">*</span></label>
                             <div class="col-md-9">
                                 <input class="form-control" type="number" name="hero_overlay_opacity" id="hero_overlay_opacity" value="<?php echo e(old('hero_overlay_opacity', $settings['hero_overlay_opacity'] ?? '0.45')); ?>" step="0.01" min="0" max="1" required>
                             </div>
@@ -190,20 +191,20 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="card-title mb-0">D) Paramètres des factures</h5>
+                        <h5 class="card-title mb-0">D) ParamÃ¨tres des factures</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3 row">
-                            <label for="invoice_header_image" class="col-md-3 col-form-label">En-tête facture</label>
+                            <label for="invoice_header_image" class="col-md-3 col-form-label">En-tÃªte facture</label>
                             <div class="col-md-9">
                                 <?php if(!empty($settings['invoice_header_image_url'])): ?>
                                     <div class="mb-2">
-                                        <img src="<?php echo e($settings['invoice_header_image_url']); ?>" alt="En-tête facture" class="img-thumbnail" style="max-height: 120px;">
+                                        <img src="<?php echo e($settings['invoice_header_image_url']); ?>" alt="En-tÃªte facture" class="img-thumbnail" style="max-height: 120px;">
                                         <span class="text-muted small d-block">Image actuelle</span>
                                     </div>
                                 <?php endif; ?>
                                 <input class="form-control" type="file" name="invoice_header_image" id="invoice_header_image" accept="image/jpeg,image/png,image/gif,image/svg+xml,image/webp">
-                                <small class="text-muted">Image affichée en haut des factures PDF. Largeur recommandée : 1200px environ. Stockage : storage/app/public/settings/invoices/</small>
+                                <small class="text-muted">Image affichÃ©e en haut des factures PDF. Largeur recommandÃ©e : 1200px environ. Stockage : storage/app/public/settings/invoices/</small>
                             </div>
                         </div>
                         <div class="mb-3 row">
@@ -216,7 +217,7 @@
                                     </div>
                                 <?php endif; ?>
                                 <input class="form-control" type="file" name="invoice_footer_image" id="invoice_footer_image" accept="image/jpeg,image/png,image/gif,image/svg+xml,image/webp">
-                                <small class="text-muted">Image affichée en bas des factures PDF. Largeur recommandée : 1200px environ. Stockage : storage/app/public/settings/invoices/</small>
+                                <small class="text-muted">Image affichÃ©e en bas des factures PDF. Largeur recommandÃ©e : 1200px environ. Stockage : storage/app/public/settings/invoices/</small>
                             </div>
                         </div>
                     </div>
@@ -229,15 +230,15 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="card-title mb-0">E) Workspace commercial — modal départ</h5>
+                        <h5 class="card-title mb-0">E) Workspace commercial â€” modal dÃ©part</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3 row">
-                            <label class="col-md-3 col-form-label">Afficher le rapport du départ</label>
+                            <label class="col-md-3 col-form-label">Afficher le rapport du dÃ©part</label>
                             <div class="col-md-9">
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" name="ws_modal_show_departure_report" id="ws_modal_show_departure_report" value="1" <?php echo e(old('ws_modal_show_departure_report', $settings['ws_modal_show_departure_report'] ?? '1') == '1' ? 'checked' : ''); ?>>
-                                    <label class="form-check-label" for="ws_modal_show_departure_report">Afficher la section "Rapport du départ" dans le modal</label>
+                                    <label class="form-check-label" for="ws_modal_show_departure_report">Afficher la section "Rapport du dÃ©part" dans le modal</label>
                                 </div>
                             </div>
                         </div>
@@ -255,7 +256,7 @@
                                     </div>
                                     <div class="form-check form-switch mb-1">
                                         <input class="form-check-input" type="checkbox" name="ws_modal_show_commission_amount" id="ws_modal_show_commission_amount" value="1" <?php echo e(old('ws_modal_show_commission_amount', $settings['ws_modal_show_commission_amount'] ?? '1') == '1' ? 'checked' : ''); ?>>
-                                        <label class="form-check-label" for="ws_modal_show_commission_amount">Afficher le montant estimé</label>
+                                        <label class="form-check-label" for="ws_modal_show_commission_amount">Afficher le montant estimÃ©</label>
                                     </div>
                                     <div class="form-check form-switch mb-1">
                                         <input class="form-check-input" type="checkbox" name="ws_modal_show_commission_percentage" id="ws_modal_show_commission_percentage" value="1" <?php echo e(old('ws_modal_show_commission_percentage', $settings['ws_modal_show_commission_percentage'] ?? '1') == '1' ? 'checked' : ''); ?>>
@@ -267,7 +268,7 @@
                                     </div>
                                     <div class="form-check form-switch mb-1">
                                         <input class="form-check-input" type="checkbox" name="ws_modal_show_commission_agent" id="ws_modal_show_commission_agent" value="1" <?php echo e(old('ws_modal_show_commission_agent', $settings['ws_modal_show_commission_agent'] ?? '1') == '1' ? 'checked' : ''); ?>>
-                                        <label class="form-check-label" for="ws_modal_show_commission_agent">Afficher l'agent concerné</label>
+                                        <label class="form-check-label" for="ws_modal_show_commission_agent">Afficher l'agent concernÃ©</label>
                                     </div>
                                     <div class="form-check form-switch mb-1">
                                         <input class="form-check-input" type="checkbox" name="ws_modal_show_commission_branch" id="ws_modal_show_commission_branch" value="1" <?php echo e(old('ws_modal_show_commission_branch', $settings['ws_modal_show_commission_branch'] ?? '1') == '1' ? 'checked' : ''); ?>>
@@ -287,7 +288,7 @@
 
         <div class="row">
             <div class="col-12">
-                <button type="submit" class="btn btn-primary waves-effect waves-light">Enregistrer les paramètres</button>
+                <button type="submit" class="btn btn-primary waves-effect waves-light">Enregistrer les paramÃ¨tres</button>
                 <a href="<?php echo e(route('admin.dashboard')); ?>" class="btn btn-secondary waves-effect waves-light ms-2">Annuler</a>
             </div>
         </div>
@@ -311,4 +312,5 @@
     </script>
 <?php $__env->stopPush(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\settings\parametres-generaux\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\settings\parametres-generaux\index.blade.php ENDPATH**/ ?>

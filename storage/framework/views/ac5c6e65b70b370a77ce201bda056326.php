@@ -1,5 +1,6 @@
+﻿
 <?php $__env->startSection('title'); ?>
-    Fiche voyage – <?php echo e($voyage->name); ?>
+    Fiche voyage â€“ <?php echo e($voyage->name); ?>
 
 <?php $__env->stopSection(); ?>
 <?php $__env->startSection('content'); ?>
@@ -21,7 +22,7 @@
     <div class="row mb-3">
         <div class="col-12">
             <a href="<?php echo e(route('admin.circuits.voyages.edit', $voyage)); ?>" class="btn btn-primary waves-effect waves-light me-2">Modifier le voyage</a>
-            <a href="<?php echo e(route('admin.circuits.voyages.index')); ?>" class="btn btn-secondary waves-effect">Retour à la liste</a>
+            <a href="<?php echo e(route('admin.circuits.voyages.index')); ?>" class="btn btn-secondary waves-effect">Retour Ã  la liste</a>
         </div>
     </div>
 
@@ -36,7 +37,7 @@
                 <p class="mb-1"><strong>Destination :</strong> <?php echo e($voyage->destination); ?></p>
             <?php endif; ?>
             <?php if($voyage->duration_text): ?>
-                <p class="mb-1"><strong>Durée :</strong> <?php echo e($voyage->duration_text); ?></p>
+                <p class="mb-1"><strong>DurÃ©e :</strong> <?php echo e($voyage->duration_text); ?></p>
             <?php endif; ?>
             <?php if(!empty($meta['min_people'])): ?>
                 <p class="mb-1"><strong>Minimum personnes :</strong> <?php echo e($meta['min_people']); ?></p>
@@ -59,7 +60,7 @@
                 <h4 class="card-title mb-3">Prix & Promotion</h4>
                 <div class="row align-items-center">
                     <div class="col-md-6">
-                        <p class="mb-1 font-size-18 fw-medium">À partir de <?php echo e(number_format($voyage->price_from ?? 0, 0, ',', ' ')); ?> <?php echo e($voyage->currency_symbol); ?></p>
+                        <p class="mb-1 font-size-18 fw-medium">Ã€ partir de <?php echo e(number_format($voyage->price_from ?? 0, 0, ',', ' ')); ?> <?php echo e($voyage->currency_symbol); ?></p>
                         <?php if($voyage->old_price && $voyage->old_price > ($voyage->price_from ?? 0)): ?>
                             <p class="text-muted mb-0">Valeur : <?php echo e(number_format($voyage->old_price, 0, ',', ' ')); ?> <?php echo e($voyage->currency_symbol); ?></p>
                         <?php endif; ?>
@@ -67,7 +68,7 @@
                     <?php if($voyage->discount_percent !== null && $voyage->discount_percent > 0): ?>
                         <div class="col-md-6 text-md-end">
                             <span class="badge bg-danger font-size-14 me-2">Remise : <?php echo e($voyage->discount_percent); ?> %</span>
-                            <span class="badge bg-success font-size-14">Économie : <?php echo e(number_format($voyage->discount_amount, 0, ',', ' ')); ?> <?php echo e($voyage->currency_symbol); ?></span>
+                            <span class="badge bg-success font-size-14">Ã‰conomie : <?php echo e(number_format($voyage->discount_amount, 0, ',', ' ')); ?> <?php echo e($voyage->currency_symbol); ?></span>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -79,7 +80,7 @@
     <?php if(optional($voyage->departures)->isNotEmpty()): ?>
         <div class="card mb-4">
             <div class="card-body">
-                <h4 class="card-title mb-3">Départs</h4>
+                <h4 class="card-title mb-3">DÃ©parts</h4>
                 <?php if($voyage->departure_policy): ?>
                     <p class="text-muted small mb-3"><?php echo e($voyage->departure_policy); ?></p>
                 <?php endif; ?>
@@ -124,7 +125,7 @@
                                 <button class="accordion-button <?php echo e($idx > 0 ? 'collapsed' : ''); ?>" type="button" data-bs-toggle="collapse" data-bs-target="#programme-day-<?php echo e($idx); ?>" aria-expanded="<?php echo e($idx === 0 ? 'true' : 'false'); ?>" aria-controls="programme-day-<?php echo e($idx); ?>">
                                     <span class="fw-semibold">JOUR <?php echo e($day->day_number); ?></span>
                                     <?php if(!empty($dayTitleDisplay)): ?>
-                                        <span class="ms-2 text-muted">– <?php echo e($dayTitleDisplay); ?></span>
+                                        <span class="ms-2 text-muted">â€“ <?php echo e($dayTitleDisplay); ?></span>
                                     <?php endif; ?>
                                     <?php if($mode === 'free'): ?>
                                         <span class="badge bg-secondary ms-2">Jour libre</span>
@@ -140,7 +141,7 @@
                                         <ul class="list-unstyled mb-0">
                                             <?php $__currentLoopData = $includedActivities; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $da): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                 <li class="mb-2">
-                                                    <span class="fw-medium"><?php echo e($da->custom_title ?: (optional($da->activity)->title ?? 'Activité')); ?></span>
+                                                    <span class="fw-medium"><?php echo e($da->custom_title ?: (optional($da->activity)->title ?? 'ActivitÃ©')); ?></span>
                                                     <?php if($da->is_mandatory): ?>
                                                         <span class="badge bg-primary ms-1">Obligatoire</span>
                                                     <?php endif; ?>
@@ -151,7 +152,7 @@
                                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                         </ul>
                                     <?php else: ?>
-                                        <p class="text-muted small mb-0">Aucune activité</p>
+                                        <p class="text-muted small mb-0">Aucune activitÃ©</p>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -182,4 +183,5 @@
 </style>
 <?php $__env->stopPush(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\circuits\voyages\show.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\circuits\voyages\show.blade.php ENDPATH**/ ?>

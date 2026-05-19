@@ -1,3 +1,5 @@
+﻿
+
 <?php $__env->startSection('title', 'Fiche Hajj & Omra'); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -71,8 +73,8 @@
 <?php endif; ?>
                     <div><strong>Type :</strong> <?php echo e($package->type_label); ?></div>
                     <div><strong>Statut :</strong> <?php echo e($package->status_label); ?></div>
-                    <div><strong>Ville de depart :</strong> <?php echo e($package->departure_city ?: '—'); ?></div>
-                    <div><strong>Destination :</strong> <?php echo e($package->destination ?: '—'); ?></div>
+                    <div><strong>Ville de depart :</strong> <?php echo e($package->departure_city ?: 'â€”'); ?></div>
+                    <div><strong>Destination :</strong> <?php echo e($package->destination ?: 'â€”'); ?></div>
                     <div><strong>Prix a partir de :</strong> <?php echo e($package->price_from_value !== null ? number_format($package->price_from_value, 0, ',', ' ') . ' ' . $package->currency : 'Sur demande'); ?></div>
                     <div><strong>Places restantes :</strong> <?php echo e($package->remaining_places); ?></div>
                 </div>
@@ -98,8 +100,8 @@
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
 <?php $component->withAttributes(['title' => 'Description']); ?>
-                <div class="mb-3"><strong>Description courte</strong><br><?php echo e($package->short_description ?: '—'); ?></div>
-                <div><strong>Description detaillee</strong><br><?php echo nl2br(e($package->description ?: '—')); ?></div>
+                <div class="mb-3"><strong>Description courte</strong><br><?php echo e($package->short_description ?: 'â€”'); ?></div>
+                <div><strong>Description detaillee</strong><br><?php echo nl2br(e($package->description ?: 'â€”')); ?></div>
              <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginalba421f08b6b43aecb09f8eebe577a4f3)): ?>
@@ -122,10 +124,10 @@
 <?php endif; ?>
 <?php $component->withAttributes(['title' => 'Hotels et services']); ?>
                 <div class="row g-3">
-                    <div class="col-md-6"><strong>Hotel Makkah :</strong> <?php echo e($package->makkah_hotel ?: '—'); ?></div>
-                    <div class="col-md-6"><strong>Distance Haram Makkah :</strong> <?php echo e($package->makkah_haram_distance ?: '—'); ?></div>
-                    <div class="col-md-6"><strong>Hotel Madinah :</strong> <?php echo e($package->madinah_hotel ?: '—'); ?></div>
-                    <div class="col-md-6"><strong>Distance Haram Madinah :</strong> <?php echo e($package->madinah_haram_distance ?: '—'); ?></div>
+                    <div class="col-md-6"><strong>Hotel Makkah :</strong> <?php echo e($package->makkah_hotel ?: 'â€”'); ?></div>
+                    <div class="col-md-6"><strong>Distance Haram Makkah :</strong> <?php echo e($package->makkah_haram_distance ?: 'â€”'); ?></div>
+                    <div class="col-md-6"><strong>Hotel Madinah :</strong> <?php echo e($package->madinah_hotel ?: 'â€”'); ?></div>
+                    <div class="col-md-6"><strong>Distance Haram Madinah :</strong> <?php echo e($package->madinah_haram_distance ?: 'â€”'); ?></div>
                     <div class="col-md-4"><strong>Transport inclus :</strong> <?php echo e($package->transport_included ? 'Oui' : 'Non'); ?></div>
                     <div class="col-md-4"><strong>Visa inclus :</strong> <?php echo e($package->visa_included ? 'Oui' : 'Non'); ?></div>
                     <div class="col-md-4"><strong>Encadrement inclus :</strong> <?php echo e($package->guidance_included ? 'Oui' : 'Non'); ?></div>
@@ -205,7 +207,7 @@
                             <?php $__currentLoopData = $package->departures; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $departure): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <tr>
                                     <td><?php echo e($departure->departure_date?->format('d/m/Y')); ?></td>
-                                    <td><?php echo e($departure->return_date?->format('d/m/Y') ?: '—'); ?></td>
+                                    <td><?php echo e($departure->return_date?->format('d/m/Y') ?: 'â€”'); ?></td>
                                     <td><?php echo e($departure->status_label); ?></td>
                                     <td><?php echo e($departure->remaining_places); ?></td>
                                 </tr>
@@ -246,7 +248,7 @@
                         <div class="border rounded-3 p-3 h-100">
                             <div class="fw-bold mb-2">Jour <?php echo e($programDay->day_number); ?> - <?php echo e($programDay->title ?: 'Etape'); ?></div>
                             <div class="text-muted small mb-2"><?php echo e($programDay->city ?: 'Ville non renseignee'); ?></div>
-                            <div><?php echo e($programDay->description ?: '—'); ?></div>
+                            <div><?php echo e($programDay->description ?: 'â€”'); ?></div>
                         </div>
                     </div>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -264,4 +266,5 @@
 <?php endif; ?>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\hajj-omra\show.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\hajj-omra\show.blade.php ENDPATH**/ ?>

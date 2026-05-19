@@ -1,4 +1,6 @@
-<?php $__env->startSection('title', 'Group Deals — Tarifs par palier'); ?>
+﻿
+
+<?php $__env->startSection('title', 'Group Deals â€” Tarifs par palier'); ?>
 
 <?php $__env->startSection('content'); ?>
 <div class="container-fluid">
@@ -17,7 +19,7 @@
                 </div>
                 <div class="col-md-3 d-flex gap-2">
                     <button class="btn btn-outline-primary flex-fill">Filtrer</button>
-                    <a href="<?php echo e(route('admin.group-deals.tiers.index')); ?>" class="btn btn-light">Réinitialiser</a>
+                    <a href="<?php echo e(route('admin.group-deals.tiers.index')); ?>" class="btn btn-light">RÃ©initialiser</a>
                 </div>
             </form>
 
@@ -42,13 +44,13 @@
                                 <?php elseif($tier->voyage): ?>
                                     <span class="fw-semibold"><?php echo e($tier->voyage->name); ?></span>
                                 <?php else: ?>
-                                    <span class="text-muted">—</span>
+                                    <span class="text-muted">â€”</span>
                                 <?php endif; ?>
                             </td>
-                            <td><?php echo e($tier->label ?: '—'); ?></td>
-                            <td><?php echo e($tier->min_participants ?? $tier->min_people ?? '—'); ?></td>
-                            <td><?php echo e($tier->max_people ?: '—'); ?></td>
-                            <td class="fw-semibold"><?php echo e($tier->price_per_person ? number_format((float) $tier->price_per_person, 2, ',', ' ') . ' DH' : '—'); ?></td>
+                            <td><?php echo e($tier->label ?: 'â€”'); ?></td>
+                            <td><?php echo e($tier->min_participants ?? $tier->min_people ?? 'â€”'); ?></td>
+                            <td><?php echo e($tier->max_people ?: 'â€”'); ?></td>
+                            <td class="fw-semibold"><?php echo e($tier->price_per_person ? number_format((float) $tier->price_per_person, 2, ',', ' ') . ' DH' : 'â€”'); ?></td>
                             <td class="text-end">
                                 <?php if($tier->groupDeal): ?>
                                     <a href="<?php echo e(route('admin.group-deals.show', $tier->groupDeal)); ?>" class="btn btn-sm btn-primary">Ouvrir</a>
@@ -59,7 +61,7 @@
                         </tr>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-4">Aucun palier trouvé.</td>
+                            <td colspan="6" class="text-center text-muted py-4">Aucun palier trouvÃ©.</td>
                         </tr>
                     <?php endif; ?>
                     </tbody>
@@ -73,4 +75,5 @@
 </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\group-deals\tiers\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\group-deals\tiers\index.blade.php ENDPATH**/ ?>

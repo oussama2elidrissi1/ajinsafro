@@ -1,4 +1,4 @@
-
+﻿
 
 <?php $__env->startSection('title', 'Affectations'); ?>
 
@@ -44,7 +44,7 @@
     <div class="aj-card-body">
         <form method="GET" action="<?php echo e(route('admin.assignments.index')); ?>">
             <div class="aj-filter-grid">
-                <input type="text" name="search" class="aj-form-control" value="<?php echo e($filters['search'] ?? ''); ?>" placeholder="Réservation, client, email">
+                <input type="text" name="search" class="aj-form-control" value="<?php echo e($filters['search'] ?? ''); ?>" placeholder="RÃ©servation, client, email">
                 <select name="branch_id" class="aj-select">
                     <option value="">Tous les points de vente</option>
                     <?php $__currentLoopData = $branches; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $branch): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -56,7 +56,7 @@
                     <?php $__currentLoopData = $branches; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $branch): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <optgroup label="<?php echo e($branch->display_name); ?>">
                             <?php $__currentLoopData = ($agentsByBranch[$branch->id] ?? []); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $agent): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                <option value="<?php echo e($agent['id']); ?>" <?php if((int)($filters['agent_id'] ?? 0) === (int) $agent['id']): echo 'selected'; endif; ?>><?php echo e($agent['name']); ?> <?php if(!empty($agent['job_title'])): ?> — <?php echo e($agent['job_title']); ?> <?php endif; ?></option>
+                                <option value="<?php echo e($agent['id']); ?>" <?php if((int)($filters['agent_id'] ?? 0) === (int) $agent['id']): echo 'selected'; endif; ?>><?php echo e($agent['name']); ?> <?php if(!empty($agent['job_title'])): ?> â€” <?php echo e($agent['job_title']); ?> <?php endif; ?></option>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </optgroup>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -66,7 +66,7 @@
                     <?php $__currentLoopData = $branches; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $branch): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <optgroup label="<?php echo e($branch->display_name); ?>">
                             <?php $__currentLoopData = ($agentsByBranch[$branch->id] ?? []); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $agent): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                <option value="<?php echo e($agent['id']); ?>" <?php if((int)($filters['sales_manager_id'] ?? 0) === (int) $agent['id']): echo 'selected'; endif; ?>><?php echo e($agent['name']); ?> <?php if(!empty($agent['job_title'])): ?> — <?php echo e($agent['job_title']); ?> <?php endif; ?></option>
+                                <option value="<?php echo e($agent['id']); ?>" <?php if((int)($filters['sales_manager_id'] ?? 0) === (int) $agent['id']): echo 'selected'; endif; ?>><?php echo e($agent['name']); ?> <?php if(!empty($agent['job_title'])): ?> â€” <?php echo e($agent['job_title']); ?> <?php endif; ?></option>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </optgroup>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -74,12 +74,12 @@
                 <select name="status" class="aj-select">
                     <option value="">Tous les statuts</option>
                     <option value="pending" <?php if(($filters['status'] ?? '') === 'pending'): echo 'selected'; endif; ?>>En attente</option>
-                    <option value="confirmed" <?php if(($filters['status'] ?? '') === 'confirmed'): echo 'selected'; endif; ?>>Confirmée</option>
-                    <option value="cancelled" <?php if(($filters['status'] ?? '') === 'cancelled'): echo 'selected'; endif; ?>>Annulée</option>
-                    <option value="paid" <?php if(($filters['status'] ?? '') === 'paid'): echo 'selected'; endif; ?>>Payée</option>
+                    <option value="confirmed" <?php if(($filters['status'] ?? '') === 'confirmed'): echo 'selected'; endif; ?>>ConfirmÃ©e</option>
+                    <option value="cancelled" <?php if(($filters['status'] ?? '') === 'cancelled'): echo 'selected'; endif; ?>>AnnulÃ©e</option>
+                    <option value="paid" <?php if(($filters['status'] ?? '') === 'paid'): echo 'selected'; endif; ?>>PayÃ©e</option>
                 </select>
                 <select name="priority" class="aj-select">
-                    <option value="">Priorité</option>
+                    <option value="">PrioritÃ©</option>
                     <option value="low" <?php if(($filters['priority'] ?? '') === 'low'): echo 'selected'; endif; ?>>Basse</option>
                     <option value="normal" <?php if(($filters['priority'] ?? '') === 'normal'): echo 'selected'; endif; ?>>Normale</option>
                     <option value="high" <?php if(($filters['priority'] ?? '') === 'high'): echo 'selected'; endif; ?>>Haute</option>
@@ -89,10 +89,10 @@
             <div style="display:flex;gap:14px;justify-content:flex-end;align-items:center;margin-top:14px;flex-wrap:wrap;">
                 <label class="form-check-label" style="display:flex;align-items:center;gap:8px;font-weight:800;color:#172b4d;">
                     <input class="form-check-input" type="checkbox" name="unassigned" value="1" <?php if(!empty($filters['unassigned'])): echo 'checked'; endif; ?>>
-                    Non affectées seulement
+                    Non affectÃ©es seulement
                 </label>
                 <button type="submit" class="aj-btn primary"><i class="bx bx-filter-alt"></i> Filtrer</button>
-                <a href="<?php echo e(route('admin.assignments.index')); ?>" class="aj-btn"><i class="bx bx-reset"></i> Réinitialiser</a>
+                <a href="<?php echo e(route('admin.assignments.index')); ?>" class="aj-btn"><i class="bx bx-reset"></i> RÃ©initialiser</a>
             </div>
         </form>
     </div>
@@ -113,7 +113,7 @@
                 </div>
                 <div class="col-lg-3">
                     <select name="agent_id" class="aj-select assignment-agent-select">
-                        <option value="">Agent réservation</option>
+                        <option value="">Agent rÃ©servation</option>
                         <?php $__currentLoopData = $branches; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $branch): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <?php $__currentLoopData = ($agentsByBranch[$branch->id] ?? []); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $agent): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <option data-branch-id="<?php echo e($branch->id); ?>" value="<?php echo e($agent['id']); ?>"><?php echo e($agent['name']); ?></option>
@@ -133,7 +133,7 @@
                 </div>
                 <div class="col-lg-3">
                     <select name="assignment_priority" class="aj-select">
-                        <option value="">Priorité</option>
+                        <option value="">PrioritÃ©</option>
                         <option value="low">Basse</option>
                         <option value="normal">Normale</option>
                         <option value="high">Haute</option>
@@ -144,8 +144,8 @@
                     <textarea name="assignment_note" class="aj-textarea" placeholder="Note interne / contexte d'affectation"></textarea>
                 </div>
                 <div class="col-lg-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <div class="aj-subtle">Cochez les réservations à affecter puis appliquez en masse.</div>
-                    <button type="submit" class="aj-btn primary"><i class="bx bx-layer-plus"></i> Affecter la sélection</button>
+                    <div class="aj-subtle">Cochez les rÃ©servations Ã  affecter puis appliquez en masse.</div>
+                    <button type="submit" class="aj-btn primary"><i class="bx bx-layer-plus"></i> Affecter la sÃ©lection</button>
                 </div>
             </div>
         </form>
@@ -155,8 +155,8 @@
 <div class="aj-card">
     <div class="aj-card-head">
         <div>
-            <strong style="font-size:16px;color:#172b4d;">Réservations</strong>
-            <div class="aj-subtle"><?php echo e($reservations->total()); ?> réservation(s)</div>
+            <strong style="font-size:16px;color:#172b4d;">RÃ©servations</strong>
+            <div class="aj-subtle"><?php echo e($reservations->total()); ?> rÃ©servation(s)</div>
         </div>
     </div>
     <div class="aj-card-body" style="padding-top:14px;overflow-x:auto;">
@@ -171,8 +171,8 @@
                     <th>Agent</th>
                     <th>Chef commercial</th>
                     <th>Statut</th>
-                    <th>Priorité</th>
-                    <th>Mis à jour</th>
+                    <th>PrioritÃ©</th>
+                    <th>Mis Ã  jour</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -181,14 +181,14 @@
                     <tr>
                         <td><input type="checkbox" name="reservation_ids[]" value="<?php echo e($reservation->id); ?>" form="bulk-assign-form" class="reservation-checkbox"></td>
                         <td>#<?php echo e($reservation->id); ?></td>
-                        <td><?php echo e(trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? '')) ?: ($reservation->client_email ?? '—')); ?></td>
-                        <td><?php echo e($reservation->tour?->name ?? '—'); ?></td>
-                        <td><?php echo e($reservation->branch?->display_name ?? '—'); ?></td>
-                        <td><?php echo e($reservation->agent?->name ?? '—'); ?></td>
-                        <td><?php echo e($reservation->salesManager?->name ?? '—'); ?></td>
+                        <td><?php echo e(trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? '')) ?: ($reservation->client_email ?? 'â€”')); ?></td>
+                        <td><?php echo e($reservation->tour?->name ?? 'â€”'); ?></td>
+                        <td><?php echo e($reservation->branch?->display_name ?? 'â€”'); ?></td>
+                        <td><?php echo e($reservation->agent?->name ?? 'â€”'); ?></td>
+                        <td><?php echo e($reservation->salesManager?->name ?? 'â€”'); ?></td>
                         <td><span class="aj-badge soft"><?php echo e(ucfirst((string) $reservation->status)); ?></span></td>
                         <td><span class="aj-badge <?php echo e(in_array($reservation->assignment_priority, ['high','urgent'], true) ? 'off' : 'ok'); ?>"><?php echo e(ucfirst((string) ($reservation->assignment_priority ?? 'normal'))); ?></span></td>
-                        <td><?php echo e($reservation->updated_at?->timezone('Africa/Casablanca')?->format('d/m/Y H:i') ?? '—'); ?></td>
+                        <td><?php echo e($reservation->updated_at?->timezone('Africa/Casablanca')?->format('d/m/Y H:i') ?? 'â€”'); ?></td>
                         <td>
                             <button type="button" class="aj-btn assignment-open" data-bs-toggle="modal" data-bs-target="#assignmentModal"
                                 data-reservation-id="<?php echo e($reservation->id); ?>"
@@ -202,7 +202,7 @@
                         </td>
                     </tr>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                    <tr><td colspan="11" style="padding:28px;text-align:center;color:#71829a;font-weight:700;">Aucune réservation trouvée.</td></tr>
+                    <tr><td colspan="11" style="padding:28px;text-align:center;color:#71829a;font-weight:700;">Aucune rÃ©servation trouvÃ©e.</td></tr>
                 <?php endif; ?>
             </tbody>
         </table>
@@ -219,7 +219,7 @@
             <form method="POST" id="assignment-form" action="<?php echo e(route('admin.assignments.store')); ?>">
                 <?php echo csrf_field(); ?>
                 <div class="modal-header">
-                    <h5 class="modal-title">Affecter la réservation</h5>
+                    <h5 class="modal-title">Affecter la rÃ©servation</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -235,7 +235,7 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Agent réservation</label>
+                            <label class="form-label fw-bold">Agent rÃ©servation</label>
                             <select name="agent_id" id="assignment-agent" class="aj-select">
                                 <option value="">Aucun</option>
                                 <?php $__currentLoopData = $branches; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $branch): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -257,7 +257,7 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Priorité</label>
+                            <label class="form-label fw-bold">PrioritÃ©</label>
                             <select name="assignment_priority" id="assignment-priority" class="aj-select">
                                 <option value="">Normale</option>
                                 <option value="low">Basse</option>
@@ -364,4 +364,5 @@
 </script>
 <?php $__env->stopPush(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\assignments\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\assignments\index.blade.php ENDPATH**/ ?>

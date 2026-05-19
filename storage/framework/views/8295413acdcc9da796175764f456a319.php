@@ -1,4 +1,4 @@
-<?php
+﻿<?php
     $isCreate = isset($voyage->ID) && (int) $voyage->ID === 0;
     $veWpId = isset($voyage->ID) ? (int) $voyage->ID : 0;
     $laravelV = $laravelVoyage ?? null;
@@ -17,7 +17,7 @@
             $vePriceLabel = number_format((float) $priceFrom, 0, ',', ' ') . ' ' . ($cur !== '' ? $cur : 'MAD');
         }
     }
-    // Résolution destination : priorité meta WP address > multi_location > Laravel destination
+    // RÃ©solution destination : prioritÃ© meta WP address > multi_location > Laravel destination
     $veDestination = null;
     $veWpId = isset($voyage->ID) ? (int) $voyage->ID : 0;
     if ($veWpId > 0) {
@@ -255,4 +255,5 @@
     <script src="<?php echo e(URL::asset('js/voyage-v2.js?v=' . $jsV2)); ?>"></script>
 <?php $__env->stopPush(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\circuits\voyages\edit_v2.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\circuits\voyages\edit_v2.blade.php ENDPATH**/ ?>

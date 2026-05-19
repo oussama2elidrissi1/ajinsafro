@@ -1,9 +1,11 @@
+﻿
+
 <?php $__env->startSection('title', 'Points de vente'); ?>
 
 <?php $__env->startSection('content'); ?>
     <?php if (isset($component)) { $__componentOriginalcb19cb35a534439097b02b8af91726ee = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalcb19cb35a534439097b02b8af91726ee = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => 'Points de vente','subtitle' => 'Pilotage des points de vente Ajinsafro, de leurs responsables et de leur activité commerciale.','breadcrumbs' => [
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => 'Points de vente','subtitle' => 'Pilotage des points de vente Ajinsafro, de leurs responsables et de leur activitÃ© commerciale.','breadcrumbs' => [
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
             ['label' => 'Points de vente'],
         ]]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
@@ -13,7 +15,7 @@
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['title' => 'Points de vente','subtitle' => 'Pilotage des points de vente Ajinsafro, de leurs responsables et de leur activité commerciale.','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
+<?php $component->withAttributes(['title' => 'Points de vente','subtitle' => 'Pilotage des points de vente Ajinsafro, de leurs responsables et de leur activitÃ© commerciale.','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
             ['label' => 'Points de vente'],
         ])]); ?>
@@ -142,14 +144,14 @@
             <?php if($agencies->isEmpty()): ?>
                 <?php if (isset($component)) { $__componentOriginal99089f8e2ef4184d7d35db81d60c6521 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal99089f8e2ef4184d7d35db81d60c6521 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.empty-state','data' => ['title' => 'Aucun point de vente','message' => 'Aucun point de vente ne correspond aux filtres actuels.','actionUrl' => route('admin.agencies.create'),'actionLabel' => 'Créer un point de vente']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.empty-state','data' => ['title' => 'Aucun point de vente','message' => 'Aucun point de vente ne correspond aux filtres actuels.','actionUrl' => route('admin.agencies.create'),'actionLabel' => 'CrÃ©er un point de vente']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('admin.empty-state'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['title' => 'Aucun point de vente','message' => 'Aucun point de vente ne correspond aux filtres actuels.','action-url' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('admin.agencies.create')),'action-label' => 'Créer un point de vente']); ?>
+<?php $component->withAttributes(['title' => 'Aucun point de vente','message' => 'Aucun point de vente ne correspond aux filtres actuels.','action-url' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('admin.agencies.create')),'action-label' => 'CrÃ©er un point de vente']); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal99089f8e2ef4184d7d35db81d60c6521)): ?>
@@ -169,11 +171,11 @@
                                 <th>Point de vente</th>
                                 <th>Ville</th>
                                 <th>Pays</th>
-                                <th>Téléphone</th>
+                                <th>TÃ©lÃ©phone</th>
                                 <th>Email</th>
                                 <th>Manager</th>
-                                <th>Employés</th>
-                                <th>Réservations</th>
+                                <th>EmployÃ©s</th>
+                                <th>RÃ©servations</th>
                                 <th>CA</th>
                                 <th>Statut</th>
                                 <th class="text-end">Actions</th>
@@ -198,13 +200,13 @@
                                     </td>
                                     <td>
                                         <a href="<?php echo e(route('admin.agencies.show', $agency)); ?>" class="fw-semibold text-decoration-none"><?php echo e($agency->name); ?></a>
-                                        <div class="text-muted small"><?php echo e($agency->code); ?> · <?php echo e($agencyTypeLabels[$agency->agency_type] ?? $agency->agency_type); ?></div>
+                                        <div class="text-muted small"><?php echo e($agency->code); ?> Â· <?php echo e($agencyTypeLabels[$agency->agency_type] ?? $agency->agency_type); ?></div>
                                     </td>
-                                    <td><?php echo e($agency->city ?: '—'); ?></td>
-                                    <td><?php echo e($agency->country ?: '—'); ?></td>
-                                    <td><?php echo e($agency->phone ?: '—'); ?></td>
-                                    <td><?php echo e($agency->email ?: '—'); ?></td>
-                                    <td><?php echo e($agency->manager?->name ?: '—'); ?></td>
+                                    <td><?php echo e($agency->city ?: 'â€”'); ?></td>
+                                    <td><?php echo e($agency->country ?: 'â€”'); ?></td>
+                                    <td><?php echo e($agency->phone ?: 'â€”'); ?></td>
+                                    <td><?php echo e($agency->email ?: 'â€”'); ?></td>
+                                    <td><?php echo e($agency->manager?->name ?: 'â€”'); ?></td>
                                     <td><?php echo e($agency->agency_employees_count); ?></td>
                                     <td><?php echo e($agency->reservations_count); ?></td>
                                     <td><?php echo e(number_format((float) ($agency->revenue_total ?? 0), 0, ',', ' ')); ?> DH</td>
@@ -234,7 +236,7 @@
                                                 <?php echo csrf_field(); ?>
                                                 <?php echo method_field('PATCH'); ?>
                                                 <button type="submit" class="aj-btn aj-btn-soft" style="min-height:34px;padding:0 10px;font-size:12px;">
-                                                    <?php echo e($agency->status === \App\Models\Branch::STATUS_ACTIVE ? 'Désactiver' : 'Activer'); ?>
+                                                    <?php echo e($agency->status === \App\Models\Branch::STATUS_ACTIVE ? 'DÃ©sactiver' : 'Activer'); ?>
 
                                                 </button>
                                             </form>
@@ -277,4 +279,5 @@
     </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\agencies\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\agencies\index.blade.php ENDPATH**/ ?>

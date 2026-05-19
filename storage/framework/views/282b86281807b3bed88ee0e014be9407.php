@@ -1,10 +1,11 @@
-<?php $__env->startSection('title', 'Gérer l\'hôtel — ' . $tour->post_title); ?>
+﻿
+<?php $__env->startSection('title', 'GÃ©rer l\'hÃ´tel â€” ' . $tour->post_title); ?>
 
 <?php $__env->startSection('content'); ?>
     <div class="row mb-3">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">Gérer l'hôtel du circuit</h4>
+                <h4 class="page-title mb-0 font-size-18">GÃ©rer l'hÃ´tel du circuit</h4>
                 <div class="d-flex align-items-center gap-2">
                     <?php if($hotel): ?>
     <?php if(\Illuminate\Support\Facades\Route::has('admin.circuits.tour-hotels.show')): ?>
@@ -17,7 +18,7 @@
             <ol class="breadcrumb mb-0 mt-1">
                 <li class="breadcrumb-item"><a href="<?php echo e(route('admin.dashboard')); ?>">Admin</a></li>
                 <li class="breadcrumb-item"><a href="<?php echo e(route('admin.circuits.index')); ?>">Circuits</a></li>
-                <li class="breadcrumb-item"><a href="<?php echo e(route('admin.circuits.tour-hotels.index')); ?>">Hôtels</a></li>
+                <li class="breadcrumb-item"><a href="<?php echo e(route('admin.circuits.tour-hotels.index')); ?>">HÃ´tels</a></li>
                 <li class="breadcrumb-item active"><?php echo e(\Str::limit($tour->post_title, 35)); ?></li>
             </ol>
         </div>
@@ -38,7 +39,7 @@
         <div class="col-lg-8">
             <div class="card shadow-sm">
                 <div class="card-header bg-light">
-                    <h5 class="mb-0">Informations hôtel</h5>
+                    <h5 class="mb-0">Informations hÃ´tel</h5>
                     <span class="text-muted small">Voyage : <?php echo e(\Str::limit($tour->post_title, 50)); ?> (ID <?php echo e($tour->ID); ?>)</span>
                 </div>
                 <div class="card-body">
@@ -48,11 +49,11 @@
 
                         <div class="row g-3">
                             <div class="col-md-8">
-                                <label for="hotel_name" class="form-label">Nom de l'hôtel</label>
-                                <input type="text" class="form-control" id="hotel_name" name="hotel_name" value="<?php echo e(old('hotel_name', $hotel?->hotel_name ?? '')); ?>" placeholder="Ex. Hôtel Les Almoravides">
+                                <label for="hotel_name" class="form-label">Nom de l'hÃ´tel</label>
+                                <input type="text" class="form-control" id="hotel_name" name="hotel_name" value="<?php echo e(old('hotel_name', $hotel?->hotel_name ?? '')); ?>" placeholder="Ex. HÃ´tel Les Almoravides">
                             </div>
                             <div class="col-md-4">
-                                <label for="stars" class="form-label">Étoiles (0–5)</label>
+                                <label for="stars" class="form-label">Ã‰toiles (0â€“5)</label>
                                 <input type="number" class="form-control" id="stars" name="stars" value="<?php echo e(old('stars', $hotel?->stars ?? '')); ?>" min="0" max="5" placeholder="3">
                             </div>
                             <div class="col-12">
@@ -60,22 +61,22 @@
                                 <input type="text" class="form-control" id="address" name="address" value="<?php echo e(old('address', $hotel?->address ?? '')); ?>" placeholder="Ville, pays">
                             </div>
                             <div class="col-md-6">
-                                <label for="room_type" class="form-label">Type de chambre (résumé)</label>
+                                <label for="room_type" class="form-label">Type de chambre (rÃ©sumÃ©)</label>
                                 <input type="text" class="form-control" id="room_type" name="room_type" value="<?php echo e(old('room_type', $hotel?->room_type ?? '')); ?>" placeholder="Ex. Chambre double">
                             </div>
                             <div class="col-md-6">
                                 <label for="meal_plan" class="form-label">Formule repas</label>
-                                <input type="text" class="form-control" id="meal_plan" name="meal_plan" value="<?php echo e(old('meal_plan', $hotel?->meal_plan ?? '')); ?>" placeholder="Ex. Petit-déjeuner inclus">
+                                <input type="text" class="form-control" id="meal_plan" name="meal_plan" value="<?php echo e(old('meal_plan', $hotel?->meal_plan ?? '')); ?>" placeholder="Ex. Petit-dÃ©jeuner inclus">
                             </div>
                             <div class="col-12">
                                 <label for="notes" class="form-label">Notes</label>
-                                <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="Informations complémentaires…"><?php echo e(old('notes', $hotel?->notes ?? '')); ?></textarea>
+                                <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="Informations complÃ©mentairesâ€¦"><?php echo e(old('notes', $hotel?->notes ?? '')); ?></textarea>
                             </div>
                         </div>
 
                         <hr class="my-4">
                         <h5 class="mb-3">Types de chambres</h5>
-                        <p class="text-muted small mb-3">Définir les types de chambres (nom, capacité, prix, supplément, nombre de personnes, etc.).</p>
+                        <p class="text-muted small mb-3">DÃ©finir les types de chambres (nom, capacitÃ©, prix, supplÃ©ment, nombre de personnes, etc.).</p>
 
                         <div id="tour-hotel-rooms-container">
                             <?php
@@ -135,11 +136,11 @@
                                             <div class="col-md-1">
                                                 <div class="form-check">
                                                     <input type="checkbox" class="form-check-input" name="rooms[<?php echo e($ri); ?>][is_default]" value="1" <?php echo e($isDefaultVal ? 'checked' : ''); ?>>
-                                                    <label class="form-check-label small">Défaut</label>
+                                                    <label class="form-check-label small">DÃ©faut</label>
                                                 </div>
                                             </div>
                                             <div class="col-md-1">
-                                                <button type="button" class="btn btn-sm btn-outline-danger tour-hotel-remove-room" data-room-index="<?php echo e($ri); ?>" aria-label="Supprimer">×</button>
+                                                <button type="button" class="btn btn-sm btn-outline-danger tour-hotel-remove-room" data-room-index="<?php echo e($ri); ?>" aria-label="Supprimer">Ã—</button>
                                             </div>
                                         </div>
                                         <div class="row g-2 mt-1">
@@ -148,7 +149,7 @@
                                                 <input type="text" class="form-control form-control-sm" name="rooms[<?php echo e($ri); ?>][room_code]" value="<?php echo e($roomCodeVal); ?>" placeholder="Ex. DBL-STD">
                                             </div>
                                             <div class="col-md-2">
-                                                <label class="form-label small">Libellé</label>
+                                                <label class="form-label small">LibellÃ©</label>
                                                 <input type="text" class="form-control form-control-sm" name="rooms[<?php echo e($ri); ?>][room_label]" value="<?php echo e($roomLabelVal); ?>" placeholder="Optionnel">
                                             </div>
                                             <div class="col-md-4">
@@ -187,7 +188,7 @@
         <div class="col-lg-4">
             <div class="card shadow-sm mb-3">
                 <div class="card-header bg-light">
-                    <h5 class="mb-0">Voyage lié</h5>
+                    <h5 class="mb-0">Voyage liÃ©</h5>
                 </div>
                 <div class="card-body small">
                     <p class="mb-1"><strong><?php echo e(\Str::limit($tour->post_title, 40)); ?></strong></p>
@@ -248,4 +249,5 @@
     </script>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\circuits\tour-hotels\edit.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\circuits\tour-hotels\edit.blade.php ENDPATH**/ ?>

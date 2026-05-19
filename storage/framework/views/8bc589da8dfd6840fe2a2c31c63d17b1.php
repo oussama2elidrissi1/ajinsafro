@@ -1,12 +1,14 @@
-<?php $__env->startSection('title', 'Détail demande Formule Économique'); ?>
+﻿
+
+<?php $__env->startSection('title', 'DÃ©tail demande Formule Ã‰conomique'); ?>
 
 <?php $__env->startSection('content'); ?>
     <?php if (isset($component)) { $__componentOriginalcb19cb35a534439097b02b8af91726ee = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalcb19cb35a534439097b02b8af91726ee = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => $requestItem->full_name,'subtitle' => $requestItem->offer_title ?: 'Demande client','breadcrumbs' => [
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Demandes économique', 'url' => route('admin.economic-offers.requests.index')],
-            ['label' => 'Détail'],
+            ['label' => 'Demandes Ã©conomique', 'url' => route('admin.economic-offers.requests.index')],
+            ['label' => 'DÃ©tail'],
         ]]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('admin.page-header'); ?>
 <?php if ($component->shouldRender()): ?>
@@ -16,8 +18,8 @@
 <?php endif; ?>
 <?php $component->withAttributes(['title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($requestItem->full_name),'subtitle' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($requestItem->offer_title ?: 'Demande client'),'breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Demandes économique', 'url' => route('admin.economic-offers.requests.index')],
-            ['label' => 'Détail'],
+            ['label' => 'Demandes Ã©conomique', 'url' => route('admin.economic-offers.requests.index')],
+            ['label' => 'DÃ©tail'],
         ])]); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
@@ -55,22 +57,22 @@
         <div class="col-lg-5">
             <?php if (isset($component)) { $__componentOriginalba421f08b6b43aecb09f8eebe577a4f3 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalba421f08b6b43aecb09f8eebe577a4f3 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.form-section','data' => ['title' => 'Coordonnées client']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.form-section','data' => ['title' => 'CoordonnÃ©es client']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('admin.form-section'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['title' => 'Coordonnées client']); ?>
+<?php $component->withAttributes(['title' => 'CoordonnÃ©es client']); ?>
                 <div class="d-flex flex-column gap-3">
                     <div><strong>Nom :</strong> <?php echo e($requestItem->full_name); ?></div>
-                    <div><strong>Téléphone :</strong> <?php echo e($requestItem->phone); ?></div>
+                    <div><strong>TÃ©lÃ©phone :</strong> <?php echo e($requestItem->phone); ?></div>
                     <div><strong>Email :</strong> <?php echo e($requestItem->email); ?></div>
-                    <div><strong>Offre :</strong> <?php echo e($requestItem->offer_title ?: optional($requestItem->offer)->title ?: 'Non associée'); ?></div>
-                    <div><strong>Départ :</strong> <?php echo e($requestItem->selected_departure_date?->format('d/m/Y') ?: '—'); ?></div>
+                    <div><strong>Offre :</strong> <?php echo e($requestItem->offer_title ?: optional($requestItem->offer)->title ?: 'Non associÃ©e'); ?></div>
+                    <div><strong>DÃ©part :</strong> <?php echo e($requestItem->selected_departure_date?->format('d/m/Y') ?: 'â€”'); ?></div>
                     <div><strong>Adultes / Enfants :</strong> <?php echo e($requestItem->adults); ?> / <?php echo e($requestItem->children); ?></div>
-                    <div><strong>Message :</strong><br><?php echo nl2br(e($requestItem->message ?: '—')); ?></div>
+                    <div><strong>Message :</strong><br><?php echo nl2br(e($requestItem->message ?: 'â€”')); ?></div>
                 </div>
              <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
@@ -123,7 +125,7 @@ unset($__errorArgs, $__bag); ?>
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">Offre associée</label>
+                        <label class="form-label">Offre associÃ©e</label>
                         <select name="offer_id" class="form-select <?php $__errorArgs = ['offer_id'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -132,7 +134,7 @@ $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>">
-                            <option value="">Non associée</option>
+                            <option value="">Non associÃ©e</option>
                             <?php $__currentLoopData = $offers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $offer): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <option value="<?php echo e($offer->id); ?>" <?php if((int) old('offer_id', $requestItem->offer_id) === (int) $offer->id): echo 'selected'; endif; ?>><?php echo e($offer->title); ?></option>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -213,4 +215,5 @@ unset($__errorArgs, $__bag); ?>
     </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\economic-offers\requests\show.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\economic-offers\requests\show.blade.php ENDPATH**/ ?>

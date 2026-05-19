@@ -1,3 +1,5 @@
+﻿
+
 <?php $__env->startSection('title', 'Messages'); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -7,7 +9,7 @@
                 <h4 class="page-title mb-0 font-size-18">Messages</h4>
                 <ol class="breadcrumb m-0">
                     <li class="breadcrumb-item"><a href="<?php echo e(route('admin.dashboard')); ?>">Admin</a></li>
-                    <li class="breadcrumb-item"><a href="<?php echo e(route('admin.reservations.index')); ?>">Réservations</a></li>
+                    <li class="breadcrumb-item"><a href="<?php echo e(route('admin.reservations.index')); ?>">RÃ©servations</a></li>
                     <li class="breadcrumb-item active">Messages</li>
                 </ol>
             </div>
@@ -137,7 +139,7 @@
                         ?>
                         <div class="list-group-item list-group-item-action d-flex align-items-start py-3 <?php echo e($isUnread ? 'bg-info bg-opacity-10' : ''); ?>" data-message-id="<?php echo e($msg->id); ?>">
                             <div class="form-check me-2 mt-1">
-                                <input class="form-check-input msg-checkbox" type="checkbox" value="<?php echo e($msg->id); ?>" aria-label="Sélectionner">
+                                <input class="form-check-input msg-checkbox" type="checkbox" value="<?php echo e($msg->id); ?>" aria-label="SÃ©lectionner">
                             </div>
                             <div class="me-2 mt-1">
                                 <form action="<?php echo e(route('admin.reservations.messages.star', $msg->id)); ?>" method="post" class="d-inline">
@@ -150,7 +152,7 @@
                             <a href="<?php echo e(route('admin.reservations.messages.show', $msg->id)); ?>" class="flex-grow-1 min-w-0 text-decoration-none text-body">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <span class="<?php echo e($isUnread ? 'fw-bold' : ''); ?>">
-                                        <?php echo e($msg->fromBranch?->name ?? '—'); ?>
+                                        <?php echo e($msg->fromBranch?->name ?? 'â€”'); ?>
 
                                     </span>
                                     <span class="text-muted small"><?php echo e($msg->created_at->format('d M')); ?></span>
@@ -186,4 +188,5 @@
     </style>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\reservations\messages\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\reservations\messages\index.blade.php ENDPATH**/ ?>

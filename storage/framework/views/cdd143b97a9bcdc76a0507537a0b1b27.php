@@ -1,4 +1,4 @@
-
+﻿
 
 <?php $__env->startSection('title', $isEdit ? 'Editer le compte point de vente' : 'Creer un compte point de vente'); ?>
 
@@ -36,7 +36,7 @@
                             <input type="email" name="email" class="aj-form-control" value="<?php echo e(old('email', $account->email)); ?>" placeholder="email@domaine.com">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Téléphone</label>
+                            <label class="form-label fw-bold">TÃ©lÃ©phone</label>
                             <input type="text" name="phone" class="aj-form-control" value="<?php echo e(old('phone', $account->phone)); ?>" placeholder="0600000000">
                         </div>
                         <div class="col-md-6">
@@ -53,23 +53,23 @@
                             <select name="employee_id" class="aj-select">
                                 <option value="">Aucun employe</option>
                                 <?php $__currentLoopData = $employees; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $employeeOption): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                    <option value="<?php echo e($employeeOption->id); ?>" <?php if((int) old('employee_id', $employee?->id) === $employeeOption->id): echo 'selected'; endif; ?>><?php echo e($employeeOption->full_name); ?> <?php if($employeeOption->branch): ?> — <?php echo e($employeeOption->branch->display_name); ?> <?php endif; ?></option>
+                                    <option value="<?php echo e($employeeOption->id); ?>" <?php if((int) old('employee_id', $employee?->id) === $employeeOption->id): echo 'selected'; endif; ?>><?php echo e($employeeOption->full_name); ?> <?php if($employeeOption->branch): ?> â€” <?php echo e($employeeOption->branch->display_name); ?> <?php endif; ?></option>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Compte existant</label>
                             <select name="existing_user_id" class="aj-select">
-                                <option value="">Créer un nouveau compte</option>
+                                <option value="">CrÃ©er un nouveau compte</option>
                                 <?php $__currentLoopData = $users; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                    <option value="<?php echo e($user->id); ?>" <?php if((int) old('existing_user_id') === $user->id || $account->id === $user->id): echo 'selected'; endif; ?>><?php echo e($user->name); ?> — <?php echo e($user->email); ?></option>
+                                    <option value="<?php echo e($user->id); ?>" <?php if((int) old('existing_user_id') === $user->id || $account->id === $user->id): echo 'selected'; endif; ?>><?php echo e($user->name); ?> â€” <?php echo e($user->email); ?></option>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Rôle</label>
+                            <label class="form-label fw-bold">RÃ´le</label>
                             <select name="role_name" class="aj-select">
-                                <option value="">Sélectionner un rôle</option>
+                                <option value="">SÃ©lectionner un rÃ´le</option>
                                 <?php $__currentLoopData = $roles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $role): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <option value="<?php echo e($role->name); ?>" <?php if($selectedRole === $role->name): echo 'selected'; endif; ?>><?php echo e($role->name); ?></option>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -77,7 +77,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Fonction</label>
-                            <input type="text" name="job_title" class="aj-form-control" value="<?php echo e(old('job_title', $account->job_title)); ?>" placeholder="Manager, Agent réservation...">
+                            <input type="text" name="job_title" class="aj-form-control" value="<?php echo e(old('job_title', $account->job_title)); ?>" placeholder="Manager, Agent rÃ©servation...">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Mot de passe <?php echo e($isEdit ? '(laisser vide pour conserver)' : ''); ?></label>
@@ -85,7 +85,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Confirmation mot de passe</label>
-                            <input type="password" name="password_confirmation" class="aj-form-control" placeholder="Répéter le mot de passe">
+                            <input type="password" name="password_confirmation" class="aj-form-control" placeholder="RÃ©pÃ©ter le mot de passe">
                         </div>
                         <div class="col-md-12">
                             <div class="form-check form-switch mb-2">
@@ -103,7 +103,7 @@
                         </div>
                     </div>
                     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap;">
-                        <button type="submit" class="aj-btn primary"><i class="bx bx-save"></i> <?php echo e($isEdit ? 'Mettre à jour' : 'Créer le compte'); ?></button>
+                        <button type="submit" class="aj-btn primary"><i class="bx bx-save"></i> <?php echo e($isEdit ? 'Mettre Ã  jour' : 'CrÃ©er le compte'); ?></button>
                     </div>
                 </form>
             </div>
@@ -127,7 +127,7 @@
                             <form method="POST" action="<?php echo e(route('admin.agency-accounts.disable', $account)); ?>">
                                 <?php echo csrf_field(); ?>
                                 <?php echo method_field('PATCH'); ?>
-                                <button type="submit" class="aj-btn">Désactiver</button>
+                                <button type="submit" class="aj-btn">DÃ©sactiver</button>
                             </form>
                         <?php endif; ?>
                         <?php if(Route::has('admin.agency-accounts.reset-password')): ?>
@@ -144,4 +144,5 @@
 </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\agency-accounts\form.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\agency-accounts\form.blade.php ENDPATH**/ ?>

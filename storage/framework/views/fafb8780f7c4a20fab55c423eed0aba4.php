@@ -1,3 +1,5 @@
+﻿
+
 <?php $__env->startSection('title', $message->subject); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -7,7 +9,7 @@
                 <h4 class="page-title mb-0 font-size-18">Message</h4>
                 <ol class="breadcrumb m-0">
                     <li class="breadcrumb-item"><a href="<?php echo e(route('admin.dashboard')); ?>">Admin</a></li>
-                    <li class="breadcrumb-item"><a href="<?php echo e(route('admin.reservations.index')); ?>">Réservations</a></li>
+                    <li class="breadcrumb-item"><a href="<?php echo e(route('admin.reservations.index')); ?>">RÃ©servations</a></li>
                     <li class="breadcrumb-item"><a href="<?php echo e(route('admin.reservations.messages')); ?>">Messages</a></li>
                     <li class="breadcrumb-item active">Lecture</li>
                 </ol>
@@ -98,7 +100,7 @@
             <div class="card shadow-sm">
                 
                 <div class="btn-toolbar msg-toolbar p-3 border-bottom flex-wrap gap-2" role="toolbar">
-                    <a href="<?php echo e(route('admin.reservations.messages')); ?>" class="btn btn-primary btn-sm" title="Retour à la liste"><i class="bx bx-arrow-back"></i></a>
+                    <a href="<?php echo e(route('admin.reservations.messages')); ?>" class="btn btn-primary btn-sm" title="Retour Ã  la liste"><i class="bx bx-arrow-back"></i></a>
                     <div class="btn-group btn-group-sm">
                         <form action="<?php echo e(route('admin.reservations.messages.star', $message->id)); ?>" method="post" class="d-inline">
                             <?php echo csrf_field(); ?>
@@ -106,7 +108,7 @@
                                 <i class="bx <?php echo e($message->isStarredBy($user) ? 'bxs-star' : 'bx-star'); ?>"></i>
                             </button>
                         </form>
-                        <form action="<?php echo e(route('admin.reservations.messages.trash', $message->id)); ?>" method="post" class="d-inline" onsubmit="return confirm('Déplacer dans la corbeille ?');">
+                        <form action="<?php echo e(route('admin.reservations.messages.trash', $message->id)); ?>" method="post" class="d-inline" onsubmit="return confirm('DÃ©placer dans la corbeille ?');">
                             <?php echo csrf_field(); ?>
                             <button type="submit" class="btn btn-primary" title="Corbeille"><i class="bx bx-trash"></i></button>
                         </form>
@@ -161,11 +163,11 @@
                         </div>
                         <div class="flex-grow-1 min-w-0">
                             <div class="d-flex flex-wrap align-items-center gap-2">
-                                <strong class="font-size-15"><?php echo e($message->fromBranch?->name ?? '—'); ?></strong>
+                                <strong class="font-size-15"><?php echo e($message->fromBranch?->name ?? 'â€”'); ?></strong>
                                 <?php if($message->fromBranch?->email): ?>
                                     <span class="text-muted small"><?php echo e($message->fromBranch->email); ?></span>
                                 <?php endif; ?>
-                                <span class="text-muted small ms-auto"><?php echo e($message->created_at->format('d M Y à H:i')); ?></span>
+                                <span class="text-muted small ms-auto"><?php echo e($message->created_at->format('d M Y Ã  H:i')); ?></span>
                             </div>
                             <h5 class="mt-2 mb-0 font-size-16"><?php echo e($message->subject); ?></h5>
                             <?php if($message->label): ?>
@@ -195,4 +197,5 @@
     </style>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\reservations\messages\show.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\reservations\messages\show.blade.php ENDPATH**/ ?>

@@ -1,4 +1,6 @@
-<?php $__env->startSection('title', 'Demande à la carte'); ?>
+﻿
+
+<?php $__env->startSection('title', 'Demande Ã  la carte'); ?>
 
 <?php $__env->startSection('content'); ?>
     <div class="container-fluid">
@@ -6,10 +8,10 @@
             <div class="col-12">
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                     <div>
-                        <h4 class="mb-sm-0">Demande à la carte</h4>
-                        <p class="text-muted mb-0 mt-1">Espace dédié aux demandes personnalisées.</p>
+                        <h4 class="mb-sm-0">Demande Ã  la carte</h4>
+                        <p class="text-muted mb-0 mt-1">Espace dÃ©diÃ© aux demandes personnalisÃ©es.</p>
                     </div>
-                    <span class="badge rounded-pill bg-warning-subtle text-warning px-3 py-2">Page en cours de préparation</span>
+                    <span class="badge rounded-pill bg-warning-subtle text-warning px-3 py-2">Page en cours de prÃ©paration</span>
                 </div>
             </div>
         </div>
@@ -22,12 +24,12 @@
                              style="width: 72px; height: 72px; background: #e6f3fa; color: #0083c4;">
                             <i class="bx bx-edit-alt fs-1"></i>
                         </div>
-                        <h1 class="h3 mb-2">Demande à la carte</h1>
+                        <h1 class="h3 mb-2">Demande Ã  la carte</h1>
                         <p class="text-muted mb-4">
-                            Cette page sera utilisée pour qualifier et suivre les demandes de voyages personnalisés.
+                            Cette page sera utilisÃ©e pour qualifier et suivre les demandes de voyages personnalisÃ©s.
                         </p>
                         <div class="alert alert-info border-0 mb-0" style="background: #eef8fd; color: #0e3a5a;">
-                            Page en cours de préparation
+                            Page en cours de prÃ©paration
                         </div>
                     </div>
                 </div>
@@ -36,4 +38,5 @@
     </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\tailor-made-requests\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\tailor-made-requests\index.blade.php ENDPATH**/ ?>

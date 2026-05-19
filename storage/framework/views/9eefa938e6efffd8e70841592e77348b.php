@@ -1,4 +1,6 @@
-<?php $__env->startSection('title', 'Participants — '.($prestationDisplayTitle ?? $voyage->name)); ?>
+﻿
+
+<?php $__env->startSection('title', 'Participants â€” '.($prestationDisplayTitle ?? $voyage->name)); ?>
 
 <?php $__env->startPush('styles'); ?>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
@@ -19,13 +21,13 @@
         default => 'ws-pax-badge ws-pax-badge--wait',
     };
     $statusLabel = fn (string $s) => match ($s) {
-        \App\Models\Reservation::STATUS_VALIDEE => 'Confirmée',
-        \App\Models\Reservation::STATUS_ANNULEE => 'Annulée',
+        \App\Models\Reservation::STATUS_VALIDEE => 'ConfirmÃ©e',
+        \App\Models\Reservation::STATUS_ANNULEE => 'AnnulÃ©e',
         default => 'En attente',
     };
     $paxTypeLabel = fn (?string $t) => match ($t) {
         'child' => 'Enfant',
-        'infant' => 'Bébé',
+        'infant' => 'BÃ©bÃ©',
         default => 'Adulte',
     };
 ?>
@@ -45,13 +47,13 @@
             <p class="text-muted small mb-0 fw-medium">
                 <span class="text-dark fw-semibold"><?php echo e($prestationDisplayTitle); ?></span>
                 <?php if($voyage->wp_post_id): ?>
-                    <span class="text-muted">· WP #<?php echo e($voyage->wp_post_id); ?></span>
+                    <span class="text-muted">Â· WP #<?php echo e($voyage->wp_post_id); ?></span>
                 <?php endif; ?>
-                <span class="text-muted">· Laravel #<?php echo e($voyage->id); ?></span>
+                <span class="text-muted">Â· Laravel #<?php echo e($voyage->id); ?></span>
                 <?php if($travelDateLabel): ?>
-                    <span class="d-block d-md-inline mt-1 mt-md-0"><span class="badge bg-light text-dark border">Départ <?php echo e($travelDateLabel); ?></span></span>
+                    <span class="d-block d-md-inline mt-1 mt-md-0"><span class="badge bg-light text-dark border">DÃ©part <?php echo e($travelDateLabel); ?></span></span>
                 <?php elseif($travelDateId): ?>
-                    <span class="text-muted">· travel_date_id <?php echo e($travelDateId); ?></span>
+                    <span class="text-muted">Â· travel_date_id <?php echo e($travelDateId); ?></span>
                 <?php endif; ?>
             </p>
             <?php if($wpTourTitle && $wpTourTitle !== $voyage->name): ?>
@@ -61,11 +63,11 @@
         <div class="d-flex flex-wrap gap-2">
             <a href="<?php echo e(route('admin.reservations.toutes', array_filter(['voyage_id' => $voyage->id, 'travel_date_id' => $travelDateId]))); ?>"
                class="btn btn-outline-primary d-inline-flex align-items-center gap-2 rounded-3 fw-bold shadow-sm">
-                <i class="fas fa-list-ul"></i> Liste réservations (même filtre)
+                <i class="fas fa-list-ul"></i> Liste rÃ©servations (mÃªme filtre)
             </a>
             <a href="<?php echo e(route('admin.reservations.workspace.prestation.pdf', array_filter(['voyage_id' => $voyage->id, 'travel_date_id' => $travelDateId]))); ?>"
                class="btn btn-danger d-inline-flex align-items-center gap-2 rounded-3 fw-bold shadow-sm">
-                <i class="fas fa-file-pdf"></i> Télécharger PDF
+                <i class="fas fa-file-pdf"></i> TÃ©lÃ©charger PDF
             </a>
         </div>
     </div>
@@ -78,7 +80,7 @@
         <div class="col-sm-4">
             <div class="card border-0 shadow-sm rounded-3 h-100" style="border-left: 4px solid #0083c4 !important;">
                 <div class="card-body py-3">
-                    <div class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.08em;">Réservations</div>
+                    <div class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.08em;">RÃ©servations</div>
                     <div class="h4 mb-0 fw-bold" style="color: #0e3a5a;"><?php echo e($resaCount); ?></div>
                 </div>
             </div>
@@ -86,7 +88,7 @@
         <div class="col-sm-4">
             <div class="card border-0 shadow-sm rounded-3 h-100" style="border-left: 4px solid #f37a1f !important;">
                 <div class="card-body py-3">
-                    <div class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.08em;">Participants listés</div>
+                    <div class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.08em;">Participants listÃ©s</div>
                     <div class="h4 mb-0 fw-bold" style="color: #0e3a5a;"><?php echo e($totalPax); ?></div>
                 </div>
             </div>
@@ -94,7 +96,7 @@
         <div class="col-sm-4">
             <div class="card border-0 shadow-sm rounded-3 h-100 bg-light">
                 <div class="card-body py-3 small text-muted">
-                    Même périmètre que la liste admin : voyage Laravel + date de départ (TravelDate) lorsque l’URL inclut <code>travel_date_id</code>.
+                    MÃªme pÃ©rimÃ¨tre que la liste admin : voyage Laravel + date de dÃ©part (TravelDate) lorsque lâ€™URL inclut <code>travel_date_id</code>.
                 </div>
             </div>
         </div>
@@ -105,7 +107,7 @@
             <table class="table table-hover align-middle mb-0" style="min-width: 920px;">
                 <thead class="table-light">
                 <tr class="small text-muted text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.06em;">
-                    <th class="py-3 px-3">Réservation</th>
+                    <th class="py-3 px-3">RÃ©servation</th>
                     <th class="py-3 px-3">Statut</th>
                     <th class="py-3 px-3">Client</th>
                     <th class="py-3 px-3">Participant</th>
@@ -121,13 +123,13 @@
                             <td class="px-3 py-3 fw-bold" style="color: #0e3a5a;">#<?php echo e($reservation->id); ?></td>
                             <td class="px-3 py-3"><span class="<?php echo e($statusClass($reservation->status)); ?>"><?php echo e($statusLabel($reservation->status)); ?></span></td>
                             <td class="px-3 py-3 text-muted">
-                                <?php echo e(trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? '')) ?: '—'); ?>
+                                <?php echo e(trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? '')) ?: 'â€”'); ?>
 
-                                <div class="small text-warning mt-1"><i class="fas fa-info-circle me-1"></i>Aucun passager enregistré</div>
+                                <div class="small text-warning mt-1"><i class="fas fa-info-circle me-1"></i>Aucun passager enregistrÃ©</div>
                             </td>
-                            <td class="px-3 py-3">—</td>
-                            <td class="px-3 py-3">—</td>
-                            <td class="px-3 py-3">—</td>
+                            <td class="px-3 py-3">â€”</td>
+                            <td class="px-3 py-3">â€”</td>
+                            <td class="px-3 py-3">â€”</td>
                             <td class="px-3 py-3 text-end">
                                 <a href="<?php echo e(route('admin.reservations.edit', $reservation)); ?>" class="btn btn-sm btn-outline-primary rounded-pill me-1">Modifier</a>
                                 <a href="<?php echo e(route('admin.reservations.workspace.reservation.pdf', $reservation)); ?>" class="btn btn-sm btn-outline-danger rounded-pill">PDF</a>
@@ -138,10 +140,10 @@
                             <tr>
                                 <td class="px-3 py-3 fw-bold" style="color: #0e3a5a;">#<?php echo e($reservation->id); ?></td>
                                 <td class="px-3 py-3"><span class="<?php echo e($statusClass($reservation->status)); ?>"><?php echo e($statusLabel($reservation->status)); ?></span></td>
-                                <td class="px-3 py-3 text-muted"><?php echo e(trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? '')) ?: '—'); ?></td>
+                                <td class="px-3 py-3 text-muted"><?php echo e(trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? '')) ?: 'â€”'); ?></td>
                                 <td class="px-3 py-3 fw-medium"><?php echo e(trim(($p->first_name ?? '').' '.($p->last_name ?? ''))); ?></td>
                                 <td class="px-3 py-3"><span class="ws-pax-type"><?php echo e($paxTypeLabel($p->type)); ?></span></td>
-                                <td class="px-3 py-3 small font-monospace"><?php echo e($p->document_number ?? '—'); ?></td>
+                                <td class="px-3 py-3 small font-monospace"><?php echo e($p->document_number ?? 'â€”'); ?></td>
                                 <td class="px-3 py-3 text-end text-nowrap">
                                     <?php if($loop->first): ?>
                                         <a href="<?php echo e(route('admin.reservations.edit', $reservation)); ?>" class="btn btn-sm btn-outline-primary rounded-pill me-1">Modifier</a>
@@ -166,4 +168,5 @@
 </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\reservations\workspace\participants.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\reservations\workspace\participants.blade.php ENDPATH**/ ?>

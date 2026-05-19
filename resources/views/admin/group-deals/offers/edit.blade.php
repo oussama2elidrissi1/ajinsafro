@@ -1,4 +1,4 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 
 @section('title', 'Modifier Group Deal')
 
@@ -9,7 +9,7 @@
             <h4 class="mb-1">Modifier l'offre</h4>
             <p class="text-muted mb-0">{{ $groupDeal->title }}</p>
         </div>
-        <a href="{{ route('admin.group-deals.show', $groupDeal) }}" class="btn btn-light">Retour à la fiche</a>
+        <a href="{{ route('admin.group-deals.show', $groupDeal) }}" class="btn btn-light">Retour Ã  la fiche</a>
     </div>
 
     <form method="POST" action="{{ route('admin.group-deals.update', $groupDeal) }}" enctype="multipart/form-data">
@@ -17,3 +17,4 @@
     </form>
 </div>
 @endsection
+

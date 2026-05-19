@@ -1,4 +1,4 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 @section('title', 'Modifier un transfert')
 @section('content')
     <div class="row">
@@ -35,3 +35,4 @@
         </div>
     </form>
 @endsection
+

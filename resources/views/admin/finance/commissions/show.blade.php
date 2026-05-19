@@ -1,4 +1,4 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 
 @section('title', 'Detail commission')
 
@@ -21,7 +21,7 @@
                             <dt class="col-sm-4 text-muted">Agent</dt><dd class="col-sm-8 fw-semibold">{{ $entry->agent?->name ?: 'Agent non renseigne' }}</dd>
                             <dt class="col-sm-4 text-muted">Point de vente</dt><dd class="col-sm-8 fw-semibold">{{ $entry->branch?->name ?: 'Non renseigne' }}</dd>
                             <dt class="col-sm-4 text-muted">Voyage</dt><dd class="col-sm-8 fw-semibold">{{ $entry->voyage?->name ?: 'Voyage non renseigne' }}</dd>
-                            <dt class="col-sm-4 text-muted">Date depart</dt><dd class="col-sm-8 fw-semibold">{{ $entry->departureDateLabel() ?: '—' }}</dd>
+                            <dt class="col-sm-4 text-muted">Date depart</dt><dd class="col-sm-8 fw-semibold">{{ $entry->departureDateLabel() ?: 'â€”' }}</dd>
                             <dt class="col-sm-4 text-muted">Client</dt><dd class="col-sm-8 fw-semibold">{{ $entry->client_name ?: 'Client non renseigne' }}</dd>
                             <dt class="col-sm-4 text-muted">Montant reservation</dt><dd class="col-sm-8 fw-semibold">{{ number_format((float) $entry->reservation_total, 2, ',', ' ') }} DH</dd>
                             <dt class="col-sm-4 text-muted">Base commission</dt><dd class="col-sm-8 fw-semibold">{{ number_format((float) $entry->commission_base_amount, 2, ',', ' ') }} DH</dd>
@@ -71,10 +71,10 @@
                                 @endif
                                 <div class="small text-muted mt-1">
                                     @if($log->old_status || $log->new_status)
-                                        {{ $log->old_status ?: '—' }} → {{ $log->new_status ?: '—' }}
+                                        {{ $log->old_status ?: 'â€”' }} â†’ {{ $log->new_status ?: 'â€”' }}
                                     @endif
                                     @if($log->old_amount !== null || $log->new_amount !== null)
-                                        | {{ number_format((float) ($log->old_amount ?? 0), 2, ',', ' ') }} DH → {{ number_format((float) ($log->new_amount ?? 0), 2, ',', ' ') }} DH
+                                        | {{ number_format((float) ($log->old_amount ?? 0), 2, ',', ' ') }} DH â†’ {{ number_format((float) ($log->new_amount ?? 0), 2, ',', ' ') }} DH
                                     @endif
                                 </div>
                             </div>
@@ -87,3 +87,4 @@
         </div>
     </div>
 @endsection
+

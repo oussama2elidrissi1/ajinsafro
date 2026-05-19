@@ -1,10 +1,11 @@
-<?php $__env->startSection('title'); ?> Group Deals — Voyages <?php $__env->stopSection(); ?>
+﻿
+<?php $__env->startSection('title'); ?> Group Deals â€” Voyages <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('content'); ?>
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-flex align-items-center justify-content-between">
-            <h4 class="page-title mb-0 font-size-18">Group Deals — Voyages</h4>
+            <h4 class="page-title mb-0 font-size-18">Group Deals â€” Voyages</h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
                     <li class="breadcrumb-item"><a href="<?php echo e(route('admin.dashboard')); ?>">Admin</a></li>
@@ -30,18 +31,18 @@
             <div class="col-md-4">
                 <label class="form-label small mb-1">Recherche</label>
                 <input type="search" name="q" class="form-control form-control-sm"
-                       value="<?php echo e(request('q')); ?>" placeholder="Nom du voyage…">
+                       value="<?php echo e(request('q')); ?>" placeholder="Nom du voyageâ€¦">
             </div>
             <div class="col-auto">
                 <button type="submit" class="btn btn-primary btn-sm">Filtrer</button>
-                <a href="<?php echo e(route('admin.group-deals.trips.index')); ?>" class="btn btn-outline-secondary btn-sm ms-1">Réinitialiser</a>
+                <a href="<?php echo e(route('admin.group-deals.trips.index')); ?>" class="btn btn-outline-secondary btn-sm ms-1">RÃ©initialiser</a>
             </div>
         </form>
 
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0"><?php echo e($voyages->total()); ?> voyage(s) avec Group Deal activé</h5>
+            <h5 class="mb-0"><?php echo e($voyages->total()); ?> voyage(s) avec Group Deal activÃ©</h5>
             <a href="<?php echo e(route('admin.circuits.voyages.index')); ?>" class="btn btn-outline-primary btn-sm">
-                <i class="bx bx-link-external me-1"></i> Gérer les voyages
+                <i class="bx bx-link-external me-1"></i> GÃ©rer les voyages
             </a>
         </div>
 
@@ -53,7 +54,7 @@
                         <th>Voyage</th>
                         <th>Destination</th>
                         <th class="text-center">Paliers</th>
-                        <th class="text-center">Départs GD</th>
+                        <th class="text-center">DÃ©parts GD</th>
                         <th class="text-center">Garantis</th>
                         <th>Statut</th>
                         <th></th>
@@ -78,10 +79,10 @@
                         <td>
                             <strong><?php echo e($voyage->name); ?></strong>
                             <?php if($voyage->price_from): ?>
-                                <br><small class="text-muted">à partir de <?php echo e(number_format($voyage->price_from, 0, ',', ' ')); ?> €</small>
+                                <br><small class="text-muted">Ã  partir de <?php echo e(number_format($voyage->price_from, 0, ',', ' ')); ?> â‚¬</small>
                             <?php endif; ?>
                         </td>
-                        <td class="text-muted small"><?php echo e($voyage->destination ?? '—'); ?></td>
+                        <td class="text-muted small"><?php echo e($voyage->destination ?? 'â€”'); ?></td>
                         <td class="text-center">
                             <?php if($voyage->pricingTiers->count()): ?>
                                 <span class="badge bg-info text-dark"><?php echo e($voyage->pricingTiers->count()); ?> palier(s)</span>
@@ -100,19 +101,19 @@
                         <td>
                             <?php $s = $voyage->status ?? 'publish'; ?>
                             <span class="badge bg-<?php echo e($s === 'publish' ? 'success' : ($s === 'draft' ? 'secondary' : 'warning text-dark')); ?>">
-                                <?php echo e($s === 'publish' ? 'Publié' : ($s === 'draft' ? 'Brouillon' : $s)); ?>
+                                <?php echo e($s === 'publish' ? 'PubliÃ©' : ($s === 'draft' ? 'Brouillon' : $s)); ?>
 
                             </span>
                         </td>
                         <td class="text-end">
                             <a href="<?php echo e(route('admin.group-deals.trips.show', $voyage)); ?>"
-                               class="btn btn-sm btn-outline-primary">Gérer</a>
+                               class="btn btn-sm btn-outline-primary">GÃ©rer</a>
                         </td>
                     </tr>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <tr>
                         <td colspan="8" class="text-center text-muted py-4">
-                            Aucun voyage avec Group Deal activé.
+                            Aucun voyage avec Group Deal activÃ©.
                             <a href="<?php echo e(route('admin.circuits.voyages.index')); ?>">Activer le Group Deal sur un voyage</a>
                         </td>
                     </tr>
@@ -132,4 +133,5 @@
     <script src="<?php echo e(URL::asset('build/js/app.js')); ?>"></script>
 <?php $__env->stopPush(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\group-deals\trips\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\group-deals\trips\index.blade.php ENDPATH**/ ?>

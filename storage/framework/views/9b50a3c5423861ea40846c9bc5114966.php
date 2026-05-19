@@ -1,5 +1,6 @@
+﻿
 <?php $__env->startSection('title'); ?>
-    Calendrier des départs
+    Calendrier des dÃ©parts
 <?php $__env->stopSection(); ?>
 
 <?php
@@ -28,13 +29,13 @@
     <div class="partner-v2">
     <div class="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-[#0e3a5a]">Calendrier des départs</h1>
-            <p class="text-sm text-gray-500 mt-1">Départs catalogue et réservations par date.</p>
+            <h1 class="text-2xl sm:text-3xl font-bold text-[#0e3a5a]">Calendrier des dÃ©parts</h1>
+            <p class="text-sm text-gray-500 mt-1">DÃ©parts catalogue et rÃ©servations par date.</p>
         </div>
         <nav class="text-sm text-gray-500" aria-label="Fil d'Ariane">
             <a href="<?php echo e(route('admin.dashboard')); ?>" class="hover:text-[#0083c4]">Admin</a>
             <span class="mx-1">/</span>
-            <a href="<?php echo e(route('admin.reservations.index')); ?>" class="hover:text-[#0083c4]">Réservations</a>
+            <a href="<?php echo e(route('admin.reservations.index')); ?>" class="hover:text-[#0083c4]">RÃ©servations</a>
             <span class="mx-1">/</span>
             <span class="text-gray-700 font-medium">Calendrier</span>
         </nav>
@@ -46,10 +47,10 @@
         <div class="p-4 sm:p-5 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3 bg-gray-50/50">
             <h2 class="font-bold text-lg text-[#0e3a5a] flex items-center gap-2">
                 <i class="far fa-calendar-alt text-[#0083c4]"></i>
-                <span id="ajin-cal-month-title">—</span>
+                <span id="ajin-cal-month-title">â€”</span>
             </h2>
             <div class="flex items-center gap-2">
-                <button type="button" id="ajin-cal-prev" class="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-[#e6f3fa] hover:text-[#0083c4] hover:border-[#0083c4] transition-colors" title="Mois précédent">
+                <button type="button" id="ajin-cal-prev" class="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-[#e6f3fa] hover:text-[#0083c4] hover:border-[#0083c4] transition-colors" title="Mois prÃ©cÃ©dent">
                     <i class="fas fa-chevron-left text-xs"></i>
                 </button>
                 <button type="button" id="ajin-cal-today" class="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-600 hover:bg-gray-50 transition-colors">Aujourd'hui</button>
@@ -96,4 +97,5 @@
     <?php echo app('Illuminate\Foundation\Vite')(['resources/css/ajin-calendar-agent.css']); ?>
 <?php $__env->stopPush(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\reservations\calendrier\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\reservations\calendrier\index.blade.php ENDPATH**/ ?>

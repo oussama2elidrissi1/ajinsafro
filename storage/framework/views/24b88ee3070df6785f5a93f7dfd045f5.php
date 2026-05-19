@@ -1,3 +1,5 @@
+﻿
+
 <?php $__env->startSection('title', 'Fiche Group Deal'); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -5,7 +7,7 @@
     <div class="page-title-box d-flex align-items-center justify-content-between">
         <div>
             <h4 class="mb-1"><?php echo e($groupDeal->title); ?></h4>
-            <p class="text-muted mb-0"><?php echo e($groupDeal->destination ?: 'Destination non renseignée'); ?></p>
+            <p class="text-muted mb-0"><?php echo e($groupDeal->destination ?: 'Destination non renseignÃ©e'); ?></p>
         </div>
         <div class="d-flex gap-2">
             <a href="<?php echo e(route('front.group-deals.show', $groupDeal->slug)); ?>" target="_blank" class="btn btn-light">Voir la page publique</a>
@@ -49,7 +51,7 @@
                     </div>
                     <div class="mt-3 text-muted">
                         <?php if($stats['remaining_to_guarantee'] > 0): ?>
-                            Il reste <?php echo e($stats['remaining_to_guarantee']); ?> personne(s) pour garantir le départ.
+                            Il reste <?php echo e($stats['remaining_to_guarantee']); ?> personne(s) pour garantir le dÃ©part.
                         <?php else: ?>
                             Le voyage est garanti.
                         <?php endif; ?>
@@ -67,7 +69,7 @@
                                 <th>Min</th>
                                 <th>Max</th>
                                 <th>Prix</th>
-                                <th>Libellé</th>
+                                <th>LibellÃ©</th>
                                 <th>Ordre</th>
                                 <th></th>
                             </tr>
@@ -121,7 +123,7 @@
                             <thead>
                             <tr>
                                 <th>Participant</th>
-                                <th>Qté</th>
+                                <th>QtÃ©</th>
                                 <th>Prix saisi</th>
                                 <th>Statut</th>
                                 <th>Paiement</th>
@@ -140,14 +142,14 @@
                                     <td><?php echo e($participant->selected_price ? number_format((float) $participant->selected_price, 0, ',', ' ') . ' DH' : 'N/A'); ?></td>
                                     <td>
                                         <select name="status" form="participant-form-<?php echo e($participant->id); ?>" class="form-select form-select-sm">
-                                            <?php $__currentLoopData = ['pending' => 'En attente', 'confirmed' => 'Confirmé', 'paid' => 'Payé', 'cancelled' => 'Annulé']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <?php $__currentLoopData = ['pending' => 'En attente', 'confirmed' => 'ConfirmÃ©', 'paid' => 'PayÃ©', 'cancelled' => 'AnnulÃ©']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                 <option value="<?php echo e($key); ?>" <?php if($participant->status === $key): echo 'selected'; endif; ?>><?php echo e($label); ?></option>
                                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                         </select>
                                     </td>
                                     <td>
                                         <select name="payment_status" form="participant-form-<?php echo e($participant->id); ?>" class="form-select form-select-sm">
-                                            <?php $__currentLoopData = ['pending' => 'En attente', 'paid' => 'Payé', 'cancelled' => 'Annulé']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <?php $__currentLoopData = ['pending' => 'En attente', 'paid' => 'PayÃ©', 'cancelled' => 'AnnulÃ©']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                 <option value="<?php echo e($key); ?>" <?php if($participant->payment_status === $key): echo 'selected'; endif; ?>><?php echo e($label); ?></option>
                                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                         </select>
@@ -157,12 +159,12 @@
                                         <form id="participant-form-<?php echo e($participant->id); ?>" method="POST" action="<?php echo e(route('admin.group-deals.participants.update', [$groupDeal, $participant])); ?>">
                                             <?php echo csrf_field(); ?>
                                             <?php echo method_field('PATCH'); ?>
-                                            <button class="btn btn-sm btn-outline-primary">Mettre à jour</button>
+                                            <button class="btn btn-sm btn-outline-primary">Mettre Ã  jour</button>
                                         </form>
                                     </td>
                                 </tr>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                                <tr><td colspan="7" class="text-center text-muted py-4">Aucun participant pour l’instant.</td></tr>
+                                <tr><td colspan="7" class="text-center text-muted py-4">Aucun participant pour lâ€™instant.</td></tr>
                             <?php endif; ?>
                             </tbody>
                         </table>
@@ -182,7 +184,7 @@
                             <select name="client_id" class="form-select">
                                 <option value="">Saisie libre</option>
                                 <?php $__currentLoopData = $clients; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $client): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                    <option value="<?php echo e($client->id); ?>"><?php echo e($client->full_name ?: $client->email); ?><?php echo e($client->email ? ' · '.$client->email : ''); ?></option>
+                                    <option value="<?php echo e($client->id); ?>"><?php echo e($client->full_name ?: $client->email); ?><?php echo e($client->email ? ' Â· '.$client->email : ''); ?></option>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
@@ -192,7 +194,7 @@
                         </div>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">Téléphone</label>
+                                <label class="form-label">TÃ©lÃ©phone</label>
                                 <input type="text" name="phone" class="form-control">
                             </div>
                             <div class="col-md-6">
@@ -209,17 +211,17 @@
                                 <label class="form-label">Statut</label>
                                 <select name="status" class="form-select">
                                     <option value="pending">En attente</option>
-                                    <option value="confirmed">Confirmé</option>
-                                    <option value="paid">Payé</option>
-                                    <option value="cancelled">Annulé</option>
+                                    <option value="confirmed">ConfirmÃ©</option>
+                                    <option value="paid">PayÃ©</option>
+                                    <option value="cancelled">AnnulÃ©</option>
                                 </select>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Paiement</label>
                                 <select name="payment_status" class="form-select">
                                     <option value="pending">En attente</option>
-                                    <option value="paid">Payé</option>
-                                    <option value="cancelled">Annulé</option>
+                                    <option value="paid">PayÃ©</option>
+                                    <option value="cancelled">AnnulÃ©</option>
                                 </select>
                             </div>
                         </div>
@@ -229,17 +231,17 @@
             </div>
 
             <div class="card mb-4">
-                <div class="card-header"><h5 class="mb-0">Résumé</h5></div>
+                <div class="card-header"><h5 class="mb-0">RÃ©sumÃ©</h5></div>
                 <div class="card-body">
                     <ul class="list-unstyled mb-0 vstack gap-2">
-                        <li><strong>Départ:</strong> <?php echo e(optional($groupDeal->start_date)->format('d/m/Y') ?: 'N/A'); ?></li>
+                        <li><strong>DÃ©part:</strong> <?php echo e(optional($groupDeal->start_date)->format('d/m/Y') ?: 'N/A'); ?></li>
                         <li><strong>Retour:</strong> <?php echo e(optional($groupDeal->end_date)->format('d/m/Y') ?: 'N/A'); ?></li>
                         <li><strong>Deadline:</strong> <?php echo e(optional($groupDeal->registration_deadline)->format('d/m/Y') ?: 'N/A'); ?></li>
-                        <li><strong>Partage client:</strong> <?php echo e($groupDeal->share_enabled ? 'Activé' : 'Désactivé'); ?></li>
+                        <li><strong>Partage client:</strong> <?php echo e($groupDeal->share_enabled ? 'ActivÃ©' : 'DÃ©sactivÃ©'); ?></li>
                         <li><strong>Meilleur prix:</strong> <?php echo e(optional($stats['best_tier'])->price_per_person ? number_format((float) $stats['best_tier']->price_per_person, 0, ',', ' ') . ' DH' : 'N/A'); ?></li>
                         <li><strong>Prochain palier:</strong>
                             <?php if($stats['next_tier']): ?>
-                                <?php echo e($stats['next_tier']->min_participants); ?> pers. → <?php echo e(number_format((float) $stats['next_tier']->price_per_person, 0, ',', ' ')); ?> DH
+                                <?php echo e($stats['next_tier']->min_participants); ?> pers. â†’ <?php echo e(number_format((float) $stats['next_tier']->price_per_person, 0, ',', ' ')); ?> DH
                             <?php else: ?>
                                 Aucun
                             <?php endif; ?>
@@ -260,4 +262,5 @@
 </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\group-deals\offers\show.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\group-deals\offers\show.blade.php ENDPATH**/ ?>

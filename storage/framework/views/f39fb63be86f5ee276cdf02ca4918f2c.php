@@ -1,15 +1,16 @@
-<?php $__env->startSection('title'); ?> Group Deals — Départs <?php $__env->stopSection(); ?>
+﻿
+<?php $__env->startSection('title'); ?> Group Deals â€” DÃ©parts <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('content'); ?>
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-flex align-items-center justify-content-between">
-            <h4 class="page-title mb-0 font-size-18">Group Deals — Départs</h4>
+            <h4 class="page-title mb-0 font-size-18">Group Deals â€” DÃ©parts</h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
                     <li class="breadcrumb-item"><a href="<?php echo e(route('admin.dashboard')); ?>">Admin</a></li>
                     <li class="breadcrumb-item"><a href="<?php echo e(route('admin.group-deals.trips.index')); ?>">Group Deals</a></li>
-                    <li class="breadcrumb-item active">Départs</li>
+                    <li class="breadcrumb-item active">DÃ©parts</li>
                 </ol>
             </div>
         </div>
@@ -30,13 +31,13 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <label class="form-label small mb-1">Statut départ</label>
+                <label class="form-label small mb-1">Statut dÃ©part</label>
                 <select name="status" class="form-select form-select-sm">
                     <option value="">Tous</option>
                     <option value="open"    <?php if(request('status') === 'open'): echo 'selected'; endif; ?>>Ouvert</option>
-                    <option value="limited" <?php if(request('status') === 'limited'): echo 'selected'; endif; ?>>Limité</option>
+                    <option value="limited" <?php if(request('status') === 'limited'): echo 'selected'; endif; ?>>LimitÃ©</option>
                     <option value="full"    <?php if(request('status') === 'full'): echo 'selected'; endif; ?>>Complet</option>
-                    <option value="closed"  <?php if(request('status') === 'closed'): echo 'selected'; endif; ?>>Fermé</option>
+                    <option value="closed"  <?php if(request('status') === 'closed'): echo 'selected'; endif; ?>>FermÃ©</option>
                 </select>
             </div>
             <div class="col-md-2">
@@ -49,11 +50,11 @@
             </div>
             <div class="col-auto">
                 <button type="submit" class="btn btn-primary btn-sm">Filtrer</button>
-                <a href="<?php echo e(route('admin.group-deals.departures.index')); ?>" class="btn btn-outline-secondary btn-sm ms-1">Réinitialiser</a>
+                <a href="<?php echo e(route('admin.group-deals.departures.index')); ?>" class="btn btn-outline-secondary btn-sm ms-1">RÃ©initialiser</a>
             </div>
         </form>
 
-        <h5 class="mb-3"><?php echo e($departures->total()); ?> départ(s)</h5>
+        <h5 class="mb-3"><?php echo e($departures->total()); ?> dÃ©part(s)</h5>
 
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -74,16 +75,16 @@
                     <tr>
                         <td>
                             <a href="<?php echo e(route('admin.group-deals.trips.show', $dep->voyage)); ?>"
-                               class="text-body fw-semibold"><?php echo e($dep->voyage?->name ?? '—'); ?></a>
+                               class="text-body fw-semibold"><?php echo e($dep->voyage?->name ?? 'â€”'); ?></a>
                             <?php if($dep->voyage?->destination): ?>
                                 <br><small class="text-muted"><?php echo e($dep->voyage->destination); ?></small>
                             <?php endif; ?>
                         </td>
                         <td class="small">
-                            <?php echo e($dep->start_date?->format('d/m/Y') ?? '—'); ?>
+                            <?php echo e($dep->start_date?->format('d/m/Y') ?? 'â€”'); ?>
 
                             <?php if($dep->end_date): ?>
-                                <br><span class="text-muted">→ <?php echo e($dep->end_date->format('d/m/Y')); ?></span>
+                                <br><span class="text-muted">â†’ <?php echo e($dep->end_date->format('d/m/Y')); ?></span>
                             <?php endif; ?>
                         </td>
                         <td class="text-center">
@@ -97,11 +98,11 @@
                         <td class="text-center text-muted small"><?php echo e($dep->guaranteed_threshold); ?></td>
                         <td>
                             <?php if($dep->active_tier_price): ?>
-                                <span class="text-success fw-semibold"><?php echo e(number_format($dep->active_tier_price, 0, ',', ' ')); ?> €</span>
+                                <span class="text-success fw-semibold"><?php echo e(number_format($dep->active_tier_price, 0, ',', ' ')); ?> â‚¬</span>
                             <?php elseif($dep->sale_price): ?>
-                                <?php echo e(number_format($dep->sale_price, 0, ',', ' ')); ?> €
+                                <?php echo e(number_format($dep->sale_price, 0, ',', ' ')); ?> â‚¬
                             <?php else: ?>
-                                —
+                                â€”
                             <?php endif; ?>
                         </td>
                         <td>
@@ -125,13 +126,13 @@
                         </td>
                         <td>
                             <a href="<?php echo e(route('admin.group-deals.departures.show', $dep)); ?>"
-                               class="btn btn-sm btn-outline-primary">Détail</a>
+                               class="btn btn-sm btn-outline-primary">DÃ©tail</a>
                         </td>
                     </tr>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <tr>
                         <td colspan="8" class="text-center text-muted py-4">
-                            Aucun départ Group Deal trouvé.
+                            Aucun dÃ©part Group Deal trouvÃ©.
                         </td>
                     </tr>
                 <?php endif; ?>
@@ -150,4 +151,5 @@
     <script src="<?php echo e(URL::asset('build/js/app.js')); ?>"></script>
 <?php $__env->stopPush(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\group-deals\departures\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\group-deals\departures\index.blade.php ENDPATH**/ ?>

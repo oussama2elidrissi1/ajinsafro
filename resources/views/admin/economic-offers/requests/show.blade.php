@@ -1,6 +1,6 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 
-@section('title', 'Détail demande Formule Économique')
+@section('title', 'DÃ©tail demande Formule Ã‰conomique')
 
 @section('content')
     <x-admin.page-header
@@ -8,8 +8,8 @@
         :subtitle="$requestItem->offer_title ?: 'Demande client'"
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Demandes économique', 'url' => route('admin.economic-offers.requests.index')],
-            ['label' => 'Détail'],
+            ['label' => 'Demandes Ã©conomique', 'url' => route('admin.economic-offers.requests.index')],
+            ['label' => 'DÃ©tail'],
         ]"
     />
 
@@ -17,15 +17,15 @@
 
     <div class="row g-4">
         <div class="col-lg-5">
-            <x-admin.form-section title="Coordonnées client">
+            <x-admin.form-section title="CoordonnÃ©es client">
                 <div class="d-flex flex-column gap-3">
                     <div><strong>Nom :</strong> {{ $requestItem->full_name }}</div>
-                    <div><strong>Téléphone :</strong> {{ $requestItem->phone }}</div>
+                    <div><strong>TÃ©lÃ©phone :</strong> {{ $requestItem->phone }}</div>
                     <div><strong>Email :</strong> {{ $requestItem->email }}</div>
-                    <div><strong>Offre :</strong> {{ $requestItem->offer_title ?: optional($requestItem->offer)->title ?: 'Non associée' }}</div>
-                    <div><strong>Départ :</strong> {{ $requestItem->selected_departure_date?->format('d/m/Y') ?: '—' }}</div>
+                    <div><strong>Offre :</strong> {{ $requestItem->offer_title ?: optional($requestItem->offer)->title ?: 'Non associÃ©e' }}</div>
+                    <div><strong>DÃ©part :</strong> {{ $requestItem->selected_departure_date?->format('d/m/Y') ?: 'â€”' }}</div>
                     <div><strong>Adultes / Enfants :</strong> {{ $requestItem->adults }} / {{ $requestItem->children }}</div>
-                    <div><strong>Message :</strong><br>{!! nl2br(e($requestItem->message ?: '—')) !!}</div>
+                    <div><strong>Message :</strong><br>{!! nl2br(e($requestItem->message ?: 'â€”')) !!}</div>
                 </div>
             </x-admin.form-section>
         </div>
@@ -46,9 +46,9 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">Offre associée</label>
+                        <label class="form-label">Offre associÃ©e</label>
                         <select name="offer_id" class="form-select @error('offer_id') is-invalid @enderror">
-                            <option value="">Non associée</option>
+                            <option value="">Non associÃ©e</option>
                             @foreach($offers as $offer)
                                 <option value="{{ $offer->id }}" @selected((int) old('offer_id', $requestItem->offer_id) === (int) $offer->id)>{{ $offer->title }}</option>
                             @endforeach
@@ -84,3 +84,4 @@
         </div>
     </div>
 @endsection
+

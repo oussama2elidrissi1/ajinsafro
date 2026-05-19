@@ -1,4 +1,6 @@
-<?php $__env->startSection('title', 'Tableau de bord — Vue globale'); ?>
+﻿
+
+<?php $__env->startSection('title', 'Tableau de bord â€” Vue globale'); ?>
 
 <?php $__env->startPush('styles'); ?>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6,10 +8,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 /* =========================================================
-   AJ Dashboard — design system Ajinsafro
-   ▸ Tout est scopé à .aj-dash-2026
-   ▸ Aucun override du sidebar/topbar/layout Qovex
-   ▸ Aucun override de Bootstrap .row / .col
+   AJ Dashboard â€” design system Ajinsafro
+   â–¸ Tout est scopÃ© Ã  .aj-dash-2026
+   â–¸ Aucun override du sidebar/topbar/layout Qovex
+   â–¸ Aucun override de Bootstrap .row / .col
    ========================================================= */
 
 .aj-dash-2026 {
@@ -46,7 +48,7 @@
 .aj-dash-2026 a { text-decoration: none; color: inherit; }
 .aj-dash-2026 button, .aj-dash-2026 input, .aj-dash-2026 select { font-family: inherit; }
 
-/* ────────── PAGE HEAD ────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ PAGE HEAD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .aj-dash-2026 .page-head {
     display: flex;
     justify-content: space-between;
@@ -130,7 +132,7 @@
     color: #fff;
 }
 
-/* ────────── CARD ────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ CARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .aj-dash-2026 .d-card {
     background: #fff;
     border: 1px solid var(--d-border);
@@ -138,7 +140,7 @@
     box-shadow: var(--d-shadow);
 }
 
-/* ────────── KPI GRID ────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ KPI GRID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .aj-dash-2026 .kpi-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -240,7 +242,7 @@
     margin-top: 6px;
 }
 
-/* ────────── TOP WIDGETS ────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ TOP WIDGETS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .aj-dash-2026 .top-widgets {
     display: grid;
     grid-template-columns: 1fr 1fr 1.3fr;
@@ -397,7 +399,7 @@
     line-height: 1;
 }
 
-/* ────────── STATUS CARD ────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ STATUS CARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .aj-dash-2026 .status-card {
     padding: 24px;
     margin-bottom: 22px;
@@ -457,7 +459,7 @@
     transition: width 0.5s ease;
 }
 
-/* ────────── CHARTS GRID ────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ CHARTS GRID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .aj-dash-2026 .charts-grid {
     display: grid;
     grid-template-columns: 1.55fr .9fr;
@@ -511,7 +513,7 @@
     min-height: 290px;
 }
 
-/* ────────── LOWER GRID (paiements + dernières réservations) ────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ LOWER GRID (paiements + derniÃ¨res rÃ©servations) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .aj-dash-2026 .lower-grid {
     display: grid;
     grid-template-columns: .75fr 1.55fr;
@@ -555,7 +557,7 @@
     border-radius: inherit;
 }
 
-/* ────────── TABLE ────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ TABLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .aj-dash-2026 .table-card {
     padding: 0;
     overflow: hidden;
@@ -650,7 +652,7 @@
     border-color: var(--d-blue);
 }
 
-/* ────────── BOTTOM GRID (voyages + agences) ────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ BOTTOM GRID (voyages + agences) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .aj-dash-2026 .bottom-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -731,7 +733,7 @@
     font-weight: 700;
 }
 
-/* ────────── ANIMATIONS ────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ ANIMATIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .aj-dash-2026 .fade-in {
     animation: ajDashFadeIn 0.45s ease both;
 }
@@ -747,7 +749,7 @@
     to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ────────── RESPONSIVE ────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ RESPONSIVE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width: 1400px) {
     .aj-dash-2026 .top-widgets { grid-template-columns: 1fr 1fr; }
     .aj-dash-2026 .top-widgets > :nth-child(3) { grid-column: 1 / -1; }
@@ -782,7 +784,7 @@
 <?php
     $now      = \Carbon\Carbon::now('Africa/Casablanca')->locale('fr');
     $dateLong = $now->translatedFormat('l d F Y');
-    $dateTime = $now->translatedFormat('l d F Y · H:i');
+    $dateTime = $now->translatedFormat('l d F Y Â· H:i');
     $rsTotal  = max(1, (int)($stats['reservations_total'] ?? 0));
     $payments = $stats['payment_labels'] ?? [];
     $paySeries = $stats['payment_series'] ?? [];
@@ -797,7 +799,7 @@
             <div class="page-title-icon"><i class="bx bx-grid-alt"></i></div>
             <div>
                 <h1 class="dashboard-title">Tableau de bord</h1>
-                <p class="dashboard-subtitle">Vue d'ensemble de votre activité — <?php echo e($dateTime); ?></p>
+                <p class="dashboard-subtitle">Vue d'ensemble de votre activitÃ© â€” <?php echo e($dateTime); ?></p>
             </div>
         </div>
 
@@ -807,7 +809,7 @@
 
             </span>
             <a href="<?php echo e(route('admin.reservations.index')); ?>" class="control-btn primary">
-                <i class="bx bx-list-ul"></i> Réservations
+                <i class="bx bx-list-ul"></i> RÃ©servations
             </a>
         </div>
     </div>
@@ -823,7 +825,7 @@
             </div>
             <div class="kpi-footer">
                 <span>Tous les voyages</span>
-                <span class="arrow">→</span>
+                <span class="arrow">â†’</span>
             </div>
             <a href="<?php echo e(route('admin.circuits.voyages.index')); ?>" class="stretched"></a>
         </div>
@@ -836,7 +838,7 @@
             </div>
             <div class="kpi-footer">
                 <span><?php echo e($stats['branches_active'] ?? 0); ?> actives</span>
-                <span class="arrow">→</span>
+                <span class="arrow">â†’</span>
             </div>
             <a href="<?php echo e(route('admin.agencies.index')); ?>" class="stretched"></a>
         </div>
@@ -844,18 +846,18 @@
         <div class="d-card dashboard-card kpi-card fade-in d3">
             <div>
                 <div class="kpi-icon orange"><i class="bx bx-calendar-event"></i></div>
-                <div class="kpi-label">Réservations</div>
+                <div class="kpi-label">RÃ©servations</div>
                 <div class="kpi-value"><?php echo e($stats['reservations_total'] ?? 0); ?></div>
                 <?php $evo = $stats['reservations_month_evolution'] ?? 0; ?>
                 <?php if($evo < 0): ?>
-                    <span class="badge-red">↓ <?php echo e($evo); ?>% ce mois</span>
+                    <span class="badge-red">â†“ <?php echo e($evo); ?>% ce mois</span>
                 <?php elseif($evo > 0): ?>
-                    <span class="badge-green">↑ +<?php echo e($evo); ?>% ce mois</span>
+                    <span class="badge-green">â†‘ +<?php echo e($evo); ?>% ce mois</span>
                 <?php endif; ?>
             </div>
             <div class="kpi-footer">
-                <span>Total enregistré</span>
-                <span class="arrow">→</span>
+                <span>Total enregistrÃ©</span>
+                <span class="arrow">â†’</span>
             </div>
             <a href="<?php echo e(route('admin.reservations.index')); ?>" class="stretched"></a>
         </div>
@@ -867,8 +869,8 @@
                 <div class="kpi-value"><?php echo e($stats['clients_count'] ?? 0); ?></div>
             </div>
             <div class="kpi-footer">
-                <span>Clients enregistrés</span>
-                <span class="arrow">→</span>
+                <span>Clients enregistrÃ©s</span>
+                <span class="arrow">â†’</span>
             </div>
             <a href="<?php echo e(route('admin.customers.clients.index')); ?>" class="stretched"></a>
         </div>
@@ -882,26 +884,26 @@
         <div class="d-card dashboard-card widget fade-in d2">
             <div class="widget-head">
                 <div class="widget-icon"><i class="bx bx-time-five"></i></div>
-                <h3 class="card-title">Activité récente</h3>
+                <h3 class="card-title">ActivitÃ© rÃ©cente</h3>
             </div>
 
             <div class="metric-list">
                 <div class="metric-row">
                     <span>Aujourd'hui</span>
-                    <strong><?php echo e($stats['reservations_today'] ?? 0); ?> résa</strong>
+                    <strong><?php echo e($stats['reservations_today'] ?? 0); ?> rÃ©sa</strong>
                 </div>
                 <div class="metric-row">
                     <span>Cette semaine</span>
-                    <strong><?php echo e($stats['reservations_this_week'] ?? 0); ?> résa</strong>
+                    <strong><?php echo e($stats['reservations_this_week'] ?? 0); ?> rÃ©sa</strong>
                 </div>
                 <div class="metric-row">
                     <span>Ce mois</span>
-                    <strong><?php echo e($stats['reservations_this_month'] ?? 0); ?> réservations</strong>
+                    <strong><?php echo e($stats['reservations_this_month'] ?? 0); ?> rÃ©servations</strong>
                 </div>
             </div>
 
             <a href="<?php echo e(route('admin.reservations.index')); ?>" class="detail-link">
-                Voir le détail <span>→</span>
+                Voir le dÃ©tail <span>â†’</span>
             </a>
         </div>
 
@@ -912,21 +914,21 @@
                 <h3 class="card-title">Chiffre d'affaires</h3>
             </div>
 
-            <p style="color:var(--d-muted);font-weight:700;margin:0 0 4px;font-size:12px;">Total validé</p>
-            <div class="revenue-value"><?php echo e(number_format($stats['revenue_total'] ?? 0, 0, ',', ' ')); ?> €</div>
+            <p style="color:var(--d-muted);font-weight:700;margin:0 0 4px;font-size:12px;">Total validÃ©</p>
+            <div class="revenue-value"><?php echo e(number_format($stats['revenue_total'] ?? 0, 0, ',', ' ')); ?> â‚¬</div>
             <p style="color:var(--d-muted);font-weight:700;margin:0 0 8px;font-size:12px;">
-                Ce mois : <strong style="color:var(--d-text);"><?php echo e(number_format($stats['revenue_this_month'] ?? 0, 0, ',', ' ')); ?> €</strong>
+                Ce mois : <strong style="color:var(--d-text);"><?php echo e(number_format($stats['revenue_this_month'] ?? 0, 0, ',', ' ')); ?> â‚¬</strong>
             </p>
 
             <?php $revEvo = $stats['revenue_month_evolution'] ?? 0; ?>
             <?php if($revEvo >= 0): ?>
-                <span class="small-green">↑ +<?php echo e($revEvo); ?>% vs mois dernier</span>
+                <span class="small-green">â†‘ +<?php echo e($revEvo); ?>% vs mois dernier</span>
             <?php else: ?>
-                <span class="small-red">↓ <?php echo e($revEvo); ?>% vs mois dernier</span>
+                <span class="small-red">â†“ <?php echo e($revEvo); ?>% vs mois dernier</span>
             <?php endif; ?>
 
             <a href="<?php echo e(route('admin.reservations.index')); ?>" class="detail-link">
-                Voir le détail <span>→</span>
+                Voir le dÃ©tail <span>â†’</span>
             </a>
         </div>
 
@@ -938,7 +940,7 @@
                         <div class="widget-icon"><i class="bx bx-envelope"></i></div>
                         <h3 class="card-title">Messages</h3>
                     </div>
-                    <p style="color:var(--d-muted);font-weight:700;margin:0;font-size:13px;">Boîte Réservations</p>
+                    <p style="color:var(--d-muted);font-weight:700;margin:0;font-size:13px;">BoÃ®te RÃ©servations</p>
                     <div class="message-number"><?php echo e($stats['messages_count'] ?? 0); ?></div>
                     <a href="<?php echo e(route('admin.messagerie.index')); ?>" class="blue-btn">
                         <i class="bx bx-envelope"></i> Ouvrir la messagerie
@@ -952,7 +954,7 @@
 
     
     <div class="d-card dashboard-card status-card fade-in d3">
-        <h3 class="card-title">Répartition des réservations</h3>
+        <h3 class="card-title">RÃ©partition des rÃ©servations</h3>
 
         <div class="status-grid">
             <?php
@@ -974,7 +976,7 @@
 
             <div class="status-item">
                 <div class="status-line">
-                    <span><i class="dot green"></i>Validées</span>
+                    <span><i class="dot green"></i>ValidÃ©es</span>
                     <strong><?php echo e($valid); ?></strong>
                 </div>
                 <div class="progress-bar-d">
@@ -984,7 +986,7 @@
 
             <div class="status-item">
                 <div class="status-line">
-                    <span><i class="dot red"></i>Annulées</span>
+                    <span><i class="dot red"></i>AnnulÃ©es</span>
                     <strong><?php echo e($cancel); ?></strong>
                 </div>
                 <div class="progress-bar-d">
@@ -1009,7 +1011,7 @@
 
         <div class="d-card dashboard-card chart-card fade-in d4">
             <div class="card-head">
-                <h3 class="card-title">Évolution des réservations & du chiffre d'affaires</h3>
+                <h3 class="card-title">Ã‰volution des rÃ©servations & du chiffre d'affaires</h3>
                 <span class="pill-select">6 derniers mois</span>
             </div>
             <div id="aj-chart-line" class="chart-area"></div>
@@ -1017,7 +1019,7 @@
 
         <div class="d-card dashboard-card chart-card fade-in d5">
             <div class="card-head">
-                <h3 class="card-title">Statut des réservations</h3>
+                <h3 class="card-title">Statut des rÃ©servations</h3>
             </div>
             <div id="aj-chart-donut" class="chart-area"></div>
         </div>
@@ -1030,7 +1032,7 @@
         
         <div class="d-card dashboard-card chart-card fade-in d4">
             <div class="card-head">
-                <h3 class="card-title">Paiements validés</h3>
+                <h3 class="card-title">Paiements validÃ©s</h3>
             </div>
 
             <div class="payments-chart">
@@ -1041,13 +1043,13 @@
                         <strong><?php echo e($paySeries[$i]); ?></strong>
                     </div>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                    <div class="empty-row">Aucun paiement enregistré.</div>
+                    <div class="empty-row">Aucun paiement enregistrÃ©.</div>
                 <?php endif; ?>
             </div>
 
             <div style="margin-top:auto;padding-top:24px;">
                 <a href="<?php echo e(route('admin.reservations.index')); ?>" class="detail-link">
-                    Voir le détail <span>→</span>
+                    Voir le dÃ©tail <span>â†’</span>
                 </a>
             </div>
         </div>
@@ -1055,8 +1057,8 @@
         
         <div class="d-card dashboard-card table-card fade-in d5">
             <div class="card-head">
-                <h3 class="card-title">Dernières réservations</h3>
-                <a href="<?php echo e(route('admin.reservations.index')); ?>" class="pill-select">Voir toutes →</a>
+                <h3 class="card-title">DerniÃ¨res rÃ©servations</h3>
+                <a href="<?php echo e(route('admin.reservations.index')); ?>" class="pill-select">Voir toutes â†’</a>
             </div>
 
             <div style="overflow-x:auto;">
@@ -1078,7 +1080,7 @@
                             <tr>
                                 <td><span style="color:var(--d-muted);">#<?php echo e($r->id); ?></span></td>
                                 <td>
-                                    <span class="client-name"><?php echo e(trim(($r->client_first_name ?? '').' '.($r->client_last_name ?? '')) ?: '—'); ?></span>
+                                    <span class="client-name"><?php echo e(trim(($r->client_first_name ?? '').' '.($r->client_last_name ?? '')) ?: 'â€”'); ?></span>
                                     <?php if($r->client_email): ?>
                                         <span class="client-email"><?php echo e($r->client_email); ?></span>
                                     <?php endif; ?>
@@ -1088,35 +1090,35 @@
                                         <?php echo e(\Illuminate\Support\Str::limit($r->tour->name, 30)); ?>
 
                                     <?php else: ?>
-                                        <span style="color:var(--d-muted);">—</span>
+                                        <span style="color:var(--d-muted);">â€”</span>
                                     <?php endif; ?>
                                 </td>
                                 <td>
                                     <?php
                                         $st = strtolower($r->status ?? '');
                                         $cls = match(true) {
-                                            in_array($st, ['valide','validee','validée','validated','confirmed']) => 'valid',
-                                            in_array($st, ['annule','annulee','annulée','cancelled','canceled']) => 'cancel',
+                                            in_array($st, ['valide','validee','validÃ©e','validated','confirmed']) => 'valid',
+                                            in_array($st, ['annule','annulee','annulÃ©e','cancelled','canceled']) => 'cancel',
                                             default => 'pending',
                                         };
                                         $stLabel = match($cls) {
-                                            'valid'  => 'Validée',
-                                            'cancel' => 'Annulée',
+                                            'valid'  => 'ValidÃ©e',
+                                            'cancel' => 'AnnulÃ©e',
                                             default  => 'En cours',
                                         };
                                     ?>
                                     <span class="tag <?php echo e($cls); ?>"><?php echo e($stLabel); ?></span>
                                 </td>
-                                <td><?php echo e(strtoupper($r->payment_type ?? '—')); ?></td>
+                                <td><?php echo e(strtoupper($r->payment_type ?? 'â€”')); ?></td>
                                 <td>
                                     <?php if(!empty($r->base_price)): ?>
-                                        <?php echo e(number_format(($r->base_price ?? 0) + ($r->room_supplement_total ?? 0), 0, ',', ' ')); ?> €
+                                        <?php echo e(number_format(($r->base_price ?? 0) + ($r->room_supplement_total ?? 0), 0, ',', ' ')); ?> â‚¬
                                     <?php else: ?>
-                                        <span style="color:var(--d-muted);">—</span>
+                                        <span style="color:var(--d-muted);">â€”</span>
                                     <?php endif; ?>
                                 </td>
                                 <td style="white-space:nowrap;font-size:12px;">
-                                    <?php echo e($r->created_at ? $r->created_at->timezone('Africa/Casablanca')->format('d/m/Y H:i') : '—'); ?>
+                                    <?php echo e($r->created_at ? $r->created_at->timezone('Africa/Casablanca')->format('d/m/Y H:i') : 'â€”'); ?>
 
                                 </td>
                                 <td>
@@ -1127,7 +1129,7 @@
                             </tr>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <tr>
-                                <td colspan="8" class="empty-row">Aucune réservation récente.</td>
+                                <td colspan="8" class="empty-row">Aucune rÃ©servation rÃ©cente.</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -1143,7 +1145,7 @@
         
         <div class="d-card dashboard-card list-card table-card fade-in d4">
             <div class="card-head">
-                <h3 class="card-title">Voyages les plus réservés</h3>
+                <h3 class="card-title">Voyages les plus rÃ©servÃ©s</h3>
                 <a href="<?php echo e(route('admin.circuits.voyages.index')); ?>" class="pill-select">Voir tous</a>
             </div>
 
@@ -1164,7 +1166,7 @@
                         <strong class="trip-count list-item-value"><?php echo e($count); ?></strong>
                     </div>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                    <div class="empty-row">Aucun voyage réservé pour le moment.</div>
+                    <div class="empty-row">Aucun voyage rÃ©servÃ© pour le moment.</div>
                 <?php endif; ?>
             </div>
         </div>
@@ -1183,13 +1185,13 @@
                         <div>
                             <div class="agency-title list-item-title"><?php echo e($b->name); ?></div>
                             <?php if($b->city || $b->code): ?>
-                                <div class="agency-city list-item-subtitle"><?php echo e($b->city); ?><?php echo e($b->code ? ' • '.$b->code : ''); ?></div>
+                                <div class="agency-city list-item-subtitle"><?php echo e($b->city); ?><?php echo e($b->code ? ' â€¢ '.$b->code : ''); ?></div>
                             <?php endif; ?>
                         </div>
-                        <a href="<?php echo e(route('admin.agencies.show', $b)); ?>" class="agency-action list-item-value" title="Voir">→</a>
+                        <a href="<?php echo e(route('admin.agencies.show', $b)); ?>" class="agency-action list-item-value" title="Voir">â†’</a>
                     </div>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                    <div class="empty-row">Aucune agence à afficher.</div>
+                    <div class="empty-row">Aucune agence Ã  afficher.</div>
                 <?php endif; ?>
             </div>
         </div>
@@ -1206,13 +1208,13 @@
 document.addEventListener('DOMContentLoaded', function () {
     if (typeof ApexCharts === 'undefined') return;
 
-    // ─── Combo : Réservations (colonnes) + CA (ligne) ───
+    // â”€â”€â”€ Combo : RÃ©servations (colonnes) + CA (ligne) â”€â”€â”€
     var elLine = document.querySelector('#aj-chart-line');
     if (elLine) {
         new ApexCharts(elLine, {
             series: [
-                { name: 'Réservations',           type: 'column', data: <?php echo json_encode($stats['chart_reservations'] ?? [], 15, 512) ?> },
-                { name: "Chiffre d'affaires (€)", type: 'line',   data: <?php echo json_encode($stats['chart_revenue'] ?? [], 15, 512) ?> }
+                { name: 'RÃ©servations',           type: 'column', data: <?php echo json_encode($stats['chart_reservations'] ?? [], 15, 512) ?> },
+                { name: "Chiffre d'affaires (â‚¬)", type: 'line',   data: <?php echo json_encode($stats['chart_revenue'] ?? [], 15, 512) ?> }
             ],
             chart: {
                 height: 320, type: 'line',
@@ -1232,12 +1234,12 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             yaxis: [
                 {
-                    title: { text: 'Réservations', style: { color: '#8c9aad', fontWeight: 700 } },
+                    title: { text: 'RÃ©servations', style: { color: '#8c9aad', fontWeight: 700 } },
                     labels: { style: { colors: '#8c9aad' }, formatter: function (v) { return Math.round(v); } }
                 },
                 {
                     opposite: true,
-                    title: { text: 'CA (€)', style: { color: '#8c9aad', fontWeight: 700 } },
+                    title: { text: 'CA (â‚¬)', style: { color: '#8c9aad', fontWeight: 700 } },
                     labels: {
                         style: { colors: '#8c9aad' },
                         formatter: function (v) { return v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v; }
@@ -1250,7 +1252,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }).render();
     }
 
-    // ─── Donut : Statut des réservations ───
+    // â”€â”€â”€ Donut : Statut des rÃ©servations â”€â”€â”€
     var elDonut = document.querySelector('#aj-chart-donut');
     if (elDonut) {
         new ApexCharts(elDonut, {
@@ -1260,7 +1262,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 animations: { enabled: true, speed: 600 },
                 fontFamily: 'Inter, sans-serif'
             },
-            labels: <?php echo json_encode($stats['donut_labels'] ?? ['En cours', 'Validées', 'Annulées']) ?>,
+            labels: <?php echo json_encode($stats['donut_labels'] ?? ['En cours', 'ValidÃ©es', 'AnnulÃ©es']) ?>,
             plotOptions: {
                 pie: {
                     donut: {
@@ -1290,4 +1292,5 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 <?php $__env->stopPush(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\dashboard\vue-globale\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\dashboard\vue-globale\index.blade.php ENDPATH**/ ?>

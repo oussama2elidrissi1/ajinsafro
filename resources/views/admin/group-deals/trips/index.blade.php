@@ -1,11 +1,11 @@
-@extends('layouts.admin-v2')
-@section('title') Group Deals — Voyages @endsection
+﻿@extends('layouts.admin-v6')
+@section('title') Group Deals â€” Voyages @endsection
 
 @section('content')
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-flex align-items-center justify-content-between">
-            <h4 class="page-title mb-0 font-size-18">Group Deals — Voyages</h4>
+            <h4 class="page-title mb-0 font-size-18">Group Deals â€” Voyages</h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
                     <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
@@ -30,18 +30,18 @@
             <div class="col-md-4">
                 <label class="form-label small mb-1">Recherche</label>
                 <input type="search" name="q" class="form-control form-control-sm"
-                       value="{{ request('q') }}" placeholder="Nom du voyage…">
+                       value="{{ request('q') }}" placeholder="Nom du voyageâ€¦">
             </div>
             <div class="col-auto">
                 <button type="submit" class="btn btn-primary btn-sm">Filtrer</button>
-                <a href="{{ route('admin.group-deals.trips.index') }}" class="btn btn-outline-secondary btn-sm ms-1">Réinitialiser</a>
+                <a href="{{ route('admin.group-deals.trips.index') }}" class="btn btn-outline-secondary btn-sm ms-1">RÃ©initialiser</a>
             </div>
         </form>
 
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0">{{ $voyages->total() }} voyage(s) avec Group Deal activé</h5>
+            <h5 class="mb-0">{{ $voyages->total() }} voyage(s) avec Group Deal activÃ©</h5>
             <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-outline-primary btn-sm">
-                <i class="bx bx-link-external me-1"></i> Gérer les voyages
+                <i class="bx bx-link-external me-1"></i> GÃ©rer les voyages
             </a>
         </div>
 
@@ -53,7 +53,7 @@
                         <th>Voyage</th>
                         <th>Destination</th>
                         <th class="text-center">Paliers</th>
-                        <th class="text-center">Départs GD</th>
+                        <th class="text-center">DÃ©parts GD</th>
                         <th class="text-center">Garantis</th>
                         <th>Statut</th>
                         <th></th>
@@ -78,10 +78,10 @@
                         <td>
                             <strong>{{ $voyage->name }}</strong>
                             @if($voyage->price_from)
-                                <br><small class="text-muted">à partir de {{ number_format($voyage->price_from, 0, ',', ' ') }} €</small>
+                                <br><small class="text-muted">Ã  partir de {{ number_format($voyage->price_from, 0, ',', ' ') }} â‚¬</small>
                             @endif
                         </td>
-                        <td class="text-muted small">{{ $voyage->destination ?? '—' }}</td>
+                        <td class="text-muted small">{{ $voyage->destination ?? 'â€”' }}</td>
                         <td class="text-center">
                             @if($voyage->pricingTiers->count())
                                 <span class="badge bg-info text-dark">{{ $voyage->pricingTiers->count() }} palier(s)</span>
@@ -100,18 +100,18 @@
                         <td>
                             @php $s = $voyage->status ?? 'publish'; @endphp
                             <span class="badge bg-{{ $s === 'publish' ? 'success' : ($s === 'draft' ? 'secondary' : 'warning text-dark') }}">
-                                {{ $s === 'publish' ? 'Publié' : ($s === 'draft' ? 'Brouillon' : $s) }}
+                                {{ $s === 'publish' ? 'PubliÃ©' : ($s === 'draft' ? 'Brouillon' : $s) }}
                             </span>
                         </td>
                         <td class="text-end">
                             <a href="{{ route('admin.group-deals.trips.show', $voyage) }}"
-                               class="btn btn-sm btn-outline-primary">Gérer</a>
+                               class="btn btn-sm btn-outline-primary">GÃ©rer</a>
                         </td>
                     </tr>
                 @empty
                     <tr>
                         <td colspan="8" class="text-center text-muted py-4">
-                            Aucun voyage avec Group Deal activé.
+                            Aucun voyage avec Group Deal activÃ©.
                             <a href="{{ route('admin.circuits.voyages.index') }}">Activer le Group Deal sur un voyage</a>
                         </td>
                     </tr>
@@ -130,3 +130,4 @@
 @push('scripts')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
 @endpush
+

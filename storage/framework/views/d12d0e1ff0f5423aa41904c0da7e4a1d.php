@@ -1,11 +1,12 @@
-<?php $__env->startSection('title'); ?> Départ Group Deal — <?php echo e($departure->start_date?->format('d/m/Y')); ?> <?php $__env->stopSection(); ?>
+﻿
+<?php $__env->startSection('title'); ?> DÃ©part Group Deal â€” <?php echo e($departure->start_date?->format('d/m/Y')); ?> <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('content'); ?>
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-flex align-items-center justify-content-between">
             <h4 class="page-title mb-0 font-size-18">
-                Départ — <?php echo e($departure->voyage?->name); ?>
+                DÃ©part â€” <?php echo e($departure->voyage?->name); ?>
 
                 <small class="text-muted fw-normal ms-2"><?php echo e($departure->start_date?->format('d/m/Y')); ?></small>
             </h4>
@@ -13,8 +14,8 @@
                 <ol class="breadcrumb m-0">
                     <li class="breadcrumb-item"><a href="<?php echo e(route('admin.dashboard')); ?>">Admin</a></li>
                     <li class="breadcrumb-item"><a href="<?php echo e(route('admin.group-deals.trips.index')); ?>">Group Deals</a></li>
-                    <li class="breadcrumb-item"><a href="<?php echo e(route('admin.group-deals.departures.index')); ?>">Départs</a></li>
-                    <li class="breadcrumb-item active">Détail</li>
+                    <li class="breadcrumb-item"><a href="<?php echo e(route('admin.group-deals.departures.index')); ?>">DÃ©parts</a></li>
+                    <li class="breadcrumb-item active">DÃ©tail</li>
                 </ol>
             </div>
         </div>
@@ -42,7 +43,7 @@
     <div class="col-6 col-md-3">
         <div class="card border-0 shadow-sm text-center">
             <div class="card-body py-3">
-                <p class="text-muted mb-1 small">Participants confirmés</p>
+                <p class="text-muted mb-1 small">Participants confirmÃ©s</p>
                 <h3 class="mb-0 text-primary"><?php echo e($stats['confirmed_count']); ?></h3>
                 <small class="text-muted">seuil : <?php echo e($stats['threshold']); ?></small>
             </div>
@@ -53,7 +54,7 @@
             <div class="card-body py-3">
                 <p class="text-muted mb-1 small">Prix actif</p>
                 <h3 class="mb-0 text-success">
-                    <?php echo e($stats['current_price'] ? number_format($stats['current_price'], 0, ',', ' ').' €' : '—'); ?>
+                    <?php echo e($stats['current_price'] ? number_format($stats['current_price'], 0, ',', ' ').' â‚¬' : 'â€”'); ?>
 
                 </h3>
                 <?php if($stats['active_tier']): ?>
@@ -69,10 +70,10 @@
             <div class="card-body py-3">
                 <p class="text-muted mb-1 small">Prochain palier</p>
                 <?php if($stats['next_tier']): ?>
-                    <h3 class="mb-0"><?php echo e(number_format($stats['next_tier']->price_per_person, 0, ',', ' ')); ?> €</h3>
-                    <small class="text-muted">à <?php echo e($stats['next_tier']->min_participants); ?> participants</small>
+                    <h3 class="mb-0"><?php echo e(number_format($stats['next_tier']->price_per_person, 0, ',', ' ')); ?> â‚¬</h3>
+                    <small class="text-muted">Ã  <?php echo e($stats['next_tier']->min_participants); ?> participants</small>
                 <?php else: ?>
-                    <h3 class="mb-0 text-muted">—</h3>
+                    <h3 class="mb-0 text-muted">â€”</h3>
                     <small class="text-muted">Dernier palier atteint</small>
                 <?php endif; ?>
             </div>
@@ -112,7 +113,7 @@
         </div>
         <?php if(! $departure->is_guaranteed && $stats['threshold'] > $stats['confirmed_count']): ?>
             <p class="text-muted small mt-2 mb-0">
-                Il manque <strong><?php echo e($stats['threshold'] - $stats['confirmed_count']); ?></strong> participant(s) pour que ce départ soit garanti.
+                Il manque <strong><?php echo e($stats['threshold'] - $stats['confirmed_count']); ?></strong> participant(s) pour que ce dÃ©part soit garanti.
             </p>
         <?php endif; ?>
     </div>
@@ -124,14 +125,14 @@
     <div class="col-lg-8">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between">
-                <h6 class="mb-0">Participants (<?php echo e($stats['confirmed_count']); ?> confirmés)</h6>
+                <h6 class="mb-0">Participants (<?php echo e($stats['confirmed_count']); ?> confirmÃ©s)</h6>
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAddParticipant">
                     <i class="bx bx-plus"></i> Ajouter
                 </button>
             </div>
             <div class="card-body p-0">
                 <?php if($departure->groupDealParticipants->isEmpty()): ?>
-                    <div class="p-4 text-center text-muted small">Aucun participant pour ce départ.</div>
+                    <div class="p-4 text-center text-muted small">Aucun participant pour ce dÃ©part.</div>
                 <?php else: ?>
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
@@ -150,7 +151,7 @@
                                         <strong><?php echo e($p->client->first_name); ?> <?php echo e($p->client->last_name); ?></strong>
                                         <br><small class="text-muted"><?php echo e($p->client->email); ?></small>
                                     <?php else: ?>
-                                        <span class="text-muted">—</span>
+                                        <span class="text-muted">â€”</span>
                                     <?php endif; ?>
                                 </td>
                                 <td class="small text-muted"><?php echo e($p->joined_at->format('d/m/Y H:i')); ?></td>
@@ -162,9 +163,9 @@
                                         default     => 'secondary'
                                     }); ?>">
                                         <?php echo e(match($p->status) {
-                                            'confirmed' => 'Confirmé',
+                                            'confirmed' => 'ConfirmÃ©',
                                             'pending'   => 'En attente',
-                                            'cancelled' => 'Annulé',
+                                            'cancelled' => 'AnnulÃ©',
                                             default     => $p->status
                                         }); ?>
 
@@ -209,11 +210,11 @@
             <div class="card-body small">
                 <table class="table table-borderless table-sm mb-0">
                     <tr><td class="text-muted">Voyage</td><td><strong><?php echo e($departure->voyage?->name); ?></strong></td></tr>
-                    <tr><td class="text-muted">Date début</td><td><?php echo e($departure->start_date?->format('d/m/Y') ?? '—'); ?></td></tr>
-                    <tr><td class="text-muted">Date fin</td><td><?php echo e($departure->end_date?->format('d/m/Y') ?? '—'); ?></td></tr>
-                    <tr><td class="text-muted">Capacité totale</td><td><?php echo e($departure->total_capacity ?? '—'); ?></td></tr>
+                    <tr><td class="text-muted">Date dÃ©but</td><td><?php echo e($departure->start_date?->format('d/m/Y') ?? 'â€”'); ?></td></tr>
+                    <tr><td class="text-muted">Date fin</td><td><?php echo e($departure->end_date?->format('d/m/Y') ?? 'â€”'); ?></td></tr>
+                    <tr><td class="text-muted">CapacitÃ© totale</td><td><?php echo e($departure->total_capacity ?? 'â€”'); ?></td></tr>
                     <tr><td class="text-muted">Seuil garanti</td><td><?php echo e($departure->guaranteed_threshold); ?></td></tr>
-                    <tr><td class="text-muted">Statut départ</td><td><?php echo e($departure->status_label); ?></td></tr>
+                    <tr><td class="text-muted">Statut dÃ©part</td><td><?php echo e($departure->status_label); ?></td></tr>
                 </table>
             </div>
         </div>
@@ -254,12 +255,12 @@
                         <label class="form-label small">ID Client <span class="text-danger">*</span></label>
                         <input type="number" name="client_id" class="form-control form-control-sm"
                                required placeholder="ID du client">
-                        <div class="form-text">Entrez l'identifiant numérique du client.</div>
+                        <div class="form-text">Entrez l'identifiant numÃ©rique du client.</div>
                     </div>
                     <div class="mb-2">
-                        <label class="form-label small">ID Réservation (optionnel)</label>
+                        <label class="form-label small">ID RÃ©servation (optionnel)</label>
                         <input type="number" name="reservation_id" class="form-control form-control-sm"
-                               placeholder="ID de la réservation liée">
+                               placeholder="ID de la rÃ©servation liÃ©e">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -276,4 +277,5 @@
     <script src="<?php echo e(URL::asset('build/js/app.js')); ?>"></script>
 <?php $__env->stopPush(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\group-deals\departures\show.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\group-deals\departures\show.blade.php ENDPATH**/ ?>

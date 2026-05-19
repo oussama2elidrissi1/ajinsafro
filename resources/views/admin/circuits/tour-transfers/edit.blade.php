@@ -1,6 +1,6 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 @section('title')
-    Transferts du circuit — {{ $tour->post_title }}
+    Transferts du circuit â€” {{ $tour->post_title }}
 @endsection
 @section('content')
     <div class="row">
@@ -37,16 +37,16 @@
             <div class="col-lg-6">
                 <div class="card">
                     <div class="card-header bg-light">
-                        <h5 class="card-title mb-0">Transfert aller — Jour 1 (Aéroport → Hôtel)</h5>
+                        <h5 class="card-title mb-0">Transfert aller â€” Jour 1 (AÃ©roport â†’ HÃ´tel)</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
                             <label for="arrival_from_label" class="form-label">De (lieu)</label>
-                            <input type="text" class="form-control" id="arrival_from_label" name="arrival[from_label]" value="{{ old('arrival.from_label', $arrival->from_label ?? '') }}" placeholder="Ex. Aéroport Marrakech">
+                            <input type="text" class="form-control" id="arrival_from_label" name="arrival[from_label]" value="{{ old('arrival.from_label', $arrival->from_label ?? '') }}" placeholder="Ex. AÃ©roport Marrakech">
                         </div>
                         <div class="mb-3">
-                            <label for="arrival_to_label" class="form-label">À (lieu)</label>
-                            <input type="text" class="form-control" id="arrival_to_label" name="arrival[to_label]" value="{{ old('arrival.to_label', $arrival?->to_label ?? '') }}" placeholder="Ex. Hôtel">
+                            <label for="arrival_to_label" class="form-label">Ã€ (lieu)</label>
+                            <input type="text" class="form-control" id="arrival_to_label" name="arrival[to_label]" value="{{ old('arrival.to_label', $arrival?->to_label ?? '') }}" placeholder="Ex. HÃ´tel">
                         </div>
                         <div class="row">
                             <div class="col-6">
@@ -57,13 +57,13 @@
                             </div>
                             <div class="col-6">
                                 <div class="mb-3">
-                                    <label for="arrival_dropoff_time" class="form-label">Heure arrivée</label>
+                                    <label for="arrival_dropoff_time" class="form-label">Heure arrivÃ©e</label>
                                     <input type="text" class="form-control" id="arrival_dropoff_time" name="arrival[dropoff_time]" value="{{ old('arrival.dropoff_time', $arrival?->dropoff_time ?? '') }}" placeholder="15:00">
                                 </div>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label for="arrival_vehicle_type" class="form-label">Véhicule</label>
+                            <label for="arrival_vehicle_type" class="form-label">VÃ©hicule</label>
                             <input type="text" class="form-control" id="arrival_vehicle_type" name="arrival[vehicle_type]" value="{{ old('arrival.vehicle_type', $arrival?->vehicle_type ?? '') }}" placeholder="Ex. Minivan">
                         </div>
                         <div class="mb-3">
@@ -76,16 +76,16 @@
             <div class="col-lg-6">
                 <div class="card">
                     <div class="card-header bg-light">
-                        <h5 class="card-title mb-0">Transfert retour — Dernier jour (Hôtel → Aéroport)</h5>
+                        <h5 class="card-title mb-0">Transfert retour â€” Dernier jour (HÃ´tel â†’ AÃ©roport)</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
                             <label for="departure_from_label" class="form-label">De (lieu)</label>
-                            <input type="text" class="form-control" id="departure_from_label" name="departure[from_label]" value="{{ old('departure.from_label', $departure?->from_label ?? '') }}" placeholder="Ex. Hôtel">
+                            <input type="text" class="form-control" id="departure_from_label" name="departure[from_label]" value="{{ old('departure.from_label', $departure?->from_label ?? '') }}" placeholder="Ex. HÃ´tel">
                         </div>
                         <div class="mb-3">
-                            <label for="departure_to_label" class="form-label">À (lieu)</label>
-                            <input type="text" class="form-control" id="departure_to_label" name="departure[to_label]" value="{{ old('departure.to_label', $departure?->to_label ?? '') }}" placeholder="Ex. Aéroport Marrakech">
+                            <label for="departure_to_label" class="form-label">Ã€ (lieu)</label>
+                            <input type="text" class="form-control" id="departure_to_label" name="departure[to_label]" value="{{ old('departure.to_label', $departure?->to_label ?? '') }}" placeholder="Ex. AÃ©roport Marrakech">
                         </div>
                         <div class="row">
                             <div class="col-6">
@@ -96,13 +96,13 @@
                             </div>
                             <div class="col-6">
                                 <div class="mb-3">
-                                    <label for="departure_dropoff_time" class="form-label">Heure arrivée</label>
+                                    <label for="departure_dropoff_time" class="form-label">Heure arrivÃ©e</label>
                                     <input type="text" class="form-control" id="departure_dropoff_time" name="departure[dropoff_time]" value="{{ old('departure.dropoff_time', $departure?->dropoff_time ?? '') }}" placeholder="11:00">
                                 </div>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label for="departure_vehicle_type" class="form-label">Véhicule</label>
+                            <label for="departure_vehicle_type" class="form-label">VÃ©hicule</label>
                             <input type="text" class="form-control" id="departure_vehicle_type" name="departure[vehicle_type]" value="{{ old('departure.vehicle_type', $departure->vehicle_type ?? '') }}" placeholder="Ex. Minivan">
                         </div>
                         <div class="mb-3">
@@ -124,3 +124,4 @@
         </div>
     </form>
 @endsection
+

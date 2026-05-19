@@ -1,11 +1,12 @@
-<?php $__env->startSection('title', 'WordPress - Activités'); ?>
+﻿
+<?php $__env->startSection('title', 'WordPress - ActivitÃ©s'); ?>
 <?php $__env->startSection('content'); ?>
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">Catalogue activités</h4>
+                <h4 class="page-title mb-0 font-size-18">Catalogue activitÃ©s</h4>
                 <a href="<?php echo e(route('admin.wordpress.activities.create')); ?>" class="btn btn-primary">
-                    <i class="bx bx-plus me-1"></i>Nouvelle activité
+                    <i class="bx bx-plus me-1"></i>Nouvelle activitÃ©
                 </a>
             </div>
         </div>
@@ -24,7 +25,7 @@
                 <div class="col-md-3">
                     <select name="status" class="form-select">
                         <option value="">Tous les statuts</option>
-                        <option value="publish" <?php if($filters['status'] === 'publish'): echo 'selected'; endif; ?>>Publié</option>
+                        <option value="publish" <?php if($filters['status'] === 'publish'): echo 'selected'; endif; ?>>PubliÃ©</option>
                         <option value="draft" <?php if($filters['status'] === 'draft'): echo 'selected'; endif; ?>>Brouillon</option>
                     </select>
                 </div>
@@ -50,7 +51,7 @@
                             <th>Lieu</th>
                             <th>Type</th>
                             <th>Prix</th>
-                            <th>Durée</th>
+                            <th>DurÃ©e</th>
                             <th>Statut</th>
                             <th class="text-end">Actions</th>
                         </tr>
@@ -66,32 +67,32 @@
                                     <?php if($thumb): ?>
                                         <img src="<?php echo e($thumb); ?>" alt="" class="rounded" style="width:50px;height:50px;object-fit:cover;">
                                     <?php else: ?>
-                                        <span class="text-muted">—</span>
+                                        <span class="text-muted">â€”</span>
                                     <?php endif; ?>
                                 </td>
                                 <td>
                                     <div class="fw-semibold"><?php echo e($activity->post_title); ?></div>
                                     <div class="text-muted small"><?php echo e($activity->post_name); ?></div>
                                 </td>
-                                <td><?php echo e($detail->address ?? ($activity->getMeta('aj_activity_place_text') ?: '—')); ?></td>
-                                <td><?php echo e($detail->type_activity ?: ($activity->getMeta('aj_activity_category') ?: '—')); ?></td>
+                                <td><?php echo e($detail->address ?? ($activity->getMeta('aj_activity_place_text') ?: 'â€”')); ?></td>
+                                <td><?php echo e($detail->type_activity ?: ($activity->getMeta('aj_activity_category') ?: 'â€”')); ?></td>
                                 <td>
                                     <?php if($detail && ($detail->adult_price || $detail->min_price)): ?>
                                         <?php echo e(number_format((float) ($detail->adult_price ?: $detail->min_price), 0, ',', ' ')); ?> MAD
                                     <?php else: ?>
-                                        —
+                                        â€”
                                     <?php endif; ?>
                                 </td>
-                                <td><?php echo e($detail->duration ?? '—'); ?></td>
+                                <td><?php echo e($detail->duration ?? 'â€”'); ?></td>
                                 <td>
                                     <span class="badge bg-<?php echo e($activity->post_status === 'publish' ? 'success' : 'secondary'); ?>">
-                                        <?php echo e($activity->post_status === 'publish' ? 'Publié' : 'Brouillon'); ?>
+                                        <?php echo e($activity->post_status === 'publish' ? 'PubliÃ©' : 'Brouillon'); ?>
 
                                     </span>
                                 </td>
                                 <td class="text-end">
                                     <a href="<?php echo e(route('admin.wordpress.activities.edit', $activity)); ?>" class="btn btn-sm btn-soft-primary">Modifier</a>
-                                    <form action="<?php echo e(route('admin.wordpress.activities.destroy', $activity)); ?>" method="POST" class="d-inline" onsubmit="return confirm('Déplacer cette activité dans la corbeille ?');">
+                                    <form action="<?php echo e(route('admin.wordpress.activities.destroy', $activity)); ?>" method="POST" class="d-inline" onsubmit="return confirm('DÃ©placer cette activitÃ© dans la corbeille ?');">
                                         <?php echo csrf_field(); ?>
                                         <?php echo method_field('DELETE'); ?>
                                         <button type="submit" class="btn btn-sm btn-soft-danger">Supprimer</button>
@@ -100,7 +101,7 @@
                             </tr>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-4">Aucune activité trouvée.</td>
+                                <td colspan="8" class="text-center text-muted py-4">Aucune activitÃ© trouvÃ©e.</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -112,4 +113,5 @@
     </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\wordpress\activities\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\wordpress\activities\index.blade.php ENDPATH**/ ?>

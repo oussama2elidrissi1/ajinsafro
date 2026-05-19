@@ -1,4 +1,4 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 @section('title')
     Agences / Points de vente
 @endsection
@@ -113,3 +113,4 @@
         </div>
     </div>
 @endsection
+

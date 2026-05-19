@@ -1,17 +1,18 @@
+﻿
 <?php $__env->startSection('title'); ?>
-    Créer une compagnie aérienne
+    CrÃ©er une compagnie aÃ©rienne
 <?php $__env->stopSection(); ?>
 <?php $__env->startSection('content'); ?>
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">Créer une compagnie aérienne</h4>
+                <h4 class="page-title mb-0 font-size-18">CrÃ©er une compagnie aÃ©rienne</h4>
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="<?php echo e(route('admin.dashboard')); ?>">Admin</a></li>
                         <li class="breadcrumb-item"><a href="<?php echo e(route('admin.circuits.index')); ?>">Circuits</a></li>
-                        <li class="breadcrumb-item"><a href="<?php echo e(route('admin.circuits.airlines.index')); ?>">Compagnies aériennes</a></li>
-                        <li class="breadcrumb-item active">Créer</li>
+                        <li class="breadcrumb-item"><a href="<?php echo e(route('admin.circuits.airlines.index')); ?>">Compagnies aÃ©riennes</a></li>
+                        <li class="breadcrumb-item active">CrÃ©er</li>
                     </ol>
                 </div>
             </div>
@@ -59,7 +60,7 @@
                                 <label class="form-check-label" for="is_active">Active</label>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100">Créer la compagnie</button>
+                        <button type="submit" class="btn btn-primary w-100">CrÃ©er la compagnie</button>
                         <a href="<?php echo e(route('admin.circuits.airlines.index')); ?>" class="btn btn-secondary w-100 mt-2">Annuler</a>
                     </div>
                 </div>
@@ -68,4 +69,5 @@
     </form>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\circuits\airlines\create.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\circuits\airlines\create.blade.php ENDPATH**/ ?>

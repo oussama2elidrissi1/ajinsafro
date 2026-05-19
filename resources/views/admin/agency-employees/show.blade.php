@@ -1,4 +1,4 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 
 @section('title', $employee->full_name)
 
@@ -43,17 +43,17 @@
                 <div class="card-body">
                     <h5 class="mb-3">Informations</h5>
                     <dl class="row mb-0">
-                        <dt class="col-sm-5">Point de vente</dt><dd class="col-sm-7">{{ $employee->branch?->name ?: '—' }}</dd>
-                        <dt class="col-sm-5">Poste</dt><dd class="col-sm-7">{{ $employee->position ?: '—' }}</dd>
+                        <dt class="col-sm-5">Point de vente</dt><dd class="col-sm-7">{{ $employee->branch?->name ?: 'â€”' }}</dd>
+                        <dt class="col-sm-5">Poste</dt><dd class="col-sm-7">{{ $employee->position ?: 'â€”' }}</dd>
                         <dt class="col-sm-5">Statut</dt><dd class="col-sm-7">{{ \App\Models\AgencyEmployee::statusLabels()[$employee->status] ?? $employee->status }}</dd>
-                        <dt class="col-sm-5">Email</dt><dd class="col-sm-7">{{ $employee->email ?: '—' }}</dd>
-                        <dt class="col-sm-5">Téléphone</dt><dd class="col-sm-7">{{ $employee->phone ?: '—' }}</dd>
+                        <dt class="col-sm-5">Email</dt><dd class="col-sm-7">{{ $employee->email ?: 'â€”' }}</dd>
+                        <dt class="col-sm-5">TÃ©lÃ©phone</dt><dd class="col-sm-7">{{ $employee->phone ?: 'â€”' }}</dd>
                         <dt class="col-sm-5">Login</dt><dd class="col-sm-7">{{ $employee->can_login ? 'Oui' : 'Non' }}</dd>
-                        <dt class="col-sm-5">Rôle</dt><dd class="col-sm-7">{{ $employee->user?->roles->pluck('name')->join(', ') ?: '—' }}</dd>
-                        <dt class="col-sm-5">Dernière connexion</dt><dd class="col-sm-7">{{ $employee->user?->last_login_at?->format('d/m/Y H:i') ?: '—' }}</dd>
-                        <dt class="col-sm-5">Departement</dt><dd class="col-sm-7">{{ $employee->department ?: '—' }}</dd>
-                        <dt class="col-sm-5">Type employe</dt><dd class="col-sm-7">{{ $employee->employee_type ?: '—' }}</dd>
-                        <dt class="col-sm-5">Contrat</dt><dd class="col-sm-7">{{ $employee->contract_type ?: '—' }}</dd>
+                        <dt class="col-sm-5">RÃ´le</dt><dd class="col-sm-7">{{ $employee->user?->roles->pluck('name')->join(', ') ?: 'â€”' }}</dd>
+                        <dt class="col-sm-5">DerniÃ¨re connexion</dt><dd class="col-sm-7">{{ $employee->user?->last_login_at?->format('d/m/Y H:i') ?: 'â€”' }}</dd>
+                        <dt class="col-sm-5">Departement</dt><dd class="col-sm-7">{{ $employee->department ?: 'â€”' }}</dd>
+                        <dt class="col-sm-5">Type employe</dt><dd class="col-sm-7">{{ $employee->employee_type ?: 'â€”' }}</dd>
+                        <dt class="col-sm-5">Contrat</dt><dd class="col-sm-7">{{ $employee->contract_type ?: 'â€”' }}</dd>
                     </dl>
                     <div class="mt-3">
                         <strong>Note interne</strong>
@@ -65,7 +65,7 @@
         <div class="col-xl-8">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="mb-3">Réservations liées</h5>
+                    <h5 class="mb-3">RÃ©servations liÃ©es</h5>
                     <div class="table-responsive">
                         <table class="aj-table" style="width:100%;">
                             <thead>
@@ -81,13 +81,13 @@
                                 @forelse($recentReservations as $reservation)
                                     <tr>
                                         <td>#{{ $reservation->id }}</td>
-                                        <td>{{ trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? '')) ?: '—' }}</td>
+                                        <td>{{ trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? '')) ?: 'â€”' }}</td>
                                         <td>{{ $reservation->status }}</td>
-                                        <td>{{ $reservation->payment_type ?: '—' }}</td>
-                                        <td>{{ $reservation->created_at?->format('d/m/Y H:i') ?: '—' }}</td>
+                                        <td>{{ $reservation->payment_type ?: 'â€”' }}</td>
+                                        <td>{{ $reservation->created_at?->format('d/m/Y H:i') ?: 'â€”' }}</td>
                                     </tr>
                                 @empty
-                                    <tr><td colspan="5" class="text-center text-muted">Aucune réservation liée à ce collaborateur.</td></tr>
+                                    <tr><td colspan="5" class="text-center text-muted">Aucune rÃ©servation liÃ©e Ã  ce collaborateur.</td></tr>
                                 @endforelse
                             </tbody>
                         </table>
@@ -97,3 +97,4 @@
         </div>
     </div>
 @endsection
+

@@ -1,3 +1,5 @@
+﻿
+
 <?php $__env->startSection('title', "Employes des points de vente"); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -20,7 +22,7 @@
          <?php $__env->slot('actions', null, []); ?> 
             <a href="<?php echo e(route('admin.agency-employees.create')); ?>" class="aj-btn aj-btn-primary">
                 <i class="bx bx-user-plus"></i>
-                <span>Nouvel employé</span>
+                <span>Nouvel employÃ©</span>
             </a>
          <?php $__env->endSlot(); ?>
      <?php echo $__env->renderComponent(); ?>
@@ -60,7 +62,7 @@
             <form method="GET" class="mb-4">
                 <div class="aj-filter-grid" style="grid-template-columns:minmax(220px,1.3fr) repeat(5,minmax(0,.8fr)) auto;">
                     <div class="aj-field">
-                        <input type="text" name="search" class="aj-control" placeholder="Nom, email, téléphone, poste..." value="<?php echo e($filters['search']); ?>">
+                        <input type="text" name="search" class="aj-control" placeholder="Nom, email, tÃ©lÃ©phone, poste..." value="<?php echo e($filters['search']); ?>">
                     </div>
                     <div class="aj-field">
                         <select name="branch_id" class="aj-control">
@@ -80,7 +82,7 @@
                     </div>
                     <div class="aj-field">
                         <select name="role_name" class="aj-control">
-                            <option value="">Tous les rôles</option>
+                            <option value="">Tous les rÃ´les</option>
                             <?php $__currentLoopData = $roles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $role): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <option value="<?php echo e($role->name); ?>" <?php if($filters['roleName'] === $role->name): echo 'selected'; endif; ?>><?php echo e($role->name); ?></option>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -112,14 +114,14 @@
             <?php if($employees->isEmpty()): ?>
                 <?php if (isset($component)) { $__componentOriginal99089f8e2ef4184d7d35db81d60c6521 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal99089f8e2ef4184d7d35db81d60c6521 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.empty-state','data' => ['title' => 'Aucun employé','message' => 'Aucun employe de point de vente ne correspond aux criteres actuels.','actionUrl' => route('admin.agency-employees.create'),'actionLabel' => 'Ajouter un employé']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.empty-state','data' => ['title' => 'Aucun employÃ©','message' => 'Aucun employe de point de vente ne correspond aux criteres actuels.','actionUrl' => route('admin.agency-employees.create'),'actionLabel' => 'Ajouter un employÃ©']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('admin.empty-state'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['title' => 'Aucun employé','message' => 'Aucun employe de point de vente ne correspond aux criteres actuels.','action-url' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('admin.agency-employees.create')),'action-label' => 'Ajouter un employé']); ?>
+<?php $component->withAttributes(['title' => 'Aucun employÃ©','message' => 'Aucun employe de point de vente ne correspond aux criteres actuels.','action-url' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('admin.agency-employees.create')),'action-label' => 'Ajouter un employÃ©']); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal99089f8e2ef4184d7d35db81d60c6521)): ?>
@@ -138,13 +140,13 @@
                                 <th>Avatar</th>
                                 <th>Nom</th>
                                 <th>Email</th>
-                                <th>Téléphone</th>
+                                <th>TÃ©lÃ©phone</th>
                                 <th>Point de vente</th>
                                 <th>Poste</th>
-                                <th>Rôle système</th>
+                                <th>RÃ´le systÃ¨me</th>
                                 <th>Statut</th>
-                                <th>Réservations</th>
-                                <th>Dernière connexion</th>
+                                <th>RÃ©servations</th>
+                                <th>DerniÃ¨re connexion</th>
                                 <th class="text-end">Actions</th>
                             </tr>
                         </thead>
@@ -159,19 +161,19 @@
                                         <?php endif; ?>
                                     </td>
                                     <td><a href="<?php echo e(route('admin.agency-employees.show', $employee)); ?>"><?php echo e($employee->full_name); ?></a></td>
-                                    <td><?php echo e($employee->email ?: '—'); ?></td>
-                                    <td><?php echo e($employee->phone ?: '—'); ?></td>
-                                    <td><?php echo e($employee->branch?->name ?: '—'); ?></td>
-                                    <td><?php echo e($employee->position ?: '—'); ?></td>
-                                    <td><?php echo e($employee->user?->roles->pluck('name')->join(', ') ?: '—'); ?></td>
+                                    <td><?php echo e($employee->email ?: 'â€”'); ?></td>
+                                    <td><?php echo e($employee->phone ?: 'â€”'); ?></td>
+                                    <td><?php echo e($employee->branch?->name ?: 'â€”'); ?></td>
+                                    <td><?php echo e($employee->position ?: 'â€”'); ?></td>
+                                    <td><?php echo e($employee->user?->roles->pluck('name')->join(', ') ?: 'â€”'); ?></td>
                                     <td><?php echo e($statusLabels[$employee->status] ?? $employee->status); ?></td>
                                     <td><?php echo e($employee->handled_reservations_count); ?></td>
-                                    <td><?php echo e($employee->user?->last_login_at?->format('d/m/Y H:i') ?: '—'); ?></td>
+                                    <td><?php echo e($employee->user?->last_login_at?->format('d/m/Y H:i') ?: 'â€”'); ?></td>
                                     <td class="text-end">
                                         <div class="d-flex justify-content-end gap-2 flex-wrap">
                                             <a href="<?php echo e(route('admin.agency-employees.show', $employee)); ?>" class="aj-btn aj-btn-soft" style="min-height:34px;padding:0 10px;font-size:12px;">Voir</a>
                                             <a href="<?php echo e(route('admin.agency-employees.edit', $employee)); ?>" class="aj-btn aj-btn-soft" style="min-height:34px;padding:0 10px;font-size:12px;">Modifier</a>
-                                            <form method="POST" action="<?php echo e(route('admin.agency-employees.destroy', $employee)); ?>" onsubmit="return confirm('Supprimer cet employé ?');">
+                                            <form method="POST" action="<?php echo e(route('admin.agency-employees.destroy', $employee)); ?>" onsubmit="return confirm('Supprimer cet employÃ© ?');">
                                                 <?php echo csrf_field(); ?>
                                                 <?php echo method_field('DELETE'); ?>
                                                 <button type="submit" class="aj-btn aj-btn-soft" style="min-height:34px;padding:0 10px;font-size:12px;color:#d92d20;">Supprimer</button>
@@ -208,4 +210,5 @@
     </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\agency-employees\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\agency-employees\index.blade.php ENDPATH**/ ?>

@@ -1,11 +1,11 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 
 @section('title', 'Group Deals')
 
 @section('content')
     <x-admin.page-header
         title="Offres de voyage de groupe"
-        subtitle="Créez des offres autonomes avec progression, garantie et prix par paliers."
+        subtitle="CrÃ©ez des offres autonomes avec progression, garantie et prix par paliers."
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
             ['label' => 'Group Deals'],
@@ -23,9 +23,9 @@
 
     <x-admin.kpi-cards
         :kpis="[
-            ['label' => 'Total offres', 'value' => number_format($groupDeals->total(), 0, ',', ' '), 'icon' => 'bx bx-group', 'color' => '-blue', 'note' => 'Base complète'],
+            ['label' => 'Total offres', 'value' => number_format($groupDeals->total(), 0, ',', ' '), 'icon' => 'bx bx-group', 'color' => '-blue', 'note' => 'Base complÃ¨te'],
             ['label' => 'Actives', 'value' => number_format($groupDeals->where('status', 'active')->count(), 0, ',', ' '), 'icon' => 'bx bx-badge-check', 'color' => '-green', 'note' => 'En cours'],
-            ['label' => 'Complètes', 'value' => number_format($groupDeals->where('status', 'completed')->count(), 0, ',', ' '), 'icon' => 'bx bx-check-double', 'color' => '-orange', 'note' => 'Garanties'],
+            ['label' => 'ComplÃ¨tes', 'value' => number_format($groupDeals->where('status', 'completed')->count(), 0, ',', ' '), 'icon' => 'bx bx-check-double', 'color' => '-orange', 'note' => 'Garanties'],
             ['label' => 'En cours', 'value' => number_format($groupDeals->where('status', 'in_progress')->count(), 0, ',', ' '), 'icon' => 'bx bx-time', 'color' => '-violet', 'note' => 'Recrutement'],
         ]"
     />
@@ -51,7 +51,7 @@
         @if($groupDeals->isEmpty())
             <x-admin.empty-state
                 title="Aucune offre Group Deal"
-                message="Créez votre première offre pour lancer un voyage de groupe."
+                message="CrÃ©ez votre premiÃ¨re offre pour lancer un voyage de groupe."
                 :action-url="route('admin.group-deals.create')"
                 action-label="Nouvelle offre"
             />
@@ -77,12 +77,12 @@
                                 </td>
                                 <td>
                                     <div style="font-weight:800;color:#102340;">{{ $deal->title }}</div>
-                                    <div style="font-size:12px;font-weight:700;color:#7a879a;">{{ $deal->destination ?: 'Destination non renseignée' }}</div>
+                                    <div style="font-size:12px;font-weight:700;color:#7a879a;">{{ $deal->destination ?: 'Destination non renseignÃ©e' }}</div>
                                 </td>
                                 <td>
                                     <div style="font-weight:700;color:#253754;font-size:13px;">{{ optional($deal->start_date)->format('d/m/Y') ?: 'N/A' }}</div>
                                     @if($deal->end_date)
-                                        <div style="font-size:12px;font-weight:600;color:#7a879a;">→ {{ $deal->end_date->format('d/m/Y') }}</div>
+                                        <div style="font-size:12px;font-weight:600;color:#7a879a;">â†’ {{ $deal->end_date->format('d/m/Y') }}</div>
                                     @endif
                                 </td>
                                 <td>
@@ -122,3 +122,4 @@
         @endif
     </section>
 @endsection
+

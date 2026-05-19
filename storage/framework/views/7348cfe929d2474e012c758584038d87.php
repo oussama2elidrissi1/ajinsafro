@@ -1,11 +1,13 @@
-<?php $__env->startSection('title', 'Packs hébergement'); ?>
+﻿
+
+<?php $__env->startSection('title', 'Packs hÃ©bergement'); ?>
 
 <?php $__env->startSection('content'); ?>
     <?php if (isset($component)) { $__componentOriginalcb19cb35a534439097b02b8af91726ee = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalcb19cb35a534439097b02b8af91726ee = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => 'Packs hébergement','subtitle' => 'Gérez les packs d\'hébergement affichés sur le site.','breadcrumbs' => [
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => 'Packs hÃ©bergement','subtitle' => 'GÃ©rez les packs d\'hÃ©bergement affichÃ©s sur le site.','breadcrumbs' => [
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Packs hébergement'],
+            ['label' => 'Packs hÃ©bergement'],
         ]]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('admin.page-header'); ?>
 <?php if ($component->shouldRender()): ?>
@@ -13,9 +15,9 @@
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['title' => 'Packs hébergement','subtitle' => 'Gérez les packs d\'hébergement affichés sur le site.','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
+<?php $component->withAttributes(['title' => 'Packs hÃ©bergement','subtitle' => 'GÃ©rez les packs d\'hÃ©bergement affichÃ©s sur le site.','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Packs hébergement'],
+            ['label' => 'Packs hÃ©bergement'],
         ])]); ?>
          <?php $__env->slot('actions', null, []); ?> 
             <a href="<?php echo e(route('admin.accommodation-packages.create')); ?>" class="aj-btn aj-btn-primary">
@@ -58,7 +60,7 @@
     <?php if (isset($component)) { $__componentOriginaldc8ea6d1c156289736a271a64b9dc41b = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginaldc8ea6d1c156289736a271a64b9dc41b = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.kpi-cards','data' => ['kpis' => [
-            ['label' => 'Total packs', 'value' => number_format($packages->total(), 0, ',', ' '), 'icon' => 'bx bx-buildings', 'color' => '-blue', 'note' => 'Base complète'],
+            ['label' => 'Total packs', 'value' => number_format($packages->total(), 0, ',', ' '), 'icon' => 'bx bx-buildings', 'color' => '-blue', 'note' => 'Base complÃ¨te'],
             ['label' => 'Actifs', 'value' => number_format($packages->where('is_active', true)->count(), 0, ',', ' '), 'icon' => 'bx bx-badge-check', 'color' => '-green', 'note' => 'Visibles sur le site'],
             ['label' => 'En vedette', 'value' => number_format($packages->where('is_featured', true)->count(), 0, ',', ' '), 'icon' => 'bx bx-star', 'color' => '-orange', 'note' => 'Mis en avant'],
             ['label' => 'Prix moyen', 'value' => number_format($packages->avg('price_from') ?? 0, 0, ',', ' ') . ' DH', 'icon' => 'bx bx-wallet', 'color' => '-violet', 'note' => 'Moyenne base'],
@@ -70,7 +72,7 @@
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
 <?php $component->withAttributes(['kpis' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
-            ['label' => 'Total packs', 'value' => number_format($packages->total(), 0, ',', ' '), 'icon' => 'bx bx-buildings', 'color' => '-blue', 'note' => 'Base complète'],
+            ['label' => 'Total packs', 'value' => number_format($packages->total(), 0, ',', ' '), 'icon' => 'bx bx-buildings', 'color' => '-blue', 'note' => 'Base complÃ¨te'],
             ['label' => 'Actifs', 'value' => number_format($packages->where('is_active', true)->count(), 0, ',', ' '), 'icon' => 'bx bx-badge-check', 'color' => '-green', 'note' => 'Visibles sur le site'],
             ['label' => 'En vedette', 'value' => number_format($packages->where('is_featured', true)->count(), 0, ',', ' '), 'icon' => 'bx bx-star', 'color' => '-orange', 'note' => 'Mis en avant'],
             ['label' => 'Prix moyen', 'value' => number_format($packages->avg('price_from') ?? 0, 0, ',', ' ') . ' DH', 'icon' => 'bx bx-wallet', 'color' => '-violet', 'note' => 'Moyenne base'],
@@ -90,14 +92,14 @@
         <?php if($packages->isEmpty()): ?>
             <?php if (isset($component)) { $__componentOriginal99089f8e2ef4184d7d35db81d60c6521 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal99089f8e2ef4184d7d35db81d60c6521 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.empty-state','data' => ['title' => 'Aucun pack hébergement','message' => 'Créez votre premier pack pour l\'afficher sur le site.','actionUrl' => route('admin.accommodation-packages.create'),'actionLabel' => 'Nouveau pack']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.empty-state','data' => ['title' => 'Aucun pack hÃ©bergement','message' => 'CrÃ©ez votre premier pack pour l\'afficher sur le site.','actionUrl' => route('admin.accommodation-packages.create'),'actionLabel' => 'Nouveau pack']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('admin.empty-state'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['title' => 'Aucun pack hébergement','message' => 'Créez votre premier pack pour l\'afficher sur le site.','action-url' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('admin.accommodation-packages.create')),'action-label' => 'Nouveau pack']); ?>
+<?php $component->withAttributes(['title' => 'Aucun pack hÃ©bergement','message' => 'CrÃ©ez votre premier pack pour l\'afficher sur le site.','action-url' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('admin.accommodation-packages.create')),'action-label' => 'Nouveau pack']); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal99089f8e2ef4184d7d35db81d60c6521)): ?>
@@ -116,7 +118,7 @@
                             <th>Image</th>
                             <th>Titre</th>
                             <th>Destination</th>
-                            <th>Durée</th>
+                            <th>DurÃ©e</th>
                             <th>Pension</th>
                             <th>Type</th>
                             <th>Prix</th>
@@ -155,12 +157,12 @@
                                     <div style="font-size:12px;font-weight:700;color:#7a879a;">#<?php echo e($package->id); ?></div>
                                 </td>
                                 <td>
-                                    <div style="font-weight:700;color:#253754;font-size:13px;"><?php echo e($package->city ?? 'Ville non renseignée'); ?></div>
+                                    <div style="font-weight:700;color:#253754;font-size:13px;"><?php echo e($package->city ?? 'Ville non renseignÃ©e'); ?></div>
                                     <div style="font-size:12px;font-weight:600;color:#7a879a;"><?php echo e($package->country ?? ''); ?></div>
                                 </td>
                                 <td><?php echo e($package->duration_days); ?>j / <?php echo e($package->nights); ?>n</td>
-                                <td><?php echo e($package->pension_type ?? '—'); ?></td>
-                                <td><?php echo e($package->accommodation_type ?? '—'); ?></td>
+                                <td><?php echo e($package->pension_type ?? 'â€”'); ?></td>
+                                <td><?php echo e($package->accommodation_type ?? 'â€”'); ?></td>
                                 <td>
                                     <span style="color:var(--ajp-ink);font-size:15px;font-weight:900;white-space:nowrap;">
                                         <?php echo e(number_format($package->price_from, 0, ',', ' ')); ?> <?php echo e($package->currency); ?>
@@ -263,4 +265,5 @@
     </section>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\accommodation-packages\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\accommodation-packages\index.blade.php ENDPATH**/ ?>

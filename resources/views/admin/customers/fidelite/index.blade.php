@@ -1,10 +1,11 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 @section('title')
-    Fidélité
+    FidÃ©litÃ©
 @endsection
 @section('content')
-    @include('admin._placeholder', ['title' => 'Fidélité'])
+    @include('admin._placeholder', ['title' => 'FidÃ©litÃ©'])
 @endsection
 @push('scripts')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
 @endpush
+

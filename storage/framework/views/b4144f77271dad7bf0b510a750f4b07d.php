@@ -1,12 +1,13 @@
+﻿
 <?php $__env->startSection('title'); ?>
-    Modifier l'hébergement
+    Modifier l'hÃ©bergement
 <?php $__env->stopSection(); ?>
 <?php $__env->startSection('content'); ?>
     <?php if (isset($component)) { $__componentOriginalcb19cb35a534439097b02b8af91726ee = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalcb19cb35a534439097b02b8af91726ee = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => 'Modifier l\'hébergement','subtitle' => ''.e($hotel->post_title).'','breadcrumbs' => [
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => 'Modifier l\'hÃ©bergement','subtitle' => ''.e($hotel->post_title).'','breadcrumbs' => [
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Catalogue Hébergements', 'url' => route('admin.wordpress.hotels.index')],
+            ['label' => 'Catalogue HÃ©bergements', 'url' => route('admin.wordpress.hotels.index')],
             ['label' => $hotel->post_title],
         ]]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('admin.page-header'); ?>
@@ -15,15 +16,15 @@
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['title' => 'Modifier l\'hébergement','subtitle' => ''.e($hotel->post_title).'','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
+<?php $component->withAttributes(['title' => 'Modifier l\'hÃ©bergement','subtitle' => ''.e($hotel->post_title).'','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Catalogue Hébergements', 'url' => route('admin.wordpress.hotels.index')],
+            ['label' => 'Catalogue HÃ©bergements', 'url' => route('admin.wordpress.hotels.index')],
             ['label' => $hotel->post_title],
         ])]); ?>
          <?php $__env->slot('actions', null, []); ?> 
             <a href="<?php echo e(route('admin.wordpress.hotels.index')); ?>" class="aj-btn aj-btn-soft">
                 <i class="bx bx-arrow-back"></i>
-                <span>Retour à la liste</span>
+                <span>Retour Ã  la liste</span>
             </a>
          <?php $__env->endSlot(); ?>
      <?php echo $__env->renderComponent(); ?>
@@ -112,19 +113,19 @@
                                 <?php echo $__env->make('admin.wordpress.hotels._tab_contact', ['meta' => $meta ?? []], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
                             </div>
                             <div class="tab-pane fade" id="pane-price" role="tabpanel">
-                                <p class="text-muted mb-0">Prix minimum est géré dans l'onglet Location. Cet onglet peut être étendu plus tard.</p>
+                                <p class="text-muted mb-0">Prix minimum est gÃ©rÃ© dans l'onglet Location. Cet onglet peut Ãªtre Ã©tendu plus tard.</p>
                             </div>
                             <div class="tab-pane fade" id="pane-checkinout" role="tabpanel">
-                                <p class="text-muted mb-0">Check in / Check out — à configurer si nécessaire.</p>
+                                <p class="text-muted mb-0">Check in / Check out â€” Ã  configurer si nÃ©cessaire.</p>
                             </div>
                             <div class="tab-pane fade" id="pane-other" role="tabpanel">
                                 <?php echo $__env->make('admin.wordpress.hotels._tab_other', ['meta' => $meta ?? []], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
                             </div>
                             <div class="tab-pane fade" id="pane-policy" role="tabpanel">
-                                <p class="text-muted mb-0">Hotel policy — à configurer si nécessaire.</p>
+                                <p class="text-muted mb-0">Hotel policy â€” Ã  configurer si nÃ©cessaire.</p>
                             </div>
                             <div class="tab-pane fade" id="pane-inventory" role="tabpanel">
-                                <p class="text-muted mb-0">Inventory — à configurer si nécessaire.</p>
+                                <p class="text-muted mb-0">Inventory â€” Ã  configurer si nÃ©cessaire.</p>
                             </div>
                         </div>
                     </div>
@@ -155,7 +156,7 @@
         if (removeBtn && removeInput) {
             removeBtn.addEventListener('click', function() {
                 removeInput.value = '1';
-                document.getElementById('hotel-logo-preview').innerHTML = '<span class="text-muted">Logo supprimé (enregistrez pour confirmer).</span>';
+                document.getElementById('hotel-logo-preview').innerHTML = '<span class="text-muted">Logo supprimÃ© (enregistrez pour confirmer).</span>';
             });
         }
         // Gallery remove
@@ -166,4 +167,5 @@
     </script>
 <?php $__env->stopPush(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\wordpress\hotels\edit.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\wordpress\hotels\edit.blade.php ENDPATH**/ ?>

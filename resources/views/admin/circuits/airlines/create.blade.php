@@ -1,18 +1,18 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 @section('title')
-    Créer une compagnie aérienne
+    CrÃ©er une compagnie aÃ©rienne
 @endsection
 @section('content')
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">Créer une compagnie aérienne</h4>
+                <h4 class="page-title mb-0 font-size-18">CrÃ©er une compagnie aÃ©rienne</h4>
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
                         <li class="breadcrumb-item"><a href="{{ route('admin.circuits.index') }}">Circuits</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.circuits.airlines.index') }}">Compagnies aériennes</a></li>
-                        <li class="breadcrumb-item active">Créer</li>
+                        <li class="breadcrumb-item"><a href="{{ route('admin.circuits.airlines.index') }}">Compagnies aÃ©riennes</a></li>
+                        <li class="breadcrumb-item active">CrÃ©er</li>
                     </ol>
                 </div>
             </div>
@@ -60,7 +60,7 @@
                                 <label class="form-check-label" for="is_active">Active</label>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100">Créer la compagnie</button>
+                        <button type="submit" class="btn btn-primary w-100">CrÃ©er la compagnie</button>
                         <a href="{{ route('admin.circuits.airlines.index') }}" class="btn btn-secondary w-100 mt-2">Annuler</a>
                     </div>
                 </div>
@@ -68,3 +68,4 @@
         </div>
     </form>
 @endsection
+

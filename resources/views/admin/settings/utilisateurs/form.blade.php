@@ -1,18 +1,18 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 @section('title')
-    {{ $isEdit ? 'Modifier utilisateur' : 'Créer utilisateur' }}
+    {{ $isEdit ? 'Modifier utilisateur' : 'CrÃ©er utilisateur' }}
 @endsection
 
 @section('content')
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">{{ $isEdit ? 'Modifier utilisateur' : 'Créer utilisateur' }}</h4>
+                <h4 class="page-title mb-0 font-size-18">{{ $isEdit ? 'Modifier utilisateur' : 'CrÃ©er utilisateur' }}</h4>
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
                         <li class="breadcrumb-item"><a href="{{ route('admin.settings.utilisateurs') }}">Utilisateurs</a></li>
-                        <li class="breadcrumb-item active">{{ $isEdit ? 'Modifier' : 'Créer' }}</li>
+                        <li class="breadcrumb-item active">{{ $isEdit ? 'Modifier' : 'CrÃ©er' }}</li>
                     </ol>
                 </div>
             </div>
@@ -34,10 +34,10 @@
                                 <a class="nav-link active" data-bs-toggle="tab" href="#tab-infos" role="tab">Infos</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" data-bs-toggle="tab" href="#tab-role" role="tab">Rôle</a>
+                                <a class="nav-link" data-bs-toggle="tab" href="#tab-role" role="tab">RÃ´le</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" data-bs-toggle="tab" href="#tab-access" role="tab">Accès</a>
+                                <a class="nav-link" data-bs-toggle="tab" href="#tab-access" role="tab">AccÃ¨s</a>
                             </li>
                         </ul>
 
@@ -55,7 +55,7 @@
                                         @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label">Téléphone</label>
+                                        <label class="form-label">TÃ©lÃ©phone</label>
                                         <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone', $userModel->phone) }}">
                                         @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     </div>
@@ -67,7 +67,7 @@
                                     <div class="col-md-6">
                                         <label class="form-label">Agence</label>
                                         <select name="branch_id" class="form-select @error('branch_id') is-invalid @enderror">
-                                            <option value="">– Aucune –</option>
+                                            <option value="">â€“ Aucune â€“</option>
                                             @foreach($branches ?? [] as $b)
                                                 <option value="{{ $b->id }}" {{ old('branch_id', $userModel->branch_id) == $b->id ? 'selected' : '' }}>{{ $b->name }} ({{ $b->code }})</option>
                                             @endforeach
@@ -77,7 +77,7 @@
                                     <div class="col-md-6">
                                         <label class="form-label">Responsable (manager)</label>
                                         <select name="manager_id" class="form-select @error('manager_id') is-invalid @enderror">
-                                            <option value="">– Aucun –</option>
+                                            <option value="">â€“ Aucun â€“</option>
                                             @foreach($managers ?? [] as $m)
                                                 @if($isEdit && $m->id == $userModel->id) @continue @endif
                                                 <option value="{{ $m->id }}" {{ old('manager_id', $userModel->manager_id) == $m->id ? 'selected' : '' }}>{{ $m->name }} ({{ $m->email }})</option>
@@ -93,13 +93,13 @@
                                     <div class="col-md-3">
                                         <label class="form-label">Type utilisateur</label>
                                         <select name="user_type" class="form-select @error('user_type') is-invalid @enderror">
-                                            <option value="">–</option>
+                                            <option value="">â€“</option>
                                             <option value="agent" {{ old('user_type', $userModel->user_type) === 'agent' ? 'selected' : '' }}>Agent</option>
                                             <option value="commercial" {{ old('user_type', $userModel->user_type) === 'commercial' ? 'selected' : '' }}>Commercial</option>
                                             <option value="chef_commercial" {{ old('user_type', $userModel->user_type) === 'chef_commercial' ? 'selected' : '' }}>Chef Commercial</option>
                                             <option value="branch_admin" {{ old('user_type', $userModel->user_type) === 'branch_admin' ? 'selected' : '' }}>Admin Agence</option>
                                             <option value="comptable" {{ old('user_type', $userModel->user_type) === 'comptable' ? 'selected' : '' }}>Comptable</option>
-                                            <option value="siege_admin" {{ old('user_type', $userModel->user_type) === 'siege_admin' ? 'selected' : '' }}>Admin Siège</option>
+                                            <option value="siege_admin" {{ old('user_type', $userModel->user_type) === 'siege_admin' ? 'selected' : '' }}>Admin SiÃ¨ge</option>
                                             <option value="super_admin" {{ old('user_type', $userModel->user_type) === 'super_admin' ? 'selected' : '' }}>Super Admin</option>
                                         </select>
                                         @error('user_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -130,17 +130,17 @@
 
                             <div class="tab-pane" id="tab-role" role="tabpanel">
                                 <div class="mb-3">
-                                    <label class="form-label">Mode d'accès</label>
+                                    <label class="form-label">Mode d'accÃ¨s</label>
                                     <select name="access_mode" id="access_mode" class="form-select @error('access_mode') is-invalid @enderror">
                                         @php $oldMode = old('access_mode', $userModel->access_mode ?: 'role'); @endphp
-                                        <option value="role" {{ $oldMode === 'role' ? 'selected' : '' }}>Hériter d'un rôle</option>
-                                        <option value="custom" {{ $oldMode === 'custom' ? 'selected' : '' }}>Permissions personnalisées</option>
+                                        <option value="role" {{ $oldMode === 'role' ? 'selected' : '' }}>HÃ©riter d'un rÃ´le</option>
+                                        <option value="custom" {{ $oldMode === 'custom' ? 'selected' : '' }}>Permissions personnalisÃ©es</option>
                                     </select>
                                     @error('access_mode') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
 
                                 <div id="role-wrapper" class="mb-3">
-                                    <label class="form-label">Rôle</label>
+                                    <label class="form-label">RÃ´le</label>
                                     <select name="role_name" class="form-select @error('role_name') is-invalid @enderror">
                                         <option value="">-- Choisir --</option>
                                         @foreach($roles as $role)
@@ -153,15 +153,15 @@
 
                             <div class="tab-pane" id="tab-access" role="tabpanel">
                                 <div class="alert alert-info py-2 small mb-3" id="permissions-mode-alert">
-                                    En mode <strong>Hériter d'un rôle</strong>, les permissions suivent uniquement le rôle sélectionné.
-                                    Passez en <strong>Permissions personnalisées</strong> pour définir une sélection manuelle.
+                                    En mode <strong>HÃ©riter d'un rÃ´le</strong>, les permissions suivent uniquement le rÃ´le sÃ©lectionnÃ©.
+                                    Passez en <strong>Permissions personnalisÃ©es</strong> pour dÃ©finir une sÃ©lection manuelle.
                                 </div>
 
                                 <div class="d-flex gap-2 mb-3">
                                     <button type="button" class="btn btn-sm btn-outline-primary" id="check-all">Tout cocher</button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="uncheck-all">Tout décocher</button>
-                                    <button type="button" class="btn btn-sm btn-outline-info" id="apply-role-defaults">Réinitialiser selon rôle</button>
-                                    <span class="badge bg-soft-primary text-primary align-self-center" id="permissions-count">0 sélectionnée(s)</span>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="uncheck-all">Tout dÃ©cocher</button>
+                                    <button type="button" class="btn btn-sm btn-outline-info" id="apply-role-defaults">RÃ©initialiser selon rÃ´le</button>
+                                    <span class="badge bg-soft-primary text-primary align-self-center" id="permissions-count">0 sÃ©lectionnÃ©e(s)</span>
                                 </div>
 
                                 @error('permissions')
@@ -181,7 +181,7 @@
                                             <h6 class="mb-0">{{ $group['label'] }}</h6>
                                             <div class="d-flex gap-1">
                                                 <button type="button" class="btn btn-sm btn-light check-section" data-group="{{ $group['key'] }}">Cocher section</button>
-                                                <button type="button" class="btn btn-sm btn-light uncheck-section" data-group="{{ $group['key'] }}">Décocher section</button>
+                                                <button type="button" class="btn btn-sm btn-light uncheck-section" data-group="{{ $group['key'] }}">DÃ©cocher section</button>
                                             </div>
                                         </div>
                                         <div class="row">
@@ -208,7 +208,7 @@
                         </div>
 
                         <div class="mt-3 d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">{{ $isEdit ? 'Mettre à jour' : 'Créer' }}</button>
+                            <button type="submit" class="btn btn-primary">{{ $isEdit ? 'Mettre Ã  jour' : 'CrÃ©er' }}</button>
                             <a href="{{ route('admin.settings.utilisateurs') }}" class="btn btn-light">Annuler</a>
                         </div>
                     </form>
@@ -254,8 +254,8 @@
                     modeAlert.classList.toggle('alert-info', isRoleMode);
                     modeAlert.classList.toggle('alert-success', !isRoleMode);
                     modeAlert.innerHTML = isRoleMode
-                        ? 'En mode <strong>Héritage rôle</strong>, les permissions ci-dessous sont en lecture seule et suivent le rôle sélectionné.'
-                        : 'En mode <strong>Permissions personnalisées</strong>, les cases cochées sont exactement celles enregistrées pour cet utilisateur.';
+                        ? 'En mode <strong>HÃ©ritage rÃ´le</strong>, les permissions ci-dessous sont en lecture seule et suivent le rÃ´le sÃ©lectionnÃ©.'
+                        : 'En mode <strong>Permissions personnalisÃ©es</strong>, les cases cochÃ©es sont exactement celles enregistrÃ©es pour cet utilisateur.';
                 }
 
                 const disabled = isRoleMode;
@@ -278,7 +278,7 @@
             function updateSelectedCount() {
                 if (!selectedCountEl) return;
                 const count = checkboxes.filter((checkbox) => checkbox.checked).length;
-                selectedCountEl.textContent = count + ' sélectionnée(s)';
+                selectedCountEl.textContent = count + ' sÃ©lectionnÃ©e(s)';
             }
 
             function setPermissionState(permissionName, state) {
@@ -365,3 +365,4 @@
         })();
     </script>
 @endpush
+

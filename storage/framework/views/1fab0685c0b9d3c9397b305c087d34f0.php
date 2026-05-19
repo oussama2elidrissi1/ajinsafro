@@ -1,12 +1,14 @@
-<?php $__env->startSection('title', 'Nouvelle offre économique'); ?>
+﻿
+
+<?php $__env->startSection('title', 'Nouvelle offre Ã©conomique'); ?>
 
 <?php $__env->startSection('content'); ?>
     <?php if (isset($component)) { $__componentOriginalcb19cb35a534439097b02b8af91726ee = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalcb19cb35a534439097b02b8af91726ee = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => 'Nouvelle offre économique','subtitle' => 'Ajoutez une offre voyage, omra, hébergement ou activité à petit budget.','breadcrumbs' => [
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => 'Nouvelle offre Ã©conomique','subtitle' => 'Ajoutez une offre voyage, omra, hÃ©bergement ou activitÃ© Ã  petit budget.','breadcrumbs' => [
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Formule Économique', 'url' => route('admin.economic-offers.index')],
-            ['label' => 'Création'],
+            ['label' => 'Formule Ã‰conomique', 'url' => route('admin.economic-offers.index')],
+            ['label' => 'CrÃ©ation'],
         ]]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('admin.page-header'); ?>
 <?php if ($component->shouldRender()): ?>
@@ -14,10 +16,10 @@
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['title' => 'Nouvelle offre économique','subtitle' => 'Ajoutez une offre voyage, omra, hébergement ou activité à petit budget.','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
+<?php $component->withAttributes(['title' => 'Nouvelle offre Ã©conomique','subtitle' => 'Ajoutez une offre voyage, omra, hÃ©bergement ou activitÃ© Ã  petit budget.','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Formule Économique', 'url' => route('admin.economic-offers.index')],
-            ['label' => 'Création'],
+            ['label' => 'Formule Ã‰conomique', 'url' => route('admin.economic-offers.index')],
+            ['label' => 'CrÃ©ation'],
         ])]); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
@@ -64,4 +66,5 @@
     </form>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\economic-offers\create.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\economic-offers\create.blade.php ENDPATH**/ ?>

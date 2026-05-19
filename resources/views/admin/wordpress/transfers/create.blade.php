@@ -1,10 +1,10 @@
-@extends('layouts.admin-v2')
-@section('title', 'Créer un transfert')
+﻿@extends('layouts.admin-v6')
+@section('title', 'CrÃ©er un transfert')
 @section('content')
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">Créer un transfert</h4>
+                <h4 class="page-title mb-0 font-size-18">CrÃ©er un transfert</h4>
                 <a href="{{ route('admin.wordpress.transfers.index') }}" class="btn btn-secondary">Retour</a>
             </div>
         </div>
@@ -29,3 +29,4 @@
         </div>
     </form>
 @endsection
+

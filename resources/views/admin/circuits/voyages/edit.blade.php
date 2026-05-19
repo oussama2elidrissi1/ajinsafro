@@ -1,4 +1,4 @@
-@php
+﻿@php
     $isCreate = isset($voyage->ID) && (int) $voyage->ID === 0;
     $laravelV = $laravelVoyage ?? null;
     $voyageEditCssPath = public_path('css/voyage-edit.css');
@@ -21,7 +21,7 @@
             $vePriceLabel = number_format((float) $priceFrom, 0, ',', ' ').' '.($cur !== '' ? $cur : 'MAD');
         }
     }
-    // Résolution destination : priorité meta WP address > multi_location > Laravel destination
+    // RÃ©solution destination : prioritÃ© meta WP address > multi_location > Laravel destination
     $veDestination = null;
     if ($veWpId > 0) {
         $wpAddress = null;
@@ -55,7 +55,7 @@
     }
     $veDatesCount = isset($travelDates) && $travelDates instanceof \Illuminate\Support\Collection ? $travelDates->count() : 0;
 @endphp
-@extends('layouts.admin-v2')
+@extends('layouts.admin-v6')
 
 @section('title')
     {{ $isCreate ? 'Creer un tour WordPress' : 'Modifier le tour WordPress' }}
@@ -139,10 +139,10 @@
 
                             <div class="editor-save-bar">
                                 <button type="button" class="btn btn-outline-primary" data-ve-step-next-secondary>
-                                    Étape suivante : Tarifs & capacité <i class="bx bx-chevron-right"></i>
+                                    Ã‰tape suivante : Tarifs & capacitÃ© <i class="bx bx-chevron-right"></i>
                                 </button>
                                 <button type="submit" form="edit-voyage-form" class="btn btn-primary" id="edit-voyage-submit-btn">
-                                    <i class="bx bx-save"></i> Enregistrer cette étape
+                                    <i class="bx bx-save"></i> Enregistrer cette Ã©tape
                                 </button>
                             </div>
                         </div>
@@ -205,15 +205,15 @@
                 '#basic': 'Basique',
                 '#location': 'Destination',
                 '#price': 'Prix & Paiement',
-                '#information': 'Détails',
+                '#information': 'DÃ©tails',
                 '#voyage-extras': 'Extras',
-                '#availability': 'Départs',
+                '#availability': 'DÃ©parts',
                 '#flights': 'Vols',
-                '#media': 'Médias',
+                '#media': 'MÃ©dias',
                 '#taxonomies': 'Classement',
                 '#logistics': 'Logistique',
-                '#hotels': 'Hôtels',
-                '#activities': 'Activités',
+                '#hotels': 'HÃ´tels',
+                '#activities': 'ActivitÃ©s',
                 '#program-days': 'Programme'
             };
 
@@ -486,7 +486,7 @@
                 var idx = tabs.indexOf(activeTarget);
                 // Next sub-section within same step
                 if (idx >= 0 && idx < tabs.length - 1) return tabs[idx + 1];
-                // Last sub-section — first tab of next step
+                // Last sub-section â€” first tab of next step
                 var stepIndex = stepButtons.indexOf(currentStep);
                 if (stepIndex >= 0 && stepIndex < stepButtons.length - 1) {
                     var nextStep = stepButtons[stepIndex + 1];
@@ -659,7 +659,7 @@
                         // Previous sub-section within same step
                         prevTarget = tabs[idx - 1];
                     } else {
-                        // First sub-section of step — go to last sub-section of previous step
+                        // First sub-section of step â€” go to last sub-section of previous step
                         var stepIndex = stepButtons.indexOf(currentStep);
                         if (stepIndex <= 0) return;
                         var prevStep = stepButtons[stepIndex - 1];
@@ -704,7 +704,7 @@
                         }
                     }
 
-                    // Pane is clean — navigate directly
+                    // Pane is clean â€” navigate directly
                     hideGuardMessage();
                     showTab(nextTarget);
                     syncUIFromTarget(nextTarget);
@@ -828,7 +828,7 @@
                 syncUIFromTarget(target);
             });
 
-            // After-save pending navigation: if a save was triggered by "Étape suivante",
+            // After-save pending navigation: if a save was triggered by "Ã‰tape suivante",
             // redirect to the target section that was stored before submit.
             var _pendingTab = (function () {
                 try { return sessionStorage.getItem('ve_pending_next_tab'); } catch (e) { return null; }
@@ -854,3 +854,4 @@
         });
     </script>
 @endpush
+

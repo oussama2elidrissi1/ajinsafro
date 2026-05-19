@@ -1,3 +1,5 @@
+﻿
+
 <?php $__env->startSection('title', 'Nouveau message'); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -7,7 +9,7 @@
                 <h4 class="page-title mb-0 font-size-18">Nouveau message</h4>
                 <ol class="breadcrumb m-0">
                     <li class="breadcrumb-item"><a href="<?php echo e(route('admin.dashboard')); ?>">Admin</a></li>
-                    <li class="breadcrumb-item"><a href="<?php echo e(route('admin.reservations.index')); ?>">Réservations</a></li>
+                    <li class="breadcrumb-item"><a href="<?php echo e(route('admin.reservations.index')); ?>">RÃ©servations</a></li>
                     <li class="breadcrumb-item"><a href="<?php echo e(route('admin.reservations.messages')); ?>">Messages</a></li>
                     <li class="breadcrumb-item active">Nouveau</li>
                 </ol>
@@ -35,7 +37,7 @@ unset($__errorArgs, $__bag); ?>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Message <span class="text-danger">*</span></label>
-                            <textarea name="body" class="form-control" rows="8" required placeholder="Contenu du message…"><?php echo e(old('body')); ?></textarea>
+                            <textarea name="body" class="form-control" rows="8" required placeholder="Contenu du messageâ€¦"><?php echo e(old('body')); ?></textarea>
                             <?php $__errorArgs = ['body'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -45,7 +47,7 @@ if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>
                         </div>
-                        <p class="text-muted small">Le message sera envoyé au nom de votre agence.</p>
+                        <p class="text-muted small">Le message sera envoyÃ© au nom de votre agence.</p>
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary"><i class="bx bx-send me-1"></i> Envoyer</button>
                             <a href="<?php echo e(route('admin.reservations.messages')); ?>" class="btn btn-secondary">Annuler</a>
@@ -57,4 +59,5 @@ unset($__errorArgs, $__bag); ?>
     </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\reservations\messages\create.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\reservations\messages\create.blade.php ENDPATH**/ ?>

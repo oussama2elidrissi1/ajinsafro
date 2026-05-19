@@ -1,7 +1,9 @@
+﻿
+
 <?php
     use Illuminate\Support\Str;
 
-    $pageTitle = 'Catalogue Hébergements';
+    $pageTitle = 'Catalogue HÃ©bergements';
     $currentHotels = $hotels->getCollection();
     $totalHotels = $hotels->total();
     $publishedCount = $currentHotels->where('post_status', 'publish')->count();
@@ -20,15 +22,15 @@
         $activeFilters[] = 'Recherche : '.Str::limit($filters['search'], 28);
     }
     if (($filters['status'] ?? '') === 'publish') {
-        $activeFilters[] = 'Statut : Publiés';
+        $activeFilters[] = 'Statut : PubliÃ©s';
     } elseif (($filters['status'] ?? '') === 'draft') {
         $activeFilters[] = 'Statut : Brouillons';
     }
     if (filled($filters['star'] ?? null)) {
-        $activeFilters[] = 'Étoiles : '.(int) $filters['star'];
+        $activeFilters[] = 'Ã‰toiles : '.(int) $filters['star'];
     }
     if (($filters['featured'] ?? '') === '1') {
-        $activeFilters[] = 'Sélection : À la une';
+        $activeFilters[] = 'SÃ©lection : Ã€ la une';
     }
     if (filled($filters['destination'] ?? null)) {
         $activeFilters[] = 'Destination : '.Str::limit($filters['destination'], 28);
@@ -47,9 +49,9 @@
         <div class="aj-shell">
             <?php if (isset($component)) { $__componentOriginalcb19cb35a534439097b02b8af91726ee = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalcb19cb35a534439097b02b8af91726ee = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => $pageTitle,'subtitle' => 'Gérez, filtrez et consultez les hébergements WordPress synchronisés sans modifier la logique métier existante.','breadcrumbs' => [
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => $pageTitle,'subtitle' => 'GÃ©rez, filtrez et consultez les hÃ©bergements WordPress synchronisÃ©s sans modifier la logique mÃ©tier existante.','breadcrumbs' => [
                     ['label' => 'Admin', 'url' => route('admin.dashboard')],
-                    ['label' => 'Hébergements', 'url' => '#'],
+                    ['label' => 'HÃ©bergements', 'url' => '#'],
                     ['label' => 'Catalogue'],
                 ]]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('admin.page-header'); ?>
@@ -58,15 +60,15 @@
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($pageTitle),'subtitle' => 'Gérez, filtrez et consultez les hébergements WordPress synchronisés sans modifier la logique métier existante.','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
+<?php $component->withAttributes(['title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($pageTitle),'subtitle' => 'GÃ©rez, filtrez et consultez les hÃ©bergements WordPress synchronisÃ©s sans modifier la logique mÃ©tier existante.','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
                     ['label' => 'Admin', 'url' => route('admin.dashboard')],
-                    ['label' => 'Hébergements', 'url' => '#'],
+                    ['label' => 'HÃ©bergements', 'url' => '#'],
                     ['label' => 'Catalogue'],
                 ])]); ?>
                  <?php $__env->slot('actions', null, []); ?> 
                     <a href="<?php echo e(route('admin.wordpress.hotels.create')); ?>" class="aj-btn aj-btn-primary">
                         <i class="bx bx-plus"></i>
-                        <span>Créer un hébergement</span>
+                        <span>CrÃ©er un hÃ©bergement</span>
                     </a>
                  <?php $__env->endSlot(); ?>
              <?php echo $__env->renderComponent(); ?>
@@ -91,10 +93,10 @@
             <?php if (isset($component)) { $__componentOriginaldc8ea6d1c156289736a271a64b9dc41b = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginaldc8ea6d1c156289736a271a64b9dc41b = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.kpi-cards','data' => ['kpis' => [
-                    ['label' => 'Total hébergements', 'value' => number_format($totalHotels, 0, ',', ' '), 'icon' => 'bx bx-buildings', 'color' => '-blue', 'note' => 'Résultats sur le catalogue courant'],
-                    ['label' => 'Publiés', 'value' => $publishedCount, 'icon' => 'bx bx-badge-check', 'color' => '-green', 'note' => 'Sur la page affichée'],
-                    ['label' => 'Brouillons', 'value' => $draftCount, 'icon' => 'bx bx-edit-alt', 'color' => '-orange', 'note' => 'À compléter ou publier'],
-                    ['label' => 'À la une', 'value' => $featuredCount, 'icon' => 'bx bx-star', 'color' => '-violet', 'note' => 'Mis en avant dans cette vue'],
+                    ['label' => 'Total hÃ©bergements', 'value' => number_format($totalHotels, 0, ',', ' '), 'icon' => 'bx bx-buildings', 'color' => '-blue', 'note' => 'RÃ©sultats sur le catalogue courant'],
+                    ['label' => 'PubliÃ©s', 'value' => $publishedCount, 'icon' => 'bx bx-badge-check', 'color' => '-green', 'note' => 'Sur la page affichÃ©e'],
+                    ['label' => 'Brouillons', 'value' => $draftCount, 'icon' => 'bx bx-edit-alt', 'color' => '-orange', 'note' => 'Ã€ complÃ©ter ou publier'],
+                    ['label' => 'Ã€ la une', 'value' => $featuredCount, 'icon' => 'bx bx-star', 'color' => '-violet', 'note' => 'Mis en avant dans cette vue'],
                 ]]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('admin.kpi-cards'); ?>
 <?php if ($component->shouldRender()): ?>
@@ -103,10 +105,10 @@
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
 <?php $component->withAttributes(['kpis' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
-                    ['label' => 'Total hébergements', 'value' => number_format($totalHotels, 0, ',', ' '), 'icon' => 'bx bx-buildings', 'color' => '-blue', 'note' => 'Résultats sur le catalogue courant'],
-                    ['label' => 'Publiés', 'value' => $publishedCount, 'icon' => 'bx bx-badge-check', 'color' => '-green', 'note' => 'Sur la page affichée'],
-                    ['label' => 'Brouillons', 'value' => $draftCount, 'icon' => 'bx bx-edit-alt', 'color' => '-orange', 'note' => 'À compléter ou publier'],
-                    ['label' => 'À la une', 'value' => $featuredCount, 'icon' => 'bx bx-star', 'color' => '-violet', 'note' => 'Mis en avant dans cette vue'],
+                    ['label' => 'Total hÃ©bergements', 'value' => number_format($totalHotels, 0, ',', ' '), 'icon' => 'bx bx-buildings', 'color' => '-blue', 'note' => 'RÃ©sultats sur le catalogue courant'],
+                    ['label' => 'PubliÃ©s', 'value' => $publishedCount, 'icon' => 'bx bx-badge-check', 'color' => '-green', 'note' => 'Sur la page affichÃ©e'],
+                    ['label' => 'Brouillons', 'value' => $draftCount, 'icon' => 'bx bx-edit-alt', 'color' => '-orange', 'note' => 'Ã€ complÃ©ter ou publier'],
+                    ['label' => 'Ã€ la une', 'value' => $featuredCount, 'icon' => 'bx bx-star', 'color' => '-violet', 'note' => 'Mis en avant dans cette vue'],
                 ])]); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
@@ -133,30 +135,30 @@
                     <div class="aj-field aj-search-wrap">
                         <label for="search">Recherche</label>
                         <span class="aj-search-icon"><i class="bx bx-search"></i></span>
-                        <input id="search" type="text" name="search" class="aj-control" value="<?php echo e($filters['search'] ?? ''); ?>" placeholder="Nom, slug, résumé ou adresse">
+                        <input id="search" type="text" name="search" class="aj-control" value="<?php echo e($filters['search'] ?? ''); ?>" placeholder="Nom, slug, rÃ©sumÃ© ou adresse">
                     </div>
                     <div class="aj-field">
                         <label for="status">Statut</label>
                         <select id="status" name="status" class="aj-control">
                             <option value="">Tous les statuts</option>
-                            <option value="publish" <?php if(($filters['status'] ?? '') === 'publish'): echo 'selected'; endif; ?>>Publié</option>
+                            <option value="publish" <?php if(($filters['status'] ?? '') === 'publish'): echo 'selected'; endif; ?>>PubliÃ©</option>
                             <option value="draft" <?php if(($filters['status'] ?? '') === 'draft'): echo 'selected'; endif; ?>>Brouillon</option>
                         </select>
                     </div>
                     <div class="aj-field">
-                        <label for="hotel_star">Étoiles</label>
+                        <label for="hotel_star">Ã‰toiles</label>
                         <select id="hotel_star" name="hotel_star" class="aj-control">
-                            <option value="">Toutes les étoiles</option>
+                            <option value="">Toutes les Ã©toiles</option>
                             <?php for($i = 1; $i <= 5; $i++): ?>
-                                <option value="<?php echo e($i); ?>" <?php if((string) ($filters['star'] ?? '') === (string) $i): echo 'selected'; endif; ?>><?php echo e($i); ?> étoile(s)</option>
+                                <option value="<?php echo e($i); ?>" <?php if((string) ($filters['star'] ?? '') === (string) $i): echo 'selected'; endif; ?>><?php echo e($i); ?> Ã©toile(s)</option>
                             <?php endfor; ?>
                         </select>
                     </div>
                     <div class="aj-field">
-                        <label for="featured">Sélection</label>
+                        <label for="featured">SÃ©lection</label>
                         <select id="featured" name="featured" class="aj-control">
-                            <option value="">Tous les hébergements</option>
-                            <option value="1" <?php if(($filters['featured'] ?? '') === '1'): echo 'selected'; endif; ?>>À la une</option>
+                            <option value="">Tous les hÃ©bergements</option>
+                            <option value="1" <?php if(($filters['featured'] ?? '') === '1'): echo 'selected'; endif; ?>>Ã€ la une</option>
                         </select>
                     </div>
                     <div class="aj-field">
@@ -192,9 +194,9 @@
                         <div class="d-flex align-items-center gap-2">
                             <label for="hotelSortSelect" class="mb-0">Trier par :</label>
                             <select id="hotelSortSelect" class="aj-mini-btn aj-mini-select">
-                                <option value="recent">Plus récents</option>
+                                <option value="recent">Plus rÃ©cents</option>
                                 <option value="price_asc">Prix croissant</option>
-                                <option value="price_desc">Prix décroissant</option>
+                                <option value="price_desc">Prix dÃ©croissant</option>
                                 <option value="title_asc">Titre A-Z</option>
                             </select>
                         </div>
@@ -202,7 +204,7 @@
                             <i class="bx bx-export"></i>
                             <span>Exporter la vue</span>
                         </button>
-                        <span><?php echo e($hotels->firstItem() ?? 0); ?> - <?php echo e($hotels->lastItem() ?? 0); ?> sur <?php echo e($totalHotels); ?> hébergements</span>
+                        <span><?php echo e($hotels->firstItem() ?? 0); ?> - <?php echo e($hotels->lastItem() ?? 0); ?> sur <?php echo e($totalHotels); ?> hÃ©bergements</span>
                     </div>
                     <div class="aj-result-meta">
                         <span>Vue :</span>
@@ -216,14 +218,14 @@
                 <?php if($hotels->isEmpty()): ?>
                     <?php if (isset($component)) { $__componentOriginal99089f8e2ef4184d7d35db81d60c6521 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal99089f8e2ef4184d7d35db81d60c6521 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.empty-state','data' => ['title' => 'Aucun hébergement trouvé','message' => 'Ajustez vos filtres ou créez un nouvel hébergement pour alimenter le catalogue.','actionUrl' => route('admin.wordpress.hotels.create'),'actionLabel' => 'Créer un hébergement']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.empty-state','data' => ['title' => 'Aucun hÃ©bergement trouvÃ©','message' => 'Ajustez vos filtres ou crÃ©ez un nouvel hÃ©bergement pour alimenter le catalogue.','actionUrl' => route('admin.wordpress.hotels.create'),'actionLabel' => 'CrÃ©er un hÃ©bergement']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('admin.empty-state'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['title' => 'Aucun hébergement trouvé','message' => 'Ajustez vos filtres ou créez un nouvel hébergement pour alimenter le catalogue.','action-url' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('admin.wordpress.hotels.create')),'action-label' => 'Créer un hébergement']); ?>
+<?php $component->withAttributes(['title' => 'Aucun hÃ©bergement trouvÃ©','message' => 'Ajustez vos filtres ou crÃ©ez un nouvel hÃ©bergement pour alimenter le catalogue.','action-url' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('admin.wordpress.hotels.create')),'action-label' => 'CrÃ©er un hÃ©bergement']); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal99089f8e2ef4184d7d35db81d60c6521)): ?>
@@ -240,12 +242,12 @@
                             <thead>
                                 <tr>
                                     <th>Image</th>
-                                    <th>Hébergement</th>
+                                    <th>HÃ©bergement</th>
                                     <th>Localisation</th>
                                     <th>Statut</th>
-                                    <th>Étoiles</th>
+                                    <th>Ã‰toiles</th>
                                     <th>Prix min</th>
-                                    <th>Modifié le</th>
+                                    <th>ModifiÃ© le</th>
                                     <th class="text-end">Actions</th>
                                 </tr>
                             </thead>
@@ -291,7 +293,7 @@
                                             <div class="aj-item-title">
                                                 <a href="<?php echo e(route('admin.wordpress.hotels.edit', $hotel)); ?>"><?php echo e($hotel->post_title); ?></a>
                                                 <?php if($isFeatured): ?>
-                                                    <span class="aj-badge -info">À la une</span>
+                                                    <span class="aj-badge -info">Ã€ la une</span>
                                                 <?php endif; ?>
                                             </div>
                                             <div class="aj-meta-text">ID #<?php echo e($hotel->ID); ?></div>
@@ -301,33 +303,33 @@
                                         </td>
                                         <td>
                                             <div class="aj-location">
-                                                <strong><?php echo e($address !== '' ? $address : 'Adresse non renseignée'); ?></strong>
-                                                <span><?php echo e($hotel->post_name ?: 'Slug non renseigné'); ?></span>
+                                                <strong><?php echo e($address !== '' ? $address : 'Adresse non renseignÃ©e'); ?></strong>
+                                                <span><?php echo e($hotel->post_name ?: 'Slug non renseignÃ©'); ?></span>
                                             </div>
                                         </td>
                                         <td>
                                             <?php if($isPublished): ?>
-                                                <span class="aj-badge -success">Publié</span>
+                                                <span class="aj-badge -success">PubliÃ©</span>
                                             <?php else: ?>
                                                 <span class="aj-badge -warning">Brouillon</span>
                                             <?php endif; ?>
                                         </td>
                                         <td>
                                             <?php if($stars > 0): ?>
-                                                <span class="aj-stars"><?php echo e(str_repeat('★', $stars)); ?><span><?php echo e($stars); ?></span></span>
+                                                <span class="aj-stars"><?php echo e(str_repeat('â˜…', $stars)); ?><span><?php echo e($stars); ?></span></span>
                                             <?php else: ?>
-                                                <span class="aj-meta-text">Non renseigné</span>
+                                                <span class="aj-meta-text">Non renseignÃ©</span>
                                             <?php endif; ?>
                                         </td>
                                         <td>
                                             <span class="aj-price">
-                                                <?php echo e(is_numeric($price) ? number_format((float) $price, 0, ',', ' ') . ' DH' : '—'); ?>
+                                                <?php echo e(is_numeric($price) ? number_format((float) $price, 0, ',', ' ') . ' DH' : 'â€”'); ?>
 
                                             </span>
                                         </td>
                                         <td>
                                             <span class="aj-date">
-                                                <?php echo e($hotel->post_modified ? \Carbon\Carbon::parse($hotel->post_modified)->format('d/m/Y') : '—'); ?>
+                                                <?php echo e($hotel->post_modified ? \Carbon\Carbon::parse($hotel->post_modified)->format('d/m/Y') : 'â€”'); ?>
 
                                                 <small><?php echo e($hotel->post_modified ? \Carbon\Carbon::parse($hotel->post_modified)->format('H:i') : ''); ?></small>
                                             </span>
@@ -342,7 +344,7 @@
                                                 <a href="<?php echo e(route('admin.wordpress.hotels.edit', $hotel)); ?>" class="aj-icon-btn" title="Modifier">
                                                     <i class="bx bx-pencil"></i>
                                                 </a>
-                                                <form action="<?php echo e(route('admin.wordpress.hotels.destroy', $hotel)); ?>" method="POST" class="d-inline" onsubmit="return confirm('Déplacer cet hôtel dans la corbeille ?');">
+                                                <form action="<?php echo e(route('admin.wordpress.hotels.destroy', $hotel)); ?>" method="POST" class="d-inline" onsubmit="return confirm('DÃ©placer cet hÃ´tel dans la corbeille ?');">
                                                     <?php echo csrf_field(); ?>
                                                     <?php echo method_field('DELETE'); ?>
                                                     <button type="submit" class="aj-icon-btn -danger" title="Supprimer">
@@ -395,25 +397,25 @@
                                             <div class="aj-meta-text">ID #<?php echo e($hotel->ID); ?></div>
                                         </div>
                                         <?php if($isFeatured): ?>
-                                            <span class="aj-badge -info">À la une</span>
+                                            <span class="aj-badge -info">Ã€ la une</span>
                                         <?php endif; ?>
                                     </div>
 
-                                    <div class="aj-meta-text mb-3"><?php echo e(trim((string) ($stHotel->address ?? '')) !== '' ? $stHotel->address : 'Adresse non renseignée'); ?></div>
+                                    <div class="aj-meta-text mb-3"><?php echo e(trim((string) ($stHotel->address ?? '')) !== '' ? $stHotel->address : 'Adresse non renseignÃ©e'); ?></div>
 
                                     <div class="d-flex flex-wrap gap-2 mb-3">
                                         <?php if($isPublished): ?>
-                                            <span class="aj-badge -success">Publié</span>
+                                            <span class="aj-badge -success">PubliÃ©</span>
                                         <?php else: ?>
                                             <span class="aj-badge -warning">Brouillon</span>
                                         <?php endif; ?>
                                         <?php if($stars > 0): ?>
-                                            <span class="aj-badge -neutral"><?php echo e($stars); ?> étoile(s)</span>
+                                            <span class="aj-badge -neutral"><?php echo e($stars); ?> Ã©toile(s)</span>
                                         <?php endif; ?>
                                     </div>
 
                                     <div class="aj-card-actions">
-                                        <span class="aj-price"><?php echo e(is_numeric($price) ? number_format((float) $price, 0, ',', ' ') . ' DH' : '—'); ?></span>
+                                        <span class="aj-price"><?php echo e(is_numeric($price) ? number_format((float) $price, 0, ',', ' ') . ' DH' : 'â€”'); ?></span>
                                         <div class="aj-actions">
                                             <?php if($wpSiteUrl): ?>
                                                 <a href="<?php echo e($wpSiteUrl); ?>/?post_type=st_hotel&p=<?php echo e($hotel->ID); ?>" target="_blank" class="aj-icon-btn" title="Voir sur le site">
@@ -548,4 +550,5 @@
     </script>
 <?php $__env->stopPush(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\wordpress\hotels\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\wordpress\hotels\index.blade.php ENDPATH**/ ?>

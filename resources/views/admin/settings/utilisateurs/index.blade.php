@@ -1,4 +1,4 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 @section('title')
     Utilisateurs
 @endsection
@@ -11,7 +11,7 @@
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.settings.index') }}">Paramètres</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('admin.settings.index') }}">ParamÃ¨tres</a></li>
                         <li class="breadcrumb-item active">Utilisateurs</li>
                     </ol>
                 </div>
@@ -51,7 +51,7 @@
                                     <th>#</th>
                                     <th>Nom</th>
                                     <th>Email</th>
-                                    <th>Rôle</th>
+                                    <th>RÃ´le</th>
                                     <th>Mode</th>
                                     <th>Statut</th>
                                     <th>Actions</th>
@@ -63,26 +63,26 @@
                                         <td>{{ $user->id }}</td>
                                         <td>{{ $user->name }}</td>
                                         <td>{{ $user->email }}</td>
-                                        <td>{{ $user->roles->first()->name ?? $user->base_role ?? '—' }}</td>
+                                        <td>{{ $user->roles->first()->name ?? $user->base_role ?? 'â€”' }}</td>
                                         <td>
                                             @if($user->access_mode === 'custom')
-                                                <span class="badge bg-warning">Personnalisé</span>
+                                                <span class="badge bg-warning">PersonnalisÃ©</span>
                                             @else
-                                                <span class="badge bg-info">Rôle</span>
+                                                <span class="badge bg-info">RÃ´le</span>
                                             @endif
                                         </td>
                                         <td>
                                             @if($user->is_active)
                                                 <span class="badge bg-success">Actif</span>
                                             @else
-                                                <span class="badge bg-secondary">Désactivé</span>
+                                                <span class="badge bg-secondary">DÃ©sactivÃ©</span>
                                             @endif
                                         </td>
                                         <td class="d-flex gap-1">
                                             <a href="{{ route('admin.settings.utilisateurs.edit', $user) }}" class="btn btn-sm btn-primary">Modifier</a>
                                             <form method="POST" action="{{ route('admin.settings.utilisateurs.toggle-active', $user) }}">
                                                 @csrf
-                                                <button type="submit" class="btn btn-sm btn-warning">{{ $user->is_active ? 'Désactiver' : 'Activer' }}</button>
+                                                <button type="submit" class="btn btn-sm btn-warning">{{ $user->is_active ? 'DÃ©sactiver' : 'Activer' }}</button>
                                             </form>
                                             @if(auth()->id() !== $user->id)
                                                 <form method="POST" action="{{ route('admin.settings.utilisateurs.destroy', $user) }}" onsubmit="return confirm('Supprimer cet utilisateur ?');">
@@ -95,7 +95,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center text-muted">Aucun utilisateur trouvé.</td>
+                                        <td colspan="7" class="text-center text-muted">Aucun utilisateur trouvÃ©.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -114,3 +114,4 @@
 @push('scripts')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
 @endpush
+

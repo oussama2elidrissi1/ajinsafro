@@ -1,3 +1,5 @@
+﻿
+
 <?php $__env->startSection('title', 'Hajj & Omra'); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -230,7 +232,7 @@
 <?php unset($__componentOriginal92e51077c3bdcbfa01c516c134fd0f33); ?>
 <?php endif; ?>
                             </td>
-                            <td><?php echo e($package->departure_city ?: '—'); ?></td>
+                            <td><?php echo e($package->departure_city ?: 'â€”'); ?></td>
                             <td>
                                 <?php if($package->price_from_value !== null): ?>
                                     <strong><?php echo e(number_format($package->price_from_value, 0, ',', ' ')); ?> <?php echo e($package->currency); ?></strong>
@@ -238,7 +240,7 @@
                                     <span class="text-muted">Sur demande</span>
                                 <?php endif; ?>
                             </td>
-                            <td><?php echo e($nextDeparture?->departure_date?->format('d/m/Y') ?? ($package->start_date?->format('d/m/Y') ?: '—')); ?></td>
+                            <td><?php echo e($nextDeparture?->departure_date?->format('d/m/Y') ?? ($package->start_date?->format('d/m/Y') ?: 'â€”')); ?></td>
                             <td>
                                 <?php if (isset($component)) { $__componentOriginal92e51077c3bdcbfa01c516c134fd0f33 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal92e51077c3bdcbfa01c516c134fd0f33 = $attributes; } ?>
@@ -318,4 +320,5 @@
     </section>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\hajj-omra\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\hajj-omra\index.blade.php ENDPATH**/ ?>

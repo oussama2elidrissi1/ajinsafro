@@ -1,10 +1,11 @@
-<?php $__env->startSection('title', 'Modifier la règle de commission'); ?>
+﻿
+<?php $__env->startSection('title', 'Modifier la rÃ¨gle de commission'); ?>
 
 <?php $__env->startSection('content'); ?>
     <div class="row mb-3">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">Modifier la règle de commission</h4>
+                <h4 class="page-title mb-0 font-size-18">Modifier la rÃ¨gle de commission</h4>
                 <a href="<?php echo e(route('admin.partner-commission-rules.index')); ?>" class="btn btn-outline-secondary btn-sm">Retour</a>
             </div>
         </div>
@@ -28,9 +29,9 @@
             <div class="card-body">
                 <div class="row g-2">
                     <div class="col-md-6">
-                        <label class="form-label">Partenaire (vide = règle globale)</label>
+                        <label class="form-label">Partenaire (vide = rÃ¨gle globale)</label>
                         <select name="partner_id" class="form-select">
-                            <option value="">— Tous les partenaires</option>
+                            <option value="">â€” Tous les partenaires</option>
                             <?php $__currentLoopData = $partners; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $p): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <option value="<?php echo e($p->id); ?>" <?php echo e(old('partner_id', $rule->partner_id) == $p->id ? 'selected' : ''); ?>><?php echo e($p->raison_sociale); ?></option>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -39,7 +40,7 @@
                     <div class="col-md-6">
                         <label class="form-label">Voyage (vide = tous les voyages)</label>
                         <select name="voyage_id" class="form-select">
-                            <option value="">— Tous les voyages</option>
+                            <option value="">â€” Tous les voyages</option>
                             <?php $__currentLoopData = $voyages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $v): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <option value="<?php echo e($v->id); ?>" <?php echo e(old('voyage_id', $rule->voyage_id) == $v->id ? 'selected' : ''); ?>><?php echo e($v->name); ?></option>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -71,7 +72,7 @@
                     <div class="col-md-4 d-flex align-items-end">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" name="is_active" value="1" id="is_active" <?php echo e(old('is_active', $rule->is_active) ? 'checked' : ''); ?>>
-                            <label class="form-check-label" for="is_active">Règle active</label>
+                            <label class="form-check-label" for="is_active">RÃ¨gle active</label>
                         </div>
                     </div>
                 </div>
@@ -82,4 +83,5 @@
     </form>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\partner-commission-rules\edit.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\partner-commission-rules\edit.blade.php ENDPATH**/ ?>

@@ -1,4 +1,4 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 
 @section('title', 'Comptes points de vente')
 
@@ -43,7 +43,7 @@
     <div class="aj-card-body">
         <form method="GET" action="{{ route('admin.agency-accounts.index') }}">
             <div class="aj-filter-grid">
-                <input type="text" name="search" class="aj-form-control" value="{{ $filters['search'] ?? '' }}" placeholder="Nom, email, téléphone">
+                <input type="text" name="search" class="aj-form-control" value="{{ $filters['search'] ?? '' }}" placeholder="Nom, email, tÃ©lÃ©phone">
                 <select name="branch_id" class="aj-select">
                     <option value="">Tous les points de vente</option>
                     @foreach($branches as $branch)
@@ -51,7 +51,7 @@
                     @endforeach
                 </select>
                 <select name="role_name" class="aj-select">
-                    <option value="">Tous les rôles</option>
+                    <option value="">Tous les rÃ´les</option>
                     @foreach($roles as $role)
                         <option value="{{ $role->name }}" @selected(($filters['role_name'] ?? '') === $role->name)>{{ $role->name }}</option>
                     @endforeach
@@ -67,14 +67,14 @@
                     <option value="0" @selected(($filters['can_login'] ?? '') === '0')>Non</option>
                 </select>
                 <select name="last_login" class="aj-select">
-                    <option value="">Dernière connexion</option>
-                    <option value="recent" @selected(($filters['last_login'] ?? '') === 'recent')>Déjà connecté</option>
+                    <option value="">DerniÃ¨re connexion</option>
+                    <option value="recent" @selected(($filters['last_login'] ?? '') === 'recent')>DÃ©jÃ  connectÃ©</option>
                     <option value="never" @selected(($filters['last_login'] ?? '') === 'never')>Jamais</option>
                 </select>
             </div>
             <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap;">
                 <button type="submit" class="aj-btn primary"><i class="bx bx-filter-alt"></i> Filtrer</button>
-                <a href="{{ route('admin.agency-accounts.index') }}" class="aj-btn"><i class="bx bx-reset"></i> Réinitialiser</a>
+                <a href="{{ route('admin.agency-accounts.index') }}" class="aj-btn"><i class="bx bx-reset"></i> RÃ©initialiser</a>
             </div>
         </form>
     </div>
@@ -84,7 +84,7 @@
     <div class="aj-card-head">
         <div>
             <strong style="font-size:16px;color:#172b4d;">Liste des comptes</strong>
-            <div class="aj-subtle">{{ $accounts->total() }} compte(s) trouvé(s)</div>
+            <div class="aj-subtle">{{ $accounts->total() }} compte(s) trouvÃ©(s)</div>
         </div>
     </div>
     <div class="aj-card-body" style="padding-top:14px;overflow-x:auto;">
@@ -93,11 +93,11 @@
                 <tr>
                     <th>Compte</th>
                             <th>Point de vente</th>
-                    <th>Employé</th>
-                    <th>Rôle</th>
+                    <th>EmployÃ©</th>
+                    <th>RÃ´le</th>
                     <th>Statut</th>
-                    <th>Dernière connexion</th>
-                    <th>Réservations</th>
+                    <th>DerniÃ¨re connexion</th>
+                    <th>RÃ©servations</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -113,9 +113,9 @@
                                 </div>
                             </div>
                         </td>
-                        <td>{{ $account->branch?->display_name ?? '—' }}</td>
-                        <td>{{ $account->agencyEmployee?->full_name ?? '—' }}</td>
-                        <td>{{ $account->roles->first()?->name ?? '—' }}</td>
+                        <td>{{ $account->branch?->display_name ?? 'â€”' }}</td>
+                        <td>{{ $account->agencyEmployee?->full_name ?? 'â€”' }}</td>
+                        <td>{{ $account->roles->first()?->name ?? 'â€”' }}</td>
                         <td>
                             @if($account->is_active)
                                 <span class="aj-badge ok">Actif</span>
@@ -136,14 +136,14 @@
                                     <a href="{{ route('admin.agency-accounts.show', $account) }}" class="aj-btn">Voir</a>
                                 @endif
                                 @if(Route::has('admin.agency-accounts.edit'))
-                                    <a href="{{ route('admin.agency-accounts.edit', $account) }}" class="aj-btn">Éditer</a>
+                                    <a href="{{ route('admin.agency-accounts.edit', $account) }}" class="aj-btn">Ã‰diter</a>
                                 @endif
                             </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" style="padding:28px;text-align:center;color:#71829a;font-weight:700;">Aucun compte point de vente trouvé.</td>
+                        <td colspan="8" style="padding:28px;text-align:center;color:#71829a;font-weight:700;">Aucun compte point de vente trouvÃ©.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -154,3 +154,4 @@
     </div>
 </div>
 @endsection
+

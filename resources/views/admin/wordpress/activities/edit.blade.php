@@ -1,10 +1,10 @@
-@extends('layouts.admin-v2')
-@section('title', 'Modifier une activité')
+﻿@extends('layouts.admin-v6')
+@section('title', 'Modifier une activitÃ©')
 @section('content')
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">Modifier une activité</h4>
+                <h4 class="page-title mb-0 font-size-18">Modifier une activitÃ©</h4>
                 <a href="{{ route('admin.wordpress.activities.index') }}" class="btn btn-secondary">Retour</a>
             </div>
         </div>
@@ -36,3 +36,4 @@
         </div>
     </form>
 @endsection
+

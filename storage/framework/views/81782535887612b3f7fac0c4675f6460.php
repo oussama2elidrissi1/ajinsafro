@@ -1,12 +1,14 @@
-<?php $__env->startSection('title', 'Formule Économique'); ?>
+﻿
+
+<?php $__env->startSection('title', 'Formule Ã‰conomique'); ?>
 
 <?php $__env->startSection('content'); ?>
     <?php if (isset($component)) { $__componentOriginalcb19cb35a534439097b02b8af91726ee = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalcb19cb35a534439097b02b8af91726ee = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => 'Formule Économique','subtitle' => 'Pilotez les offres petit budget Ajinsafro depuis un espace unique.','breadcrumbs' => [
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => 'Formule Ã‰conomique','subtitle' => 'Pilotez les offres petit budget Ajinsafro depuis un espace unique.','breadcrumbs' => [
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
             ['label' => 'Produits & Services'],
-            ['label' => 'Formule Économique'],
+            ['label' => 'Formule Ã‰conomique'],
         ]]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('admin.page-header'); ?>
 <?php if ($component->shouldRender()): ?>
@@ -14,10 +16,10 @@
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['title' => 'Formule Économique','subtitle' => 'Pilotez les offres petit budget Ajinsafro depuis un espace unique.','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
+<?php $component->withAttributes(['title' => 'Formule Ã‰conomique','subtitle' => 'Pilotez les offres petit budget Ajinsafro depuis un espace unique.','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
             ['label' => 'Produits & Services'],
-            ['label' => 'Formule Économique'],
+            ['label' => 'Formule Ã‰conomique'],
         ])]); ?>
          <?php $__env->slot('actions', null, []); ?> 
             <a href="<?php echo e(route('admin.economic-offers.requests.index')); ?>" class="aj-btn aj-btn-soft">
@@ -164,14 +166,14 @@
         <?php if($offers->isEmpty()): ?>
             <?php if (isset($component)) { $__componentOriginal99089f8e2ef4184d7d35db81d60c6521 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal99089f8e2ef4184d7d35db81d60c6521 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.empty-state','data' => ['title' => 'Aucune offre économique','message' => 'Créez une première offre puis ajoutez ses départs, tarifs et médias.','actionUrl' => route('admin.economic-offers.create'),'actionLabel' => 'Créer une offre']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.empty-state','data' => ['title' => 'Aucune offre Ã©conomique','message' => 'CrÃ©ez une premiÃ¨re offre puis ajoutez ses dÃ©parts, tarifs et mÃ©dias.','actionUrl' => route('admin.economic-offers.create'),'actionLabel' => 'CrÃ©er une offre']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('admin.empty-state'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['title' => 'Aucune offre économique','message' => 'Créez une première offre puis ajoutez ses départs, tarifs et médias.','action-url' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('admin.economic-offers.create')),'action-label' => 'Créer une offre']); ?>
+<?php $component->withAttributes(['title' => 'Aucune offre Ã©conomique','message' => 'CrÃ©ez une premiÃ¨re offre puis ajoutez ses dÃ©parts, tarifs et mÃ©dias.','action-url' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('admin.economic-offers.create')),'action-label' => 'CrÃ©er une offre']); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal99089f8e2ef4184d7d35db81d60c6521)): ?>
@@ -251,8 +253,8 @@
 <?php $component = $__componentOriginal92e51077c3bdcbfa01c516c134fd0f33; ?>
 <?php unset($__componentOriginal92e51077c3bdcbfa01c516c134fd0f33); ?>
 <?php endif; ?></td>
-                            <td><?php echo e($offer->destination ?: '—'); ?></td>
-                            <td><?php echo e($offer->departure_city ?: '—'); ?></td>
+                            <td><?php echo e($offer->destination ?: 'â€”'); ?></td>
+                            <td><?php echo e($offer->departure_city ?: 'â€”'); ?></td>
                             <td>
                                 <?php if($offer->price_from_value !== null): ?>
                                     <strong><?php echo e(number_format($offer->price_from_value, 0, ',', ' ')); ?> <?php echo e($offer->currency); ?></strong>
@@ -264,10 +266,10 @@
                                 <?php if($offer->old_price !== null): ?>
                                     <span style="text-decoration:line-through;color:#7a879a;"><?php echo e(number_format((float) $offer->old_price, 0, ',', ' ')); ?> <?php echo e($offer->currency); ?></span>
                                 <?php else: ?>
-                                    <span class="text-muted">—</span>
+                                    <span class="text-muted">â€”</span>
                                 <?php endif; ?>
                             </td>
-                            <td><?php echo e($nextDeparture?->departure_date?->format('d/m/Y') ?? ($offer->departure_date?->format('d/m/Y') ?: '—')); ?></td>
+                            <td><?php echo e($nextDeparture?->departure_date?->format('d/m/Y') ?? ($offer->departure_date?->format('d/m/Y') ?: 'â€”')); ?></td>
                             <td><?php echo e($offer->remaining_places); ?></td>
                             <td>
                                 <?php if (isset($component)) { $__componentOriginal92e51077c3bdcbfa01c516c134fd0f33 = $component; } ?>
@@ -349,4 +351,5 @@
     </section>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\economic-offers\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\economic-offers\index.blade.php ENDPATH**/ ?>

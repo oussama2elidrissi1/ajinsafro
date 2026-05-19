@@ -1,4 +1,5 @@
-<?php $__env->startSection('title', 'Hôtels'); ?>
+﻿
+<?php $__env->startSection('title', 'HÃ´tels'); ?>
 
 <?php $__env->startPush('styles'); ?>
 <style>
@@ -76,9 +77,9 @@
     <div class="row mb-3">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">Hôtels</h4>
+                <h4 class="page-title mb-0 font-size-18">HÃ´tels</h4>
                 <a href="<?php echo e(route('admin.hotels.create')); ?>" class="btn btn-primary">
-                    <i class="bx bx-plus me-1"></i> Nouvel hôtel
+                    <i class="bx bx-plus me-1"></i> Nouvel hÃ´tel
                 </a>
             </div>
         </div>
@@ -133,9 +134,9 @@
                         <h5 class="card-title"><?php echo e($hotel->name); ?></h5>
                         <div class="hotel-meta">
                             <?php if($hotel->city || $hotel->country): ?>
-                                <span><i class="bx bx-map-pin me-1"></i><?php echo e(trim(implode(', ', array_filter([$hotel->city, $hotel->country]))) ?: '—'); ?></span>
+                                <span><i class="bx bx-map-pin me-1"></i><?php echo e(trim(implode(', ', array_filter([$hotel->city, $hotel->country]))) ?: 'â€”'); ?></span>
                             <?php else: ?>
-                                <span>—</span>
+                                <span>â€”</span>
                             <?php endif; ?>
                         </div>
                         <div class="hotel-badges">
@@ -150,7 +151,7 @@
                             <a href="<?php echo e(route('admin.hotels.show', $hotel)); ?>" class="btn btn-sm btn-outline-primary">Voir</a>
                             <a href="<?php echo e(route('admin.hotels.edit', $hotel)); ?>" class="btn btn-sm btn-outline-secondary">Modifier</a>
                             <form action="<?php echo e(route('admin.hotels.destroy', $hotel)); ?>" method="post" class="d-inline"
-                                  onsubmit="return confirm('Supprimer cet hôtel ?');">
+                                  onsubmit="return confirm('Supprimer cet hÃ´tel ?');">
                                 <?php echo csrf_field(); ?>
                                 <?php echo method_field('DELETE'); ?>
                                 <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer</button>
@@ -164,7 +165,7 @@
                 <div class="card shadow-sm">
                     <div class="card-body text-center text-muted py-5">
                         <i class="bx bxs-hotel display-4 d-block mb-2"></i>
-                        Aucun hôtel.
+                        Aucun hÃ´tel.
                     </div>
                 </div>
             </div>
@@ -179,4 +180,5 @@
     <?php endif; ?>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\hotels\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\hotels\index.blade.php ENDPATH**/ ?>

@@ -1,4 +1,4 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 @section('title')
     Transferts des circuits
 @endsection
@@ -27,7 +27,7 @@
 
     @if (!empty($wpConnectionFailed))
         <div class="alert alert-warning alert-dismissible fade show" role="alert">
-            <strong>Connexion WordPress indisponible.</strong> Vérifiez la configuration de la base WP.
+            <strong>Connexion WordPress indisponible.</strong> VÃ©rifiez la configuration de la base WP.
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
@@ -37,10 +37,10 @@
             <div class="card">
                 <div class="card-body">
                     <p class="text-muted mb-3">
-                        Transfert aller (Jour 1) : Aéroport → Hôtel. Transfert retour (dernier jour) : Hôtel → Aéroport.
+                        Transfert aller (Jour 1) : AÃ©roport â†’ HÃ´tel. Transfert retour (dernier jour) : HÃ´tel â†’ AÃ©roport.
                     </p>
                     @if($tours->isEmpty())
-                        <p class="text-muted mb-0">Aucun tour. <a href="{{ route('admin.circuits.voyages.create') }}">Créer un tour</a> puis revenir ici pour définir les transferts.</p>
+                        <p class="text-muted mb-0">Aucun tour. <a href="{{ route('admin.circuits.voyages.create') }}">CrÃ©er un tour</a> puis revenir ici pour dÃ©finir les transferts.</p>
                     @else
                         <div class="table-responsive">
                             <table class="table table-hover table-centered mb-0">
@@ -63,20 +63,20 @@
                                             </td>
                                             <td>
                                                 @if($tr['arrival'] && ($tr['arrival']->from_label || $tr['arrival']->to_label))
-                                                    {{ $tr['arrival']->from_label ?? '—' }} → {{ $tr['arrival']->to_label ?? '—' }}
+                                                    {{ $tr['arrival']->from_label ?? 'â€”' }} â†’ {{ $tr['arrival']->to_label ?? 'â€”' }}
                                                 @else
-                                                    <span class="text-muted">—</span>
+                                                    <span class="text-muted">â€”</span>
                                                 @endif
                                             </td>
                                             <td>
                                                 @if($tr['departure'] && ($tr['departure']->from_label || $tr['departure']->to_label))
-                                                    {{ $tr['departure']->from_label ?? '—' }} → {{ $tr['departure']->to_label ?? '—' }}
+                                                    {{ $tr['departure']->from_label ?? 'â€”' }} â†’ {{ $tr['departure']->to_label ?? 'â€”' }}
                                                 @else
-                                                    <span class="text-muted">—</span>
+                                                    <span class="text-muted">â€”</span>
                                                 @endif
                                             </td>
                                             <td class="text-end">
-                                                <a href="{{ route('admin.circuits.voyages.edit', $tour->ID) }}?tab=flights" class="btn btn-sm btn-soft-primary waves-effect waves-light">Gérer (dans le voyage)</a>
+                                                <a href="{{ route('admin.circuits.voyages.edit', $tour->ID) }}?tab=flights" class="btn btn-sm btn-soft-primary waves-effect waves-light">GÃ©rer (dans le voyage)</a>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -92,3 +92,4 @@
         </div>
     </div>
 @endsection
+

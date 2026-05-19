@@ -1,3 +1,4 @@
+﻿
 <?php $__env->startSection('title'); ?>
     Dashboard AjinsAfro
 <?php $__env->stopSection(); ?>
@@ -30,7 +31,7 @@
                             <i class="bx bx-calendar-check font-size-22"></i>
                         </div>
                         <div>
-                            <p class="text-muted mb-0 small">Réservations</p>
+                            <p class="text-muted mb-0 small">RÃ©servations</p>
                             <h5 class="mb-0"><?php echo e($stats['reservations_total']); ?></h5>
                         </div>
                     </div>
@@ -78,7 +79,7 @@
                             <i class="bx bx-check-circle font-size-22"></i>
                         </div>
                         <div>
-                            <p class="text-muted mb-0 small">Validées</p>
+                            <p class="text-muted mb-0 small">ValidÃ©es</p>
                             <h5 class="mb-0"><?php echo e($stats['reservations_validees']); ?></h5>
                         </div>
                     </div>
@@ -96,7 +97,7 @@
                     <h6 class="mb-0">
                         <i class="bx bx-group me-2 text-primary"></i>Group Deals
                     </h6>
-                    <a href="<?php echo e(route('admin.group-deals.index')); ?>" class="btn btn-outline-primary btn-sm">Gérer</a>
+                    <a href="<?php echo e(route('admin.group-deals.index')); ?>" class="btn btn-outline-primary btn-sm">GÃ©rer</a>
                 </div>
                 <div class="card-body py-3">
                     <div class="row g-3 text-center">
@@ -122,7 +123,7 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <p class="text-muted mb-0">Tableau de bord selon votre rôle et votre agence. Consultez la <a href="<?php echo e(route('admin.dashboard.vue-globale')); ?>">Vue globale</a> pour les statistiques détaillées.</p>
+                    <p class="text-muted mb-0">Tableau de bord selon votre rÃ´le et votre agence. Consultez la <a href="<?php echo e(route('admin.dashboard.vue-globale')); ?>">Vue globale</a> pour les statistiques dÃ©taillÃ©es.</p>
                 </div>
             </div>
         </div>
@@ -132,4 +133,5 @@
     <script src="<?php echo e(URL::asset('build/js/app.js')); ?>"></script>
 <?php $__env->stopPush(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\dashboard\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\dashboard\index.blade.php ENDPATH**/ ?>

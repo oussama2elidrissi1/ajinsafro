@@ -1,6 +1,6 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 @section('title')
-    Modifier la compagnie aérienne
+    Modifier la compagnie aÃ©rienne
 @endsection
 @section('content')
     <div class="row">
@@ -11,7 +11,7 @@
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
                         <li class="breadcrumb-item"><a href="{{ route('admin.circuits.index') }}">Circuits</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.circuits.airlines.index') }}">Compagnies aériennes</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('admin.circuits.airlines.index') }}">Compagnies aÃ©riennes</a></li>
                         <li class="breadcrumb-item active">Modifier</li>
                     </ol>
                 </div>
@@ -69,3 +69,4 @@
         </div>
     </form>
 @endsection
+

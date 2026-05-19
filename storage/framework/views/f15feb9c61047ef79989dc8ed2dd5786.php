@@ -1,3 +1,5 @@
+﻿
+
 <?php $__env->startSection('title', 'Detail demande Hajj & Omra'); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -70,7 +72,7 @@
                     <div><strong>Adultes :</strong> <?php echo e($requestItem->adults); ?></div>
                     <div><strong>Enfants :</strong> <?php echo e($requestItem->children); ?></div>
                     <div><strong>Type chambre :</strong> <?php echo e($requestItem->room_type ?: 'Non precise'); ?></div>
-                    <div><strong>Date depart choisie :</strong> <?php echo e($requestItem->selected_departure_date?->format('d/m/Y') ?: '—'); ?></div>
+                    <div><strong>Date depart choisie :</strong> <?php echo e($requestItem->selected_departure_date?->format('d/m/Y') ?: 'â€”'); ?></div>
                     <div><strong>Message :</strong><br><?php echo nl2br(e($requestItem->message ?: 'Aucun message')); ?></div>
                 </div>
              <?php echo $__env->renderComponent(); ?>
@@ -143,4 +145,5 @@
     </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\hajj-omra\requests\show.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\hajj-omra\requests\show.blade.php ENDPATH**/ ?>

@@ -1,11 +1,13 @@
-<?php $__env->startSection('title', 'Modifier offre économique'); ?>
+﻿
+
+<?php $__env->startSection('title', 'Modifier offre Ã©conomique'); ?>
 
 <?php $__env->startSection('content'); ?>
     <?php if (isset($component)) { $__componentOriginalcb19cb35a534439097b02b8af91726ee = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalcb19cb35a534439097b02b8af91726ee = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => $offer->title,'subtitle' => 'Mettez à jour le contenu, les départs et les tarifs de cette offre.','breadcrumbs' => [
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => $offer->title,'subtitle' => 'Mettez Ã  jour le contenu, les dÃ©parts et les tarifs de cette offre.','breadcrumbs' => [
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Formule Économique', 'url' => route('admin.economic-offers.index')],
+            ['label' => 'Formule Ã‰conomique', 'url' => route('admin.economic-offers.index')],
             ['label' => 'Modification'],
         ]]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('admin.page-header'); ?>
@@ -14,9 +16,9 @@
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($offer->title),'subtitle' => 'Mettez à jour le contenu, les départs et les tarifs de cette offre.','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
+<?php $component->withAttributes(['title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($offer->title),'subtitle' => 'Mettez Ã  jour le contenu, les dÃ©parts et les tarifs de cette offre.','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Formule Économique', 'url' => route('admin.economic-offers.index')],
+            ['label' => 'Formule Ã‰conomique', 'url' => route('admin.economic-offers.index')],
             ['label' => 'Modification'],
         ])]); ?>
 <?php echo $__env->renderComponent(); ?>
@@ -59,10 +61,11 @@
             <a href="<?php echo e(route('admin.economic-offers.show', $offer)); ?>" class="aj-btn aj-btn-soft">Voir la fiche</a>
             <button type="submit" class="aj-btn aj-btn-primary">
                 <i class="bx bx-save"></i>
-                <span>Mettre à jour</span>
+                <span>Mettre Ã  jour</span>
             </button>
         </div>
     </form>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\economic-offers\edit.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\economic-offers\edit.blade.php ENDPATH**/ ?>

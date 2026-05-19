@@ -1,3 +1,5 @@
+﻿
+
 <?php $__env->startSection('title', $isEdit ? 'Modifier point de vente' : 'Creer point de vente'); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -6,7 +8,7 @@
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => $isEdit ? 'Modifier point de vente' : 'Creer un point de vente','subtitle' => 'Structure, coordonnees, commission, responsable et parametres metier du point de vente.','breadcrumbs' => [
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
             ['label' => 'Points de vente', 'url' => route('admin.agencies.index')],
-            ['label' => $isEdit ? 'Modifier' : 'Créer'],
+            ['label' => $isEdit ? 'Modifier' : 'CrÃ©er'],
         ]]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('admin.page-header'); ?>
 <?php if ($component->shouldRender()): ?>
@@ -17,7 +19,7 @@
 <?php $component->withAttributes(['title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($isEdit ? 'Modifier point de vente' : 'Creer un point de vente'),'subtitle' => 'Structure, coordonnees, commission, responsable et parametres metier du point de vente.','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
             ['label' => 'Points de vente', 'url' => route('admin.agencies.index')],
-            ['label' => $isEdit ? 'Modifier' : 'Créer'],
+            ['label' => $isEdit ? 'Modifier' : 'CrÃ©er'],
         ])]); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
@@ -72,7 +74,7 @@
                         <label class="form-label">Structure</label>
                         <select name="type" class="form-select">
                             <option value="<?php echo e(\App\Models\Branch::TYPE_BRANCH); ?>" <?php if(old('type', $agency->type) === \App\Models\Branch::TYPE_BRANCH): echo 'selected'; endif; ?>>Point de vente</option>
-                            <option value="<?php echo e(\App\Models\Branch::TYPE_HEAD_OFFICE); ?>" <?php if(old('type', $agency->type) === \App\Models\Branch::TYPE_HEAD_OFFICE): echo 'selected'; endif; ?>>Siège</option>
+                            <option value="<?php echo e(\App\Models\Branch::TYPE_HEAD_OFFICE); ?>" <?php if(old('type', $agency->type) === \App\Models\Branch::TYPE_HEAD_OFFICE): echo 'selected'; endif; ?>>SiÃ¨ge</option>
                         </select>
                     </div>
                     <div class="col-md-4">
@@ -97,7 +99,7 @@
                             <option value="">Aucun</option>
                             <?php $__currentLoopData = $managerOptions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $manager): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <option value="<?php echo e($manager->id); ?>" <?php if((int) old('manager_user_id', $agency->manager_user_id) === (int) $manager->id): echo 'selected'; endif; ?>>
-                                    <?php echo e($manager->name); ?><?php echo e($manager->email ? ' · ' . $manager->email : ''); ?>
+                                    <?php echo e($manager->name); ?><?php echo e($manager->email ? ' Â· ' . $manager->email : ''); ?>
 
                                 </option>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -120,7 +122,7 @@
                         <input type="text" name="address" class="form-control" value="<?php echo e(old('address', $agency->address)); ?>">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Téléphone</label>
+                        <label class="form-label">TÃ©lÃ©phone</label>
                         <input type="text" name="phone" class="form-control" value="<?php echo e(old('phone', $agency->phone)); ?>">
                     </div>
                     <div class="col-md-4">
@@ -193,4 +195,5 @@
     </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\agencies\form.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\agencies\form.blade.php ENDPATH**/ ?>

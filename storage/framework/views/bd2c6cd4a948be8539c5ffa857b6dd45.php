@@ -1,4 +1,5 @@
-<?php $__env->startSection('title', 'Détail hôtel'); ?>
+﻿
+<?php $__env->startSection('title', 'DÃ©tail hÃ´tel'); ?>
 
 <?php $__env->startSection('content'); ?>
     <div class="row mb-3">
@@ -18,7 +19,7 @@
             
             <div class="card shadow-sm mb-3">
                 <div class="card-header bg-light d-flex align-items-center">
-                    <h5 class="mb-0">Informations générales</h5>
+                    <h5 class="mb-0">Informations gÃ©nÃ©rales</h5>
                     <span class="badge bg-<?php echo e($hotel->is_active ? 'success' : 'secondary'); ?> ms-auto">
                         <?php echo e($hotel->is_active ? 'Actif' : 'Inactif'); ?>
 
@@ -37,10 +38,10 @@
                                     <?php if($hotel->address): ?>
                                         <tr><td class="text-nowrap pe-2 fw-medium text-dark">Adresse</td><td><?php echo e($hotel->address); ?></td></tr>
                                     <?php endif; ?>
-                                    <tr><td class="text-nowrap pe-2 fw-medium text-dark">Ville</td><td><?php echo e($hotel->city ?? '—'); ?></td></tr>
-                                    <tr><td class="text-nowrap pe-2 fw-medium text-dark">Pays</td><td><?php echo e($hotel->country ?? '—'); ?></td></tr>
+                                    <tr><td class="text-nowrap pe-2 fw-medium text-dark">Ville</td><td><?php echo e($hotel->city ?? 'â€”'); ?></td></tr>
+                                    <tr><td class="text-nowrap pe-2 fw-medium text-dark">Pays</td><td><?php echo e($hotel->country ?? 'â€”'); ?></td></tr>
                                     <?php if($hotel->latitude && $hotel->longitude): ?>
-                                        <tr><td class="text-nowrap pe-2 fw-medium text-dark">Coordonnées</td><td><?php echo e($hotel->latitude); ?>, <?php echo e($hotel->longitude); ?></td></tr>
+                                        <tr><td class="text-nowrap pe-2 fw-medium text-dark">CoordonnÃ©es</td><td><?php echo e($hotel->latitude); ?>, <?php echo e($hotel->longitude); ?></td></tr>
                                     <?php endif; ?>
                                     <tr><td class="text-nowrap pe-2 fw-medium text-dark">Note</td><td>
                                         <?php if($hotel->rating_average > 0): ?>
@@ -84,7 +85,7 @@
             <?php if($hotel->amenities->isNotEmpty()): ?>
                 <div class="card shadow-sm mb-3">
                     <div class="card-header bg-light">
-                        <h5 class="mb-0">Équipements</h5>
+                        <h5 class="mb-0">Ã‰quipements</h5>
                     </div>
                     <div class="card-body">
                         <?php $__currentLoopData = $hotel->amenities; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $amenity): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -127,7 +128,7 @@
             <div class="col-12">
                 <div class="card shadow-sm">
                     <div class="card-header bg-light">
-                        <h5 class="mb-0">Types de chambres – détail</h5>
+                        <h5 class="mb-0">Types de chambres â€“ dÃ©tail</h5>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -136,8 +137,8 @@
                                     <tr>
                                         <th>Type</th>
                                         <th>Code</th>
-                                        <th>Capacité</th>
-                                        <th>Quantité</th>
+                                        <th>CapacitÃ©</th>
+                                        <th>QuantitÃ©</th>
                                         <th>Prix</th>
                                         <th>Description</th>
                                         <th>Options chambre</th>
@@ -147,7 +148,7 @@
                                     <?php $__currentLoopData = $hotel->roomTypes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $rt): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <tr>
                                             <td><strong><?php echo e($rt->name); ?></strong></td>
-                                            <td><code class="small"><?php echo e($rt->code ?? '—'); ?></code></td>
+                                            <td><code class="small"><?php echo e($rt->code ?? 'â€”'); ?></code></td>
                                             <td><?php echo e($rt->capacity_adults); ?> adulte(s) / <?php echo e($rt->capacity_children); ?> enfant(s)</td>
                                             <td><?php echo e($rt->quantity); ?></td>
                                             <td>
@@ -155,11 +156,11 @@
                                                     <?php echo e(number_format((float) $rt->base_price, 0, ',', ' ')); ?> <?php echo e($rt->currency ?? 'MAD'); ?>
 
                                                 <?php else: ?>
-                                                    <span class="text-muted">—</span>
+                                                    <span class="text-muted">â€”</span>
                                                 <?php endif; ?>
                                             </td>
                                             <td class="small text-muted" style="max-width:200px;">
-                                                <?php echo e($rt->description ? \Str::limit($rt->description, 60) : '—'); ?>
+                                                <?php echo e($rt->description ? \Str::limit($rt->description, 60) : 'â€”'); ?>
 
                                             </td>
                                             <td class="small">
@@ -168,7 +169,7 @@
                                                         <span class="badge bg-light text-dark border me-1"><?php echo e(is_array($opt) ? ($opt['label'] ?? $opt['name'] ?? json_encode($opt)) : $opt); ?></span>
                                                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                 <?php else: ?>
-                                                    <span class="text-muted">—</span>
+                                                    <span class="text-muted">â€”</span>
                                                 <?php endif; ?>
                                             </td>
                                         </tr>
@@ -183,4 +184,5 @@
     <?php endif; ?>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\hotels\show.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\hotels\show.blade.php ENDPATH**/ ?>

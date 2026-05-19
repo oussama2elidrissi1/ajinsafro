@@ -1,16 +1,17 @@
+﻿
 <?php $__env->startSection('title'); ?>
-    Offres activités
+    Offres activitÃ©s
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('content'); ?>
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">Offres activités</h4>
+                <h4 class="page-title mb-0 font-size-18">Offres activitÃ©s</h4>
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="<?php echo e(route('admin.dashboard')); ?>">Admin</a></li>
-                        <li class="breadcrumb-item active">Offres activités</li>
+                        <li class="breadcrumb-item active">Offres activitÃ©s</li>
                     </ol>
                 </div>
             </div>
@@ -50,8 +51,8 @@
                                     <th>Titre</th>
                                     <th>Pays</th>
                                     <th>Ville</th>
-                                    <th>Catégorie</th>
-                                    <th>Durée</th>
+                                    <th>CatÃ©gorie</th>
+                                    <th>DurÃ©e</th>
                                     <th>Prix</th>
                                     <th>Dispo</th>
                                     <th>Vedette</th>
@@ -97,7 +98,7 @@
                                     </tr>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                     <tr>
-                                        <td colspan="12" class="text-center text-muted">Aucune offre activité.</td>
+                                        <td colspan="12" class="text-center text-muted">Aucune offre activitÃ©.</td>
                                     </tr>
                                 <?php endif; ?>
                             </tbody>
@@ -116,4 +117,5 @@
     </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\activity-offers\index.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\activity-offers\index.blade.php ENDPATH**/ ?>

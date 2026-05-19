@@ -1,5 +1,6 @@
+﻿
 <?php $__env->startSection('title'); ?>
-    <?php echo e($isEdit ? 'Modifier utilisateur' : 'Créer utilisateur'); ?>
+    <?php echo e($isEdit ? 'Modifier utilisateur' : 'CrÃ©er utilisateur'); ?>
 
 <?php $__env->stopSection(); ?>
 
@@ -7,12 +8,12 @@
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18"><?php echo e($isEdit ? 'Modifier utilisateur' : 'Créer utilisateur'); ?></h4>
+                <h4 class="page-title mb-0 font-size-18"><?php echo e($isEdit ? 'Modifier utilisateur' : 'CrÃ©er utilisateur'); ?></h4>
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="<?php echo e(route('admin.dashboard')); ?>">Admin</a></li>
                         <li class="breadcrumb-item"><a href="<?php echo e(route('admin.settings.utilisateurs')); ?>">Utilisateurs</a></li>
-                        <li class="breadcrumb-item active"><?php echo e($isEdit ? 'Modifier' : 'Créer'); ?></li>
+                        <li class="breadcrumb-item active"><?php echo e($isEdit ? 'Modifier' : 'CrÃ©er'); ?></li>
                     </ol>
                 </div>
             </div>
@@ -34,10 +35,10 @@
                                 <a class="nav-link active" data-bs-toggle="tab" href="#tab-infos" role="tab">Infos</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" data-bs-toggle="tab" href="#tab-role" role="tab">Rôle</a>
+                                <a class="nav-link" data-bs-toggle="tab" href="#tab-role" role="tab">RÃ´le</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" data-bs-toggle="tab" href="#tab-access" role="tab">Accès</a>
+                                <a class="nav-link" data-bs-toggle="tab" href="#tab-access" role="tab">AccÃ¨s</a>
                             </li>
                         </ul>
 
@@ -83,7 +84,7 @@ endif;
 unset($__errorArgs, $__bag); ?>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label">Téléphone</label>
+                                        <label class="form-label">TÃ©lÃ©phone</label>
                                         <input type="text" name="phone" class="form-control <?php $__errorArgs = ['phone'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -130,7 +131,7 @@ $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>">
-                                            <option value="">– Aucune –</option>
+                                            <option value="">â€“ Aucune â€“</option>
                                             <?php $__currentLoopData = $branches ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $b): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                 <option value="<?php echo e($b->id); ?>" <?php echo e(old('branch_id', $userModel->branch_id) == $b->id ? 'selected' : ''); ?>><?php echo e($b->name); ?> (<?php echo e($b->code); ?>)</option>
                                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -154,7 +155,7 @@ $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>">
-                                            <option value="">– Aucun –</option>
+                                            <option value="">â€“ Aucun â€“</option>
                                             <?php $__currentLoopData = $managers ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $m): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                 <?php if($isEdit && $m->id == $userModel->id): ?> <?php continue; ?> <?php endif; ?>
                                                 <option value="<?php echo e($m->id); ?>" <?php echo e(old('manager_id', $userModel->manager_id) == $m->id ? 'selected' : ''); ?>><?php echo e($m->name); ?> (<?php echo e($m->email); ?>)</option>
@@ -198,13 +199,13 @@ $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>">
-                                            <option value="">–</option>
+                                            <option value="">â€“</option>
                                             <option value="agent" <?php echo e(old('user_type', $userModel->user_type) === 'agent' ? 'selected' : ''); ?>>Agent</option>
                                             <option value="commercial" <?php echo e(old('user_type', $userModel->user_type) === 'commercial' ? 'selected' : ''); ?>>Commercial</option>
                                             <option value="chef_commercial" <?php echo e(old('user_type', $userModel->user_type) === 'chef_commercial' ? 'selected' : ''); ?>>Chef Commercial</option>
                                             <option value="branch_admin" <?php echo e(old('user_type', $userModel->user_type) === 'branch_admin' ? 'selected' : ''); ?>>Admin Agence</option>
                                             <option value="comptable" <?php echo e(old('user_type', $userModel->user_type) === 'comptable' ? 'selected' : ''); ?>>Comptable</option>
-                                            <option value="siege_admin" <?php echo e(old('user_type', $userModel->user_type) === 'siege_admin' ? 'selected' : ''); ?>>Admin Siège</option>
+                                            <option value="siege_admin" <?php echo e(old('user_type', $userModel->user_type) === 'siege_admin' ? 'selected' : ''); ?>>Admin SiÃ¨ge</option>
                                             <option value="super_admin" <?php echo e(old('user_type', $userModel->user_type) === 'super_admin' ? 'selected' : ''); ?>>Super Admin</option>
                                         </select>
                                         <?php $__errorArgs = ['user_type'];
@@ -256,7 +257,7 @@ unset($__errorArgs, $__bag); ?>
 
                             <div class="tab-pane" id="tab-role" role="tabpanel">
                                 <div class="mb-3">
-                                    <label class="form-label">Mode d'accès</label>
+                                    <label class="form-label">Mode d'accÃ¨s</label>
                                     <select name="access_mode" id="access_mode" class="form-select <?php $__errorArgs = ['access_mode'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -266,8 +267,8 @@ if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>">
                                         <?php $oldMode = old('access_mode', $userModel->access_mode ?: 'role'); ?>
-                                        <option value="role" <?php echo e($oldMode === 'role' ? 'selected' : ''); ?>>Hériter d'un rôle</option>
-                                        <option value="custom" <?php echo e($oldMode === 'custom' ? 'selected' : ''); ?>>Permissions personnalisées</option>
+                                        <option value="role" <?php echo e($oldMode === 'role' ? 'selected' : ''); ?>>HÃ©riter d'un rÃ´le</option>
+                                        <option value="custom" <?php echo e($oldMode === 'custom' ? 'selected' : ''); ?>>Permissions personnalisÃ©es</option>
                                     </select>
                                     <?php $__errorArgs = ['access_mode'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
@@ -280,7 +281,7 @@ unset($__errorArgs, $__bag); ?>
                                 </div>
 
                                 <div id="role-wrapper" class="mb-3">
-                                    <label class="form-label">Rôle</label>
+                                    <label class="form-label">RÃ´le</label>
                                     <select name="role_name" class="form-select <?php $__errorArgs = ['role_name'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -307,15 +308,15 @@ unset($__errorArgs, $__bag); ?>
 
                             <div class="tab-pane" id="tab-access" role="tabpanel">
                                 <div class="alert alert-info py-2 small mb-3" id="permissions-mode-alert">
-                                    En mode <strong>Hériter d'un rôle</strong>, les permissions suivent uniquement le rôle sélectionné.
-                                    Passez en <strong>Permissions personnalisées</strong> pour définir une sélection manuelle.
+                                    En mode <strong>HÃ©riter d'un rÃ´le</strong>, les permissions suivent uniquement le rÃ´le sÃ©lectionnÃ©.
+                                    Passez en <strong>Permissions personnalisÃ©es</strong> pour dÃ©finir une sÃ©lection manuelle.
                                 </div>
 
                                 <div class="d-flex gap-2 mb-3">
                                     <button type="button" class="btn btn-sm btn-outline-primary" id="check-all">Tout cocher</button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="uncheck-all">Tout décocher</button>
-                                    <button type="button" class="btn btn-sm btn-outline-info" id="apply-role-defaults">Réinitialiser selon rôle</button>
-                                    <span class="badge bg-soft-primary text-primary align-self-center" id="permissions-count">0 sélectionnée(s)</span>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="uncheck-all">Tout dÃ©cocher</button>
+                                    <button type="button" class="btn btn-sm btn-outline-info" id="apply-role-defaults">RÃ©initialiser selon rÃ´le</button>
+                                    <span class="badge bg-soft-primary text-primary align-self-center" id="permissions-count">0 sÃ©lectionnÃ©e(s)</span>
                                 </div>
 
                                 <?php $__errorArgs = ['permissions'];
@@ -349,7 +350,7 @@ unset($__errorArgs, $__bag); ?>
                                             <h6 class="mb-0"><?php echo e($group['label']); ?></h6>
                                             <div class="d-flex gap-1">
                                                 <button type="button" class="btn btn-sm btn-light check-section" data-group="<?php echo e($group['key']); ?>">Cocher section</button>
-                                                <button type="button" class="btn btn-sm btn-light uncheck-section" data-group="<?php echo e($group['key']); ?>">Décocher section</button>
+                                                <button type="button" class="btn btn-sm btn-light uncheck-section" data-group="<?php echo e($group['key']); ?>">DÃ©cocher section</button>
                                             </div>
                                         </div>
                                         <div class="row">
@@ -377,7 +378,7 @@ unset($__errorArgs, $__bag); ?>
                         </div>
 
                         <div class="mt-3 d-flex gap-2">
-                            <button type="submit" class="btn btn-primary"><?php echo e($isEdit ? 'Mettre à jour' : 'Créer'); ?></button>
+                            <button type="submit" class="btn btn-primary"><?php echo e($isEdit ? 'Mettre Ã  jour' : 'CrÃ©er'); ?></button>
                             <a href="<?php echo e(route('admin.settings.utilisateurs')); ?>" class="btn btn-light">Annuler</a>
                         </div>
                     </form>
@@ -423,8 +424,8 @@ unset($__errorArgs, $__bag); ?>
                     modeAlert.classList.toggle('alert-info', isRoleMode);
                     modeAlert.classList.toggle('alert-success', !isRoleMode);
                     modeAlert.innerHTML = isRoleMode
-                        ? 'En mode <strong>Héritage rôle</strong>, les permissions ci-dessous sont en lecture seule et suivent le rôle sélectionné.'
-                        : 'En mode <strong>Permissions personnalisées</strong>, les cases cochées sont exactement celles enregistrées pour cet utilisateur.';
+                        ? 'En mode <strong>HÃ©ritage rÃ´le</strong>, les permissions ci-dessous sont en lecture seule et suivent le rÃ´le sÃ©lectionnÃ©.'
+                        : 'En mode <strong>Permissions personnalisÃ©es</strong>, les cases cochÃ©es sont exactement celles enregistrÃ©es pour cet utilisateur.';
                 }
 
                 const disabled = isRoleMode;
@@ -447,7 +448,7 @@ unset($__errorArgs, $__bag); ?>
             function updateSelectedCount() {
                 if (!selectedCountEl) return;
                 const count = checkboxes.filter((checkbox) => checkbox.checked).length;
-                selectedCountEl.textContent = count + ' sélectionnée(s)';
+                selectedCountEl.textContent = count + ' sÃ©lectionnÃ©e(s)';
             }
 
             function setPermissionState(permissionName, state) {
@@ -535,4 +536,5 @@ unset($__errorArgs, $__bag); ?>
     </script>
 <?php $__env->stopPush(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\settings\utilisateurs\form.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\settings\utilisateurs\form.blade.php ENDPATH**/ ?>

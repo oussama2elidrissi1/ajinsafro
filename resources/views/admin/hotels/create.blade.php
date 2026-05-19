@@ -1,11 +1,11 @@
-@extends('layouts.admin-v2')
-@section('title', 'Nouvel hôtel')
+﻿@extends('layouts.admin-v6')
+@section('title', 'Nouvel hÃ´tel')
 
 @section('content')
     <div class="row mb-3">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">Nouvel hôtel</h4>
+                <h4 class="page-title mb-0 font-size-18">Nouvel hÃ´tel</h4>
                 <a href="{{ route('admin.hotels.index') }}" class="btn btn-outline-secondary btn-sm">Retour</a>
             </div>
         </div>
@@ -31,4 +31,5 @@
         </div>
     </form>
 @endsection
+
 

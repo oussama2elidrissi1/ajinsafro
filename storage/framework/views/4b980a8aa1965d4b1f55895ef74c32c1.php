@@ -1,5 +1,6 @@
+﻿
 <?php $__env->startSection('title'); ?>
-    Créer un tour WordPress
+    CrÃ©er un tour WordPress
 <?php $__env->stopSection(); ?>
 <?php $__env->startPush('styles'); ?>
     <link href="<?php echo e(URL::asset('css/voyage-edit.css?v=' . md5_file(public_path('css/voyage-edit.css')))); ?>" rel="stylesheet" type="text/css" />
@@ -51,22 +52,22 @@
                         
                         <div class="mb-3">
                             <label for="title" class="form-label">Titre du tour <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="title" name="title" value="<?php echo e(old('title')); ?>" required placeholder="Ex : Séjour Dubaï 7 jours (6 nuits)">
+                            <input type="text" class="form-control" id="title" name="title" value="<?php echo e(old('title')); ?>" required placeholder="Ex : SÃ©jour DubaÃ¯ 7 jours (6 nuits)">
                         </div>
 
                         <div class="mb-3">
                             <label for="slug" class="form-label">Slug (URL)</label>
-                            <input type="text" class="form-control" id="slug" name="slug" value="<?php echo e(old('slug')); ?>" placeholder="laissez vide pour générer automatiquement">
+                            <input type="text" class="form-control" id="slug" name="slug" value="<?php echo e(old('slug')); ?>" placeholder="laissez vide pour gÃ©nÃ©rer automatiquement">
                         </div>
 
                         <div class="mb-3">
-                            <label for="content" class="form-label">Description complète</label>
-                            <textarea class="form-control" id="content" name="content" rows="10" placeholder="Description détaillée du tour"><?php echo e(old('content')); ?></textarea>
+                            <label for="content" class="form-label">Description complÃ¨te</label>
+                            <textarea class="form-control" id="content" name="content" rows="10" placeholder="Description dÃ©taillÃ©e du tour"><?php echo e(old('content')); ?></textarea>
                         </div>
 
                         <div class="mb-3">
                             <label for="excerpt" class="form-label">Extrait / Accroche</label>
-                            <textarea class="form-control" id="excerpt" name="excerpt" rows="3" placeholder="Texte court pour l'aperçu"><?php echo e(old('excerpt')); ?></textarea>
+                            <textarea class="form-control" id="excerpt" name="excerpt" rows="3" placeholder="Texte court pour l'aperÃ§u"><?php echo e(old('excerpt')); ?></textarea>
                         </div>
                     </div>
                 </div>
@@ -74,7 +75,7 @@
         <?php
             $airlines = $airlines ?? collect();
             $hasSecondFlightCreate = old('flights.1.airline_id') || old('flights.1.cabin_class');
-            $flightDash = '—';
+            $flightDash = 'â€”';
         ?>
                 <div id="create-flights-content" class="create-flights-crud">
                 <style>
@@ -103,14 +104,14 @@
                     <div class="flight-card-view" id="create-flight-0-card-view">
                         <div class="flight-card-admin" style="min-width: 320px;">
                             <div class="flight-card-header">
-                                <span class="flight-card-title">✈ FLIGHT • <span id="create-flight-0-dep-label"><?php echo e(old('flights.0.depart_airport') ?: old('flights.0.depart_city') ?: $flightDash); ?></span> to <span id="create-flight-0-arr-label"><?php echo e(old('flights.0.arrive_airport') ?: old('flights.0.arrive_city') ?: $flightDash); ?></span></span>
+                                <span class="flight-card-title">âœˆ FLIGHT â€¢ <span id="create-flight-0-dep-label"><?php echo e(old('flights.0.depart_airport') ?: old('flights.0.depart_city') ?: $flightDash); ?></span> to <span id="create-flight-0-arr-label"><?php echo e(old('flights.0.arrive_airport') ?: old('flights.0.arrive_city') ?: $flightDash); ?></span></span>
                                 <button type="button" class="flight-remove-btn create-flight-reset-btn" data-index="0">REMOVE</button>
                             </div>
                             <div class="flight-card-body">
                                 <div class="flight-card-col"><div class="flight-icon-circle"><i class="bx bx-trip"></i></div></div>
                                 <div class="flight-card-col flight-card-center">
                                     <div class="flight-dep"><div class="flight-date" id="create-flight-0-dep-date"><?php echo e($flightDash); ?></div><div class="flight-place" id="create-flight-0-dep-place"><?php echo e(old('flights.0.depart_airport') ?: old('flights.0.depart_city') ?: $flightDash); ?></div></div>
-                                    <div class="flight-arrow">→</div>
+                                    <div class="flight-arrow">â†’</div>
                                     <div class="flight-arr"><div class="flight-date" id="create-flight-0-arr-date"><?php echo e($flightDash); ?></div><div class="flight-place" id="create-flight-0-arr-place"><?php echo e(old('flights.0.arrive_airport') ?: old('flights.0.arrive_city') ?: $flightDash); ?></div></div>
                                 </div>
                                 <div class="flight-card-col flight-card-baggage">
@@ -126,8 +127,8 @@
                     </div>
                     <div class="flight-card-edit" id="create-flight-0-edit" style="display:none;">
                         <div class="row g-3">
-                            <div class="col-md-6"><label class="form-label">Compagnie aérienne</label>
-                                <select class="form-select" name="flights[0][airline_id]"><option value="">— Choisir —</option>
+                            <div class="col-md-6"><label class="form-label">Compagnie aÃ©rienne</label>
+                                <select class="form-select" name="flights[0][airline_id]"><option value="">â€” Choisir â€”</option>
                                     <?php $__currentLoopData = $airlines; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $airline): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <option value="<?php echo e($airline->id); ?>" <?php echo e(old('flights.0.airline_id') == $airline->id ? 'selected' : ''); ?>><?php echo e($airline->name); ?> <?php if($airline->code_iata): ?>(<?php echo e($airline->code_iata); ?>)<?php endif; ?></option>
                                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -138,13 +139,13 @@
                                         <option value="<?php echo e($value); ?>" <?php echo e(old('flights.0.cabin_class', 'economy') == $value ? 'selected' : ''); ?>><?php echo e($label); ?></option>
                                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </select></div>
-                            <div class="col-md-4"><label class="form-label">Numéro de vol</label><input type="text" class="form-control" name="flights[0][flight_number]" value="<?php echo e(old('flights.0.flight_number')); ?>" placeholder="ex. AF1234"></div>
-                            <div class="col-md-4"><label class="form-label">Ville départ</label><input type="text" class="form-control" name="flights[0][depart_city]" value="<?php echo e(old('flights.0.depart_city')); ?>" placeholder="ex. Casablanca"></div>
-                            <div class="col-md-4"><label class="form-label">Aéroport départ</label><input type="text" class="form-control" name="flights[0][depart_airport]" value="<?php echo e(old('flights.0.depart_airport')); ?>" placeholder="ex. CMN"></div>
-                            <div class="col-md-4"><label class="form-label">Ville arrivée</label><input type="text" class="form-control" name="flights[0][arrive_city]" value="<?php echo e(old('flights.0.arrive_city')); ?>" placeholder="ex. Paris"></div>
-                            <div class="col-md-4"><label class="form-label">Aéroport arrivée</label><input type="text" class="form-control" name="flights[0][arrive_airport]" value="<?php echo e(old('flights.0.arrive_airport')); ?>" placeholder="ex. CDG"></div>
-                            <div class="col-md-6"><label class="form-label">Date départ</label><input type="date" class="form-control" name="flights[0][depart_date]" value="<?php echo e(old('flights.0.depart_date')); ?>"></div>
-                            <div class="col-md-6"><label class="form-label">Date arrivée</label><input type="date" class="form-control" name="flights[0][arrive_date]" value="<?php echo e(old('flights.0.arrive_date')); ?>"></div>
+                            <div class="col-md-4"><label class="form-label">NumÃ©ro de vol</label><input type="text" class="form-control" name="flights[0][flight_number]" value="<?php echo e(old('flights.0.flight_number')); ?>" placeholder="ex. AF1234"></div>
+                            <div class="col-md-4"><label class="form-label">Ville dÃ©part</label><input type="text" class="form-control" name="flights[0][depart_city]" value="<?php echo e(old('flights.0.depart_city')); ?>" placeholder="ex. Casablanca"></div>
+                            <div class="col-md-4"><label class="form-label">AÃ©roport dÃ©part</label><input type="text" class="form-control" name="flights[0][depart_airport]" value="<?php echo e(old('flights.0.depart_airport')); ?>" placeholder="ex. CMN"></div>
+                            <div class="col-md-4"><label class="form-label">Ville arrivÃ©e</label><input type="text" class="form-control" name="flights[0][arrive_city]" value="<?php echo e(old('flights.0.arrive_city')); ?>" placeholder="ex. Paris"></div>
+                            <div class="col-md-4"><label class="form-label">AÃ©roport arrivÃ©e</label><input type="text" class="form-control" name="flights[0][arrive_airport]" value="<?php echo e(old('flights.0.arrive_airport')); ?>" placeholder="ex. CDG"></div>
+                            <div class="col-md-6"><label class="form-label">Date dÃ©part</label><input type="date" class="form-control" name="flights[0][depart_date]" value="<?php echo e(old('flights.0.depart_date')); ?>"></div>
+                            <div class="col-md-6"><label class="form-label">Date arrivÃ©e</label><input type="date" class="form-control" name="flights[0][arrive_date]" value="<?php echo e(old('flights.0.arrive_date')); ?>"></div>
                             <div class="col-md-4"><label class="form-label">Cabin (ex. 7 KGS)</label><input type="text" class="form-control" name="flights[0][cabin_baggage]" value="<?php echo e(old('flights.0.cabin_baggage')); ?>"></div>
                             <div class="col-md-4"><label class="form-label">Check-in (ex. 20 KGS)</label><input type="text" class="form-control" name="flights[0][checkin_baggage]" value="<?php echo e(old('flights.0.checkin_baggage')); ?>"></div>
                             <div class="col-md-4"><label class="form-label">&nbsp;</label><div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="flights[0][is_tentative]" value="1" <?php echo e(old('flights.0.is_tentative') ? 'checked' : ''); ?>><label class="form-check-label">Vol tentative</label></div></div>
@@ -159,14 +160,14 @@
                     <div class="flight-card-view" id="create-flight-1-card-view">
                         <div class="flight-card-admin" style="min-width: 320px;">
                             <div class="flight-card-header">
-                                <span class="flight-card-title">✈ FLIGHT • <span id="create-flight-1-dep-label"><?php echo e(old('flights.1.departure_airport') ?: $flightDash); ?></span> to <span id="create-flight-1-arr-label"><?php echo e(old('flights.1.arrival_airport') ?: $flightDash); ?></span></span>
+                                <span class="flight-card-title">âœˆ FLIGHT â€¢ <span id="create-flight-1-dep-label"><?php echo e(old('flights.1.departure_airport') ?: $flightDash); ?></span> to <span id="create-flight-1-arr-label"><?php echo e(old('flights.1.arrival_airport') ?: $flightDash); ?></span></span>
                                 <button type="button" class="flight-remove-btn create-flight-remove-vol2-btn">REMOVE</button>
                             </div>
                             <div class="flight-card-body">
                                 <div class="flight-card-col"><div class="flight-icon-circle"><i class="bx bx-trip"></i></div></div>
                                 <div class="flight-card-col flight-card-center">
                                     <div class="flight-dep"><div class="flight-date" id="create-flight-1-dep-date"><?php echo e($flightDash); ?></div><div class="flight-place" id="create-flight-1-dep-place"><?php echo e(old('flights.1.depart_airport') ?: old('flights.1.depart_city') ?: $flightDash); ?></div></div>
-                                    <div class="flight-arrow">→</div>
+                                    <div class="flight-arrow">â†’</div>
                                     <div class="flight-arr"><div class="flight-date" id="create-flight-1-arr-date"><?php echo e($flightDash); ?></div><div class="flight-place" id="create-flight-1-arr-place"><?php echo e(old('flights.1.arrive_airport') ?: old('flights.1.arrive_city') ?: $flightDash); ?></div></div>
                                 </div>
                                 <div class="flight-card-col flight-card-baggage">
@@ -182,8 +183,8 @@
                     </div>
                     <div class="flight-card-edit" id="create-flight-1-edit" style="display:none;">
                         <div class="row g-3">
-                            <div class="col-md-6"><label class="form-label">Compagnie aérienne</label>
-                                <select class="form-select" name="flights[1][airline_id]"><option value="">— Choisir —</option>
+                            <div class="col-md-6"><label class="form-label">Compagnie aÃ©rienne</label>
+                                <select class="form-select" name="flights[1][airline_id]"><option value="">â€” Choisir â€”</option>
                                     <?php $__currentLoopData = $airlines; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $airline): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <option value="<?php echo e($airline->id); ?>" <?php echo e(old('flights.1.airline_id') == $airline->id ? 'selected' : ''); ?>><?php echo e($airline->name); ?> <?php if($airline->code_iata): ?>(<?php echo e($airline->code_iata); ?>)<?php endif; ?></option>
                                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -194,18 +195,18 @@
                                         <option value="<?php echo e($value); ?>" <?php echo e(old('flights.1.cabin_class', 'economy') == $value ? 'selected' : ''); ?>><?php echo e($label); ?></option>
                                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </select></div>
-                            <div class="col-md-4"><label class="form-label">Numéro de vol</label><input type="text" class="form-control" name="flights[1][flight_number]" value="<?php echo e(old('flights.1.flight_number')); ?>"></div>
-                            <div class="col-md-4"><label class="form-label">Ville départ</label><input type="text" class="form-control" name="flights[1][depart_city]" value="<?php echo e(old('flights.1.depart_city')); ?>"></div>
-                            <div class="col-md-4"><label class="form-label">Aéroport départ</label><input type="text" class="form-control" name="flights[1][depart_airport]" value="<?php echo e(old('flights.1.depart_airport')); ?>"></div>
-                            <div class="col-md-4"><label class="form-label">Ville arrivée</label><input type="text" class="form-control" name="flights[1][arrive_city]" value="<?php echo e(old('flights.1.arrive_city')); ?>"></div>
-                            <div class="col-md-4"><label class="form-label">Aéroport arrivée</label><input type="text" class="form-control" name="flights[1][arrive_airport]" value="<?php echo e(old('flights.1.arrive_airport')); ?>"></div>
-                            <div class="col-md-6"><label class="form-label">Date départ</label><input type="date" class="form-control" name="flights[1][depart_date]" value="<?php echo e(old('flights.1.depart_date')); ?>"></div>
-                            <div class="col-md-6"><label class="form-label">Date arrivée</label><input type="date" class="form-control" name="flights[1][arrive_date]" value="<?php echo e(old('flights.1.arrive_date')); ?>"></div>
+                            <div class="col-md-4"><label class="form-label">NumÃ©ro de vol</label><input type="text" class="form-control" name="flights[1][flight_number]" value="<?php echo e(old('flights.1.flight_number')); ?>"></div>
+                            <div class="col-md-4"><label class="form-label">Ville dÃ©part</label><input type="text" class="form-control" name="flights[1][depart_city]" value="<?php echo e(old('flights.1.depart_city')); ?>"></div>
+                            <div class="col-md-4"><label class="form-label">AÃ©roport dÃ©part</label><input type="text" class="form-control" name="flights[1][depart_airport]" value="<?php echo e(old('flights.1.depart_airport')); ?>"></div>
+                            <div class="col-md-4"><label class="form-label">Ville arrivÃ©e</label><input type="text" class="form-control" name="flights[1][arrive_city]" value="<?php echo e(old('flights.1.arrive_city')); ?>"></div>
+                            <div class="col-md-4"><label class="form-label">AÃ©roport arrivÃ©e</label><input type="text" class="form-control" name="flights[1][arrive_airport]" value="<?php echo e(old('flights.1.arrive_airport')); ?>"></div>
+                            <div class="col-md-6"><label class="form-label">Date dÃ©part</label><input type="date" class="form-control" name="flights[1][depart_date]" value="<?php echo e(old('flights.1.depart_date')); ?>"></div>
+                            <div class="col-md-6"><label class="form-label">Date arrivÃ©e</label><input type="date" class="form-control" name="flights[1][arrive_date]" value="<?php echo e(old('flights.1.arrive_date')); ?>"></div>
                             <div class="col-md-4"><label class="form-label">Cabin (ex. 7 KGS)</label><input type="text" class="form-control" name="flights[1][cabin_baggage]" value="<?php echo e(old('flights.1.cabin_baggage')); ?>"></div>
                             <div class="col-md-4"><label class="form-label">Check-in (ex. 20 KGS)</label><input type="text" class="form-control" name="flights[1][checkin_baggage]" value="<?php echo e(old('flights.1.checkin_baggage')); ?>"></div>
                             <div class="col-md-4"><label class="form-label">&nbsp;</label><div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="flights[1][is_tentative]" value="1" <?php echo e(old('flights.1.is_tentative') ? 'checked' : ''); ?>><label class="form-check-label">Vol tentative</label></div></div>
-                            <div class="col-12"><div class="form-check"><input class="form-check-input create-flight-default-radio" type="radio" name="create_flights_default_radio" id="create_flights_default_0" value="0" <?php echo e($hasSecondFlightCreate && old('flights.0.is_default', true) ? 'checked' : ''); ?>><label class="form-check-label" for="create_flights_default_0">Vol par défaut</label></div>
-                                <div class="form-check"><input class="form-check-input create-flight-default-radio" type="radio" name="create_flights_default_radio" id="create_flights_default_1" value="1" <?php echo e($hasSecondFlightCreate && old('flights.1.is_default') ? 'checked' : ''); ?>><label class="form-check-label" for="create_flights_default_1">Vol par défaut</label></div>
+                            <div class="col-12"><div class="form-check"><input class="form-check-input create-flight-default-radio" type="radio" name="create_flights_default_radio" id="create_flights_default_0" value="0" <?php echo e($hasSecondFlightCreate && old('flights.0.is_default', true) ? 'checked' : ''); ?>><label class="form-check-label" for="create_flights_default_0">Vol par dÃ©faut</label></div>
+                                <div class="form-check"><input class="form-check-input create-flight-default-radio" type="radio" name="create_flights_default_radio" id="create_flights_default_1" value="1" <?php echo e($hasSecondFlightCreate && old('flights.1.is_default') ? 'checked' : ''); ?>><label class="form-check-label" for="create_flights_default_1">Vol par dÃ©faut</label></div>
                                 <input type="hidden" name="flights[1][is_default]" id="create_flights_1_is_default" value="<?php echo e($hasSecondFlightCreate ? (old('flights.1.is_default') ? '1' : '0') : '0'); ?>"></div>
                             <div class="col-12"><button type="button" class="btn btn-sm btn-primary create-flight-save-btn me-2" data-index="1">Save flight</button><button type="button" class="btn btn-sm btn-secondary create-flight-cancel-btn" data-index="1">Cancel</button></div>
                         </div>
@@ -213,14 +214,14 @@
                 </div>
 
                 <div class="mb-3" id="create-flight2-add-wrap" style="<?php echo e($hasSecondFlightCreate ? 'display:none;' : ''); ?>">
-                    <button type="button" class="btn btn-outline-primary" id="create-flight2-add-btn"><i class="bx bx-plus"></i> Ajouter un 2ème vol</button>
+                    <button type="button" class="btn btn-outline-primary" id="create-flight2-add-btn"><i class="bx bx-plus"></i> Ajouter un 2Ã¨me vol</button>
                 </div>
                 </div>
         
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Tour Program</h4>
-                        <p class="text-muted">Définissez le programme jour par jour de votre tour (identique à WordPress Traveler)</p>
+                        <p class="text-muted">DÃ©finissez le programme jour par jour de votre tour (identique Ã  WordPress Traveler)</p>
                         
                         
                         <div class="mb-4">
@@ -247,24 +248,24 @@
                             </div>
                             
                             <div class="alert alert-info" id="emptyProgramAlert">
-                                <i class="bx bx-info-circle"></i> Aucun item de programme. Cliquez sur "Add new" pour ajouter un élément.
+                                <i class="bx bx-info-circle"></i> Aucun item de programme. Cliquez sur "Add new" pour ajouter un Ã©lÃ©ment.
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="card" id="activities">
                     <div class="card-body">
-                        <h4 class="card-title mb-4">Activités</h4>
+                        <h4 class="card-title mb-4">ActivitÃ©s</h4>
                         <?php echo $__env->make('admin.circuits.voyages.partials._under_construction_notice', [
-                            'title' => '⚠️ Section en cours de construction — ne pas modifier',
-                            'tabName' => 'Activités',
+                            'title' => 'âš ï¸ Section en cours de construction â€” ne pas modifier',
+                            'tabName' => 'ActivitÃ©s',
                         ], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
                     </div>
                 </div>
 
                 <div class="card" id="availability">
                     <div class="card-body">
-                        <h4 class="card-title mb-4">Disponibilité & Réservation</h4>
+                        <h4 class="card-title mb-4">DisponibilitÃ© & RÃ©servation</h4>
                         <?php echo $__env->make('admin.circuits.voyages.partials._availability_notice', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
                     </div>
                 </div>
@@ -277,7 +278,7 @@
                 <div class="card ve-sidebar-card ve-actions-card">
                     <div class="card-body">
                         <button type="submit" form="create-voyage-form" class="btn btn-primary">
-                            <i class="bx bx-plus-circle"></i> Créer le tour
+                            <i class="bx bx-plus-circle"></i> CrÃ©er le tour
                         </button>
                         <a href="<?php echo e(route('admin.circuits.voyages.index')); ?>" class="btn btn-outline-secondary">
                             <i class="bx bx-x"></i> Annuler
@@ -288,12 +289,12 @@
                 
                 <div class="card ve-sidebar-card">
                     <div class="card-body">
-                        <h5 class="ve-sidebar-title mb-3 fw-bold"><i class="bx bx-cog text-primary"></i> Paramètres & Prix</h5>
+                        <h5 class="ve-sidebar-title mb-3 fw-bold"><i class="bx bx-cog text-primary"></i> ParamÃ¨tres & Prix</h5>
 
                         <div class="mb-3">
                             <label for="post_status" class="form-label">Statut</label>
                             <select class="form-select" id="post_status" name="post_status">
-                                <option value="publish" <?php echo e(old('post_status') === 'publish' ? 'selected' : ''); ?>>Publié</option>
+                                <option value="publish" <?php echo e(old('post_status') === 'publish' ? 'selected' : ''); ?>>PubliÃ©</option>
                                 <option value="draft" <?php echo e(old('post_status') === 'draft' ? 'selected' : ''); ?>>Brouillon</option>
                                 <option value="pending" <?php echo e(old('post_status') === 'pending' ? 'selected' : ''); ?>>En attente</option>
                             </select>
@@ -301,7 +302,7 @@
 
                         <div class="mb-3">
                             <label for="destination" class="form-label">Destination</label>
-                            <input type="text" class="form-control" id="destination" name="destination" value="<?php echo e(old('destination')); ?>" placeholder="Ex : Dubaï, EAU">
+                            <input type="text" class="form-control" id="destination" name="destination" value="<?php echo e(old('destination')); ?>" placeholder="Ex : DubaÃ¯, EAU">
                         </div>
                         
                         <hr class="my-4">
@@ -331,7 +332,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="duration_text" class="form-label">Durée</label>
+                            <label for="duration_text" class="form-label">DurÃ©e</label>
                             <input type="text" class="form-control" id="duration_text" name="duration_text" value="<?php echo e(old('duration_text')); ?>" placeholder="Ex : 7 jours / 6 nuits">
                         </div>
 
@@ -417,19 +418,19 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="thumbnail_id" class="form-label">Image à la une (ID WP)</label>
+                            <label for="thumbnail_id" class="form-label">Image Ã  la une (ID WP)</label>
                             <input type="number" class="form-control" id="thumbnail_id" name="thumbnail_id" value="<?php echo e(old('thumbnail_id')); ?>" placeholder="14434">
                         </div>
 
                         <div class="mb-3">
-                            <label for="gallery_ids" class="form-label">Galerie générale (images supplémentaires)</label>
+                            <label for="gallery_ids" class="form-label">Galerie gÃ©nÃ©rale (images supplÃ©mentaires)</label>
                             <input type="text" class="form-control" id="gallery_ids" name="gallery_ids" value="<?php echo e(old('gallery_ids')); ?>" placeholder="14435,14436,14437">
                         </div>
                         
                         <div class="form-check mb-3">
                             <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured" value="1" <?php echo e(old('is_featured') ? 'checked' : ''); ?>>
                             <label class="form-check-label" for="is_featured">
-                                Tour à la une (Featured)
+                                Tour Ã  la une (Featured)
                             </label>
                         </div>
                         
@@ -486,7 +487,7 @@
                 const checked = document.querySelectorAll('.location-checkbox:checked').length;
                 const countText = document.getElementById('locationCountTextCreate');
                 if (countText) {
-                    countText.textContent = checked + ' location(s) sélectionnée(s)';
+                    countText.textContent = checked + ' location(s) sÃ©lectionnÃ©e(s)';
                 }
             };
             
@@ -497,7 +498,7 @@
         
         // Vols: flight cards + edit mode (create form)
         document.addEventListener('DOMContentLoaded', function() {
-            var dash = '—';
+            var dash = 'â€”';
             function parseDateTimeLocal(val) {
                 if (!val) return null;
                 var d = new Date(val);
@@ -616,7 +617,7 @@
                             <input type="text"
                                    name="tours_program[${programItemIndex}][title]"
                                    class="form-control"
-                                   placeholder="Ex: 08:00 - Départ de l'hôtel"
+                                   placeholder="Ex: 08:00 - DÃ©part de l'hÃ´tel"
                                    value="${String(title || '').replace(/"/g, '&quot;')}">
                         </div>
                         <div class="mb-0">
@@ -624,7 +625,7 @@
                             <textarea name="tours_program[${programItemIndex}][desc]"
                                       class="form-control"
                                       rows="3"
-                                      placeholder="Description détaillée de cette étape du programme">${String(desc || '')}</textarea>
+                                      placeholder="Description dÃ©taillÃ©e de cette Ã©tape du programme">${String(desc || '')}</textarea>
                         </div>
                     </div>
                 `;
@@ -722,7 +723,7 @@
                 fileInput.accept = 'image/jpeg,image/png,image/webp';
                 fileInput.addEventListener('change', function() {
                     if (!this.files || !this.files[0]) return;
-                    alert('Pour le formulaire de création, veuillez d\'abord créer le tour, puis éditer pour uploader les images via la médiathèque WordPress.');
+                    alert('Pour le formulaire de crÃ©ation, veuillez d\'abord crÃ©er le tour, puis Ã©diter pour uploader les images via la mÃ©diathÃ¨que WordPress.');
                     this.value = '';
                 });
                 fileInput.click();
@@ -769,7 +770,7 @@
         // Initialize hidden input
         updateHeroGalleryHidden();
 
-        // Éviter "An invalid form control with name='...' is not focusable" : retirer required des champs dans modals/onglets cachés avant submit
+        // Ã‰viter "An invalid form control with name='...' is not focusable" : retirer required des champs dans modals/onglets cachÃ©s avant submit
         (function() {
             function stripRequiredFromHiddenInForm(form) {
                 var list = [];
@@ -815,4 +816,5 @@
     </script>
 <?php $__env->stopPush(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\circuits\voyages\create.blade.php ENDPATH**/ ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\circuits\voyages\create.blade.php ENDPATH**/ ?>

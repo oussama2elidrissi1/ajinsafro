@@ -1,4 +1,4 @@
-@extends('layouts.admin-v2')
+﻿@extends('layouts.admin-v6')
 
 @section('title', 'Affectations')
 
@@ -44,7 +44,7 @@
     <div class="aj-card-body">
         <form method="GET" action="{{ route('admin.assignments.index') }}">
             <div class="aj-filter-grid">
-                <input type="text" name="search" class="aj-form-control" value="{{ $filters['search'] ?? '' }}" placeholder="Réservation, client, email">
+                <input type="text" name="search" class="aj-form-control" value="{{ $filters['search'] ?? '' }}" placeholder="RÃ©servation, client, email">
                 <select name="branch_id" class="aj-select">
                     <option value="">Tous les points de vente</option>
                     @foreach($branches as $branch)
@@ -56,7 +56,7 @@
                     @foreach($branches as $branch)
                         <optgroup label="{{ $branch->display_name }}">
                             @foreach(($agentsByBranch[$branch->id] ?? []) as $agent)
-                                <option value="{{ $agent['id'] }}" @selected((int)($filters['agent_id'] ?? 0) === (int) $agent['id'])>{{ $agent['name'] }} @if(!empty($agent['job_title'])) — {{ $agent['job_title'] }} @endif</option>
+                                <option value="{{ $agent['id'] }}" @selected((int)($filters['agent_id'] ?? 0) === (int) $agent['id'])>{{ $agent['name'] }} @if(!empty($agent['job_title'])) â€” {{ $agent['job_title'] }} @endif</option>
                             @endforeach
                         </optgroup>
                     @endforeach
@@ -66,7 +66,7 @@
                     @foreach($branches as $branch)
                         <optgroup label="{{ $branch->display_name }}">
                             @foreach(($agentsByBranch[$branch->id] ?? []) as $agent)
-                                <option value="{{ $agent['id'] }}" @selected((int)($filters['sales_manager_id'] ?? 0) === (int) $agent['id'])>{{ $agent['name'] }} @if(!empty($agent['job_title'])) — {{ $agent['job_title'] }} @endif</option>
+                                <option value="{{ $agent['id'] }}" @selected((int)($filters['sales_manager_id'] ?? 0) === (int) $agent['id'])>{{ $agent['name'] }} @if(!empty($agent['job_title'])) â€” {{ $agent['job_title'] }} @endif</option>
                             @endforeach
                         </optgroup>
                     @endforeach
@@ -74,12 +74,12 @@
                 <select name="status" class="aj-select">
                     <option value="">Tous les statuts</option>
                     <option value="pending" @selected(($filters['status'] ?? '') === 'pending')>En attente</option>
-                    <option value="confirmed" @selected(($filters['status'] ?? '') === 'confirmed')>Confirmée</option>
-                    <option value="cancelled" @selected(($filters['status'] ?? '') === 'cancelled')>Annulée</option>
-                    <option value="paid" @selected(($filters['status'] ?? '') === 'paid')>Payée</option>
+                    <option value="confirmed" @selected(($filters['status'] ?? '') === 'confirmed')>ConfirmÃ©e</option>
+                    <option value="cancelled" @selected(($filters['status'] ?? '') === 'cancelled')>AnnulÃ©e</option>
+                    <option value="paid" @selected(($filters['status'] ?? '') === 'paid')>PayÃ©e</option>
                 </select>
                 <select name="priority" class="aj-select">
-                    <option value="">Priorité</option>
+                    <option value="">PrioritÃ©</option>
                     <option value="low" @selected(($filters['priority'] ?? '') === 'low')>Basse</option>
                     <option value="normal" @selected(($filters['priority'] ?? '') === 'normal')>Normale</option>
                     <option value="high" @selected(($filters['priority'] ?? '') === 'high')>Haute</option>
@@ -89,10 +89,10 @@
             <div style="display:flex;gap:14px;justify-content:flex-end;align-items:center;margin-top:14px;flex-wrap:wrap;">
                 <label class="form-check-label" style="display:flex;align-items:center;gap:8px;font-weight:800;color:#172b4d;">
                     <input class="form-check-input" type="checkbox" name="unassigned" value="1" @checked(!empty($filters['unassigned']))>
-                    Non affectées seulement
+                    Non affectÃ©es seulement
                 </label>
                 <button type="submit" class="aj-btn primary"><i class="bx bx-filter-alt"></i> Filtrer</button>
-                <a href="{{ route('admin.assignments.index') }}" class="aj-btn"><i class="bx bx-reset"></i> Réinitialiser</a>
+                <a href="{{ route('admin.assignments.index') }}" class="aj-btn"><i class="bx bx-reset"></i> RÃ©initialiser</a>
             </div>
         </form>
     </div>
@@ -113,7 +113,7 @@
                 </div>
                 <div class="col-lg-3">
                     <select name="agent_id" class="aj-select assignment-agent-select">
-                        <option value="">Agent réservation</option>
+                        <option value="">Agent rÃ©servation</option>
                         @foreach($branches as $branch)
                             @foreach(($agentsByBranch[$branch->id] ?? []) as $agent)
                                 <option data-branch-id="{{ $branch->id }}" value="{{ $agent['id'] }}">{{ $agent['name'] }}</option>
@@ -133,7 +133,7 @@
                 </div>
                 <div class="col-lg-3">
                     <select name="assignment_priority" class="aj-select">
-                        <option value="">Priorité</option>
+                        <option value="">PrioritÃ©</option>
                         <option value="low">Basse</option>
                         <option value="normal">Normale</option>
                         <option value="high">Haute</option>
@@ -144,8 +144,8 @@
                     <textarea name="assignment_note" class="aj-textarea" placeholder="Note interne / contexte d'affectation"></textarea>
                 </div>
                 <div class="col-lg-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <div class="aj-subtle">Cochez les réservations à affecter puis appliquez en masse.</div>
-                    <button type="submit" class="aj-btn primary"><i class="bx bx-layer-plus"></i> Affecter la sélection</button>
+                    <div class="aj-subtle">Cochez les rÃ©servations Ã  affecter puis appliquez en masse.</div>
+                    <button type="submit" class="aj-btn primary"><i class="bx bx-layer-plus"></i> Affecter la sÃ©lection</button>
                 </div>
             </div>
         </form>
@@ -155,8 +155,8 @@
 <div class="aj-card">
     <div class="aj-card-head">
         <div>
-            <strong style="font-size:16px;color:#172b4d;">Réservations</strong>
-            <div class="aj-subtle">{{ $reservations->total() }} réservation(s)</div>
+            <strong style="font-size:16px;color:#172b4d;">RÃ©servations</strong>
+            <div class="aj-subtle">{{ $reservations->total() }} rÃ©servation(s)</div>
         </div>
     </div>
     <div class="aj-card-body" style="padding-top:14px;overflow-x:auto;">
@@ -171,8 +171,8 @@
                     <th>Agent</th>
                     <th>Chef commercial</th>
                     <th>Statut</th>
-                    <th>Priorité</th>
-                    <th>Mis à jour</th>
+                    <th>PrioritÃ©</th>
+                    <th>Mis Ã  jour</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -181,14 +181,14 @@
                     <tr>
                         <td><input type="checkbox" name="reservation_ids[]" value="{{ $reservation->id }}" form="bulk-assign-form" class="reservation-checkbox"></td>
                         <td>#{{ $reservation->id }}</td>
-                        <td>{{ trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? '')) ?: ($reservation->client_email ?? '—') }}</td>
-                        <td>{{ $reservation->tour?->name ?? '—' }}</td>
-                        <td>{{ $reservation->branch?->display_name ?? '—' }}</td>
-                        <td>{{ $reservation->agent?->name ?? '—' }}</td>
-                        <td>{{ $reservation->salesManager?->name ?? '—' }}</td>
+                        <td>{{ trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? '')) ?: ($reservation->client_email ?? 'â€”') }}</td>
+                        <td>{{ $reservation->tour?->name ?? 'â€”' }}</td>
+                        <td>{{ $reservation->branch?->display_name ?? 'â€”' }}</td>
+                        <td>{{ $reservation->agent?->name ?? 'â€”' }}</td>
+                        <td>{{ $reservation->salesManager?->name ?? 'â€”' }}</td>
                         <td><span class="aj-badge soft">{{ ucfirst((string) $reservation->status) }}</span></td>
                         <td><span class="aj-badge {{ in_array($reservation->assignment_priority, ['high','urgent'], true) ? 'off' : 'ok' }}">{{ ucfirst((string) ($reservation->assignment_priority ?? 'normal')) }}</span></td>
-                        <td>{{ $reservation->updated_at?->timezone('Africa/Casablanca')?->format('d/m/Y H:i') ?? '—' }}</td>
+                        <td>{{ $reservation->updated_at?->timezone('Africa/Casablanca')?->format('d/m/Y H:i') ?? 'â€”' }}</td>
                         <td>
                             <button type="button" class="aj-btn assignment-open" data-bs-toggle="modal" data-bs-target="#assignmentModal"
                                 data-reservation-id="{{ $reservation->id }}"
@@ -202,7 +202,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="11" style="padding:28px;text-align:center;color:#71829a;font-weight:700;">Aucune réservation trouvée.</td></tr>
+                    <tr><td colspan="11" style="padding:28px;text-align:center;color:#71829a;font-weight:700;">Aucune rÃ©servation trouvÃ©e.</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -218,7 +218,7 @@
             <form method="POST" id="assignment-form" action="{{ route('admin.assignments.store') }}">
                 @csrf
                 <div class="modal-header">
-                    <h5 class="modal-title">Affecter la réservation</h5>
+                    <h5 class="modal-title">Affecter la rÃ©servation</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -234,7 +234,7 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Agent réservation</label>
+                            <label class="form-label fw-bold">Agent rÃ©servation</label>
                             <select name="agent_id" id="assignment-agent" class="aj-select">
                                 <option value="">Aucun</option>
                                 @foreach($branches as $branch)
@@ -256,7 +256,7 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Priorité</label>
+                            <label class="form-label fw-bold">PrioritÃ©</label>
                             <select name="assignment_priority" id="assignment-priority" class="aj-select">
                                 <option value="">Normale</option>
                                 <option value="low">Basse</option>
@@ -362,3 +362,4 @@
 })();
 </script>
 @endpush
+
