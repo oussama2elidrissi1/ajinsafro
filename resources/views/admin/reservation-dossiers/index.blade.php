@@ -695,23 +695,13 @@
                                                             @endcan
                                                             <a href="{{ $paymentFollowUrl }}" class="rd-mini-btn"><i class="bx bx-wallet"></i><span>Suivre paiement</span></a>
                                                             <a href="{{ route('admin.reservations.dossier.pdf', $reservation) }}" target="_blank" class="rd-mini-btn"><i class="bx bx-printer"></i><span>Imprimer</span></a>
-                                                            @php
-                                                                $canDeleteReservation = auth()->user()->isBranchAdmin()
-                                                                    || auth()->user()->isManager()
-                                                                    || auth()->user()->isChefCommercial()
-                                                                    || auth()->user()->hasRole('super_admin')
-                                                                    || auth()->user()->hasRole('siege_admin')
-                                                                    || auth()->user()->can('reservations.delete');
-                                                            @endphp
-                                                            @if($canDeleteReservation)
-                                                                <form method="POST" action="{{ route('admin.reservation-dossiers.destroy', $reservation) }}" class="js-delete-reservation-form" style="display:inline;">
-                                                                    @csrf
-                                                                    @method('DELETE')
-                                                                    <button type="submit" class="rd-mini-btn rd-mini-btn--danger" data-confirm-delete="Voulez-vous vraiment supprimer cette reservation ? Cette action est irreversible.">
-                                                                        <i class="bx bx-trash"></i><span>Supprimer</span>
-                                                                    </button>
-                                                                </form>
-                                                            @endif
+                                                            <form method="POST" action="{{ route('admin.reservation-dossiers.destroy', $reservation) }}" class="js-delete-reservation-form" style="display:inline;">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="rd-mini-btn rd-mini-btn--danger" data-confirm-delete="Voulez-vous vraiment supprimer cette reservation ? Cette action est irreversible.">
+                                                                    <i class="bx bx-trash"></i><span>Supprimer</span>
+                                                                </button>
+                                                            </form>
                                                         </div>
                                                     </td>
                                                 </tr>

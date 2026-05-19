@@ -38,7 +38,11 @@
       "Bash(echo \"Exit code: $?\")",
       "Bash(curl *)",
       "Bash(python3 *)",
-      "PowerShell(. C:\\\\Users\\\\oussa\\\\Desktop\\\\fix_js.ps1)"
+      "PowerShell(. C:\\\\Users\\\\oussa\\\\Desktop\\\\fix_js.ps1)",
+      "Bash(Get-ChildItem -Path \"storage\\\\framework\\\\views\")",
+      "Bash(Sort-Object LastWriteTime -Descending)",
+      "Bash(Select-Object -First 10)",
+      "Bash(Format-Table Name, LastWriteTime)"
     ]
   }
 }

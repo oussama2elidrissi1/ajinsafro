@@ -20,6 +20,9 @@
     $publicShowUrl = (!$isCreate && $laravelV && !empty($laravelV->slug))
         ? url('/voyages/' . $laravelV->slug)
         : null;
+    $workflowTotalSteps = 14;
+    $workflowValidatedSteps = 10;
+    $workflowProgressPercent = 71;
 ?>
 
 <div class="ve-page-header">
@@ -61,18 +64,20 @@
             </div>
         </div>
 
-        <div class="ve-header-main__actions">
-            <span class="ve-status-badge status-<?php echo e($currentStatus); ?> align-self-center">
-                <span class="status-dot"></span>
-                <?php echo e($statusLabel); ?>
-
-            </span>
-
-            <?php if($publicShowUrl): ?>
-                <a href="<?php echo e($publicShowUrl); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary">
-                    <i class="bx bx-link-external"></i> Voir la page client
-                </a>
-            <?php endif; ?>
+        <div class="ve-header-main__actions ve-header-main__actions--workflow">
+            <div class="voyage-header-workflow-card" id="workflow">
+                <div class="workflow-card-title">Workflow</div>
+                <div class="workflow-card-value">
+                    <strong><?php echo e($workflowValidatedSteps); ?></strong> / <?php echo e($workflowTotalSteps); ?> étapes validées
+                </div>
+                <div class="workflow-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?php echo e($workflowProgressPercent); ?>">
+                    <span class="workflow-progress-bar" style="width: <?php echo e($workflowProgressPercent); ?>%"></span>
+                </div>
+                <div class="workflow-card-footer">
+                    <span><?php echo e($workflowProgressPercent); ?>%</span>
+                    <a href="#basic" data-ve-resume-workflow>Reprendre le workflow</a>
+                </div>
+            </div>
         </div>
     </div>
 

@@ -5,7 +5,9 @@
     $sidebarBrandLogo = \App\Models\Setting::brandLogoUrl('dark');
     $sidebarBrandHref = request()->routeIs('admin.dashboard.v2') && \Illuminate\Support\Facades\Route::has('admin.dashboard.v2')
         ? route('admin.dashboard.v2')
-        : route('admin.dashboard');
+        : (request()->routeIs('admin.dashboard.v4') && \Illuminate\Support\Facades\Route::has('admin.dashboard.v4')
+            ? route('admin.dashboard.v4')
+            : route('admin.dashboard'));
     $sidebarRole = $sidebarUser?->getRoleNames()->first() ?? 'Administrateur';
     $sidebarInitials = strtoupper(collect(preg_split('/\s+/', trim((string) ($sidebarUser?->name ?? 'Admin'))))->filter()->take(2)->map(fn ($part) => mb_substr($part, 0, 1))->implode(''));
     if ($sidebarInitials === '') {
@@ -119,6 +121,28 @@
 
             if ($dashboardV3Leaf) {
                 $dashboardChildren[] = $dashboardV3Leaf;
+            }
+        }
+    }
+    if (\Illuminate\Support\Facades\Route::has('admin.dashboard.v4')) {
+        $dashboardV4Exists = collect($dashboardChildren)->contains(function ($child) {
+            return ($child['route'] ?? null) === 'admin.dashboard.v4' || (($child['href'] ?? null) === route('admin.dashboard.v4'));
+        });
+
+        if (! $dashboardV4Exists) {
+            $dashboardV4Leaf = $makeLeaf(
+                'dashboard_v4',
+                'Dashboard V4',
+                'admin.dashboard.v4',
+                null,
+                ['admin.dashboard.v4'],
+                [],
+                null,
+                'dashboard.overview.view'
+            );
+
+            if ($dashboardV4Leaf) {
+                $dashboardChildren[] = $dashboardV4Leaf;
             }
         }
     }

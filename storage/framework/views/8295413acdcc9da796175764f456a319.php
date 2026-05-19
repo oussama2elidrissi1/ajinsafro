@@ -144,6 +144,9 @@
             'journeySubtitle' => $journeySubtitle,
             'frontPreviewUrl' => $frontPreviewUrl,
             'nextActionSection' => $nextActionSection,
+            'completedSteps' => $completedSteps,
+            'sectionsCount' => $sectionsCount,
+            'progressPercent' => $progressPercent,
         ], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
 
         <div class="v2-body v3-workspace">
@@ -226,20 +229,6 @@
                 </div>
             </main>
 
-            <?php echo $__env->make('admin.circuits.voyages.partials.v3._rail', [
-                'completedSteps' => $completedSteps,
-                'sectionsCount' => $sectionsCount,
-                'progressPercent' => $progressPercent,
-                'isCreate' => $isCreate,
-                'veWpId' => $veWpId,
-                'statusLabel' => $statusLabel,
-                'veDestination' => $veDestination,
-                'veDatesCount' => $veDatesCount,
-                'vePriceLabel' => $vePriceLabel,
-                'v3QuickActions' => $v3QuickActions,
-                'alertSection' => $alertSection,
-                'nextActionSection' => $nextActionSection,
-            ], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
         </div>
     </div>
 

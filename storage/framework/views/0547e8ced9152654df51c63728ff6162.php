@@ -484,6 +484,17 @@
             width: 100%;
         }
     }
+    .reservation-dossiers-page .rd-mini-btn--danger {
+        background: #fff1f2;
+        color: #dc2626;
+        border-color: #fecdd3;
+    }
+
+    .reservation-dossiers-page .rd-mini-btn--danger:hover {
+        background: #dc2626;
+        color: #ffffff;
+        border-color: #dc2626;
+    }
 </style>
 <?php $__env->stopPush(); ?>
 
@@ -682,6 +693,13 @@
                                                             <?php endif; ?>
                                                             <a href="<?php echo e($paymentFollowUrl); ?>" class="rd-mini-btn"><i class="bx bx-wallet"></i><span>Suivre paiement</span></a>
                                                             <a href="<?php echo e(route('admin.reservations.dossier.pdf', $reservation)); ?>" target="_blank" class="rd-mini-btn"><i class="bx bx-printer"></i><span>Imprimer</span></a>
+                                                            <form method="POST" action="<?php echo e(route('admin.reservation-dossiers.destroy', $reservation)); ?>" class="js-delete-reservation-form" style="display:inline;">
+                                                                <?php echo csrf_field(); ?>
+                                                                <?php echo method_field('DELETE'); ?>
+                                                                <button type="submit" class="rd-mini-btn rd-mini-btn--danger" data-confirm-delete="Voulez-vous vraiment supprimer cette reservation ? Cette action est irreversible.">
+                                                                    <i class="bx bx-trash"></i><span>Supprimer</span>
+                                                                </button>
+                                                            </form>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -717,5 +735,22 @@
     </div>
 </div>
 <?php $__env->stopSection(); ?>
+
+<?php $__env->startPush('scripts'); ?>
+<script>
+(function () {
+    document.querySelectorAll('.js-delete-reservation-form').forEach(function (form) {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var message = form.querySelector('[data-confirm-delete]')?.dataset.confirmDelete
+                || 'Voulez-vous vraiment supprimer cette reservation ?';
+            if (confirm(message)) {
+                form.submit();
+            }
+        });
+    });
+})();
+</script>
+<?php $__env->stopPush(); ?>
 
 <?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\reservation-dossiers\index.blade.php ENDPATH**/ ?>

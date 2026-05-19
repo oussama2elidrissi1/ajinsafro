@@ -72,7 +72,7 @@
 <?php $__env->stopPush(); ?>
 
 <?php $__env->startSection('content'); ?>
-<div class="voyage-edit-page">
+<div class="voyage-edit-page voyage-workflow-page">
     <div class="ve-shell">
         <?php echo $__env->make('admin.circuits.voyages.partials._voyage_page_header', [
             'isCreate' => $isCreate,
@@ -101,12 +101,13 @@
         <textarea name="programme_days_payload" id="programme-days-payload" class="d-none" aria-hidden="true"></textarea>
 
         <div class="ve-shell">
-            <div class="ve-page-layout">
-                <div class="ve-main-col">
-                    <div class="ve-editor-frame">
-                        <?php echo $__env->make('admin.circuits.voyages.partials._voyage_actions_bar', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
-                        <?php echo $__env->make('admin.circuits.voyages.partials._voyage_tabs_nav', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+            <div class="voyage-editor-grid">
+                <aside class="workflow-sidebar ve-left">
+                    <?php echo $__env->make('admin.circuits.voyages.partials._voyage_tabs_nav', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+                </aside>
 
+                <div class="voyage-editor-main workflow-main editor-main ve-content">
+                    <div class="ve-editor-frame">
                         <div class="ve-editor-body">
                             <div class="tab-content ve-tab-content pt-4">
                                 <?php echo $__env->make('admin.circuits.voyages.partials.tabs._basic', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
@@ -136,6 +137,15 @@
                                     </div>
                                 </div>
                             <?php endif; ?>
+
+                            <div class="editor-save-bar">
+                                <button type="button" class="btn btn-outline-primary" data-ve-step-next-secondary>
+                                    Étape suivante : Tarifs & capacité <i class="bx bx-chevron-right"></i>
+                                </button>
+                                <button type="submit" form="edit-voyage-form" class="btn btn-primary" id="edit-voyage-submit-btn">
+                                    <i class="bx bx-save"></i> Enregistrer cette étape
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -179,6 +189,8 @@
             var stepButtons = Array.prototype.slice.call(workflow.querySelectorAll('[data-ve-step]'));
             var prevBtn = workflow.querySelector('[data-ve-step-prev]');
             var nextBtn = workflow.querySelector('[data-ve-step-next]');
+            var nextSecondaryButtons = Array.prototype.slice.call(document.querySelectorAll('[data-ve-step-next-secondary]'));
+            var resumeWorkflowLinks = Array.prototype.slice.call(document.querySelectorAll('[data-ve-resume-workflow]'));
             var currentLabel = workflow.querySelector('[data-ve-current-step-label]');
             var tabContent = document.querySelector('.ve-tab-content');
             var allPanes = tabContent ? Array.prototype.slice.call(tabContent.querySelectorAll('.tab-pane')).filter(function (pane) {
@@ -699,6 +711,30 @@
                     syncUIFromTarget(nextTarget);
                     showGuardMessage('success', labelForTarget(nextTarget));
                     setTimeout(function () { hideGuardMessage(); }, 3500);
+                });
+            }
+
+            if (nextSecondaryButtons.length) {
+                nextSecondaryButtons.forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        if (nextBtn) {
+                            nextBtn.click();
+                        }
+                    });
+                });
+            }
+
+            if (resumeWorkflowLinks.length) {
+                resumeWorkflowLinks.forEach(function (link) {
+                    link.addEventListener('click', function (event) {
+                        event.preventDefault();
+                        var target = '#basic';
+                        var changed = requestTabChange(target);
+                        if (!changed) return;
+                        syncUIFromTarget(target);
+                        var workflowTop = workflow.getBoundingClientRect().top + window.pageYOffset - 90;
+                        window.scrollTo({ top: Math.max(0, workflowTop), behavior: 'smooth' });
+                    });
                 });
             }
 

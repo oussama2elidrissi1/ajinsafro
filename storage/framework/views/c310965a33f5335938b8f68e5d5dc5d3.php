@@ -40,41 +40,30 @@
     </div>
 
     <div class="v3-hero-actions">
-        <a href="<?php echo e(route('admin.circuits.voyages.index')); ?>" class="v3-btn v3-btn-muted">
-            <i class="bx bx-arrow-back"></i>
-            <span>Retour catalogue</span>
-        </a>
-
-        <?php if($frontPreviewUrl): ?>
-            <a href="<?php echo e($frontPreviewUrl); ?>" class="v3-btn v3-btn-muted" target="_blank" rel="noopener">
-                <i class="bx bx-show-alt"></i>
-                <span>Apercu public</span>
-            </a>
-        <?php else: ?>
-            <button type="button" class="v3-btn v3-btn-muted" disabled>
-                <i class="bx bx-show-alt"></i>
-                <span>Apercu public</span>
-            </button>
-        <?php endif; ?>
-
-        <?php if(!$isCreate): ?>
-            <a href="<?php echo e(route('admin.circuits.voyages.edit', $veWpId)); ?>" class="v3-btn v3-btn-muted" data-v2-classic-link>
-                <i class="bx bx-transfer-alt"></i>
-                <span>Version classique</span>
-            </a>
-        <?php endif; ?>
-
-        <button type="button" class="v3-btn v3-btn-primary" data-v2-save>
-            <i class="bx bx-save"></i>
-            <span><?php echo e($isCreate ? 'Creer le brouillon' : 'Enregistrer maintenant'); ?></span>
-        </button>
-
-        <?php if(!empty($nextActionSection)): ?>
-            <a href="#<?php echo e($nextActionSection['id']); ?>" class="v3-btn v3-btn-ghost">
-                <span>Continuer le workflow</span>
-                <i class="bx bx-chevron-right"></i>
-            </a>
-        <?php endif; ?>
+        <div class="v3-header-workflow-card">
+            <p class="v3-header-workflow-card__kicker">Workflow</p>
+            <p class="v3-header-workflow-card__value">
+                <strong><?php echo e($completedSteps); ?></strong> / <?php echo e($sectionsCount); ?> étapes validées
+            </p>
+            <div class="v3-header-workflow-card__progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?php echo e($progressPercent); ?>">
+                <span id="v2-progress-bar" style="width: <?php echo e($progressPercent); ?>%"></span>
+            </div>
+            <div class="v3-header-workflow-card__footer">
+                <span id="v2-progress-text"><?php echo e($progressPercent); ?>%</span>
+                <?php if(!empty($nextActionSection)): ?>
+                    <a href="#<?php echo e($nextActionSection['id']); ?>">Reprendre le workflow</a>
+                <?php endif; ?>
+            </div>
+            <div class="v3-header-workflow-card__links">
+                <a href="<?php echo e(route('admin.circuits.voyages.index')); ?>">Retour catalogue</a>
+                <?php if($frontPreviewUrl): ?>
+                    <a href="<?php echo e($frontPreviewUrl); ?>" target="_blank" rel="noopener">Aperçu public</a>
+                <?php endif; ?>
+                <?php if(!$isCreate): ?>
+                    <a href="<?php echo e(route('admin.circuits.voyages.edit', $veWpId)); ?>" data-v2-classic-link>Version classique</a>
+                <?php endif; ?>
+            </div>
+        </div>
     </div>
 </section>
 <?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\circuits\voyages\partials\v3\_hero.blade.php ENDPATH**/ ?>
