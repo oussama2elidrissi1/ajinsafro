@@ -188,6 +188,14 @@ body.aj-admin-v6 .admin-v6-content table tbody td {
     font-size: 13px !important;
     padding-top: 10px !important;
     padding-bottom: 10px !important;
+    font-weight: 400 !important;
+}
+
+body.aj-admin-v6 .admin-v6-content table tbody td *,
+body.aj-admin-v6 .admin-v6-content table tbody td a,
+body.aj-admin-v6 .admin-v6-content table tbody td strong,
+body.aj-admin-v6 .admin-v6-content table tbody td b {
+    font-weight: 400 !important;
 }
 
 body.aj-admin-v6 .admin-v6-sidebar-head {

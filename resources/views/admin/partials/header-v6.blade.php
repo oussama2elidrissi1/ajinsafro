@@ -39,23 +39,9 @@
         </div>
     </div>
 
-    <div class="aj-v6-topbar-center">
-        <div class="aj-v6-search">
-            <span class="aj-search-icon"><i class="bx bx-search"></i></span>
-            <input type="text" placeholder="Rechercher (voyage, agence, réservation, client...)">
-        </div>
-    </div>
+    <div class="aj-v6-topbar-center"></div>
 
     <div class="aj-v6-topbar-actions">
-        <div class="aj-v6-chip aj-v6-date-chip">
-            <i class="bx bx-calendar"></i>
-            <span>{{ $v6DateLabel }}</span>
-        </div>
-        <button type="button" class="aj-v6-chip">
-            <i class="bx bx-slider-alt"></i>
-            <span>Filtres</span>
-        </button>
-
         @if(\Illuminate\Support\Facades\Route::has('admin.messagerie.index'))
             <a href="{{ route('admin.messagerie.index') }}" class="aj-topbar-notif" title="Messagerie">
                 <i class="bx bx-envelope"></i>
@@ -71,20 +57,6 @@
                 @if($adminV2PendingCount > 0)
                     <b class="aj-notif-badge">{{ min($adminV2PendingCount, 99) }}</b>
                 @endif
-            </a>
-        @endif
-
-        @hasSection('header_primary_action')
-            @yield('header_primary_action')
-        @elseif($primaryActionLabel && $primaryActionRoute && \Illuminate\Support\Facades\Route::has($primaryActionRoute))
-            <a href="{{ route($primaryActionRoute) }}" class="aj-v6-primary-btn">
-                <i class="bx bx-plus"></i>
-                <span>{{ $primaryActionLabel }}</span>
-            </a>
-        @elseif(\Illuminate\Support\Facades\Route::has('admin.reservations.create'))
-            <a href="{{ route('admin.reservations.create') }}" class="aj-v6-primary-btn">
-                <i class="bx bx-plus"></i>
-                <span>Réservations</span>
             </a>
         @endif
 

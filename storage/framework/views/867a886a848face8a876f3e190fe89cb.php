@@ -40,23 +40,9 @@
         </div>
     </div>
 
-    <div class="aj-v6-topbar-center">
-        <div class="aj-v6-search">
-            <span class="aj-search-icon"><i class="bx bx-search"></i></span>
-            <input type="text" placeholder="Rechercher (voyage, agence, réservation, client...)">
-        </div>
-    </div>
+    <div class="aj-v6-topbar-center"></div>
 
     <div class="aj-v6-topbar-actions">
-        <div class="aj-v6-chip aj-v6-date-chip">
-            <i class="bx bx-calendar"></i>
-            <span><?php echo e($v6DateLabel); ?></span>
-        </div>
-        <button type="button" class="aj-v6-chip">
-            <i class="bx bx-slider-alt"></i>
-            <span>Filtres</span>
-        </button>
-
         <?php if(\Illuminate\Support\Facades\Route::has('admin.messagerie.index')): ?>
             <a href="<?php echo e(route('admin.messagerie.index')); ?>" class="aj-topbar-notif" title="Messagerie">
                 <i class="bx bx-envelope"></i>
@@ -72,20 +58,6 @@
                 <?php if($adminV2PendingCount > 0): ?>
                     <b class="aj-notif-badge"><?php echo e(min($adminV2PendingCount, 99)); ?></b>
                 <?php endif; ?>
-            </a>
-        <?php endif; ?>
-
-        <?php if (! empty(trim($__env->yieldContent('header_primary_action')))): ?>
-            <?php echo $__env->yieldContent('header_primary_action'); ?>
-        <?php elseif($primaryActionLabel && $primaryActionRoute && \Illuminate\Support\Facades\Route::has($primaryActionRoute)): ?>
-            <a href="<?php echo e(route($primaryActionRoute)); ?>" class="aj-v6-primary-btn">
-                <i class="bx bx-plus"></i>
-                <span><?php echo e($primaryActionLabel); ?></span>
-            </a>
-        <?php elseif(\Illuminate\Support\Facades\Route::has('admin.reservations.create')): ?>
-            <a href="<?php echo e(route('admin.reservations.create')); ?>" class="aj-v6-primary-btn">
-                <i class="bx bx-plus"></i>
-                <span>Réservations</span>
             </a>
         <?php endif; ?>
 
