@@ -5846,6 +5846,14 @@ body[data-layout="detached"] #page-topbar .header-item span {
     padding: 6px 2px 0;
 }
 
+.ws-field--budget-range .ws-budget-range__labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 700;
+}
+
 .ws-field--budget-range .ws-budget-range input[type="range"] {
     width: 100%;
     accent-color: #0f7ab6;

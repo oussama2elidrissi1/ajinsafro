@@ -1583,7 +1583,7 @@
                 <div class="ws-field">
                     <label class="ws-field__label" for="ws-filter-budget-min">Budget min</label>
                     <div class="ws-budget-inline">
-                        <input type="number" id="ws-filter-budget-min" name="budget_min" value="{{ $workspaceFilters['budget_min'] ?? '' }}" class="ws-input" min="0" step="500" inputmode="numeric" placeholder="0">
+                        <input type="number" id="ws-filter-budget-min" name="budget_min" value="{{ $workspaceFilters['budget_min'] ?? 0 }}" class="ws-input" min="0" step="500" inputmode="numeric" placeholder="0" readonly>
                         <span class="ws-budget-inline__suffix">MAD</span>
                     </div>
                 </div>
@@ -1597,7 +1597,7 @@
                 <div class="ws-field ws-field--budget-range full">
                     <label class="ws-field__label" for="ws-budget-range-min">Segment budget (0 à max)</label>
                     <div class="ws-budget-range">
-                        <input type="range" id="ws-budget-range-min" min="0" max="100000" step="500" value="{{ (int) ($workspaceFilters['budget_min'] ?? 0) }}">
+                        <div class="ws-budget-range__labels"><span>0</span><span>MAX</span></div>
                         <input type="range" id="ws-budget-range-max" min="0" max="100000" step="500" value="{{ (int) ($workspaceFilters['budget_max'] ?? 30000) }}">
                     </div>
                 </div>
@@ -2280,53 +2280,30 @@ document.addEventListener('DOMContentLoaded', function () {
     var dateToEl = document.getElementById('ws-filter-date-to');
     var budgetMinEl = document.getElementById('ws-filter-budget-min');
     var budgetMaxEl = document.getElementById('ws-filter-budget-max');
-    var budgetRangeMinEl = document.getElementById('ws-budget-range-min');
     var budgetRangeMaxEl = document.getElementById('ws-budget-range-max');
     var applyBtn = document.getElementById('ws-filters-apply');
 
-    function wsSyncBudgetRanges() {
-        if (!budgetMinEl || !budgetMaxEl || !budgetRangeMinEl || !budgetRangeMaxEl) return;
-        var minVal = parseInt(budgetMinEl.value || '0', 10);
-        var maxVal = parseInt(budgetMaxEl.value || '30000', 10);
-        if (isNaN(minVal)) minVal = 0;
-        if (isNaN(maxVal)) maxVal = 30000;
-        minVal = Math.max(0, minVal);
-        maxVal = Math.max(0, maxVal);
-        if (minVal > maxVal) {
-            var t = minVal; minVal = maxVal; maxVal = t;
-        }
-        budgetMinEl.value = minVal;
-        budgetMaxEl.value = maxVal;
-        budgetRangeMinEl.value = minVal;
-        budgetRangeMaxEl.value = maxVal;
-    }
-
-    if (budgetRangeMinEl && budgetRangeMaxEl && budgetMinEl && budgetMaxEl) {
-        budgetRangeMinEl.addEventListener('input', function () {
-            var minVal = parseInt(budgetRangeMinEl.value || '0', 10);
-            var maxVal = parseInt(budgetRangeMaxEl.value || '0', 10);
-            if (minVal > maxVal) {
-                budgetRangeMaxEl.value = String(minVal);
-                maxVal = minVal;
-            }
-            budgetMinEl.value = String(minVal);
-            budgetMaxEl.value = String(maxVal);
-        });
-
+    if (budgetRangeMaxEl && budgetMinEl && budgetMaxEl) {
+        budgetMinEl.value = '0';
         budgetRangeMaxEl.addEventListener('input', function () {
-            var minVal = parseInt(budgetRangeMinEl.value || '0', 10);
             var maxVal = parseInt(budgetRangeMaxEl.value || '0', 10);
-            if (maxVal < minVal) {
-                budgetRangeMinEl.value = String(maxVal);
-                minVal = maxVal;
-            }
-            budgetMinEl.value = String(minVal);
+            if (isNaN(maxVal) || maxVal < 0) maxVal = 0;
+            budgetMinEl.value = '0';
             budgetMaxEl.value = String(maxVal);
         });
 
-        budgetMinEl.addEventListener('input', wsSyncBudgetRanges);
-        budgetMaxEl.addEventListener('input', wsSyncBudgetRanges);
-        wsSyncBudgetRanges();
+        budgetMaxEl.addEventListener('input', function () {
+            var maxVal = parseInt(budgetMaxEl.value || '0', 10);
+            if (isNaN(maxVal) || maxVal < 0) maxVal = 0;
+            budgetMinEl.value = '0';
+            budgetMaxEl.value = String(maxVal);
+            budgetRangeMaxEl.value = String(maxVal);
+        });
+
+        if (!budgetMaxEl.value) {
+            budgetMaxEl.value = String(parseInt(budgetRangeMaxEl.value || '30000', 10));
+        }
+        budgetRangeMaxEl.value = budgetMaxEl.value;
     }
 
     function wsActivateView(mode) {
