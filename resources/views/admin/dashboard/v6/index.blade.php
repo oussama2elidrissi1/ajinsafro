@@ -42,6 +42,141 @@
 @push('styles')
 <style>
 {{ $v6Css }}
+
+/* Dashboard V6 Laravel fixes: stable collapse + 1280/1366 responsive density. */
+.app-shell {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.main {
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+html[data-sidebar="collapsed"] .sidebar,
+html[data-sidebar="collapsed"] .sidebar:hover {
+  width: var(--sidebar-closed) !important;
+}
+
+html[data-sidebar="collapsed"] .main,
+html[data-sidebar="collapsed"] .sidebar:hover ~ .main {
+  margin-left: var(--sidebar-closed) !important;
+}
+
+html[data-sidebar="collapsed"] .sidebar .brand-name,
+html[data-sidebar="collapsed"] .sidebar .menu-label,
+html[data-sidebar="collapsed"] .sidebar .nav-section-title,
+html[data-sidebar="collapsed"] .sidebar .user-meta,
+html[data-sidebar="collapsed"] .sidebar .nav-chevron,
+html[data-sidebar="collapsed"] .sidebar .premium-box,
+html[data-sidebar="collapsed"] .sidebar .submenu {
+  display: none !important;
+}
+
+html[data-sidebar="collapsed"] .sidebar .sidebar-brand,
+html[data-sidebar="collapsed"] .sidebar .sidebar-user,
+html[data-sidebar="collapsed"] .sidebar .nav-item,
+html[data-sidebar="collapsed"] .sidebar .nav-parent {
+  justify-content: center !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  min-width: 0 !important;
+}
+
+html[data-sidebar="collapsed"] .sidebar .sidebar-toggle {
+  right: 20px !important;
+}
+
+.topbar {
+  overflow: visible;
+}
+
+.kpi-card {
+  grid-template-columns: 1fr 76px !important;
+  gap: 10px !important;
+}
+
+.kpi-left {
+  gap: 10px !important;
+}
+
+.kpi-icon {
+  width: 44px !important;
+  height: 44px !important;
+  flex-basis: 44px !important;
+  border-radius: 14px !important;
+}
+
+.kpi-sparkline {
+  width: 76px !important;
+}
+
+.kpi-title,
+.kpi-note {
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+@media (max-width: 1380px) {
+  .topbar {
+    grid-template-columns: minmax(160px, 220px) minmax(220px, 1fr) auto !important;
+    gap: 12px !important;
+    padding: 0 16px !important;
+  }
+
+  .top-actions {
+    gap: 7px !important;
+  }
+
+  .chip,
+  .primary-btn {
+    padding: 0 10px !important;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+  }
+
+  .kpi-card {
+    padding: 14px !important;
+    min-height: 112px !important;
+  }
+
+  .dashboard-grid,
+  .dashboard-grid.middle,
+  .dashboard-grid.bottom {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+@media (max-width: 1180px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .dashboard-grid,
+  .dashboard-grid.middle,
+  .dashboard-grid.bottom {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 760px) {
+  html[data-sidebar="expanded"] .sidebar {
+    width: var(--sidebar-open) !important;
+    transform: translateX(0) !important;
+  }
+
+  html[data-sidebar="collapsed"] .sidebar,
+  html[data-sidebar="collapsed"] .sidebar:hover {
+    width: 0 !important;
+    transform: translateX(-100%) !important;
+  }
+}
 </style>
 @endpush
 
@@ -60,6 +195,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const saved = localStorage.getItem('aj-v6-sidebar');
     if (saved === 'collapsed' || saved === 'expanded') {
         root.dataset.sidebar = saved;
+    } else if (!root.dataset.sidebar) {
+        root.dataset.sidebar = 'expanded';
     }
 
     const toggle = function () {
@@ -70,6 +207,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('sidebarToggle')?.addEventListener('click', toggle);
     document.getElementById('mobileToggle')?.addEventListener('click', toggle);
+
+    document.querySelectorAll('.nav-parent').forEach(function (button) {
+        button.addEventListener('click', function (event) {
+            if (root.dataset.sidebar === 'collapsed') {
+                event.preventDefault();
+                root.dataset.sidebar = 'expanded';
+                localStorage.setItem('aj-v6-sidebar', 'expanded');
+            }
+        });
+    });
 });
 </script>
 @endpush
