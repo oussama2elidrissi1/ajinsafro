@@ -46,6 +46,10 @@
     $v6Body = str_replace('<a href="#">Dashboard V4</a>', '<a href="' . e(route('admin.dashboard.v4')) . '">Dashboard V4</a>', $v6Body);
     $v6Body = str_replace('<a href="#">Dashboard V3</a>', '<a href="' . e(route('admin.dashboard.v3')) . '">Dashboard V3</a>', $v6Body);
     $v6Body = str_replace('<a href="#">Dashboard V2</a>', '<a href="' . e(route('admin.dashboard.v2')) . '">Dashboard V2</a>', $v6Body);
+    $v6Body = preg_replace('/<div class="search-box"[\s\S]*?<\/div>/i', '', $v6Body, 1);
+    $v6Body = preg_replace('/<div class="chip date-chip"[\s\S]*?<\/div>/i', '', $v6Body, 1);
+    $v6Body = preg_replace('/<button class="chip"[^>]*>[\s\S]*?Filtres[\s\S]*?<\/button>/i', '', $v6Body, 1);
+    $v6Body = preg_replace('/<div class="page-title"[\s\S]*?<\/div>/i', '', $v6Body, 1);
 @endphp
 
 @push('styles')
