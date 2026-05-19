@@ -120,6 +120,15 @@
   overscroll-behavior: contain;
 }
 
+/* Hide dashboard version links inside the injected sidebar-v2 menu. */
+.dashboard-v6-sidebar a[href*="/admin/dashboard/v2"],
+.dashboard-v6-sidebar a[href*="/admin/dashboard/v3"],
+.dashboard-v6-sidebar a[href*="/admin/dashboard/v4"],
+.dashboard-v6-sidebar a[href*="/admin/dashboard/v5"],
+.dashboard-v6-sidebar a[href*="/admin/dashboard/v6"] {
+  display: none !important;
+}
+
 .main {
   height: 100vh;
   overflow-y: auto;

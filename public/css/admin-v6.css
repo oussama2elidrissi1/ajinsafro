@@ -229,6 +229,15 @@ body.aj-admin-v6 .admin-v6-sidebar-head {
     background: #fff;
 }
 
+/* Hide dashboard version links in the sidebar (keep "Vue d'ensemble / Statistiques / Alertes"). */
+body.aj-admin-v6 #aj-admin-v2-sidebar a[href*="/admin/dashboard/v2"],
+body.aj-admin-v6 #aj-admin-v2-sidebar a[href*="/admin/dashboard/v3"],
+body.aj-admin-v6 #aj-admin-v2-sidebar a[href*="/admin/dashboard/v4"],
+body.aj-admin-v6 #aj-admin-v2-sidebar a[href*="/admin/dashboard/v5"],
+body.aj-admin-v6 #aj-admin-v2-sidebar a[href*="/admin/dashboard/v6"] {
+    display: none !important;
+}
+
 body.aj-admin-v6 .admin-v6-sidebar-toggle {
     width: 38px;
     height: 38px;
