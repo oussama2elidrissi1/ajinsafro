@@ -124,9 +124,11 @@
         --text: #101828;
         --muted: #667085;
         --border: #e8edf3;
+        width: 100%;
         min-height: 100vh;
         background: #f6f8fb;
         color: var(--text);
+        overflow-x: hidden;
     }
 
     .aj-dashboard-v4-page button,
@@ -147,12 +149,15 @@
         top: 0;
         bottom: 0;
         width: 286px;
+        min-width: 286px;
+        max-width: 286px;
         padding: 28px 20px;
         color: #fff;
         background:
             radial-gradient(circle at 20% 10%, rgba(216, 164, 58, 0.22), transparent 25%),
             linear-gradient(180deg, #05172b 0%, #08213d 55%, #06192d 100%);
-        overflow: hidden;
+        overflow-x: hidden;
+        overflow-y: auto;
         z-index: 30;
     }
 
@@ -194,9 +199,9 @@
 
     .aj-v4-sidebar__brand img {
         display: block;
-        width: 168px;
-        max-width: 168px;
-        height: 30px;
+        width: auto;
+        max-width: 190px;
+        height: auto;
         object-fit: contain;
         object-position: left center;
         filter: brightness(0) invert(1);
@@ -277,6 +282,12 @@
         text-decoration: none;
         overflow: visible;
         min-width: 0;
+        white-space: nowrap;
+    }
+
+    .aj-v4-sidebar__item > span:first-child,
+    .aj-v4-sidebar__subitem > span:first-child {
+        flex: none;
     }
 
     .aj-v4-sidebar__item:hover,
@@ -347,8 +358,15 @@
     .aj-v4-main {
         margin-left: 286px;
         width: calc(100% - 286px);
+        max-width: none !important;
         padding: 28px 34px 38px;
         overflow: visible;
+    }
+
+    .aj-v4-content {
+        width: 100%;
+        max-width: none !important;
+        margin: 0 !important;
     }
 
     .aj-v4-topbar {
@@ -400,7 +418,7 @@
         position: relative;
         flex: 1 1 390px;
         min-width: 260px;
-        max-width: 590px;
+        max-width: none;
     }
 
     .aj-v4-search input {
@@ -533,7 +551,7 @@
     .aj-v4-hero__content {
         position: relative;
         z-index: 1;
-        max-width: 660px;
+        width: 100%;
     }
 
     .aj-v4-hero__logo {
@@ -549,9 +567,9 @@
 
     .aj-v4-hero__logo img {
         display: block;
-        width: 172px;
-        max-width: 172px;
-        height: 30px;
+        width: auto;
+        max-width: 190px;
+        height: auto;
         object-fit: contain;
         object-position: left center;
         filter: brightness(0) invert(1);
@@ -613,6 +631,7 @@
         gap: 18px;
     }
 
+    .aj-v4-kpi-grid,
     .aj-v4-kpis {
         grid-template-columns: repeat(4, minmax(0, 1fr));
         margin-bottom: 18px;
@@ -675,18 +694,21 @@
         height:32px;
     }
 
+    .aj-v4-analytics-grid,
     .aj-v4-grid--top {
         grid-template-columns: 1.65fr 0.95fr 0.72fr;
         align-items: stretch;
         margin-bottom: 18px;
     }
 
+    .aj-v4-activity-grid,
     .aj-v4-grid--bottom {
         grid-template-columns: 1.22fr 1.02fr 0.96fr;
         align-items: stretch;
         margin-bottom: 18px;
     }
 
+    .aj-v4-metrics-grid,
     .aj-v4-grid--bottom-last {
         grid-template-columns: 1.35fr 1fr 1fr;
         align-items: start;
@@ -1052,12 +1074,16 @@
     }
 
     @media (max-width: 1280px) {
+        .aj-v4-kpi-grid,
         .aj-v4-kpis {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
+        .aj-v4-analytics-grid,
         .aj-v4-grid--top,
+        .aj-v4-activity-grid,
         .aj-v4-grid--bottom,
+        .aj-v4-metrics-grid,
         .aj-v4-grid--bottom-last {
             grid-template-columns: 1fr;
         }
@@ -1099,6 +1125,7 @@
     }
 
     @media (max-width: 660px) {
+        .aj-v4-kpi-grid,
         .aj-v4-kpis {
             grid-template-columns: 1fr;
         }
@@ -1185,6 +1212,7 @@
         </aside>
 
         <main class="aj-v4-main">
+            <div class="aj-v4-content">
             <header class="aj-v4-topbar">
                 <div class="aj-v4-topbar__title">
                     <h1>Tableau de bord</h1>
@@ -1231,7 +1259,7 @@
                 </div>
             </section>
 
-            <section class="aj-v4-kpis" aria-label="Indicateurs principaux">
+            <section class="aj-v4-kpi-grid" aria-label="Indicateurs principaux">
                 <article class="aj-v4-card aj-v4-kpi-card">
                     <div class="aj-v4-kpi-card__icon blue"><i class="bx bx-briefcase-alt-2"></i></div>
                     <div>
@@ -1273,7 +1301,7 @@
                 </article>
             </section>
 
-            <section class="aj-v4-grid aj-v4-grid--top">
+            <section class="aj-v4-grid aj-v4-analytics-grid">
                 <article class="aj-v4-card aj-v4-panel">
                     <div class="aj-v4-panel__head">
                         <div>
@@ -1359,7 +1387,7 @@
                 </article>
             </section>
 
-            <section class="aj-v4-grid aj-v4-grid--bottom">
+            <section class="aj-v4-grid aj-v4-activity-grid">
                 <article class="aj-v4-card aj-v4-panel">
                     <div class="aj-v4-panel__head">
                         <div>
@@ -1446,7 +1474,7 @@
                 </article>
             </section>
 
-            <section class="aj-v4-grid aj-v4-grid--bottom-last" style="margin-top:18px;">
+            <section class="aj-v4-grid aj-v4-metrics-grid" style="margin-top:18px;">
                 <article class="aj-v4-card aj-v4-panel">
                     <div class="aj-v4-panel__head">
                         <div>
@@ -1517,6 +1545,7 @@
                     </div>
                 </article>
             </section>
+            </div>
         </main>
     </div>
 </div>
