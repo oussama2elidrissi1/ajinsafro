@@ -1,4 +1,12 @@
 <?php $__env->startSection('title', 'Dossier de réservation'); ?>
+<?php $__env->startSection('page_title', 'Dossier de réservation'); ?>
+<?php $__env->startSection('hide_admin_footer', '1'); ?>
+<?php $__env->startSection('header_primary_action'); ?>
+    <a href="<?php echo e(route('admin.reservations.create')); ?>" class="aj-v6-primary-btn">
+        <i class="bx bx-plus"></i>
+        <span>Créer un dossier</span>
+    </a>
+<?php $__env->stopSection(); ?>
 
 <?php
     use App\Models\Reservation;
@@ -1229,4 +1237,4 @@
     <?php $__env->stopPush(); ?>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\reservation-dossiers\show.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\reservation-dossiers\show.blade.php ENDPATH**/ ?>

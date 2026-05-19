@@ -114,6 +114,10 @@ body.aj-admin-v6 .aj-admin-v2-content {
     padding: 18px 20px 24px;
 }
 
+body.aj-admin-v6 .aj-footer {
+    display: none;
+}
+
 body.aj-admin-v6 .card,
 body.aj-admin-v6 .panel,
 body.aj-admin-v6 .aj-panel {

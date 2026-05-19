@@ -1,4 +1,4 @@
-@extends('layouts.admin-v2')
+@extends('layouts.admin-v6')
 
 @section('title', 'Créer une réservation')
 @section('hidePageFooter', '1')

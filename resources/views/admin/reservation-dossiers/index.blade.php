@@ -1,6 +1,14 @@
-@extends('layouts.admin-v2')
+@extends('layouts.admin-v6')
 
 @section('title', 'Dossiers de reservation')
+@section('page_title', 'Dossiers de réservation')
+@section('hide_admin_footer', '1')
+@section('header_primary_action')
+    <a href="{{ route('admin.reservations.create') }}" class="aj-v6-primary-btn">
+        <i class="bx bx-plus"></i>
+        <span>Créer un dossier</span>
+    </a>
+@endsection
 
 @php
     use App\Models\Reservation;
@@ -35,14 +43,7 @@
         padding-bottom: 24px;
     }
 
-    .reservation-dossiers-page .rd-hero {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 18px;
-        flex-wrap: wrap;
-        margin-bottom: 24px;
-    }
+    .reservation-dossiers-page .rd-hero { display: none; }
 
     .reservation-dossiers-page .rd-hero h1 {
         font-size: clamp(28px, 3vw, 40px);
@@ -501,7 +502,7 @@
 @endpush
 
 @section('content')
-<div class="container-fluid reservation-dossiers-page">
+<div class="reservation-dossiers-page">
     <div class="rd-hero">
         <div>
             <h1>Dossiers de reservation</h1>

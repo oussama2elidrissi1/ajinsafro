@@ -110,7 +110,7 @@
     $workspaceCalendarSeedDate = $workspaceFilters['date_from']
         ?? (collect($workspaceCalendarEvents)->pluck('departure_date')->filter()->sort()->first() ?: Carbon::today()->format('Y-m-d'));
 @endphp
-@extends('layouts.admin-v2')
+@extends('layouts.admin-v6')
 
 @section('title', 'Espace réservation — Catalogue')
 

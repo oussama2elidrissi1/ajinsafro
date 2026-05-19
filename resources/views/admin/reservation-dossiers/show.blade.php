@@ -1,6 +1,14 @@
-@extends('layouts.admin-v2')
+@extends('layouts.admin-v6')
 
 @section('title', 'Dossier de réservation')
+@section('page_title', 'Dossier de réservation')
+@section('hide_admin_footer', '1')
+@section('header_primary_action')
+    <a href="{{ route('admin.reservations.create') }}" class="aj-v6-primary-btn">
+        <i class="bx bx-plus"></i>
+        <span>Créer un dossier</span>
+    </a>
+@endsection
 
 @php
     use App\Models\Reservation;

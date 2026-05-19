@@ -1,4 +1,12 @@
 <?php $__env->startSection('title', 'Dossiers de reservation'); ?>
+<?php $__env->startSection('page_title', 'Dossiers de réservation'); ?>
+<?php $__env->startSection('hide_admin_footer', '1'); ?>
+<?php $__env->startSection('header_primary_action'); ?>
+    <a href="<?php echo e(route('admin.reservations.create')); ?>" class="aj-v6-primary-btn">
+        <i class="bx bx-plus"></i>
+        <span>Créer un dossier</span>
+    </a>
+<?php $__env->stopSection(); ?>
 
 <?php
     use App\Models\Reservation;
@@ -33,14 +41,7 @@
         padding-bottom: 24px;
     }
 
-    .reservation-dossiers-page .rd-hero {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 18px;
-        flex-wrap: wrap;
-        margin-bottom: 24px;
-    }
+    .reservation-dossiers-page .rd-hero { display: none; }
 
     .reservation-dossiers-page .rd-hero h1 {
         font-size: clamp(28px, 3vw, 40px);
@@ -499,7 +500,7 @@
 <?php $__env->stopPush(); ?>
 
 <?php $__env->startSection('content'); ?>
-<div class="container-fluid reservation-dossiers-page">
+<div class="reservation-dossiers-page">
     <div class="rd-hero">
         <div>
             <h1>Dossiers de reservation</h1>
@@ -753,4 +754,4 @@
 </script>
 <?php $__env->stopPush(); ?>
 
-<?php echo $__env->make('layouts.admin-v2', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\reservation-dossiers\index.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\reservation-dossiers\index.blade.php ENDPATH**/ ?>
