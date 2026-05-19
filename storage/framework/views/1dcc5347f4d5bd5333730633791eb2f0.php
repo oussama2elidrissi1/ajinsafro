@@ -57,11 +57,12 @@
     
     <link href="<?php echo e(URL::asset('css/admin-sidebar-v2.css')); ?>" rel="stylesheet">
     <link href="<?php echo e(URL::asset('css/admin-v2.css')); ?>" rel="stylesheet">
+    <link href="<?php echo e(URL::asset('css/admin-v6.css')); ?>" rel="stylesheet">
 
     <?php echo $__env->yieldPushContent('styles'); ?>
     <link href="<?php echo e(URL::asset('css/admin-compact.css')); ?>?v=workspace-fixed-v7" rel="stylesheet">
 </head>
-<body class="aj-admin-v2-body aj-admin aj-admin-compact<?php echo e($isCommercialWorkspaceOnly ? ' commercial-reservations-only' : ''); ?>">
+<body class="aj-admin-v2-body aj-admin aj-admin-v6 aj-admin-compact<?php echo e($isCommercialWorkspaceOnly ? ' commercial-reservations-only' : ''); ?>">
 
 <?php if($isCommercialWorkspaceOnly): ?>
     <?php echo $__env->yieldContent('content'); ?>
@@ -78,7 +79,7 @@
     
     <div class="aj-admin-v2-main">
 
-        <?php echo $__env->make('admin.partials.header-v2', [
+        <?php echo $__env->make('admin.partials.header-v6', [
             'adminV2User'         => $adminV2User,
             'adminV2UserName'     => $adminV2UserName,
             'adminV2UserRole'     => $adminV2UserRole,

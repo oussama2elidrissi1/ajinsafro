@@ -57,11 +57,12 @@
     {{-- Admin V2 system — loaded last to override Qovex layout rules --}}
     <link href="{{ URL::asset('css/admin-sidebar-v2.css') }}" rel="stylesheet">
     <link href="{{ URL::asset('css/admin-v2.css') }}" rel="stylesheet">
+    <link href="{{ URL::asset('css/admin-v6.css') }}" rel="stylesheet">
 
     @stack('styles')
     <link href="{{ URL::asset('css/admin-compact.css') }}?v=workspace-fixed-v7" rel="stylesheet">
 </head>
-<body class="aj-admin-v2-body aj-admin aj-admin-compact{{ $isCommercialWorkspaceOnly ? ' commercial-reservations-only' : '' }}">
+<body class="aj-admin-v2-body aj-admin aj-admin-v6 aj-admin-compact{{ $isCommercialWorkspaceOnly ? ' commercial-reservations-only' : '' }}">
 
 @if($isCommercialWorkspaceOnly)
     @yield('content')
@@ -78,7 +79,7 @@
     {{-- ═══ MAIN ═══ --}}
     <div class="aj-admin-v2-main">
 
-        @include('admin.partials.header-v2', [
+        @include('admin.partials.header-v6', [
             'adminV2User'         => $adminV2User,
             'adminV2UserName'     => $adminV2UserName,
             'adminV2UserRole'     => $adminV2UserRole,
