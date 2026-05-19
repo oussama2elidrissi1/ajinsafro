@@ -1,0 +1,465 @@
+import React, { useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import {
+  CalendarDays,
+  Users,
+  Plane,
+  Hotel,
+  Wallet,
+  TrendingUp,
+  AlertTriangle,
+  CheckCircle2,
+  Clock3,
+  Search,
+  Bell,
+  Filter,
+  MoreHorizontal,
+  ArrowUpRight,
+  MapPin,
+  UserRoundCheck,
+  TicketCheck,
+  Building2,
+  BadgePercent,
+  ChevronDown,
+  Eye,
+  Plus,
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+
+const revenueData = [
+  { month: "Jan", ca: 180000, reservations: 45 },
+  { month: "Fév", ca: 220000, reservations: 53 },
+  { month: "Mar", ca: 310000, reservations: 71 },
+  { month: "Avr", ca: 285000, reservations: 64 },
+  { month: "Mai", ca: 390000, reservations: 88 },
+  { month: "Juin", ca: 470000, reservations: 104 },
+  { month: "Juil", ca: 620000, reservations: 137 },
+];
+
+const destinationData = [
+  { name: "Dakhla", value: 36 },
+  { name: "Istanbul", value: 24 },
+  { name: "Marrakech", value: 18 },
+  { name: "Omra", value: 14 },
+  { name: "Autres", value: 8 },
+];
+
+const departureData = [
+  { name: "Dakhla Premium", date: "23 Mai 2026", sold: 18, capacity: 24, status: "Ouvert", city: "Tanger", price: "3 980 DH" },
+  { name: "Omra Ramadan", date: "01 Juin 2026", sold: 42, capacity: 50, status: "Urgent", city: "Casablanca", price: "16 900 DH" },
+  { name: "Istanbul Express", date: "08 Juin 2026", sold: 29, capacity: 32, status: "Presque complet", city: "Rabat", price: "7 800 DH" },
+  { name: "Marrakech Groupe", date: "15 Juin 2026", sold: 11, capacity: 20, status: "Ouvert", city: "Tanger", price: "2 450 DH" },
+];
+
+const reservations = [
+  { client: "Nadia El Amrani", trip: "Dakhla Premium", amount: "7 960 DH", status: "Confirmée", agent: "Oumayma", time: "Il y a 12 min" },
+  { client: "Youssef Berrada", trip: "Omra Ramadan", amount: "16 900 DH", status: "En attente", agent: "Agence Tanger", time: "Il y a 28 min" },
+  { client: "Salma Bennis", trip: "Istanbul Express", amount: "15 600 DH", status: "Acompte", agent: "Karim", time: "Il y a 41 min" },
+  { client: "Mohamed Alaoui", trip: "Marrakech Groupe", amount: "4 900 DH", status: "Client web", agent: "Direct", time: "Il y a 1 h" },
+];
+
+const COLORS = ["#0f6fb5", "#f28c28", "#18a66a", "#1f2937", "#94a3b8"];
+
+function formatNumber(value) {
+  return new Intl.NumberFormat("fr-MA").format(value);
+}
+
+function StatusBadge({ status }) {
+  const styles = {
+    Confirmée: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    "En attente": "bg-amber-50 text-amber-700 border-amber-200",
+    Acompte: "bg-blue-50 text-blue-700 border-blue-200",
+    "Client web": "bg-purple-50 text-purple-700 border-purple-200",
+    Ouvert: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    Urgent: "bg-red-50 text-red-700 border-red-200",
+    "Presque complet": "bg-amber-50 text-amber-700 border-amber-200",
+  };
+
+  return (
+    <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${styles[status] || "bg-slate-50 text-slate-700 border-slate-200"}`}>
+      {status}
+    </span>
+  );
+}
+
+function ProgressBar({ sold, capacity }) {
+  const percent = Math.min(100, Math.round((sold / capacity) * 100));
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between text-xs text-slate-500">
+        <span>{sold}/{capacity} vendus</span>
+        <span>{capacity - sold} restants</span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-[#0f6fb5] via-[#18a66a] to-[#f28c28]"
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function MetricCard({ icon: Icon, title, value, subtitle, trend, tone = "blue" }) {
+  const tones = {
+    blue: "from-[#0f6fb5]/12 to-[#0f6fb5]/5 text-[#0f6fb5]",
+    orange: "from-[#f28c28]/15 to-[#f28c28]/5 text-[#c96e12]",
+    green: "from-[#18a66a]/15 to-[#18a66a]/5 text-[#128456]",
+    dark: "from-slate-900/10 to-slate-900/5 text-slate-900",
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
+      <Card className="rounded-3xl border-slate-200/80 bg-white/90 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
+        <CardContent className="p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-slate-500">{title}</p>
+              <div className="mt-2 flex items-end gap-2">
+                <h3 className="text-2xl font-black tracking-tight text-slate-950">{value}</h3>
+                {trend && <span className="mb-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700">{trend}</span>}
+              </div>
+              <p className="mt-2 text-sm text-slate-500">{subtitle}</p>
+            </div>
+            <div className={`rounded-2xl bg-gradient-to-br p-3 ${tones[tone]}`}>
+              <Icon className="h-6 w-6" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
+export default function AjinsafroDashboard() {
+  const [period, setPeriod] = useState("Ce mois");
+
+  const totals = useMemo(() => {
+    const totalRevenue = revenueData.reduce((sum, item) => sum + item.ca, 0);
+    const totalReservations = revenueData.reduce((sum, item) => sum + item.reservations, 0);
+    return { totalRevenue, totalReservations };
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-[#f6f8fb] text-slate-950">
+      <div className="flex min-h-screen">
+        <aside className="hidden w-72 shrink-0 border-r border-slate-200 bg-white/95 p-5 lg:block">
+          <div className="flex items-center gap-3 rounded-3xl bg-gradient-to-br from-[#0f6fb5] to-[#084c87] p-4 text-white shadow-lg shadow-blue-900/15">
+            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white/15 text-xl font-black">A</div>
+            <div>
+              <p className="text-lg font-black leading-tight">Ajinsafro</p>
+              <p className="text-xs text-blue-100">Travel Backoffice</p>
+            </div>
+          </div>
+
+          <nav className="mt-7 space-y-1.5">
+            {[
+              [TrendingUp, "Dashboard", true],
+              [CalendarDays, "Réservations", false],
+              [Plane, "Voyages", false],
+              [Hotel, "Hébergement", false],
+              [Users, "Clients & agences", false],
+              [BadgePercent, "Commissions", false],
+              [Building2, "RH & points de vente", false],
+            ].map(([Icon, label, active]) => (
+              <button
+                key={label}
+                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-bold transition ${
+                  active
+                    ? "bg-[#0f6fb5] text-white shadow-md shadow-blue-900/15"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+                }`}
+              >
+                <Icon className="h-5 w-5" />
+                {label}
+              </button>
+            ))}
+          </nav>
+
+          <div className="mt-8 rounded-3xl border border-orange-100 bg-orange-50 p-4">
+            <div className="flex items-center gap-2 text-orange-700">
+              <AlertTriangle className="h-5 w-5" />
+              <p className="text-sm font-black">Alertes opérationnelles</p>
+            </div>
+            <p className="mt-2 text-sm leading-6 text-orange-800/80">
+              3 départs nécessitent une action : rooming, acompte ou validation chef commercial.
+            </p>
+            <Button className="mt-4 w-full rounded-2xl bg-[#f28c28] text-white hover:bg-[#d97917]">Voir les alertes</Button>
+          </div>
+        </aside>
+
+        <main className="flex-1 overflow-hidden">
+          <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/80 px-4 py-4 backdrop-blur-xl md:px-8">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+              <div>
+                <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-500">
+                  <span>Admin</span>
+                  <span>/</span>
+                  <span>Vue globale</span>
+                  <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700">Live</span>
+                </div>
+                <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950 md:text-3xl">Dashboard commercial Ajinsafro</h1>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="relative min-w-[260px]">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Input className="rounded-2xl border-slate-200 bg-slate-50 pl-9" placeholder="Rechercher client, voyage, dossier..." />
+                </div>
+                <Button variant="outline" className="rounded-2xl border-slate-200 bg-white font-bold">
+                  <Filter className="mr-2 h-4 w-4" /> {period} <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+                <Button className="rounded-2xl bg-[#0f6fb5] font-bold text-white hover:bg-[#0b5f9d]">
+                  <Plus className="mr-2 h-4 w-4" /> Nouvelle réservation
+                </Button>
+                <button className="grid h-10 w-10 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-600">
+                  <Bell className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          </header>
+
+          <div className="space-y-6 p-4 md:p-8">
+            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <MetricCard icon={Wallet} title="Chiffre d'affaires" value={`${formatNumber(totals.totalRevenue)} DH`} subtitle="CA consolidé ventes + web" trend="+18%" tone="blue" />
+              <MetricCard icon={TicketCheck} title="Réservations" value={formatNumber(totals.totalReservations)} subtitle="Confirmées, acomptes et web" trend="+11%" tone="green" />
+              <MetricCard icon={Plane} title="Départs actifs" value="38" subtitle="Voyages avec disponibilité" tone="orange" />
+              <MetricCard icon={UserRoundCheck} title="Agents actifs" value="14" subtitle="Commerciaux + agences" tone="dark" />
+            </section>
+
+            <section className="grid grid-cols-1 gap-6 2xl:grid-cols-3">
+              <Card className="rounded-3xl border-slate-200 bg-white shadow-sm 2xl:col-span-2">
+                <CardContent className="p-5 md:p-6">
+                  <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h2 className="text-lg font-black text-slate-950">Performance commerciale</h2>
+                      <p className="text-sm text-slate-500">CA et volume de réservations par mois</p>
+                    </div>
+                    <div className="flex gap-2">
+                      {["7 jours", "30 jours", "Année"].map((item, index) => (
+                        <button key={item} className={`rounded-full px-3 py-1.5 text-xs font-bold ${index === 1 ? "bg-[#0f6fb5] text-white" : "bg-slate-100 text-slate-600"}`}>
+                          {item}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="h-[330px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={revenueData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="caGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#0f6fb5" stopOpacity={0.28} />
+                            <stop offset="95%" stopColor="#0f6fb5" stopOpacity={0.02} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                        <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} tickFormatter={(value) => `${value / 1000}k`} />
+                        <Tooltip formatter={(value, name) => [name === "ca" ? `${formatNumber(value)} DH` : value, name === "ca" ? "CA" : "Réservations"]} />
+                        <Area type="monotone" dataKey="ca" stroke="#0f6fb5" strokeWidth={3} fill="url(#caGradient)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-3xl border-slate-200 bg-white shadow-sm">
+                <CardContent className="p-5 md:p-6">
+                  <div className="mb-5 flex items-center justify-between">
+                    <div>
+                      <h2 className="text-lg font-black text-slate-950">Destinations vendues</h2>
+                      <p className="text-sm text-slate-500">Répartition du mois</p>
+                    </div>
+                    <MoreHorizontal className="h-5 w-5 text-slate-400" />
+                  </div>
+                  <div className="h-[245px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={destinationData} innerRadius={58} outerRadius={92} paddingAngle={4} dataKey="value">
+                          {destinationData.map((entry, index) => (
+                            <Cell key={`cell-${entry.name}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value) => [`${value}%`, "Part"]} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="space-y-3">
+                    {destinationData.map((item, index) => (
+                      <div key={item.name} className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <span className="h-2.5 w-2.5 rounded-full" style={{ background: COLORS[index % COLORS.length] }} />
+                          <span className="font-semibold text-slate-700">{item.name}</span>
+                        </div>
+                        <span className="font-black text-slate-950">{item.value}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
+
+            <section className="grid grid-cols-1 gap-6 2xl:grid-cols-3">
+              <Card className="rounded-3xl border-slate-200 bg-white shadow-sm 2xl:col-span-2">
+                <CardContent className="p-5 md:p-6">
+                  <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h2 className="text-lg font-black text-slate-950">Départs à piloter</h2>
+                      <p className="text-sm text-slate-500">Suivi capacité, ventes, urgence et disponibilité</p>
+                    </div>
+                    <Button variant="outline" className="rounded-2xl border-slate-200 font-bold">
+                      Voir calendrier <ArrowUpRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  <div className="overflow-hidden rounded-2xl border border-slate-200">
+                    <div className="hidden grid-cols-[1.5fr_1fr_1fr_1.1fr_0.8fr] gap-4 bg-slate-50 px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500 md:grid">
+                      <span>Voyage</span>
+                      <span>Départ</span>
+                      <span>Statut</span>
+                      <span>Capacité</span>
+                      <span className="text-right">Action</span>
+                    </div>
+                    <div className="divide-y divide-slate-100">
+                      {departureData.map((item) => (
+                        <div key={item.name} className="grid gap-4 p-4 md:grid-cols-[1.5fr_1fr_1fr_1.1fr_0.8fr] md:items-center">
+                          <div>
+                            <p className="font-black text-slate-950">{item.name}</p>
+                            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                              <MapPin className="h-3.5 w-3.5" /> {item.city}
+                              <span>•</span>
+                              <span>{item.price}</span>
+                            </div>
+                          </div>
+                          <div className="text-sm font-bold text-slate-700">{item.date}</div>
+                          <div><StatusBadge status={item.status} /></div>
+                          <ProgressBar sold={item.sold} capacity={item.capacity} />
+                          <div className="flex justify-end">
+                            <Button size="sm" className="rounded-xl bg-slate-950 text-white hover:bg-slate-800">
+                              <Eye className="mr-2 h-4 w-4" /> Détails
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-3xl border-slate-200 bg-white shadow-sm">
+                <CardContent className="p-5 md:p-6">
+                  <div className="mb-5">
+                    <h2 className="text-lg font-black text-slate-950">Qualité opérationnelle</h2>
+                    <p className="text-sm text-slate-500">Indicateurs de contrôle</p>
+                  </div>
+                  <div className="space-y-4">
+                    {[
+                      [CheckCircle2, "Dossiers validés", "82%", "text-emerald-600", "bg-emerald-50"],
+                      [Clock3, "Acomptes à suivre", "17", "text-amber-600", "bg-amber-50"],
+                      [AlertTriangle, "Rooming incomplet", "6", "text-red-600", "bg-red-50"],
+                      [Wallet, "Commissions à approuver", "12", "text-blue-600", "bg-blue-50"],
+                    ].map(([Icon, label, value, color, bg]) => (
+                      <div key={label} className="flex items-center justify-between rounded-2xl border border-slate-100 p-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`rounded-2xl p-2 ${bg} ${color}`}>
+                            <Icon className="h-5 w-5" />
+                          </div>
+                          <p className="text-sm font-bold text-slate-700">{label}</p>
+                        </div>
+                        <p className="text-xl font-black text-slate-950">{value}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-5 rounded-3xl bg-gradient-to-br from-[#0f6fb5] via-[#0c5f9b] to-[#084c87] p-5 text-white">
+                    <p className="text-sm font-bold text-blue-100">Objectif mensuel</p>
+                    <p className="mt-1 text-3xl font-black">74%</p>
+                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/20">
+                      <div className="h-full w-[74%] rounded-full bg-[#f28c28]" />
+                    </div>
+                    <p className="mt-3 text-sm text-blue-100">Encore 186 000 DH pour atteindre l’objectif.</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
+
+            <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+              <Card className="rounded-3xl border-slate-200 bg-white shadow-sm">
+                <CardContent className="p-5 md:p-6">
+                  <div className="mb-5 flex items-center justify-between">
+                    <div>
+                      <h2 className="text-lg font-black text-slate-950">Réservations récentes</h2>
+                      <p className="text-sm text-slate-500">Flux live commercial et client web</p>
+                    </div>
+                    <Button variant="outline" className="rounded-2xl border-slate-200 font-bold">Voir tout</Button>
+                  </div>
+                  <div className="space-y-3">
+                    {reservations.map((reservation) => (
+                      <div key={`${reservation.client}-${reservation.time}`} className="rounded-2xl border border-slate-100 p-4 transition hover:border-blue-200 hover:bg-blue-50/30">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <p className="font-black text-slate-950">{reservation.client}</p>
+                            <p className="mt-1 text-sm text-slate-500">{reservation.trip} • {reservation.agent}</p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <StatusBadge status={reservation.status} />
+                            <p className="text-sm font-black text-slate-950">{reservation.amount}</p>
+                          </div>
+                        </div>
+                        <p className="mt-2 text-xs font-semibold text-slate-400">{reservation.time}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-3xl border-slate-200 bg-white shadow-sm">
+                <CardContent className="p-5 md:p-6">
+                  <div className="mb-5 flex items-center justify-between">
+                    <div>
+                      <h2 className="text-lg font-black text-slate-950">Ventes par canal</h2>
+                      <p className="text-sm text-slate-500">Agence, commercial, client web</p>
+                    </div>
+                    <Button variant="outline" className="rounded-2xl border-slate-200 font-bold">Exporter</Button>
+                  </div>
+                  <div className="h-[310px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={[
+                        { canal: "Agence", ventes: 48 },
+                        { canal: "Commercial", ventes: 63 },
+                        { canal: "Client web", ventes: 31 },
+                        { canal: "Group deals", ventes: 19 },
+                      ]} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                        <XAxis dataKey="canal" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+                        <Tooltip formatter={(value) => [value, "Ventes"]} />
+                        <Bar dataKey="ventes" radius={[14, 14, 0, 0]} fill="#0f6fb5" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}

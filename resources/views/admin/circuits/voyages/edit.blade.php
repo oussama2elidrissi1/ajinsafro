@@ -66,6 +66,10 @@
     <link href="{{ URL::asset('css/flight-options-new.css') }}" rel="stylesheet" type="text/css" />
 @endpush
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/voyage-edit-fix.css') }}?v={{ filemtime(public_path('css/voyage-edit-fix.css')) }}">
+@endpush
+
 @section('content')
 <div class="voyage-edit-page">
     <div class="ve-shell">
