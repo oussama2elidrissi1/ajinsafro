@@ -46,10 +46,7 @@
     $v6Body = str_replace('<a href="#">Dashboard V4</a>', '<a href="' . e(route('admin.dashboard.v4')) . '">Dashboard V4</a>', $v6Body);
     $v6Body = str_replace('<a href="#">Dashboard V3</a>', '<a href="' . e(route('admin.dashboard.v3')) . '">Dashboard V3</a>', $v6Body);
     $v6Body = str_replace('<a href="#">Dashboard V2</a>', '<a href="' . e(route('admin.dashboard.v2')) . '">Dashboard V2</a>', $v6Body);
-    $v6Body = preg_replace('/<div class="search-box"[\s\S]*?<\/div>/i', '', $v6Body, 1);
-    $v6Body = preg_replace('/<div class="chip date-chip"[\s\S]*?<\/div>/i', '', $v6Body, 1);
-    $v6Body = preg_replace('/<button class="chip"[^>]*>[\s\S]*?Filtres[\s\S]*?<\/button>/i', '', $v6Body, 1);
-    $v6Body = preg_replace('/<div class="page-title"[\s\S]*?<\/div>/i', '', $v6Body, 1);
+    // Keep V6 topbar structure (title + search + actions) as in the reference HTML.
 @endphp
 
 @push('styles')
@@ -62,6 +59,42 @@
 .app-shell {
   height: 100vh;
   overflow: hidden;
+}
+
+.dashboard-v6 .topbar{
+  display: grid !important;
+  grid-template-columns: auto minmax(320px, 1fr) auto !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.dashboard-v6 .topbar .page-title{
+  min-width: 0 !important;
+}
+
+.dashboard-v6 .topbar .search-box{
+  min-width: 0 !important;
+}
+
+.dashboard-v6 .topbar .actions{
+  justify-self: end !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: nowrap !important;
+}
+
+@media (max-width: 900px){
+  .dashboard-v6 .topbar{
+    grid-template-columns: 1fr !important;
+    row-gap: 10px !important;
+  }
+  .dashboard-v6 .topbar .actions{
+    justify-self: start !important;
+    overflow-x: auto !important;
+    padding-bottom: 2px !important;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .sidebar,
