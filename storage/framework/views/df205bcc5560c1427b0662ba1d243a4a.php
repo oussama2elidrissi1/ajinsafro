@@ -1303,9 +1303,21 @@
     }
 
     .admin-sales-catalogue-grid-fix {
-        display: grid !important;
-        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
         gap: 18px !important;
+        justify-content: flex-start !important;
+        align-items: stretch !important;
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    .admin-sales-catalogue-grid-fix > .admin-sales-catalogue-card-fix {
+        flex: 0 0 calc((100% - 54px) / 4) !important;
+        width: calc((100% - 54px) / 4) !important;
+        max-width: calc((100% - 54px) / 4) !important;
+        min-width: 0 !important;
+        margin: 0 !important;
     }
 
     .admin-sales-catalogue-card-fix {
@@ -1342,36 +1354,27 @@
     }
 
     @media (max-width: 1300px) {
-        .admin-sales-catalogue-grid-fix {
-            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        .admin-sales-catalogue-grid-fix > .admin-sales-catalogue-card-fix {
+            flex-basis: calc((100% - 36px) / 3) !important;
+            width: calc((100% - 36px) / 3) !important;
+            max-width: calc((100% - 36px) / 3) !important;
         }
     }
 
     @media (max-width: 1000px) {
-        .admin-sales-catalogue-grid-fix {
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        .admin-sales-catalogue-grid-fix > .admin-sales-catalogue-card-fix {
+            flex-basis: calc((100% - 18px) / 2) !important;
+            width: calc((100% - 18px) / 2) !important;
+            max-width: calc((100% - 18px) / 2) !important;
         }
     }
 
     @media (max-width: 650px) {
-        .admin-sales-catalogue-grid-fix {
-            grid-template-columns: 1fr !important;
+        .admin-sales-catalogue-grid-fix > .admin-sales-catalogue-card-fix {
+            flex-basis: 100% !important;
+            width: 100% !important;
+            max-width: 100% !important;
         }
-    }
-
-    .admin-sales-catalogue-grid-fix {
-        grid-auto-flow: row !important;
-    }
-
-    .admin-sales-catalogue-grid-fix > .admin-sales-catalogue-card-fix,
-    .admin-sales-catalogue-card-fix.ws-offer-card,
-    .admin-sales-catalogue-card-fix.ws-catalog-row {
-        grid-column: auto !important;
-        grid-column-start: auto !important;
-        grid-column-end: auto !important;
-        width: 100% !important;
-        max-width: none !important;
-        min-width: 0 !important;
     }
 </style>
 <?php $__env->stopPush(); ?>
@@ -1867,7 +1870,7 @@
                          style="width:100% !important;max-width:none !important;margin:0 !important;padding-left:0 !important;padding-right:0 !important;">
                         <h3 class="ws-catalog-section__title">Départs disponibles à la vente</h3>
                         <div class="admin-sales-catalogue-grid-fix"
-                             style="display:grid !important;grid-template-columns:repeat(4,minmax(0,1fr)) !important;gap:18px !important;width:100% !important;max-width:none !important;margin:0 !important;padding:0 !important;justify-content:stretch !important;justify-items:stretch !important;align-items:stretch !important;">
+                             style="display:flex !important;flex-wrap:wrap !important;gap:18px !important;width:100% !important;max-width:none !important;margin:0 !important;padding:0 !important;justify-content:flex-start !important;align-items:stretch !important;">
                             <?php $__currentLoopData = $sellableDepRowsV2; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $depItem): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <?php echo $__env->make('admin.reservations.workspace.partials.catalog-row', ['row' => $depItem['row'], 'departure' => $depItem['departure'], 'mode' => 'card'], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
