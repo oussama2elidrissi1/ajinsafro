@@ -1,6 +1,60 @@
 (function () {
     "use strict";
 
+    function safeJsonParse(raw, fallback) {
+        try {
+            return JSON.parse(raw);
+        } catch (e) {
+            return fallback;
+        }
+    }
+
+    function isCustomRequestType(value) {
+        var v = String(value || "").trim();
+        // Backward compat: older templates used "custom" on the single page.
+        return v === "demande_a_la_carte" || v === "custom";
+    }
+
+    function toIsoDate(d) {
+        if (!(d instanceof Date)) {
+            d = new Date(d);
+        }
+        if (!d || isNaN(d.getTime())) {
+            return "";
+        }
+        var y = d.getFullYear();
+        var m = String(d.getMonth() + 1).padStart(2, "0");
+        var day = String(d.getDate()).padStart(2, "0");
+        return y + "-" + m + "-" + day;
+    }
+
+    function formatFrenchDateLabel(isoDate) {
+        var raw = String(isoDate || "").trim();
+        if (!raw) {
+            return "";
+        }
+        var parts = raw.split("-");
+        if (parts.length !== 3) {
+            return raw;
+        }
+        var y = parseInt(parts[0], 10);
+        var m = parseInt(parts[1], 10);
+        var d = parseInt(parts[2], 10);
+        if (!isFinite(y) || !isFinite(m) || !isFinite(d)) {
+            return raw;
+        }
+        var date = new Date(y, m - 1, d);
+        if (isNaN(date.getTime())) {
+            return raw;
+        }
+        var weekdays = ["Dim.", "Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam."];
+        var months = ["Janv.", "Fevr.", "Mars", "Avr.", "Mai", "Juin", "Juil.", "Aout", "Sept.", "Oct.", "Nov.", "Dec."];
+        var wd = weekdays[date.getDay()] || "";
+        var mm = months[date.getMonth()] || "";
+        var dd = String(date.getDate()).padStart(2, "0");
+        return (wd ? wd + " " : "") + dd + " " + mm + " " + String(date.getFullYear());
+    }
+
     function escapeHtml(str) {
         if (!str) { return ""; }
         return String(str)
@@ -208,6 +262,8 @@
         var childrenInput = document.getElementById("ajtb-v1-guest-children-input");
         var dateSelect = document.getElementById("ajtb-v1-search-date");
         var fromSelect = document.getElementById("ajtb-v1-search-from");
+        var customDepartureInput = document.getElementById("ajtb-v1-custom-departure-place");
+        var customDateInput = document.getElementById("ajtb-v1-custom-departure-date");
 
         var fields = {
             total: document.querySelector("[data-ajtb-recap-field='total']"),
@@ -227,6 +283,9 @@
         if (!fields.total) { return; }
 
         function getDateSpecificAdultPrice() {
+            if (window.ajtbCustomRequestMode && window.ajtbCustomRequestMode.isCustom) {
+                return null;
+            }
             if (!dateSelect) { return null; }
             var selectedDate = dateSelect.value || "";
             if (!selectedDate || !datePrices || !datePrices[selectedDate]) { return null; }
@@ -290,8 +349,22 @@
             if (fields.priceExtras) { fields.priceExtras.textContent = formatAmount(extrasTotal) + " " + currency; }
             if (fields.priceRoom) { fields.priceRoom.textContent = formatAmount(roomTotal) + " " + currency; }
 
-            var departureLabel = fromSelect && fromSelect.selectedIndex >= 0 ? (fromSelect.options[fromSelect.selectedIndex].getAttribute("data-place-name") || fromSelect.options[fromSelect.selectedIndex].textContent || "-") : "-";
-            var dateLabel = dateSelect && dateSelect.selectedIndex >= 0 ? (dateSelect.options[dateSelect.selectedIndex].textContent || "-") : "-";
+            var isCustom = !!(window.ajtbCustomRequestMode && window.ajtbCustomRequestMode.isCustom);
+            var departureLabel = "-";
+            var dateLabel = "-";
+            if (isCustom) {
+                departureLabel = customDepartureInput ? String(customDepartureInput.value || "").trim() : (window.ajtbCustomRequestMode.customPlace || "");
+                if (!departureLabel) departureLabel = "-";
+                var dv = customDateInput ? String(customDateInput.value || "").trim() : (window.ajtbCustomRequestMode.customDate || "");
+                dateLabel = dv ? (formatFrenchDateLabel(dv) || dv) : "-";
+            } else {
+                departureLabel = fromSelect && fromSelect.selectedIndex >= 0
+                    ? (fromSelect.options[fromSelect.selectedIndex].getAttribute("data-place-name") || fromSelect.options[fromSelect.selectedIndex].textContent || "-")
+                    : "-";
+                dateLabel = dateSelect && dateSelect.selectedIndex >= 0
+                    ? (dateSelect.options[dateSelect.selectedIndex].textContent || "-")
+                    : "-";
+            }
             var guestsLabel = getGuestsLabel(adults, children);
 
             fields.departure.forEach(function (el) { el.textContent = departureLabel; });
@@ -310,6 +383,15 @@
         if (fromSelect) {
             fromSelect.addEventListener("change", recalculate);
         }
+        if (customDepartureInput) {
+            customDepartureInput.addEventListener("input", recalculate);
+        }
+        if (customDateInput) {
+            customDateInput.addEventListener("change", function () {
+                recalculate();
+                document.dispatchEvent(new CustomEvent("ajtb:v1:date-changed"));
+            });
+        }
 
         document.addEventListener("ajtb:v1:travellers-changed", recalculate);
         document.addEventListener("ajtb:v1:rooms-changed", recalculate);
@@ -319,6 +401,9 @@
     }
 
     function loadRoomsAndExtras() {
+        if (window.ajtbCustomRequestMode && window.ajtbCustomRequestMode.isCustom) {
+            return;
+        }
         var base = window.ajtbRecapBase || {};
         var tourId = base.tourId || 0;
         var dateSelect = document.getElementById("ajtb-v1-search-date");
@@ -469,11 +554,20 @@
 
         var dateSelect = document.getElementById("ajtb-v1-search-date");
         var fromSelect = document.getElementById("ajtb-v1-search-from");
+        var customPlaceInput = document.getElementById("ajtb-v1-custom-departure-place");
+        var customDateInput = document.getElementById("ajtb-v1-custom-departure-date");
         var adultsInput = document.getElementById("ajtb-v1-guest-adults-input");
         var childrenInput = document.getElementById("ajtb-v1-guest-children-input");
         var totalEl = document.querySelector("[data-ajtb-recap-field='total']");
 
-        var dateLabel = dateSelect && dateSelect.selectedIndex >= 0 ? dateSelect.options[dateSelect.selectedIndex].textContent : "-";
+        var isCustom = !!(window.ajtbCustomRequestMode && window.ajtbCustomRequestMode.isCustom);
+        var dateLabel = "-";
+        if (isCustom) {
+            var dv = customDateInput ? String(customDateInput.value || "").trim() : (window.ajtbCustomRequestMode.customDate || "");
+            dateLabel = dv ? (formatFrenchDateLabel(dv) || dv) : "-";
+        } else {
+            dateLabel = dateSelect && dateSelect.selectedIndex >= 0 ? dateSelect.options[dateSelect.selectedIndex].textContent : "-";
+        }
         var adults = adultsInput ? Math.max(1, parseInt(adultsInput.value || "2", 10) || 2) : 2;
         var children = childrenInput ? Math.max(0, parseInt(childrenInput.value || "0", 10) || 0) : 0;
         var peopleTxt = adults + " " + (adults > 1 ? "adultes" : "adulte");
@@ -498,6 +592,10 @@
         var tourId = base.tourId || 0;
         var dateSelect = document.getElementById("ajtb-v1-search-date");
         var fromSelect = document.getElementById("ajtb-v1-search-from");
+        var customPlaceInput = document.getElementById("ajtb-v1-custom-departure-place");
+        var customDateInput = document.getElementById("ajtb-v1-custom-departure-date");
+        var customPlaceErr = document.getElementById("ajtb-v1-custom-departure-place-error");
+        var customDateErr = document.getElementById("ajtb-v1-custom-departure-date-error");
         var adultsInput = document.getElementById("ajtb-v1-guest-adults-input");
         var childrenInput = document.getElementById("ajtb-v1-guest-children-input");
         var first = document.getElementById("ajtb-client-first");
@@ -506,28 +604,126 @@
         var email = document.getElementById("ajtb-client-email");
         var specialReq = document.getElementById("ajtb-special-request");
 
-        if (!first || !last || first.value.trim() === "" || last.value.trim() === "") {
-            alert("Veuillez saisir le prenom et le nom du client.");
+        function ensureErrorNode(inputEl, id) {
+            if (!inputEl || !inputEl.parentElement) { return null; }
+            var existing = document.getElementById(id);
+            if (existing) { return existing; }
+            var div = document.createElement("div");
+            div.className = "ajtb-field-error";
+            div.id = id;
+            div.hidden = true;
+            inputEl.parentElement.appendChild(div);
+            return div;
+        }
+
+        var firstErr = ensureErrorNode(first, "ajtb-client-first-error");
+        var lastErr = ensureErrorNode(last, "ajtb-client-last-error");
+        var phoneErr = ensureErrorNode(phone, "ajtb-client-phone-error");
+
+        var isCustom = !!(window.ajtbCustomRequestMode && window.ajtbCustomRequestMode.isCustom);
+
+        var ok = true;
+        if (!first || String(first.value || "").trim() === "") {
+            ok = false;
+            setInlineError(firstErr, "Prénom obligatoire.");
+        } else {
+            setInlineError(firstErr, "");
+        }
+        if (!last || String(last.value || "").trim() === "") {
+            ok = false;
+            setInlineError(lastErr, "Nom obligatoire.");
+        } else {
+            setInlineError(lastErr, "");
+        }
+        if (!phone || String(phone.value || "").trim() === "") {
+            ok = false;
+            setInlineError(phoneErr, "Téléphone obligatoire.");
+        } else {
+            setInlineError(phoneErr, "");
+        }
+
+        if (isCustom) {
+            var place = customPlaceInput ? String(customPlaceInput.value || "").trim() : "";
+            var dv = customDateInput ? String(customDateInput.value || "").trim() : "";
+            if (!place) {
+                ok = false;
+                setInlineError(customPlaceErr, "Veuillez écrire votre lieu de départ.");
+            } else {
+                setInlineError(customPlaceErr, "");
+            }
+            if (!dv) {
+                ok = false;
+                setInlineError(customDateErr, "Veuillez choisir une date de départ.");
+            } else {
+                var today = new Date();
+                today.setHours(0, 0, 0, 0);
+                var selected = new Date(dv + "T00:00:00");
+                if (isNaN(selected.getTime()) || selected < today) {
+                    ok = false;
+                    setInlineError(customDateErr, "La date de départ ne peut pas être dans le passé.");
+                } else {
+                    setInlineError(customDateErr, "");
+                }
+            }
+        }
+
+        if (!ok) {
             return;
         }
 
         var passengers = collectPassengers();
 
         var formData = new FormData();
-        formData.append("action", "ajtb_v1_create_reservation");
-        formData.append("nonce", window.ajtbData && window.ajtbData.reservationNonce ? window.ajtbData.reservationNonce : "");
-        formData.append("tour_id", tourId);
-        formData.append("departure_place_id", fromSelect ? parseInt(fromSelect.value || "0", 10) : 0);
-        formData.append("departure_date", dateSelect ? dateSelect.value : "");
-        formData.append("adults", adultsInput ? parseInt(adultsInput.value || "2", 10) : 2);
-        formData.append("children", childrenInput ? parseInt(childrenInput.value || "0", 10) : 0);
-        formData.append("client_first_name", first.value.trim());
-        formData.append("client_last_name", last.value.trim());
-        formData.append("client_phone", phone ? phone.value.trim() : "");
-        formData.append("client_email", email ? email.value.trim() : "");
-        formData.append("passengers", JSON.stringify(passengers));
-        formData.append("room_allocation_json", JSON.stringify([]));
-        formData.append("extras_json", JSON.stringify(getSelectedExtras()));
+        if (isCustom) {
+            formData.append("action", "ajtb_v1_create_tailor_made_request");
+            formData.append("nonce", window.ajtbData && window.ajtbData.tailorMadeNonce ? window.ajtbData.tailorMadeNonce : "");
+            formData.append("tour_id", tourId);
+            formData.append("tour_title", base.tourTitle ? String(base.tourTitle) : "");
+            formData.append("tour_url", base.permalink ? String(base.permalink) : "");
+            formData.append("booking_url", base.bookingUrl ? String(base.bookingUrl) : "");
+            formData.append("custom_departure_place", customPlaceInput ? String(customPlaceInput.value || "").trim() : "");
+            formData.append("custom_departure_date", customDateInput ? String(customDateInput.value || "").trim() : "");
+            formData.append("adults", adultsInput ? parseInt(adultsInput.value || "2", 10) : 2);
+            formData.append("children", childrenInput ? parseInt(childrenInput.value || "0", 10) : 0);
+
+            var totalEl = document.querySelector("[data-ajtb-recap-field='total']");
+            var totalRaw = totalEl ? String(totalEl.textContent || "").trim() : "";
+            var total = parseFloat(totalRaw.replace(/\s+/g, "").replace(",", ".")) || 0;
+            var aCnt = adultsInput ? (parseInt(adultsInput.value || "2", 10) || 2) : 2;
+            var cCnt = childrenInput ? (parseInt(childrenInput.value || "0", 10) || 0) : 0;
+            var people = Math.max(1, aCnt + cCnt);
+            var perPerson = people > 0 ? (total / people) : 0;
+
+            formData.append("price_currency", base.pricing && base.pricing.currency ? String(base.pricing.currency) : "MAD");
+            formData.append("price_total", String(total));
+            formData.append("price_per_person", String(perPerson));
+
+            formData.append("client_first_name", first ? String(first.value || "").trim() : "");
+            formData.append("client_last_name", last ? String(last.value || "").trim() : "");
+            formData.append("client_phone", phone ? String(phone.value || "").trim() : "");
+            formData.append("client_email", email ? String(email.value || "").trim() : "");
+            formData.append("message", specialReq ? String(specialReq.value || "").trim() : "");
+            formData.append("passengers", JSON.stringify(passengers));
+            formData.append("extras_json", JSON.stringify(getSelectedExtras()));
+        } else {
+            formData.append("action", "ajtb_v1_create_reservation");
+            formData.append("nonce", window.ajtbData && window.ajtbData.reservationNonce ? window.ajtbData.reservationNonce : "");
+            formData.append("tour_id", tourId);
+            formData.append("departure_place_id", fromSelect ? parseInt(fromSelect.value || "0", 10) : 0);
+            formData.append("departure_date", dateSelect ? dateSelect.value : "");
+            formData.append("adults", adultsInput ? parseInt(adultsInput.value || "2", 10) : 2);
+            formData.append("children", childrenInput ? parseInt(childrenInput.value || "0", 10) : 0);
+            formData.append("client_first_name", first.value.trim());
+            formData.append("client_last_name", last.value.trim());
+            formData.append("client_phone", phone ? phone.value.trim() : "");
+            formData.append("client_email", email ? email.value.trim() : "");
+            formData.append("passengers", JSON.stringify(passengers));
+            formData.append("room_allocation_json", JSON.stringify([]));
+            formData.append("extras_json", JSON.stringify(getSelectedExtras()));
+            if (specialReq) {
+                formData.append("special_request", specialReq.value.trim());
+            }
+        }
 
         var companionRows = document.querySelectorAll("[data-companion-row]");
         companionRows.forEach(function (row, idx) {
@@ -539,9 +735,7 @@
             if (lastEl) { formData.append("companions[" + idx + "][last_name]", lastEl.value.trim()); }
         });
 
-        if (specialReq) {
-            formData.append("special_request", specialReq.value.trim());
-        }
+        // special_request is only for classic reservation; for custom we send "message" above.
 
         var confirmBtn = document.getElementById("ajtb-final-submit");
         var mobileBtn = document.getElementById("ajtb-mobile-submit");
@@ -563,13 +757,12 @@
                 if (!data.success) {
                     if (confirmBtn) {
                         confirmBtn.disabled = false;
-                        confirmBtn.textContent = "Confirmer ma reservation";
+                        confirmBtn.textContent = isCustom ? "Envoyer ma demande" : "Confirmer ma reservation";
                     }
                     if (mobileBtn) {
                         mobileBtn.disabled = false;
-                        mobileBtn.textContent = "Confirmer";
+                        mobileBtn.textContent = isCustom ? "Envoyer" : "Confirmer";
                     }
-                    alert(data.data && data.data.message ? data.data.message : "Une erreur est survenue.");
                     return;
                 }
 
@@ -591,19 +784,18 @@
                 if (modalEl) {
                     modalEl.removeAttribute("hidden");
                 } else {
-                    alert("Votre demande de reservation a ete envoyee. Un conseiller Ajinsafro va vous contacter.");
+                    // No JS alert: the success screen is enough.
                 }
             })
             .catch(function () {
                 if (confirmBtn) {
                     confirmBtn.disabled = false;
-                    confirmBtn.textContent = "Confirmer ma reservation";
+                    confirmBtn.textContent = isCustom ? "Envoyer ma demande" : "Confirmer ma reservation";
                 }
                 if (mobileBtn) {
                     mobileBtn.disabled = false;
-                    mobileBtn.textContent = "Confirmer";
+                    mobileBtn.textContent = isCustom ? "Envoyer" : "Confirmer";
                 }
-                alert("Une erreur reseau est survenue. Veuillez reessayer.");
             });
     }
 
@@ -679,7 +871,77 @@
         });
     }
 
+    function setInlineError(el, message) {
+        if (!el) { return; }
+        var msg = String(message || "").trim();
+        el.textContent = msg;
+        el.hidden = msg === "";
+    }
+
+    function initCustomRequestMode() {
+        var base = window.ajtbRecapBase || {};
+        var tourId = base.tourId || 0;
+        var payload = null;
+        if (tourId) {
+            payload = safeJsonParse(localStorage.getItem("ajtb:v1:recap:" + String(tourId)), null);
+        }
+        var requestType = payload && payload.requestType ? String(payload.requestType) : "";
+        var isCustom = isCustomRequestType(requestType);
+
+        var normalDeparture = document.querySelector("[data-ajtb-normal-departure]");
+        var customDeparture = document.querySelector("[data-ajtb-custom-departure]");
+        var normalDate = document.querySelector("[data-ajtb-normal-date]");
+        var customDate = document.querySelector("[data-ajtb-custom-date]");
+        var customPlaceInput = document.getElementById("ajtb-v1-custom-departure-place");
+        var customDateInput = document.getElementById("ajtb-v1-custom-departure-date");
+
+        var customPlace = "";
+        var customDateValue = "";
+        if (payload && payload.custom) {
+            customPlace = String(payload.custom.departure_place || "").trim();
+            customDateValue = String(payload.custom.departure_date || "").trim();
+        }
+        if (!customPlace && payload && payload.departure && payload.departure.label) {
+            customPlace = String(payload.departure.label || "").trim();
+        }
+        if (!customDateValue && payload && payload.date && payload.date.value) {
+            customDateValue = String(payload.date.value || "").trim();
+        }
+
+        window.ajtbCustomRequestMode = {
+            isCustom: isCustom,
+            requestType: requestType,
+            customPlace: customPlace,
+            customDate: customDateValue,
+        };
+
+        if (normalDeparture) { normalDeparture.hidden = isCustom; }
+        if (customDeparture) { customDeparture.hidden = !isCustom; }
+        if (normalDate) { normalDate.hidden = isCustom; }
+        if (customDate) { customDate.hidden = !isCustom; }
+
+        if (customPlaceInput && isCustom && customPlaceInput.value.trim() === "" && customPlace) {
+            customPlaceInput.value = customPlace;
+        }
+        if (customDateInput && isCustom && String(customDateInput.value || "").trim() === "" && customDateValue) {
+            customDateInput.value = customDateValue;
+        }
+        if (customDateInput) {
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);
+            customDateInput.min = toIsoDate(today);
+        }
+
+        if (isCustom) {
+            // UX: reflect it's not a classic reservation.
+            document.querySelectorAll("[data-ajtb-recap-action='final-submit']").forEach(function (btn) {
+                btn.textContent = "Envoyer ma demande";
+            });
+        }
+    }
+
     function init() {
+        initCustomRequestMode();
         initGuestsPicker();
         initCompanions();
         initPriceCalculation();

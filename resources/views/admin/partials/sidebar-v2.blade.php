@@ -12,86 +12,30 @@
         $sidebarBrandHref = route('admin.dashboard.v5');
     } elseif (request()->routeIs('admin.dashboard.v6') && \Illuminate\Support\Facades\Route::has('admin.dashboard.v6')) {
         $sidebarBrandHref = route('admin.dashboard.v6');
+    if ($sidebarUser?->hasRole(\App\Services\BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY)) {
+        $adminGroups = array_values(array_filter([
+            $makeLeaf(
+                'sales_workspace_only_final',
+                'Vente / Catalogue',
+                'admin.reservations.workspace',
+                'bx bx-briefcase-alt',
+                ['admin.reservations.workspace*', 'admin.reservations.create', 'admin.reservations.store'],
+                [],
+                null,
+                'reservations.view'
+            ),
+            $makeLeaf(
+                'reservations_index_only_final',
+                'Réservations',
+                'admin.reservation-dossiers.index',
+                'bx bx-calendar-check',
+                ['admin.reservation-dossiers.*', 'admin.reservations.index', 'admin.reservations.show', 'admin.reservations.edit', 'admin.reservations.update', 'admin.reservations.destroy'],
+                [],
+                null,
+                'reservations.view'
+            ),
+        ]));
     }
-    $sidebarRole = $sidebarUser?->getRoleNames()->first() ?? 'Administrateur';
-    $sidebarInitials = strtoupper(collect(preg_split('/\s+/', trim((string) ($sidebarUser?->name ?? 'Admin'))))->filter()->take(2)->map(fn ($part) => mb_substr($part, 0, 1))->implode(''));
-    if ($sidebarInitials === '') {
-        $sidebarInitials = 'AD';
-    }
-
-    $menuService = app(\App\Services\Admin\AdminMenuService::class);
-    $baseMenuItems = $sidebarUser ? $menuService->buildForUser($sidebarUser) : [];
-    $menuByKey = collect($baseMenuItems)->keyBy('key');
-
-    $userCanAccessPermissions = function ($permission) use ($sidebarUser): bool {
-        if (!$sidebarUser) {
-            return false;
-        }
-
-        if (is_string($permission) && $permission !== '') {
-            return $sidebarUser->can($permission);
-        }
-
-        if (is_array($permission)) {
-            foreach ($permission as $permissionName) {
-                if (is_string($permissionName) && $permissionName !== '' && $sidebarUser->can($permissionName)) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        return true;
-    };
-
-    $makeLeaf = function (string $key, string $label, ?string $route = null, ?string $icon = null, array $activePatterns = [], array $query = [], ?int $badge = null, $permission = null) use ($userCanAccessPermissions): ?array {
-        if (!$route || !\Illuminate\Support\Facades\Route::has($route)) {
-            return null;
-        }
-
-        if (!$userCanAccessPermissions($permission)) {
-            return null;
-        }
-
-        $href = route($route, $query);
-        $patterns = $activePatterns !== [] ? $activePatterns : [$route, $route . '.*'];
-        $active = request()->routeIs(...$patterns);
-
-        return [
-            'key' => $key,
-            'label' => $label,
-            'icon' => $icon,
-            'href' => $href,
-            'children' => [],
-            'active' => $active,
-            'open' => false,
-            'badge' => $badge,
-        ];
-    };
-
-    $makeGroup = function (string $key, string $label, array $children, ?string $icon = null): ?array {
-        $children = array_values(array_filter($children));
-        if ($children === []) {
-            return null;
-        }
-
-        $active = collect($children)->contains(fn ($child) => !empty($child['active']) || !empty($child['open']));
-
-        return [
-            'key' => $key,
-            'label' => $label,
-            'icon' => $icon,
-            'href' => null,
-            'children' => $children,
-            'active' => $active,
-            'open' => $active,
-            'badge' => null,
-        ];
-    };
-
-    $unreadCount = 0;
-    $pendingReservationsCount = 0;
     if ($sidebarUser && \Illuminate\Support\Facades\Schema::hasTable('messages')) {
         $unreadCount = \App\Models\Message::query()
             ->where('recipient_id', $sidebarUser->id)
@@ -334,7 +278,7 @@
             $makeLeaf(
                 'reservations_index_only_final',
                 'Reservations',
-                'admin.reservations.index',
+                'admin.reservation-dossiers.index',
                 'bx bx-calendar-check',
                 ['admin.reservations.index', 'admin.reservation-dossiers.*', 'admin.reservations.show', 'admin.reservations.edit', 'admin.reservations.update', 'admin.reservations.destroy'],
                 [],

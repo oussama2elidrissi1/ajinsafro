@@ -104,39 +104,63 @@ get_header();
                         <div class="ajtb-form-grid ajtb-form-grid--3">
                             <div class="ajtb-field">
                                 <label for="ajtb-v1-search-from"><?php echo esc_html__('Ville de depart', 'ajinsafro-traveler-home'); ?></label>
-                                <?php if (!empty($search_places)): ?>
-                                    <select class="ajtb-search-select" id="ajtb-v1-search-from" aria-label="<?php echo esc_attr__('Lieux de depart', 'ajinsafro-traveler-home'); ?>">
-                                        <?php foreach ($search_places as $place_option): ?>
-                                            <?php
-                                            $pid = isset($place_option['id']) ? (int) $place_option['id'] : 0;
-                                            $pname = isset($place_option['name']) ? trim((string) $place_option['name']) : '';
-                                            if ($pname === '') { continue; }
-                                            ?>
-                                            <option value="<?php echo esc_attr((string) $pid); ?>" data-place-name="<?php echo esc_attr($pname); ?>">
-                                                <?php echo esc_html($pname); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                <?php else: ?>
-                                    <strong class="ajtb-muted">--</strong>
-                                <?php endif; ?>
+                                <div data-ajtb-normal-departure>
+                                    <?php if (!empty($search_places)): ?>
+                                        <select class="ajtb-search-select" id="ajtb-v1-search-from" aria-label="<?php echo esc_attr__('Lieux de depart', 'ajinsafro-traveler-home'); ?>">
+                                            <?php foreach ($search_places as $place_option): ?>
+                                                <?php
+                                                $pid = isset($place_option['id']) ? (int) $place_option['id'] : 0;
+                                                $pname = isset($place_option['name']) ? trim((string) $place_option['name']) : '';
+                                                if ($pname === '') { continue; }
+                                                ?>
+                                                <option value="<?php echo esc_attr((string) $pid); ?>" data-place-name="<?php echo esc_attr($pname); ?>">
+                                                    <?php echo esc_html($pname); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    <?php else: ?>
+                                        <strong class="ajtb-muted">--</strong>
+                                    <?php endif; ?>
+                                </div>
+
+                                <div data-ajtb-custom-departure hidden>
+                                    <input
+                                        type="text"
+                                        class="ajtb-search-select"
+                                        id="ajtb-v1-custom-departure-place"
+                                        name="custom_departure_place"
+                                        placeholder="<?php echo esc_attr__('Ecrire votre lieu de depart', 'ajinsafro-traveler-home'); ?>"
+                                        autocomplete="address-level2">
+                                    <div class="ajtb-field-error" id="ajtb-v1-custom-departure-place-error" hidden></div>
+                                </div>
                             </div>
                             <div class="ajtb-field">
                                 <label for="ajtb-v1-search-date"><?php echo esc_html__('Date de voyage', 'ajinsafro-traveler-home'); ?></label>
-                                <?php if (!empty($search_dates)): ?>
-                                    <select class="ajtb-search-select" id="ajtb-v1-search-date" aria-label="<?php echo esc_attr__('Dates de depart', 'ajinsafro-traveler-home'); ?>">
-                                        <?php foreach ($search_dates as $date_option): ?>
-                                            <?php
-                                            $dv = isset($date_option['value']) ? trim((string) $date_option['value']) : '';
-                                            $dd = isset($date_option['display']) ? (string) $date_option['display'] : $dv;
-                                            if ($dv === '') { continue; }
-                                            ?>
-                                            <option value="<?php echo esc_attr($dv); ?>"><?php echo esc_html($dd !== '' ? $dd : $dv); ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                <?php else: ?>
-                                    <strong class="ajtb-muted">--</strong>
-                                <?php endif; ?>
+                                <div data-ajtb-normal-date>
+                                    <?php if (!empty($search_dates)): ?>
+                                        <select class="ajtb-search-select" id="ajtb-v1-search-date" aria-label="<?php echo esc_attr__('Dates de depart', 'ajinsafro-traveler-home'); ?>">
+                                            <?php foreach ($search_dates as $date_option): ?>
+                                                <?php
+                                                $dv = isset($date_option['value']) ? trim((string) $date_option['value']) : '';
+                                                $dd = isset($date_option['display']) ? (string) $date_option['display'] : $dv;
+                                                if ($dv === '') { continue; }
+                                                ?>
+                                                <option value="<?php echo esc_attr($dv); ?>"><?php echo esc_html($dd !== '' ? $dd : $dv); ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    <?php else: ?>
+                                        <strong class="ajtb-muted">--</strong>
+                                    <?php endif; ?>
+                                </div>
+
+                                <div data-ajtb-custom-date hidden>
+                                    <input
+                                        type="date"
+                                        class="ajtb-search-select"
+                                        id="ajtb-v1-custom-departure-date"
+                                        name="custom_departure_date">
+                                    <div class="ajtb-field-error" id="ajtb-v1-custom-departure-date-error" hidden></div>
+                                </div>
                             </div>
                             <div class="ajtb-field">
                                 <label><?php echo esc_html__('Voyageurs', 'ajinsafro-traveler-home'); ?></label>

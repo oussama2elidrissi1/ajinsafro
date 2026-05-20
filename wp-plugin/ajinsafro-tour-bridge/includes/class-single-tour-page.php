@@ -30,6 +30,8 @@ class AJTB_Single_Tour_Page
         add_action('wp_ajax_nopriv_ajtb_v1_get_rooms_extras', [self::class, 'ajax_get_rooms_extras']);
         add_action('wp_ajax_ajtb_v1_create_reservation', [self::class, 'ajax_create_reservation']);
         add_action('wp_ajax_nopriv_ajtb_v1_create_reservation', [self::class, 'ajax_create_reservation']);
+        add_action('wp_ajax_ajtb_v1_create_tailor_made_request', [self::class, 'ajax_create_tailor_made_request']);
+        add_action('wp_ajax_nopriv_ajtb_v1_create_tailor_made_request', [self::class, 'ajax_create_tailor_made_request']);
     }
 
     public static function register_recap_endpoint(): void
@@ -440,6 +442,7 @@ class AJTB_Single_Tour_Page
                 'ajaxUrl' => admin_url('admin-ajax.php'),
                 'activityNonce' => wp_create_nonce('ajtb_v1_activity_toggle'),
                 'reservationNonce' => wp_create_nonce('ajtb_v1_create_reservation'),
+                'tailorMadeNonce' => wp_create_nonce('ajtb_v1_create_tailor_made_request'),
                 'activityMessages' => [
                     'added' => __('Activité ajoutée à votre programme.', 'ajinsafro-tour-bridge'),
                     'error' => __('Impossible d’ajouter l’activité pour le moment.', 'ajinsafro-tour-bridge'),
@@ -498,6 +501,7 @@ class AJTB_Single_Tour_Page
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'activityNonce' => wp_create_nonce('ajtb_v1_activity_toggle'),
             'reservationNonce' => wp_create_nonce('ajtb_v1_create_reservation'),
+            'tailorMadeNonce' => wp_create_nonce('ajtb_v1_create_tailor_made_request'),
             'activityMessages' => [
                 'added' => __('Activité ajoutée à votre programme.', 'ajinsafro-tour-bridge'),
                 'error' => __('Impossible d’ajouter l’activité pour le moment.', 'ajinsafro-tour-bridge'),
@@ -1176,6 +1180,142 @@ class AJTB_Single_Tour_Page
             'account_created' => (bool) ($account['created'] ?? false),
             'login' => (string) ($account['login'] ?? ''),
             'password' => (string) ($account['password'] ?? ''),
+        ]);
+    }
+
+    public static function ajax_create_tailor_made_request(): void
+    {
+        $nonce_ok = check_ajax_referer('ajtb_v1_create_tailor_made_request', 'nonce', false);
+        if (!$nonce_ok) {
+            wp_send_json_error([
+                'message' => __('RequÃªte non autorisÃ©e.', 'ajinsafro-tour-bridge'),
+            ], 403);
+        }
+
+        global $wpdb;
+
+        $tour_id = isset($_POST['tour_id']) ? (int) $_POST['tour_id'] : 0; // WP post id
+        $custom_departure_place = isset($_POST['custom_departure_place']) ? sanitize_text_field((string) $_POST['custom_departure_place']) : '';
+        $custom_departure_date = isset($_POST['custom_departure_date']) ? sanitize_text_field((string) $_POST['custom_departure_date']) : '';
+
+        $adults = isset($_POST['adults']) ? max(1, (int) $_POST['adults']) : 1;
+        $children = isset($_POST['children']) ? max(0, (int) $_POST['children']) : 0;
+
+        $client_first_name = isset($_POST['client_first_name']) ? sanitize_text_field((string) $_POST['client_first_name']) : '';
+        $client_last_name = isset($_POST['client_last_name']) ? sanitize_text_field((string) $_POST['client_last_name']) : '';
+        $client_phone = isset($_POST['client_phone']) ? sanitize_text_field((string) $_POST['client_phone']) : '';
+        $client_email = isset($_POST['client_email']) ? sanitize_email((string) $_POST['client_email']) : '';
+        $message = isset($_POST['message']) ? sanitize_textarea_field((string) $_POST['message']) : '';
+
+        $tour_title = isset($_POST['tour_title']) ? sanitize_text_field((string) $_POST['tour_title']) : '';
+        $tour_url = isset($_POST['tour_url']) ? esc_url_raw((string) $_POST['tour_url']) : '';
+        $booking_url = isset($_POST['booking_url']) ? esc_url_raw((string) $_POST['booking_url']) : '';
+
+        $price_currency = isset($_POST['price_currency']) ? sanitize_text_field((string) $_POST['price_currency']) : 'MAD';
+        $price_total = isset($_POST['price_total']) ? (float) $_POST['price_total'] : 0.0;
+        $price_per_person = isset($_POST['price_per_person']) ? (float) $_POST['price_per_person'] : 0.0;
+
+        if ($tour_id <= 0) {
+            wp_send_json_error([
+                'message' => __('ParamÃ¨tres incomplets.', 'ajinsafro-tour-bridge'),
+            ], 422);
+        }
+
+        if ($custom_departure_place === '' || $custom_departure_date === '') {
+            wp_send_json_error([
+                'message' => __('Veuillez renseigner le lieu et la date de dÃ©part.', 'ajinsafro-tour-bridge'),
+            ], 422);
+        }
+
+        if (!preg_match('/^\\d{4}-\\d{2}-\\d{2}$/', $custom_departure_date)) {
+            wp_send_json_error([
+                'message' => __('Date de dÃ©part invalide.', 'ajinsafro-tour-bridge'),
+            ], 422);
+        }
+
+        $today = current_time('Y-m-d'); // WP timezone
+        if (strtotime($custom_departure_date) < strtotime($today)) {
+            wp_send_json_error([
+                'message' => __('La date de dÃ©part ne peut pas Ãªtre dans le passÃ©.', 'ajinsafro-tour-bridge'),
+            ], 422);
+        }
+
+        if ($client_first_name === '' || $client_last_name === '' || $client_phone === '') {
+            wp_send_json_error([
+                'message' => __('Veuillez renseigner le prÃ©nom, le nom et le tÃ©lÃ©phone.', 'ajinsafro-tour-bridge'),
+            ], 422);
+        }
+
+        $table = self::first_table([
+            'tailor_made_requests',
+            $wpdb->prefix . 'tailor_made_requests',
+        ]);
+        if ($table === '') {
+            wp_send_json_error([
+                'message' => __('Table demande Ã  la carte introuvable.', 'ajinsafro-tour-bridge'),
+            ], 500);
+        }
+
+        // Best-effort: link to Laravel voyage id when possible.
+        $voyage_id = null;
+        $voyages_table = self::first_table([
+            'voyages',
+            'aj_voyages',
+            $wpdb->prefix . 'voyages',
+            $wpdb->prefix . 'aj_voyages',
+        ]);
+        if ($voyages_table !== '') {
+            $vid = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM {$voyages_table} WHERE wp_post_id = %d ORDER BY id ASC LIMIT 1",
+                $tour_id
+            ));
+            if ($vid > 0) {
+                $voyage_id = $vid;
+            }
+        }
+
+        if ($tour_title === '') {
+            $tour_title = $tour_id > 0 ? (string) get_the_title($tour_id) : '';
+        }
+        if ($tour_url === '') {
+            $tour_url = $tour_id > 0 ? (string) get_permalink($tour_id) : '';
+        }
+
+        $now_gmt = current_time('mysql', true);
+        $inserted = $wpdb->insert($table, [
+            'type' => 'demande_a_la_carte',
+            'source' => 'public_st_tour',
+            'status' => 'new',
+            'voyage_id' => $voyage_id,
+            'wp_post_id' => $tour_id,
+            'tour_title' => $tour_title ?: null,
+            'tour_url' => $tour_url ?: null,
+            'booking_url' => $booking_url ?: null,
+            'custom_departure_place' => $custom_departure_place,
+            'custom_departure_date' => $custom_departure_date,
+            'adults' => $adults,
+            'children' => $children,
+            'travellers_total' => $adults + $children,
+            'price_currency' => $price_currency ?: 'MAD',
+            'price_per_person' => $price_per_person > 0 ? $price_per_person : null,
+            'price_total' => $price_total > 0 ? $price_total : null,
+            'client_first_name' => $client_first_name ?: null,
+            'client_last_name' => $client_last_name ?: null,
+            'client_phone' => $client_phone ?: null,
+            'client_email' => $client_email ?: null,
+            'message' => $message ?: null,
+            'created_at' => $now_gmt,
+            'updated_at' => $now_gmt,
+        ]);
+
+        if (!$inserted) {
+            wp_send_json_error([
+                'message' => __('Impossible dâ€™enregistrer la demande.', 'ajinsafro-tour-bridge'),
+            ], 500);
+        }
+
+        wp_send_json_success([
+            'request_id' => (int) $wpdb->insert_id,
         ]);
     }
 

@@ -281,6 +281,14 @@ body.single-st_tours .footer-bottom {
     line-height: 1.45;
 }
 
+.ajtb-v1-field-error {
+    margin-top: 6px;
+    color: #b42318;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
 .ajtb-v1-guests-picker {
     position: relative;
 }

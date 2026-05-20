@@ -5,6 +5,55 @@
 (function () {
     "use strict";
 
+    function isCustomRequestType(value) {
+        var v = String(value || "").trim();
+        // Backward compat: older templates used "custom".
+        return v === "demande_a_la_carte" || v === "custom";
+    }
+
+    function toIsoDate(d) {
+        if (!(d instanceof Date)) {
+            d = new Date(d);
+        }
+        if (!d || isNaN(d.getTime())) {
+            return "";
+        }
+        var y = d.getFullYear();
+        var m = String(d.getMonth() + 1).padStart(2, "0");
+        var day = String(d.getDate()).padStart(2, "0");
+        return y + "-" + m + "-" + day;
+    }
+
+    function formatFrenchDateLabel(isoDate) {
+        // isoDate: YYYY-MM-DD
+        var raw = String(isoDate || "").trim();
+        if (!raw) {
+            return "";
+        }
+        var parts = raw.split("-");
+        if (parts.length !== 3) {
+            return raw;
+        }
+        var y = parseInt(parts[0], 10);
+        var m = parseInt(parts[1], 10);
+        var d = parseInt(parts[2], 10);
+        if (!isFinite(y) || !isFinite(m) || !isFinite(d)) {
+            return raw;
+        }
+        var date = new Date(y, m - 1, d);
+        if (isNaN(date.getTime())) {
+            return raw;
+        }
+
+        var weekdays = ["Dim.", "Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam."];
+        var months = ["Janv.", "Fevr.", "Mars", "Avr.", "Mai", "Juin", "Juil.", "Aout", "Sept.", "Oct.", "Nov.", "Dec."];
+        // Use local date getters: user intent is local travel date.
+        var wd = weekdays[date.getDay()] || "";
+        var mm = months[date.getMonth()] || "";
+        var dd = String(date.getDate()).padStart(2, "0");
+        return (wd ? wd + " " : "") + dd + " " + mm + " " + String(date.getFullYear());
+    }
+
     function escapeHtml(str) {
         if (!str) { return ""; }
         return String(str)
@@ -438,6 +487,9 @@
         var childrenInput = document.getElementById("ajtb-v1-guest-children-input");
         var dateSelect = document.getElementById("ajtb-v1-search-date");
         var fromSelect = document.getElementById("ajtb-v1-search-from");
+        var requestTypeSelect = document.getElementById("ajtb-v1-request-type");
+        var customDepartureInput = document.getElementById("ajtb-v1-custom-departure-place");
+        var customDateInput = document.getElementById("ajtb-v1-custom-departure-date");
         var dateDisplayMap = {};
         var searchBar = document.getElementById("ajtb-v1-search-box");
 
@@ -472,6 +524,13 @@
         }
 
         function getSelectedDepartureLabel() {
+            var isCustom = requestTypeSelect ? isCustomRequestType(requestTypeSelect.value) : false;
+            if (isCustom && customDepartureInput) {
+                var v = String(customDepartureInput.value || "").trim();
+                if (v) {
+                    return v;
+                }
+            }
             if (!fromSelect) {
                 return priceCard.getAttribute("data-default-departure") || "-";
             }
@@ -484,6 +543,13 @@
         }
 
         function getSelectedDateLabel() {
+            var isCustom = requestTypeSelect ? isCustomRequestType(requestTypeSelect.value) : false;
+            if (isCustom && customDateInput) {
+                var v = String(customDateInput.value || "").trim();
+                if (v) {
+                    return formatFrenchDateLabel(v) || v;
+                }
+            }
             if (!dateSelect) {
                 return priceCard.getAttribute("data-default-date") || "-";
             }
@@ -588,6 +654,10 @@
         }
 
         function getDateSpecificAdultPrice() {
+            var isCustom = requestTypeSelect ? isCustomRequestType(requestTypeSelect.value) : false;
+            if (isCustom) {
+                return null;
+            }
             if (!dateSelect) {
                 return null;
             }
@@ -722,6 +792,21 @@
 
         if (fromSelect) {
             fromSelect.addEventListener("change", recalculate);
+        }
+        if (customDepartureInput) {
+            customDepartureInput.addEventListener("input", recalculate);
+        }
+        if (customDateInput) {
+            customDateInput.addEventListener("change", function () {
+                recalculate();
+                document.dispatchEvent(new CustomEvent("ajtb:v1:date-changed"));
+            });
+        }
+        if (requestTypeSelect) {
+            requestTypeSelect.addEventListener("change", function () {
+                recalculate();
+                document.dispatchEvent(new CustomEvent("ajtb:v1:request-type-changed"));
+            });
         }
 
         document.addEventListener("ajtb:v1:travellers-changed", recalculate);
@@ -1372,15 +1457,27 @@
         var childrenInput = document.getElementById("ajtb-v1-guest-children-input");
         var fromSelect = document.getElementById("ajtb-v1-search-from");
         var dateSelect = document.getElementById("ajtb-v1-search-date");
+        var requestTypeSelect = document.getElementById("ajtb-v1-request-type");
+        var customDepartureInput = document.getElementById("ajtb-v1-custom-departure-place");
+        var customDateInput = document.getElementById("ajtb-v1-custom-departure-date");
 
         var adults = adultsInput ? parseInt(adultsInput.value || "2", 10) : 2;
         var children = childrenInput ? parseInt(childrenInput.value || "0", 10) : 0;
         if (!isFinite(adults) || adults < 1) { adults = 1; }
         if (!isFinite(children) || children < 0) { children = 0; }
 
+        var requestType = requestTypeSelect ? String(requestTypeSelect.value || "").trim() : "available";
+        var isCustom = isCustomRequestType(requestType);
+
         var departureLabel = priceCard.getAttribute("data-default-departure") || "-";
         var departurePlaceId = 0;
-        if (fromSelect && fromSelect.options && fromSelect.selectedIndex >= 0) {
+        if (isCustom) {
+            departurePlaceId = 0;
+            departureLabel = customDepartureInput ? String(customDepartureInput.value || "").trim() : "";
+            if (!departureLabel) {
+                departureLabel = "-";
+            }
+        } else if (fromSelect && fromSelect.options && fromSelect.selectedIndex >= 0) {
             var opt = fromSelect.options[fromSelect.selectedIndex];
             departurePlaceId = parseInt(fromSelect.value || "0", 10) || 0;
             departureLabel = (opt.getAttribute("data-place-name") || opt.textContent || departureLabel).trim();
@@ -1388,7 +1485,10 @@
 
         var dateValue = "";
         var dateLabel = priceCard.getAttribute("data-default-date") || "-";
-        if (dateSelect && dateSelect.options && dateSelect.selectedIndex >= 0) {
+        if (isCustom) {
+            dateValue = customDateInput ? String(customDateInput.value || "").trim() : "";
+            dateLabel = dateValue ? (formatFrenchDateLabel(dateValue) || dateValue) : "-";
+        } else if (dateSelect && dateSelect.options && dateSelect.selectedIndex >= 0) {
             var dateOpt = dateSelect.options[dateSelect.selectedIndex];
             dateValue = String(dateSelect.value || "");
             dateLabel = String(dateOpt.textContent || dateValue || dateLabel).trim();
@@ -1426,6 +1526,7 @@
             version: 1,
             capturedAt: Date.now(),
             tourId: tourId,
+            requestType: requestType,
             departure: {
                 id: departurePlaceId,
                 label: departureLabel || "-",
@@ -1434,6 +1535,10 @@
                 value: dateValue,
                 label: dateLabel || "-",
             },
+            custom: isCustom ? {
+                departure_place: (customDepartureInput ? String(customDepartureInput.value || "").trim() : ""),
+                departure_date: (customDateInput ? String(customDateInput.value || "").trim() : ""),
+            } : null,
             guests: {
                 adults: adults,
                 children: children,
@@ -1465,7 +1570,58 @@
             return;
         }
 
+        function setInlineError(errorEl, message) {
+            if (!errorEl) return;
+            var msg = String(message || "").trim();
+            errorEl.textContent = msg;
+            errorEl.hidden = msg === "";
+        }
+
+        function validateCustomInputs() {
+            var typeSelect = document.getElementById("ajtb-v1-request-type");
+            var isCustom = typeSelect ? isCustomRequestType(typeSelect.value) : false;
+            if (!isCustom) {
+                return true;
+            }
+
+            var placeInput = document.getElementById("ajtb-v1-custom-departure-place");
+            var dateInput = document.getElementById("ajtb-v1-custom-departure-date");
+            var placeErr = document.getElementById("ajtb-v1-custom-departure-place-error");
+            var dateErr = document.getElementById("ajtb-v1-custom-departure-date-error");
+
+            var ok = true;
+            var place = placeInput ? String(placeInput.value || "").trim() : "";
+            var dateVal = dateInput ? String(dateInput.value || "").trim() : "";
+
+            if (!place) {
+                ok = false;
+                setInlineError(placeErr, "Veuillez écrire votre lieu de départ.");
+            } else {
+                setInlineError(placeErr, "");
+            }
+
+            if (!dateVal) {
+                ok = false;
+                setInlineError(dateErr, "Veuillez choisir une date de départ.");
+            } else {
+                var today = new Date();
+                today.setHours(0, 0, 0, 0);
+                var selected = new Date(dateVal + "T00:00:00");
+                if (isNaN(selected.getTime()) || selected < today) {
+                    ok = false;
+                    setInlineError(dateErr, "La date de départ ne peut pas être dans le passé.");
+                } else {
+                    setInlineError(dateErr, "");
+                }
+            }
+
+            return ok;
+        }
+
         actionEl.addEventListener("click", function () {
+            if (!validateCustomInputs()) {
+                return;
+            }
             var payload = collectRecapPayloadFromSingle();
             if (!payload) {
                 return;
@@ -2994,13 +3150,37 @@
     function initRequestType() {
         var typeSelect = document.getElementById("ajtb-v1-request-type");
         var customMsg = document.getElementById("ajtb-v1-custom-message");
+        var normalDeparture = document.querySelector("[data-ajtb-normal-departure]");
+        var customDeparture = document.querySelector("[data-ajtb-custom-departure]");
+        var normalDate = document.querySelector("[data-ajtb-normal-date]");
+        var customDate = document.querySelector("[data-ajtb-custom-date]");
+        var customDateInput = document.getElementById("ajtb-v1-custom-departure-date");
         if (!typeSelect) {
             return;
         }
         function renderRequestType() {
-            var isCustom = typeSelect.value === "custom";
+            var isCustom = isCustomRequestType(typeSelect.value);
             if (customMsg) {
                 customMsg.hidden = !isCustom;
+            }
+            if (normalDeparture) {
+                normalDeparture.hidden = isCustom;
+            }
+            if (customDeparture) {
+                customDeparture.hidden = !isCustom;
+            }
+            if (normalDate) {
+                normalDate.hidden = isCustom;
+            }
+            if (customDate) {
+                customDate.hidden = !isCustom;
+            }
+
+            if (customDateInput) {
+                // Disallow past dates (local timezone).
+                var today = new Date();
+                today.setHours(0, 0, 0, 0);
+                customDateInput.min = toIsoDate(today);
             }
         }
         typeSelect.addEventListener("change", renderRequestType);
@@ -3023,4 +3203,3 @@
         initExpandableText(document);
     });
 })();
-

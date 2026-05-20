@@ -303,47 +303,83 @@ get_header();
                 <div class="ajtb-v1-search-grid">
                     <div class="ajtb-v1-search-card">
                         <span class="ajtb-v1-search-label">Lieu de départ</span>
-                        <?php if (!empty($search_place_options)): ?>
+                        <div data-ajtb-normal-departure>
+                            <?php if (!empty($search_place_options)): ?>
+                                <span class="ajtb-v1-search-value ajtb-v1-search-value--select">
+                                    <select class="ajtb-v1-search-select" id="ajtb-v1-search-from" aria-label="Lieux de départ disponibles">
+                                        <?php foreach ($search_place_options as $place_option): ?>
+                                            <?php
+                                            $place_id = isset($place_option['id']) ? (int) $place_option['id'] : 0;
+                                            $place_name = isset($place_option['name']) ? trim((string) $place_option['name']) : '';
+                                            $place_code = isset($place_option['code']) ? trim((string) $place_option['code']) : '';
+                                            if ($place_name === '') {
+                                                continue;
+                                            }
+                                            $is_selected = ($search_departure_id > 0 && $place_id === $search_departure_id)
+                                                || ($search_departure_id <= 0 && $search_departure !== '' && $place_name === $search_departure);
+                                            ?>
+                                            <option value="<?php echo esc_attr((string) $place_id); ?>" data-place-name="<?php echo esc_attr($place_name); ?>" data-place-code="<?php echo esc_attr($place_code); ?>"<?php selected($is_selected, true); ?>>
+                                                <?php echo esc_html($place_name); ?><?php echo $place_code !== '' ? esc_html(' (' . $place_code . ')') : ''; ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <strong aria-hidden="true">&#9662;</strong>
+                                </span>
+                            <?php else: ?>
+                                <span class="ajtb-v1-search-value">
+                                    <span class="ajtb-v1-search-text"><?php echo esc_html($search_departure !== '' ? $search_departure : 'Aucun lieu de départ configuré'); ?></span>
+                                    <strong aria-hidden="true">&#9662;</strong>
+                                </span>
+                            <?php endif; ?>
+                        </div>
+
+                        <div data-ajtb-custom-departure hidden>
                             <span class="ajtb-v1-search-value ajtb-v1-search-value--select">
-                                <select class="ajtb-v1-search-select" id="ajtb-v1-search-from" aria-label="Lieux de départ disponibles">
-                                    <?php foreach ($search_place_options as $place_option): ?>
-                                        <?php
-                                        $place_id = isset($place_option['id']) ? (int) $place_option['id'] : 0;
-                                        $place_name = isset($place_option['name']) ? trim((string) $place_option['name']) : '';
-                                        $place_code = isset($place_option['code']) ? trim((string) $place_option['code']) : '';
-                                        if ($place_name === '') {
-                                            continue;
-                                        }
-                                        $is_selected = ($search_departure_id > 0 && $place_id === $search_departure_id)
-                                            || ($search_departure_id <= 0 && $search_departure !== '' && $place_name === $search_departure);
-                                        ?>
-                                        <option value="<?php echo esc_attr((string) $place_id); ?>" data-place-name="<?php echo esc_attr($place_name); ?>" data-place-code="<?php echo esc_attr($place_code); ?>"<?php selected($is_selected, true); ?>>
-                                            <?php echo esc_html($place_name); ?><?php echo $place_code !== '' ? esc_html(' (' . $place_code . ')') : ''; ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
+                                <input
+                                    type="text"
+                                    class="ajtb-v1-search-select"
+                                    id="ajtb-v1-custom-departure-place"
+                                    name="custom_departure_place"
+                                    placeholder="Écrire votre lieu de départ"
+                                    autocomplete="address-level2">
                                 <strong aria-hidden="true">&#9662;</strong>
                             </span>
-                        <?php else: ?>
-                            <span class="ajtb-v1-search-value"><span class="ajtb-v1-search-text"><?php echo esc_html($search_departure !== '' ? $search_departure : 'Aucun lieu de départ configuré'); ?></span><strong aria-hidden="true">&#9662;</strong></span>
-                        <?php endif; ?>
+                            <div class="ajtb-v1-field-error" id="ajtb-v1-custom-departure-place-error" hidden></div>
+                        </div>
                     </div>
                     <div class="ajtb-v1-search-card">
                         <span class="ajtb-v1-search-label">Date de départ</span>
-                        <?php if (!empty($search_date_options)): ?>
+                        <div data-ajtb-normal-date>
+                            <?php if (!empty($search_date_options)): ?>
+                                <span class="ajtb-v1-search-value ajtb-v1-search-value--select">
+                                    <select class="ajtb-v1-search-select" id="ajtb-v1-search-date" aria-label="Dates de départ disponibles">
+                                        <?php foreach ($search_date_options as $date_option): ?>
+                                            <option value="<?php echo esc_attr((string) $date_option['value']); ?>"<?php selected((string) $date_option['value'], $selected_search_date); ?>>
+                                                <?php echo esc_html($translate_ui((string) $date_option['display'])); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <strong aria-hidden="true">&#9662;</strong>
+                                </span>
+                            <?php else: ?>
+                                <span class="ajtb-v1-search-value">
+                                    <span class="ajtb-v1-search-text"><?php echo esc_html($translate_ui($search_date)); ?></span>
+                                    <strong aria-hidden="true">&#9662;</strong>
+                                </span>
+                            <?php endif; ?>
+                        </div>
+
+                        <div data-ajtb-custom-date hidden>
                             <span class="ajtb-v1-search-value ajtb-v1-search-value--select">
-                                <select class="ajtb-v1-search-select" id="ajtb-v1-search-date" aria-label="Dates de départ disponibles">
-                                    <?php foreach ($search_date_options as $date_option): ?>
-                                        <option value="<?php echo esc_attr((string) $date_option['value']); ?>"<?php selected((string) $date_option['value'], $selected_search_date); ?>>
-                                            <?php echo esc_html($translate_ui((string) $date_option['display'])); ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
+                                <input
+                                    type="date"
+                                    class="ajtb-v1-search-select"
+                                    id="ajtb-v1-custom-departure-date"
+                                    name="custom_departure_date">
                                 <strong aria-hidden="true">&#9662;</strong>
                             </span>
-                        <?php else: ?>
-                            <span class="ajtb-v1-search-value"><span class="ajtb-v1-search-text"><?php echo esc_html($translate_ui($search_date)); ?></span><strong aria-hidden="true">&#9662;</strong></span>
-                        <?php endif; ?>
+                            <div class="ajtb-v1-field-error" id="ajtb-v1-custom-departure-date-error" hidden></div>
+                        </div>
                     </div>
                     <div class="ajtb-v1-search-card">
                         <span class="ajtb-v1-search-label">Voyageurs</span>
@@ -392,7 +428,7 @@ get_header();
                         <span class="ajtb-v1-search-value ajtb-v1-search-value--select">
                             <select class="ajtb-v1-search-select" id="ajtb-v1-request-type" aria-label="Type de demande">
                                 <option value="available">Départ disponible</option>
-                                <option value="custom">Demande à la carte</option>
+                                <option value="demande_a_la_carte">Demande à la carte</option>
                             </select>
                             <strong aria-hidden="true">&#9662;</strong>
                         </span>

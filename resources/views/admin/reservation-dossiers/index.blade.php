@@ -1,6 +1,6 @@
 @extends('layouts.admin-v6')
 
-@section('title', 'Dossiers de reservation')
+@section('title', 'Dossiers de réservation')
 @section('page_title', 'Dossiers de réservation')
 @section('hide_admin_footer', '1')
 @section('header_primary_action')
@@ -9,6 +9,13 @@
         <span>Créer un dossier</span>
     </a>
 @endsection
+
+@php
+    $breadcrumbs = [
+        ['label' => 'Accueil', 'url' => \Illuminate\Support\Facades\Route::has('admin.dashboard.v6') ? route('admin.dashboard.v6') : route('admin.dashboard')],
+        ['label' => 'Réservations'],
+    ];
+@endphp
 
 @php
     use App\Models\Reservation;

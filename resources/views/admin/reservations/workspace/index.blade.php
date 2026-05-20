@@ -112,8 +112,15 @@
 @endphp
 @extends('layouts.admin-v6')
 
-@section('title', 'Espace de réservation')
-@section('page_title', 'Espace de réservation')
+@section('title', 'Catalogue des Voyages & Départs')
+@section('page_title', 'Catalogue des Voyages & Départs')
+
+@php
+    $breadcrumbs = [
+        ['label' => 'Accueil', 'url' => \Illuminate\Support\Facades\Route::has('admin.dashboard.v6') ? route('admin.dashboard.v6') : route('admin.dashboard')],
+        ['label' => 'Vente / Catalogue'],
+    ];
+@endphp
 
 @push('styles')
 @if(!$usePortalTailwind)
@@ -148,9 +155,6 @@
     </script>
 @endif
 <link rel="stylesheet" href="{{ asset('css/reservation-workspace.css') }}?v=workspace-fixed-v7">
-@if(auth()->user()?->hasRole('commercial_reservations_only'))
-<link rel="stylesheet" href="{{ asset('css/commercial-reservations-workspace.css') }}?v=1">
-@endif
 <style>
     .ws-ring-pulse { animation: wsPulse 1.6s ease-out 1; }
     @keyframes wsPulse {
@@ -1302,50 +1306,7 @@
     $workspaceUserInitials = strtoupper(collect(preg_split('/\s+/', trim((string) ($workspaceUser?->name ?? 'OA'))))->filter()->take(2)->map(fn ($part) => mb_substr($part, 0, 1))->implode(''));
     if ($workspaceUserInitials === '') { $workspaceUserInitials = 'OA'; }
 @endphp
-@if($isCommercialReservationsOnly)
-<div class="commercial-workspace-page" id="commercialWorkspacePage">
-    <aside class="commercial-workspace-sidebar" id="commercialWorkspaceSidebar">
-        <div class="commercial-workspace-brand">
-            <a href="{{ route('admin.reservations.workspace', ['view' => 'catalog']) }}" class="commercial-workspace-brand-link">
-                <img src="{{ $workspaceBrandLogo }}" alt="{{ $workspaceBrandName }}" class="commercial-workspace-brand-logo">
-            </a>
-        </div>
-        <div class="commercial-workspace-profile">
-            <div class="commercial-workspace-profile-avatar">{{ $workspaceUserInitials }}</div>
-            <div class="commercial-workspace-profile-meta">
-                <strong>{{ $workspaceUser?->name ?? 'Oumayma Ajinsafro' }}</strong>
-                <span>{{ $workspaceUserRole }}</span>
-            </div>
-            <a href="{{ route('admin.profile.edit') }}" class="commercial-workspace-profile-btn">Mon profil</a>
-        </div>
-        <nav class="commercial-workspace-nav" aria-label="Navigation commerciale">
-            <a href="{{ route('admin.reservations.workspace', array_filter(['view' => 'catalog'] + request()->query())) }}" class="commercial-workspace-nav-link {{ $workspaceView === 'catalog' ? 'is-active' : '' }}" data-commercial-view="catalog">Vente / Catalogue</a>
-            <a href="{{ route('admin.reservations.workspace', array_filter(['view' => 'list'] + request()->query())) }}" class="commercial-workspace-nav-link {{ $workspaceView === 'list' ? 'is-active' : '' }}" data-commercial-view="list">Réservations</a>
-            <a href="{{ route('admin.profile.edit') }}" class="commercial-workspace-nav-link">Mon profil</a>
-            <a href="{{ route('logout.get') }}" class="commercial-workspace-nav-link is-logout">Déconnexion</a>
-        </nav>
-    </aside>
-    <div class="commercial-workspace-main">
-        <header class="commercial-workspace-topbar">
-            <button type="button" class="commercial-workspace-sidebar-toggle" id="commercialWorkspaceSidebarToggle" aria-label="Afficher/masquer la barre latérale">
-                <i class="fas fa-bars" aria-hidden="true"></i>
-            </button>
-            <div class="commercial-workspace-search">
-                <i class="fas fa-search" aria-hidden="true"></i>
-                <input type="text" id="commercialWorkspaceTopSearch" placeholder="Recherche globale...">
-            </div>
-            <div class="commercial-workspace-top-actions">
-                <button type="button" class="commercial-workspace-icon-btn" aria-label="Notifications"><i class="far fa-bell"></i></button>
-                <button type="button" class="commercial-workspace-icon-btn" aria-label="Messages"><i class="far fa-envelope"></i></button>
-                <div class="commercial-workspace-top-profile">
-                    <strong>{{ $workspaceUser?->name ?? 'Oumayma Ajinsafro' }}</strong>
-                    <span>{{ $workspaceUserRole }}</span>
-                </div>
-            </div>
-        </header>
-        <div class="commercial-workspace-content">
-@endif
-<div class="fade-in ws-page {{ $isCommercialReservationsOnly ? 'ws-page--commercial' : 'max-w-[1680px] mx-auto' }} pb-10 overflow-x-hidden">
+<div class="fade-in ws-page max-w-[1680px] mx-auto pb-10 overflow-x-hidden">
     @if(session('workspace_store_error'))
         <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 text-red-900 px-4 py-3 text-sm shadow-sm" role="alert">
             <strong class="font-semibold">Enregistrement impossible.</strong>
@@ -1387,7 +1348,6 @@
         $sellableDepRowsV2 = $allDepRowsV2->filter(fn ($i) => $i['is_sellable'])->values();
     @endphp
 
-    @if($isCommercialReservationsOnly)
     <div id="reservations-main-content" class="commercial-v2-main space-y-6">
         <form id="catalogue-workspace" method="GET" action="{{ route('admin.reservations.workspace') }}" class="commercial-v2-filters-wrap">
             <input type="hidden" name="view" id="ws-filter-view" value="{{ $workspaceView }}">
@@ -1854,13 +1814,8 @@
             </div>
         </div>
     </div>
-    @endif
-</div>
-@if($isCommercialReservationsOnly)
-        </div>
     </div>
 </div>
-@endif
 
 <script type="application/json" id="workspace-calendar-json">{!! json_encode($workspaceCalendarEvents, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
 <script type="application/json" id="workspace-calendar-meta-json">{!! json_encode(['seed_date' => $workspaceCalendarSeedDate, 'reset_url' => $workspaceResetUrl], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
@@ -3147,7 +3102,4 @@ document.addEventListener('DOMContentLoaded', function () {
     }, true);
 });
 </script>
-@if(auth()->user()?->hasRole('commercial_reservations_only'))
-<script src="{{ asset('js/commercial-reservations-workspace.js') }}?v=1"></script>
-@endif
 @endpush

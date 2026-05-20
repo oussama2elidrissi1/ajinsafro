@@ -241,6 +241,14 @@
   outline: none;
 }
 
+.ajtb-field-error {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #b42318;
+}
+
 /* Guests picker */
 .ajtb-guests-picker {
   position: relative;
