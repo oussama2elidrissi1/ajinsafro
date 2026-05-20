@@ -6018,6 +6018,71 @@ body.admin-v6 .ws-offer-card__actions--compact .ws-btn {
     min-height: 2.25rem;
 }
 
+body.admin-v6 .catalog-grid,
+body.admin-v6 .voyage-catalog-grid,
+body.admin-v6 .sales-catalog-grid,
+body.admin-v6 .ws-catalog-grid,
+body.admin-v6 .ws-catalog-grid.ws-catalog-grid--compact {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 18px !important;
+    width: 100% !important;
+    max-width: none !important;
+    justify-content: stretch !important;
+    align-items: stretch !important;
+    align-content: start !important;
+    justify-items: stretch !important;
+}
+
+body.admin-v6 .catalog-grid > *,
+body.admin-v6 .voyage-catalog-grid > *,
+body.admin-v6 .sales-catalog-grid > *,
+body.admin-v6 .ws-catalog-grid > *,
+body.admin-v6 .ws-catalog-grid.ws-catalog-grid--compact > * {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+}
+
+body.admin-v6 .catalog-card,
+body.admin-v6 .ws-offer-card.ws-offer-card--compact {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    justify-self: stretch;
+}
+
+@media (max-width: 1500px) {
+    body.admin-v6 .catalog-grid,
+    body.admin-v6 .voyage-catalog-grid,
+    body.admin-v6 .sales-catalog-grid,
+    body.admin-v6 .ws-catalog-grid,
+    body.admin-v6 .ws-catalog-grid.ws-catalog-grid--compact {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 1100px) {
+    body.admin-v6 .catalog-grid,
+    body.admin-v6 .voyage-catalog-grid,
+    body.admin-v6 .sales-catalog-grid,
+    body.admin-v6 .ws-catalog-grid,
+    body.admin-v6 .ws-catalog-grid.ws-catalog-grid--compact {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 650px) {
+    body.admin-v6 .catalog-grid,
+    body.admin-v6 .voyage-catalog-grid,
+    body.admin-v6 .sales-catalog-grid,
+    body.admin-v6 .ws-catalog-grid,
+    body.admin-v6 .ws-catalog-grid.ws-catalog-grid--compact {
+        grid-template-columns: 1fr !important;
+    }
+}
+
 @media (min-width: 768px) {
     body.admin-v6 .ws-catalog-grid,
     body.admin-v6 .ws-catalog-grid.ws-catalog-grid--compact {
