@@ -427,6 +427,7 @@
 </tr>
 <?php else: ?>
 <article class="catalog-card ws-catalog-row ws-offer-card ws-offer-card--compact admin-sales-catalogue-card-fix <?php echo e($rowAccent); ?> <?php echo e($hasLaravel ? '' : 'ws-catalog-row--unlinked'); ?><?php echo e($isNearFuture ? ' ws-catalog-row--near' : ''); ?><?php echo e($isSellable ? '' : ' ws-catalog-row--configure'); ?>"
+         style="width:100% !important;max-width:none !important;min-width:0 !important;margin:0 !important;justify-self:stretch !important;"
     data-type="<?php echo e($typeKey); ?>"
     data-row-code="<?php echo e($row['code']); ?>"
     data-code="<?php echo e($row['code']); ?>"

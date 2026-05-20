@@ -1295,30 +1295,20 @@
     }
 
     /* === FIX: grille catalogue 4 colonnes desktop === */
+    .admin-sales-catalogue-page-fix {
+        width: 100% !important;
+        max-width: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
     .admin-sales-catalogue-grid-fix {
         display: grid !important;
         grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
         gap: 18px !important;
-        width: 100% !important;
-        max-width: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        justify-content: stretch !important;
-        align-items: stretch !important;
-    }
-
-    .admin-sales-catalogue-grid-fix > .admin-sales-catalogue-card-fix {
-        width: 100% !important;
-        max-width: none !important;
-        min-width: 0 !important;
-        margin: 0 !important;
-        justify-self: stretch !important;
     }
 
     .admin-sales-catalogue-card-fix {
-        width: 100% !important;
-        max-width: none !important;
-        min-width: 0 !important;
         overflow: hidden !important;
     }
 
@@ -1368,37 +1358,6 @@
             grid-template-columns: 1fr !important;
         }
     }
-
-    .ws-catalog-section {
-        width: 100% !important;
-        max-width: none !important;
-    }
-
-    .ws-catalog-grid.ws-catalog-grid--compact.admin-sales-catalogue-grid-fix {
-        display: grid !important;
-        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-        justify-items: stretch !important;
-        justify-content: stretch !important;
-        place-items: stretch !important;
-        width: 100% !important;
-        max-width: none !important;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-    }
-
-    .ws-catalog-grid.ws-catalog-grid--compact.admin-sales-catalogue-grid-fix > article,
-    .ws-catalog-grid.ws-catalog-grid--compact.admin-sales-catalogue-grid-fix > .admin-sales-catalogue-card-fix {
-        width: 100% !important;
-        max-width: none !important;
-        justify-self: stretch !important;
-        margin: 0 !important;
-    }
-
-    .ws-offer-card--compact.admin-sales-catalogue-card-fix {
-        width: 100% !important;
-        max-width: none !important;
-        min-width: 0 !important;
-    }
 </style>
 <?php $__env->stopPush(); ?>
 
@@ -1413,7 +1372,8 @@
     $workspaceUserInitials = strtoupper(collect(preg_split('/\s+/', trim((string) ($workspaceUser?->name ?? 'OA'))))->filter()->take(2)->map(fn ($part) => mb_substr($part, 0, 1))->implode(''));
     if ($workspaceUserInitials === '') { $workspaceUserInitials = 'OA'; }
 ?>
-<div class="fade-in ws-page max-w-[1680px] mx-auto pb-10 overflow-x-hidden">
+<div class="fade-in ws-page admin-sales-catalogue-page-fix pb-10 overflow-x-hidden"
+     style="width:100%;max-width:none;margin:0;">
     <?php if(session('workspace_store_error')): ?>
         <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 text-red-900 px-4 py-3 text-sm shadow-sm" role="alert">
             <strong class="font-semibold">Enregistrement impossible.</strong>
@@ -1890,7 +1850,8 @@
                 <?php if($sellableRows->isNotEmpty()): ?>
                     <div class="ws-catalog-section">
                         <h3 class="ws-catalog-section__title">Voyages disponibles à la vente</h3>
-                        <div class="ws-catalog-grid ws-catalog-grid--compact admin-sales-catalogue-grid-fix">
+                        <div class="admin-sales-catalogue-grid-fix"
+                             style="display:grid !important;grid-template-columns:repeat(4,minmax(0,1fr)) !important;gap:18px !important;width:100% !important;max-width:none !important;margin:0 !important;padding:0 !important;justify-content:stretch !important;justify-items:stretch !important;align-items:stretch !important;">
                             <?php $__currentLoopData = $sellableRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <?php echo $__env->make('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'card'], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
