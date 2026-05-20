@@ -16,17 +16,25 @@
 
     $unreadCount  = 0;
     $pendingCount = 0;
-    if ($adminUser && \Illuminate\Support\Facades\Schema::hasTable('messages')) {
-        $unreadCount = \App\Models\Message::query()
-            ->where('recipient_id', $adminUser->id)
-            ->where('folder_recipient', 'inbox')
-            ->where('read', false)
-            ->count();
+    try {
+        if ($adminUser && \Illuminate\Support\Facades\Schema::hasTable('messages')) {
+            $unreadCount = \App\Models\Message::query()
+                ->where('recipient_id', $adminUser->id)
+                ->where('folder_recipient', 'inbox')
+                ->where('read', false)
+                ->count();
+        }
+    } catch (Throwable $e) {
+        $unreadCount = 0;
     }
-    if (\Illuminate\Support\Facades\Schema::hasTable('reservations')) {
-        $pendingCount = \App\Models\Reservation::query()
-            ->where('status', \App\Models\Reservation::STATUS_PENDING)
-            ->count();
+    try {
+        if (\Illuminate\Support\Facades\Schema::hasTable('reservations')) {
+            $pendingCount = \App\Models\Reservation::query()
+                ->where('status', \App\Models\Reservation::STATUS_PENDING)
+                ->count();
+        }
+    } catch (Throwable $e) {
+        $pendingCount = 0;
     }
 @endphp
 <!DOCTYPE html>

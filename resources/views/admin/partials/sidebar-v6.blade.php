@@ -52,7 +52,7 @@
             $url = route($route);
             $query = $item['query'] ?? null;
             if (is_array($query) && count($query)) {
-                $url .= (str_contains($url, '?') ? '&' : '?') . http_build_query($query);
+                $url .= ((strpos($url, '?') !== false) ? '&' : '?') . http_build_query($query);
             }
             return $url;
         }
@@ -136,6 +136,14 @@
         $html .= '</ul>';
         return $html;
     };
+
+    $menuHtml = '';
+    try {
+        $menuHtml = $renderItems($items);
+    } catch (Throwable $e) {
+        // Never break the whole admin UI because of a sidebar rendering issue.
+        $menuHtml = '';
+    }
 @endphp
 
 <aside class="admin-v6-sidebar" id="adminV6Sidebar" aria-label="Navigation Ajinsafro">
@@ -168,7 +176,7 @@
         </div>
 
         <nav class="aj-sidebar-v2__nav" aria-label="Navigation administration">
-            {!! $renderItems($items) !!}
+            {!! $menuHtml !!}
 
             <div class="aj-sidebar-v2__account">
                 <div class="aj-sidebar-v2__section-title">Compte</div>
