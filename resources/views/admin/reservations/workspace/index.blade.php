@@ -1305,28 +1305,22 @@
     .admin-sales-catalogue-grid-fix {
         display: flex !important;
         flex-wrap: wrap !important;
-        gap: 12px !important;
+        gap: 10px !important;
         justify-content: flex-start !important;
         align-items: stretch !important;
         width: 100% !important;
         max-width: none !important;
     }
 
-    .admin-sales-catalogue-grid-fix > .admin-sales-catalogue-card-fix {
-        flex: 0 0 calc(25% - 9px) !important;
-        width: calc(25% - 9px) !important;
-        max-width: calc(25% - 9px) !important;
-        min-width: 0 !important;
-        margin: 0 !important;
-        box-sizing: border-box !important;
-    }
-
+    .admin-sales-catalogue-grid-fix > .admin-sales-catalogue-card-fix,
     .ws-offer-card--compact.admin-sales-catalogue-card-fix,
     .catalog-card.admin-sales-catalogue-card-fix,
     .ws-catalog-row.admin-sales-catalogue-card-fix {
+        flex: 0 0 23.5% !important;
+        width: 23.5% !important;
+        max-width: 23.5% !important;
         min-width: 0 !important;
-        max-width: calc(25% - 9px) !important;
-        width: calc(25% - 9px) !important;
+        margin: 0 !important;
         box-sizing: border-box !important;
     }
 
@@ -1336,25 +1330,25 @@
 
     .admin-sales-catalogue-card-fix .ws-offer-card__media--compact,
     .admin-sales-catalogue-card-fix .ws-offer-card__media {
-        height: 130px !important;
-        max-height: 130px !important;
+        height: 115px !important;
+        max-height: 115px !important;
         aspect-ratio: auto !important;
     }
 
     .admin-sales-catalogue-card-fix .ws-offer-card__media img,
     .admin-sales-catalogue-card-fix .ws-offer-card__img {
-        height: 130px !important;
+        height: 115px !important;
         object-fit: cover !important;
     }
 
     .admin-sales-catalogue-card-fix .ws-offer-card__body--compact {
-        padding: 10px !important;
-        gap: 0.4rem !important;
+        padding: 8px !important;
+        gap: 0.3rem !important;
     }
 
     .admin-sales-catalogue-card-fix .ws-offer-card__title--compact {
-        font-size: 0.78rem !important;
-        line-height: 1.2 !important;
+        font-size: 0.72rem !important;
+        line-height: 1.15 !important;
         min-height: 0 !important;
     }
 
@@ -1363,8 +1357,11 @@
         padding: 0.5rem 0.6rem !important;
     }
 
-    @media (max-width: 1050px) {
-        .admin-sales-catalogue-grid-fix > .admin-sales-catalogue-card-fix {
+    @media (max-width: 950px) {
+        .admin-sales-catalogue-grid-fix > .admin-sales-catalogue-card-fix,
+        .ws-offer-card--compact.admin-sales-catalogue-card-fix,
+        .catalog-card.admin-sales-catalogue-card-fix,
+        .ws-catalog-row.admin-sales-catalogue-card-fix {
             flex: 0 0 calc(50% - 6px) !important;
             width: calc(50% - 6px) !important;
             max-width: calc(50% - 6px) !important;
@@ -1372,7 +1369,10 @@
     }
 
     @media (max-width: 650px) {
-        .admin-sales-catalogue-grid-fix > .admin-sales-catalogue-card-fix {
+        .admin-sales-catalogue-grid-fix > .admin-sales-catalogue-card-fix,
+        .ws-offer-card--compact.admin-sales-catalogue-card-fix,
+        .catalog-card.admin-sales-catalogue-card-fix,
+        .ws-catalog-row.admin-sales-catalogue-card-fix {
             flex: 0 0 100% !important;
             width: 100% !important;
             max-width: 100% !important;
@@ -1872,7 +1872,7 @@
                          style="width:100% !important;max-width:none !important;margin:0 !important;padding-left:0 !important;padding-right:0 !important;">
                         <h3 class="ws-catalog-section__title">Départs disponibles à la vente</h3>
                         <div class="admin-sales-catalogue-grid-fix"
-                             style="display:flex !important;flex-wrap:wrap !important;gap:12px !important;width:100% !important;max-width:none !important;margin:0 !important;padding:0 !important;justify-content:flex-start !important;align-items:stretch !important;">
+                             style="display:flex !important;flex-wrap:wrap !important;gap:10px !important;width:100% !important;max-width:none !important;margin:0 !important;padding:0 !important;justify-content:flex-start !important;align-items:stretch !important;">
                             @foreach($sellableDepRowsV2 as $depItem)
                                 @include('admin.reservations.workspace.partials.catalog-row', ['row' => $depItem['row'], 'departure' => $depItem['departure'], 'mode' => 'card'])
                             @endforeach
