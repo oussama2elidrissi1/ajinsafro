@@ -6025,13 +6025,15 @@ body.admin-v6 .ws-catalog-grid,
 body.admin-v6 .ws-catalog-grid.ws-catalog-grid--compact {
     display: grid !important;
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    gap: 18px !important;
+    gap: 20px !important;
     width: 100% !important;
-    max-width: none !important;
+    max-width: 100% !important;
     justify-content: stretch !important;
     align-items: stretch !important;
     align-content: start !important;
     justify-items: stretch !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 body.admin-v6 .catalog-grid > *,
@@ -6040,7 +6042,7 @@ body.admin-v6 .sales-catalog-grid > *,
 body.admin-v6 .ws-catalog-grid > *,
 body.admin-v6 .ws-catalog-grid.ws-catalog-grid--compact > * {
     width: 100% !important;
-    max-width: none !important;
+    max-width: 100% !important;
     min-width: 0 !important;
     margin: 0 !important;
 }
@@ -6053,7 +6055,7 @@ body.admin-v6 .ws-offer-card.ws-offer-card--compact {
     justify-self: stretch;
 }
 
-@media (max-width: 1500px) {
+@media (max-width: 1400px) {
     body.admin-v6 .catalog-grid,
     body.admin-v6 .voyage-catalog-grid,
     body.admin-v6 .sales-catalog-grid,
@@ -6073,7 +6075,7 @@ body.admin-v6 .ws-offer-card.ws-offer-card--compact {
     }
 }
 
-@media (max-width: 650px) {
+@media (max-width: 700px) {
     body.admin-v6 .catalog-grid,
     body.admin-v6 .voyage-catalog-grid,
     body.admin-v6 .sales-catalog-grid,

@@ -446,19 +446,19 @@ body.commercial-reservations-only .commercial-v2-btn-book { background: #0081bc;
 body.commercial-reservations-only .commercial-v2-empty { text-align: center; color: #64748b; padding: 28px 18px; }
 body.commercial-reservations-only .commercial-v2-cards-grid { padding: 16px; }
 
-body.commercial-reservations-only .commercial-workspace-page .catalogue-grid,
-body.commercial-reservations-only .commercial-workspace-page .catalog-grid,
-body.commercial-reservations-only .commercial-workspace-page .voyage-cards-grid {
+body.commercial-reservations-only .catalogue-grid,
+body.commercial-reservations-only .catalog-grid,
+body.commercial-reservations-only .voyage-cards-grid {
     display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     gap: 22px !important;
     width: 100% !important;
     max-width: 100% !important;
 }
 
-body.commercial-reservations-only .commercial-workspace-page .voyage-card,
-body.commercial-reservations-only .commercial-workspace-page .catalogue-card,
-body.commercial-reservations-only .commercial-workspace-page .commercial-voyage-card {
+body.commercial-reservations-only .voyage-card,
+body.commercial-reservations-only .catalogue-card,
+body.commercial-reservations-only .commercial-voyage-card {
     background: #ffffff !important;
     border: 1px solid #e4edf7 !important;
     border-radius: 20px !important;
@@ -467,64 +467,83 @@ body.commercial-reservations-only .commercial-workspace-page .commercial-voyage-
     max-width: 100% !important;
 }
 
-body.commercial-reservations-only .commercial-workspace-page .voyage-card img,
-body.commercial-reservations-only .commercial-workspace-page .catalogue-card img,
-body.commercial-reservations-only .commercial-workspace-page .commercial-voyage-card img,
-body.commercial-reservations-only .commercial-workspace-page .voyage-card-image img {
+body.commercial-reservations-only .voyage-card img,
+body.commercial-reservations-only .catalogue-card img,
+body.commercial-reservations-only .commercial-voyage-card img,
+body.commercial-reservations-only .voyage-card-image img {
     width: 100% !important;
-    height: 220px !important;
-    max-height: 220px !important;
+    height: 180px !important;
+    max-height: 180px !important;
     object-fit: cover !important;
     object-position: center !important;
     display: block !important;
 }
 
-body.commercial-reservations-only .commercial-workspace-page .voyage-card-image,
-body.commercial-reservations-only .commercial-workspace-page .catalogue-card-image {
+body.commercial-reservations-only .voyage-card-image,
+body.commercial-reservations-only .catalogue-card-image {
     width: 100% !important;
     height: 220px !important;
     overflow: hidden !important;
     background: #f1f5f9 !important;
 }
 
-body.commercial-reservations-only .commercial-workspace-page .voyage-card-body,
-body.commercial-reservations-only .commercial-workspace-page .catalogue-card-body {
+body.commercial-reservations-only .voyage-card-body,
+body.commercial-reservations-only .catalogue-card-body {
     padding: 18px !important;
 }
 
-body.commercial-reservations-only .commercial-workspace-page .voyage-card-badges { display: flex; gap: 8px; margin-bottom: 10px; }
-body.commercial-reservations-only .commercial-workspace-page .voyage-chip { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; border-radius: 999px; padding: 4px 8px; background: #e0f2fe; color: #0369a1; }
-body.commercial-reservations-only .commercial-workspace-page .voyage-chip-ref { background: #eff6ff; color: #1d4ed8; }
-body.commercial-reservations-only .commercial-workspace-page .voyage-card-body h3 { font-size: 16px; line-height: 1.3; margin: 0 0 8px; color: #0f172a; font-weight: 700; }
-body.commercial-reservations-only .commercial-workspace-page .voyage-card-destination { margin: 0 0 10px; color: #475569; font-size: 12px; display: flex; gap: 7px; align-items: center; }
-body.commercial-reservations-only .commercial-workspace-page .voyage-card-meta { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
-body.commercial-reservations-only .commercial-workspace-page .voyage-card-meta span { color: #64748b; font-size: 11px; }
-body.commercial-reservations-only .commercial-workspace-page .voyage-card-meta strong { color: #0f172a; font-size: 14px; }
-body.commercial-reservations-only .commercial-workspace-page .voyage-card-stats { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 11px; color: #475569; margin-bottom: 12px; }
-body.commercial-reservations-only .commercial-workspace-page .voyage-card-actions { display: flex; gap: 9px; }
-body.commercial-reservations-only .commercial-workspace-page .voyage-card-actions .btn-view,
-body.commercial-reservations-only .commercial-workspace-page .voyage-card-actions .btn-reserve { flex: 1; text-align: center; text-decoration: none; border-radius: 10px; height: 36px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
-body.commercial-reservations-only .commercial-workspace-page .voyage-card-actions .btn-view { border: 1px solid #cbd5e1; background: #fff; color: #334155; }
-body.commercial-reservations-only .commercial-workspace-page .voyage-card-actions .btn-reserve { border: 0; background: #0081bc; color: #fff; }
+body.commercial-reservations-only .voyage-card-badges { display: flex; gap: 8px; margin-bottom: 10px; }
+body.commercial-reservations-only .voyage-chip { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; border-radius: 999px; padding: 4px 8px; background: #e0f2fe; color: #0369a1; }
+body.commercial-reservations-only .voyage-chip-ref { background: #eff6ff; color: #1d4ed8; }
+body.commercial-reservations-only .voyage-card-body h3 { font-size: 16px; line-height: 1.3; margin: 0 0 8px; color: #0f172a; font-weight: 700; }
+body.commercial-reservations-only .voyage-card-destination { margin: 0 0 10px; color: #475569; font-size: 12px; display: flex; gap: 7px; align-items: center; }
+body.commercial-reservations-only .voyage-card-meta { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+body.commercial-reservations-only .voyage-card-meta span { color: #64748b; font-size: 11px; }
+body.commercial-reservations-only .voyage-card-meta strong { color: #0f172a; font-size: 14px; }
+body.commercial-reservations-only .voyage-card-stats { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 11px; color: #475569; margin-bottom: 12px; }
+body.commercial-reservations-only .voyage-card-actions { display: flex; gap: 9px; }
+body.commercial-reservations-only .voyage-card-actions .btn-view,
+body.commercial-reservations-only .voyage-card-actions .btn-reserve { flex: 1; text-align: center; text-decoration: none; border-radius: 10px; height: 36px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+body.commercial-reservations-only .voyage-card-actions .btn-view { border: 1px solid #cbd5e1; background: #fff; color: #334155; }
+body.commercial-reservations-only .voyage-card-actions .btn-reserve { border: 0; background: #0081bc; color: #fff; }
 
 @media (max-width: 1450px) {
     body.commercial-reservations-only .commercial-v2-filters-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
-@media (max-width: 1366px) {
-    body.commercial-reservations-only .commercial-workspace-page .catalogue-grid,
-    body.commercial-reservations-only .commercial-workspace-page .catalog-grid,
-    body.commercial-reservations-only .commercial-workspace-page .voyage-cards-grid {
+@media (max-width: 1400px) {
+    body.commercial-reservations-only .catalogue-grid,
+    body.commercial-reservations-only .catalog-grid,
+    body.commercial-reservations-only .voyage-cards-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 18px !important;
+    }
+
+    body.commercial-reservations-only .voyage-card img,
+    body.commercial-reservations-only .catalogue-card img,
+    body.commercial-reservations-only .commercial-voyage-card img,
+    body.commercial-reservations-only .voyage-card-image img,
+    body.commercial-reservations-only .voyage-card-image,
+    body.commercial-reservations-only .catalogue-card-image {
+        height: 190px !important;
+        max-height: 190px !important;
+    }
+}
+
+@media (max-width: 1100px) {
+    body.commercial-reservations-only .catalogue-grid,
+    body.commercial-reservations-only .catalog-grid,
+    body.commercial-reservations-only .voyage-cards-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         gap: 16px !important;
     }
 
-    body.commercial-reservations-only .commercial-workspace-page .voyage-card img,
-    body.commercial-reservations-only .commercial-workspace-page .catalogue-card img,
-    body.commercial-reservations-only .commercial-workspace-page .commercial-voyage-card img,
-    body.commercial-reservations-only .commercial-workspace-page .voyage-card-image img,
-    body.commercial-reservations-only .commercial-workspace-page .voyage-card-image,
-    body.commercial-reservations-only .commercial-workspace-page .catalogue-card-image {
+    body.commercial-reservations-only .voyage-card img,
+    body.commercial-reservations-only .catalogue-card img,
+    body.commercial-reservations-only .commercial-voyage-card img,
+    body.commercial-reservations-only .voyage-card-image img,
+    body.commercial-reservations-only .voyage-card-image,
+    body.commercial-reservations-only .catalogue-card-image {
         height: 190px !important;
         max-height: 190px !important;
     }
@@ -535,15 +554,25 @@ body.commercial-reservations-only .commercial-workspace-page .voyage-card-action
     body.commercial-reservations-only .commercial-v2-filters-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
+@media (max-width: 768px) {
+    body.commercial-reservations-only .catalogue-grid,
+    body.commercial-reservations-only .catalog-grid,
+    body.commercial-reservations-only .voyage-cards-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    body.commercial-reservations-only .voyage-card img,
+    body.commercial-reservations-only .catalogue-card img,
+    body.commercial-reservations-only .commercial-voyage-card img,
+    body.commercial-reservations-only .voyage-card-image img,
+    body.commercial-reservations-only .voyage-card-image,
+    body.commercial-reservations-only .catalogue-card-image {
+        height: 180px !important;
+        max-height: 180px !important;
+    }
+}
+
 @media (max-width: 700px) {
     body.commercial-reservations-only .commercial-v2-filters-grid { grid-template-columns: 1fr; }
     body.commercial-reservations-only .commercial-workspace-content { padding: 12px; }
-}
-
-@media (max-width: 768px) {
-    body.commercial-reservations-only .commercial-workspace-page .catalogue-grid,
-    body.commercial-reservations-only .commercial-workspace-page .catalog-grid,
-    body.commercial-reservations-only .commercial-workspace-page .voyage-cards-grid {
-        grid-template-columns: 1fr !important;
-    }
 }
