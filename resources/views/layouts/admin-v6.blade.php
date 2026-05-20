@@ -52,8 +52,10 @@
 
     <link href="{{ URL::asset('build/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ URL::asset('build/css/icons.min.css') }}" rel="stylesheet">
+    <link href="{{ URL::asset('build/css/app.min.css') }}" rel="stylesheet">
     <link href="{{ URL::asset('css/admin-branding.css') }}" rel="stylesheet">
     <link href="{{ URL::asset('css/admin-premium.css') }}" rel="stylesheet">
+    <link href="{{ URL::asset('css/admin-sidebar-v2.css') }}" rel="stylesheet">
     <link href="{{ URL::asset('css/admin-v2.css') }}" rel="stylesheet">
     <link href="{{ URL::asset('css/admin-v6.css') }}" rel="stylesheet">
     @stack('styles')
@@ -61,11 +63,20 @@
 @php
     $isWorkspaceRoute = request()->routeIs('admin.reservations.workspace');
 @endphp
-<body class="admin-v6{{ $isWorkspaceRoute ? ' admin-v6-compact aj-admin-compact' : '' }}">
-    <div class="admin-v6-shell" id="admin-v6-root">
-        @include('admin.partials.sidebar-v6', ['sidebarContext' => 'admin-v6'])
+<body class="aj-admin-v2-body aj-admin admin-v6 aj-admin-v6{{ $isWorkspaceRoute ? ' admin-v6-compact aj-admin-compact' : '' }}">
+    <div class="aj-admin-v2-layout admin-v6-shell" id="admin-v6-root">
+        <aside class="aj-admin-v2-sidebar admin-v6-sidebar" id="aj-admin-v2-sidebar">
+            <div class="admin-v6-sidebar-head">
+                <button type="button" class="admin-v6-sidebar-toggle" id="adminV6SidebarToggle" aria-label="Reduire / ouvrir la sidebar">
+                    <i class="bx bx-menu"></i>
+                </button>
+            </div>
+            @include('admin.partials.sidebar-v2', ['sidebarContext' => 'admin-vue-globale'])
+        </aside>
 
-        <div class="admin-v6-page">
+        <div class="aj-admin-v2-overlay admin-v6-overlay" id="aj-admin-v2-overlay"></div>
+
+        <div class="aj-admin-v2-main admin-v6-page">
             @include('admin.partials.header-v6', [
                 'adminUser'      => $adminUser,
                 'adminUserName'  => $adminUserName,
@@ -84,6 +95,7 @@
 
     <script src="{{ URL::asset('build/libs/jquery/jquery.min.js') }}"></script>
     <script src="{{ URL::asset('build/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ URL::asset('js/admin-sidebar-v2.js') }}"></script>
     <script src="{{ URL::asset('js/admin-v6.js') }}"></script>
     @stack('scripts')
 </body>

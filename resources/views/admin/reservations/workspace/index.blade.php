@@ -1354,7 +1354,7 @@
             <input type="hidden" name="view" id="ws-filter-view" value="{{ $workspaceView }}">
             <div class="commercial-v2-header">
                 <div>
-                    <h1>Catalogue des Voyages &amp; Départs</h1>
+                    <h1>Catalogue des Voyages & Départs</h1>
                     <p>Recherchez les départs programmés et initiez un dossier de vente directe en un seul clic.</p>
                 </div>
                 <div class="commercial-v2-view-switch" role="group" aria-label="Mode d'affichage">

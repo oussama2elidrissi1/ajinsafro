@@ -6,9 +6,9 @@
         var key = 'adminV6SidebarCollapsed';
 
         var collapseBtn = document.getElementById('adminV6SidebarToggle');
-        var sidebar = document.getElementById('adminV6Sidebar');
-        var overlay = document.getElementById('adminV6Overlay');
-        var hamburger = document.getElementById('adminV6Hamburger');
+        var sidebar = document.getElementById('adminV6Sidebar') || document.getElementById('aj-admin-v2-sidebar');
+        var overlay = document.getElementById('adminV6Overlay') || document.getElementById('aj-admin-v2-overlay');
+        var hamburger = document.getElementById('adminV6Hamburger') || document.getElementById('aj-admin-v2-hamburger');
 
         if (!sidebar) return;
 

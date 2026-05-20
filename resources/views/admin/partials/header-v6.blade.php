@@ -8,7 +8,11 @@
     $unreadCount  = $unreadCount  ?? 0;
     $pendingCount = $pendingCount ?? 0;
 
-    $v6Title = $pageTitle ?? trim((string) View::yieldContent('page_title', View::yieldContent('title', 'Espace Admin')));
+    $v6Title = html_entity_decode(
+        $pageTitle ?? trim((string) View::yieldContent('page_title', View::yieldContent('title', 'Espace Admin'))),
+        ENT_QUOTES | ENT_HTML5,
+        'UTF-8'
+    );
     $v6Breadcrumbs = $breadcrumbs ?? null;
     $primaryActionLabel = $primaryActionLabel ?? null;
     $primaryActionRoute = $primaryActionRoute ?? null;
@@ -27,9 +31,9 @@
                     @foreach($v6Breadcrumbs as $index => $crumb)
                         @if($index > 0)<span>&gt;</span>@endif
                         @if(!empty($crumb['url']))
-                            <a href="{{ $crumb['url'] }}">{{ $crumb['label'] ?? '' }}</a>
+                            <a href="{{ $crumb['url'] }}">{{ html_entity_decode((string) ($crumb['label'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8') }}</a>
                         @else
-                            {{ $crumb['label'] ?? '' }}
+                            {{ html_entity_decode((string) ($crumb['label'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8') }}
                         @endif
                     @endforeach
                 </div>
