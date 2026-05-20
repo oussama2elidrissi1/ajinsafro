@@ -25,7 +25,7 @@
                     <div><strong>Adultes :</strong> {{ $requestItem->adults }}</div>
                     <div><strong>Enfants :</strong> {{ $requestItem->children }}</div>
                     <div><strong>Type chambre :</strong> {{ $requestItem->room_type ?: 'Non precise' }}</div>
-                    <div><strong>Date depart choisie :</strong> {{ $requestItem->selected_departure_date?->format('d/m/Y') ?: 'â€”' }}</div>
+                    <div><strong>Date depart choisie :</strong> {{ $requestItem->selected_departure_date?->format('d/m/Y') ?: '�?"' }}</div>
                     <div><strong>Message :</strong><br>{!! nl2br(e($requestItem->message ?: 'Aucun message')) !!}</div>
                 </div>
             </x-admin.form-section>
@@ -70,4 +70,5 @@
         </div>
     </div>
 @endsection
+
 

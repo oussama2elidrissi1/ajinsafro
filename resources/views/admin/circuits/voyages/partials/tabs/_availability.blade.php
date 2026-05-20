@@ -1,4 +1,4 @@
-<div class="tab-pane" id="availability" role="tabpanel" data-ve-pane-title="Départs">
+﻿<div class="tab-pane" id="availability" role="tabpanel" data-ve-pane-title="Départs">
     <div class="card ve-pane-card">
         <div class="card-body">
             @php
@@ -200,8 +200,8 @@
                             <tbody>
                                 @forelse($departureMetrics as $metric)
                                     <tr>
-                                        <td>{{ $metric['start_date_label'] ?? '—' }}</td>
-                                        <td>{{ $metric['end_date_label'] ?? '—' }}</td>
+                                        <td>{{ $metric['start_date_label'] ?? '�?"' }}</td>
+                                        <td>{{ $metric['end_date_label'] ?? '�?"' }}</td>
                                         <td>{{ (int) ($metric['total_capacity'] ?? 0) }}</td>
                                         <td>{{ (int) ($metric['reserved_capacity'] ?? 0) }}</td>
                                         <td><strong>{{ (int) ($metric['available_capacity'] ?? 0) }}</strong></td>
@@ -223,3 +223,4 @@
         </div>
     </div>
 </div>
+

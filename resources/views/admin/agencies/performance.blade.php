@@ -5,7 +5,7 @@
 @section('content')
     <x-admin.page-header
         title="Performance points de vente"
-        subtitle="Comparatif des rÃ©servations, du chiffre dâ€™affaires et des commissions estimÃ©es par point de vente."
+        subtitle="Comparatif des réservations, du chiffre d�?Taffaires et des commissions estimées par point de vente."
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
             ['label' => 'Points de vente', 'url' => route('admin.agencies.index')],
@@ -64,10 +64,10 @@
                             <thead>
                                 <tr>
                                     <th>Point de vente</th>
-                                    <th>RÃ©servations</th>
-                                    <th>ValidÃ©es</th>
+                                    <th>Réservations</th>
+                                    <th>Validées</th>
                                     <th>En attente</th>
-                                    <th>AnnulÃ©es</th>
+                                    <th>Annulées</th>
                                     <th>CA</th>
                                     <th>Commission</th>
                                     <th>Conversion</th>
@@ -86,7 +86,7 @@
                                         <td>{{ number_format($row['conversion_rate'], 1, ',', ' ') }}%</td>
                                     </tr>
                                 @empty
-                                    <tr><td colspan="8" class="text-center text-muted">Aucune donnÃ©e disponible.</td></tr>
+                                    <tr><td colspan="8" class="text-center text-muted">Aucune donnée disponible.</td></tr>
                                 @endforelse
                             </tbody>
                         </table>
@@ -97,20 +97,20 @@
         <div class="col-xl-4">
             <div class="card h-100">
                 <div class="card-body">
-                    <h5 class="mb-3">Top employÃ©s</h5>
+                    <h5 class="mb-3">Top employés</h5>
                     <div class="d-flex flex-column gap-3">
                         @forelse($topEmployees as $row)
                             <div class="d-flex justify-content-between align-items-center border rounded-3 px-3 py-2">
                                 <div>
                                     <div class="fw-semibold">{{ $row['employee']->full_name }}</div>
                                     <div class="text-muted small">
-                                        {{ $row['employee']->branch?->name ?: 'â€”' }} Â· {{ $row['employee']->position ?: 'â€”' }}
+                                        {{ $row['employee']->branch?->name ?: '�?"' }} · {{ $row['employee']->position ?: '�?"' }}
                                     </div>
                                 </div>
-                                <span class="aj-badge aj-badge-info">{{ $row['count'] }} rÃ©sa</span>
+                                <span class="aj-badge aj-badge-info">{{ $row['count'] }} résa</span>
                             </div>
                         @empty
-                            <p class="text-muted mb-0">Aucun employÃ© disponible pour cette pÃ©riode.</p>
+                            <p class="text-muted mb-0">Aucun employé disponible pour cette période.</p>
                         @endforelse
                     </div>
                 </div>
@@ -118,4 +118,5 @@
         </div>
     </div>
 @endsection
+
 

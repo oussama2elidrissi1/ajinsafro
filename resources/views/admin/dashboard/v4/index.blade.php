@@ -1,4 +1,4 @@
-@extends('layouts.dashboard-v4')
+﻿@extends('layouts.dashboard-v4')
 
 @section('title', 'Dashboard V4')
 
@@ -581,7 +581,7 @@
     }
 
     .aj-v4-hero::after {
-        content: "☼";
+        content: "�~�";
         position: absolute;
         right: 24px;
         top: 16px;
@@ -1386,7 +1386,7 @@
     <div class="aj-dashboard-v4-layout">
         <aside class="aj-v4-sidebar" aria-label="Navigation principale">
             <div class="aj-v4-sidebar__brand">
-                <div class="aj-v4-sidebar__brand-badge">☼</div>
+                <div class="aj-v4-sidebar__brand-badge">�~�</div>
                 <img src="{{ $dashboardBrandLogo }}" alt="{{ $dashboardBrandName }}" class="aj-v4-logo-text">
                 <button type="button" class="aj-v4-sidebar__toggle aj-v4-sidebar-toggle" id="ajV4SidebarToggle" aria-label="Basculer la sidebar">
                     <i class="bx bx-menu"></i>
@@ -1399,15 +1399,15 @@
                     <strong>{{ $dashboardUserName }}</strong>
                     <span>{{ $dashboardUserRole }}</span>
                 </div>
-                <span style="margin-left:auto;color:var(--aj-gold-300);">⌄</span>
+                <span style="margin-left:auto;color:var(--aj-gold-300);">�O"</span>
             </div>
 
             <p class="aj-v4-sidebar__nav-title">Navigation</p>
             <nav class="aj-v4-sidebar__nav">
                 <a href="{{ route('admin.dashboard.v4') }}" class="aj-v4-sidebar__item is-active">
-                    <span>⌂</span>
+                    <span>�O,</span>
                     <span class="aj-v4-nav-label">Tableau de bord</span>
-                    <span class="aj-v4-nav-caret" style="margin-left:auto;color:var(--aj-gold-300);">⌃</span>
+                    <span class="aj-v4-nav-caret" style="margin-left:auto;color:var(--aj-gold-300);">�Of</span>
                 </a>
                 <div class="aj-v4-sidebar__subnav aj-v4-sub-nav">
                     <a href="{{ route('admin.dashboard.vue-globale') }}" class="aj-v4-sidebar__subitem {{ $dashboardRouteIs('admin.dashboard.vue-globale') ? 'is-active' : '' }}">Vue d'ensemble</a>
@@ -1419,19 +1419,19 @@
                 </div>
 
                 <a href="{{ route('admin.reservations.workspace') }}" class="aj-v4-sidebar__item">
-                    <span>▣</span>
+                    <span>�-�</span>
                     <span class="aj-v4-nav-label">Réservations</span>
-                    <span class="aj-v4-nav-caret" style="margin-left:auto;color:var(--aj-gold-300);">⌄</span>
+                    <span class="aj-v4-nav-caret" style="margin-left:auto;color:var(--aj-gold-300);">�O"</span>
                 </a>
-                <a href="#" class="aj-v4-sidebar__item"><span>✈</span><span class="aj-v4-nav-label">Départs</span><span class="aj-v4-nav-caret" style="margin-left:auto;color:var(--aj-gold-300);">⌄</span></a>
-                <a href="#" class="aj-v4-sidebar__item"><span>♙</span><span class="aj-v4-nav-label">Clients</span><span class="aj-v4-nav-caret" style="margin-left:auto;color:var(--aj-gold-300);">⌄</span></a>
-                <a href="#" class="aj-v4-sidebar__item"><span>⌖</span><span class="aj-v4-nav-label">Destinations</span></a>
-                <a href="#" class="aj-v4-sidebar__item"><span>▤</span><span class="aj-v4-nav-label">Rapports</span><span class="aj-v4-nav-caret" style="margin-left:auto;color:var(--aj-gold-300);">⌄</span></a>
-                <a href="#" class="aj-v4-sidebar__item"><span>⚙</span><span class="aj-v4-nav-label">Paramètres</span><span class="aj-v4-nav-caret" style="margin-left:auto;color:var(--aj-gold-300);">⌄</span></a>
+                <a href="#" class="aj-v4-sidebar__item"><span>�o^</span><span class="aj-v4-nav-label">Départs</span><span class="aj-v4-nav-caret" style="margin-left:auto;color:var(--aj-gold-300);">�O"</span></a>
+                <a href="#" class="aj-v4-sidebar__item"><span>�TT</span><span class="aj-v4-nav-label">Clients</span><span class="aj-v4-nav-caret" style="margin-left:auto;color:var(--aj-gold-300);">�O"</span></a>
+                <a href="#" class="aj-v4-sidebar__item"><span>�O-</span><span class="aj-v4-nav-label">Destinations</span></a>
+                <a href="#" class="aj-v4-sidebar__item"><span>�-�</span><span class="aj-v4-nav-label">Rapports</span><span class="aj-v4-nav-caret" style="margin-left:auto;color:var(--aj-gold-300);">�O"</span></a>
+                <a href="#" class="aj-v4-sidebar__item"><span>�sT</span><span class="aj-v4-nav-label">Paramètres</span><span class="aj-v4-nav-caret" style="margin-left:auto;color:var(--aj-gold-300);">�O"</span></a>
             </nav>
 
             <div class="aj-v4-sidebar__premium aj-v4-premium-box">
-                <h3>♛ Service Premium</h3>
+                <h3>�T> Service Premium</h3>
                 <p>Accédez aux analyses avancées, au suivi commercial et au pilotage opérationnel.</p>
                 <button type="button">Découvrir</button>
             </div>
@@ -1443,7 +1443,7 @@
                 <div class="aj-v4-topbar__title">
                     <h1 class="aj-v4-page-title">Dashboard V4</h1>
                     <div class="aj-v4-topbar__breadcrumb">
-                        <span>Accueil</span><span>›</span><span>Tableau de bord</span><span>›</span><strong>Dashboard V4</strong>
+                        <span>Accueil</span><span>�?�</span><span>Tableau de bord</span><span>�?�</span><strong>Dashboard V4</strong>
                     </div>
                 </div>
 
@@ -1460,13 +1460,13 @@
                         <div class="aj-v4-user">
                             <div class="aj-v4-user__photo">{{ $dashboardInitials }}</div>
                             <span>{{ $dashboardUserName }}</span>
-                            <span>⌄</span>
+                            <span>�O"</span>
                         </div>
                     </div>
                     <div class="aj-v4-topbar__controls">
-                        <button type="button" class="aj-v4-control-btn">📅 18 mai – 24 mai 2025 ⌄</button>
-                        <button type="button" class="aj-v4-control-btn">☷ Filtres ⌄</button>
-                        <a href="{{ route('admin.reservations.create') }}" class="aj-v4-primary-btn">＋ Nouvelle réservation</a>
+                        <button type="button" class="aj-v4-control-btn">�Y". 18 mai �?" 24 mai 2025 �O"</button>
+                        <button type="button" class="aj-v4-control-btn">�~� Filtres �O"</button>
+                        <a href="{{ route('admin.reservations.create') }}" class="aj-v4-primary-btn">�< Nouvelle réservation</a>
                     </div>
                 </div>
             </header>
@@ -1476,7 +1476,7 @@
                         <div class="aj-v4-hero__logo">
                             <img src="{{ $dashboardBrandLogo }}" alt="{{ $dashboardBrandName }}">
                         </div>
-                        <h2>Bienvenue sur Ajinsafro, Admin ✨</h2>
+                        <h2>Bienvenue sur Ajinsafro, Admin �o�</h2>
                         <p>Voici un aperçu des performances de votre activité cette semaine.</p>
                     </div>
                     <div class="aj-v4-hero__art" aria-hidden="true"></div>
@@ -1488,7 +1488,7 @@
                     <div>
                         <small class="aj-v4-kpi-title">Chiffre d'affaires</small>
                         <strong class="aj-v4-kpi-value">{{ $revenueDisplay }}</strong>
-                        <span class="aj-v4-kpi-trend">↗ {{ number_format($monthEvolution, 1, ',', ' ') }}%</span>
+                        <span class="aj-v4-kpi-trend">�?- {{ number_format($monthEvolution, 1, ',', ' ') }}%</span>
                     </div>
                     <svg class="aj-v4-kpi-sparkline" viewBox="0 0 160 36" fill="none"><path d="M4 28 C22 24 24 16 40 20 C56 24 58 5 78 12 C96 19 102 2 119 9 C135 16 139 22 156 12" stroke="#0f4f8f" stroke-width="3"/><path d="M4 28 C22 24 24 16 40 20 C56 24 58 5 78 12 C96 19 102 2 119 9 C135 16 139 22 156 12 L156 36 L4 36 Z" fill="#0f4f8f" opacity="0.10"/></svg>
                 </article>
@@ -1498,7 +1498,7 @@
                     <div>
                         <small class="aj-v4-kpi-title">Réservations</small>
                         <strong class="aj-v4-kpi-value">{{ number_format($reservationsTotal, 0, ',', ' ') }}</strong>
-                        <span class="aj-v4-kpi-trend">↗ 12,4%</span>
+                        <span class="aj-v4-kpi-trend">�?- 12,4%</span>
                     </div>
                     <svg class="aj-v4-kpi-sparkline" viewBox="0 0 160 36" fill="none"><path d="M4 27 C25 27 28 23 42 25 C58 27 59 12 75 16 C88 20 94 8 108 10 C124 12 123 26 138 24 C148 23 151 16 156 18" stroke="#f47b20" stroke-width="3"/><path d="M4 27 C25 27 28 23 42 25 C58 27 59 12 75 16 C88 20 94 8 108 10 C124 12 123 26 138 24 C148 23 151 16 156 18 L156 36 L4 36 Z" fill="#f47b20" opacity="0.10"/></svg>
                 </article>
@@ -1508,7 +1508,7 @@
                     <div>
                         <small class="aj-v4-kpi-title">Départs actifs</small>
                         <strong class="aj-v4-kpi-value">{{ number_format($departuresActive, 0, ',', ' ') }}</strong>
-                        <span class="aj-v4-kpi-trend">↗ 8,1%</span>
+                        <span class="aj-v4-kpi-trend">�?- 8,1%</span>
                     </div>
                     <svg class="aj-v4-kpi-sparkline" viewBox="0 0 160 36" fill="none"><path d="M4 29 C19 26 24 22 36 24 C50 26 54 15 68 16 C82 17 87 8 100 12 C116 17 119 4 132 7 C144 10 149 18 156 15" stroke="#19a463" stroke-width="3"/><path d="M4 29 C19 26 24 22 36 24 C50 26 54 15 68 16 C82 17 87 8 100 12 C116 17 119 4 132 7 C144 10 149 18 156 15 L156 36 L4 36 Z" fill="#19a463" opacity="0.10"/></svg>
                 </article>
@@ -1518,7 +1518,7 @@
                     <div>
                         <small class="aj-v4-kpi-title">Clients</small>
                         <strong class="aj-v4-kpi-value">{{ number_format($clientsCount, 0, ',', ' ') }}</strong>
-                        <span class="aj-v4-kpi-trend">↗ 15,7%</span>
+                        <span class="aj-v4-kpi-trend">�?- 15,7%</span>
                     </div>
                     <svg class="aj-v4-kpi-sparkline" viewBox="0 0 160 36" fill="none"><path d="M4 28 C22 17 31 23 45 20 C60 18 60 28 76 23 C91 18 94 5 110 9 C125 13 128 25 142 21 C151 19 153 14 156 15" stroke="#d8a43a" stroke-width="3"/><path d="M4 28 C22 17 31 23 45 20 C60 18 60 28 76 23 C91 18 94 5 110 9 C125 13 128 25 142 21 C151 19 153 14 156 15 L156 36 L4 36 Z" fill="#d8a43a" opacity="0.13"/></svg>
                 </article>
@@ -1582,7 +1582,7 @@
                             @endforeach
                         </div>
                     </div>
-                    <a href="#" class="aj-v4-link" style="margin-top:20px;">Voir le détail des destinations →</a>
+                    <a href="#" class="aj-v4-link" style="margin-top:20px;">Voir le détail des destinations �?'</a>
                 </article>
 
                 <article class="aj-v4-card aj-v4-panel">
@@ -1606,7 +1606,7 @@
                         </svg>
                         <div class="aj-v4-gauge__center"><strong>{{ $confirmedRatio }}%</strong><span>Confirmées</span></div>
                     </div>
-                    <div class="aj-v4-trend" style="justify-content:center;margin-top:18px;">↗ 6% vs semaine précédente</div>
+                    <div class="aj-v4-trend" style="justify-content:center;margin-top:18px;">�?- 6% vs semaine précédente</div>
                 </article>
                 </section>
 
@@ -1646,7 +1646,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <div style="text-align:center;margin-top:18px;"><a href="#" class="aj-v4-link">Voir tous les départs →</a></div>
+                    <div style="text-align:center;margin-top:18px;"><a href="#" class="aj-v4-link">Voir tous les départs �?'</a></div>
                 </article>
 
                 <article class="aj-v4-card aj-v4-panel">
@@ -1660,7 +1660,7 @@
                                 <div class="aj-v4-mini-avatar">{{ mb_strtoupper(mb_substr($reservation['client'], 0, 2)) }}</div>
                                 <div class="aj-v4-item">
                                     <strong>{{ $reservation['client'] }}</strong>
-                                    <span>{{ $reservation['trip'] }} • {{ $reservation['agent'] }}</span>
+                                    <span>{{ $reservation['trip'] }} �?� {{ $reservation['agent'] }}</span>
                                 </div>
                                 <div class="aj-v4-amount">{{ $reservation['amount'] }}<small class="aj-v4-status {{ $reservation['status'] === 'En attente' ? 'wait' : 'ok' }}">{{ $reservation['status'] }}</small></div>
                             </div>
@@ -1692,7 +1692,7 @@
                             <span style="padding-bottom:4px;color:rgba(255,255,255,0.78);font-size:13px;font-weight:700;">de confirmation</span>
                         </div>
                         <div class="aj-v4-objective__bar"><div class="aj-v4-objective__fill"></div></div>
-                        <p class="aj-v4-objective__note">Encore 186 000 DH pour atteindre l’objectif fixé sur le mois en cours.</p>
+                        <p class="aj-v4-objective__note">Encore 186 000 DH pour atteindre l�?Tobjectif fixé sur le mois en cours.</p>
                     </div>
                 </article>
                 </section>
@@ -1764,7 +1764,7 @@
                             <span style="padding-bottom:4px;color:rgba(255,255,255,0.78);font-size:13px;font-weight:700;">CA cumulé</span>
                         </div>
                         <div class="aj-v4-objective__bar"><div class="aj-v4-objective__fill"></div></div>
-                        <p class="aj-v4-objective__note">Encore 186 000 DH pour atteindre l’objectif fixé sur le mois en cours.</p>
+                        <p class="aj-v4-objective__note">Encore 186 000 DH pour atteindre l�?Tobjectif fixé sur le mois en cours.</p>
                     </div>
                 </article>
                 </section>
@@ -1803,3 +1803,4 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
+

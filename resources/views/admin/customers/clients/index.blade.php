@@ -1,11 +1,11 @@
 ﻿@extends('layouts.admin-v6')
 @section('title')
-    {{ isset($trashed) && $trashed ? 'Clients supprimÃ©s' : 'Clients' }}
+    {{ isset($trashed) && $trashed ? 'Clients supprimés' : 'Clients' }}
 @endsection
 @section('content')
     <x-admin.page-header
-        :title="isset($trashed) && $trashed ? 'Corbeille â€“ Clients' : 'Liste des clients'"
-        subtitle="GÃ©rez, filtrez et consultez la base clients."
+        :title="isset($trashed) && $trashed ? 'Corbeille �?" Clients' : 'Liste des clients'"
+        subtitle="Gérez, filtrez et consultez la base clients."
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
             ['label' => 'Clients', 'url' => route('admin.customers.index')],
@@ -25,7 +25,7 @@
             @else
                 <a href="{{ route('admin.customers.clients.index') }}" class="aj-btn aj-btn-soft">
                     <i class="bx bx-list-ul"></i>
-                    <span>Retour Ã  la liste</span>
+                    <span>Retour à la liste</span>
                 </a>
             @endif
         </x-slot>
@@ -36,7 +36,7 @@
     @if (!isset($trashed) || !$trashed)
         <x-admin.kpi-cards
             :kpis="[
-                ['label' => 'Total clients', 'value' => number_format($clients->total(), 0, ',', ' '), 'icon' => 'bx bx-group', 'color' => '-blue', 'note' => 'Base complÃ¨te'],
+                ['label' => 'Total clients', 'value' => number_format($clients->total(), 0, ',', ' '), 'icon' => 'bx bx-group', 'color' => '-blue', 'note' => 'Base complète'],
                 ['label' => 'Actifs', 'value' => number_format($clients->where('status', 'active')->count(), 0, ',', ' '), 'icon' => 'bx bx-badge-check', 'color' => '-green', 'note' => 'En cours'],
                 ['label' => 'VIP', 'value' => number_format($clients->where('status', 'vip')->count(), 0, ',', ' '), 'icon' => 'bx bx-star', 'color' => '-orange', 'note' => 'Prioritaires'],
                 ['label' => 'Nouveaux ce mois', 'value' => number_format($clients->where('created_at', '>=', now()->startOfMonth())->count(), 0, ',', ' '), 'icon' => 'bx bx-user-plus', 'color' => '-violet', 'note' => 'Inscriptions'],
@@ -49,8 +49,8 @@
             <div class="card">
                 <div class="card-body">
                     @if (isset($trashed) && $trashed)
-                        <p class="text-muted mb-3">Clients supprimÃ©s (corbeille). Vous pouvez restaurer ou supprimer dÃ©finitivement.</p>
-                        <a href="{{ route('admin.customers.clients.index') }}" class="aj-btn aj-btn-soft mb-3"><i class="bx bx-list-ul me-1"></i> Retour Ã  la liste</a>
+                        <p class="text-muted mb-3">Clients supprimés (corbeille). Vous pouvez restaurer ou supprimer définitivement.</p>
+                        <a href="{{ route('admin.customers.clients.index') }}" class="aj-btn aj-btn-soft mb-3"><i class="bx bx-list-ul me-1"></i> Retour à la liste</a>
                     @endif
 
                     <form method="GET" class="mb-4">
@@ -60,7 +60,7 @@
                         <div class="aj-filter-grid" style="grid-template-columns: minmax(200px, 1.4fr) repeat(4, minmax(0, .8fr)) minmax(160px, auto) auto;">
                             <div class="aj-field aj-search-wrap">
                                 <span class="aj-search-icon"><i class="bx bx-search"></i></span>
-                                <input type="text" name="search" class="aj-control" placeholder="Code, nom, email, tÃ©l..." value="{{ request('search') }}">
+                                <input type="text" name="search" class="aj-control" placeholder="Code, nom, email, tél..." value="{{ request('search') }}">
                             </div>
                             @if (!isset($trashed) || !$trashed)
                                 <div class="aj-field">
@@ -68,7 +68,7 @@
                                         <option value="">Tous les statuts</option>
                                         <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Actif</option>
                                         <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactif</option>
-                                        <option value="blocked" {{ request('status') === 'blocked' ? 'selected' : '' }}>BloquÃ©</option>
+                                        <option value="blocked" {{ request('status') === 'blocked' ? 'selected' : '' }}>Bloqué</option>
                                         <option value="vip" {{ request('status') === 'vip' ? 'selected' : '' }}>VIP</option>
                                     </select>
                                 </div>
@@ -76,7 +76,7 @@
                                     <select name="client_type" class="aj-control">
                                         <option value="">Tous les types</option>
                                         <option value="individual" {{ request('client_type') === 'individual' ? 'selected' : '' }}>Particulier</option>
-                                        <option value="company" {{ request('client_type') === 'company' ? 'selected' : '' }}>SociÃ©tÃ©</option>
+                                        <option value="company" {{ request('client_type') === 'company' ? 'selected' : '' }}>Société</option>
                                         <option value="agency" {{ request('client_type') === 'agency' ? 'selected' : '' }}>Agence</option>
                                     </select>
                                 </div>
@@ -85,7 +85,7 @@
                                         <option value="">Toutes les sources</option>
                                         <option value="website" {{ request('source') === 'website' ? 'selected' : '' }}>Site web</option>
                                         <option value="whatsapp" {{ request('source') === 'whatsapp' ? 'selected' : '' }}>WhatsApp</option>
-                                        <option value="phone" {{ request('source') === 'phone' ? 'selected' : '' }}>TÃ©lÃ©phone</option>
+                                        <option value="phone" {{ request('source') === 'phone' ? 'selected' : '' }}>Téléphone</option>
                                         <option value="admin" {{ request('source') === 'admin' ? 'selected' : '' }}>Admin</option>
                                     </select>
                                 </div>
@@ -107,7 +107,7 @@
                             <div class="d-flex flex-wrap gap-2">
                                 <a href="{{ isset($trashed) && $trashed ? route('admin.customers.clients.trashed') : route('admin.customers.clients.index') }}" class="aj-btn aj-btn-soft w-100">
                                     <i class="bx bx-reset"></i>
-                                    <span>RÃ©initialiser</span>
+                                    <span>Réinitialiser</span>
                                 </a>
                             </div>
                         </div>
@@ -134,7 +134,7 @@
                     @if($clients->isEmpty())
                         <x-admin.empty-state
                             :title="isset($trashed) && $trashed ? 'Aucun client dans la corbeille' : 'Aucun client'"
-                            :message="isset($trashed) && $trashed ? 'La corbeille est vide.' : 'Aucun client ne correspond Ã  vos critÃ¨res. CrÃ©ez votre premier client.'"
+                            :message="isset($trashed) && $trashed ? 'La corbeille est vide.' : 'Aucun client ne correspond à vos critères. Créez votre premier client.'"
                             :action-url="(!isset($trashed) || !$trashed) ? route('admin.customers.clients.create') : null"
                             action-label="Nouveau client"
                         />
@@ -144,22 +144,22 @@
                                 <thead>
                                     <tr>
                                         @if (!isset($trashed) || !$trashed)
-                                            <th width="40"><input type="checkbox" id="select-all" aria-label="Tout sÃ©lectionner"></th>
+                                            <th width="40"><input type="checkbox" id="select-all" aria-label="Tout sélectionner"></th>
                                         @endif
                                         <th>Code</th>
                                         <th>Nom</th>
                                         <th>Type</th>
                                         <th>Email</th>
-                                        <th>TÃ©lÃ©phone</th>
+                                        <th>Téléphone</th>
                                         <th>WhatsApp</th>
-                                        <th>NationalitÃ©</th>
+                                        <th>Nationalité</th>
                                         <th>Ville</th>
-                                        <th>CatÃ©gorie</th>
+                                        <th>Catégorie</th>
                                         <th>Budget</th>
                                         <th>Statut</th>
-                                        <th>AssignÃ©</th>
+                                        <th>Assigné</th>
                                         <th>Dernier contact</th>
-                                        <th>CrÃ©Ã© le</th>
+                                        <th>Créé le</th>
                                         <th class="text-end">Actions</th>
                                     </tr>
                                 </thead>
@@ -175,7 +175,7 @@
                                             </td>
                                             <td>
                                                 @php
-                                                    $typeLabel = $c->client_type === 'individual' ? 'Particulier' : ($c->client_type === 'company' ? 'SociÃ©tÃ©' : 'Agence');
+                                                    $typeLabel = $c->client_type === 'individual' ? 'Particulier' : ($c->client_type === 'company' ? 'Société' : 'Agence');
                                                     $typeColor = match($c->client_type) {
                                                         'company' => 'info',
                                                         'agency' => 'neutral',
@@ -184,13 +184,13 @@
                                                 @endphp
                                                 <x-admin.badge :type="$typeColor" :label="$typeLabel" />
                                             </td>
-                                            <td>{{ $c->email ?? 'â€”' }}</td>
-                                            <td>{{ $c->phone ?? 'â€”' }}</td>
-                                            <td>{{ $c->whatsapp_number ?? 'â€”' }}</td>
-                                            <td>{{ $c->nationality ?? 'â€”' }}</td>
-                                            <td>{{ $c->city ?? 'â€”' }}</td>
-                                            <td>{{ $c->traveler_category ?? 'â€”' }}</td>
-                                            <td>{{ $c->budget_display ?? 'â€”' }}</td>
+                                            <td>{{ $c->email ?? '�?"' }}</td>
+                                            <td>{{ $c->phone ?? '�?"' }}</td>
+                                            <td>{{ $c->whatsapp_number ?? '�?"' }}</td>
+                                            <td>{{ $c->nationality ?? '�?"' }}</td>
+                                            <td>{{ $c->city ?? '�?"' }}</td>
+                                            <td>{{ $c->traveler_category ?? '�?"' }}</td>
+                                            <td>{{ $c->budget_display ?? '�?"' }}</td>
                                             <td>
                                                 @php
                                                     $statusColor = match($c->status) {
@@ -203,8 +203,8 @@
                                                 @endphp
                                                 <x-admin.badge :type="$statusColor" :label="strtoupper($c->status)" />
                                             </td>
-                                            <td>{{ $c->assignedTo?->name ?? 'â€”' }}</td>
-                                            <td>{{ $c->last_contacted_at?->format('d/m/Y') ?? 'â€”' }}</td>
+                                            <td>{{ $c->assignedTo?->name ?? '�?"' }}</td>
+                                            <td>{{ $c->last_contacted_at?->format('d/m/Y') ?? '�?"' }}</td>
                                             <td>{{ $c->created_at->format('d/m/Y') }}</td>
                                             <td class="text-end">
                                                 @if (isset($trashed) && $trashed)
@@ -212,7 +212,7 @@
                                                         @csrf
                                                         <button type="submit" class="aj-btn aj-btn-soft" style="min-height:32px;padding:0 10px;font-size:12px;">Restaurer</button>
                                                     </form>
-                                                    <form action="{{ route('admin.customers.clients.force', $c->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer dÃ©finitivement ce client ?');">
+                                                    <form action="{{ route('admin.customers.clients.force', $c->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer définitivement ce client ?');">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="aj-btn aj-btn-soft" style="min-height:32px;padding:0 10px;font-size:12px;color:#d92d20;">Supprimer</button>
@@ -233,9 +233,9 @@
                         </div>
                         @if (!isset($trashed) || !$trashed)
                             <div class="d-flex flex-wrap gap-2 mt-3 mb-2">
-                                <span class="me-2" style="font-size:13px;font-weight:700;color:#5f6f85;">Actions groupÃ©es :</span>
+                                <span class="me-2" style="font-size:13px;font-weight:700;color:#5f6f85;">Actions groupées :</span>
                                 <button type="button" class="aj-mini-btn" data-bulk-action="activate" style="color:#067647;">Activer</button>
-                                <button type="button" class="aj-mini-btn" data-bulk-action="deactivate" style="color:#b54708;">DÃ©sactiver</button>
+                                <button type="button" class="aj-mini-btn" data-bulk-action="deactivate" style="color:#b54708;">Désactiver</button>
                                 <button type="button" class="aj-mini-btn" data-bulk-action="block" style="color:#d92d20;">Bloquer</button>
                                 <button type="button" class="aj-mini-btn" data-bulk-action="vip" style="color:#0550a7;">VIP</button>
                                 <button type="button" class="aj-mini-btn" data-bulk-action="delete">Supprimer</button>
@@ -262,9 +262,9 @@
         btn.addEventListener('click', function() {
             var ids = [];
             document.querySelectorAll('.row-select:checked').forEach(function(cb) { ids.push(cb.value); });
-            if (ids.length === 0) { alert('SÃ©lectionnez au moins un client.'); return; }
+            if (ids.length === 0) { alert('Sélectionnez au moins un client.'); return; }
             var action = this.getAttribute('data-bulk-action');
-            if (action === 'delete' && !confirm('Mettre les clients sÃ©lectionnÃ©s en corbeille ?')) return;
+            if (action === 'delete' && !confirm('Mettre les clients sélectionnés en corbeille ?')) return;
             var form = document.getElementById('bulk-form');
             form.querySelector('#bulk-action').value = action;
             form.querySelectorAll('[name="ids[]"]').forEach(function(el) { el.remove(); });
@@ -281,4 +281,5 @@
 })();
 </script>
 @endpush
+
 

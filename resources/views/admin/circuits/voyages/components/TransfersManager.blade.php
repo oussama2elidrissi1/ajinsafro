@@ -1,4 +1,4 @@
-<style>
+﻿<style>
 #day-builder-transfers-manager .day-builder-context {
     background: #e7f1ff;
     border: 1px solid #b6d7ff;
@@ -16,9 +16,9 @@
 </style>
 <div id="day-builder-transfers-manager">
     <div class="alert alert-warning border-warning mb-3" role="alert">
-        <h6 class="mb-2"><i class="bx bx-error me-1"></i>Section en cours de construction — ne pas modifier</h6>
-        <p class="mb-1">Cette section n’est pas encore finalisée et ses champs ne sont pas pris en charge par la logique actuelle (enregistrement, validation, affichage).</p>
-        <p class="mb-0">Merci de ne rien modifier ici pour le moment afin d’éviter incohérences, erreurs de sauvegarde ou comportements inattendus. Cette partie sera activée dès qu’elle sera prête.</p>
+        <h6 class="mb-2"><i class="bx bx-error me-1"></i>Section en cours de construction �?" ne pas modifier</h6>
+        <p class="mb-1">Cette section n�?Test pas encore finalisée et ses champs ne sont pas pris en charge par la logique actuelle (enregistrement, validation, affichage).</p>
+        <p class="mb-0">Merci de ne rien modifier ici pour le moment afin d�?Téviter incohérences, erreurs de sauvegarde ou comportements inattendus. Cette partie sera activée dès qu�?Telle sera prête.</p>
     </div>
 
     {{-- Bloc config du jour (même pattern que Vols) --}}
@@ -26,13 +26,13 @@
         <div class="d-flex align-items-start gap-2">
             <i class="bx bx-car text-primary mt-1"></i>
             <div class="flex-grow-1">
-                <div class="fw-semibold text-primary" id="transfers-context-title">Transferts – Jour 1</div>
+                <div class="fw-semibold text-primary" id="transfers-context-title">Transferts �?" Jour 1</div>
                 <div class="small text-muted" id="transfers-context-description">Configurez les transferts (arrivée / départ) pour ce jour.</div>
             </div>
         </div>
     </div>
 
-    {{-- État / résumé --}}
+    {{-- �?tat / résumé --}}
     <div class="day-builder-summary-block">
         <div id="transfers-summary-text" class="small">0 transfert configuré</div>
     </div>
@@ -72,7 +72,7 @@
                         <input type="text" class="form-control form-control-sm" id="transfers-new-from" placeholder="Ex. Aéroport">
                     </div>
                     <div class="col-6">
-                        <label class="form-label small">À</label>
+                        <label class="form-label small">�?</label>
                         <input type="text" class="form-control form-control-sm" id="transfers-new-to" placeholder="Ex. Hôtel">
                     </div>
                     <div class="col-6">
@@ -204,7 +204,7 @@
                 var mainLabel = document.createElement('label');
                 mainLabel.className = 'form-check-label fw-medium d-block';
                 mainLabel.htmlFor = 'transfer-' + transfer.id;
-                mainLabel.textContent = (transfer.from_label || '?') + ' → ' + (transfer.to_label || '?');
+                mainLabel.textContent = (transfer.from_label || '?') + ' �?' ' + (transfer.to_label || '?');
                 labelDiv.appendChild(mainLabel);
                 var details = [];
                 if (transfer.pickup_time) details.push('Prise: ' + transfer.pickup_time);
@@ -216,7 +216,7 @@
                     var detailsEl = document.createElement('div');
                     detailsEl.className = 'text-muted mt-1';
                     detailsEl.style.fontSize = '11px';
-                    detailsEl.textContent = details.join(' • ');
+                    detailsEl.textContent = details.join(' �?� ');
                     labelDiv.appendChild(detailsEl);
                 }
                 if (transfer.notes) {
@@ -266,7 +266,7 @@
                 var mainLabel = document.createElement('label');
                 mainLabel.className = 'form-check-label fw-medium d-block';
                 mainLabel.htmlFor = 'transfer-' + transfer.id;
-                mainLabel.textContent = (transfer.from_label || '?') + ' → ' + (transfer.to_label || '?');
+                mainLabel.textContent = (transfer.from_label || '?') + ' �?' ' + (transfer.to_label || '?');
                 labelDiv.appendChild(mainLabel);
                 var details = [];
                 if (transfer.pickup_time) details.push('Prise: ' + transfer.pickup_time);
@@ -278,7 +278,7 @@
                     var detailsEl = document.createElement('div');
                     detailsEl.className = 'text-muted mt-1';
                     detailsEl.style.fontSize = '11px';
-                    detailsEl.textContent = details.join(' • ');
+                    detailsEl.textContent = details.join(' �?� ');
                     labelDiv.appendChild(detailsEl);
                 }
                 if (transfer.notes) {
@@ -439,7 +439,7 @@
     function refreshUI() {
         var day = getDrawerDay();
         currentDayIndex = day.index;
-        if (titleEl) titleEl.textContent = 'Transferts – Jour ' + day.number;
+        if (titleEl) titleEl.textContent = 'Transferts �?" Jour ' + day.number;
         if (descEl) descEl.textContent = 'Configurez les transferts (arrivée / départ) pour ce jour. Pas de champ "Jour" : le jour est imposé par le contexte.';
         if (addBtnLabel) addBtnLabel.textContent = '+ Ajouter des transferts (Jour ' + day.number + ')';
         if (chooseBtnLabel) chooseBtnLabel.textContent = 'Configurer les transferts (Jour ' + day.number + ')';
@@ -471,7 +471,7 @@
                     infoDiv.className = 'flex-grow-1';
                     var mainLabel = document.createElement('div');
                     mainLabel.className = 'fw-medium';
-                    mainLabel.textContent = (t.from_label || '?') + ' → ' + (t.to_label || '?');
+                    mainLabel.textContent = (t.from_label || '?') + ' �?' ' + (t.to_label || '?');
                     infoDiv.appendChild(mainLabel);
                     var details = [];
                     if (t.direction === 'arrival') details.push('<span class="badge bg-success">Arrivée</span>');
@@ -483,7 +483,7 @@
                         var detailsEl = document.createElement('div');
                         detailsEl.className = 'mt-1 text-muted';
                         detailsEl.style.fontSize = '11px';
-                        detailsEl.innerHTML = details.join(' • ');
+                        detailsEl.innerHTML = details.join(' �?� ');
                         infoDiv.appendChild(detailsEl);
                     }
                     if (t.notes) {
@@ -576,7 +576,7 @@
                     ids.forEach(function(id) {
                         var t = window.tourTransfersData.arrival.find(function(x) { return x.id === id; }) ||
                                 window.tourTransfersData.departure.find(function(x) { return x.id === id; });
-                        if (t) lines.push((t.from_label || '?') + ' → ' + (t.to_label || '?'));
+                        if (t) lines.push((t.from_label || '?') + ' �?' ' + (t.to_label || '?'));
                     });
                     if (lines.length) {
                         lines.forEach(function(l) {
@@ -911,3 +911,4 @@
     refreshUI();
 })();
 </script>
+

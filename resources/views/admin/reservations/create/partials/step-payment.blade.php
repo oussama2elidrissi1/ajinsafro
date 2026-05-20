@@ -1,8 +1,8 @@
-<section class="reservation-create__panel" data-create-step="5" data-reservation-step="5" hidden>
+﻿<section class="reservation-create__panel" data-create-step="5" data-reservation-step="5" hidden>
     <div class="reservation-create__card">
         <div class="reservation-create__section-head">
             <div>
-                <p class="reservation-create__eyebrow">Étape 5</p>
+                <p class="reservation-create__eyebrow">�?tape 5</p>
                 <h3 class="reservation-create__section-title">Paiement et validation</h3>
                 <p class="reservation-create__section-subtitle">Saisissez l'acompte ou le paiement du jour et vérifiez immédiatement le statut financier du dossier.</p>
             </div>
@@ -51,7 +51,7 @@
                     <div class="reservation-create__field">
                         <label class="reservation-create__label" for="payment_type">Mode de paiement</label>
                         <select name="payment_type" id="payment_type" class="reservation-create__input">
-                            <option value="">Sélectionner…</option>
+                            <option value="">Sélectionner�?�</option>
                             <option value="Espèces" {{ old('payment_type') === 'Espèces' ? 'selected' : '' }}>Espèces</option>
                             <option value="Virement bancaire" {{ old('payment_type') === 'Virement bancaire' ? 'selected' : '' }}>Virement bancaire</option>
                             <option value="Carte bancaire" {{ old('payment_type') === 'Carte bancaire' ? 'selected' : '' }}>Carte bancaire</option>
@@ -66,7 +66,7 @@
                     </div>
                     <div class="reservation-create__field">
                         <label class="reservation-create__label" for="payment_reference">Référence paiement</label>
-                        <input type="text" name="payment_reference" id="payment_reference" class="reservation-create__input" value="{{ old('payment_reference') }}" placeholder="Reçu, transaction, bordereau…">
+                        <input type="text" name="payment_reference" id="payment_reference" class="reservation-create__input" value="{{ old('payment_reference') }}" placeholder="Reçu, transaction, bordereau�?�">
                     </div>
                     <div class="reservation-create__field">
                         <label class="reservation-create__label" for="payment_receipt">Justificatif</label>
@@ -74,7 +74,7 @@
                     </div>
                     <div class="reservation-create__field reservation-create__field--full">
                         <label class="reservation-create__label" for="payment_note">Note interne</label>
-                        <textarea name="payment_note" id="payment_note" class="reservation-create__input reservation-create__input--textarea" rows="4" placeholder="Détail du règlement, échéance, point de suivi…">{{ old('payment_note') }}</textarea>
+                        <textarea name="payment_note" id="payment_note" class="reservation-create__input reservation-create__input--textarea" rows="4" placeholder="Détail du règlement, échéance, point de suivi�?�">{{ old('payment_note') }}</textarea>
                     </div>
                 </div>
                 <p class="reservation-create__helper" id="create-payment-help">Le montant payé ne peut pas dépasser le total du dossier.</p>
@@ -88,3 +88,4 @@
         <button type="button" class="reservation-create__button reservation-create__button--primary" data-create-next data-step-next="6">Continuer</button>
     </div>
 </section>
+

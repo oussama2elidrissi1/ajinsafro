@@ -1,6 +1,6 @@
 ﻿@extends('layouts.admin-v6')
 
-@section('title'){{ $isEdit ? 'Modifier rÃ´le' : 'CrÃ©er rÃ´le' }} â€” RÃ´les & Permissions@endsection
+@section('title'){{ $isEdit ? 'Modifier rôle' : 'Créer rôle' }} �?" Rôles & Permissions@endsection
 
 @push('styles')
     <style>
@@ -129,12 +129,12 @@
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">{{ $isEdit ? 'Modifier rÃ´le' : 'CrÃ©er rÃ´le' }}</h4>
+                <h4 class="page-title mb-0 font-size-18">{{ $isEdit ? 'Modifier rôle' : 'Créer rôle' }}</h4>
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.settings.roles-permissions') }}">RÃ´les & Permissions</a></li>
-                        <li class="breadcrumb-item active">{{ $isEdit ? 'Modifier' : 'CrÃ©er' }}</li>
+                        <li class="breadcrumb-item"><a href="{{ route('admin.settings.roles-permissions') }}">Rôles & Permissions</a></li>
+                        <li class="breadcrumb-item active">{{ $isEdit ? 'Modifier' : 'Créer' }}</li>
                     </ol>
                 </div>
             </div>
@@ -152,19 +152,19 @@
                 <div class="card-body">
                     <div class="row g-3 align-items-end">
                         <div class="col-lg-4">
-                            <label class="form-label fw-semibold">Nom du rÃ´le</label>
+                            <label class="form-label fw-semibold">Nom du rôle</label>
                             <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', $roleModel->name) }}" required>
                             @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                         <div class="col-lg-4">
                             <label class="form-label fw-semibold">Recherche de permission</label>
-                            <input type="search" id="permission-search" class="form-control" placeholder="Rechercher un module, un libellÃ© ou une clÃ© technique">
+                            <input type="search" id="permission-search" class="form-control" placeholder="Rechercher un module, un libellé ou une clé technique">
                         </div>
                         <div class="col-lg-4">
                             <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
                                 <button type="button" class="btn btn-primary" id="check-all">Tout cocher</button>
-                                <button type="button" class="btn btn-outline-secondary" id="uncheck-all">Tout dÃ©cocher</button>
-                                <span class="badge bg-soft-primary text-primary align-self-center px-3 py-2" id="permissions-count">0 sÃ©lectionnÃ©e(s)</span>
+                                <button type="button" class="btn btn-outline-secondary" id="uncheck-all">Tout décocher</button>
+                                <span class="badge bg-soft-primary text-primary align-self-center px-3 py-2" id="permissions-count">0 sélectionnée(s)</span>
                             </div>
                         </div>
                     </div>
@@ -193,11 +193,11 @@
                                         <h5 class="mb-0">{{ $section['label'] }}</h5>
                                         <span class="badge bg-soft-dark text-dark section-count" data-count-for="section:{{ $sectionKey }}">0 / 0</span>
                                     </div>
-                                    <p class="text-muted small mb-0 mt-1">Permissions alignÃ©es sur la sidebar rÃ©elle de lâ€™admin.</p>
+                                    <p class="text-muted small mb-0 mt-1">Permissions alignées sur la sidebar réelle de l�?Tadmin.</p>
                                 </div>
                                 <div class="d-flex flex-wrap gap-2">
                                     <button type="button" class="btn btn-sm btn-outline-primary check-section" data-section="{{ $sectionKey }}">Cocher section</button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary uncheck-section" data-section="{{ $sectionKey }}">DÃ©cocher section</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary uncheck-section" data-section="{{ $sectionKey }}">Décocher section</button>
                                     <button type="button" class="btn btn-sm btn-light section-toggle" data-section="{{ $sectionKey }}" aria-expanded="true">
                                         <span class="toggle-label"></span>
                                     </button>
@@ -243,7 +243,7 @@
                                             </div>
                                             <div class="d-flex flex-wrap gap-2">
                                                 <button type="button" class="btn btn-sm btn-outline-primary check-module" data-module="{{ $moduleKey }}">Cocher module</button>
-                                                <button type="button" class="btn btn-sm btn-outline-secondary uncheck-module" data-module="{{ $moduleKey }}">DÃ©cocher module</button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary uncheck-module" data-module="{{ $moduleKey }}">Décocher module</button>
                                                 <button type="button" class="btn btn-sm btn-light module-toggle" data-module="{{ $moduleKey }}" aria-expanded="true">
                                                     <span class="toggle-label"></span>
                                                 </button>
@@ -289,12 +289,12 @@
                 <div class="card border-0 shadow-sm">
                     <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                         <div>
-                            <div class="fw-semibold">Enregistrement du rÃ´le</div>
-                            <div class="text-muted small">Les permissions existantes non touchÃ©es sont conservÃ©es jusquâ€™Ã  la validation.</div>
+                            <div class="fw-semibold">Enregistrement du rôle</div>
+                            <div class="text-muted small">Les permissions existantes non touchées sont conservées jusqu�?Tà la validation.</div>
                         </div>
                         <div class="d-flex gap-2">
                             <a href="{{ route('admin.settings.roles-permissions') }}" class="btn btn-light">Annuler</a>
-                            <button type="submit" class="btn btn-primary">{{ $isEdit ? 'Mettre Ã  jour' : 'CrÃ©er' }}</button>
+                            <button type="submit" class="btn btn-primary">{{ $isEdit ? 'Mettre à jour' : 'Créer' }}</button>
                         </div>
                     </div>
                 </div>
@@ -329,7 +329,7 @@
 
             function updateCounters() {
                 const checked = checkboxes.filter((checkbox) => checkbox.checked).length;
-                countEl.textContent = checked + ' sÃ©lectionnÃ©e(s)';
+                countEl.textContent = checked + ' sélectionnée(s)';
 
                 sectionEls.forEach((section) => {
                     updateCounter('.section-count', 'section:' + section.dataset.section);
@@ -432,4 +432,5 @@
         })();
     </script>
 @endpush
+
 

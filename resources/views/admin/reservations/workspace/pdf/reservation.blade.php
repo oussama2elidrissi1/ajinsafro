@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="utf-8">
@@ -21,17 +21,17 @@
     <p class="meta">Généré le {{ $generatedAt->format('d/m/Y H:i') }}</p>
 
     <p><strong>Statut :</strong> {{ $reservation->status }}</p>
-    <p><strong>Type de prestation :</strong> {{ $reservation->prestation_type ?? '—' }}</p>
-    <p><strong>Voyage (Laravel) :</strong> {{ $reservation->tour?->name ?? '—' }} @if($reservation->tour?->wp_post_id) (WP #{{ $reservation->tour->wp_post_id }}) @endif</p>
+    <p><strong>Type de prestation :</strong> {{ $reservation->prestation_type ?? '�?"' }}</p>
+    <p><strong>Voyage (Laravel) :</strong> {{ $reservation->tour?->name ?? '�?"' }} @if($reservation->tour?->wp_post_id) (WP #{{ $reservation->tour->wp_post_id }}) @endif</p>
     @if($reservation->travelDate)
-        <p><strong>Date de départ (calendrier) :</strong> {{ optional($reservation->travelDate->date)->format('d/m/Y') ?? '—' }}</p>
+        <p><strong>Date de départ (calendrier) :</strong> {{ optional($reservation->travelDate->date)->format('d/m/Y') ?? '�?"' }}</p>
     @endif
     <p><strong>Client :</strong> {{ trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? '')) }}</p>
     @if($reservation->client?->full_name)
         <p class="meta">Fiche client : {{ $reservation->client->full_name }} @if($reservation->client->client_code) ({{ $reservation->client->client_code }}) @endif</p>
     @endif
-    <p><strong>Total :</strong> {{ $reservation->total_price !== null ? number_format((float) $reservation->total_price, 2, ',', ' ').' MAD' : '—' }}</p>
-    <p><strong>Montant payé :</strong> {{ $reservation->paid_amount !== null ? number_format((float) $reservation->paid_amount, 2, ',', ' ').' MAD' : '—' }}</p>
+    <p><strong>Total :</strong> {{ $reservation->total_price !== null ? number_format((float) $reservation->total_price, 2, ',', ' ').' MAD' : '�?"' }}</p>
+    <p><strong>Montant payé :</strong> {{ $reservation->paid_amount !== null ? number_format((float) $reservation->paid_amount, 2, ',', ' ').' MAD' : '�?"' }}</p>
 
     <h2>Participants</h2>
     <table>
@@ -48,8 +48,8 @@
             <tr>
                 <td>{{ trim(($p->first_name ?? '').' '.($p->last_name ?? '')) }}</td>
                 <td>{{ $p->type }}</td>
-                <td>{{ optional($p->birth_date)->format('d/m/Y') ?? '—' }}</td>
-                <td>{{ $p->document_number ?? '—' }}</td>
+                <td>{{ optional($p->birth_date)->format('d/m/Y') ?? '�?"' }}</td>
+                <td>{{ $p->document_number ?? '�?"' }}</td>
             </tr>
         @endforeach
         </tbody>
@@ -73,3 +73,4 @@
     @endif
 </body>
 </html>
+

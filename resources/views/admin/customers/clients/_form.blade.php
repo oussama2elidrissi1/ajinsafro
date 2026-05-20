@@ -1,4 +1,4 @@
-@php
+﻿@php
     $isEdit = isset($client) && $client->exists;
     $sources = ['website' => 'Site web', 'whatsapp' => 'WhatsApp', 'phone' => 'Téléphone', 'facebook' => 'Facebook', 'instagram' => 'Instagram', 'referral' => 'Parrainage', 'walkin' => 'Walk-in', 'admin' => 'Admin'];
 @endphp
@@ -32,7 +32,7 @@
             <div class="col-md-6">
                 <label class="form-label">Source</label>
                 <select name="source" class="form-select">
-                    <option value="">—</option>
+                    <option value="">�?"</option>
                     @foreach($sources as $k => $v)
                         <option value="{{ $k }}" {{ old('source', $client->source ?? '') === $k ? 'selected' : '' }}>{{ $v }}</option>
                     @endforeach
@@ -41,7 +41,7 @@
             <div class="col-md-6">
                 <label class="form-label">Assigné à</label>
                 <select name="assigned_to" class="form-select">
-                    <option value="">—</option>
+                    <option value="">�?"</option>
                     @foreach($users as $u)
                         <option value="{{ $u->id }}" {{ old('assigned_to', $client->assigned_to ?? '') == $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
                     @endforeach
@@ -75,7 +75,7 @@
             <div class="col-md-4">
                 <label class="form-label">Genre</label>
                 <select name="gender" class="form-select">
-                    <option value="">—</option>
+                    <option value="">�?"</option>
                     <option value="male" {{ old('gender', $client->gender ?? '') === 'male' ? 'selected' : '' }}>Homme</option>
                     <option value="female" {{ old('gender', $client->gender ?? '') === 'female' ? 'selected' : '' }}>Femme</option>
                     <option value="other" {{ old('gender', $client->gender ?? '') === 'other' ? 'selected' : '' }}>Autre</option>
@@ -95,7 +95,7 @@
                 <select name="preferred_language" class="form-select">
                     <option value="fr" {{ old('preferred_language', $client->preferred_language ?? 'fr') === 'fr' ? 'selected' : '' }}>Français</option>
                     <option value="en" {{ old('preferred_language', $client->preferred_language ?? '') === 'en' ? 'selected' : '' }}>English</option>
-                    <option value="ar" {{ old('preferred_language', $client->preferred_language ?? '') === 'ar' ? 'selected' : '' }}>العربية</option>
+                    <option value="ar" {{ old('preferred_language', $client->preferred_language ?? '') === 'ar' ? 'selected' : '' }}>ا�"عرب�Sة</option>
                 </select>
             </div>
         </div>
@@ -133,7 +133,7 @@
             <div class="col-md-6">
                 <label class="form-label">Préférence de contact</label>
                 <select name="contact_method_preference" class="form-select">
-                    <option value="">—</option>
+                    <option value="">�?"</option>
                     <option value="phone" {{ old('contact_method_preference', $client->contact_method_preference ?? '') === 'phone' ? 'selected' : '' }}>Téléphone</option>
                     <option value="email" {{ old('contact_method_preference', $client->contact_method_preference ?? '') === 'email' ? 'selected' : '' }}>Email</option>
                     <option value="whatsapp" {{ old('contact_method_preference', $client->contact_method_preference ?? '') === 'whatsapp' ? 'selected' : '' }}>WhatsApp</option>
@@ -223,7 +223,7 @@
             <div class="col-md-6">
                 <label class="form-label">Catégorie voyageur</label>
                 <select name="traveler_category" class="form-select">
-                    <option value="">—</option>
+                    <option value="">�?"</option>
                     <option value="solo" {{ old('traveler_category', $client->traveler_category ?? '') === 'solo' ? 'selected' : '' }}>Solo</option>
                     <option value="couple" {{ old('traveler_category', $client->traveler_category ?? '') === 'couple' ? 'selected' : '' }}>Couple</option>
                     <option value="family" {{ old('traveler_category', $client->traveler_category ?? '') === 'family' ? 'selected' : '' }}>Famille</option>
@@ -405,3 +405,4 @@
         </div>
     </div>
 </div>
+

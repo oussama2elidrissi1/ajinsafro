@@ -1,11 +1,12 @@
 ﻿@extends('layouts.admin-v6')
 @section('title')
-    DisponibilitÃ©s
+    Disponibilités
 @endsection
 @section('content')
-    @include('admin._placeholder', ['title' => 'DisponibilitÃ©s'])
+    @include('admin._placeholder', ['title' => 'Disponibilités'])
 @endsection
 @push('scripts')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
 @endpush
+
 

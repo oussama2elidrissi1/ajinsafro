@@ -1,13 +1,14 @@
-@extends('layouts.master')
+﻿@extends('layouts.admin-v6')
 
-@section('title') Créer un Tour WordPress @endsection
+@section('title', 'Créer un tour WordPress')
+@section('page_title', 'Créer un tour WordPress')
+
+@php
+    $breadcrumbs = [ ['label' => 'Accueil', 'url' => (\Illuminate\Support\Facades\Route::has('admin.dashboard.v6') ? route('admin.dashboard.v6') : (\Illuminate\Support\Facades\Route::has('admin.dashboard') ? route('admin.dashboard') : url('/admin')))], ['label' => 'WordPress', 'url' => route('admin.wordpress.tours.index')], ['label' => 'Créer'] ];
+@endphp
+
 
 @section('content')
-@component('components.breadcrumb')
-@slot('li_1') <a href="{{ route('admin.wordpress.tours.index') }}">Tours WordPress</a> @endslot
-@slot('title') Créer un tour @endslot
-@endcomponent
-
 <div class="row">
     <div class="col-lg-12">
         <div class="card">
@@ -123,3 +124,9 @@
     </div>
 </div>
 @endsection
+
+
+
+
+
+

@@ -1,4 +1,4 @@
-@extends('layouts.admin-v6')
+﻿@extends('layouts.admin-v6')
 @section('title')
     Rôles & Permissions
 @endsection
@@ -84,3 +84,4 @@
 @push('scripts')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
 @endpush
+

@@ -1,6 +1,6 @@
 ﻿@extends('layouts.admin-v6')
 
-@section('title', 'Group Deals â€” Participants')
+@section('title', 'Group Deals �?" Participants')
 
 @section('content')
 <div class="container-fluid">
@@ -15,11 +15,11 @@
         <div class="card-body">
             <form method="get" class="row g-3 mb-4">
                 <div class="col-md-6">
-                    <input type="text" name="q" class="form-control" value="{{ $filters['q'] ?? '' }}" placeholder="Nom, email ou tÃ©lÃ©phone">
+                    <input type="text" name="q" class="form-control" value="{{ $filters['q'] ?? '' }}" placeholder="Nom, email ou téléphone">
                 </div>
                 <div class="col-md-3 d-flex gap-2">
                     <button class="btn btn-outline-primary flex-fill">Filtrer</button>
-                    <a href="{{ route('admin.group-deals.participants.index') }}" class="btn btn-light">RÃ©initialiser</a>
+                    <a href="{{ route('admin.group-deals.participants.index') }}" class="btn btn-light">Réinitialiser</a>
                 </div>
             </form>
 
@@ -41,13 +41,13 @@
                         <tr>
                             <td>
                                 <div class="fw-semibold">{{ $participant->full_name }}</div>
-                                <div class="text-muted small">{{ $participant->email ?: 'â€”' }} Â· {{ $participant->phone ?: 'â€”' }}</div>
+                                <div class="text-muted small">{{ $participant->email ?: '�?"' }} · {{ $participant->phone ?: '�?"' }}</div>
                             </td>
                             <td>
                                 @if($participant->groupDeal)
                                     <a href="{{ route('admin.group-deals.show', $participant->groupDeal) }}" class="text-decoration-none">{{ $participant->groupDeal->title }}</a>
                                 @else
-                                    <span class="text-muted">â€”</span>
+                                    <span class="text-muted">�?"</span>
                                 @endif
                             </td>
                             <td>{{ $participant->participants_count }}</td>
@@ -59,7 +59,7 @@
                             <td>
                                 <span class="badge bg-light text-dark">{{ ucfirst($participant->payment_status) }}</span>
                             </td>
-                            <td class="small text-muted">{{ optional($participant->joined_at)->format('d/m/Y H:i') ?: 'â€”' }}</td>
+                            <td class="small text-muted">{{ optional($participant->joined_at)->format('d/m/Y H:i') ?: '�?"' }}</td>
                             <td class="text-end">
                                 @if($participant->groupDeal)
                                     <a href="{{ route('admin.group-deals.show', $participant->groupDeal) }}" class="btn btn-sm btn-primary">Ouvrir</a>
@@ -68,7 +68,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-4">Aucun participant trouvÃ©.</td>
+                            <td colspan="7" class="text-center text-muted py-4">Aucun participant trouvé.</td>
                         </tr>
                     @endforelse
                     </tbody>
@@ -80,4 +80,5 @@
     </div>
 </div>
 @endsection
+
 

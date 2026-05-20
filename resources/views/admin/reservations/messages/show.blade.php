@@ -9,7 +9,7 @@
                 <h4 class="page-title mb-0 font-size-18">Message</h4>
                 <ol class="breadcrumb m-0">
                     <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('admin.reservations.index') }}">RÃ©servations</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('admin.reservations.index') }}">Réservations</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('admin.reservations.messages') }}">Messages</a></li>
                     <li class="breadcrumb-item active">Lecture</li>
                 </ol>
@@ -25,7 +25,7 @@
     @endif
 
     <div class="row">
-        {{-- Barre latÃ©rale gauche (identique Ã  la liste) --}}
+        {{-- Barre latérale gauche (identique à la liste) --}}
         <div class="col-md-4 col-lg-3">
             <div class="card mb-3 shadow-sm">
                 <div class="card-body p-3">
@@ -93,12 +93,12 @@
             </div>
         </div>
 
-        {{-- Zone lecture : barre d'outils + en-tÃªte + corps --}}
+        {{-- Zone lecture : barre d'outils + en-tête + corps --}}
         <div class="col-md-8 col-lg-9">
             <div class="card shadow-sm">
                 {{-- Barre d'outils (actions sur le message) --}}
                 <div class="btn-toolbar msg-toolbar p-3 border-bottom flex-wrap gap-2" role="toolbar">
-                    <a href="{{ route('admin.reservations.messages') }}" class="btn btn-primary btn-sm" title="Retour Ã  la liste"><i class="bx bx-arrow-back"></i></a>
+                    <a href="{{ route('admin.reservations.messages') }}" class="btn btn-primary btn-sm" title="Retour à la liste"><i class="bx bx-arrow-back"></i></a>
                     <div class="btn-group btn-group-sm">
                         <form action="{{ route('admin.reservations.messages.star', $message->id) }}" method="post" class="d-inline">
                             @csrf
@@ -106,7 +106,7 @@
                                 <i class="bx {{ $message->isStarredBy($user) ? 'bxs-star' : 'bx-star' }}"></i>
                             </button>
                         </form>
-                        <form action="{{ route('admin.reservations.messages.trash', $message->id) }}" method="post" class="d-inline" onsubmit="return confirm('DÃ©placer dans la corbeille ?');">
+                        <form action="{{ route('admin.reservations.messages.trash', $message->id) }}" method="post" class="d-inline" onsubmit="return confirm('Déplacer dans la corbeille ?');">
                             @csrf
                             <button type="submit" class="btn btn-primary" title="Corbeille"><i class="bx bx-trash"></i></button>
                         </form>
@@ -153,7 +153,7 @@
                     </div>
                 </div>
 
-                {{-- En-tÃªte du message (expÃ©diteur + sujet) --}}
+                {{-- En-tête du message (expéditeur + sujet) --}}
                 <div class="card-body border-bottom">
                     <div class="d-flex align-items-start gap-3">
                         <div class="flex-shrink-0 rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center text-primary" style="width:48px;height:48px;">
@@ -161,11 +161,11 @@
                         </div>
                         <div class="flex-grow-1 min-w-0">
                             <div class="d-flex flex-wrap align-items-center gap-2">
-                                <strong class="font-size-15">{{ $message->fromBranch?->name ?? 'â€”' }}</strong>
+                                <strong class="font-size-15">{{ $message->fromBranch?->name ?? '�?"' }}</strong>
                                 @if($message->fromBranch?->email)
                                     <span class="text-muted small">{{ $message->fromBranch->email }}</span>
                                 @endif
-                                <span class="text-muted small ms-auto">{{ $message->created_at->format('d M Y Ã  H:i') }}</span>
+                                <span class="text-muted small ms-auto">{{ $message->created_at->format('d M Y à H:i') }}</span>
                             </div>
                             <h5 class="mt-2 mb-0 font-size-16">{{ $message->subject }}</h5>
                             @if($message->label)
@@ -193,4 +193,5 @@
         .msg-toolbar > a.btn { margin-right: 0.25rem; }
     </style>
 @endsection
+
 

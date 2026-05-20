@@ -17,7 +17,7 @@
             $vePriceLabel = number_format((float) $priceFrom, 0, ',', ' ') . ' ' . ($cur !== '' ? $cur : 'MAD');
         }
     }
-    // RÃ©solution destination : prioritÃ© meta WP address > multi_location > Laravel destination
+    // Résolution destination : priorité meta WP address > multi_location > Laravel destination
     $veDestination = null;
     $veWpId = isset($voyage->ID) ? (int) $voyage->ID : 0;
     if ($veWpId > 0) {
@@ -254,4 +254,5 @@
     </script>
     <script src="{{ URL::asset('js/voyage-v2.js?v=' . $jsV2) }}"></script>
 @endpush
+
 

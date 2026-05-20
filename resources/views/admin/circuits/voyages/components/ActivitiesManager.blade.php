@@ -1,4 +1,4 @@
-<div id="day-builder-activities-root"
+﻿<div id="day-builder-activities-root"
      data-list-url="{{ route('admin.circuits.activities.ajax.list') }}"
      data-show-url-base="{{ url('/admin/circuits/activities/ajax') }}"
      data-store-url="{{ route('admin.circuits.activities.ajax.store') }}"
@@ -232,7 +232,7 @@
 
     function limitText(text, max) {
         var s = String(text || '');
-        return s.length > max ? s.substring(0, max) + '…' : s;
+        return s.length > max ? s.substring(0, max) + '�?�' : s;
     }
 
     function toastHost() {
@@ -336,7 +336,7 @@
                 '<p class="card-text small text-muted flex-grow-1" data-activity-description>' + esc(limitText(activity.description, 90)) + '</p>' +
                 '<div class="small mb-1">Adulte: ' + esc(activity.adult_price || '0.00') + ' MAD</div>' +
                 '<div class="small text-muted mb-1">Enfant: ' + esc(activity.child_price || '0.00') + ' MAD</div>' +
-                '<div class="small text-muted mb-2">Prix: ' + esc(activity.base_price || '0.00') + ' • Durée: ' + esc(activity.default_duration_minutes || '—') + ' min</div>' +
+                '<div class="small text-muted mb-2">Prix: ' + esc(activity.base_price || '0.00') + ' �?� Durée: ' + esc(activity.default_duration_minutes || '�?"') + ' min</div>' +
                 '<div class="d-flex align-items-center justify-content-between gap-2 mt-auto">' +
                     badge +
                     '<button type="button" class="btn btn-sm btn-primary day-builder-add-activity" data-activity-id="' + activity.id + '" data-activity-title="' + esc(activity.title) + '">Ajouter au jour</button>' +
@@ -577,7 +577,7 @@
 
             showFormMode('edit');
         } catch (error) {
-            showToast(error.message || 'Impossible de charger l’activité.', 'danger');
+            showToast(error.message || 'Impossible de charger l�?Tactivité.', 'danger');
         } finally {
             setFormLoading(false);
         }
@@ -645,7 +645,7 @@
                 applyFieldErrors(error.payload.errors);
                 showFormAlert('warning', error.payload.message || 'Veuillez corriger les erreurs.');
             } else {
-                showFormAlert('danger', error.message || 'Échec de l’enregistrement.');
+                showFormAlert('danger', error.message || '�?chec de l�?Tenregistrement.');
             }
         } finally {
             setFormLoading(false);
@@ -768,3 +768,4 @@
     fetchList('');
 })();
 </script>
+

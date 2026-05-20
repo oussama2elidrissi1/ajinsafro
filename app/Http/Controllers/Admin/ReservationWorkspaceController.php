@@ -42,6 +42,9 @@ class ReservationWorkspaceController extends Controller
     {
         $this->authorizeWorkspace($request);
         $workspaceView = $this->normalizeWorkspaceView($request->query('view'));
+        if (! $request->filled('view') && $request->user()?->hasRole('commercial_reservations_only')) {
+            $workspaceView = 'catalog';
+        }
         $workspaceFilters = $this->normalizeWorkspaceFilters($request);
 
         $catalog = $this->catalog->buildRows($request->user());
@@ -112,7 +115,7 @@ class ReservationWorkspaceController extends Controller
             'workspaceView' => $workspaceView,
             'workspaceFilters' => $workspaceFilters,
             'workspaceFilterOptions' => $workspaceFilterOptions,
-            'workspaceResetUrl' => route('admin.reservations.workspace', ['view' => 'list']),
+            'workspaceResetUrl' => route('admin.reservations.workspace', ['view' => $workspaceView]),
             'currentSort' => $sort,
             'currentDirection' => $direction,
         ]);

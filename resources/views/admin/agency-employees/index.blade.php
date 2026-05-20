@@ -14,7 +14,7 @@
         <x-slot name="actions">
             <a href="{{ route('admin.agency-employees.create') }}" class="aj-btn aj-btn-primary">
                 <i class="bx bx-user-plus"></i>
-                <span>Nouvel employÃ©</span>
+                <span>Nouvel employé</span>
             </a>
         </x-slot>
     </x-admin.page-header>
@@ -26,7 +26,7 @@
             <form method="GET" class="mb-4">
                 <div class="aj-filter-grid" style="grid-template-columns:minmax(220px,1.3fr) repeat(5,minmax(0,.8fr)) auto;">
                     <div class="aj-field">
-                        <input type="text" name="search" class="aj-control" placeholder="Nom, email, tÃ©lÃ©phone, poste..." value="{{ $filters['search'] }}">
+                        <input type="text" name="search" class="aj-control" placeholder="Nom, email, téléphone, poste..." value="{{ $filters['search'] }}">
                     </div>
                     <div class="aj-field">
                         <select name="branch_id" class="aj-control">
@@ -46,7 +46,7 @@
                     </div>
                     <div class="aj-field">
                         <select name="role_name" class="aj-control">
-                            <option value="">Tous les rÃ´les</option>
+                            <option value="">Tous les rôles</option>
                             @foreach($roles as $role)
                                 <option value="{{ $role->name }}" @selected($filters['roleName'] === $role->name)>{{ $role->name }}</option>
                             @endforeach
@@ -77,10 +77,10 @@
 
             @if($employees->isEmpty())
                 <x-admin.empty-state
-                    title="Aucun employÃ©"
+                    title="Aucun employé"
                     message="Aucun employe de point de vente ne correspond aux criteres actuels."
                     :action-url="route('admin.agency-employees.create')"
-                    action-label="Ajouter un employÃ©"
+                    action-label="Ajouter un employé"
                 />
             @else
                 <div class="table-responsive">
@@ -90,13 +90,13 @@
                                 <th>Avatar</th>
                                 <th>Nom</th>
                                 <th>Email</th>
-                                <th>TÃ©lÃ©phone</th>
+                                <th>Téléphone</th>
                                 <th>Point de vente</th>
                                 <th>Poste</th>
-                                <th>RÃ´le systÃ¨me</th>
+                                <th>Rôle système</th>
                                 <th>Statut</th>
-                                <th>RÃ©servations</th>
-                                <th>DerniÃ¨re connexion</th>
+                                <th>Réservations</th>
+                                <th>Dernière connexion</th>
                                 <th class="text-end">Actions</th>
                             </tr>
                         </thead>
@@ -111,19 +111,19 @@
                                         @endif
                                     </td>
                                     <td><a href="{{ route('admin.agency-employees.show', $employee) }}">{{ $employee->full_name }}</a></td>
-                                    <td>{{ $employee->email ?: 'â€”' }}</td>
-                                    <td>{{ $employee->phone ?: 'â€”' }}</td>
-                                    <td>{{ $employee->branch?->name ?: 'â€”' }}</td>
-                                    <td>{{ $employee->position ?: 'â€”' }}</td>
-                                    <td>{{ $employee->user?->roles->pluck('name')->join(', ') ?: 'â€”' }}</td>
+                                    <td>{{ $employee->email ?: '�?"' }}</td>
+                                    <td>{{ $employee->phone ?: '�?"' }}</td>
+                                    <td>{{ $employee->branch?->name ?: '�?"' }}</td>
+                                    <td>{{ $employee->position ?: '�?"' }}</td>
+                                    <td>{{ $employee->user?->roles->pluck('name')->join(', ') ?: '�?"' }}</td>
                                     <td>{{ $statusLabels[$employee->status] ?? $employee->status }}</td>
                                     <td>{{ $employee->handled_reservations_count }}</td>
-                                    <td>{{ $employee->user?->last_login_at?->format('d/m/Y H:i') ?: 'â€”' }}</td>
+                                    <td>{{ $employee->user?->last_login_at?->format('d/m/Y H:i') ?: '�?"' }}</td>
                                     <td class="text-end">
                                         <div class="d-flex justify-content-end gap-2 flex-wrap">
                                             <a href="{{ route('admin.agency-employees.show', $employee) }}" class="aj-btn aj-btn-soft" style="min-height:34px;padding:0 10px;font-size:12px;">Voir</a>
                                             <a href="{{ route('admin.agency-employees.edit', $employee) }}" class="aj-btn aj-btn-soft" style="min-height:34px;padding:0 10px;font-size:12px;">Modifier</a>
-                                            <form method="POST" action="{{ route('admin.agency-employees.destroy', $employee) }}" onsubmit="return confirm('Supprimer cet employÃ© ?');">
+                                            <form method="POST" action="{{ route('admin.agency-employees.destroy', $employee) }}" onsubmit="return confirm('Supprimer cet employé ?');">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="aj-btn aj-btn-soft" style="min-height:34px;padding:0 10px;font-size:12px;color:#d92d20;">Supprimer</button>
@@ -140,4 +140,5 @@
         </div>
     </div>
 @endsection
+
 

@@ -1,4 +1,4 @@
-<style>
+﻿<style>
 #day-builder-root .day-builder-summary { font-size: 0.875rem; color: #6c757d; }
 #day-builder-root .day-builder-tabs .nav-link { font-size: 0.92rem; font-weight: 600; }
 </style>
@@ -13,10 +13,10 @@
     <div class="card-header bg-white border-bottom py-3">
         <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
             <div class="flex-grow-1">
-                <p class="text-uppercase text-muted small fw-bold mb-1">Programme — éléments par jour</p>
-                <h5 class="mb-1" id="day-builder-drawer-label">Jour — configuration</h5>
+                <p class="text-uppercase text-muted small fw-bold mb-1">Programme �?" éléments par jour</p>
+                <h5 class="mb-1" id="day-builder-drawer-label">Jour �?" configuration</h5>
                 <div class="day-builder-summary" id="day-builder-day-summary">Sélectionnez le jour cible ci-dessous.</div>
-                <div class="small text-muted" id="day-builder-drawer-context">Ajoutez des activités, un hôtel ou des transferts pour le jour choisi — sans panneau latéral.</div>
+                <div class="small text-muted" id="day-builder-drawer-context">Ajoutez des activités, un hôtel ou des transferts pour le jour choisi �?" sans panneau latéral.</div>
             </div>
             <div style="min-width:220px">
                 <label for="programme-day-target-select" class="form-label small mb-1">Jour cible</label>
@@ -51,3 +51,4 @@
         </div>
     </div>
 </div>
+

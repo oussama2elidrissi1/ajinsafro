@@ -1,4 +1,4 @@
-<div class="row g-3">
+﻿<div class="row g-3">
     <div class="col-md-6">
         <label class="form-label">Titre <span class="text-danger">*</span></label>
         <input type="text" name="title" class="form-control @error('title') is-invalid @enderror" value="{{ old('title', $package->title) }}" required>
@@ -87,3 +87,4 @@
         @error('sort_order') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
 </div>
+

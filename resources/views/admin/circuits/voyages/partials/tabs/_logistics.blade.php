@@ -1,4 +1,4 @@
-@php
+﻿@php
     $lm = ($laravelVoyage ?? null) ? ($laravelVoyage->logistics_meta ?? []) : [];
     $logisticsTransportTypeOpts = \App\Services\BusinessReferentialService::logisticsTransportTypes();
     $transport = $lm['transport'] ?? [];
@@ -90,7 +90,7 @@
                                             <div class="col-md-6">
                                                 <label class="form-label">Type</label>
                                                 <select class="form-select" name="logistics_meta[transport][type]">
-                                                    <option value="">— Choisir —</option>
+                                                    <option value="">�?" Choisir �?"</option>
                                                     @foreach($logisticsTransportTypeOpts as $tto)
                                                         <option value="{{ $tto['value'] }}" @selected($transportTypeVal === $tto['value'])>{{ $tto['label'] }}</option>
                                                     @endforeach
@@ -138,3 +138,4 @@
 .ve-logistics-pane-card .card-header { border-radius: 0.5rem 0.5rem 0 0 !important; }
 </style>
 @endpush
+

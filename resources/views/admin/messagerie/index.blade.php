@@ -1,46 +1,67 @@
 ﻿@extends('layouts.admin-v6')
-@section('title')
-    Messagerie interne
-@endsection
+
+@section('title', 'Messagerie')
+@section('page_title', 'Messagerie')
+
+@php
+    $breadcrumbs = [
+        ['label' => 'Accueil', 'url' => \Illuminate\Support\Facades\Route::has('admin.dashboard.v6') ? route('admin.dashboard.v6') : (\Illuminate\Support\Facades\Route::has('admin.dashboard') ? route('admin.dashboard') : url('/admin'))],
+        ['label' => 'Réservations', 'url' => \Illuminate\Support\Facades\Route::has('admin.reservations.workspace') ? route('admin.reservations.workspace') : null],
+        ['label' => 'Messagerie'],
+    ];
+@endphp
 
 @section('content')
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">Messagerie interne</h4>
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
-                        <li class="breadcrumb-item active">Messagerie</li>
-                    </ol>
-                </div>
+    <div class="admin-v6-card p-3 p-md-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+            <div class="d-grid gap-1">
+                <div class="text-muted" style="font-weight:700">Messagerie interne</div>
+                <div style="font-weight:800;font-size:16px">Conversations</div>
             </div>
+
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newChannelModal">
+                <i class="bx bx-plus"></i>
+                <span class="ms-1">Nouveau message</span>
+            </button>
         </div>
-    </div>
 
-    <div class="row">
-        <div class="col-12">
-            <div class="email-leftbar card" style="max-width: 320px;">
-                <button type="button" class="btn btn-primary btn-block waves-effect waves-light" data-bs-toggle="modal" data-bs-target="#newChannelModal">
-                    <i class="bx bx-plus me-1"></i> Nouvelle conversation
-                </button>
-                <h6 class="mt-4">Conversations</h6>
-                <div id="channel-list" class="list-group mail-list mt-2">
-                    <p class="text-muted small">Chargementâ€¦</p>
+        <div class="row g-3">
+            <div class="col-12 col-lg-4">
+                <div class="admin-v6-card p-3" style="height:100%">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div style="font-weight:800">Conversations</div>
+                        <span class="badge bg-light text-muted">Auto</span>
+                    </div>
+
+                    <div class="mb-2">
+                        <input type="search" class="form-control" placeholder="Rechercher une conversation..." id="channel-search">
+                    </div>
+
+                    <div id="channel-list" class="list-group mail-list" style="max-height: 520px; overflow:auto">
+                        <div class="text-muted small">Chargement...</div>
+                    </div>
                 </div>
             </div>
 
-            <div class="email-rightbar mb-3">
-                <div class="card">
-                    <div id="message-area-placeholder" class="card-body text-center text-muted py-5">
-                        <i class="bx bx-message-detail font-size-48"></i>
-                        <p class="mt-2 mb-0">SÃ©lectionnez une conversation ou crÃ©ez-en une.</p>
+            <div class="col-12 col-lg-8">
+                <div class="admin-v6-card p-3" style="min-height: 560px">
+                    <div id="message-area-placeholder" class="text-center text-muted py-5">
+                        <i class="bx bx-message-detail" style="font-size:52px"></i>
+                        <p class="mt-2 mb-0">Sélectionnez une conversation ou créez-en une.</p>
                     </div>
-                    <div id="message-area" class="card-body d-none">
-                        <h5 id="channel-title" class="mb-3"></h5>
-                        <div id="messages-container" style="max-height: 400px; overflow-y: auto;" class="mb-3"></div>
+
+                    <div id="message-area" class="d-none">
+                        <div class="d-flex align-items-start justify-content-between gap-2 mb-3">
+                            <div class="d-grid gap-1" style="min-width:0">
+                                <h5 id="channel-title" class="mb-0" style="font-weight:900"></h5>
+                                <div class="text-muted small">Historique des messages</div>
+                            </div>
+                        </div>
+
+                        <div id="messages-container" class="border rounded p-3 mb-3" style="max-height: 380px; overflow-y: auto; background:#fff"></div>
+
                         <div class="d-flex gap-2">
-                            <input type="text" id="message-input" class="form-control" placeholder="Ã‰crire un messageâ€¦" maxlength="10000">
+                            <input type="text" id="message-input" class="form-control" placeholder="Écrire un message..." maxlength="10000">
                             <button type="button" id="send-btn" class="btn btn-primary">Envoyer</button>
                         </div>
                     </div>
@@ -49,209 +70,249 @@
         </div>
     </div>
 
-    <div class="modal fade" id="newChannelModal" tabindex="-1">
-        <div class="modal-dialog">
+    <div class="modal fade" id="newChannelModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Nouvelle conversation</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title">Nouveau message</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
                 </div>
                 <div class="modal-body">
                     <ul class="nav nav-tabs" role="tablist">
-                        <li class="nav-item">
-                            <a class="nav-link active" data-bs-toggle="tab" href="#tab-direct">Direct</a>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-direct" type="button" role="tab">Direct</button>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" data-bs-toggle="tab" href="#tab-reservation">RÃ©servation</a>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-reservation" type="button" role="tab">Réservation</button>
                         </li>
                     </ul>
-                    <div class="tab-content p-3">
-                        <div class="tab-pane active" id="tab-direct">
+
+                    <div class="tab-content pt-3">
+                        <div class="tab-pane fade show active" id="tab-direct" role="tabpanel">
                             <label class="form-label">Utilisateur</label>
                             <select id="new-direct-user" class="form-select">
-                                <option value="">â€“ Choisir â€“</option>
+                                <option value="">- Choisir -</option>
                                 @foreach($users ?? [] as $u)
                                     <option value="{{ $u->id }}">{{ $u->name }} ({{ $u->email }})</option>
                                 @endforeach
                             </select>
                         </div>
-                        <div class="tab-pane" id="tab-reservation">
-                            <label class="form-label">RÃ©servation</label>
+                        <div class="tab-pane fade" id="tab-reservation" role="tabpanel">
+                            <label class="form-label">Réservation</label>
                             <select id="new-reservation-id" class="form-select">
-                                <option value="">â€“ Choisir â€“</option>
+                                <option value="">- Choisir -</option>
                                 @foreach($reservations ?? [] as $r)
-                                    <option value="{{ $r->id }}">#{{ $r->id }} â€“ {{ $r->client_first_name }} {{ $r->client_last_name }}</option>
+                                    <option value="{{ $r->id }}">#{{ $r->id }} - {{ $r->client_first_name }} {{ $r->client_last_name }}</option>
                                 @endforeach
                             </select>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
                     <button type="button" class="btn btn-primary" id="create-channel-btn">Ouvrir</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-(function() {
-    const csrf = '{{ csrf_token() }}';
-    const channelsUrl = '{{ route("admin.messagerie.channels") }}';
-    const createChannelUrl = '{{ route("admin.messagerie.channels.create") }}';
-    let currentChannelId = null;
-    let pollTimer = null;
+    @push('scripts')
+        <script>
+            (function () {
+                'use strict';
 
-    const $list = document.getElementById('channel-list');
-    const $placeholder = document.getElementById('message-area-placeholder');
-    const $messageArea = document.getElementById('message-area');
-    const $channelTitle = document.getElementById('channel-title');
-    const $messagesContainer = document.getElementById('messages-container');
-    const $messageInput = document.getElementById('message-input');
-    const $sendBtn = document.getElementById('send-btn');
+                const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-    function fetchChannels() {
-        fetch(channelsUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
-            .then(r => r.json())
-            .then(data => {
-                if (!data.channels || data.channels.length === 0) {
-                    $list.innerHTML = '<p class="text-muted small">Aucune conversation.</p>';
-                    return;
+                const $list = document.getElementById('channel-list');
+                const $search = document.getElementById('channel-search');
+
+                const $placeholder = document.getElementById('message-area-placeholder');
+                const $area = document.getElementById('message-area');
+                const $title = document.getElementById('channel-title');
+                const $messagesContainer = document.getElementById('messages-container');
+                const $messageInput = document.getElementById('message-input');
+                const $sendBtn = document.getElementById('send-btn');
+
+                const fetchChannelsUrl = '{{ url("admin/messagerie/channels") }}';
+                const createChannelUrl = '{{ url("admin/messagerie/channels") }}';
+
+                let currentChannelId = null;
+                let currentChannelName = '';
+                let allChannels = [];
+
+                function escapeHtml(s) {
+                    const div = document.createElement('div');
+                    div.textContent = s == null ? '' : String(s);
+                    return div.innerHTML;
                 }
-                $list.innerHTML = data.channels.map(ch => {
-                    const unread = ch.unread ? `<span class="badge bg-danger float-end">${ch.unread}</span>` : '';
-                    return `<a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center channel-item ${currentChannelId == ch.id ? 'active' : ''}" data-channel-id="${ch.id}" data-name="${(ch.name || ch.display_name || '').replace(/"/g, '&quot;')}">${ch.name || ch.display_name} ${unread}</a>`;
-                }).join('');
-                document.querySelectorAll('.channel-item').forEach(el => {
-                    el.addEventListener('click', function(e) { e.preventDefault(); selectChannel(parseInt(this.dataset.channelId, 10), this.dataset.name); });
+
+                function renderChannels(channels) {
+                    $list.innerHTML = '';
+
+                    if (!channels.length) {
+                        $list.innerHTML = '<div class="text-muted small">Aucune conversation.</div>';
+                        return;
+                    }
+
+                    channels.forEach(ch => {
+                        const a = document.createElement('a');
+                        a.href = 'javascript:void(0);';
+                        a.className = 'list-group-item list-group-item-action';
+                        a.innerHTML = '<div style="font-weight:800">' + escapeHtml(ch.name || 'Conversation') + '</div>'
+                            + '<div class="small text-muted">' + escapeHtml(ch.last_message_preview || '') + '</div>';
+                        a.addEventListener('click', function(){ selectChannel(ch.id, ch.name || 'Conversation'); });
+                        $list.appendChild(a);
+                    });
+                }
+
+                function fetchChannels() {
+                    fetch(fetchChannelsUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+                        .then(r => {
+                            if (!r.ok) return r.json().then(d => { throw new Error(d.error || 'Erreur chargement'); });
+                            return r.json();
+                        })
+                        .then(data => {
+                            allChannels = (data.channels || []);
+                            applyChannelFilter();
+                        })
+                        .catch(() => {
+                            $list.innerHTML = '<div class="text-danger small">Erreur chargement des conversations.</div>';
+                        });
+                }
+
+                function applyChannelFilter() {
+                    const q = ($search.value || '').trim().toLowerCase();
+                    if (!q) { renderChannels(allChannels); return; }
+                    renderChannels(allChannels.filter(c => String(c.name || '').toLowerCase().includes(q)));
+                }
+
+                function selectChannel(channelId, name) {
+                    currentChannelId = channelId;
+                    currentChannelName = name || 'Conversation';
+
+                    $title.textContent = currentChannelName;
+                    $placeholder.classList.add('d-none');
+                    $area.classList.remove('d-none');
+
+                    loadMessages();
+                }
+
+                function loadMessages() {
+                    if (!currentChannelId) return;
+                    const url = '{{ url("admin/messagerie/channels") }}/' + currentChannelId + '/messages';
+
+                    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+                        .then(r => {
+                            if (!r.ok) return r.json().then(d => { throw new Error(d.error || 'Erreur chargement'); });
+                            return r.json();
+                        })
+                        .then(data => {
+                            $messagesContainer.innerHTML = (data.messages || []).map(m => {
+                                const time = new Date(m.created_at).toLocaleString('fr-FR');
+                                return '<div class="mb-2">'
+                                    + '<strong>' + escapeHtml(m.sender_name) + '</strong> '
+                                    + '<small class="text-muted">' + escapeHtml(time) + '</small><br>'
+                                    + '<span class="text-break">' + escapeHtml(m.message) + '</span>'
+                                    + '</div>';
+                            }).join('');
+                            $messagesContainer.scrollTop = $messagesContainer.scrollHeight;
+                        })
+                        .catch(() => {});
+                }
+
+                function sendMessage() {
+                    const text = ($messageInput.value || '').trim();
+                    if (!text || !currentChannelId) return;
+
+                    const sendUrl = '{{ url("admin/messagerie/channels") }}/' + currentChannelId + '/messages';
+                    fetch(sendUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrf,
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ message: text })
+                    })
+                        .then(r => {
+                            if (!r.ok) {
+                                return r.json().then(data => { throw new Error(data.message || data.error || ('Erreur ' + r.status)); });
+                            }
+                            return r.json();
+                        })
+                        .then(() => {
+                            $messageInput.value = '';
+                            loadMessages();
+                            fetchChannels();
+                        })
+                        .catch(err => {
+                            // Keep it simple: show inline text instead of a raw alert.
+                            $messagesContainer.insertAdjacentHTML('beforeend', '<div class="text-danger small mt-2">' + escapeHtml(err.message || 'Erreur lors de l\'envoi du message.') + '</div>');
+                        });
+                }
+
+                $sendBtn.addEventListener('click', sendMessage);
+                $messageInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
                 });
-            })
-            .catch(() => { $list.innerHTML = '<p class="text-danger small">Erreur chargement.</p>'; });
-    }
 
-    function selectChannel(id, name) {
-        currentChannelId = id;
-        $channelTitle.textContent = name || 'Conversation';
-        $placeholder.classList.add('d-none');
-        $messageArea.classList.remove('d-none');
-        $messageInput.focus();
-        document.querySelectorAll('.channel-item').forEach(el => {
-            el.classList.toggle('active', parseInt(el.dataset.channelId, 10) === id);
-        });
-        loadMessages();
-        if (pollTimer) clearInterval(pollTimer);
-        pollTimer = setInterval(loadMessages, 10000);
-    }
+                $search.addEventListener('input', applyChannelFilter);
 
-    function loadMessages() {
-        if (!currentChannelId) return;
-        const messagesUrl = '{{ url("admin/messagerie/channels") }}/' + currentChannelId + '/messages';
-        fetch(messagesUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
-            .then(r => {
-                if (!r.ok) return r.json().then(d => { throw new Error(d.error || 'Erreur chargement'); });
-                return r.json();
-            })
-            .then(data => {
-                $messagesContainer.innerHTML = (data.messages || []).map(m => {
-                    const time = new Date(m.created_at).toLocaleString('fr-FR');
-                    return '<div class="mb-2"><strong>' + escapeHtml(m.sender_name) + '</strong> <small class="text-muted">' + time + '</small><br><span class="text-break">' + escapeHtml(m.message) + '</span></div>';
-                }).join('');
-                $messagesContainer.scrollTop = $messagesContainer.scrollHeight;
-            })
-            .catch(() => {});
-    }
+                document.getElementById('create-channel-btn').addEventListener('click', function() {
+                    const directUser = document.getElementById('new-direct-user').value;
+                    const reservationId = document.getElementById('new-reservation-id').value;
+                    const activeTab = document.querySelector('#newChannelModal .nav-link.active');
+                    const type = activeTab && activeTab.getAttribute('data-bs-target') === '#tab-reservation' ? 'reservation' : 'direct';
 
-    function escapeHtml(s) {
-        const div = document.createElement('div');
-        div.textContent = s;
-        return div.innerHTML;
-    }
+                    const body = { type };
+                    if (type === 'direct' && directUser) body.user_id = parseInt(directUser, 10);
+                    if (type === 'reservation' && reservationId) body.reservation_id = parseInt(reservationId, 10);
 
-    function sendMessage() {
-        const text = ($messageInput.value || '').trim();
-        if (!text || !currentChannelId) return;
-        const sendUrl = '{{ url("admin/messagerie/channels") }}/' + currentChannelId + '/messages';
-        fetch(sendUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrf,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({ message: text })
-        })
-            .then(r => {
-                if (!r.ok) {
-                    return r.json().then(data => { throw new Error(data.message || data.error || 'Erreur ' + r.status); });
+                    fetch(createChannelUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                        body: JSON.stringify(body)
+                    })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.channel_id) {
+                                bootstrap.Modal.getInstance(document.getElementById('newChannelModal')).hide();
+                                fetchChannels();
+                                setTimeout(function() {
+                                    const name = type === 'reservation'
+                                        ? ('Réservation #' + (body.reservation_id || ''))
+                                        : (document.querySelector('#new-direct-user option:checked')?.textContent || 'Conversation');
+                                    selectChannel(data.channel_id, name);
+                                }, 300);
+                            }
+                        });
+                });
+
+                function openReservationChannel(reservationId) {
+                    fetch(createChannelUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                        body: JSON.stringify({ type: 'reservation', reservation_id: parseInt(reservationId, 10) })
+                    })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.channel_id) {
+                                fetchChannels();
+                                setTimeout(function() { selectChannel(data.channel_id, 'Réservation #' + reservationId); }, 400);
+                            }
+                        });
                 }
-                return r.json();
-            })
-            .then((data) => {
-                $messageInput.value = '';
-                loadMessages();
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const reservationId = urlParams.get('reservation_id');
+                if (reservationId) {
+                    openReservationChannel(reservationId);
+                    window.history.replaceState({}, '', window.location.pathname);
+                }
+
                 fetchChannels();
-            })
-            .catch(err => {
-                alert(err.message || 'Erreur lors de l\'envoi du message.');
-            });
-    }
-
-    $sendBtn.addEventListener('click', sendMessage);
-    $messageInput.addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
-
-    document.getElementById('create-channel-btn').addEventListener('click', function() {
-        const directUser = document.getElementById('new-direct-user').value;
-        const reservationId = document.getElementById('new-reservation-id').value;
-        const activeTab = document.querySelector('#newChannelModal .nav-link.active');
-        const type = activeTab && activeTab.getAttribute('href') === '#tab-reservation' ? 'reservation' : 'direct';
-        const body = { type };
-        if (type === 'direct' && directUser) body.user_id = parseInt(directUser, 10);
-        if (type === 'reservation' && reservationId) body.reservation_id = parseInt(reservationId, 10);
-        fetch(createChannelUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
-            body: JSON.stringify(body)
-        })
-            .then(r => r.json())
-            .then(data => {
-                if (data.channel_id) {
-                    bootstrap.Modal.getInstance(document.getElementById('newChannelModal')).hide();
-                    fetchChannels();
-                    setTimeout(function() {
-                        const name = type === 'reservation' ? 'RÃ©servation #' + (body.reservation_id || '') : (document.querySelector('#new-direct-user option:checked')?.textContent || 'Conversation');
-                        selectChannel(data.channel_id, name);
-                    }, 300);
-                } else if (data.error) {
-                    alert(data.error);
-                }
-            });
-    });
-
-    function openReservationChannel(reservationId) {
-        fetch(createChannelUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
-            body: JSON.stringify({ type: 'reservation', reservation_id: parseInt(reservationId, 10) })
-        })
-            .then(r => r.json())
-            .then(data => {
-                if (data.channel_id) {
-                    fetchChannels();
-                    setTimeout(function() { selectChannel(data.channel_id, 'RÃ©servation #' + reservationId); }, 400);
-                }
-            });
-    }
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const reservationId = urlParams.get('reservation_id');
-    if (reservationId) {
-        openReservationChannel(reservationId);
-        window.history.replaceState({}, '', window.location.pathname);
-    }
-
-    fetchChannels();
-})();
-    </script>
+            })();
+        </script>
+    @endpush
 @endsection
-

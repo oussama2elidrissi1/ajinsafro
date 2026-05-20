@@ -1,4 +1,4 @@
-@extends('layouts.admin-v6')
+﻿@extends('layouts.admin-v6')
 
 @section('title', 'Mes commissions')
 @section('page_title', 'Commissions')
@@ -113,7 +113,7 @@
                             @forelse($entries as $entry)
                                 @php
                                     $statusClass = 'commission-status--' . $entry->commission_status;
-                                    $departureDate = $entry->reservation?->departure?->start_date?->format('d/m/Y') ?? $entry->travelDate?->date?->format('d/m/Y') ?? '—';
+                                    $departureDate = $entry->reservation?->departure?->start_date?->format('d/m/Y') ?? $entry->travelDate?->date?->format('d/m/Y') ?? '�?"';
                                 @endphp
                                 <tr>
                                     <td class="px-3">{{ optional($entry->calculated_at)->format('d/m/Y') }}</td>
@@ -143,3 +143,4 @@
         </div>
     </div>
 @endsection
+

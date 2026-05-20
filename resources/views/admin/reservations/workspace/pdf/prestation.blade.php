@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="utf-8">
@@ -17,7 +17,7 @@
     </style>
 </head>
 <body>
-    <h1>Fiche prestation — {{ $prestationDisplayTitle }}</h1>
+    <h1>Fiche prestation �?" {{ $prestationDisplayTitle }}</h1>
     <p class="muted">
         Réf. Laravel voyages #{{ $voyage->id }}
         @if($voyage->wp_post_id) · WordPress post #{{ $voyage->wp_post_id }} @endif
@@ -55,11 +55,11 @@
                 <tr>
                     <td>{{ $r->id }}</td>
                     <td class="{{ $stClass }}">{{ $st }}</td>
-                    <td>{{ trim(($r->client_first_name ?? '').' '.($r->client_last_name ?? '')) ?: ($r->client?->full_name ?? '—') }}</td>
-                    <td>{{ $r->prestation_type ?? '—' }}</td>
+                    <td>{{ trim(($r->client_first_name ?? '').' '.($r->client_last_name ?? '')) ?: ($r->client?->full_name ?? '�?"') }}</td>
+                    <td>{{ $r->prestation_type ?? '�?"' }}</td>
                     <td>{{ $r->passengers->count() }}</td>
-                    <td>{{ $r->total_price !== null ? number_format((float) $r->total_price, 2, ',', ' ').' MAD' : '—' }}</td>
-                    <td>{{ $r->paid_amount !== null ? number_format((float) $r->paid_amount, 2, ',', ' ').' MAD' : '—' }}</td>
+                    <td>{{ $r->total_price !== null ? number_format((float) $r->total_price, 2, ',', ' ').' MAD' : '�?"' }}</td>
+                    <td>{{ $r->paid_amount !== null ? number_format((float) $r->paid_amount, 2, ',', ' ').' MAD' : '�?"' }}</td>
                 </tr>
             @endforeach
             </tbody>
@@ -85,8 +85,8 @@
                         <td>{{ $r->status }}</td>
                         <td>{{ trim(($p->first_name ?? '').' '.($p->last_name ?? '')) }}</td>
                         <td>{{ $p->type }}</td>
-                        <td>{{ optional($p->birth_date)->format('d/m/Y') ?? '—' }}</td>
-                        <td>{{ $p->document_number ?? '—' }}</td>
+                        <td>{{ optional($p->birth_date)->format('d/m/Y') ?? '�?"' }}</td>
+                        <td>{{ $p->document_number ?? '�?"' }}</td>
                     </tr>
                 @empty
                     <tr>
@@ -100,3 +100,4 @@
     @endif
 </body>
 </html>
+

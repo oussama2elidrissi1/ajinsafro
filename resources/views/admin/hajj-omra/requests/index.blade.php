@@ -64,10 +64,10 @@
                             <td>{{ $requestItem->created_at?->format('d/m/Y H:i') }}</td>
                             <td>
                                 <div class="fw-bold">{{ $requestItem->full_name }}</div>
-                                <div class="text-muted small">{{ $requestItem->phone }} Â· {{ $requestItem->email }}</div>
+                                <div class="text-muted small">{{ $requestItem->phone }} · {{ $requestItem->email }}</div>
                             </td>
                             <td>{{ $requestItem->package_title ?: optional($requestItem->package)->title ?: 'Non associee' }}</td>
-                            <td>{{ $requestItem->selected_departure_date?->format('d/m/Y') ?: 'â€”' }}</td>
+                            <td>{{ $requestItem->selected_departure_date?->format('d/m/Y') ?: '�?"' }}</td>
                             <td>
                                 <x-admin.badge
                                     :type="match($requestItem->status){
@@ -93,4 +93,5 @@
         @endif
     </section>
 @endsection
+
 

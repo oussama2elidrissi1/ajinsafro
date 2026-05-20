@@ -1,11 +1,12 @@
 ﻿@extends('layouts.admin-v6')
 @section('title')
-    AnnulÃ©es
+    Annulées
 @endsection
 @section('content')
-    @include('admin._placeholder', ['title' => 'AnnulÃ©es'])
+    @include('admin._placeholder', ['title' => 'Annulées'])
 @endsection
 @push('scripts')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
 @endpush
+
 

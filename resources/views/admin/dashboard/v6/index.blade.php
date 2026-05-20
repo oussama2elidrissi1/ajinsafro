@@ -1,4 +1,4 @@
-@extends('layouts.dashboard-v5')
+﻿@extends('layouts.dashboard-v5')
 
 @section('title', 'Espace Client')
 
@@ -30,7 +30,7 @@
     $v6Body = str_replace('<div class="app-shell">', '<div class="app-shell dashboard-v6">', $v6Body);
 
     $v6Body = str_replace(
-        '<div class="brand-mark" aria-hidden="true">▰</div>',
+        '<div class="brand-mark" aria-hidden="true">�-�</div>',
         '<div class="brand-mark" aria-hidden="true"><img src="' . e($dashboardBrandLogo) . '" alt="' . e($dashboardBrandName) . '" style="width:28px;height:28px;object-fit:contain;filter:brightness(0) invert(1)"></div>',
         $v6Body
     );
@@ -39,7 +39,7 @@
     $v6Body = str_replace('<strong>Admin</strong>', '<strong>' . e($dashboardUserName) . '</strong>', $v6Body);
     $v6Body = str_replace('<span>Administrateur</span>', '<span>' . e($dashboardUserRole) . '</span>', $v6Body);
     $v6Body = str_replace('<h1>Dashboard V6</h1>', '<h1>Espace Admin</h1>', $v6Body);
-    $v6Body = str_replace('📅 mardi 19 mai 2026', '📅 ' . e($dashboardDateLabel), $v6Body);
+    $v6Body = str_replace('�Y". mardi 19 mai 2026', '�Y". ' . e($dashboardDateLabel), $v6Body);
     $v6Body = str_replace('<button class="primary-btn" type="button">+ Réservations</button>', '<a class="primary-btn" href="' . e(route('admin.reservations.create')) . '">+ Réservations</a>', $v6Body);
     $v6Body = str_replace('<a href="#" class="active">Dashboard V6</a>', '<a href="' . e(route('admin.dashboard.v6')) . '" class="active">Espace Admin</a>', $v6Body);
     $v6Body = str_replace('<a href="#">Dashboard V5</a>', '<a href="' . e(route('admin.dashboard.v5')) . '">Dashboard V5</a>', $v6Body);
@@ -50,7 +50,7 @@
     $v6Body = preg_replace('/<button class="chip"[^>]*>[\s\S]*?mardi[\s\S]*?<\/button>/i', '', $v6Body, 1);
     $v6Body = preg_replace('/<button class="chip"[^>]*>[\s\S]*?Filtres[\s\S]*?<\/button>/i', '', $v6Body, 1);
     // Remove "+ Réservations" primary action from the template header.
-    $v6Body = preg_replace('/<(?:a|button)\s+[^>]*class="[^"]*primary-btn[^"]*"[^>]*>[\s\S]*?RÃ©servations[\s\S]*?<\/(?:a|button)>/i', '', $v6Body, 1);
+    $v6Body = preg_replace('/<(?:a|button)\s+[^>]*class="[^"]*primary-btn[^"]*"[^>]*>[\s\S]*?R�f©servations[\s\S]*?<\/(?:a|button)>/i', '', $v6Body, 1);
     // Keep V6 topbar structure (title + search + actions) as in the reference HTML.
 @endphp
 
@@ -581,3 +581,4 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
+

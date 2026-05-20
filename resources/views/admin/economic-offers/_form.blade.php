@@ -1,4 +1,4 @@
-@php
+﻿@php
     $priceRows = old('prices', $offer->prices->map(fn($item) => [
         'label' => $item->label,
         'type' => $item->type,
@@ -27,7 +27,7 @@
 
 <div class="row g-4">
     <div class="col-12">
-        <x-admin.form-section title="1. Informations générales" subtitle="Structure principale de l’offre économique.">
+        <x-admin.form-section title="1. Informations générales" subtitle="Structure principale de l�?Toffre économique.">
             <div class="row g-3">
                 <div class="col-md-6">
                     <label class="form-label">Titre <span class="text-danger">*</span></label>
@@ -46,7 +46,7 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label">Type d’offre <span class="text-danger">*</span></label>
+                    <label class="form-label">Type d�?Toffre <span class="text-danger">*</span></label>
                     <select name="offer_type" class="form-select @error('offer_type') is-invalid @enderror" required>
                         @foreach($typeOptions as $value => $label)
                             <option value="{{ $value }}" @selected(old('offer_type', $offer->offer_type) === $value)>{{ $label }}</option>
@@ -168,7 +168,7 @@
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label">Type d’hébergement</label>
+                    <label class="form-label">Type d�?Thébergement</label>
                     <input type="text" name="accommodation_type" value="{{ old('accommodation_type', $offer->accommodation_type) }}" class="form-control @error('accommodation_type') is-invalid @enderror">
                     @error('accommodation_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
@@ -209,7 +209,7 @@
                     @error('payment_conditions') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Conditions d’annulation</label>
+                    <label class="form-label">Conditions d�?Tannulation</label>
                     <textarea name="cancellation_conditions" rows="4" class="form-control @error('cancellation_conditions') is-invalid @enderror">{{ old('cancellation_conditions', $offer->cancellation_conditions) }}</textarea>
                     @error('cancellation_conditions') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
@@ -228,7 +228,7 @@
                             <div class="col-md-2"><label class="form-label">Prix</label><input type="number" step="0.01" name="prices[{{ $index }}][price]" value="{{ $row['price'] ?? '' }}" class="form-control"></div>
                             <div class="col-md-2"><label class="form-label">Ancien prix</label><input type="number" step="0.01" name="prices[{{ $index }}][old_price]" value="{{ $row['old_price'] ?? '' }}" class="form-control"></div>
                             <div class="col-md-2"><label class="form-label">Stock</label><input type="number" min="0" name="prices[{{ $index }}][stock]" value="{{ $row['stock'] ?? '' }}" class="form-control"></div>
-                            <div class="col-md-1 d-flex align-items-end"><button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-row>×</button></div>
+                            <div class="col-md-1 d-flex align-items-end"><button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-row>�-</button></div>
                             <div class="col-12"><label class="form-label">Condition</label><input type="text" name="prices[{{ $index }}][condition]" value="{{ $row['condition'] ?? '' }}" class="form-control"></div>
                         </div>
                     </div>
@@ -256,7 +256,7 @@
                 <div class="col-md-3"><label class="form-label">Ville de départ</label><input type="text" name="departure_city" value="{{ old('departure_city', $offer->departure_city) }}" class="form-control @error('departure_city') is-invalid @enderror">@error('departure_city') <div class="invalid-feedback">{{ $message }}</div> @enderror</div>
                 <div class="col-md-3"><label class="form-label">Destination</label><input type="text" name="destination" value="{{ old('destination', $offer->destination) }}" class="form-control @error('destination') is-invalid @enderror">@error('destination') <div class="invalid-feedback">{{ $message }}</div> @enderror</div>
                 <div class="col-md-2"><label class="form-label">Pays</label><input type="text" name="country" value="{{ old('country', $offer->country) }}" class="form-control @error('country') is-invalid @enderror">@error('country') <div class="invalid-feedback">{{ $message }}</div> @enderror</div>
-                <div class="col-md-2"><label class="form-label">Ville d’arrivée</label><input type="text" name="arrival_city" value="{{ old('arrival_city', $offer->arrival_city) }}" class="form-control @error('arrival_city') is-invalid @enderror">@error('arrival_city') <div class="invalid-feedback">{{ $message }}</div> @enderror</div>
+                <div class="col-md-2"><label class="form-label">Ville d�?Tarrivée</label><input type="text" name="arrival_city" value="{{ old('arrival_city', $offer->arrival_city) }}" class="form-control @error('arrival_city') is-invalid @enderror">@error('arrival_city') <div class="invalid-feedback">{{ $message }}</div> @enderror</div>
                 <div class="col-md-2"><label class="form-label">Distance clé</label><input type="text" name="key_distance" value="{{ old('key_distance', $offer->key_distance) }}" class="form-control @error('key_distance') is-invalid @enderror">@error('key_distance') <div class="invalid-feedback">{{ $message }}</div> @enderror</div>
                 <div class="col-12"><label class="form-label">Adresse / zone</label><input type="text" name="address_zone" value="{{ old('address_zone', $offer->address_zone) }}" class="form-control @error('address_zone') is-invalid @enderror">@error('address_zone') <div class="invalid-feedback">{{ $message }}</div> @enderror</div>
             </div>
@@ -275,7 +275,7 @@
                             <div class="col-md-2"><label class="form-label">Places totales</label><input type="number" min="0" name="departures[{{ $index }}][total_places]" value="{{ $row['total_places'] ?? '' }}" class="form-control"></div>
                             <div class="col-md-2"><label class="form-label">Places dispo</label><input type="number" min="0" name="departures[{{ $index }}][available_places]" value="{{ $row['available_places'] ?? '' }}" class="form-control"></div>
                             <div class="col-md-1"><label class="form-label">Réservées</label><input type="number" min="0" name="departures[{{ $index }}][reserved_places]" value="{{ $row['reserved_places'] ?? '' }}" class="form-control"></div>
-                            <div class="col-md-1 d-flex align-items-end"><button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-row>×</button></div>
+                            <div class="col-md-1 d-flex align-items-end"><button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-row>�-</button></div>
                             <div class="col-md-3">
                                 <label class="form-label">Statut</label>
                                 <select name="departures[{{ $index }}][status]" class="form-select">
@@ -359,7 +359,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="col-md-2"><label class="form-label">Prix</label><input type="number" step="0.01" name="prices[${index}][price]" class="form-control"></div>
                     <div class="col-md-2"><label class="form-label">Ancien prix</label><input type="number" step="0.01" name="prices[${index}][old_price]" class="form-control"></div>
                     <div class="col-md-2"><label class="form-label">Stock</label><input type="number" min="0" name="prices[${index}][stock]" class="form-control"></div>
-                    <div class="col-md-1 d-flex align-items-end"><button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-row>×</button></div>
+                    <div class="col-md-1 d-flex align-items-end"><button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-row>�-</button></div>
                     <div class="col-12"><label class="form-label">Condition</label><input type="text" name="prices[${index}][condition]" class="form-control"></div>
                 </div>
             </div>
@@ -376,7 +376,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="col-md-2"><label class="form-label">Places totales</label><input type="number" min="0" name="departures[${index}][total_places]" class="form-control"></div>
                     <div class="col-md-2"><label class="form-label">Places dispo</label><input type="number" min="0" name="departures[${index}][available_places]" class="form-control"></div>
                     <div class="col-md-1"><label class="form-label">Réservées</label><input type="number" min="0" name="departures[${index}][reserved_places]" class="form-control"></div>
-                    <div class="col-md-1 d-flex align-items-end"><button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-row>×</button></div>
+                    <div class="col-md-1 d-flex align-items-end"><button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-row>�-</button></div>
                     <div class="col-md-3">
                         <label class="form-label">Statut</label>
                         <select name="departures[${index}][status]" class="form-select">
@@ -415,3 +415,4 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
+

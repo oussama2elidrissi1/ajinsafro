@@ -1,13 +1,14 @@
-@extends('layouts.master')
+﻿@extends('layouts.admin-v6')
 
-@section('title') Tours WordPress @endsection
+@section('title', 'Tours WordPress')
+@section('page_title', 'Tours WordPress')
+
+@php
+    $breadcrumbs = [ ['label' => 'Accueil', 'url' => (\Illuminate\Support\Facades\Route::has('admin.dashboard.v6') ? route('admin.dashboard.v6') : (\Illuminate\Support\Facades\Route::has('admin.dashboard') ? route('admin.dashboard') : url('/admin')))], ['label' => 'WordPress'], ['label' => 'Tours'] ];
+@endphp
+
 
 @section('content')
-@component('components.breadcrumb')
-@slot('li_1') Admin @endslot
-@slot('title') Tours WordPress (TravelerWP) @endslot
-@endcomponent
-
 <div class="row">
     <div class="col-12">
         <div class="card">
@@ -85,7 +86,7 @@
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('admin.wordpress.tours.edit', $tour->ID) }}" 
                                                class="btn btn-sm btn-primary" 
-                                               title="Éditer">
+                                               title="�?Éditer">
                                                 <i class="mdi mdi-pencil"></i>
                                             </a>
                                             <a href="https://ajinsafro.net/tours/{{ $tour->post_name }}" 
@@ -126,3 +127,10 @@
     </div>
 </div>
 @endsection
+
+
+
+
+
+
+

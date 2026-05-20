@@ -1,18 +1,19 @@
-@extends('layouts.master')
+﻿@extends('layouts.admin-v6')
 
-@section('title') Éditer Tour WordPress @endsection
+@section('title', 'ÉÉditer tour WordPress')
+@section('page_title', 'ÉÉditer tour WordPress')
+
+@php
+    $breadcrumbs = [ ['label' => 'Accueil', 'url' => (\Illuminate\Support\Facades\Route::has('admin.dashboard.v6') ? route('admin.dashboard.v6') : (\Illuminate\Support\Facades\Route::has('admin.dashboard') ? route('admin.dashboard') : url('/admin')))], ['label' => 'WordPress', 'url' => route('admin.wordpress.tours.index')], ['label' => 'ÉÉditer'] ];
+@endphp
+
 
 @section('content')
-@component('components.breadcrumb')
-@slot('li_1') <a href="{{ route('admin.wordpress.tours.index') }}">Tours WordPress</a> @endslot
-@slot('title') Éditer : {{ $tour['title'] }} @endslot
-@endcomponent
-
 <div class="row">
     <div class="col-lg-12">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h4 class="card-title mb-0">Éditer Tour #{{ $tour['id'] }}</h4>
+                <h4 class="card-title mb-0">�?Éditer Tour #{{ $tour['id'] }}</h4>
                 <a href="https://ajinsafro.net/tours/{{ $tour['slug'] }}" target="_blank" class="btn btn-sm btn-info">
                     <i class="mdi mdi-eye me-1"></i> Voir sur WordPress
                 </a>
@@ -151,3 +152,10 @@
     </div>
 </div>
 @endsection
+
+
+
+
+
+
+

@@ -1,4 +1,4 @@
-<section class="v3-hero-card">
+﻿<section class="v3-hero-card">
     <div class="v3-hero-thumb{{ !empty($heroImageUrl) ? ' has-image' : '' }}" @if(!empty($heroImageUrl)) style="background-image:url('{{ $heroImageUrl }}')" @endif>
         @if(empty($heroImageUrl))
             <span class="v3-hero-thumb-badge">Voyage Studio</span>
@@ -66,3 +66,4 @@
         </div>
     </div>
 </section>
+

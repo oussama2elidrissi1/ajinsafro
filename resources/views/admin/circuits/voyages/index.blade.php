@@ -1,4 +1,4 @@
-@extends('layouts.admin-v6')
+﻿@extends('layouts.admin-v6')
 
 @php
     use Illuminate\Support\Str;
@@ -86,7 +86,7 @@
                 :kpis="[
                     ['label' => 'Voyages trouvés', 'value' => number_format($totalTours, 0, ',', ' '), 'icon' => 'bx bx-map-alt', 'color' => '-blue', 'note' => 'Catalogue courant'],
                     ['label' => 'Publiés', 'value' => $publishedTours, 'icon' => 'bx bx-badge-check', 'color' => '-green', 'note' => 'Visibles dans le catalogue'],
-                    ['label' => 'Brouillons', 'value' => $draftTours, 'icon' => 'bx bx-edit-alt', 'color' => '-orange', 'note' => 'À finaliser'],
+                    ['label' => 'Brouillons', 'value' => $draftTours, 'icon' => 'bx bx-edit-alt', 'color' => '-orange', 'note' => '�? finaliser'],
                     ['label' => 'Avec départs actifs', 'value' => $withDepartures, 'icon' => 'bx bx-calendar-check', 'color' => '-violet', 'note' => 'Basé sur les données catalogue'],
                 ]"
             />
@@ -249,7 +249,7 @@
                                         </td>
                                         <td>{{ $tour->address ?? '-' }}</td>
                                         <td>{{ $tour->duration_day ?? '-' }}</td>
-                                        <td><span class="aj-price">{{ $price > 0 ? number_format($price, 0, ',', ' ') . ' MAD' : '—' }}</span></td>
+                                        <td><span class="aj-price">{{ $price > 0 ? number_format($price, 0, ',', ' ') . ' MAD' : '�?"' }}</span></td>
                                         <td>
                                             @if($tour->post_status === 'publish')
                                                 <span class="aj-badge -success">Publié</span>
@@ -275,7 +275,7 @@
                                                 <a href="{{ route('admin.circuits.voyages.edit', $tour->ID) }}" class="aj-icon-btn" title="Modifier">
                                                     <i class="bx bx-pencil"></i>
                                                 </a>
-                                                <a href="{{ route('admin.circuits.voyages.edit-v2', $tour->ID) }}" class="aj-icon-btn" title="Éditeur V2">
+                                                <a href="{{ route('admin.circuits.voyages.edit-v2', $tour->ID) }}" class="aj-icon-btn" title="�?diteur V2">
                                                     <i class="bx bx-layer"></i>
                                                 </a>
                                                 <form action="{{ route('admin.circuits.voyages.destroy', $tour->ID) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce tour de WordPress ?');">
@@ -319,7 +319,7 @@
                                         @endif
                                     </div>
                                     <div class="aj-card-actions">
-                                        <span class="aj-price">{{ $price > 0 ? number_format($price, 0, ',', ' ') . ' MAD' : '—' }}</span>
+                                        <span class="aj-price">{{ $price > 0 ? number_format($price, 0, ',', ' ') . ' MAD' : '�?"' }}</span>
                                         <div class="aj-actions">
                                             <a href="{{ route('admin.circuits.voyages.edit', $tour->ID) }}" class="aj-icon-btn" title="Modifier"><i class="bx bx-pencil"></i></a>
                                             <a href="{{ route('admin.circuits.voyages.edit-v2', $tour->ID) }}" class="aj-icon-btn" title="V2"><i class="bx bx-layer"></i></a>
@@ -413,3 +413,4 @@
         });
     </script>
 @endpush
+

@@ -1,4 +1,4 @@
-@props(['meta' => []])
+﻿@props(['meta' => []])
 
 @php
     $hotelPhone = old('hotel_phone', $meta['hotel_phone'] ?? '');
@@ -18,3 +18,4 @@
         @error('hotel_email')<div class="invalid-feedback">{{ $message }}</div>@enderror
     </div>
 </div>
+

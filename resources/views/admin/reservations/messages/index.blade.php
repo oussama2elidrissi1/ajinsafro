@@ -9,7 +9,7 @@
                 <h4 class="page-title mb-0 font-size-18">Messages</h4>
                 <ol class="breadcrumb m-0">
                     <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('admin.reservations.index') }}">RÃ©servations</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('admin.reservations.index') }}">Réservations</a></li>
                     <li class="breadcrumb-item active">Messages</li>
                 </ol>
             </div>
@@ -24,7 +24,7 @@
     @endif
 
     <div class="row">
-        {{-- Barre latÃ©rale gauche (style email inbox) --}}
+        {{-- Barre latérale gauche (style email inbox) --}}
         <div class="col-md-4 col-lg-3">
             <div class="card mb-3 shadow-sm">
                 <div class="card-body p-3">
@@ -137,7 +137,7 @@
                         @endphp
                         <div class="list-group-item list-group-item-action d-flex align-items-start py-3 {{ $isUnread ? 'bg-info bg-opacity-10' : '' }}" data-message-id="{{ $msg->id }}">
                             <div class="form-check me-2 mt-1">
-                                <input class="form-check-input msg-checkbox" type="checkbox" value="{{ $msg->id }}" aria-label="SÃ©lectionner">
+                                <input class="form-check-input msg-checkbox" type="checkbox" value="{{ $msg->id }}" aria-label="Sélectionner">
                             </div>
                             <div class="me-2 mt-1">
                                 <form action="{{ route('admin.reservations.messages.star', $msg->id) }}" method="post" class="d-inline">
@@ -150,7 +150,7 @@
                             <a href="{{ route('admin.reservations.messages.show', $msg->id) }}" class="flex-grow-1 min-w-0 text-decoration-none text-body">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <span class="{{ $isUnread ? 'fw-bold' : '' }}">
-                                        {{ $msg->fromBranch?->name ?? 'â€”' }}
+                                        {{ $msg->fromBranch?->name ?? '�?"' }}
                                     </span>
                                     <span class="text-muted small">{{ $msg->created_at->format('d M') }}</span>
                                 </div>
@@ -183,4 +183,5 @@
         .msg-toolbar > a.btn { margin-right: 0.25rem; }
     </style>
 @endsection
+
 

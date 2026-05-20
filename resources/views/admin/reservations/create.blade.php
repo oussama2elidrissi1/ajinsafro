@@ -1,4 +1,4 @@
-@extends('layouts.admin-v6')
+﻿@extends('layouts.admin-v6')
 
 @section('title', 'Créer une réservation')
 @section('hidePageFooter', '1')
@@ -67,3 +67,4 @@
 @push('scripts')
     <script src="{{ asset('js/reservation-create.js') }}"></script>
 @endpush
+

@@ -10,7 +10,7 @@
                     <h4 class="page-title mb-1 font-size-18">{{ $label }}</h4>
                     <p class="text-muted small mb-0"><code>{{ $groupKey }}</code></p>
                 </div>
-                <a href="{{ route('admin.settings.referentiels-metier') }}" class="btn btn-light btn-sm">â† Toutes les familles</a>
+                <a href="{{ route('admin.settings.referentiels-metier') }}" class="btn btn-light btn-sm">�?� Toutes les familles</a>
             </div>
         </div>
     </div>
@@ -34,7 +34,7 @@
                 @csrf
                 @if($groupKey === 'payment_methods')
                     <div class="col-12">
-                        <label class="form-label">Meta (JSON) â€” doit contenir <code>meta_key</code></label>
+                        <label class="form-label">Meta (JSON) �?" doit contenir <code>meta_key</code></label>
                         <textarea name="meta_json" class="form-control font-monospace" rows="2" required placeholder='{"meta_key":"is_meta_payment_gateway_st_xxx"}'>{{ old('meta_json', '{"meta_key":""}') }}</textarea>
                     </div>
                 @else
@@ -44,7 +44,7 @@
                     </div>
                 @endif
                 <div class="col-md-4">
-                    <label class="form-label">LibellÃ©</label>
+                    <label class="form-label">Libellé</label>
                     <input type="text" name="label" class="form-control" value="{{ old('label') }}" required>
                 </div>
                 <div class="col-md-2">
@@ -85,7 +85,7 @@
                                         @csrf
                                         @method('PUT')
                                         <div class="col-md-4">
-                                            <label class="form-label small mb-0">LibellÃ©</label>
+                                            <label class="form-label small mb-0">Libellé</label>
                                             <input type="text" name="label" class="form-control form-control-sm" value="{{ $item->label }}">
                                         </div>
                                         <div class="col-md-2">
@@ -125,4 +125,5 @@
         </div>
     </div>
 @endsection
+
 

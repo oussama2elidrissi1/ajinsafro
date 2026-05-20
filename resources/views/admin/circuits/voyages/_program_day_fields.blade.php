@@ -1,4 +1,4 @@
-@php
+﻿@php
     $day = $day ?? null;
 @endphp
 <div class="mb-3">
@@ -6,13 +6,13 @@
     <input type="text" class="form-control" name="title" id="title" value="{{ old('title', $day?->title) }}" required placeholder="Ex : Arrivée à Casablanca">
 </div>
 <div class="mb-3">
-    <label for="city" class="form-label">Ville / Étape</label>
+    <label for="city" class="form-label">Ville / �?tape</label>
     <input type="text" class="form-control" name="city" id="city" value="{{ old('city', $day?->city) }}" placeholder="Ex : Casablanca">
 </div>
 <div class="mb-3">
     <label for="day_label" class="form-label">Badge jour (Inclus / Optionnel / Libre)</label>
     <select class="form-select" name="day_label" id="day_label">
-        <option value="">—</option>
+        <option value="">�?"</option>
         @foreach(\App\Models\TravelProgramDay::DAY_LABELS as $value => $label)
             <option value="{{ $value }}" {{ old('day_label', $day?->day_label) == $value ? 'selected' : '' }}>{{ $label }}</option>
         @endforeach
@@ -61,3 +61,4 @@
         <label class="form-check-label" for="meal_dinner">Dîner</label>
     </div>
 </div>
+

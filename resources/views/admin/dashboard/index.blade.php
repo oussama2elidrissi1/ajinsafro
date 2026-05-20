@@ -31,7 +31,7 @@
                             <i class="bx bx-calendar-check font-size-22"></i>
                         </div>
                         <div>
-                            <p class="text-muted mb-0 small">RÃ©servations</p>
+                            <p class="text-muted mb-0 small">Réservations</p>
                             <h5 class="mb-0">{{ $stats['reservations_total'] }}</h5>
                         </div>
                     </div>
@@ -79,7 +79,7 @@
                             <i class="bx bx-check-circle font-size-22"></i>
                         </div>
                         <div>
-                            <p class="text-muted mb-0 small">ValidÃ©es</p>
+                            <p class="text-muted mb-0 small">Validées</p>
                             <h5 class="mb-0">{{ $stats['reservations_validees'] }}</h5>
                         </div>
                     </div>
@@ -97,7 +97,7 @@
                     <h6 class="mb-0">
                         <i class="bx bx-group me-2 text-primary"></i>Group Deals
                     </h6>
-                    <a href="{{ route('admin.group-deals.index') }}" class="btn btn-outline-primary btn-sm">GÃ©rer</a>
+                    <a href="{{ route('admin.group-deals.index') }}" class="btn btn-outline-primary btn-sm">Gérer</a>
                 </div>
                 <div class="card-body py-3">
                     <div class="row g-3 text-center">
@@ -123,7 +123,7 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <p class="text-muted mb-0">Tableau de bord selon votre rÃ´le et votre agence. Consultez la <a href="{{ route('admin.dashboard.vue-globale') }}">Vue globale</a> pour les statistiques dÃ©taillÃ©es.</p>
+                    <p class="text-muted mb-0">Tableau de bord selon votre rôle et votre agence. Consultez la <a href="{{ route('admin.dashboard.vue-globale') }}">Vue globale</a> pour les statistiques détaillées.</p>
                 </div>
             </div>
         </div>
@@ -132,4 +132,5 @@
 @push('scripts')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
 @endpush
+
 

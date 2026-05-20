@@ -12,7 +12,7 @@
                         <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
                         <li class="breadcrumb-item"><a href="{{ route('admin.customers.index') }}">Clients</a></li>
                         <li class="breadcrumb-item"><a href="{{ route('admin.customers.clients.index') }}">Liste clients</a></li>
-                        <li class="breadcrumb-item active">CrÃ©er</li>
+                        <li class="breadcrumb-item active">Créer</li>
                     </ol>
                 </div>
             </div>
@@ -39,4 +39,5 @@
         </div>
     </form>
 @endsection
+
 

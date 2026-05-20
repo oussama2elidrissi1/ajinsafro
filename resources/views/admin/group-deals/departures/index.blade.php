@@ -1,16 +1,16 @@
 ﻿@extends('layouts.admin-v6')
-@section('title') Group Deals â€” DÃ©parts @endsection
+@section('title') Group Deals �?" Départs @endsection
 
 @section('content')
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-flex align-items-center justify-content-between">
-            <h4 class="page-title mb-0 font-size-18">Group Deals â€” DÃ©parts</h4>
+            <h4 class="page-title mb-0 font-size-18">Group Deals �?" Départs</h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
                     <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('admin.group-deals.trips.index') }}">Group Deals</a></li>
-                    <li class="breadcrumb-item active">DÃ©parts</li>
+                    <li class="breadcrumb-item active">Départs</li>
                 </ol>
             </div>
         </div>
@@ -31,13 +31,13 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <label class="form-label small mb-1">Statut dÃ©part</label>
+                <label class="form-label small mb-1">Statut départ</label>
                 <select name="status" class="form-select form-select-sm">
                     <option value="">Tous</option>
                     <option value="open"    @selected(request('status') === 'open')>Ouvert</option>
-                    <option value="limited" @selected(request('status') === 'limited')>LimitÃ©</option>
+                    <option value="limited" @selected(request('status') === 'limited')>Limité</option>
                     <option value="full"    @selected(request('status') === 'full')>Complet</option>
-                    <option value="closed"  @selected(request('status') === 'closed')>FermÃ©</option>
+                    <option value="closed"  @selected(request('status') === 'closed')>Fermé</option>
                 </select>
             </div>
             <div class="col-md-2">
@@ -50,11 +50,11 @@
             </div>
             <div class="col-auto">
                 <button type="submit" class="btn btn-primary btn-sm">Filtrer</button>
-                <a href="{{ route('admin.group-deals.departures.index') }}" class="btn btn-outline-secondary btn-sm ms-1">RÃ©initialiser</a>
+                <a href="{{ route('admin.group-deals.departures.index') }}" class="btn btn-outline-secondary btn-sm ms-1">Réinitialiser</a>
             </div>
         </form>
 
-        <h5 class="mb-3">{{ $departures->total() }} dÃ©part(s)</h5>
+        <h5 class="mb-3">{{ $departures->total() }} départ(s)</h5>
 
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -75,15 +75,15 @@
                     <tr>
                         <td>
                             <a href="{{ route('admin.group-deals.trips.show', $dep->voyage) }}"
-                               class="text-body fw-semibold">{{ $dep->voyage?->name ?? 'â€”' }}</a>
+                               class="text-body fw-semibold">{{ $dep->voyage?->name ?? '�?"' }}</a>
                             @if($dep->voyage?->destination)
                                 <br><small class="text-muted">{{ $dep->voyage->destination }}</small>
                             @endif
                         </td>
                         <td class="small">
-                            {{ $dep->start_date?->format('d/m/Y') ?? 'â€”' }}
+                            {{ $dep->start_date?->format('d/m/Y') ?? '�?"' }}
                             @if($dep->end_date)
-                                <br><span class="text-muted">â†’ {{ $dep->end_date->format('d/m/Y') }}</span>
+                                <br><span class="text-muted">�?' {{ $dep->end_date->format('d/m/Y') }}</span>
                             @endif
                         </td>
                         <td class="text-center">
@@ -97,11 +97,11 @@
                         <td class="text-center text-muted small">{{ $dep->guaranteed_threshold }}</td>
                         <td>
                             @if($dep->active_tier_price)
-                                <span class="text-success fw-semibold">{{ number_format($dep->active_tier_price, 0, ',', ' ') }} â‚¬</span>
+                                <span class="text-success fw-semibold">{{ number_format($dep->active_tier_price, 0, ',', ' ') }} �,�</span>
                             @elseif($dep->sale_price)
-                                {{ number_format($dep->sale_price, 0, ',', ' ') }} â‚¬
+                                {{ number_format($dep->sale_price, 0, ',', ' ') }} �,�
                             @else
-                                â€”
+                                �?"
                             @endif
                         </td>
                         <td>
@@ -125,13 +125,13 @@
                         </td>
                         <td>
                             <a href="{{ route('admin.group-deals.departures.show', $dep) }}"
-                               class="btn btn-sm btn-outline-primary">DÃ©tail</a>
+                               class="btn btn-sm btn-outline-primary">Détail</a>
                         </td>
                     </tr>
                 @empty
                     <tr>
                         <td colspan="8" class="text-center text-muted py-4">
-                            Aucun dÃ©part Group Deal trouvÃ©.
+                            Aucun départ Group Deal trouvé.
                         </td>
                     </tr>
                 @endforelse
@@ -149,4 +149,5 @@
 @push('scripts')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
 @endpush
+
 

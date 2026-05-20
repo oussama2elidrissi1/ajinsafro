@@ -1,4 +1,4 @@
-<div
+﻿<div
     id="day-builder-flights-manager"
     data-total-days="{{ $lastDayNumber ?? (($programDays && $programDays->isNotEmpty()) ? $programDays->count() : 1) }}"
 >

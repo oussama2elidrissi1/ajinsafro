@@ -1,8 +1,8 @@
-<section class="reservation-create__panel" data-create-step="6" data-reservation-step="6" hidden>
+﻿<section class="reservation-create__panel" data-create-step="6" data-reservation-step="6" hidden>
     <div class="reservation-create__card">
         <div class="reservation-create__section-head">
             <div>
-                <p class="reservation-create__eyebrow">Étape 6</p>
+                <p class="reservation-create__eyebrow">�?tape 6</p>
                 <h3 class="reservation-create__section-title">Dossier de réservation</h3>
                 <p class="reservation-create__section-subtitle">Relisez le dossier, chargez les documents utiles et confirmez l'ouverture du dossier commercial.</p>
             </div>
@@ -26,7 +26,7 @@
                 </div>
                 <div class="reservation-create__final-line">
                     <span>Départ</span>
-                    <strong id="create-final-departure">—</strong>
+                    <strong id="create-final-departure">�?"</strong>
                 </div>
                 <div class="reservation-create__final-line">
                     <span>Voyageurs</span>
@@ -67,7 +67,7 @@
                             <div class="reservation-create__field">
                                 <label class="reservation-create__label" for="visa_status">Statut visa</label>
                                 <select name="visa_status" id="visa_status" class="reservation-create__input">
-                                    <option value="">—</option>
+                                    <option value="">�?"</option>
                                     <option value="not_required" {{ old('visa_status') === 'not_required' ? 'selected' : '' }}>Non requis</option>
                                     <option value="pending" {{ old('visa_status') === 'pending' ? 'selected' : '' }}>En attente</option>
                                     <option value="approved" {{ old('visa_status') === 'approved' ? 'selected' : '' }}>Approuvé</option>
@@ -80,7 +80,7 @@
                             </div>
                             <div class="reservation-create__field reservation-create__field--full">
                                 <label class="reservation-create__label" for="visa_notes">Notes visa</label>
-                                <textarea name="visa_notes" id="visa_notes" class="reservation-create__input reservation-create__input--textarea" rows="4" placeholder="Suivi visa, pièces manquantes, remarques internes…">{{ old('visa_notes') }}</textarea>
+                                <textarea name="visa_notes" id="visa_notes" class="reservation-create__input reservation-create__input--textarea" rows="4" placeholder="Suivi visa, pièces manquantes, remarques internes�?�">{{ old('visa_notes') }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -102,3 +102,4 @@
         </div>
     </div>
 </section>
+

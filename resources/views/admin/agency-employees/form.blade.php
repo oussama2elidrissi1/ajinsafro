@@ -9,7 +9,7 @@
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
             ['label' => 'Employes des points de vente', 'url' => route('admin.agency-employees.index')],
-            ['label' => $isEdit ? 'Modifier' : 'CrÃ©er'],
+            ['label' => $isEdit ? 'Modifier' : 'Créer'],
         ]"
     />
 
@@ -25,7 +25,7 @@
 
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <label class="form-label">PrÃ©nom</label>
+                        <label class="form-label">Prénom</label>
                         <input type="text" name="first_name" class="form-control" value="{{ old('first_name', $employee->first_name) }}" required>
                     </div>
                     <div class="col-md-4">
@@ -35,7 +35,7 @@
                     <div class="col-md-4">
                         <label class="form-label">Point de vente</label>
                         <select name="branch_id" class="form-select" required>
-                            <option value="">SÃ©lectionner</option>
+                            <option value="">Sélectionner</option>
                             @foreach($branches as $branch)
                                 <option value="{{ $branch->id }}" @selected((int) old('branch_id', $employee->branch_id) === (int) $branch->id)>{{ $branch->name }}</option>
                             @endforeach
@@ -46,7 +46,7 @@
                         <input type="email" name="email" class="form-control" value="{{ old('email', $employee->email) }}">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">TÃ©lÃ©phone</label>
+                        <label class="form-label">Téléphone</label>
                         <input type="text" name="phone" class="form-control" value="{{ old('phone', $employee->phone) }}">
                     </div>
                     <div class="col-md-4">
@@ -56,7 +56,7 @@
                     <div class="col-md-4">
                         <label class="form-label">Poste</label>
                         <select name="position" class="form-select">
-                            <option value="">SÃ©lectionner</option>
+                            <option value="">Sélectionner</option>
                             @foreach($positionOptions as $option)
                                 <option value="{{ $option }}" @selected(old('position', $employee->position) === $option)>{{ $option }}</option>
                             @endforeach
@@ -148,11 +148,12 @@
                 </div>
 
                 <div class="d-flex flex-wrap gap-2 mt-4">
-                    <button type="submit" class="aj-btn aj-btn-primary">{{ $isEdit ? 'Mettre Ã  jour' : 'CrÃ©er' }}</button>
+                    <button type="submit" class="aj-btn aj-btn-primary">{{ $isEdit ? 'Mettre à jour' : 'Créer' }}</button>
                     <a href="{{ route('admin.agency-employees.index') }}" class="aj-btn aj-btn-soft">Annuler</a>
                 </div>
             </form>
         </div>
     </div>
 @endsection
+
 

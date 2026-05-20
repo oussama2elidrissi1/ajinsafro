@@ -1,4 +1,4 @@
-{{-- Multi-flight options: Vols Aller / Vols Retour / Vols pendant le circuit --}}
+﻿{{-- Multi-flight options: Vols Aller / Vols Retour / Vols pendant le circuit --}}
 @php
     $flightOptionsWithIndex = $flightOptionsWithIndex ?? [];
     $nextFlightOptionIndex = $nextFlightOptionIndex ?? 0;
@@ -9,7 +9,7 @@
         if (!$d) return null;
         return $d instanceof \Carbon\Carbon ? $d->format('D, d M') : \Carbon\Carbon::parse($d)->format('D, d M');
     };
-    $dash = '—';
+    $dash = '�?"';
 @endphp
 <style>
 .flight-opt-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); border: 1px solid #e9ecef; overflow: hidden; margin-bottom: 12px; }
@@ -24,7 +24,7 @@
 </style>
 
 <div class="flight-opt-section" data-flight-section="outbound">
-    <h6><i class="bx bx-trip"></i> Vols Aller (options) — Jour 1</h6>
+    <h6><i class="bx bx-trip"></i> Vols Aller (options) �?" Jour 1</h6>
     <div class="flight-opt-cards-outbound">
         @foreach($flightOptionsWithIndex as $entry)
             @if($entry['type'] === 'outbound')
@@ -36,7 +36,7 @@
 </div>
 
 <div class="flight-opt-section" data-flight-section="return">
-    <h6><i class="bx bx-trip"></i> Vols Retour (options) — Jour {{ $lastDayNumber }}</h6>
+    <h6><i class="bx bx-trip"></i> Vols Retour (options) �?" Jour {{ $lastDayNumber }}</h6>
     <div class="flight-opt-cards-return">
         @foreach($flightOptionsWithIndex as $entry)
             @if($entry['type'] === 'return')
@@ -73,3 +73,4 @@
         @include('admin.circuits.voyages.partials._flight_option_card', ['index' => -1, 'option' => null, 'type' => 'segment', 'dayLabel' => '', 'airlines' => $airlines, 'fmtDate' => $fmtDate, 'dash' => $dash, 'lastDayNumber' => $lastDayNumber])
     </div>
 </div>
+

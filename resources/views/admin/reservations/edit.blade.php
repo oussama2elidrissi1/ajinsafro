@@ -1,4 +1,4 @@
-@extends(!empty($reservationEmbed) ? 'layouts.reservation-embed' : 'layouts.master-ajinsafro')
+﻿@extends(!empty($reservationEmbed) ? 'layouts.reservation-embed' : 'layouts.master-ajinsafro')
 
 @section('title', 'Dossier de réservation')
 
@@ -69,9 +69,9 @@
                         <span class="badge bg-light text-dark">{{ $reservation->status_label ?? $reservation->status }}</span>
                     </div>
                     <div class="small text-muted">
-                        Client principal : <strong>{{ $clientLabel ?: '—' }}</strong>
-                        · Voyage : <strong>{{ $reservation->offer?->name ?? '—' }}</strong>
-                        · Départ : <strong>{{ $reservation->departure?->start_date?->format('d/m/Y') ?? '—' }}</strong>
+                        Client principal : <strong>{{ $clientLabel ?: '�?"' }}</strong>
+                        · Voyage : <strong>{{ $reservation->offer?->name ?? '�?"' }}</strong>
+                        · Départ : <strong>{{ $reservation->departure?->start_date?->format('d/m/Y') ?? '�?"' }}</strong>
                     </div>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
@@ -184,9 +184,9 @@
                             <tbody>
                                 @forelse($reservation->payments as $payment)
                                     <tr>
-                                        <td>{{ $payment->payment_date?->format('d/m/Y') ?? '—' }}</td>
-                                        <td>{{ $payment->payment_method ?: '—' }}</td>
-                                        <td>{{ $payment->reference ?: '—' }}</td>
+                                        <td>{{ $payment->payment_date?->format('d/m/Y') ?? '�?"' }}</td>
+                                        <td>{{ $payment->payment_method ?: '�?"' }}</td>
+                                        <td>{{ $payment->reference ?: '�?"' }}</td>
                                         <td class="text-end fw-semibold">{{ number_format((float) $payment->amount, 2, ',', ' ') }} DH</td>
                                         <td>
                                             <div class="d-flex flex-wrap gap-2">
@@ -217,7 +217,7 @@
                         <div class="col-md-4">
                             <label class="form-label">Mode de paiement</label>
                             <select name="payment_method" class="form-select" required>
-                                <option value="">Sélectionner…</option>
+                                <option value="">Sélectionner�?�</option>
                                 <option value="Espèces">Espèces</option>
                                 <option value="Virement bancaire">Virement bancaire</option>
                                 <option value="Carte bancaire">Carte bancaire</option>
@@ -364,14 +364,14 @@
                                     <tr>
                                         <td>{{ $clientLabel ?: 'Client principal' }}</td>
                                         <td>Principal</td>
-                                        <td>{{ $reservation->client_document_type ?: '—' }} {{ $reservation->client_document_number ?: '' }}</td>
+                                        <td>{{ $reservation->client_document_type ?: '�?"' }} {{ $reservation->client_document_number ?: '' }}</td>
                                     </tr>
                                 @endif
                                 @foreach($reservation->passengers as $passenger)
                                     <tr>
-                                        <td>{{ trim(($passenger->first_name ?? '').' '.($passenger->last_name ?? '')) ?: '—' }}</td>
-                                        <td>{{ $passenger->type ?: '—' }}</td>
-                                        <td>{{ $passenger->document_type ?: '—' }} {{ $passenger->document_number ?: '' }}</td>
+                                        <td>{{ trim(($passenger->first_name ?? '').' '.($passenger->last_name ?? '')) ?: '�?"' }}</td>
+                                        <td>{{ $passenger->type ?: '�?"' }}</td>
+                                        <td>{{ $passenger->document_type ?: '�?"' }} {{ $passenger->document_number ?: '' }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -398,7 +398,7 @@
                     <tbody>
                         @forelse($reservation->histories->sortByDesc('created_at') as $history)
                             <tr>
-                                <td>{{ $history->created_at?->format('d/m/Y H:i') ?? '—' }}</td>
+                                <td>{{ $history->created_at?->format('d/m/Y H:i') ?? '�?"' }}</td>
                                 <td>{{ $history->action }}</td>
                                 <td>{{ $history->user?->name ?? 'Système' }}</td>
                                 <td class="small text-muted">
@@ -407,7 +407,7 @@
                                     @elseif($history->new_value)
                                         {{ \Illuminate\Support\Str::limit($history->new_value, 160) }}
                                     @else
-                                        —
+                                        �?"
                                     @endif
                                 </td>
                             </tr>
@@ -440,7 +440,7 @@
                     <div class="col-md-6">
                         <label class="form-label">Offre / voyage <span class="text-danger">*</span></label>
                         <select name="tour_id" id="select-tour-id" class="form-select" required>
-                            <option value="">Sélectionner un voyage…</option>
+                            <option value="">Sélectionner un voyage�?�</option>
                             @foreach($voyages as $voyage)
                                 <option value="{{ $voyage->id }}" {{ old('tour_id', $reservation->tour_id) == $voyage->id ? 'selected' : '' }}>
                                     {{ $voyage->name ?? $voyage->slug }}
@@ -455,7 +455,7 @@
                     <div class="col-md-3">
                         <label class="form-label">Mode de paiement</label>
                         <select name="payment_type" class="form-select">
-                            <option value="">Sélectionner…</option>
+                            <option value="">Sélectionner�?�</option>
                             @foreach(['Espèces', 'Virement bancaire', 'Carte bancaire', 'Chèque', 'TPE', 'Autre'] as $paymentType)
                                 <option value="{{ $paymentType }}" {{ old('payment_type', $reservation->payment_type) === $paymentType ? 'selected' : '' }}>{{ $paymentType }}</option>
                             @endforeach
@@ -483,11 +483,11 @@
                 <div id="existing-client-block" style="{{ $clientMode === 'existing' ? '' : 'display:none;' }}">
                     <label class="form-label">Sélectionner un client <span class="text-danger">*</span></label>
                     <select name="client_external_id" id="client_external_id" class="form-select">
-                        <option value="">— Choisir un client —</option>
+                        <option value="">�?" Choisir un client �?"</option>
                         @foreach($clients as $client)
                             <option value="{{ $client->id }}" {{ old('client_external_id', $reservation->client_external_id) == $client->id ? 'selected' : '' }}>
                                 [{{ $client->client_code }}] {{ $client->full_name }}
-                                @if($client->phone) — {{ $client->phone }} @endif
+                                @if($client->phone) �?" {{ $client->phone }} @endif
                             </option>
                         @endforeach
                     </select>
@@ -514,7 +514,7 @@
                         <div class="col-md-4">
                             <label class="form-label">Type document</label>
                             <select name="client_document_type" class="form-select">
-                                <option value="">Sélectionner…</option>
+                                <option value="">Sélectionner�?�</option>
                                 <option value="cin" {{ old('client_document_type', $reservation->client_document_type) === 'cin' ? 'selected' : '' }}>CIN</option>
                                 <option value="passport" {{ old('client_document_type', $reservation->client_document_type) === 'passport' ? 'selected' : '' }}>Passeport</option>
                             </select>
@@ -605,7 +605,7 @@
                     <div class="col-md-4" id="assistant-visa-block" style="{{ old('visa_ok', $reservation->visa_ok ?? true) ? 'display:none;' : '' }}">
                         <label class="form-label">Statut visa</label>
                         <select name="visa_status" class="form-select">
-                            <option value="">—</option>
+                            <option value="">�?"</option>
                             <option value="not_required" {{ old('visa_status', $reservation->visa_status) === 'not_required' ? 'selected' : '' }}>Non requis</option>
                             <option value="pending" {{ old('visa_status', $reservation->visa_status) === 'pending' ? 'selected' : '' }}>En attente</option>
                             <option value="approved" {{ old('visa_status', $reservation->visa_status) === 'approved' ? 'selected' : '' }}>Approuvé</option>
@@ -682,3 +682,4 @@
         </script>
     @endpush
 @endsection
+

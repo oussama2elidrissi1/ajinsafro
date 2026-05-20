@@ -1,4 +1,4 @@
-@extends('layouts.admin-v6')
+﻿@extends('layouts.admin-v6')
 
 @section('title', 'Commissions')
 
@@ -130,7 +130,7 @@
                     </thead>
                     <tbody>
                         @forelse($entries as $entry)
-                            @php $departureDate = $entry->reservation?->departure?->start_date?->format('d/m/Y') ?? $entry->travelDate?->date?->format('d/m/Y') ?? '—'; @endphp
+                            @php $departureDate = $entry->reservation?->departure?->start_date?->format('d/m/Y') ?? $entry->travelDate?->date?->format('d/m/Y') ?? '�?"'; @endphp
                             <tr>
                                 <td class="px-3">{{ optional($entry->calculated_at)->format('d/m/Y') }}</td>
                                 <td>{{ $entry->agent?->name ?: 'Agent non renseigne' }}</td>
@@ -172,3 +172,4 @@
         </div>
     </div>
 @endsection
+

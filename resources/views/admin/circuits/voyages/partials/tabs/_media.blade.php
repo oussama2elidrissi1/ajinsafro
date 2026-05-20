@@ -1,8 +1,8 @@
-﻿<div class="tab-pane" id="media" role="tabpanel" data-ve-pane-title="Médias">
+﻿<div class="tab-pane" id="media" role="tabpanel" data-ve-pane-title="M�dias">
                 <div class="card ve-pane-card">
                     <div class="card-body">
-                        <h4 class="card-title mb-2">Images & VidÃ©os</h4>
-                        <p class="text-muted small mb-4">Hero, Ã  la une WordPress et galerie.</p>
+                        <h4 class="card-title mb-2">Images & Vidéos</h4>
+                        <p class="text-muted small mb-4">Hero, à la une WordPress et galerie.</p>
 
                         {{-- Section 1 : Image principale (Hero / Cover) --}}
                         <div class="mb-4 p-3 p-md-4 border rounded-3 bg-light ve-media-section">
@@ -21,34 +21,34 @@
                                         </button>
                                         <input type="file" id="hero_image_file" accept="image/jpeg,image/png,image/webp" class="d-none">
                                         <button type="button" class="btn btn-outline-secondary btn-sm me-2" id="hero-choose-media-btn">
-                                            <i class="bx bx-images"></i> Choisir depuis la mÃ©diathÃ¨que
+                                            <i class="bx bx-images"></i> Choisir depuis la médiathèque
                                         </button>
                                         <button type="button" class="btn btn-outline-danger btn-sm" id="hero-remove-btn">
                                             <i class="bx bx-trash"></i> Supprimer
                                         </button>
                                     </div>
-                                    <small class="text-muted d-block">JPG, PNG ou WebP "â€ max 5 Mo.</small>
+                                    <small class="text-muted d-block">JPG, PNG ou WebP "�?� max 5 Mo.</small>
                                     <div id="hero-upload-error" class="alert alert-danger mt-2 mb-0 d-none" role="alert"></div>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Option : utiliser l'image principale comme image ÃƒÂ  la une WP --}}
+                        {{-- Option : utiliser l'image principale comme image �f  la une WP --}}
                         <div class="mb-3">
                             <div class="form-check">
                                 @php $useHeroAsThumb = old('hero_use_as_thumbnail') !== null ? (bool) old('hero_use_as_thumbnail') : (isset($meta['hero_image_id']) && isset($meta['thumbnail_id']) && (string)$meta['hero_image_id'] === (string)$meta['thumbnail_id']); @endphp
                                 <input class="form-check-input" type="checkbox" name="hero_use_as_thumbnail" value="1" id="hero_use_as_thumbnail" {{ $useHeroAsThumb ? 'checked' : '' }}>
-                                <label class="form-check-label" for="hero_use_as_thumbnail">Utiliser l'image principale comme image ÃƒÂ  la une WordPress</label>
+                                <label class="form-check-label" for="hero_use_as_thumbnail">Utiliser l'image principale comme image �f  la une WordPress</label>
                             </div>
                         </div>
 
-                        {{-- Section 2 : Image Ã  la une WordPress (Featured Image) --}}
+                        {{-- Section 2 : Image à la une WordPress (Featured Image) --}}
                         @php
                             $wpFeaturedImageId = old('thumbnail_id', $meta['thumbnail_id'] ?? '');
                             $wpFeaturedImageUrl = $wpFeaturedImageId ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int) $wpFeaturedImageId) : '';
                         @endphp
                         <div class="mb-4 p-3 border rounded bg-light">
-                            <h5 class="mb-2">Image Ã  la une WordPress (Featured Image)</h5>
+                            <h5 class="mb-2">Image à la une WordPress (Featured Image)</h5>
                             <input type="hidden" id="thumbnail_id" name="thumbnail_id" value="{{ $wpFeaturedImageId }}">
                             <div class="d-flex flex-wrap align-items-start gap-3">
                                 <div id="wp-featured-preview-wrap" class="border rounded overflow-hidden bg-white" style="width: 180px; height: 120px; display: {{ $wpFeaturedImageUrl ? 'block' : 'none' }};">
@@ -57,7 +57,7 @@
                                 <div class="flex-grow-1">
                                     <div class="mb-2 d-flex flex-wrap gap-2">
                                         <button type="button" class="btn btn-outline-secondary btn-sm" id="wp-featured-choose-btn">
-                                            <i class="bx bx-images"></i> Choisir depuis la mÃ©diathÃ¨que WP
+                                            <i class="bx bx-images"></i> Choisir depuis la médiathèque WP
                                         </button>
                                         <button type="button" class="btn btn-outline-primary btn-sm" id="wp-featured-upload-btn">
                                             <i class="bx bx-upload"></i> Uploader vers WP
@@ -128,24 +128,24 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="gallery_ids" class="form-label">Galerie gÃ©nÃ©rale (images supplÃ©mentaires)</label>
+                            <label for="gallery_ids" class="form-label">Galerie générale (images supplémentaires)</label>
                             <input type="text" class="form-control" id="gallery_ids" name="gallery_ids" value="{{ old('gallery_ids', $gallery_csv ?? '') }}" placeholder="14435,14436,14437">
                         </div>
                         
                         <div class="mb-3">
-                            <label for="video" class="form-label">URL VidÃ©o</label>
+                            <label for="video" class="form-label">URL Vidéo</label>
                             <input type="text" class="form-control" id="video" name="video" value="{{ old('video', $meta['video'] ?? '') }}" placeholder="https://www.youtube.com/watch?v=...">
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- Modal MÃ©diathÃ¨que WP (choix image hero) --}}
+            {{-- Modal Médiathèque WP (choix image hero) --}}
             <div class="modal fade" id="hero-media-modal" tabindex="-1" aria-labelledby="hero-media-modal-label" aria-hidden="true">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="hero-media-modal-label">Choisir une image depuis la mÃ©diathÃ¨que</h5>
+                            <h5 class="modal-title" id="hero-media-modal-label">Choisir une image depuis la médiathèque</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
                         </div>
                         <div class="modal-body">
@@ -164,12 +164,12 @@
                 <div class="modal-dialog modal-xl">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="wp-featured-media-modal-label">MÃ©diathÃ¨que WordPress - Image Ã  la une</h5>
+                            <h5 class="modal-title" id="wp-featured-media-modal-label">Médiathèque WordPress - Image à la une</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
                         </div>
                         <div class="modal-body">
                             <div class="mb-3">
-                                <input type="search" class="form-control" id="wp-featured-media-search" placeholder="Rechercher un mÃ©dia...">
+                                <input type="search" class="form-control" id="wp-featured-media-search" placeholder="Rechercher un média...">
                             </div>
                             <div id="wp-featured-media-results" class="row g-3" style="min-height: 220px;"></div>
                             <div id="wp-featured-media-loading" class="text-center py-4 text-muted d-none">Chargement...</div>
@@ -178,5 +178,6 @@
                     </div>
                 </div>
             </div>
+
 
 

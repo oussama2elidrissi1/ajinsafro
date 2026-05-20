@@ -1,17 +1,17 @@
 ﻿@extends('layouts.admin-v6')
 @section('title')
-    Modifier pack hÃ©bergement
+    Modifier pack hébergement
 @endsection
 
 @section('content')
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">Modifier pack hÃ©bergement</h4>
+                <h4 class="page-title mb-0 font-size-18">Modifier pack hébergement</h4>
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.accommodation-packages.index') }}">Packs hÃ©bergement</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('admin.accommodation-packages.index') }}">Packs hébergement</a></li>
                         <li class="breadcrumb-item active">Modifier</li>
                     </ol>
                 </div>
@@ -37,4 +37,5 @@
         </div>
     </div>
 @endsection
+
 

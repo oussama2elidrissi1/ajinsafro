@@ -487,7 +487,7 @@
                                     <tr>
                                         <td>
                                             <strong>{{ $row['name'] }}</strong><br>
-                                            <small class="text-muted">{{ $row['city'] }} â€¢ {{ $row['price'] }}</small>
+                                            <small class="text-muted">{{ $row['city'] }} �?� {{ $row['price'] }}</small>
                                         </td>
                                         <td>{{ $row['date'] }}</td>
                                         <td><span class="dashboard-v3-status {{ $statusClass }}">{{ $row['status'] }}</span></td>
@@ -558,7 +558,7 @@
                                 <div class="d-flex justify-content-between gap-2 align-items-center flex-wrap">
                                     <div>
                                         <strong>{{ $row['client'] }}</strong>
-                                        <div class="small text-muted">{{ $row['trip'] }} â€¢ {{ $row['agent'] }}</div>
+                                        <div class="small text-muted">{{ $row['trip'] }} �?� {{ $row['agent'] }}</div>
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
                                         <span class="dashboard-v3-status {{ $statusClass }}">{{ $row['status'] }}</span>
@@ -595,3 +595,4 @@
         </section>
     </div>
 @endsection
+

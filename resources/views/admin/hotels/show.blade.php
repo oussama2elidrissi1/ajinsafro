@@ -1,5 +1,5 @@
 ﻿@extends('layouts.admin-v6')
-@section('title', 'DÃ©tail hÃ´tel')
+@section('title', 'Détail hôtel')
 
 @section('content')
     <div class="row mb-3">
@@ -16,10 +16,10 @@
 
     <div class="row">
         <div class="col-lg-8">
-            {{-- Fiche hÃ´tel : infos complÃ¨tes --}}
+            {{-- Fiche hôtel : infos complètes --}}
             <div class="card shadow-sm mb-3">
                 <div class="card-header bg-light d-flex align-items-center">
-                    <h5 class="mb-0">Informations gÃ©nÃ©rales</h5>
+                    <h5 class="mb-0">Informations générales</h5>
                     <span class="badge bg-{{ $hotel->is_active ? 'success' : 'secondary' }} ms-auto">
                         {{ $hotel->is_active ? 'Actif' : 'Inactif' }}
                     </span>
@@ -37,10 +37,10 @@
                                     @if($hotel->address)
                                         <tr><td class="text-nowrap pe-2 fw-medium text-dark">Adresse</td><td>{{ $hotel->address }}</td></tr>
                                     @endif
-                                    <tr><td class="text-nowrap pe-2 fw-medium text-dark">Ville</td><td>{{ $hotel->city ?? 'â€”' }}</td></tr>
-                                    <tr><td class="text-nowrap pe-2 fw-medium text-dark">Pays</td><td>{{ $hotel->country ?? 'â€”' }}</td></tr>
+                                    <tr><td class="text-nowrap pe-2 fw-medium text-dark">Ville</td><td>{{ $hotel->city ?? '�?"' }}</td></tr>
+                                    <tr><td class="text-nowrap pe-2 fw-medium text-dark">Pays</td><td>{{ $hotel->country ?? '�?"' }}</td></tr>
                                     @if($hotel->latitude && $hotel->longitude)
-                                        <tr><td class="text-nowrap pe-2 fw-medium text-dark">CoordonnÃ©es</td><td>{{ $hotel->latitude }}, {{ $hotel->longitude }}</td></tr>
+                                        <tr><td class="text-nowrap pe-2 fw-medium text-dark">Coordonnées</td><td>{{ $hotel->latitude }}, {{ $hotel->longitude }}</td></tr>
                                     @endif
                                     <tr><td class="text-nowrap pe-2 fw-medium text-dark">Note</td><td>
                                         @if($hotel->rating_average > 0)
@@ -84,7 +84,7 @@
             @if($hotel->amenities->isNotEmpty())
                 <div class="card shadow-sm mb-3">
                     <div class="card-header bg-light">
-                        <h5 class="mb-0">Ã‰quipements</h5>
+                        <h5 class="mb-0">�?quipements</h5>
                     </div>
                     <div class="card-body">
                         @foreach($hotel->amenities as $amenity)
@@ -120,13 +120,13 @@
         </div>
     </div>
 
-    {{-- Tableau dÃ©taillÃ© des types de chambres --}}
+    {{-- Tableau détaillé des types de chambres --}}
     @if($hotel->roomTypes->isNotEmpty())
         <div class="row mt-2">
             <div class="col-12">
                 <div class="card shadow-sm">
                     <div class="card-header bg-light">
-                        <h5 class="mb-0">Types de chambres â€“ dÃ©tail</h5>
+                        <h5 class="mb-0">Types de chambres �?" détail</h5>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -135,8 +135,8 @@
                                     <tr>
                                         <th>Type</th>
                                         <th>Code</th>
-                                        <th>CapacitÃ©</th>
-                                        <th>QuantitÃ©</th>
+                                        <th>Capacité</th>
+                                        <th>Quantité</th>
                                         <th>Prix</th>
                                         <th>Description</th>
                                         <th>Options chambre</th>
@@ -146,18 +146,18 @@
                                     @foreach($hotel->roomTypes as $rt)
                                         <tr>
                                             <td><strong>{{ $rt->name }}</strong></td>
-                                            <td><code class="small">{{ $rt->code ?? 'â€”' }}</code></td>
+                                            <td><code class="small">{{ $rt->code ?? '�?"' }}</code></td>
                                             <td>{{ $rt->capacity_adults }} adulte(s) / {{ $rt->capacity_children }} enfant(s)</td>
                                             <td>{{ $rt->quantity }}</td>
                                             <td>
                                                 @if($rt->base_price !== null)
                                                     {{ number_format((float) $rt->base_price, 0, ',', ' ') }} {{ $rt->currency ?? 'MAD' }}
                                                 @else
-                                                    <span class="text-muted">â€”</span>
+                                                    <span class="text-muted">�?"</span>
                                                 @endif
                                             </td>
                                             <td class="small text-muted" style="max-width:200px;">
-                                                {{ $rt->description ? \Str::limit($rt->description, 60) : 'â€”' }}
+                                                {{ $rt->description ? \Str::limit($rt->description, 60) : '�?"' }}
                                             </td>
                                             <td class="small">
                                                 @if(is_array($rt->amenities) && count($rt->amenities) > 0)
@@ -165,7 +165,7 @@
                                                         <span class="badge bg-light text-dark border me-1">{{ is_array($opt) ? ($opt['label'] ?? $opt['name'] ?? json_encode($opt)) : $opt }}</span>
                                                     @endforeach
                                                 @else
-                                                    <span class="text-muted">â€”</span>
+                                                    <span class="text-muted">�?"</span>
                                                 @endif
                                             </td>
                                         </tr>
@@ -179,4 +179,5 @@
         </div>
     @endif
 @endsection
+
 

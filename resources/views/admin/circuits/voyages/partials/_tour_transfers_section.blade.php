@@ -1,4 +1,4 @@
-@php
+﻿@php
     $lastDayNumber = isset($lastDayNumber) ? $lastDayNumber : (($programDays && $programDays->isNotEmpty()) ? $programDays->count() : max(1, (int)($meta['duration_day'] ?? 1)));
     // Fusionner arrivals et departures en une seule liste unifiée
     $allTransfers = collect();
@@ -26,7 +26,7 @@
             <div class="card mb-2 tour-transfer-row" data-index="{{ $ti }}" data-transfer-id="{{ $transferId ?? '' }}">
                 <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
                     <strong>Transfert {{ $ti + 1 }}</strong>
-                    @if($ti > 0)<button type="button" class="btn btn-sm btn-outline-danger tour-remove-transfer" aria-label="Supprimer">×</button>@endif
+                    @if($ti > 0)<button type="button" class="btn btn-sm btn-outline-danger tour-remove-transfer" aria-label="Supprimer">�-</button>@endif
                 </div>
                 <div class="card-body">
                     <div class="row g-2">
@@ -49,7 +49,7 @@
                             <input type="text" class="form-control form-control-sm" name="tour_transfers[{{ $ti }}][from_label]" value="{{ old("tour_transfers.{$ti}.from_label", optional($transfer)->from_label ?? '') }}" placeholder="Ex. Aéroport, Hôtel">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label small">À (ex. hôtel, aéroport)</label>
+                            <label class="form-label small">�? (ex. hôtel, aéroport)</label>
                             <input type="text" class="form-control form-control-sm" name="tour_transfers[{{ $ti }}][to_label]" value="{{ old("tour_transfers.{$ti}.to_label", optional($transfer)->to_label ?? '') }}" placeholder="Ex. Hôtel, Aéroport">
                         </div>
                         <div class="col-6 col-md-2">
@@ -76,7 +76,7 @@
                                     <img id="{{ $transferImgId }}_preview" src="{{ $transferImgUrl }}" alt="" style="max-width:100%; max-height:100%; object-fit: cover;">
                                 </div>
                                 <button type="button" class="btn btn-sm btn-outline-primary ajtb-logistique-media-btn" data-target="transfer" data-input="{{ $transferImgId }}" data-preview="{{ $transferImgId }}_preview" data-preview-wrap="{{ $transferImgId }}_preview_wrap"><i class="bx bx-image"></i> Choisir</button>
-                                <button type="button" class="btn btn-sm btn-outline-danger ajtb-logistique-media-remove" data-input="{{ $transferImgId }}" data-preview="{{ $transferImgId }}_preview" data-preview-wrap="{{ $transferImgId }}_preview_wrap">×</button>
+                                <button type="button" class="btn btn-sm btn-outline-danger ajtb-logistique-media-remove" data-input="{{ $transferImgId }}" data-preview="{{ $transferImgId }}_preview" data-preview-wrap="{{ $transferImgId }}_preview_wrap">�-</button>
                             </div>
                         </div>
                     </div>
@@ -111,7 +111,7 @@
             btn.type = 'button';
             btn.className = 'btn btn-sm btn-outline-danger tour-remove-transfer';
             btn.setAttribute('aria-label', 'Supprimer');
-            btn.textContent = '×';
+            btn.textContent = '�-';
             clone.querySelector('.card-header').appendChild(btn);
         }
         clone.querySelectorAll('[name^="tour_transfers["]').forEach(function(inp){
@@ -165,3 +165,4 @@
     });
 })();
 </script>
+

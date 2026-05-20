@@ -36,7 +36,7 @@
                             <input type="email" name="email" class="aj-form-control" value="{{ old('email', $account->email) }}" placeholder="email@domaine.com">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">TÃ©lÃ©phone</label>
+                            <label class="form-label fw-bold">Téléphone</label>
                             <input type="text" name="phone" class="aj-form-control" value="{{ old('phone', $account->phone) }}" placeholder="0600000000">
                         </div>
                         <div class="col-md-6">
@@ -53,23 +53,23 @@
                             <select name="employee_id" class="aj-select">
                                 <option value="">Aucun employe</option>
                                 @foreach($employees as $employeeOption)
-                                    <option value="{{ $employeeOption->id }}" @selected((int) old('employee_id', $employee?->id) === $employeeOption->id)>{{ $employeeOption->full_name }} @if($employeeOption->branch) â€” {{ $employeeOption->branch->display_name }} @endif</option>
+                                    <option value="{{ $employeeOption->id }}" @selected((int) old('employee_id', $employee?->id) === $employeeOption->id)>{{ $employeeOption->full_name }} @if($employeeOption->branch) �?" {{ $employeeOption->branch->display_name }} @endif</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Compte existant</label>
                             <select name="existing_user_id" class="aj-select">
-                                <option value="">CrÃ©er un nouveau compte</option>
+                                <option value="">Créer un nouveau compte</option>
                                 @foreach($users as $user)
-                                    <option value="{{ $user->id }}" @selected((int) old('existing_user_id') === $user->id || $account->id === $user->id)>{{ $user->name }} â€” {{ $user->email }}</option>
+                                    <option value="{{ $user->id }}" @selected((int) old('existing_user_id') === $user->id || $account->id === $user->id)>{{ $user->name }} �?" {{ $user->email }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">RÃ´le</label>
+                            <label class="form-label fw-bold">Rôle</label>
                             <select name="role_name" class="aj-select">
-                                <option value="">SÃ©lectionner un rÃ´le</option>
+                                <option value="">Sélectionner un rôle</option>
                                 @foreach($roles as $role)
                                     <option value="{{ $role->name }}" @selected($selectedRole === $role->name)>{{ $role->name }}</option>
                                 @endforeach
@@ -77,7 +77,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Fonction</label>
-                            <input type="text" name="job_title" class="aj-form-control" value="{{ old('job_title', $account->job_title) }}" placeholder="Manager, Agent rÃ©servation...">
+                            <input type="text" name="job_title" class="aj-form-control" value="{{ old('job_title', $account->job_title) }}" placeholder="Manager, Agent réservation...">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Mot de passe {{ $isEdit ? '(laisser vide pour conserver)' : '' }}</label>
@@ -85,7 +85,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Confirmation mot de passe</label>
-                            <input type="password" name="password_confirmation" class="aj-form-control" placeholder="RÃ©pÃ©ter le mot de passe">
+                            <input type="password" name="password_confirmation" class="aj-form-control" placeholder="Répéter le mot de passe">
                         </div>
                         <div class="col-md-12">
                             <div class="form-check form-switch mb-2">
@@ -103,7 +103,7 @@
                         </div>
                     </div>
                     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap;">
-                        <button type="submit" class="aj-btn primary"><i class="bx bx-save"></i> {{ $isEdit ? 'Mettre Ã  jour' : 'CrÃ©er le compte' }}</button>
+                        <button type="submit" class="aj-btn primary"><i class="bx bx-save"></i> {{ $isEdit ? 'Mettre à jour' : 'Créer le compte' }}</button>
                     </div>
                 </form>
             </div>
@@ -127,7 +127,7 @@
                             <form method="POST" action="{{ route('admin.agency-accounts.disable', $account) }}">
                                 @csrf
                                 @method('PATCH')
-                                <button type="submit" class="aj-btn">DÃ©sactiver</button>
+                                <button type="submit" class="aj-btn">Désactiver</button>
                             </form>
                         @endif
                         @if(Route::has('admin.agency-accounts.reset-password'))
@@ -143,4 +143,5 @@
     </div>
 </div>
 @endsection
+
 

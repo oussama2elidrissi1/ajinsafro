@@ -5,7 +5,7 @@
 
                 <p class="text-muted small mb-3">Les lieux de depart se gerent dans l'etape Disponibilites.</p>
 
-                {{-- Utilisation du Flight Manager rÃ©utilisable en mode complet --}}
+                {{-- Utilisation du Flight Manager réutilisable en mode complet --}}
                 @include('admin.circuits.voyages.partials._flight_manager', [
                     'mode' => 'full',
                     'flightOptionsWithIndex' => $flightOptionsWithIndex ?? [],
@@ -15,4 +15,5 @@
                     'departurePlaces' => $departurePlaces ?? collect(),
                 ])
             </div>
+
 

@@ -1,5 +1,5 @@
-{{--
-  Bouton FAB + modal debug catalogue — inclus en fin de <body> (@stack body-end)
+﻿{{--
+  Bouton FAB + modal debug catalogue �?" inclus en fin de <body> (@stack body-end)
   pour que position:fixed soit relatif à la fenêtre (pas à une colonne / transform parent).
 --}}
 @if(config('app.debug') && isset($catalogMeta))
@@ -22,7 +22,7 @@
             </header>
             <div class="ws-debug-modal__body">
                 @if(!empty($catalogMeta['wp_connection_failed']))
-                    <p class="ws-debug-modal__alert">Connexion WordPress indisponible — aucune ligne catalogue.</p>
+                    <p class="ws-debug-modal__alert">Connexion WordPress indisponible �?" aucune ligne catalogue.</p>
                 @else
                     <p class="ws-debug-modal__intro">
                         <strong>wp_tours</strong> = nombre de tours WordPress (comme Circuits / voyages). <strong>total_rows</strong> = packages + vols + hébergements dans le tableau.
@@ -77,9 +77,9 @@
                                         <tr>
                                             <td>{{ $d['wp_post_id'] ?? '' }}</td>
                                             <td class="ws-debug-table__cell-tight">{{ is_scalar($d['adult_price_meta_raw'] ?? null) ? $d['adult_price_meta_raw'] : json_encode($d['adult_price_meta_raw']) }}</td>
-                                            <td>{{ $d['parsed_wp_adult'] ?? '—' }}</td>
-                                            <td>{{ $d['laravel_price_from'] ?? '—' }}</td>
-                                            <td><strong>{{ $d['price_label_final'] ?? '—' }}</strong></td>
+                                            <td>{{ $d['parsed_wp_adult'] ?? '�?"' }}</td>
+                                            <td>{{ $d['laravel_price_from'] ?? '�?"' }}</td>
+                                            <td><strong>{{ $d['price_label_final'] ?? '�?"' }}</strong></td>
                                             <td>{{ $d['price_source'] ?? '' }}</td>
                                         </tr>
                                     @endforeach
@@ -109,10 +109,10 @@
                                     @foreach($catalogMeta['package_departure_debug'] as $dd)
                                         <tr>
                                             <td>{{ $dd['wp_post_id'] ?? '' }}</td>
-                                            <td>{{ $dd['laravel_voyage_id'] ?? '—' }}</td>
-                                            <td class="ws-debug-table__cell-tight">{{ !empty($dd['active_travel_dates_ymd']) ? implode(', ', $dd['active_travel_dates_ymd']) : '—' }}</td>
-                                            <td>{{ $dd['picked_travel_date_id'] ?? '—' }}</td>
-                                            <td><strong>{{ $dd['picked_date_ymd'] ?? '—' }}</strong></td>
+                                            <td>{{ $dd['laravel_voyage_id'] ?? '�?"' }}</td>
+                                            <td class="ws-debug-table__cell-tight">{{ !empty($dd['active_travel_dates_ymd']) ? implode(', ', $dd['active_travel_dates_ymd']) : '�?"' }}</td>
+                                            <td>{{ $dd['picked_travel_date_id'] ?? '�?"' }}</td>
+                                            <td><strong>{{ $dd['picked_date_ymd'] ?? '�?"' }}</strong></td>
                                             <td>{{ !empty($dd['workspace_display_is_past']) ? 'oui' : 'non' }}</td>
                                             <td>
                                                 @if(!empty($dd['no_laravel_voyage']))<span class="ws-debug-tag ws-debug-tag--warn">sans Laravel</span>@endif
@@ -128,7 +128,7 @@
                         @if(!empty($catalogMeta['package_places_source_doc']))
                             <p class="ws-debug-modal__doc">{{ $catalogMeta['package_places_source_doc'] }}</p>
                         @endif
-                        <p class="ws-debug-modal__section-title">Places / chambres (échantillon max 8 packages Laravel — même calcul que l’édition voyage)</p>
+                        <p class="ws-debug-modal__section-title">Places / chambres (échantillon max 8 packages Laravel �?" même calcul que l�?Tédition voyage)</p>
                         <pre class="ws-debug-modal__pre ws-debug-modal__pre--json">{{ json_encode($catalogMeta['package_places_debug'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
                     @endif
                 @endif
@@ -189,3 +189,4 @@
 })();
 </script>
 @endif
+

@@ -1,4 +1,4 @@
-{{-- Modal : gestion stock chambres par date de départ (voyage Laravel requis). --}}
+﻿{{-- Modal : gestion stock chambres par date de départ (voyage Laravel requis). --}}
 @php
     $raDeparturesUrl = route('admin.circuits.voyages.room-availability.departures', $voyage);
     $raSyncDeparturesUrl = route('admin.circuits.voyages.sync-departures', $voyage);
@@ -35,7 +35,7 @@
             </div>
             <div class="modal-body">
                 <div id="ra-sync-hint" class="alert alert-info small mb-3 d-none" role="status">
-                    <p class="mb-2"><strong>Information.</strong> Les départs sont synchronisés automatiquement depuis WordPress à l’ouverture de cette fenêtre.</p>
+                    <p class="mb-2"><strong>Information.</strong> Les départs sont synchronisés automatiquement depuis WordPress à l�?Touverture de cette fenêtre.</p>
                     <p class="mb-0 d-none" id="ra-sync-hint-resync"></p>
                 </div>
 
@@ -60,8 +60,8 @@
                 <div class="row g-3 mb-3">
                     <div class="col-md-8">
                         <label for="ra-departure-select" class="form-label small fw-semibold text-uppercase text-muted">Départ</label>
-                        <select id="ra-departure-select" class="form-select" data-placeholder="Chargement…">
-                            <option value="">— Sélectionnez une date de départ —</option>
+                        <select id="ra-departure-select" class="form-select" data-placeholder="Chargement�?�">
+                            <option value="">�?" Sélectionnez une date de départ �?"</option>
                         </select>
                     </div>
                     <div class="col-md-4 d-flex align-items-end">
@@ -79,8 +79,8 @@
                 </div>
 
                 <div id="ra-departure-loading" class="d-none text-center py-5">
-                    <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Chargement…</span></div>
-                    <p class="text-muted small mt-2 mb-0">Chargement du stock…</p>
+                    <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Chargement�?�</span></div>
+                    <p class="text-muted small mt-2 mb-0">Chargement du stock�?�</p>
                 </div>
             </div>
             <div class="modal-footer border-top bg-light">
@@ -94,3 +94,4 @@
     #voyageRoomAvailabilityModal .min-h-badges { min-height: 38px; align-items: center; }
     #voyageRoomAvailabilityModal .ra-departure-content .accordion-button { font-size: 0.95rem; }
 </style>
+

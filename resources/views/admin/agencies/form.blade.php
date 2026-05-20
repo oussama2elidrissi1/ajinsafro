@@ -9,7 +9,7 @@
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
             ['label' => 'Points de vente', 'url' => route('admin.agencies.index')],
-            ['label' => $isEdit ? 'Modifier' : 'CrÃ©er'],
+            ['label' => $isEdit ? 'Modifier' : 'Créer'],
         ]"
     />
 
@@ -36,7 +36,7 @@
                         <label class="form-label">Structure</label>
                         <select name="type" class="form-select">
                             <option value="{{ \App\Models\Branch::TYPE_BRANCH }}" @selected(old('type', $agency->type) === \App\Models\Branch::TYPE_BRANCH)>Point de vente</option>
-                            <option value="{{ \App\Models\Branch::TYPE_HEAD_OFFICE }}" @selected(old('type', $agency->type) === \App\Models\Branch::TYPE_HEAD_OFFICE)>SiÃ¨ge</option>
+                            <option value="{{ \App\Models\Branch::TYPE_HEAD_OFFICE }}" @selected(old('type', $agency->type) === \App\Models\Branch::TYPE_HEAD_OFFICE)>Siège</option>
                         </select>
                     </div>
                     <div class="col-md-4">
@@ -61,7 +61,7 @@
                             <option value="">Aucun</option>
                             @foreach($managerOptions as $manager)
                                 <option value="{{ $manager->id }}" @selected((int) old('manager_user_id', $agency->manager_user_id) === (int) $manager->id)>
-                                    {{ $manager->name }}{{ $manager->email ? ' Â· ' . $manager->email : '' }}
+                                    {{ $manager->name }}{{ $manager->email ? ' · ' . $manager->email : '' }}
                                 </option>
                             @endforeach
                         </select>
@@ -83,7 +83,7 @@
                         <input type="text" name="address" class="form-control" value="{{ old('address', $agency->address) }}">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">TÃ©lÃ©phone</label>
+                        <label class="form-label">Téléphone</label>
                         <input type="text" name="phone" class="form-control" value="{{ old('phone', $agency->phone) }}">
                     </div>
                     <div class="col-md-4">
@@ -155,4 +155,5 @@
         </div>
     </div>
 @endsection
+
 

@@ -9,7 +9,7 @@
                 <h4 class="page-title mb-0 font-size-18">Nouveau message</h4>
                 <ol class="breadcrumb m-0">
                     <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('admin.reservations.index') }}">RÃ©servations</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('admin.reservations.index') }}">Réservations</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('admin.reservations.messages') }}">Messages</a></li>
                     <li class="breadcrumb-item active">Nouveau</li>
                 </ol>
@@ -30,10 +30,10 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Message <span class="text-danger">*</span></label>
-                            <textarea name="body" class="form-control" rows="8" required placeholder="Contenu du messageâ€¦">{{ old('body') }}</textarea>
+                            <textarea name="body" class="form-control" rows="8" required placeholder="Contenu du message�?�">{{ old('body') }}</textarea>
                             @error('body')<span class="text-danger small">{{ $message }}</span>@enderror
                         </div>
-                        <p class="text-muted small">Le message sera envoyÃ© au nom de votre agence.</p>
+                        <p class="text-muted small">Le message sera envoyé au nom de votre agence.</p>
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary"><i class="bx bx-send me-1"></i> Envoyer</button>
                             <a href="{{ route('admin.reservations.messages') }}" class="btn btn-secondary">Annuler</a>
@@ -44,4 +44,5 @@
         </div>
     </div>
 @endsection
+
 

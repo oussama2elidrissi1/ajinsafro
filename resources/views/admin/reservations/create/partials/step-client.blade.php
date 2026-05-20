@@ -1,4 +1,4 @@
-@php
+﻿@php
     $clientMode = old('client_mode', 'new');
     $oldPassengers = collect(old('passengers', []));
 @endphp
@@ -7,7 +7,7 @@
     <div class="reservation-create__card">
         <div class="reservation-create__section-head">
             <div>
-                <p class="reservation-create__eyebrow">Étape 2</p>
+                <p class="reservation-create__eyebrow">�?tape 2</p>
                 <h3 class="reservation-create__section-title">Voyageurs</h3>
                 <p class="reservation-create__section-subtitle">Le client principal est le voyageur principal. Ajoutez les accompagnants avant la repartition des chambres.</p>
             </div>
@@ -69,7 +69,7 @@
                 <div class="reservation-create__field">
                     <label class="reservation-create__label" for="client_document_type">Type de document</label>
                     <select name="client_document_type" id="client_document_type" class="reservation-create__input">
-                        <option value="">Sélectionner…</option>
+                        <option value="">Sélectionner�?�</option>
                         <option value="cin" {{ old('client_document_type') === 'cin' ? 'selected' : '' }}>CIN</option>
                         <option value="passport" {{ old('client_document_type') === 'passport' ? 'selected' : '' }}>Passeport</option>
                     </select>
@@ -152,3 +152,4 @@
         <button type="button" class="reservation-create__button reservation-create__button--primary" data-create-next data-step-next="3">Continuer</button>
     </div>
 </section>
+

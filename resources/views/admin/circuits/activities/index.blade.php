@@ -4,7 +4,7 @@
     use Illuminate\Support\Str;
 
     $mediaService = app(\App\Services\WordPressMediaService::class);
-    $pageTitle = 'Catalogue des activitÃ©s';
+    $pageTitle = 'Catalogue des activités';
     $currentActivities = $activities->getCollection();
     $totalActivities = $activities->total();
     $activeCount = $currentActivities->where('is_active', true)->count();
@@ -30,7 +30,7 @@
             <div class="aj-catalog-head">
                 <div>
                     <h1 class="aj-catalog-title">{{ $pageTitle }}</h1>
-                    <p class="aj-catalog-subtitle">GÃ©rez les activitÃ©s rÃ©utilisables par rÃ©gion avec une prÃ©sentation admin cohÃ©rente et plus propre.</p>
+                    <p class="aj-catalog-subtitle">Gérez les activités réutilisables par région avec une présentation admin cohérente et plus propre.</p>
                 </div>
                 <div>
                     <div class="aj-catalog-breadcrumb">
@@ -38,11 +38,11 @@
                         <span>/</span>
                         <span>Circuits</span>
                         <span>/</span>
-                        <strong style="color:#0b1f3a">ActivitÃ©s</strong>
+                        <strong style="color:#0b1f3a">Activités</strong>
                     </div>
                     <a href="{{ route('admin.circuits.activities.create') }}" class="aj-btn aj-btn-primary">
                         <i class="bx bx-plus"></i>
-                        <span>Nouvelle activitÃ©</span>
+                        <span>Nouvelle activité</span>
                     </a>
                 </div>
             </div>
@@ -59,7 +59,7 @@
                     <div class="aj-kpi-head">
                         <div class="aj-kpi-icon -blue"><i class="bx bx-camera-movie"></i></div>
                         <div>
-                            <span class="aj-kpi-label">Total activitÃ©s</span>
+                            <span class="aj-kpi-label">Total activités</span>
                             <strong class="aj-kpi-value">{{ number_format($totalActivities, 0, ',', ' ') }}</strong>
                             <span class="aj-kpi-note">Catalogue courant</span>
                         </div>
@@ -71,7 +71,7 @@
                         <div>
                             <span class="aj-kpi-label">Actives</span>
                             <strong class="aj-kpi-value">{{ $activeCount }}</strong>
-                            <span class="aj-kpi-note">Sur la page affichÃ©e</span>
+                            <span class="aj-kpi-note">Sur la page affichée</span>
                         </div>
                     </div>
                 </article>
@@ -81,7 +81,7 @@
                         <div>
                             <span class="aj-kpi-label">Inactives</span>
                             <strong class="aj-kpi-value">{{ $inactiveCount }}</strong>
-                            <span class="aj-kpi-note">Ã€ vÃ©rifier</span>
+                            <span class="aj-kpi-note">�? vérifier</span>
                         </div>
                     </div>
                 </article>
@@ -91,7 +91,7 @@
                         <div>
                             <span class="aj-kpi-label">Avec galerie</span>
                             <strong class="aj-kpi-value">{{ $withGalleryCount }}</strong>
-                            <span class="aj-kpi-note">Visuels renseignÃ©s</span>
+                            <span class="aj-kpi-note">Visuels renseignés</span>
                         </div>
                     </div>
                 </article>
@@ -102,18 +102,18 @@
                     <div class="aj-result-meta">
                         <div class="d-flex align-items-center gap-2">
                             <label for="activityFilterInput" class="mb-0">Recherche locale :</label>
-                            <input id="activityFilterInput" type="search" class="aj-mini-select" placeholder="Titre, rÃ©gion, type...">
+                            <input id="activityFilterInput" type="search" class="aj-mini-select" placeholder="Titre, région, type...">
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             <label for="activitySortSelect" class="mb-0">Trier par :</label>
                             <select id="activitySortSelect" class="aj-mini-select">
                                 <option value="title_asc">Titre A-Z</option>
                                 <option value="price_asc">Prix croissant</option>
-                                <option value="price_desc">Prix dÃ©croissant</option>
-                                <option value="duration_desc">DurÃ©e longue</option>
+                                <option value="price_desc">Prix décroissant</option>
+                                <option value="duration_desc">Durée longue</option>
                             </select>
                         </div>
-                        <span>{{ $activities->firstItem() ?? 0 }} - {{ $activities->lastItem() ?? 0 }} sur {{ $totalActivities }} activitÃ©s</span>
+                        <span>{{ $activities->firstItem() ?? 0 }} - {{ $activities->lastItem() ?? 0 }} sur {{ $totalActivities }} activités</span>
                     </div>
                     <div class="aj-result-meta">
                         <button type="button" class="aj-mini-btn" id="activityExportBtn">
@@ -131,11 +131,11 @@
             <section class="aj-panel">
                 @if($activities->isEmpty())
                     <div class="aj-empty">
-                        <h5 class="mb-2">Aucune activitÃ© disponible</h5>
-                        <p class="text-muted mb-3">CrÃ©ez la premiÃ¨re activitÃ© pour alimenter le catalogue.</p>
+                        <h5 class="mb-2">Aucune activité disponible</h5>
+                        <p class="text-muted mb-3">Créez la première activité pour alimenter le catalogue.</p>
                         <a href="{{ route('admin.circuits.activities.create') }}" class="aj-btn aj-btn-primary">
                             <i class="bx bx-plus"></i>
-                            <span>CrÃ©er une activitÃ©</span>
+                            <span>Créer une activité</span>
                         </a>
                     </div>
                 @else
@@ -145,11 +145,11 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Visuel</th>
-                                    <th>ActivitÃ©</th>
-                                    <th>RÃ©gion</th>
+                                    <th>Activité</th>
+                                    <th>Région</th>
                                     <th>Tarifs</th>
-                                    <th>Ã‚ges</th>
-                                    <th>DurÃ©e</th>
+                                    <th>�,ges</th>
+                                    <th>Durée</th>
                                     <th>Galerie</th>
                                     <th>Statut</th>
                                     <th class="text-end">Actions</th>
@@ -197,7 +197,7 @@
                                                     <span class="aj-badge -success">Active</span>
                                                 @endif
                                             </div>
-                                            <div class="aj-meta-text">{{ $activity->activity_type ?: 'Type non renseignÃ©' }}</div>
+                                            <div class="aj-meta-text">{{ $activity->activity_type ?: 'Type non renseigné' }}</div>
                                             <div class="aj-meta-text"><code>{{ $activity->slug }}</code></div>
                                         </td>
                                         <td>{{ $activity->region_name ?: $activity->location_text ?: '-' }}</td>
@@ -271,7 +271,7 @@
                                 </div>
                                 <div class="aj-card-body">
                                     <h4 class="aj-card-title"><a href="{{ route('admin.circuits.activities.edit', $activity) }}">{{ $activity->title }}</a></h4>
-                                    <div class="aj-meta-text mb-2">{{ $activity->region_name ?: $activity->location_text ?: 'RÃ©gion non renseignÃ©e' }}</div>
+                                    <div class="aj-meta-text mb-2">{{ $activity->region_name ?: $activity->location_text ?: 'Région non renseignée' }}</div>
                                     <div class="d-flex flex-wrap gap-2 mb-3">
                                         <span class="aj-badge -neutral">{{ $activity->activity_type ?: 'Type libre' }}</span>
                                         @if($activity->is_active)
@@ -292,7 +292,7 @@
                     </div>
 
                     <div class="aj-footer">
-                        <div>Affichage de {{ $activities->firstItem() ?? 0 }} Ã  {{ $activities->lastItem() ?? 0 }} sur {{ $totalActivities }} rÃ©sultats</div>
+                        <div>Affichage de {{ $activities->firstItem() ?? 0 }} à {{ $activities->lastItem() ?? 0 }} sur {{ $totalActivities }} résultats</div>
                         <div>{{ $activities->links() }}</div>
                     </div>
                 @endif
@@ -400,4 +400,5 @@
         });
     </script>
 @endpush
+
 

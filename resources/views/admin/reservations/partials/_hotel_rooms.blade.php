@@ -1,4 +1,4 @@
-@php
+﻿@php
     $hotelsRoomsUrl = $hotelsRoomsUrl ?? route('admin.reservations.hotels-rooms');
     $voyageDeparturesUrl = $voyageDeparturesUrl ?? route('admin.reservations.voyage-departures');
     $departureHotelsRoomsUrl = $departureHotelsRoomsUrl ?? route('admin.reservations.departure-hotels-rooms');
@@ -45,7 +45,7 @@
                         <button type="button" class="btn btn-sm btn-outline-primary" id="btn-toggle-departure">Modifier</button>
                     </div>
                     <select class="form-select" id="reservation-departure-select" disabled>
-                        <option value="">— Choisir un départ —</option>
+                        <option value="">�?" Choisir un départ �?"</option>
                     </select>
                     <input type="hidden" name="departure_id" id="input-departure-id" value="{{ $initialDepartureId }}">
                     <input type="hidden" name="travel_date_id" id="input-travel-date-id" value="{{ $initialTravelDateId }}">
@@ -63,7 +63,7 @@
                             <option value="fixed" @selected(old('discount_type', $reservation?->discount_type ?? '') === 'fixed')>DH</option>
                         </select>
                     </div>
-                    <div class="form-text">Prix après réduction : <strong id="reservation-price-after-discount">—</strong></div>
+                    <div class="form-text">Prix après réduction : <strong id="reservation-price-after-discount">�?"</strong></div>
                 </div>
             </div>
         @else
@@ -85,7 +85,7 @@
                             <option value="fixed" @selected(old('discount_type', $reservation?->discount_type ?? '') === 'fixed')>DH</option>
                         </select>
                     </div>
-                    <div class="form-text">Prix après réduction : <strong id="reservation-price-after-discount">—</strong></div>
+                    <div class="form-text">Prix après réduction : <strong id="reservation-price-after-discount">�?"</strong></div>
                 </div>
             </div>
         @endif
@@ -102,7 +102,7 @@
                         <div class="card-header bg-light py-2">
                             <strong>{{ $hotel->hotel_name ?: 'Hôtel J'.($hotel->check_in_day ?? '?') }}</strong>
                             @if($hotel->check_in_day || $hotel->check_out_day)
-                                <span class="text-muted small">— J{{ $hotel->check_in_day ?? '?' }} à J{{ $hotel->check_out_day ?? '?' }}</span>
+                                <span class="text-muted small">�?" J{{ $hotel->check_in_day ?? '?' }} à J{{ $hotel->check_out_day ?? '?' }}</span>
                             @endif
                         </div>
                         <div class="card-body py-2">
@@ -127,7 +127,7 @@
                                             @endphp
                                             <tr class="reservation-room-row">
                                                 <td>
-                                                    {{ $room->room_type }}{{ $room->room_label ? ' — '.$room->room_label : '' }}
+                                                    {{ $room->room_type }}{{ $room->room_label ? ' �?" '.$room->room_label : '' }}
                                                 </td>
                                                 <td class="text-center">{{ $room->capacity_total }} pers.</td>
                                                 <td class="text-center">{{ number_format((float) $room->supplement, 0, ',', ' ') }} DH</td>
@@ -144,7 +144,7 @@
                                                         data-room-capacity="{{ $room->capacity_total }}"
                                                     >
                                                 </td>
-                                                <td class="text-end reservation-room-total">{{ $roomCount > 0 ? number_format($roomCount * (float) $room->supplement, 0, ',', ' ').' DH' : '—' }}</td>
+                                                <td class="text-end reservation-room-total">{{ $roomCount > 0 ? number_format($roomCount * (float) $room->supplement, 0, ',', ' ').' DH' : '�?"' }}</td>
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -370,7 +370,7 @@
         var total = count * parseNumber(input.getAttribute('data-room-supplement'));
         var target = row.querySelector('.reservation-room-total');
         if (target) {
-            target.textContent = count > 0 ? total.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' DH' : '—';
+            target.textContent = count > 0 ? total.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' DH' : '�?"';
         }
     }
 
@@ -532,7 +532,7 @@
                     var opt = departureSelect && departureSelect.options[departureSelect.selectedIndex];
                     if (opt && opt.textContent) selectedLabel = opt.textContent.trim();
                     else if (typeof payload !== 'undefined' && payload && payload.departure && payload.departure.start_date) {
-                        selectedLabel = (payload.departure.start_date || '') + (payload.departure.end_date ? ' → ' + payload.departure.end_date : '');
+                        selectedLabel = (payload.departure.start_date || '') + (payload.departure.end_date ? ' �?' ' + payload.departure.end_date : '');
                     }
                 }
 
@@ -675,7 +675,7 @@
                             (room.tour_hotel_room_id ? '<input type="hidden" name="hotel_rooms[' + index + '][tour_hotel_room_id]" value="' + (room.tour_hotel_room_id || '') + '">' : '') +
                             '<input type="number" name="hotel_rooms[' + index + '][room_count]" class="form-control form-control-sm text-center reservation-room-count" value="' + count + '" min="0" max="' + (room.available_rooms || 0) + '" data-room-supplement="' + supplement + '" data-room-capacity="' + (room.capacity_total || 0) + '">' +
                         '</td>' +
-                        '<td class="text-end reservation-room-total">' + (count > 0 ? subtotal.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' DH' : '—') + '</td>' +
+                        '<td class="text-end reservation-room-total">' + (count > 0 ? subtotal.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' DH' : '�?"') + '</td>' +
                     '</tr>';
                     index += 1;
                 });
@@ -696,7 +696,7 @@
                 try { selectedLabel = String(window.getSelectedDepartureLabel() || '').trim(); } catch (e) { selectedLabel = ''; }
             }
             if (!selectedLabel && departureData && (departureData.start_date || departureData.end_date)) {
-                selectedLabel = (departureData.start_date || '') + (departureData.end_date ? ' → ' + departureData.end_date : '');
+                selectedLabel = (departureData.start_date || '') + (departureData.end_date ? ' �?' ' + departureData.end_date : '');
             }
             if (!selectedLabel) {
                 var opt = departureSelect && departureSelect.options[departureSelect.selectedIndex];
@@ -728,7 +728,7 @@
             setAccommodationMode('blocked');
             html = payload.message
                 ? '<div class="alert alert-warning mb-0">' + escapeHtml(payload.message) + '</div>'
-                : '<div class="alert alert-secondary mb-0">Ce départ n’a plus de places disponibles.</div>';
+                : '<div class="alert alert-secondary mb-0">Ce départ n�?Ta plus de places disponibles.</div>';
         }
 
         roomsContainer.innerHTML = html;
@@ -807,7 +807,7 @@
             travel_date_id: travelDateId
         });
 
-        roomsContainer.innerHTML = '<p class="text-muted mb-0">Chargement des chambres…</p>';
+        roomsContainer.innerHTML = '<p class="text-muted mb-0">Chargement des chambres�?�</p>';
         fetch(url, {
             credentials: 'same-origin',
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -880,7 +880,7 @@
     function loadDeparturesForTour(tourId, selectedDepartureId) {
         if (!departureSelect) return;
 
-        departureSelect.innerHTML = '<option value="">— Choisir un départ —</option>';
+        departureSelect.innerHTML = '<option value="">�?" Choisir un départ �?"</option>';
         if (!tourId) {
             if (roomsContainer) {
                 roomsContainer.innerHTML = '<p class="text-muted mb-0" id="reservation-hotel-placeholder">Sélectionnez un voyage puis un départ pour charger les chambres du dossier.</p>';
@@ -911,7 +911,7 @@
                 departures.forEach(function (departure) {
                     var option = document.createElement('option');
                     option.value = departure.id;
-                    option.textContent = String(departure.label || '').replace(/â†’|→/g, ' -> ') + (departure.available_capacity != null ? ' - ' + departure.available_capacity + ' pl.' : '');
+                    option.textContent = String(departure.label || '').replace(/â�?��?T|�?'/g, ' -> ') + (departure.available_capacity != null ? ' - ' + departure.available_capacity + ' pl.' : '');
                     option.setAttribute('data-wp-travel-date-id', departure.wp_travel_date_id || '');
                     option.setAttribute('data-base-price', departure.base_price || 0);
                     option.setAttribute('data-sale-price', departure.sale_price || 0);
@@ -949,7 +949,7 @@
             })
             .catch(function (error) {
                 console.error('[HotelRooms] loadDeparturesForTour failed', error);
-                departureSelect.innerHTML = '<option value="">— Erreur de chargement —</option>';
+                departureSelect.innerHTML = '<option value="">�?" Erreur de chargement �?"</option>';
                 var wrapper = departureSelect.closest('.col-md-6') || departureSelect.parentElement;
                 if (wrapper && !wrapper.querySelector('.departure-load-error')) {
                     var errDiv = document.createElement('div');
@@ -1121,3 +1121,4 @@
     window.reservationCreateRecomputeTotals = window.reservationCreateRecomputeTotals || syncSummary;
 })();
 </script>
+

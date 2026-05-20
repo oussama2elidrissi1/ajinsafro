@@ -9,7 +9,7 @@
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.partners.index') }}">RÃ©seau partenaires</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('admin.partners.index') }}">Réseau partenaires</a></li>
                         <li class="breadcrumb-item active">Revendeurs</li>
                     </ol>
                 </div>
@@ -43,8 +43,8 @@
                                 <select name="status" class="form-select form-select-sm" style="width: auto;">
                                     <option value="">Tous les statuts</option>
                                     <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>En attente</option>
-                                    <option value="validated" {{ request('status') === 'validated' ? 'selected' : '' }}>ValidÃ©</option>
-                                    <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>RefusÃ©</option>
+                                    <option value="validated" {{ request('status') === 'validated' ? 'selected' : '' }}>Validé</option>
+                                    <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Refusé</option>
                                     <option value="suspended" {{ request('status') === 'suspended' ? 'selected' : '' }}>Suspendu</option>
                                 </select>
                             </div>
@@ -62,7 +62,7 @@
                                     <th>Raison sociale / Nom</th>
                                     <th>Responsable</th>
                                     <th>Email</th>
-                                    <th>TÃ©lÃ©phone</th>
+                                    <th>Téléphone</th>
                                     <th>Date d'inscription</th>
                                     <th>Statut</th>
                                     <th class="text-end">Actions</th>
@@ -80,7 +80,7 @@
                                         </td>
                                         <td>{{ $partner->nom_responsable }}</td>
                                         <td>{{ $partner->email }}</td>
-                                        <td>{{ $partner->telephone ?? 'â€”' }}</td>
+                                        <td>{{ $partner->telephone ?? '�?"' }}</td>
                                         <td>{{ $partner->created_at?->format('d/m/Y H:i') }}</td>
                                         <td>
                                             @php
@@ -122,4 +122,5 @@
         </div>
     </div>
 @endsection
+
 

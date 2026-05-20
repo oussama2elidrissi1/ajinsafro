@@ -1,4 +1,4 @@
-@php
+﻿@php
     $selectedTourId = (int) ($preselectedTourId ?? old('tour_id'));
     $wpTitles = $wpTitles ?? collect();
 @endphp
@@ -7,7 +7,7 @@
     <div class="reservation-create__card">
         <div class="reservation-create__section-head">
             <div>
-                <p class="reservation-create__eyebrow">Étape 1</p>
+                <p class="reservation-create__eyebrow">�?tape 1</p>
                 <h3 class="reservation-create__section-title">Sélection de la prestation</h3>
                 <p class="reservation-create__section-subtitle">Choisissez le voyage et le départ avant de composer le dossier.</p>
             </div>
@@ -27,7 +27,7 @@
                     <button type="button" class="btn btn-sm btn-outline-primary" id="btn-toggle-tour">Modifier</button>
                 </div>
                 <select class="reservation-create__input" required id="select-tour-id" disabled>
-                    <option value="">Sélectionner un voyage…</option>
+                    <option value="">Sélectionner un voyage�?�</option>
                     @foreach($voyages as $voyage)
                         @php
                             $label = $voyage->wp_post_id && $wpTitles->has($voyage->wp_post_id)
@@ -57,7 +57,7 @@
             <div class="reservation-create__selection-item">
                 <span>Date préchargée</span>
                 <strong id="create-selected-date-name">
-                    {{ isset($selectedTravelDate) && $selectedTravelDate ? $selectedTravelDate->date->translatedFormat('d M Y') : '—' }}
+                    {{ isset($selectedTravelDate) && $selectedTravelDate ? $selectedTravelDate->date->translatedFormat('d M Y') : '�?"' }}
                 </strong>
             </div>
         </div>
@@ -84,3 +84,4 @@
         <button type="button" class="reservation-create__button reservation-create__button--primary" data-create-next data-step-next="2">Continuer</button>
     </div>
 </section>
+

@@ -9,7 +9,7 @@
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.settings.index') }}">ParamÃƒÂ¨tres</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('admin.settings.index') }}">Param�f¨tres</a></li>
                         <li class="breadcrumb-item active">Home page ilyass</li>
                     </ol>
                 </div>
@@ -42,7 +42,7 @@
         </div>
     @endif
 
-    {{-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â TABS Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â --}}
+    {{-- â�?�â�?�â�?�â�?�â�?�â�?�â�?� TABS â�?�â�?�â�?�â�?�â�?�â�?�â�?� --}}
     <ul class="nav nav-tabs mb-4" role="tablist">
         <li class="nav-item">
             <a class="nav-link {{ ($tab ?? 'header') === 'header' ? 'active' : '' }}" data-bs-toggle="tab" href="#tab-header" role="tab">Header</a>
@@ -54,9 +54,9 @@
 
     <div class="tab-content">
 
-    {{-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-         TAB 1 Ã¢â‚¬â€ HEADER (topbar + navbar)
-         Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â --}}
+    {{-- â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�
+         TAB 1 â�,��?� HEADER (topbar + navbar)
+         â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?� --}}
     <div class="tab-pane fade {{ ($tab ?? 'header') === 'header' ? 'show active' : '' }}" id="tab-header" role="tabpanel">
         <form action="{{ url('/admin/settings/home-page/header') }}" method="POST" enctype="multipart/form-data">
             @csrf
@@ -68,19 +68,19 @@
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" name="header[enabled]" value="1" id="hdr_enabled"
                                {{ old('header.enabled', data_get($header, 'enabled')) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="hdr_enabled">Activer le header personnalisÃƒÂ©</label>
+                        <label class="form-check-label" for="hdr_enabled">Activer le header personnalis�f©</label>
                     </div>
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" name="header[show_header_sitewide]" value="1" id="hdr_sitewide"
                                {{ old('header.show_header_sitewide', data_get($header, 'show_header_sitewide')) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="hdr_sitewide">Appliquer le header ÃƒÂ  toutes les pages WordPress</label>
+                        <label class="form-check-label" for="hdr_sitewide">Appliquer le header �f  toutes les pages WordPress</label>
                     </div>
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" name="header[show_footer_sitewide]" value="1" id="hdr_footer_sitewide"
                                {{ old('header.show_footer_sitewide', data_get($header, 'show_footer_sitewide', true)) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="hdr_footer_sitewide">Appliquer le footer personnalisÃƒÂ© ÃƒÂ  toutes les pages</label>
+                        <label class="form-check-label" for="hdr_footer_sitewide">Appliquer le footer personnalis�f© �f  toutes les pages</label>
                     </div>
-                    <p class="small text-muted mt-1 mb-0">Le header et le footer personnalisÃƒÂ©s remplacent ceux du thÃƒÂ¨me WordPress sur toutes les pages.</p>
+                    <p class="small text-muted mt-1 mb-0">Le header et le footer personnalis�f©s remplacent ceux du th�f¨me WordPress sur toutes les pages.</p>
                 </div>
             </div>
 
@@ -95,7 +95,7 @@
                     </div>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">TÃƒÂ©lÃƒÂ©phone</label>
+                            <label class="form-label">T�f©l�f©phone</label>
                             <input type="text" class="form-control" name="header[phone]"
                                    value="{{ old('header.phone', data_get($header, 'phone')) }}">
                         </div>
@@ -105,7 +105,7 @@
                                    value="{{ old('header.email', data_get($header, 'email')) }}">
                         </div>
                     </div>
-                    <h6 class="mt-3 mb-2">RÃƒÂ©seaux sociaux</h6>
+                    <h6 class="mt-3 mb-2">R�f©seaux sociaux</h6>
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label">Facebook</label>
@@ -205,7 +205,7 @@
                     <div id="hdr_links_wrap" class="mt-3" style="display:none">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <label class="form-label fw-bold mb-0">Liens du menu</label>
-                            <small class="text-muted"><i class="fas fa-arrows-alt"></i> Utilisez les flÃƒÂ¨ches pour rÃƒÂ©organiser l'ordre</small>
+                            <small class="text-muted"><i class="fas fa-arrows-alt"></i> Utilisez les fl�f¨ches pour r�f©organiser l'ordre</small>
                         </div>
                         <div id="hdr-links-container" class="vstack gap-3">
                             @foreach(old('header.links', data_get($header, 'links', [])) as $li => $link)
@@ -230,7 +230,7 @@
                                             <input class="form-control form-control-sm" name="header[links][{{ $li }}][url]" value="{{ data_get($link, 'url') }}" placeholder="Ex: /hotel">
                                         </div>
                                         <div class="col-md-2">
-                                            <label class="form-label small mb-0">IcÃƒÂ´ne FA</label>
+                                            <label class="form-label small mb-0">Ic�f´ne FA</label>
                                             <input class="form-control form-control-sm" name="header[links][{{ $li }}][icon]" value="{{ data_get($link, 'icon') }}" placeholder="fas fa-hotel">
                                         </div>
                                         <div class="col-auto d-flex align-items-end gap-2">
@@ -242,7 +242,7 @@
                                         <div class="col-auto d-flex align-items-end">
                                             <button type="button" class="btn btn-sm btn-outline-primary hdr-add-child">+ Sous-menu</button>
                                         </div>
-                                        <div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-link">Ãƒâ€”</button></div>
+                                        <div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-link">�f�?"</button></div>
                                     </div>
                                     {{-- Sub-menus with ordering --}}
                                     <div class="hdr-children-list ms-4 ps-3 border-start border-2 border-primary">
@@ -259,8 +259,8 @@
                                                 <div class="col-auto"><span class="badge bg-secondary hdr-child-order-display">{{ data_get($child, 'order', $ci + 1) }}</span></div>
                                                 <div class="col-3"><input class="form-control form-control-sm" name="header[links][{{ $li }}][children][{{ $ci }}][label]" value="{{ data_get($child, 'label') }}" placeholder="Label"></div>
                                                 <div class="col-3"><input class="form-control form-control-sm" name="header[links][{{ $li }}][children][{{ $ci }}][url]" value="{{ data_get($child, 'url') }}" placeholder="URL"></div>
-                                                <div class="col-2"><input class="form-control form-control-sm" name="header[links][{{ $li }}][children][{{ $ci }}][icon]" value="{{ data_get($child, 'icon', '') }}" placeholder="IcÃƒÂ´ne FA"></div>
-                                                <div class="col-auto"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-child py-0 px-1">Ãƒâ€”</button></div>
+                                                <div class="col-2"><input class="form-control form-control-sm" name="header[links][{{ $li }}][children][{{ $ci }}][icon]" value="{{ data_get($child, 'icon', '') }}" placeholder="Ic�f´ne FA"></div>
+                                                <div class="col-auto"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-child py-0 px-1">�f�?"</button></div>
                                             </div>
                                         @endforeach
                                     </div>
@@ -281,7 +281,7 @@
                                {{ old('header.lowcost_enabled', data_get($header, 'lowcost_enabled', true)) ? 'checked' : '' }}>
                         <label class="form-check-label" for="hdr_lowcost">Afficher le bouton "Formule Low Cost"</label>
                     </div>
-                    <p class="small text-muted mb-3">Ce bouton s'affiche ÃƒÂ  droite de la navbar avec un effet de gradient orange/rouge et une animation.</p>
+                    <p class="small text-muted mb-3">Ce bouton s'affiche �f  droite de la navbar avec un effet de gradient orange/rouge et une animation.</p>
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Texte du bouton</label>
@@ -301,9 +301,9 @@
         </form>
     </div>
 
-    {{-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-         TAB 2 Ã¢â‚¬â€ CONTENU (hero, sections, regionsÃ¢â‚¬Â¦)
-         Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â --}}
+    {{-- â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�
+         TAB 2 â�,��?� CONTENU (hero, sections, regionsâ�,�¦)
+         â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?�â�?� --}}
     <div class="tab-pane fade {{ ($tab ?? 'header') === 'content' ? 'show active' : '' }}" id="tab-content" role="tabpanel">
         <form action="{{ route('admin.settings.home-page.update') }}" method="POST" enctype="multipart/form-data" id="home-page-settings-form">
             @csrf
@@ -316,7 +316,7 @@
                             <label class="form-label">Type</label>
                             <select class="form-select" name="hero[type]" id="hero_type" required>
                                 <option value="image" {{ old('hero.type', data_get($settings, 'hero.type')) === 'image' ? 'selected' : '' }}>Image</option>
-                                <option value="video" {{ old('hero.type', data_get($settings, 'hero.type')) === 'video' ? 'selected' : '' }}>VidÃƒÂ©o</option>
+                                <option value="video" {{ old('hero.type', data_get($settings, 'hero.type')) === 'video' ? 'selected' : '' }}>Vid�f©o</option>
                             </select>
                         </div>
                         <div class="col-md-8">
@@ -336,13 +336,13 @@
                             <input type="file" class="form-control" name="hero[image_file]" accept="image/*">
                         </div>
                         <div class="col-md-6" id="hero_video_url_wrap">
-                            <label class="form-label">VidÃƒÂ©o URL (YouTube/Vimeo/mp4)</label>
+                            <label class="form-label">Vid�f©o URL (YouTube/Vimeo/mp4)</label>
                             <input type="url" class="form-control" name="hero[video_url]" value="{{ old('hero.video_url', data_get($settings, 'hero.video_url')) }}" placeholder="https://...">
                         </div>
                         <div class="col-md-6" id="hero_video_file_wrap">
                             <label class="form-label">Upload mp4</label>
                             <input type="file" class="form-control" name="hero_video_file" accept="video/mp4">
-                            <small class="text-muted d-block mt-1">Max 50MB. Si l'upload ÃƒÂ©choue, utilisez un lien vidÃƒÂ©o.</small>
+                            <small class="text-muted d-block mt-1">Max 50MB. Si l'upload �f©choue, utilisez un lien vid�f©o.</small>
                             @error('hero_video_file') <small class="text-danger d-block mt-1">{{ $message }}</small> @enderror
                         </div>
                         <div class="col-md-6">
@@ -367,12 +367,12 @@
                 $sectionLabels = [
                     'search' => 'Search',
                     'last_minute' => 'Tendances du moment',
-                    'accommodations' => 'SÃƒÂ©jours uniques',
-                    'holiday_theme' => 'Voyages par thÃƒÂ¨me',
+                    'accommodations' => 'S�f©jours uniques',
+                    'holiday_theme' => 'Voyages par th�f¨me',
                     'regions' => 'Destinations',
                     'good_spots' => 'Bons coins',
-                    'whatsapp_banner' => 'BanniÃƒÂ¨re WhatsApp',
-                    'cruises' => 'CroisiÃƒÂ¨res',
+                    'whatsapp_banner' => 'Banni�f¨re WhatsApp',
+                    'cruises' => 'Croisi�f¨res',
                     'newsletter' => 'Newsletter',
                 ];
                 $sectionOrder = old('section_order', data_get($settings, 'section_order', ['last_minute', 'accommodations', 'holiday_theme', 'regions', 'good_spots', 'whatsapp_banner', 'cruises', 'newsletter']));
@@ -382,21 +382,21 @@
             @endphp
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <h5 class="card-title mb-0">Ordre et visibilitÃƒÂ© des sections</h5>
+                    <h5 class="card-title mb-0">Ordre et visibilit�f© des sections</h5>
                     <div class="d-flex gap-2 align-items-center">
                         <select class="form-select form-select-sm" id="section-add-builtin" style="width:auto;">
-                            <option value="">Ajouter une sectionÃ¢â‚¬Â¦</option>
+                            <option value="">Ajouter une sectionâ�,�¦</option>
                             @foreach($sectionLabels as $sKey => $sLabel)
                                 @if(!in_array($sKey, $sectionOrder))
                                     <option value="{{ $sKey }}">{{ $sLabel }}</option>
                                 @endif
                             @endforeach
                         </select>
-                        <button type="button" class="btn btn-sm btn-outline-primary" id="section-add-custom">Section personnalisÃƒÂ©e</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="section-add-custom">Section personnalis�f©e</button>
                     </div>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted small mb-3">RÃƒÂ©ordonnez les sections avec les flÃƒÂ¨ches. DÃƒÂ©cochez pour masquer une section sur la page d'accueil.</p>
+                    <p class="text-muted small mb-3">R�f©ordonnez les sections avec les fl�f¨ches. D�f©cochez pour masquer une section sur la page d'accueil.</p>
                     <div id="section-order-container" class="vstack gap-2">
                         @foreach($sectionOrder as $idx => $secKey)
                             @if(str_starts_with((string)$secKey, 'custom_'))
@@ -405,8 +405,8 @@
                                     <input type="hidden" name="section_order[]" value="{{ $secKey }}">
                                     <div class="d-flex align-items-start gap-2 flex-wrap">
                                         <div class="d-flex flex-column gap-0">
-                                            <button type="button" class="btn btn-sm btn-outline-secondary section-move-up" title="Monter">Ã¢â€ â€˜</button>
-                                            <button type="button" class="btn btn-sm btn-outline-secondary section-move-down" title="Descendre">Ã¢â€ â€œ</button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary section-move-up" title="Monter">â�?��?~</button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary section-move-down" title="Descendre">â�?��?o</button>
                                         </div>
                                         <div class="form-check form-switch align-self-center">
                                             <input class="form-check-input" type="checkbox" name="sections[{{ $secKey }}]" value="1"
@@ -414,13 +414,13 @@
                                             <label class="form-check-label">Activer</label>
                                         </div>
                                         <div class="flex-grow-1">
-                                            <label class="form-label small mb-0">Section personnalisÃƒÂ©e Ã¢â‚¬â€ Titre</label>
+                                            <label class="form-label small mb-0">Section personnalis�f©e â�,��?� Titre</label>
                                             <input type="text" class="form-control form-control-sm" name="custom_sections[{{ $secKey }}][title]" value="{{ data_get($custom, 'title') }}" placeholder="Titre de la section">
                                             <label class="form-label small mb-0 mt-1">Contenu (HTML / shortcodes)</label>
                                             <textarea class="form-control form-control-sm" name="custom_sections[{{ $secKey }}][content]" rows="3" placeholder="<p>...</p> ou [shortcode]">{{ data_get($custom, 'content') }}</textarea>
                                         </div>
                                         <div class="align-self-center">
-                                            <button type="button" class="btn btn-sm btn-outline-danger section-remove">Ãƒâ€”</button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger section-remove">�f�?"</button>
                                         </div>
                                     </div>
                                 </div>
@@ -428,8 +428,8 @@
                                 <div class="border rounded p-2 section-order-row d-flex align-items-center gap-2" data-section-key="{{ $secKey }}">
                                     <input type="hidden" name="section_order[]" value="{{ $secKey }}">
                                     <div class="d-flex flex-column gap-0">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary section-move-up" title="Monter">Ã¢â€ â€˜</button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary section-move-down" title="Descendre">Ã¢â€ â€œ</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary section-move-up" title="Monter">â�?��?~</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary section-move-down" title="Descendre">â�?��?o</button>
                                     </div>
                                     <div class="form-check form-switch mb-0">
                                         <input class="form-check-input" type="checkbox" name="sections[{{ $secKey }}]" value="1"
@@ -437,7 +437,7 @@
                                         <label class="form-check-label">{{ $sectionLabels[$secKey] ?? $secKey }}</label>
                                     </div>
                                     <div class="ms-auto">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary section-remove" title="Retirer de la liste">Ãƒâ€”</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary section-remove" title="Retirer de la liste">�f�?"</button>
                                     </div>
                                 </div>
                             @endif
@@ -482,23 +482,23 @@
 
             {{-- Accommodations --}}
             <div class="card">
-                <div class="card-header"><h5 class="card-title mb-0">DÃƒÂ©couvrez des sÃƒÂ©jours uniques</h5></div>
+                <div class="card-header"><h5 class="card-title mb-0">D�f©couvrez des s�f©jours uniques</h5></div>
                 <div class="card-body row g-3">
                     <div class="col-md-6">
                         <label class="form-label">Titre</label>
-                        <input type="text" class="form-control" name="accommodations[title]" value="{{ old('accommodations.title', data_get($settings, 'accommodations.title', 'DÃƒÂ©couvrez des sÃƒÂ©jours uniques')) }}">
+                        <input type="text" class="form-control" name="accommodations[title]" value="{{ old('accommodations.title', data_get($settings, 'accommodations.title', 'D�f©couvrez des s�f©jours uniques')) }}">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Nombre d'items</label>
                         <input type="number" class="form-control" min="1" max="20" name="accommodations[count]" value="{{ old('accommodations.count', data_get($settings, 'accommodations.count', 4)) }}">
                     </div>
                     <div class="col-12">
-                        <p class="text-muted small mb-0">Affiche les hÃƒÂ´tels et locations (post types: st_hotel, st_rental) les plus rÃƒÂ©cents.</p>
+                        <p class="text-muted small mb-0">Affiche les h�f´tels et locations (post types: st_hotel, st_rental) les plus r�f©cents.</p>
                     </div>
                 </div>
             </div>
 
-            {{-- Voyages par thÃƒÂ¨me --}}
+            {{-- Voyages par th�f¨me --}}
             @php
                 $holidayTheme = old('holiday_theme', data_get($settings, 'holiday_theme', []));
                 $holidayItems = data_get($holidayTheme, 'items', []);
@@ -506,19 +506,19 @@
             @endphp
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Voyages par thÃƒÂ¨me</h5>
+                    <h5 class="card-title mb-0">Voyages par th�f¨me</h5>
                     <button type="button" class="btn btn-sm btn-outline-primary" id="holiday-add-item">Ajouter une carte</button>
                 </div>
                 <div class="card-body">
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" name="holiday_theme[enabled]" value="1" id="holiday_enabled"
                                {{ old('holiday_theme.enabled', data_get($holidayTheme, 'enabled', true)) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="holiday_enabled">Activer la section Voyages par thÃƒÂ¨me</label>
+                        <label class="form-check-label" for="holiday_enabled">Activer la section Voyages par th�f¨me</label>
                     </div>
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
                             <label class="form-label">Sur-titre</label>
-                            <input type="text" class="form-control" name="holiday_theme[eyebrow]" value="{{ old('holiday_theme.eyebrow', data_get($holidayTheme, 'eyebrow', 'Voyages par thÃƒÂ¨me')) }}">
+                            <input type="text" class="form-control" name="holiday_theme[eyebrow]" value="{{ old('holiday_theme.eyebrow', data_get($holidayTheme, 'eyebrow', 'Voyages par th�f¨me')) }}">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Titre ligne 1</label>
@@ -545,11 +545,11 @@
                             <input type="file" class="form-control" name="holiday_theme_left_image_file" accept="image/*">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Image dÃƒÂ©co URL</label>
+                            <label class="form-label">Image d�f©co URL</label>
                             <input type="text" class="form-control" name="holiday_theme[deco_image_url]" value="{{ old('holiday_theme.deco_image_url', data_get($holidayTheme, 'deco_image_url')) }}">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Upload image dÃƒÂ©co</label>
+                            <label class="form-label">Upload image d�f©co</label>
                             <input type="file" class="form-control" name="holiday_theme_deco_image_file" accept="image/*">
                         </div>
                         <div class="col-md-6">
@@ -562,14 +562,14 @@
                         </div>
                     </div>
 
-                    <h6 class="mb-2">Cartes voyages par thÃƒÂ¨me</h6>
+                    <h6 class="mb-2">Cartes voyages par th�f¨me</h6>
                     <div id="holiday-items-container" class="vstack gap-2">
                         @foreach($holidayItems as $idx => $item)
                             <div class="border rounded p-2 holiday-row" data-index="{{ $idx }}">
                                 <div class="row g-2 align-items-center">
                                     <div class="col-auto d-flex flex-column gap-0">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary holiday-move-up" title="Monter">Ã¢â€ â€˜</button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary holiday-move-down" title="Descendre">Ã¢â€ â€œ</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary holiday-move-up" title="Monter">â�?��?~</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary holiday-move-down" title="Descendre">â�?��?o</button>
                                     </div>
                                     <div class="col-md-2">
                                         <label class="form-label small mb-0">Titre</label>
@@ -611,7 +611,7 @@
                                     </div>
                                     <div class="col-auto">
                                         <input type="hidden" class="holiday-order" name="holiday_theme[items][{{ $idx }}][order]" value="{{ data_get($item, 'order', $idx) }}">
-                                        <button type="button" class="btn btn-sm btn-outline-danger holiday-remove mt-4">Ãƒâ€”</button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger holiday-remove mt-4">�f�?"</button>
                                     </div>
                                     <div class="col-12">
                                         <div class="holiday-preview border rounded p-2 d-flex align-items-center gap-2">
@@ -631,19 +631,19 @@
 
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Destinations par rÃƒÂ©gion</h5>
-                    <button type="button" class="btn btn-sm btn-outline-primary" id="dbr-add-item">Ajouter une rÃƒÂ©gion</button>
+                    <h5 class="card-title mb-0">Destinations par r�f©gion</h5>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="dbr-add-item">Ajouter une r�f©gion</button>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted small mb-3">Grille 2Ãƒâ€”4 cÃƒÂ´tÃƒÂ© WordPress. Label obligatoire ; image et lien optionnels.</p>
+                    <p class="text-muted small mb-3">Grille 2�f�?"4 c�f´t�f© WordPress. Label obligatoire ; image et lien optionnels.</p>
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" name="destinations_by_region[enabled]" value="1" id="dbr-enabled"
                                {{ old('destinations_by_region.enabled', data_get($destinationsByRegion, 'enabled', true)) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="dbr-enabled">Activer la section Destinations par rÃƒÂ©gion</label>
+                        <label class="form-check-label" for="dbr-enabled">Activer la section Destinations par r�f©gion</label>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Titre de la section</label>
-                        <input type="text" class="form-control" name="destinations_by_region[title]" value="{{ old('destinations_by_region.title', data_get($destinationsByRegion, 'title', 'Destinations par rÃƒÂ©gion')) }}" placeholder="Destinations par rÃƒÂ©gion">
+                        <input type="text" class="form-control" name="destinations_by_region[title]" value="{{ old('destinations_by_region.title', data_get($destinationsByRegion, 'title', 'Destinations par r�f©gion')) }}" placeholder="Destinations par r�f©gion">
                     </div>
                     <div id="dbr-items-container" class="vstack gap-2">
                         @php
@@ -654,15 +654,15 @@
                             <div class="border rounded p-2 dbr-row align-items-center" data-index="{{ $idx }}">
                                 <div class="row g-2 align-items-center">
                                     <div class="col-auto d-flex flex-column gap-0">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary dbr-move-up" title="Monter">Ã¢â€ â€˜</button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary dbr-move-down" title="Descendre">Ã¢â€ â€œ</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary dbr-move-up" title="Monter">â�?��?~</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary dbr-move-down" title="Descendre">â�?��?o</button>
                                     </div>
                                     <div class="col"><input type="hidden" name="destinations_by_region[items][{{ $idx }}][order]" class="dbr-order" value="{{ data_get($item, 'order', $idx + 1) }}"><label class="form-label small mb-0">Ordre</label><span class="dbr-order-display">{{ data_get($item, 'order', $idx + 1) }}</span></div>
                                     <div class="col"><label class="form-label small mb-0">Label <span class="text-danger">*</span></label><input type="text" class="form-control form-control-sm" name="destinations_by_region[items][{{ $idx }}][label]" value="{{ data_get($item, 'label') }}" placeholder="Ex: CAP NORD" required></div>
                                     <div class="col"><label class="form-label small mb-0">Image URL</label><input type="text" class="form-control form-control-sm" name="destinations_by_region[items][{{ $idx }}][image_url]" value="{{ data_get($item, 'image_url') }}" placeholder="https://..."></div>
                                     <div class="col-auto"><label class="form-label small mb-0">Choisir</label><input type="file" class="form-control form-control-sm dbr-file" name="destinations_by_region_files[{{ $idx }}]" accept="image/*" data-index="{{ $idx }}"></div>
                                     <div class="col"><label class="form-label small mb-0">Lien URL</label><input type="text" class="form-control form-control-sm" name="destinations_by_region[items][{{ $idx }}][link_url]" value="{{ data_get($item, 'link_url') }}" placeholder="https://..."></div>
-                                    <div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger dbr-remove">Ãƒâ€”</button></div>
+                                    <div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger dbr-remove">�f�?"</button></div>
                                 </div>
                             </div>
                         @endforeach
@@ -684,7 +684,7 @@
                             <div class="row g-2">
                                 <div class="col-md-3"><input class="form-control" name="good_spots[{{ $idx }}][title]" value="{{ data_get($spot, 'title') }}" placeholder="Titre"></div>
                                 <div class="col-md-3"><input class="form-control" name="good_spots[{{ $idx }}][subtitle]" value="{{ data_get($spot, 'subtitle') }}" placeholder="Sous-titre"></div>
-                                <div class="col-md-3"><input class="form-control" name="good_spots[{{ $idx }}][icon]" value="{{ data_get($spot, 'icon') }}" placeholder="IcÃƒÂ´ne FA (ex: fas fa-utensils)"></div>
+                                <div class="col-md-3"><input class="form-control" name="good_spots[{{ $idx }}][icon]" value="{{ data_get($spot, 'icon') }}" placeholder="Ic�f´ne FA (ex: fas fa-utensils)"></div>
                                 <div class="col-md-3"><input class="form-control" name="good_spots[{{ $idx }}][link_url]" value="{{ data_get($spot, 'link_url') }}" placeholder="Link URL"></div>
                                 <div class="col-md-6"><input class="form-control" name="good_spots[{{ $idx }}][image_url]" value="{{ data_get($spot, 'image_url') }}" placeholder="Image URL"></div>
                                 <div class="col-md-6"><input type="file" class="form-control" name="good_spots_files[{{ $idx }}]" accept="image/*"></div>
@@ -711,7 +711,7 @@
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="accordion_slider[enabled]" value="1" id="accordion_slider_enabled"
                                        {{ old('accordion_slider.enabled', data_get($accordionSlider, 'enabled', true)) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="accordion_slider_enabled">Activer la section accordÃ©on</label>
+                                <label class="form-check-label" for="accordion_slider_enabled">Activer la section accordéon</label>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -733,8 +733,8 @@
                             <div class="border rounded p-3 accordion-slider-row" data-index="{{ $idx }}">
                                 <div class="row g-2 align-items-start">
                                     <div class="col-auto d-flex flex-column gap-0">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary accordion-slider-move-up" title="Monter">â†‘</button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary accordion-slider-move-down" title="Descendre">â†“</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary accordion-slider-move-up" title="Monter">�?'</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary accordion-slider-move-down" title="Descendre">�?"</button>
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label small mb-0">Titre vertical <span class="text-danger">*</span></label>
@@ -779,7 +779,7 @@
                                         <div class="form-control form-control-sm accordion-slider-order-display">{{ data_get($slide, 'order', $idx + 1) }}</div>
                                     </div>
                                     <div class="col-auto d-flex align-items-end">
-                                        <button type="button" class="btn btn-sm btn-outline-danger accordion-slider-remove">Ã—</button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger accordion-slider-remove">�-</button>
                                     </div>
                                     <div class="col-12">
                                         <div class="promo-preview">
@@ -799,25 +799,25 @@
 
             {{-- WhatsApp Banner --}}
             <div class="card">
-                <div class="card-header"><h5 class="card-title mb-0">BanniÃƒÂ¨re WhatsApp</h5></div>
+                <div class="card-header"><h5 class="card-title mb-0">Banni�f¨re WhatsApp</h5></div>
                 <div class="card-body">
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" name="whatsapp_banner[enabled]" value="1" id="whatsapp_enabled"
                                {{ old('whatsapp_banner.enabled', data_get($settings, 'whatsapp_banner.enabled')) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="whatsapp_enabled">Activer la banniÃƒÂ¨re WhatsApp</label>
+                        <label class="form-check-label" for="whatsapp_enabled">Activer la banni�f¨re WhatsApp</label>
                     </div>
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Titre</label>
-                            <input type="text" class="form-control" name="whatsapp_banner[title]" value="{{ old('whatsapp_banner.title', data_get($settings, 'whatsapp_banner.title', 'Rejoignez notre chaÃƒÂ®ne WhatsApp pour suivre nos actualitÃƒÂ©s voyage')) }}">
+                            <input type="text" class="form-control" name="whatsapp_banner[title]" value="{{ old('whatsapp_banner.title', data_get($settings, 'whatsapp_banner.title', 'Rejoignez notre cha�f®ne WhatsApp pour suivre nos actualit�f©s voyage')) }}">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Texte court (description)</label>
-                            <input type="text" class="form-control" name="whatsapp_banner[subtitle]" value="{{ old('whatsapp_banner.subtitle', data_get($settings, 'whatsapp_banner.subtitle', 'Restez informÃƒÂ© avec AjinSafro')) }}">
+                            <input type="text" class="form-control" name="whatsapp_banner[subtitle]" value="{{ old('whatsapp_banner.subtitle', data_get($settings, 'whatsapp_banner.subtitle', 'Restez inform�f© avec AjinSafro')) }}">
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Segments meta conservÃƒÂ©s pour compatibilitÃƒÂ©</label>
-                            <p class="text-muted small mb-2">Ces champs restent stockÃƒÂ©s mais ne sont plus affichÃƒÂ©s sur la home.</p>
+                            <label class="form-label">Segments meta conserv�f©s pour compatibilit�f©</label>
+                            <p class="text-muted small mb-2">Ces champs restent stock�f©s mais ne sont plus affich�f©s sur la home.</p>
                             @php
                                 $features = old('whatsapp_banner.features', data_get($settings, 'whatsapp_banner.features', []));
                                 $features = is_array($features) ? $features : [];
@@ -853,17 +853,17 @@
 
             {{-- Cruises --}}
             <div class="card">
-                <div class="card-header"><h5 class="card-title mb-0">CroisiÃƒÂ¨res</h5></div>
+                <div class="card-header"><h5 class="card-title mb-0">Croisi�f¨res</h5></div>
                 <div class="card-body">
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" name="cruises[enabled]" value="1" id="cruises_enabled"
                                {{ old('cruises.enabled', data_get($settings, 'cruises.enabled')) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="cruises_enabled">Activer la section CroisiÃƒÂ¨res</label>
+                        <label class="form-check-label" for="cruises_enabled">Activer la section Croisi�f¨res</label>
                     </div>
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Titre</label>
-                            <input type="text" class="form-control" name="cruises[title]" value="{{ old('cruises.title', data_get($settings, 'cruises.title', 'CroisiÃƒÂ¨res')) }}">
+                            <input type="text" class="form-control" name="cruises[title]" value="{{ old('cruises.title', data_get($settings, 'cruises.title', 'Croisi�f¨res')) }}">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Image URL</label>
@@ -880,7 +880,7 @@
                         @endif
                         <div class="col-md-6">
                             <label class="form-label">Texte du bouton</label>
-                            <input type="text" class="form-control" name="cruises[button_text]" value="{{ old('cruises.button_text', data_get($settings, 'cruises.button_text', 'DÃƒÂ©couvrir')) }}">
+                            <input type="text" class="form-control" name="cruises[button_text]" value="{{ old('cruises.button_text', data_get($settings, 'cruises.button_text', 'D�f©couvrir')) }}">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">URL du bouton</label>
@@ -895,16 +895,16 @@
                 <div class="card-header"><h5 class="card-title mb-0">Footer</h5></div>
                 <div class="card-body row g-3">
                     <div class="col-md-4">
-                        <label class="form-label">Colonne 1 Ã¢â‚¬â€ Titre</label>
+                        <label class="form-label">Colonne 1 â�,��?� Titre</label>
                         <input type="text" class="form-control" name="footer[col1_heading]" value="{{ old('footer.col1_heading', data_get($settings, 'footer.col1_heading', 'En savoir plus')) }}">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Colonne 2 Ã¢â‚¬â€ Titre</label>
-                        <input type="text" class="form-control" name="footer[col2_heading]" value="{{ old('footer.col2_heading', data_get($settings, 'footer.col2_heading', 'SociÃƒÂ©tÃƒÂ©')) }}">
+                        <label class="form-label">Colonne 2 â�,��?� Titre</label>
+                        <input type="text" class="form-control" name="footer[col2_heading]" value="{{ old('footer.col2_heading', data_get($settings, 'footer.col2_heading', 'Soci�f©t�f©')) }}">
                     </div>
                     <div class="col-12">
-                        <label class="form-label">Mentions lÃƒÂ©gales</label>
-                        <textarea class="form-control" name="footer[legal_text]" rows="3" placeholder="Licence NÃ‚Â° ... | RC: ...">{{ old('footer.legal_text', data_get($settings, 'footer.legal_text', "Licence NÃ‚Â° 489117 | RC: 18989\nPatente: 50411316 | I.C.E: 001585417000035\nAjinSafro Recreation SARL AU")) }}</textarea>
+                        <label class="form-label">Mentions l�f©gales</label>
+                        <textarea class="form-control" name="footer[legal_text]" rows="3" placeholder="Licence N�,° ... | RC: ...">{{ old('footer.legal_text', data_get($settings, 'footer.legal_text', "Licence N�,° 489117 | RC: 18989\nPatente: 50411316 | I.C.E: 001585417000035\nAjinSafro Recreation SARL AU")) }}</textarea>
                     </div>
                 </div>
             </div>
@@ -963,7 +963,7 @@
 @push('scripts')
 <script>
 (function () {
-    /* Ã¢â€â‚¬Ã¢â€â‚¬ Header tab JS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+    /* â�?��,�â�?��,� Header tab JS â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,� */
     var menuSource = document.getElementById('hdr_menu_source');
     var wpMenuWrap = document.getElementById('hdr_wp_menu_wrap');
     var linksWrap = document.getElementById('hdr_links_wrap');
@@ -989,10 +989,10 @@
             '<div class="col-auto text-center" style="min-width:40px"><span class="badge bg-primary hdr-order-display">' + order + '</span></div>' +
             '<div class="col-md-2"><label class="form-label small mb-0">Texte</label><input class="form-control form-control-sm" name="header[links][' + idx + '][label]" placeholder="Ex: HOTEL"></div>' +
             '<div class="col-md-2"><label class="form-label small mb-0">URL</label><input class="form-control form-control-sm" name="header[links][' + idx + '][url]" placeholder="Ex: /hotel"></div>' +
-            '<div class="col-md-2"><label class="form-label small mb-0">IcÃƒÂ´ne FA</label><input class="form-control form-control-sm" name="header[links][' + idx + '][icon]" placeholder="fas fa-hotel"></div>' +
+            '<div class="col-md-2"><label class="form-label small mb-0">Ic�f´ne FA</label><input class="form-control form-control-sm" name="header[links][' + idx + '][icon]" placeholder="fas fa-hotel"></div>' +
             '<div class="col-auto d-flex align-items-end gap-2"><div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="header[links][' + idx + '][active]" value="1"><label class="form-check-label small">Actif</label></div></div>' +
             '<div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-primary hdr-add-child">+ Sous-menu</button></div>' +
-            '<div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-link">Ãƒâ€”</button></div>' +
+            '<div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-link">�f�?"</button></div>' +
             '</div>' +
             '<div class="hdr-children-list ms-4 ps-3 border-start border-2 border-primary"><div class="d-flex justify-content-between align-items-center mb-1"><small class="text-muted fw-semibold">Sous-menus</small></div></div>' +
             '</div>';
@@ -1006,8 +1006,8 @@
             '<div class="col-auto"><span class="badge bg-secondary hdr-child-order-display">' + order + '</span></div>' +
             '<div class="col-3"><input class="form-control form-control-sm" name="header[links][' + linkIdx + '][children][' + childIdx + '][label]" placeholder="Label"></div>' +
             '<div class="col-3"><input class="form-control form-control-sm" name="header[links][' + linkIdx + '][children][' + childIdx + '][url]" placeholder="URL"></div>' +
-            '<div class="col-2"><input class="form-control form-control-sm" name="header[links][' + linkIdx + '][children][' + childIdx + '][icon]" placeholder="IcÃƒÂ´ne FA"></div>' +
-            '<div class="col-auto"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-child py-0 px-1">Ãƒâ€”</button></div>' +
+            '<div class="col-2"><input class="form-control form-control-sm" name="header[links][' + linkIdx + '][children][' + childIdx + '][icon]" placeholder="Ic�f´ne FA"></div>' +
+            '<div class="col-auto"><button type="button" class="btn btn-sm btn-outline-danger hdr-remove-child py-0 px-1">�f�?"</button></div>' +
             '</div>';
     }
 
@@ -1115,7 +1115,7 @@
         });
     }
 
-    /* Ã¢â€â‚¬Ã¢â€â‚¬ Content tab JS (existing) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+    /* â�?��,�â�?��,� Content tab JS (existing) â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,� */
     var heroType = document.getElementById('hero_type');
     var imageWraps = [document.getElementById('hero_image_url_wrap'), document.getElementById('hero_image_file_wrap')];
     var videoWraps = [document.getElementById('hero_video_url_wrap'), document.getElementById('hero_video_file_wrap')];
@@ -1139,17 +1139,17 @@
     toggleHeroFields();
     syncOverlayValue();
 
-    /* Ã¢â€â‚¬Ã¢â€â‚¬ Ordre des sections + sections personnalisÃƒÂ©es Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+    /* â�?��,�â�?��,� Ordre des sections + sections personnalis�f©es â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,� */
     var sectionOrderContainer = document.getElementById('section-order-container');
     var sectionAddCustomBtn = document.getElementById('section-add-custom');
     var sectionLabels = {
         last_minute: 'Tendances du moment',
-        accommodations: 'SÃƒÂ©jours uniques',
-        holiday_theme: 'Voyages par thÃƒÂ¨me',
+        accommodations: 'S�f©jours uniques',
+        holiday_theme: 'Voyages par th�f¨me',
         regions: 'Destinations',
         good_spots: 'Bons coins',
-        whatsapp_banner: 'BanniÃƒÂ¨re WhatsApp',
-        cruises: 'CroisiÃƒÂ¨res',
+        whatsapp_banner: 'Banni�f¨re WhatsApp',
+        cruises: 'Croisi�f¨res',
         newsletter: 'Newsletter'
     };
     function nextCustomId() {
@@ -1165,29 +1165,29 @@
             '<input type="hidden" name="section_order[]" value="' + secKey + '">' +
             '<div class="d-flex align-items-start gap-2 flex-wrap">' +
             '<div class="d-flex flex-column gap-0">' +
-            '<button type="button" class="btn btn-sm btn-outline-secondary section-move-up" title="Monter">Ã¢â€ â€˜</button>' +
-            '<button type="button" class="btn btn-sm btn-outline-secondary section-move-down" title="Descendre">Ã¢â€ â€œ</button></div>' +
+            '<button type="button" class="btn btn-sm btn-outline-secondary section-move-up" title="Monter">â�?��?~</button>' +
+            '<button type="button" class="btn btn-sm btn-outline-secondary section-move-down" title="Descendre">â�?��?o</button></div>' +
             '<div class="form-check form-switch align-self-center">' +
             '<input class="form-check-input" type="checkbox" name="sections[' + secKey + ']" value="1" checked>' +
             '<label class="form-check-label">Activer</label></div>' +
             '<div class="flex-grow-1">' +
-            '<label class="form-label small mb-0">Section personnalisÃƒÂ©e Ã¢â‚¬â€ Titre</label>' +
+            '<label class="form-label small mb-0">Section personnalis�f©e â�,��?� Titre</label>' +
             '<input type="text" class="form-control form-control-sm" name="custom_sections[' + secKey + '][title]" placeholder="Titre de la section">' +
             '<label class="form-label small mb-0 mt-1">Contenu (HTML / shortcodes)</label>' +
             '<textarea class="form-control form-control-sm" name="custom_sections[' + secKey + '][content]" rows="3" placeholder="<p>...</p> ou [shortcode]"></textarea></div>' +
-            '<div class="align-self-center"><button type="button" class="btn btn-sm btn-outline-danger section-remove">Ãƒâ€”</button></div></div></div>';
+            '<div class="align-self-center"><button type="button" class="btn btn-sm btn-outline-danger section-remove">�f�?"</button></div></div></div>';
     }
     function builtinSectionRowHtml(secKey) {
         var label = sectionLabels[secKey] || secKey;
         return '<div class="border rounded p-2 section-order-row d-flex align-items-center gap-2" data-section-key="' + secKey + '">' +
             '<input type="hidden" name="section_order[]" value="' + secKey + '">' +
             '<div class="d-flex flex-column gap-0">' +
-            '<button type="button" class="btn btn-sm btn-outline-secondary section-move-up" title="Monter">Ã¢â€ â€˜</button>' +
-            '<button type="button" class="btn btn-sm btn-outline-secondary section-move-down" title="Descendre">Ã¢â€ â€œ</button></div>' +
+            '<button type="button" class="btn btn-sm btn-outline-secondary section-move-up" title="Monter">â�?��?~</button>' +
+            '<button type="button" class="btn btn-sm btn-outline-secondary section-move-down" title="Descendre">â�?��?o</button></div>' +
             '<div class="form-check form-switch mb-0">' +
             '<input class="form-check-input" type="checkbox" name="sections[' + secKey + ']" value="1" checked>' +
             '<label class="form-check-label">' + label + '</label></div>' +
-            '<div class="ms-auto"><button type="button" class="btn btn-sm btn-outline-secondary section-remove" title="Retirer de la liste">Ãƒâ€”</button></div></div>';
+            '<div class="ms-auto"><button type="button" class="btn btn-sm btn-outline-secondary section-remove" title="Retirer de la liste">�f�?"</button></div></div>';
     }
     var sectionAddBuiltin = document.getElementById('section-add-builtin');
     if (sectionAddBuiltin) {
@@ -1230,13 +1230,13 @@
         });
     }
 
-    /* Ã¢â€â‚¬Ã¢â€â‚¬ Voyages par theme items repeater Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+    /* â�?��,�â�?��,� Voyages par theme items repeater â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,� */
     var holidayContainer = document.getElementById('holiday-items-container');
     var holidayAddBtn = document.getElementById('holiday-add-item');
     function holidayRowHtml(idx) {
         return '<div class="border rounded p-2 holiday-row" data-index="' + idx + '">' +
             '<div class="row g-2 align-items-center">' +
-            '<div class="col-auto d-flex flex-column gap-0"><button type="button" class="btn btn-sm btn-outline-secondary holiday-move-up" title="Monter">Ã¢â€ â€˜</button><button type="button" class="btn btn-sm btn-outline-secondary holiday-move-down" title="Descendre">Ã¢â€ â€œ</button></div>' +
+            '<div class="col-auto d-flex flex-column gap-0"><button type="button" class="btn btn-sm btn-outline-secondary holiday-move-up" title="Monter">â�?��?~</button><button type="button" class="btn btn-sm btn-outline-secondary holiday-move-down" title="Descendre">â�?��?o</button></div>' +
             '<div class="col-md-2"><label class="form-label small mb-0">Titre</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][title]"></div>' +
             '<div class="col-md-2"><label class="form-label small mb-0">Badge</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][badge]" placeholder="Nouveau"></div>' +
             '<div class="col-md-2"><label class="form-label small mb-0">Description</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][description]" placeholder="Texte court"></div>' +
@@ -1246,7 +1246,7 @@
             '<div class="col-md-2"><label class="form-label small mb-0">Btn URL</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][button_url]" value="#"></div>' +
             '<div class="col-md-2"><label class="form-label small mb-0">Tags</label><input type="text" class="form-control form-control-sm" name="holiday_theme[items][' + idx + '][tags]" placeholder="plage, famille, luxe"></div>' +
             '<div class="col-auto"><div class="form-check form-switch mt-4"><input class="form-check-input" type="checkbox" name="holiday_theme[items][' + idx + '][active]" value="1" checked><label class="form-check-label small">Actif</label></div></div>' +
-            '<div class="col-auto"><input type="hidden" class="holiday-order" name="holiday_theme[items][' + idx + '][order]" value="' + idx + '"><button type="button" class="btn btn-sm btn-outline-danger holiday-remove mt-4">Ãƒâ€”</button></div>' +
+            '<div class="col-auto"><input type="hidden" class="holiday-order" name="holiday_theme[items][' + idx + '][order]" value="' + idx + '"><button type="button" class="btn btn-sm btn-outline-danger holiday-remove mt-4">�f�?"</button></div>' +
             '<div class="col-12"><div class="holiday-preview border rounded p-2 d-flex align-items-center gap-2"><div class="holiday-preview__img" style="width:64px;height:44px;border-radius:8px;background:#e7edf5 center/cover no-repeat;"></div><div><div class="holiday-preview__title fw-bold small">Titre</div><div class="holiday-preview__meta text-muted small"></div></div></div></div>' +
             '</div></div>';
     }
@@ -1316,13 +1316,13 @@
         });
     }
 
-    /* Ã¢â€â‚¬Ã¢â€â‚¬ Destinations par rÃƒÂ©gion (DBR) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+    /* â�?��,�â�?��,� Destinations par r�f©gion (DBR) â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,�â�?��,� */
     var accordionSliderContainer = document.getElementById('accordion-slider-items-container');
     var accordionSliderAddBtn = document.getElementById('accordion-slider-add-item');
     function accordionSliderRowHtml(idx) {
         return '<div class="border rounded p-3 accordion-slider-row" data-index="' + idx + '">' +
             '<div class="row g-2 align-items-start">' +
-            '<div class="col-auto d-flex flex-column gap-0"><button type="button" class="btn btn-sm btn-outline-secondary accordion-slider-move-up" title="Monter">â†‘</button><button type="button" class="btn btn-sm btn-outline-secondary accordion-slider-move-down" title="Descendre">â†“</button></div>' +
+            '<div class="col-auto d-flex flex-column gap-0"><button type="button" class="btn btn-sm btn-outline-secondary accordion-slider-move-up" title="Monter">�?'</button><button type="button" class="btn btn-sm btn-outline-secondary accordion-slider-move-down" title="Descendre">�?"</button></div>' +
             '<div class="col-md-3"><label class="form-label small mb-0">Titre vertical <span class="text-danger">*</span></label><input type="text" class="form-control form-control-sm" name="accordion_slider[slides][' + idx + '][title]" required></div>' +
             '<div class="col-md-3"><label class="form-label small mb-0">Sous-titre</label><input type="text" class="form-control form-control-sm" name="accordion_slider[slides][' + idx + '][subtitle]"></div>' +
             '<div class="col-md-3"><label class="form-label small mb-0">Image URL</label><input type="text" class="form-control form-control-sm accordion-slider-image-input" name="accordion_slider[slides][' + idx + '][image]" placeholder="https://..."></div>' +
@@ -1332,7 +1332,7 @@
             '<div class="col-md-2"><label class="form-label small mb-0">Style bouton</label><select class="form-select form-select-sm" name="accordion_slider[slides][' + idx + '][button_style]"><option value="orange">Orange</option><option value="white">White</option><option value="white-arabic">White Arabic</option></select></div>' +
             '<div class="col-md-3"><label class="form-label small mb-0">Overlay / gradient</label><input type="text" class="form-control form-control-sm" name="accordion_slider[slides][' + idx + '][overlay_color]" placeholder="linear-gradient(...)"></div>' +
             '<div class="col-md-1"><label class="form-label small mb-0">Ordre</label><input type="hidden" class="accordion-slider-order" name="accordion_slider[slides][' + idx + '][order]" value="' + (idx + 1) + '"><div class="form-control form-control-sm accordion-slider-order-display">' + (idx + 1) + '</div></div>' +
-            '<div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger accordion-slider-remove">Ã—</button></div>' +
+            '<div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger accordion-slider-remove">�-</button></div>' +
             '<div class="col-12"><div class="promo-preview"><div class="promo-preview__img accordion-slider-preview-img"></div><div><div class="promo-preview__title accordion-slider-preview-title">Titre</div><div class="promo-preview__subtitle accordion-slider-preview-subtitle"></div></div></div></div>' +
             '</div></div>';
     }
@@ -1410,13 +1410,13 @@
         label = label || ''; imageUrl = imageUrl || ''; linkUrl = linkUrl || ''; order = order == null ? idx + 1 : order;
         return '<div class="border rounded p-2 dbr-row align-items-center" data-index="' + idx + '">' +
             '<div class="row g-2 align-items-center">' +
-            '<div class="col-auto d-flex flex-column gap-0"><button type="button" class="btn btn-sm btn-outline-secondary dbr-move-up" title="Monter">Ã¢â€ â€˜</button><button type="button" class="btn btn-sm btn-outline-secondary dbr-move-down" title="Descendre">Ã¢â€ â€œ</button></div>' +
+            '<div class="col-auto d-flex flex-column gap-0"><button type="button" class="btn btn-sm btn-outline-secondary dbr-move-up" title="Monter">â�?��?~</button><button type="button" class="btn btn-sm btn-outline-secondary dbr-move-down" title="Descendre">â�?��?o</button></div>' +
             '<div class="col"><input type="hidden" name="destinations_by_region[items][' + idx + '][order]" class="dbr-order" value="' + order + '"><label class="form-label small mb-0">Ordre</label><span class="dbr-order-display">' + order + '</span></div>' +
             '<div class="col"><label class="form-label small mb-0">Label <span class="text-danger">*</span></label><input type="text" class="form-control form-control-sm" name="destinations_by_region[items][' + idx + '][label]" value="' + (label.replace(/"/g, '&quot;')) + '" placeholder="Ex: CAP NORD" required></div>' +
             '<div class="col"><label class="form-label small mb-0">Image URL</label><input type="text" class="form-control form-control-sm" name="destinations_by_region[items][' + idx + '][image_url]" value="' + (imageUrl.replace(/"/g, '&quot;')) + '" placeholder="https://..."></div>' +
             '<div class="col-auto"><label class="form-label small mb-0">Choisir</label><input type="file" class="form-control form-control-sm dbr-file" name="destinations_by_region_files[' + idx + ']" accept="image/*" data-index="' + idx + '"></div>' +
             '<div class="col"><label class="form-label small mb-0">Lien URL</label><input type="text" class="form-control form-control-sm" name="destinations_by_region[items][' + idx + '][link_url]" value="' + (linkUrl.replace(/"/g, '&quot;')) + '" placeholder="https://..."></div>' +
-            '<div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger dbr-remove">Ãƒâ€”</button></div>' +
+            '<div class="col-auto d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger dbr-remove">�f�?"</button></div>' +
             '</div></div>';
     }
     function dbrRenumber() {
@@ -1480,4 +1480,5 @@
 })();
 </script>
 @endpush
+
 

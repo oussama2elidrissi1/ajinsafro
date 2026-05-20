@@ -1,8 +1,8 @@
-<section class="reservation-create__panel" data-create-step="4" data-reservation-step="4" hidden>
+﻿<section class="reservation-create__panel" data-create-step="4" data-reservation-step="4" hidden>
     <div class="reservation-create__card">
         <div class="reservation-create__section-head">
             <div>
-                <p class="reservation-create__eyebrow">Étape 4</p>
+                <p class="reservation-create__eyebrow">�?tape 4</p>
                 <h3 class="reservation-create__section-title">Extras</h3>
                 <p class="reservation-create__section-subtitle">Les extras sont chargés depuis la configuration du voyage et intégrés au total du dossier.</p>
             </div>
@@ -11,7 +11,7 @@
         <div id="reservation-create-extras-container" class="reservation-create__extras-list"></div>
         <div id="reservation-create-extras-empty" class="reservation-create__placeholder">
             <strong>Aucun extra configuré</strong>
-            <p>Ce voyage ne contient pas encore d’extras actifs dans la configuration voyage.</p>
+            <p>Ce voyage ne contient pas encore d�?Textras actifs dans la configuration voyage.</p>
         </div>
     </div>
 
@@ -21,3 +21,4 @@
         <button type="button" class="reservation-create__button reservation-create__button--primary" data-create-next data-step-next="5">Continuer</button>
     </div>
 </section>
+

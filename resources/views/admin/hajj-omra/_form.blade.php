@@ -1,4 +1,4 @@
-@php
+﻿@php
     $roomPriceRows = old('room_prices', $package->roomPrices->map(fn($item) => [
         'room_type' => $item->room_type,
         'price' => $item->price,
@@ -244,7 +244,7 @@
                                 <input type="number" min="0" name="room_prices[{{ $index }}][stock]" value="{{ $row['stock'] ?? '' }}" class="form-control">
                             </div>
                             <div class="col-md-1 d-flex align-items-end">
-                                <button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-row>×</button>
+                                <button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-row>�-</button>
                             </div>
                         </div>
                     </div>
@@ -296,7 +296,7 @@
                                 <textarea name="departures[{{ $index }}][internal_notes]" rows="2" class="form-control">{{ $row['internal_notes'] ?? '' }}</textarea>
                             </div>
                             <div class="col-md-1 d-flex align-items-end">
-                                <button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-row>×</button>
+                                <button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-row>�-</button>
                             </div>
                         </div>
                     </div>
@@ -333,7 +333,7 @@
                                 <input type="file" name="program_day_images[{{ $index }}]" class="form-control" accept=".jpg,.jpeg,.png,.webp">
                             </div>
                             <div class="col-md-1 d-flex align-items-end">
-                                <button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-row>×</button>
+                                <button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-row>�-</button>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Description</label>
@@ -454,7 +454,7 @@
                                     <input type="number" min="0" name="room_prices[${index}][stock]" class="form-control">
                                 </div>
                                 <div class="col-md-1 d-flex align-items-end">
-                                    <button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-row>×</button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-row>�-</button>
                                 </div>
                             </div>
                         </div>`;
@@ -496,7 +496,7 @@
                                     <textarea name="departures[${index}][internal_notes]" rows="2" class="form-control"></textarea>
                                 </div>
                                 <div class="col-md-1 d-flex align-items-end">
-                                    <button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-row>×</button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-row>�-</button>
                                 </div>
                             </div>
                         </div>`;
@@ -523,7 +523,7 @@
                                     <input type="file" name="program_day_images[${index}]" class="form-control" accept=".jpg,.jpeg,.png,.webp">
                                 </div>
                                 <div class="col-md-1 d-flex align-items-end">
-                                    <button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-row>×</button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-row>�-</button>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label">Description</label>
@@ -560,3 +560,4 @@
         })();
     </script>
 @endpush
+

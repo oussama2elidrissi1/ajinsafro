@@ -1,4 +1,4 @@
-{{--
+﻿{{--
 Flight Manager Component - Réutilisable pour onglet normal ET contexte compact (modal/drawer)
 @param string $mode - 'full' pour onglet normal, 'modal'/'drawer' pour mode compact
 @param array $flightOptionsWithIndex - Options de vol existantes
@@ -23,7 +23,7 @@ Flight Manager Component - Réutilisable pour onglet normal ET contexte compact 
         if (!$d) return null;
         return $d instanceof \Carbon\Carbon ? $d->format('D, d M') : \Carbon\Carbon::parse($d)->format('D, d M');
     };
-    $dash = '—';
+    $dash = '�?"';
 @endphp
 
 <div class="flight-manager"
@@ -34,9 +34,9 @@ Flight Manager Component - Réutilisable pour onglet normal ET contexte compact 
 
     @if($isCompact)
         <div class="alert alert-warning border-warning mb-3" role="alert">
-            <h6 class="mb-2"><i class="bx bx-error me-1"></i>Section en cours de construction — ne pas modifier</h6>
-            <p class="mb-1">Cette section n’est pas encore finalisée et ses champs ne sont pas pris en charge par la logique actuelle (enregistrement, validation, affichage).</p>
-            <p class="mb-0">Merci de ne rien modifier ici pour le moment afin d’éviter incohérences, erreurs de sauvegarde ou comportements inattendus. Cette partie sera activée dès qu’elle sera prête.</p>
+            <h6 class="mb-2"><i class="bx bx-error me-1"></i>Section en cours de construction �?" ne pas modifier</h6>
+            <p class="mb-1">Cette section n�?Test pas encore finalisée et ses champs ne sont pas pris en charge par la logique actuelle (enregistrement, validation, affichage).</p>
+            <p class="mb-0">Merci de ne rien modifier ici pour le moment afin d�?Téviter incohérences, erreurs de sauvegarde ou comportements inattendus. Cette partie sera activée dès qu�?Telle sera prête.</p>
         </div>
     @endif
 
@@ -147,7 +147,7 @@ Flight Manager Component - Réutilisable pour onglet normal ET contexte compact 
                     <i class="bx bx-list-ul me-1"></i> Gérer les compagnies aériennes
                 </button>
                 @if($airlines->isEmpty())
-                    <span class="text-muted ms-2">— Aucune compagnie. Cliquez pour en ajouter.</span>
+                    <span class="text-muted ms-2">�?" Aucune compagnie. Cliquez pour en ajouter.</span>
                 @endif
             </div>
         @endif
@@ -348,13 +348,13 @@ Flight Manager Component - Réutilisable pour onglet normal ET contexte compact 
 
             if (titleEl && descEl) {
                 if (day === 1) {
-                    titleEl.textContent = 'Jour 1 — Vol Aller';
+                    titleEl.textContent = 'Jour 1 �?" Vol Aller';
                     descEl.textContent = 'Configuration du vol aller du circuit.';
                 } else if (day === totalDays) {
-                    titleEl.textContent = 'Jour ' + totalDays + ' — Vol Retour';
+                    titleEl.textContent = 'Jour ' + totalDays + ' �?" Vol Retour';
                     descEl.textContent = 'Configuration du vol retour du circuit.';
                 } else {
-                    titleEl.textContent = 'Jour ' + day + ' — Vols pendant le circuit';
+                    titleEl.textContent = 'Jour ' + day + ' �?" Vols pendant le circuit';
                     descEl.textContent = 'Ajoutez ici les vols pendant le circuit pour ce jour. Aller/Retour restent sur Jour 1 et Jour ' + totalDays + '.';
                 }
             }
@@ -550,12 +550,12 @@ Flight Manager Component - Réutilisable pour onglet normal ET contexte compact 
             selects.forEach(function(selectEl) {
                 var previousValue = selectEl.value;
                 var placeholder = selectEl.querySelector('option[value=""]');
-                var placeholderText = placeholder ? placeholder.textContent : '—';
+                var placeholderText = placeholder ? placeholder.textContent : '�?"';
 
                 selectEl.innerHTML = '';
                 var emptyOpt = document.createElement('option');
                 emptyOpt.value = '';
-                emptyOpt.textContent = placeholderText || '—';
+                emptyOpt.textContent = placeholderText || '�?"';
                 selectEl.appendChild(emptyOpt);
 
                 airlineState.list.forEach(function(airline) {
@@ -611,8 +611,8 @@ Flight Manager Component - Réutilisable pour onglet normal ET contexte compact 
             els.tableBody.innerHTML = filtered.map(function(airline) {
                 return '<tr data-airline-id="' + airline.id + '">' +
                     '<td>' + escapeHtml(airline.name) + '</td>' +
-                    '<td>' + escapeHtml(airline.code_iata || '—') + '</td>' +
-                    '<td>' + escapeHtml(airline.logo_url || '—') + '</td>' +
+                    '<td>' + escapeHtml(airline.code_iata || '�?"') + '</td>' +
+                    '<td>' + escapeHtml(airline.logo_url || '�?"') + '</td>' +
                     '<td>' + (airline.is_active
                         ? '<span class="badge bg-success-subtle text-success">Actif</span>'
                         : '<span class="badge bg-secondary-subtle text-secondary">Inactif</span>') + '</td>' +
@@ -763,7 +763,7 @@ Flight Manager Component - Réutilisable pour onglet normal ET contexte compact 
                     applyValidationErrors(error.payload.errors);
                     showAlert('warning', error.payload.message || 'Veuillez corriger les erreurs de validation.');
                 } else {
-                    showAlert('danger', error.message || 'Échec lors de l’enregistrement.');
+                    showAlert('danger', error.message || '�?chec lors de l�?Tenregistrement.');
                 }
             } finally {
                 setSaveLoading(false);

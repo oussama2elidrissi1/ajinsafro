@@ -103,7 +103,7 @@
                             <td>
                                 <x-admin.badge type="info" :label="$package->type_label" />
                             </td>
-                            <td>{{ $package->departure_city ?: 'â€”' }}</td>
+                            <td>{{ $package->departure_city ?: '�?"' }}</td>
                             <td>
                                 @if($package->price_from_value !== null)
                                     <strong>{{ number_format($package->price_from_value, 0, ',', ' ') }} {{ $package->currency }}</strong>
@@ -111,7 +111,7 @@
                                     <span class="text-muted">Sur demande</span>
                                 @endif
                             </td>
-                            <td>{{ $nextDeparture?->departure_date?->format('d/m/Y') ?? ($package->start_date?->format('d/m/Y') ?: 'â€”') }}</td>
+                            <td>{{ $nextDeparture?->departure_date?->format('d/m/Y') ?? ($package->start_date?->format('d/m/Y') ?: '�?"') }}</td>
                             <td>
                                 <x-admin.badge
                                     :type="match($package->status){
@@ -150,4 +150,5 @@
         @endif
     </section>
 @endsection
+
 

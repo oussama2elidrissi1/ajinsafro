@@ -1,4 +1,4 @@
-{{-- Package Builder Items Section --}}
+﻿{{-- Package Builder Items Section --}}
 <div class="card mt-4">
     <div class="card-body">
         <h4 class="card-title mb-4">
@@ -83,7 +83,7 @@
                                                         </td>
                                                         <td>
                                                             @if($item->price_delta_per_person == 0)
-                                                                <span class="text-muted">—</span>
+                                                                <span class="text-muted">�?"</span>
                                                             @else
                                                                 {{ $item->formatted_price_delta }}
                                                             @endif
@@ -206,3 +206,4 @@
     });
 </script>
 @endpush
+

@@ -5,7 +5,7 @@
 @section('content')
     <x-admin.page-header
         title="Points de vente"
-        subtitle="Pilotage des points de vente Ajinsafro, de leurs responsables et de leur activitÃ© commerciale."
+        subtitle="Pilotage des points de vente Ajinsafro, de leurs responsables et de leur activité commerciale."
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
             ['label' => 'Points de vente'],
@@ -91,7 +91,7 @@
                     title="Aucun point de vente"
                     message="Aucun point de vente ne correspond aux filtres actuels."
                     :action-url="route('admin.agencies.create')"
-                    action-label="CrÃ©er un point de vente"
+                    action-label="Créer un point de vente"
                 />
             @else
                 <div class="table-responsive">
@@ -102,11 +102,11 @@
                                 <th>Point de vente</th>
                                 <th>Ville</th>
                                 <th>Pays</th>
-                                <th>TÃ©lÃ©phone</th>
+                                <th>Téléphone</th>
                                 <th>Email</th>
                                 <th>Manager</th>
-                                <th>EmployÃ©s</th>
-                                <th>RÃ©servations</th>
+                                <th>Employés</th>
+                                <th>Réservations</th>
                                 <th>CA</th>
                                 <th>Statut</th>
                                 <th class="text-end">Actions</th>
@@ -131,13 +131,13 @@
                                     </td>
                                     <td>
                                         <a href="{{ route('admin.agencies.show', $agency) }}" class="fw-semibold text-decoration-none">{{ $agency->name }}</a>
-                                        <div class="text-muted small">{{ $agency->code }} Â· {{ $agencyTypeLabels[$agency->agency_type] ?? $agency->agency_type }}</div>
+                                        <div class="text-muted small">{{ $agency->code }} · {{ $agencyTypeLabels[$agency->agency_type] ?? $agency->agency_type }}</div>
                                     </td>
-                                    <td>{{ $agency->city ?: 'â€”' }}</td>
-                                    <td>{{ $agency->country ?: 'â€”' }}</td>
-                                    <td>{{ $agency->phone ?: 'â€”' }}</td>
-                                    <td>{{ $agency->email ?: 'â€”' }}</td>
-                                    <td>{{ $agency->manager?->name ?: 'â€”' }}</td>
+                                    <td>{{ $agency->city ?: '�?"' }}</td>
+                                    <td>{{ $agency->country ?: '�?"' }}</td>
+                                    <td>{{ $agency->phone ?: '�?"' }}</td>
+                                    <td>{{ $agency->email ?: '�?"' }}</td>
+                                    <td>{{ $agency->manager?->name ?: '�?"' }}</td>
                                     <td>{{ $agency->agency_employees_count }}</td>
                                     <td>{{ $agency->reservations_count }}</td>
                                     <td>{{ number_format((float) ($agency->revenue_total ?? 0), 0, ',', ' ') }} DH</td>
@@ -148,7 +148,7 @@
                                                 @csrf
                                                 @method('PATCH')
                                                 <button type="submit" class="aj-btn aj-btn-soft" style="min-height:34px;padding:0 10px;font-size:12px;">
-                                                    {{ $agency->status === \App\Models\Branch::STATUS_ACTIVE ? 'DÃ©sactiver' : 'Activer' }}
+                                                    {{ $agency->status === \App\Models\Branch::STATUS_ACTIVE ? 'Désactiver' : 'Activer' }}
                                                 </button>
                                             </form>
                                             <a href="{{ route('admin.agencies.show', $agency) }}" class="aj-btn aj-btn-soft" style="min-height:34px;padding:0 10px;font-size:12px;">Voir</a>
@@ -170,4 +170,5 @@
         </div>
     </div>
 @endsection
+
 

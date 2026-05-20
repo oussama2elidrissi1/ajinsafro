@@ -1,4 +1,4 @@
-@php $modalAjax = $modalAjax ?? false; @endphp
+﻿@php $modalAjax = $modalAjax ?? false; @endphp
 <div class="card border shadow-sm">
     <div class="card-header bg-white py-3 border-bottom">
         <h5 class="mb-0"><i class="bx bx-cog me-1 text-primary"></i> Paramètres du départ</h5>
@@ -51,7 +51,7 @@
                 </div>
                 <div class="col-12">
                     <label class="form-label">Notes</label>
-                    <textarea name="notes" class="form-control" rows="3" placeholder="Notes internes…">{{ old('notes', $departure->notes) }}</textarea>
+                    <textarea name="notes" class="form-control" rows="3" placeholder="Notes internes�?�">{{ old('notes', $departure->notes) }}</textarea>
                 </div>
             </div>
             <div class="mt-3 text-end">
@@ -60,3 +60,4 @@
         </form>
     </div>
 </div>
+

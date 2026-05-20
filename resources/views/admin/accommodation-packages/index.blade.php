@@ -1,14 +1,14 @@
 ﻿@extends('layouts.admin-v6')
 
-@section('title', 'Packs hÃ©bergement')
+@section('title', 'Packs hébergement')
 
 @section('content')
     <x-admin.page-header
-        title="Packs hÃ©bergement"
-        subtitle="GÃ©rez les packs d'hÃ©bergement affichÃ©s sur le site."
+        title="Packs hébergement"
+        subtitle="Gérez les packs d'hébergement affichés sur le site."
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Packs hÃ©bergement'],
+            ['label' => 'Packs hébergement'],
         ]"
     >
         <x-slot name="actions">
@@ -23,7 +23,7 @@
 
     <x-admin.kpi-cards
         :kpis="[
-            ['label' => 'Total packs', 'value' => number_format($packages->total(), 0, ',', ' '), 'icon' => 'bx bx-buildings', 'color' => '-blue', 'note' => 'Base complÃ¨te'],
+            ['label' => 'Total packs', 'value' => number_format($packages->total(), 0, ',', ' '), 'icon' => 'bx bx-buildings', 'color' => '-blue', 'note' => 'Base complète'],
             ['label' => 'Actifs', 'value' => number_format($packages->where('is_active', true)->count(), 0, ',', ' '), 'icon' => 'bx bx-badge-check', 'color' => '-green', 'note' => 'Visibles sur le site'],
             ['label' => 'En vedette', 'value' => number_format($packages->where('is_featured', true)->count(), 0, ',', ' '), 'icon' => 'bx bx-star', 'color' => '-orange', 'note' => 'Mis en avant'],
             ['label' => 'Prix moyen', 'value' => number_format($packages->avg('price_from') ?? 0, 0, ',', ' ') . ' DH', 'icon' => 'bx bx-wallet', 'color' => '-violet', 'note' => 'Moyenne base'],
@@ -33,8 +33,8 @@
     <section class="aj-panel">
         @if($packages->isEmpty())
             <x-admin.empty-state
-                title="Aucun pack hÃ©bergement"
-                message="CrÃ©ez votre premier pack pour l'afficher sur le site."
+                title="Aucun pack hébergement"
+                message="Créez votre premier pack pour l'afficher sur le site."
                 :action-url="route('admin.accommodation-packages.create')"
                 action-label="Nouveau pack"
             />
@@ -46,7 +46,7 @@
                             <th>Image</th>
                             <th>Titre</th>
                             <th>Destination</th>
-                            <th>DurÃ©e</th>
+                            <th>Durée</th>
                             <th>Pension</th>
                             <th>Type</th>
                             <th>Prix</th>
@@ -66,12 +66,12 @@
                                     <div style="font-size:12px;font-weight:700;color:#7a879a;">#{{ $package->id }}</div>
                                 </td>
                                 <td>
-                                    <div style="font-weight:700;color:#253754;font-size:13px;">{{ $package->city ?? 'Ville non renseignÃ©e' }}</div>
+                                    <div style="font-weight:700;color:#253754;font-size:13px;">{{ $package->city ?? 'Ville non renseignée' }}</div>
                                     <div style="font-size:12px;font-weight:600;color:#7a879a;">{{ $package->country ?? '' }}</div>
                                 </td>
                                 <td>{{ $package->duration_days }}j / {{ $package->nights }}n</td>
-                                <td>{{ $package->pension_type ?? 'â€”' }}</td>
-                                <td>{{ $package->accommodation_type ?? 'â€”' }}</td>
+                                <td>{{ $package->pension_type ?? '�?"' }}</td>
+                                <td>{{ $package->accommodation_type ?? '�?"' }}</td>
                                 <td>
                                     <span style="color:var(--ajp-ink);font-size:15px;font-weight:900;white-space:nowrap;">
                                         {{ number_format($package->price_from, 0, ',', ' ') }} {{ $package->currency }}
@@ -100,4 +100,5 @@
         @endif
     </section>
 @endsection
+
 

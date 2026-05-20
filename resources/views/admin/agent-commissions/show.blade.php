@@ -1,4 +1,4 @@
-@extends('layouts.master-ajinsafro')
+﻿@extends('layouts.master-ajinsafro')
 
 @section('title', 'Detail commission')
 
@@ -29,7 +29,7 @@
                 <h5 class="mb-4">Synthese</h5>
                 <dl class="row mb-0">
                     <dt class="col-sm-4">Voyage</dt><dd class="col-sm-8">{{ $entry->voyage?->name ?: 'Voyage non renseigne' }}</dd>
-                    <dt class="col-sm-4">Date depart</dt><dd class="col-sm-8">{{ $entry->departureDateLabel() ?: '—' }}</dd>
+                    <dt class="col-sm-4">Date depart</dt><dd class="col-sm-8">{{ $entry->departureDateLabel() ?: '�?"' }}</dd>
                     <dt class="col-sm-4">Client</dt><dd class="col-sm-8">{{ $entry->client_name ?: 'Client non renseigne' }}</dd>
                     <dt class="col-sm-4">Montant reservation</dt><dd class="col-sm-8">{{ number_format((float) $entry->reservation_total, 2, ',', ' ') }} DH</dd>
                     <dt class="col-sm-4">Commission adulte</dt><dd class="col-sm-8">{{ number_format((float) $entry->commission_adult, 2, ',', ' ') }} DH</dd>
@@ -52,10 +52,10 @@
                         @endif
                         <div class="small text-muted mt-1">
                             @if($log->old_status || $log->new_status)
-                                {{ $log->old_status ?: '—' }} → {{ $log->new_status ?: '—' }}
+                                {{ $log->old_status ?: '�?"' }} �?' {{ $log->new_status ?: '�?"' }}
                             @endif
                             @if($log->old_amount !== null || $log->new_amount !== null)
-                                | {{ number_format((float) ($log->old_amount ?? 0), 2, ',', ' ') }} DH → {{ number_format((float) ($log->new_amount ?? 0), 2, ',', ' ') }} DH
+                                | {{ number_format((float) ($log->old_amount ?? 0), 2, ',', ' ') }} DH �?' {{ number_format((float) ($log->new_amount ?? 0), 2, ',', ' ') }} DH
                             @endif
                         </div>
                     </div>
@@ -66,3 +66,4 @@
         </div>
     </div>
 @endsection
+

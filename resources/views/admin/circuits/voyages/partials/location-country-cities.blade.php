@@ -1,4 +1,4 @@
-{{-- Choix multiple de pays + catalogue villes (world_cities + WP). Recherche pays et villes, Tout sélectionner/désélectionner. --}}
+﻿{{-- Choix multiple de pays + catalogue villes (world_cities + WP). Recherche pays et villes, Tout sélectionner/désélectionner. --}}
 @php
     $selectedIds = $selectedLocationIds ?? [];
     $worldCountries = $worldCountries ?? [];
@@ -12,10 +12,10 @@
         <label class="form-label fw-medium">Pays (choix multiple)</label>
         <div class="destination-country-multi-wrap">
             <div class="destination-country-add-wrap position-relative mb-2">
-                <input type="text" class="form-control form-control-sm destination-country-add-search" id="destinationCountryAddSearch" placeholder="Rechercher et ajouter des pays…" autocomplete="off">
+                <input type="text" class="form-control form-control-sm destination-country-add-search" id="destinationCountryAddSearch" placeholder="Rechercher et ajouter des pays�?�" autocomplete="off">
                 <div class="destination-country-autocomplete-dropdown" id="destinationCountryAutocompleteDropdown"></div>
             </div>
-            <input type="text" class="form-control form-control-sm destination-country-search mb-2" id="destinationCountrySearch" placeholder="Filtrer la liste des pays…" autocomplete="off">
+            <input type="text" class="form-control form-control-sm destination-country-search mb-2" id="destinationCountrySearch" placeholder="Filtrer la liste des pays�?�" autocomplete="off">
             <div class="destination-country-multi-actions mb-2">
                 <button type="button" class="btn btn-sm btn-outline-primary" id="destinationSelectAllCountries">Tout sélectionner</button>
                 <button type="button" class="btn btn-sm btn-outline-secondary" id="destinationDeselectAllCountries">Tout désélectionner</button>
@@ -36,10 +36,10 @@
             <span class="destination-cities-panel-title" id="destination-cities-panel-title">Villes (choix multiple)</span>
             <div class="destination-cities-panel-actions ms-auto d-flex flex-wrap align-items-center gap-2">
                 <div class="destination-city-autocomplete-wrap position-relative">
-                    <input type="text" class="form-control form-control-sm destination-city-add-search" id="destinationCityAddSearch" placeholder="Rechercher et ajouter des villes…" style="min-width: 220px;" autocomplete="off">
+                    <input type="text" class="form-control form-control-sm destination-city-add-search" id="destinationCityAddSearch" placeholder="Rechercher et ajouter des villes�?�" style="min-width: 220px;" autocomplete="off">
                     <div class="destination-city-autocomplete-dropdown" id="destinationCityAutocompleteDropdown"></div>
                 </div>
-                <input type="text" class="form-control form-control-sm destination-city-search" id="destinationCitySearch" placeholder="Filtrer la liste…" style="max-width: 160px;" autocomplete="off">
+                <input type="text" class="form-control form-control-sm destination-city-search" id="destinationCitySearch" placeholder="Filtrer la liste�?�" style="max-width: 160px;" autocomplete="off">
                 <button type="button" class="btn btn-sm btn-outline-primary" id="destinationSelectAllCities">Tout sélectionner</button>
                 <button type="button" class="btn btn-sm btn-outline-secondary" id="destinationDeselectAllCities">Tout désélectionner</button>
             </div>
@@ -59,3 +59,4 @@
     window.DESTINATION_ENSURE_LOCATION_URL = @json($ensureLocationUrl);
 })();
 </script>
+

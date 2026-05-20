@@ -1,4 +1,4 @@
-@php
+﻿@php
     $opt = $option ?? null;
     $isNew = !$opt;
     $departurePlaces = $departurePlaces ?? collect();
@@ -15,7 +15,7 @@
         <input type="hidden" name="flight_options[{{ $index }}][day_number]" value="{{ $type === 'outbound' ? 1 : ($lastDayNumber ?? 1) }}">
     @endif
 
-    {{-- Card Header: Route (From → To) with delete button --}}
+    {{-- Card Header: Route (From �?' To) with delete button --}}
     <div class="flight-opt-header">
         <div class="flight-opt-route-display">
 
@@ -28,7 +28,7 @@
                            placeholder="From (ex: Paris)"
                            style="font-weight: 600;">
                 </div>
-                <div style="color: #999; font-size: 14px;">→</div>
+                <div style="color: #999; font-size: 14px;">�?'</div>
                 <div style="flex: 1;">
                     <input type="text" 
                            class="form-control form-control-sm flight-opt-to-city" 
@@ -52,7 +52,7 @@
             <div class="col-md-6">
                 <label class="form-label small">Compagnie aérienne</label>
                 <select name="flight_options[{{ $index }}][airline_id]" class="form-select form-select-sm">
-                    <option value="">— Pas de compagnie —</option>
+                    <option value="">�?" Pas de compagnie �?"</option>
                     @foreach($airlines as $a)
                         <option value="{{ $a->id }}" {{ $opt && $opt->airline_id == $a->id ? 'selected' : '' }}>
                             {{ $a->name }} @if($a->code_iata)({{ $a->code_iata }})@endif
@@ -136,7 +136,7 @@
                         $selDp = (string) old('flight_options.'.$index.'.departure_place_id', $opt ? (string) ($opt->departure_place_id ?? '') : '');
                     @endphp
                     <select name="flight_options[{{ $index }}][departure_place_id]" class="form-select form-select-sm ve-flight-departure-place-select">
-                        <option value="">— Aucun —</option>
+                        <option value="">�?" Aucun �?"</option>
                         @foreach($dpSorted as $dpPos => $place)
                             @php
                                 $optVal = $place->id ? (string) $place->id : 'NEW_'.$dpPos;
@@ -165,3 +165,4 @@
         </div>
     </div>
 </div>
+

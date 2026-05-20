@@ -1,20 +1,20 @@
 ﻿@extends('layouts.admin-v6')
-@section('title') DÃ©part Group Deal â€” {{ $departure->start_date?->format('d/m/Y') }} @endsection
+@section('title') Départ Group Deal �?" {{ $departure->start_date?->format('d/m/Y') }} @endsection
 
 @section('content')
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-flex align-items-center justify-content-between">
             <h4 class="page-title mb-0 font-size-18">
-                DÃ©part â€” {{ $departure->voyage?->name }}
+                Départ �?" {{ $departure->voyage?->name }}
                 <small class="text-muted fw-normal ms-2">{{ $departure->start_date?->format('d/m/Y') }}</small>
             </h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
                     <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('admin.group-deals.trips.index') }}">Group Deals</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('admin.group-deals.departures.index') }}">DÃ©parts</a></li>
-                    <li class="breadcrumb-item active">DÃ©tail</li>
+                    <li class="breadcrumb-item"><a href="{{ route('admin.group-deals.departures.index') }}">Départs</a></li>
+                    <li class="breadcrumb-item active">Détail</li>
                 </ol>
             </div>
         </div>
@@ -35,12 +35,12 @@
     </div>
 @endif
 
-{{-- â”€â”€ KPI row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
+{{-- �"?�"? KPI row �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"? --}}
 <div class="row g-3 mb-4">
     <div class="col-6 col-md-3">
         <div class="card border-0 shadow-sm text-center">
             <div class="card-body py-3">
-                <p class="text-muted mb-1 small">Participants confirmÃ©s</p>
+                <p class="text-muted mb-1 small">Participants confirmés</p>
                 <h3 class="mb-0 text-primary">{{ $stats['confirmed_count'] }}</h3>
                 <small class="text-muted">seuil : {{ $stats['threshold'] }}</small>
             </div>
@@ -51,7 +51,7 @@
             <div class="card-body py-3">
                 <p class="text-muted mb-1 small">Prix actif</p>
                 <h3 class="mb-0 text-success">
-                    {{ $stats['current_price'] ? number_format($stats['current_price'], 0, ',', ' ').' â‚¬' : 'â€”' }}
+                    {{ $stats['current_price'] ? number_format($stats['current_price'], 0, ',', ' ').' �,�' : '�?"' }}
                 </h3>
                 @if($stats['active_tier'])
                     <small class="text-muted">{{ $stats['active_tier']->label ?? 'Palier actif' }}</small>
@@ -66,10 +66,10 @@
             <div class="card-body py-3">
                 <p class="text-muted mb-1 small">Prochain palier</p>
                 @if($stats['next_tier'])
-                    <h3 class="mb-0">{{ number_format($stats['next_tier']->price_per_person, 0, ',', ' ') }} â‚¬</h3>
-                    <small class="text-muted">Ã  {{ $stats['next_tier']->min_participants }} participants</small>
+                    <h3 class="mb-0">{{ number_format($stats['next_tier']->price_per_person, 0, ',', ' ') }} �,�</h3>
+                    <small class="text-muted">à {{ $stats['next_tier']->min_participants }} participants</small>
                 @else
-                    <h3 class="mb-0 text-muted">â€”</h3>
+                    <h3 class="mb-0 text-muted">�?"</h3>
                     <small class="text-muted">Dernier palier atteint</small>
                 @endif
             </div>
@@ -92,7 +92,7 @@
     </div>
 </div>
 
-{{-- â”€â”€ Jauge progression â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
+{{-- �"?�"? Jauge progression �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"? --}}
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-2">
@@ -109,7 +109,7 @@
         </div>
         @if(! $departure->is_guaranteed && $stats['threshold'] > $stats['confirmed_count'])
             <p class="text-muted small mt-2 mb-0">
-                Il manque <strong>{{ $stats['threshold'] - $stats['confirmed_count'] }}</strong> participant(s) pour que ce dÃ©part soit garanti.
+                Il manque <strong>{{ $stats['threshold'] - $stats['confirmed_count'] }}</strong> participant(s) pour que ce départ soit garanti.
             </p>
         @endif
     </div>
@@ -117,18 +117,18 @@
 
 <div class="row g-3">
 
-    {{-- â”€â”€ Tableau des participants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
+    {{-- �"?�"? Tableau des participants �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"? --}}
     <div class="col-lg-8">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between">
-                <h6 class="mb-0">Participants ({{ $stats['confirmed_count'] }} confirmÃ©s)</h6>
+                <h6 class="mb-0">Participants ({{ $stats['confirmed_count'] }} confirmés)</h6>
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAddParticipant">
                     <i class="bx bx-plus"></i> Ajouter
                 </button>
             </div>
             <div class="card-body p-0">
                 @if($departure->groupDealParticipants->isEmpty())
-                    <div class="p-4 text-center text-muted small">Aucun participant pour ce dÃ©part.</div>
+                    <div class="p-4 text-center text-muted small">Aucun participant pour ce départ.</div>
                 @else
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
@@ -147,7 +147,7 @@
                                         <strong>{{ $p->client->first_name }} {{ $p->client->last_name }}</strong>
                                         <br><small class="text-muted">{{ $p->client->email }}</small>
                                     @else
-                                        <span class="text-muted">â€”</span>
+                                        <span class="text-muted">�?"</span>
                                     @endif
                                 </td>
                                 <td class="small text-muted">{{ $p->joined_at->format('d/m/Y H:i') }}</td>
@@ -159,9 +159,9 @@
                                         default     => 'secondary'
                                     } }}">
                                         {{ match($p->status) {
-                                            'confirmed' => 'ConfirmÃ©',
+                                            'confirmed' => 'Confirmé',
                                             'pending'   => 'En attente',
-                                            'cancelled' => 'AnnulÃ©',
+                                            'cancelled' => 'Annulé',
                                             default     => $p->status
                                         } }}
                                     </span>
@@ -196,7 +196,7 @@
         </div>
     </div>
 
-    {{-- â”€â”€ Infos dÃ©part + actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
+    {{-- �"?�"? Infos départ + actions �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"? --}}
     <div class="col-lg-4">
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-header bg-white border-bottom">
@@ -205,11 +205,11 @@
             <div class="card-body small">
                 <table class="table table-borderless table-sm mb-0">
                     <tr><td class="text-muted">Voyage</td><td><strong>{{ $departure->voyage?->name }}</strong></td></tr>
-                    <tr><td class="text-muted">Date dÃ©but</td><td>{{ $departure->start_date?->format('d/m/Y') ?? 'â€”' }}</td></tr>
-                    <tr><td class="text-muted">Date fin</td><td>{{ $departure->end_date?->format('d/m/Y') ?? 'â€”' }}</td></tr>
-                    <tr><td class="text-muted">CapacitÃ© totale</td><td>{{ $departure->total_capacity ?? 'â€”' }}</td></tr>
+                    <tr><td class="text-muted">Date début</td><td>{{ $departure->start_date?->format('d/m/Y') ?? '�?"' }}</td></tr>
+                    <tr><td class="text-muted">Date fin</td><td>{{ $departure->end_date?->format('d/m/Y') ?? '�?"' }}</td></tr>
+                    <tr><td class="text-muted">Capacité totale</td><td>{{ $departure->total_capacity ?? '�?"' }}</td></tr>
                     <tr><td class="text-muted">Seuil garanti</td><td>{{ $departure->guaranteed_threshold }}</td></tr>
-                    <tr><td class="text-muted">Statut dÃ©part</td><td>{{ $departure->status_label }}</td></tr>
+                    <tr><td class="text-muted">Statut départ</td><td>{{ $departure->status_label }}</td></tr>
                 </table>
             </div>
         </div>
@@ -235,7 +235,7 @@
 
 </div>
 
-{{-- â”€â”€ Modal Ajouter participant â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
+{{-- �"?�"? Modal Ajouter participant �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"? --}}
 <div class="modal fade" id="modalAddParticipant" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -250,12 +250,12 @@
                         <label class="form-label small">ID Client <span class="text-danger">*</span></label>
                         <input type="number" name="client_id" class="form-control form-control-sm"
                                required placeholder="ID du client">
-                        <div class="form-text">Entrez l'identifiant numÃ©rique du client.</div>
+                        <div class="form-text">Entrez l'identifiant numérique du client.</div>
                     </div>
                     <div class="mb-2">
-                        <label class="form-label small">ID RÃ©servation (optionnel)</label>
+                        <label class="form-label small">ID Réservation (optionnel)</label>
                         <input type="number" name="reservation_id" class="form-control form-control-sm"
-                               placeholder="ID de la rÃ©servation liÃ©e">
+                               placeholder="ID de la réservation liée">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -271,4 +271,5 @@
 @push('scripts')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
 @endpush
+
 

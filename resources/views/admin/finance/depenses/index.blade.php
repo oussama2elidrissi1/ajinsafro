@@ -1,11 +1,12 @@
 ﻿@extends('layouts.admin-v6')
 @section('title')
-    DÃ©penses
+    Dépenses
 @endsection
 @section('content')
-    @include('admin._placeholder', ['title' => 'DÃ©penses'])
+    @include('admin._placeholder', ['title' => 'Dépenses'])
 @endsection
 @push('scripts')
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
 @endpush
+
 

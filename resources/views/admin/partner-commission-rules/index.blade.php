@@ -1,12 +1,12 @@
 ﻿@extends('layouts.admin-v6')
-@section('title', 'RÃ¨gles de commission')
+@section('title', 'Règles de commission')
 
 @section('content')
     <div class="row mb-3">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">RÃ¨gles de commission</h4>
-                <a href="{{ route('admin.partner-commission-rules.create') }}" class="btn btn-primary"><i class="bx bx-plus me-1"></i> Nouvelle rÃ¨gle</a>
+                <h4 class="page-title mb-0 font-size-18">Règles de commission</h4>
+                <a href="{{ route('admin.partner-commission-rules.create') }}" class="btn btn-primary"><i class="bx bx-plus me-1"></i> Nouvelle règle</a>
             </div>
         </div>
     </div>
@@ -52,7 +52,7 @@
                             <th>Voyage</th>
                             <th>Type</th>
                             <th>Valeur</th>
-                            <th>PÃ©riode</th>
+                            <th>Période</th>
                             <th>Actif</th>
                             <th class="text-end">Actions</th>
                         </tr>
@@ -60,17 +60,17 @@
                     <tbody>
                         @forelse($rules as $rule)
                             <tr>
-                                <td>{{ $rule->partner ? $rule->partner->display_name : 'â€” Global' }}</td>
-                                <td>{{ $rule->voyage ? $rule->voyage->name : 'â€” Tous' }}</td>
+                                <td>{{ $rule->partner ? $rule->partner->display_name : '�?" Global' }}</td>
+                                <td>{{ $rule->voyage ? $rule->voyage->name : '�?" Tous' }}</td>
                                 <td>{{ $rule->type === 'percent' ? '%' : 'Fixe' }}</td>
                                 <td>{{ $rule->type === 'percent' ? $rule->value . ' %' : number_format($rule->value, 0, ',', ' ') . ' DH' }}</td>
                                 <td>
-                                    {{ $rule->valid_from?->format('d/m/Y') ?? 'â€”' }} â†’ {{ $rule->valid_until?->format('d/m/Y') ?? 'â€”' }}
+                                    {{ $rule->valid_from?->format('d/m/Y') ?? '�?"' }} �?' {{ $rule->valid_until?->format('d/m/Y') ?? '�?"' }}
                                 </td>
                                 <td><span class="badge bg-{{ $rule->is_active ? 'success' : 'secondary' }}">{{ $rule->is_active ? 'Oui' : 'Non' }}</span></td>
                                 <td class="text-end">
                                     <a href="{{ route('admin.partner-commission-rules.edit', $rule) }}" class="btn btn-sm btn-outline-primary">Modifier</a>
-                                    <form action="{{ route('admin.partner-commission-rules.destroy', $rule) }}" method="post" class="d-inline" onsubmit="return confirm('Supprimer cette rÃ¨gle ?');">
+                                    <form action="{{ route('admin.partner-commission-rules.destroy', $rule) }}" method="post" class="d-inline" onsubmit="return confirm('Supprimer cette règle ?');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer</button>
@@ -79,7 +79,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center text-muted py-4">Aucune rÃ¨gle. CrÃ©ez une rÃ¨gle globale (sans partenaire ni voyage) ou par partenaire/voyage.</td>
+                                <td colspan="7" class="text-center text-muted py-4">Aucune règle. Créez une règle globale (sans partenaire ni voyage) ou par partenaire/voyage.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -91,4 +91,5 @@
         </div>
     </div>
 @endsection
+
 

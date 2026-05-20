@@ -1,11 +1,11 @@
 ﻿@extends('layouts.admin-v6')
-@section('title', 'Nouvelle rÃ¨gle de commission')
+@section('title', 'Nouvelle règle de commission')
 
 @section('content')
     <div class="row mb-3">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">Nouvelle rÃ¨gle de commission</h4>
+                <h4 class="page-title mb-0 font-size-18">Nouvelle règle de commission</h4>
                 <a href="{{ route('admin.partner-commission-rules.index') }}" class="btn btn-outline-secondary btn-sm">Retour</a>
             </div>
         </div>
@@ -28,9 +28,9 @@
             <div class="card-body">
                 <div class="row g-2">
                     <div class="col-md-6">
-                        <label class="form-label">Partenaire (vide = rÃ¨gle globale)</label>
+                        <label class="form-label">Partenaire (vide = règle globale)</label>
                         <select name="partner_id" class="form-select">
-                            <option value="">â€” Tous les partenaires</option>
+                            <option value="">�?" Tous les partenaires</option>
                             @foreach($partners as $p)
                                 <option value="{{ $p->id }}" {{ old('partner_id') == $p->id ? 'selected' : '' }}>{{ $p->raison_sociale }}</option>
                             @endforeach
@@ -39,7 +39,7 @@
                     <div class="col-md-6">
                         <label class="form-label">Voyage (vide = tous les voyages)</label>
                         <select name="voyage_id" class="form-select">
-                            <option value="">â€” Tous les voyages</option>
+                            <option value="">�?" Tous les voyages</option>
                             @foreach($voyages as $v)
                                 <option value="{{ $v->id }}" {{ old('voyage_id') == $v->id ? 'selected' : '' }}>{{ $v->name }}</option>
                             @endforeach
@@ -71,14 +71,15 @@
                     <div class="col-md-4 d-flex align-items-end">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" name="is_active" value="1" id="is_active" {{ old('is_active', true) ? 'checked' : '' }}>
-                            <label class="form-check-label" for="is_active">RÃ¨gle active</label>
+                            <label class="form-check-label" for="is_active">Règle active</label>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <button type="submit" class="btn btn-primary">CrÃ©er la rÃ¨gle</button>
+        <button type="submit" class="btn btn-primary">Créer la règle</button>
         <a href="{{ route('admin.partner-commission-rules.index') }}" class="btn btn-secondary">Annuler</a>
     </form>
 @endsection
+
 

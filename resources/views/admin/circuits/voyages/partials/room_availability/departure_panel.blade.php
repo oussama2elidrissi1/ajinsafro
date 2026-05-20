@@ -1,4 +1,4 @@
-{{-- Panneau chargé en AJAX : hôtels + stock chambres pour un départ (modal). --}}
+﻿{{-- Panneau chargé en AJAX : hôtels + stock chambres pour un départ (modal). --}}
 <div class="ra-departure-panel" data-departure-id="{{ $departure->id }}">
     <div class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 bg-light border rounded">
         <span class="badge bg-secondary">{{ $departure->status_label }}</span>
@@ -28,3 +28,4 @@
         'layout' => 'accordion',
     ])
 </div>
+

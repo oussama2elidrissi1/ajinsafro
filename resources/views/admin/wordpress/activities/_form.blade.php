@@ -1,4 +1,4 @@
-@props([
+﻿@props([
     'activity' => null,
     'stActivity' => null,
     'meta' => [],
@@ -136,12 +136,12 @@
 
                 <div class="row">
                     <div class="col-6 mb-3">
-                        <label for="aj_activity_min_age" class="form-label">Âge min</label>
+                        <label for="aj_activity_min_age" class="form-label">�,ge min</label>
                         <input type="number" min="0" class="form-control @error('aj_activity_min_age') is-invalid @enderror" id="aj_activity_min_age" name="aj_activity_min_age" value="{{ old('aj_activity_min_age', $meta['aj_activity_min_age'] ?? '') }}">
                         @error('aj_activity_min_age')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-6 mb-3">
-                        <label for="aj_activity_max_age" class="form-label">Âge max</label>
+                        <label for="aj_activity_max_age" class="form-label">�,ge max</label>
                         <input type="number" min="0" class="form-control @error('aj_activity_max_age') is-invalid @enderror" id="aj_activity_max_age" name="aj_activity_max_age" value="{{ old('aj_activity_max_age', $meta['aj_activity_max_age'] ?? '') }}">
                         @error('aj_activity_max_age')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
@@ -201,3 +201,4 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
+

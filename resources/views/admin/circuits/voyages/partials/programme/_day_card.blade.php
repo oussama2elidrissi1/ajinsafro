@@ -1,4 +1,4 @@
-@php
+﻿@php
     $day = $entry['day'];
     $activities = $entry['activities'];
     $collapseId = 'collapse-day-' . $day->id . '-i' . $dayIndex;
@@ -11,7 +11,7 @@
     <h2 class="accordion-header programme-day-header">
         <span class="drag-handle me-2 text-muted cursor-grab" title="Déplacer" aria-hidden="true"><i class="bx bx-dots-vertical-rounded"></i></span>
         <button class="accordion-button flex-grow-1 {{ $isFirst ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}" aria-expanded="{{ $isFirst ? 'true' : 'false' }}" aria-controls="{{ $collapseId }}">
-            <span class="programme-day-label">JOUR {{ $day->day_number }} — {{ $dayTitleDisplay }}</span>
+            <span class="programme-day-label">JOUR {{ $day->day_number }} �?" {{ $dayTitleDisplay }}</span>
         </button>
         <button type="button" class="btn btn-sm btn-outline-danger me-2 btn-remove-program-day" title="Supprimer ce jour" data-day-id="{{ $day->id }}">
             <i class="bx bx-trash"></i>
@@ -45,7 +45,7 @@
                 </div>
                 <div class="field-title">
                     <label class="form-label">Titre du jour</label>
-                    <input type="text" class="form-control" name="programme_days[{{ $dayIndex }}][day_title]" value="{{ old('programme_days.'.$dayIndex.'.day_title', $day->day_title ?? $day->title) }}" placeholder="Ex. : Jour 1 — Arrivée">
+                    <input type="text" class="form-control" name="programme_days[{{ $dayIndex }}][day_title]" value="{{ old('programme_days.'.$dayIndex.'.day_title', $day->day_title ?? $day->title) }}" placeholder="Ex. : Jour 1 �?" Arrivée">
                 </div>
                 <div class="field-ville">
                     <label class="form-label">Ville</label>
@@ -116,3 +116,4 @@
         </div>
     </div>
 </div>
+

@@ -1,4 +1,4 @@
-{{-- Partial: page placeholder AjinsAfro - titre du sous-menu + card "Page en cours de construction" --}}
+﻿{{-- Partial: page placeholder AjinsAfro - titre du sous-menu + card "Page en cours de construction" --}}
 <x-admin.page-header
     :title="$title"
     :breadcrumbs="[
@@ -18,3 +18,4 @@
         </div>
     </div>
 </div>
+

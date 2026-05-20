@@ -1,4 +1,4 @@
-{{-- Lieux de depart (editables) rattaches a l'etape Disponibilites. Les options de vol peuvent referencer ces lieux via "Lieu de depart". --}}
+﻿{{-- Lieux de depart (editables) rattaches a l'etape Disponibilites. Les options de vol peuvent referencer ces lieux via "Lieu de depart". --}}
 @php
     $departurePlaces = $departurePlaces ?? collect();
     $placesList = $departurePlaces->isEmpty() ? [] : $departurePlaces->all();
@@ -32,7 +32,7 @@
                             </div>
                         </div>
                         <div class="col-md-1">
-                            <button type="button" class="btn btn-sm btn-outline-danger remove-departure-place-inline" aria-label="Supprimer">×</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-departure-place-inline" aria-label="Supprimer">�-</button>
                         </div>
                     </div>
                 </div>
@@ -53,7 +53,7 @@
         rows.sort(function (a, b) {
             return parseInt(a.getAttribute('data-index'), 10) - parseInt(b.getAttribute('data-index'), 10);
         });
-        var options = [{ value: '', label: '— Aucun —' }];
+        var options = [{ value: '', label: '�?" Aucun �?"' }];
         rows.forEach(function (row, pos) {
             var idInput = row.querySelector('input[name*="[id]"]');
             var nameInput = row.querySelector('input[name*="[name]"]');
@@ -99,7 +99,7 @@
             '<div class="col-md-2"><input type="text" class="form-control form-control-sm" name="departure_places[' + idx + '][code]" placeholder="CMN"></div>' +
             '<div class="col-md-2"><label class="form-label small mb-0 d-block">Prix (MAD)</label><input type="number" step="0.01" min="0" class="form-control form-control-sm" name="departure_places[' + idx + '][price]" placeholder="0"></div>' +
             '<div class="col-md-2"><div class="form-check mb-0"><input type="checkbox" class="form-check-input" name="departure_places[' + idx + '][is_active]" value="1" checked><label class="form-check-label small">Actif</label></div></div>' +
-            '<div class="col-md-1"><button type="button" class="btn btn-sm btn-outline-danger remove-departure-place-inline" aria-label="Supprimer">×</button></div></div></div>';
+            '<div class="col-md-1"><button type="button" class="btn btn-sm btn-outline-danger remove-departure-place-inline" aria-label="Supprimer">�-</button></div></div></div>';
         container.appendChild(div);
         refreshDeparturePlaceSelects();
     });
@@ -116,3 +116,4 @@
     });
 })();
 </script>
+

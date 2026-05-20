@@ -1,15 +1,15 @@
 ﻿@extends('layouts.admin-v6')
 
-@section('title', 'Nouvelle offre Ã©conomique')
+@section('title', 'Nouvelle offre économique')
 
 @section('content')
     <x-admin.page-header
-        title="Nouvelle offre Ã©conomique"
-        subtitle="Ajoutez une offre voyage, omra, hÃ©bergement ou activitÃ© Ã  petit budget."
+        title="Nouvelle offre économique"
+        subtitle="Ajoutez une offre voyage, omra, hébergement ou activité à petit budget."
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Formule Ã‰conomique', 'url' => route('admin.economic-offers.index')],
-            ['label' => 'CrÃ©ation'],
+            ['label' => 'Formule �?conomique', 'url' => route('admin.economic-offers.index')],
+            ['label' => 'Création'],
         ]"
     />
 
@@ -27,4 +27,5 @@
         </div>
     </form>
 @endsection
+
 

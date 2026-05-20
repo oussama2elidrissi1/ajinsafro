@@ -129,7 +129,7 @@
             ),
             $makeLeaf(
                 'reservations_index_only_final',
-                'Réservations',
+                'R�servations',
                 'admin.reservation-dossiers.index',
                 'bx bx-calendar-check',
                 ['admin.reservation-dossiers.*', 'admin.reservations.index', 'admin.reservations.show', 'admin.reservations.edit', 'admin.reservations.update', 'admin.reservations.destroy'],
@@ -321,7 +321,7 @@
         $reservationsOnlyChildren = array_values(array_filter([
             $makeLeaf(
                 'reservations_index_only',
-                'RÃ©servations',
+                'Réservations',
                 'admin.reservations.index',
                 'bx bx-calendar-check',
                 ['admin.reservations.*', 'admin.reservation-dossiers.*'],
@@ -332,7 +332,7 @@
         ]));
 
         $adminGroups = array_values(array_filter([
-            $makeGroup('grp_reservations', 'RÃ©servations', $reservationsOnlyChildren, 'bx bx-calendar-check'),
+            $makeGroup('grp_reservations', 'Réservations', $reservationsOnlyChildren, 'bx bx-calendar-check'),
         ]));
     }
 
@@ -354,7 +354,7 @@
             ),
             $makeLeaf(
                 'reservations_index_only_flat',
-                'RÃƒÂ©servations',
+                'R�f©servations',
                 'admin.reservations.index',
                 'bx bx-calendar-check',
                 [
@@ -509,7 +509,7 @@
                     <li class="aj-sidebar-v2__item is-danger">
                         <a href="{{ route('logout.get') }}" class="aj-sidebar-v2__link">
                             <span class="aj-sidebar-v2__icon"><i class="bx bx-power-off"></i></span>
-                            <span class="aj-sidebar-v2__label">DÃ©connexion</span>
+                            <span class="aj-sidebar-v2__label">Déconnexion</span>
                         </a>
                     </li>
                 @endif
@@ -517,3 +517,4 @@
         </div>
     </nav>
 </div>
+

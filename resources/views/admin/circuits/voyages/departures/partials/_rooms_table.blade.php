@@ -1,4 +1,4 @@
-@php
+﻿@php
     $rooms = $departureHotel->rooms ?? collect();
     $modalAjax = $modalAjax ?? false;
 @endphp
@@ -7,7 +7,7 @@
 <div class="mb-2">
     <p class="text-muted small mb-0">
         <i class="bx bx-layer me-1"></i>
-        Stock <strong>propre à ce départ</strong> — total physique, réservé (engagements + attentes comptées dans « dispo »), et disponible réel.
+        Stock <strong>propre à ce départ</strong> �?" total physique, réservé (engagements + attentes comptées dans « dispo »), et disponible réel.
     </p>
 </div>
 
@@ -65,7 +65,7 @@
                         </div>
                         <div class="form-check form-check-inline mt-1 mb-0">
                             <input class="form-check-input js-manual-places" type="checkbox" name="manual_places" form="room-update-form-{{ $r->id }}" value="1" id="manual-{{ $r->id }}" data-row="{{ $r->id }}" {{ $manualPlaces ? 'checked' : '' }}>
-                            <label class="form-check-label small text-muted" for="manual-{{ $r->id }}" title="Si coché, les places totales ne suivent pas chambres × capacité">Manuel</label>
+                            <label class="form-check-label small text-muted" for="manual-{{ $r->id }}" title="Si coché, les places totales ne suivent pas chambres �- capacité">Manuel</label>
                         </div>
                     </td>
                     <td class="text-center" style="max-width:100px">
@@ -188,3 +188,4 @@
     if (addManual) addManual.addEventListener('change', recalcAdd);
 })();
 </script>
+

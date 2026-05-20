@@ -1,4 +1,4 @@
-@php
+﻿@php
     $availabilityStatuses = [
         'available' => 'Disponible',
         'limited' => 'Limité',
@@ -101,3 +101,4 @@
         </div>
     @endif
 </details>
+

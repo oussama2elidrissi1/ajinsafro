@@ -1,4 +1,4 @@
-@extends('layouts.admin-v6')
+﻿@extends('layouts.admin-v6')
 
 @section('title', 'Dossier de réservation')
 @section('page_title', 'Dossier de réservation')
@@ -127,7 +127,7 @@
             isset($newValue['title']) ? 'Document : '.$newValue['title'] : null,
             isset($newValue['note_excerpt']) ? $newValue['note_excerpt'] : null,
             $history->note ?: null,
-        ])->filter()->implode(' • ');
+        ])->filter()->implode(' �?� ');
 
         return [
             'label' => $labels[$history->action] ?? str_replace('_', ' ', (string) $history->action),
@@ -604,7 +604,7 @@
                             @endif
                         </div>
                         <h1 class="rd-title">Dossier de réservation #{{ $dossier->dossier_number ?: $dossier->id }}</h1>
-                        <p class="rd-lead">Client principal {{ $clientName }} • Voyage {{ $offer?->name ?? 'non renseigné' }} • Départ {{ $departure?->start_date?->format('d/m/Y') ?? '—' }}</p>
+                        <p class="rd-lead">Client principal {{ $clientName }} �?� Voyage {{ $offer?->name ?? 'non renseigné' }} �?� Départ {{ $departure?->start_date?->format('d/m/Y') ?? '�?"' }}</p>
 
                         <div class="rd-meta">
                             <div class="rd-meta-card">
@@ -613,11 +613,11 @@
                             </div>
                             <div class="rd-meta-card">
                                 <span>Voyage</span>
-                                <strong>{{ $offer?->name ?? '—' }}</strong>
+                                <strong>{{ $offer?->name ?? '�?"' }}</strong>
                             </div>
                             <div class="rd-meta-card">
                                 <span>Date départ</span>
-                                <strong>{{ $departure?->start_date?->format('d/m/Y') ?? '—' }}</strong>
+                                <strong>{{ $departure?->start_date?->format('d/m/Y') ?? '�?"' }}</strong>
                             </div>
                             <div class="rd-meta-card">
                                 <span>Voyageurs</span>
@@ -642,7 +642,7 @@
             </section>
 
             <ul class="nav nav-pills rd-tabs" role="tablist">
-                <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#overview-panel" type="button" role="tab">Vue d’ensemble</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#overview-panel" type="button" role="tab">Vue d�?Tensemble</button></li>
                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#payments-panel" type="button" role="tab">Paiements & documents</button></li>
                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#travelers-panel" type="button" role="tab">Voyageurs</button></li>
                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#rooms-panel" type="button" role="tab">Chambres</button></li>
@@ -670,12 +670,12 @@
                                 @endif
 
                                 <div class="rd-summary-grid mb-3">
-                                    <div class="rd-summary-card is-blue"><span>Total base</span><strong>{{ $baseTotal > 0 ? number_format($baseTotal, 2, ',', ' ').' DH' : '—' }}</strong></div>
-                                    <div class="rd-summary-card"><span>Suppléments chambres</span><strong>{{ $roomSupplementTotal > 0 ? number_format($roomSupplementTotal, 2, ',', ' ').' DH' : '—' }}</strong></div>
-                                    <div class="rd-summary-card"><span>Extras</span><strong>{{ $extrasTotal > 0 ? number_format($extrasTotal, 2, ',', ' ').' DH' : '—' }}</strong></div>
-                                    <div class="rd-summary-card is-blue"><span>Total dossier</span><strong>{{ $totalAmount > 0 ? number_format($totalAmount, 2, ',', ' ').' DH' : '—' }}</strong></div>
-                                    <div class="rd-summary-card is-green"><span>Total payé</span><strong>{{ $paidAmount > 0 ? number_format($paidAmount, 2, ',', ' ').' DH' : '—' }}</strong></div>
-                                    <div class="rd-summary-card {{ $remainingAmount > 0 ? 'is-orange' : 'is-green' }}"><span>Reste à payer</span><strong>{{ $remainingAmount > 0 ? number_format($remainingAmount, 2, ',', ' ').' DH' : '—' }}</strong></div>
+                                    <div class="rd-summary-card is-blue"><span>Total base</span><strong>{{ $baseTotal > 0 ? number_format($baseTotal, 2, ',', ' ').' DH' : '�?"' }}</strong></div>
+                                    <div class="rd-summary-card"><span>Suppléments chambres</span><strong>{{ $roomSupplementTotal > 0 ? number_format($roomSupplementTotal, 2, ',', ' ').' DH' : '�?"' }}</strong></div>
+                                    <div class="rd-summary-card"><span>Extras</span><strong>{{ $extrasTotal > 0 ? number_format($extrasTotal, 2, ',', ' ').' DH' : '�?"' }}</strong></div>
+                                    <div class="rd-summary-card is-blue"><span>Total dossier</span><strong>{{ $totalAmount > 0 ? number_format($totalAmount, 2, ',', ' ').' DH' : '�?"' }}</strong></div>
+                                    <div class="rd-summary-card is-green"><span>Total payé</span><strong>{{ $paidAmount > 0 ? number_format($paidAmount, 2, ',', ' ').' DH' : '�?"' }}</strong></div>
+                                    <div class="rd-summary-card {{ $remainingAmount > 0 ? 'is-orange' : 'is-green' }}"><span>Reste à payer</span><strong>{{ $remainingAmount > 0 ? number_format($remainingAmount, 2, ',', ' ').' DH' : '�?"' }}</strong></div>
                                 </div>
 
                                 <div class="d-flex justify-content-between align-items-center gap-3 mb-3 flex-wrap">
@@ -696,7 +696,7 @@
                                     <h2 class="rd-panel-title">Informations dossier</h2>
                                     <p class="rd-panel-subtitle">Zone compacte de modification du dossier et des voyageurs.</p>
                                 </div>
-                                <a href="{{ route('admin.reservations.edit', $reservation) }}" class="rd-btn rd-btn-soft rd-btn-sm"><i class="bx bx-external-link"></i><span>Ouvrir l’édition complète</span></a>
+                                <a href="{{ route('admin.reservations.edit', $reservation) }}" class="rd-btn rd-btn-soft rd-btn-sm"><i class="bx bx-external-link"></i><span>Ouvrir l�?Tédition complète</span></a>
                             </div>
                             <div class="rd-panel-body">
                                 @can('reservations.update')
@@ -715,7 +715,7 @@
                                             <div class="col-md-6">
                                                 <label class="rd-label">Offre / voyage</label>
                                                 <select name="tour_id" class="form-select" required>
-                                                    <option value="">Sélectionner un voyage…</option>
+                                                    <option value="">Sélectionner un voyage�?�</option>
                                                     @foreach($voyages as $voyage)
                                                         <option value="{{ $voyage->id }}" @selected((int) old('tour_id', $currentTourId) === (int) $voyage->id)>{{ $voyage->name ?? $voyage->slug }}</option>
                                                     @endforeach
@@ -731,7 +731,7 @@
                                             <div class="col-md-3">
                                                 <label class="rd-label">Mode de paiement</label>
                                                 <select name="payment_type" class="form-select">
-                                                    <option value="">—</option>
+                                                    <option value="">�?"</option>
                                                     @foreach(['Espèces', 'Virement bancaire', 'Carte bancaire', 'Chèque', 'TPE', 'Autre'] as $paymentType)
                                                         <option value="{{ $paymentType }}" @selected(old('payment_type', $reservation->payment_type) === $paymentType)>{{ $paymentType }}</option>
                                                     @endforeach
@@ -843,7 +843,7 @@
                                         @endforeach
                                     </form>
                                 @else
-                                    <div class="rd-empty">Vous n’avez pas l’autorisation de modifier ce dossier.</div>
+                                    <div class="rd-empty">Vous n�?Tavez pas l�?Tautorisation de modifier ce dossier.</div>
                                 @endcan
                             </div>
                         </section>
@@ -870,10 +870,10 @@
                                             <tbody>
                                                 @foreach($paymentRows as $payment)
                                                     <tr>
-                                                        <td>{{ optional($payment->payment_date ?? $payment->created_at)->format('d/m/Y') ?? '—' }}</td>
-                                                        <td>{{ $payment->payment_method ?? '—' }}</td>
-                                                        <td>{{ $payment->reference ?? '—' }}</td>
-                                                        <td>{{ $payment->proof_file ?? '—' }}</td>
+                                                        <td>{{ optional($payment->payment_date ?? $payment->created_at)->format('d/m/Y') ?? '�?"' }}</td>
+                                                        <td>{{ $payment->payment_method ?? '�?"' }}</td>
+                                                        <td>{{ $payment->reference ?? '�?"' }}</td>
+                                                        <td>{{ $payment->proof_file ?? '�?"' }}</td>
                                                         <td class="text-end fw-bold">{{ number_format((float) ($payment->amount ?? 0), 2, ',', ' ') }} DH</td>
                                                     </tr>
                                                 @endforeach
@@ -917,7 +917,7 @@
                                                     <tr>
                                                         <td>{{ ucfirst(str_replace('_', ' ', (string) $document->type)) }}</td>
                                                         <td>{{ $document->title }}</td>
-                                                        <td>{{ optional($document->created_at)->format('d/m/Y H:i') ?? '—' }}</td>
+                                                        <td>{{ optional($document->created_at)->format('d/m/Y H:i') ?? '�?"' }}</td>
                                                         <td class="text-end">
                                                             @if($documentUrl($document))
                                                                 <a href="{{ $documentUrl($document) }}" target="_blank" rel="noopener" class="rd-btn rd-btn-soft rd-btn-sm"><i class="bx bx-download"></i><span>Ouvrir</span></a>
@@ -975,22 +975,22 @@
                                     <tbody>
                                         <tr>
                                             <td>Principal</td>
-                                            <td>{{ $client?->first_name ?? $reservation->client_first_name ?? '—' }}</td>
-                                            <td>{{ $client?->last_name ?? $reservation->client_last_name ?? '—' }}</td>
-                                            <td>{{ optional($client?->birth_date)->format('d/m/Y') ?? optional($reservation->client_birth_date)->format('d/m/Y') ?? '—' }}</td>
-                                            <td>{{ $client?->document_type ?? $reservation->client_document_type ?? '—' }}</td>
-                                            <td>{{ $client?->document_number ?? $reservation->client_document_number ?? '—' }}</td>
+                                            <td>{{ $client?->first_name ?? $reservation->client_first_name ?? '�?"' }}</td>
+                                            <td>{{ $client?->last_name ?? $reservation->client_last_name ?? '�?"' }}</td>
+                                            <td>{{ optional($client?->birth_date)->format('d/m/Y') ?? optional($reservation->client_birth_date)->format('d/m/Y') ?? '�?"' }}</td>
+                                            <td>{{ $client?->document_type ?? $reservation->client_document_type ?? '�?"' }}</td>
+                                            <td>{{ $client?->document_number ?? $reservation->client_document_number ?? '�?"' }}</td>
                                             <td class="text-end"><span class="rd-pill is-completed">Client principal</span></td>
                                         </tr>
                                         @forelse($companionTravelers as $traveler)
                                             <tr>
                                                 <td>{{ ucfirst((string) ($traveler['type'] ?? 'adult')) }}</td>
-                                                <td>{{ $traveler['first_name'] ?? '—' }}</td>
-                                                <td>{{ $traveler['last_name'] ?? '—' }}</td>
-                                                <td>{{ ! empty($traveler['birth_date']) ? \Illuminate\Support\Carbon::parse($traveler['birth_date'])->format('d/m/Y') : '—' }}</td>
-                                                <td>{{ $traveler['document_type'] ?? '—' }}</td>
-                                                <td>{{ $traveler['document_number'] ?? '—' }}</td>
-                                                <td class="text-end"><span class="text-muted small">—</span></td>
+                                                <td>{{ $traveler['first_name'] ?? '�?"' }}</td>
+                                                <td>{{ $traveler['last_name'] ?? '�?"' }}</td>
+                                                <td>{{ ! empty($traveler['birth_date']) ? \Illuminate\Support\Carbon::parse($traveler['birth_date'])->format('d/m/Y') : '�?"' }}</td>
+                                                <td>{{ $traveler['document_type'] ?? '�?"' }}</td>
+                                                <td>{{ $traveler['document_number'] ?? '�?"' }}</td>
+                                                <td class="text-end"><span class="text-muted small">�?"</span></td>
                                             </tr>
                                         @empty
                                             <tr><td colspan="7"><div class="rd-empty">Aucun accompagnant enregistré.</div></td></tr>
@@ -1039,12 +1039,12 @@
                                                             <tbody>
                                                                 @foreach($hotelRows as $roomRow)
                                                                     <tr>
-                                                                        <td>{{ $roomRow['room_type'] }}{{ $roomRow['room_label'] ? ' — '.$roomRow['room_label'] : '' }}</td>
-                                                                        <td class="text-center">{{ $roomRow['capacity'] > 0 ? $roomRow['capacity'].' pers.' : '—' }}</td>
+                                                                        <td>{{ $roomRow['room_type'] }}{{ $roomRow['room_label'] ? ' �?" '.$roomRow['room_label'] : '' }}</td>
+                                                                        <td class="text-center">{{ $roomRow['capacity'] > 0 ? $roomRow['capacity'].' pers.' : '�?"' }}</td>
                                                                         <td class="text-center">{{ $roomRow['room_count'] }}</td>
-                                                                        <td class="text-center">{{ $roomRow['capacity'] > 0 ? $roomRow['capacity'].' pers.' : '—' }}</td>
-                                                                        <td class="text-end">{{ $roomRow['supplement'] > 0 ? number_format((float) $roomRow['supplement'], 2, ',', ' ').' DH' : '—' }}</td>
-                                                                        <td class="text-end fw-bold">{{ $roomRow['subtotal'] > 0 ? number_format((float) $roomRow['subtotal'], 2, ',', ' ').' DH' : '—' }}</td>
+                                                                        <td class="text-center">{{ $roomRow['capacity'] > 0 ? $roomRow['capacity'].' pers.' : '�?"' }}</td>
+                                                                        <td class="text-end">{{ $roomRow['supplement'] > 0 ? number_format((float) $roomRow['supplement'], 2, ',', ' ').' DH' : '�?"' }}</td>
+                                                                        <td class="text-end fw-bold">{{ $roomRow['subtotal'] > 0 ? number_format((float) $roomRow['subtotal'], 2, ',', ' ').' DH' : '�?"' }}</td>
                                                                     </tr>
                                                                 @endforeach
                                                             </tbody>
@@ -1153,7 +1153,7 @@
                                                     @endif
                                                 </div>
                                                 <div class="text-end small text-muted">
-                                                    <div>{{ optional($history->created_at)->format('d/m/Y H:i') ?? '—' }}</div>
+                                                    <div>{{ optional($history->created_at)->format('d/m/Y H:i') ?? '�?"' }}</div>
                                                     <div>{{ $history->user?->name ?? 'Système' }}</div>
                                                 </div>
                                             </div>
@@ -1238,3 +1238,4 @@
         </script>
     @endpush
 @endsection
+
