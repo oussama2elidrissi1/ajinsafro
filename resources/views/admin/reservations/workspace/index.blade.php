@@ -1348,6 +1348,7 @@
         $sellableDepRowsV2 = $allDepRowsV2->filter(fn ($i) => $i['is_sellable'])->values();
     @endphp
 
+    @if(!$usePortalTailwind)
     <div id="reservations-main-content" class="commercial-v2-main space-y-6">
         <form id="catalogue-workspace" method="GET" action="{{ route('admin.reservations.workspace') }}" class="commercial-v2-filters-wrap">
             <input type="hidden" name="view" id="ws-filter-view" value="{{ $workspaceView }}">
@@ -1816,6 +1817,7 @@
     </div>
     </div>
 </div>
+    @endif
 
 <script type="application/json" id="workspace-calendar-json">{!! json_encode($workspaceCalendarEvents, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
 <script type="application/json" id="workspace-calendar-meta-json">{!! json_encode(['seed_date' => $workspaceCalendarSeedDate, 'reset_url' => $workspaceResetUrl], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
