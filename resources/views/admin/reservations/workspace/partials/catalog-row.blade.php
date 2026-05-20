@@ -80,7 +80,7 @@
 
     $rowTitle = trim(($row['name'] ?? '').($hasLaravel && $typeKey === 'package' ? ' · #'.$row['voyage_id'] : ''));
 
-    $capText = '�? configurer';
+    $capText = 'À configurer';
     if ($typeKey === 'package' && $hasLaravel && ($placesState ?? '') === 'ok' && $placesTotal !== null) {
         $capText = number_format((int) $placesTotal, 0, ',', ' ');
     }
@@ -166,7 +166,7 @@
     if ($depRowStatPending > 0) {
         $depRowSoldTitleParts[] = 'dans '.$depRowStatPending.' dossier'.($depRowStatPending > 1 ? 's' : '');
     }
-    $depRowSoldTitle = implode(' �?" ', $depRowSoldTitleParts);
+    $depRowSoldTitle = implode(' - ', $depRowSoldTitleParts);
 
     $isSellableForRow = $isSellable;
     if ($viewMode === 'table' && $departureData) {
@@ -186,9 +186,9 @@
 
     $badgeHtmlClass = match ($comBadge) {
         'TOP VENTE' => 'ws-commercial-badge ws-commercial-badge--top',
-        '�? POUSSER' => 'ws-commercial-badge ws-commercial-badge--push',
+        'À POUSSER' => 'ws-commercial-badge ws-commercial-badge--push',
         'FAIBLE STOCK' => 'ws-commercial-badge ws-commercial-badge--low',
-        'D�?PART PROCHE' => 'ws-commercial-badge ws-commercial-badge--near',
+        'DÉPART PROCHE' => 'ws-commercial-badge ws-commercial-badge--near',
         'FORT POTENTIEL' => 'ws-commercial-badge ws-commercial-badge--potential',
         'DISPONIBLE' => 'ws-commercial-badge ws-commercial-badge--avail',
         default => null,
@@ -220,16 +220,16 @@
     };
 
     $priorityLabel = match ($comPriority) {
-        'push_urgent' => '�? pousser',
+        'push_urgent' => 'À pousser',
         'almost_full' => 'Presque complet',
         'high_potential' => 'Fort potentiel',
-        'promote' => '�? promouvoir',
-        'watch' => '�? surveiller',
+        'promote' => 'À promouvoir',
+        'watch' => 'À surveiller',
         default => 'Standard',
     };
 
     $configureBadgeClass = 'ws-commercial-badge ws-commercial-badge--configure';
-    $configureLabel = '�? configurer';
+    $configureLabel = 'À configurer';
     $nonSellablePriorityLabel = 'Non vendable';
     $nonSellablePriorityClass = 'ws-priority-badge ws-priority-badge--configure';
 
@@ -255,7 +255,7 @@
             $nonSellableBtnText = 'Complet';
         } elseif ($cap === null || $cap <= 0) {
             $nonSellableReason = 'no_capacity';
-            $nonSellableBadge = '�? configurer';
+            $nonSellableBadge = 'À configurer';
             $nonSellableBadgeClass = 'ws-commercial-badge ws-commercial-badge--configure';
             $nonSellableBtnText = 'Configurer';
             $nonSellableBtnClass = 'ws-btn ws-btn--sm ' . ($editTourUrl ? 'ws-btn--configure' : 'ws-btn--disabled');
@@ -323,7 +323,7 @@
         @if($destination !== '')
             <span class="ws-td__destination">{{ $destination }}</span>
         @else
-            <span class="ws-td__muted">�?"</span>
+            <span class="ws-td__muted">-</span>
         @endif
     </td>
     <td class="ws-td ws-td--dep" data-label="Départ">
@@ -333,22 +333,22 @@
                 <span class="ws-td__dep-badge ws-td__dep-badge--past">Passé</span>
             @endif
         @else
-            <span class="ws-td__muted">�?"</span>
+            <span class="ws-td__muted">-</span>
         @endif
     </td>
     <td class="ws-td ws-td--sold" data-label="Vendu / En attente">
-        <span class="ws-td__sold" title="{{ $depRowSoldVal }} place{{ $depRowSoldVal > 1 ? 's' : '' }} vendue{{ $depRowSoldVal > 1 ? 's' : '' }} confirmée{{ $depRowSoldVal > 1 ? 's' : '' }} �?" {{ $depRowSoldPending }} place{{ $depRowSoldPending > 1 ? 's' : '' }} en attente">{{ $depRowSoldVal }} / {{ $depRowSoldPending }}</span>
+        <span class="ws-td__sold" title="{{ $depRowSoldVal }} place{{ $depRowSoldVal > 1 ? 's' : '' }} vendue{{ $depRowSoldVal > 1 ? 's' : '' }} confirmée{{ $depRowSoldVal > 1 ? 's' : '' }} - {{ $depRowSoldPending }} place{{ $depRowSoldPending > 1 ? 's' : '' }} en attente">{{ $depRowSoldVal }} / {{ $depRowSoldPending }}</span>
     </td>
     <td class="ws-td ws-td--remain" data-label="Restant">
         @if($depRowRemaining !== null)
             <span class="ws-td__remain {{ $depRowRemaining <= 5 ? 'ws-td__remain--danger' : ($depRowRemaining <= 10 ? 'ws-td__remain--warn' : '') }}">{{ $depRowRemaining }}</span>
         @else
-            <span class="ws-td__muted">�?"</span>
+            <span class="ws-td__muted">-</span>
         @endif
     </td>
     <td class="ws-td ws-td--cap" data-label="Capacité">
         <div class="ws-td__cap-wrap">
-            <span class="ws-td__cap-text">{{ $depRowCapacity !== null ? $depRowCapacity.' places' : '�?"' }}</span>
+            <span class="ws-td__cap-text">{{ $depRowCapacity !== null ? $depRowCapacity.' places' : '-' }}</span>
             @if($depRowCapacity !== null && $depRowCapacity > 0)
                 <div class="ws-progress-bar--mini">
                     <div class="ws-progress-bar--mini__track">
@@ -528,7 +528,7 @@
                         @if($comRemaining !== null)
                             {{ $comRemaining }} restantes
                         @else
-                            �?"
+                            -
                         @endif
                     </span>
                 </div>
@@ -555,11 +555,11 @@
                             };
                             $statusLabel = !empty($departure['is_past'])
                                 ? 'Passé'
-                                : (($departure['status_label'] ?? '') === 'Disponible' ? '�? venir' : ($departure['status_label'] ?? '�? venir'));
+                                : (($departure['status_label'] ?? '') === 'Disponible' ? 'À venir' : ($departure['status_label'] ?? 'À venir'));
                         @endphp
                         <li class="ws-offer-card__departure-item">
                             <span class="ws-offer-card__departure-date">{{ $departure['date_label'] ?? 'Date non renseignée' }}</span>
-                            <span class="ws-offer-card__departure-status {{ $statusClass }}">�?" {{ $statusLabel }}</span>
+                            <span class="ws-offer-card__departure-status {{ $statusClass }}">- {{ $statusLabel }}</span>
                         </li>
                     @endforeach
                 </ul>

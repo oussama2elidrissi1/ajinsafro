@@ -2,7 +2,8 @@
     use App\Services\View\AgentPortalLayout;
     use Carbon\Carbon;
     $usePortalTailwind = AgentPortalLayout::shouldUse(auth()->user());
-    $workspaceView = $workspaceView ?? 'list';
+    $useLegacyWorkspaceMarkup = false;
+    $workspaceView = $workspaceView ?? 'catalog';
     $workspaceFilters = $workspaceFilters ?? [
         'search' => '',
         'type' => '',
@@ -13,7 +14,7 @@
         'budget_max' => null,
     ];
     $workspaceFilterOptions = $workspaceFilterOptions ?? ['destinations' => []];
-    $workspaceResetUrl = $workspaceResetUrl ?? route('admin.reservations.workspace', ['view' => 'list']);
+    $workspaceResetUrl = $workspaceResetUrl ?? route('admin.reservations.workspace', ['view' => 'catalog']);
     $catalogRows = $workspaceSellableRows ?? $catalogRows;
 
     $workspaceCalendarEvents = $catalogRows->flatMap(function ($r) {
@@ -123,7 +124,6 @@
 @endphp
 
 @push('styles')
-@if(!$usePortalTailwind)
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -153,7 +153,6 @@
             }
         };
     </script>
-@endif
 <link rel="stylesheet" href="{{ asset('css/reservation-workspace.css') }}?v=workspace-fixed-v7">
 <style>
     .ws-ring-pulse { animation: wsPulse 1.6s ease-out 1; }
@@ -1348,7 +1347,7 @@
         $sellableDepRowsV2 = $allDepRowsV2->filter(fn ($i) => $i['is_sellable'])->values();
     @endphp
 
-    @if(!$usePortalTailwind)
+    @if($useLegacyWorkspaceMarkup)
     <div id="reservations-main-content" class="commercial-v2-main space-y-6">
         <form id="catalogue-workspace" method="GET" action="{{ route('admin.reservations.workspace') }}" class="commercial-v2-filters-wrap">
             <input type="hidden" name="view" id="ws-filter-view" value="{{ $workspaceView }}">

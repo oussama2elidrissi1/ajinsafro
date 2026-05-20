@@ -476,7 +476,7 @@ class ReservationWorkspaceController extends Controller
     {
         $view = strtolower(trim((string) ($raw ?? '')));
 
-        return in_array($view, ['catalog', 'list', 'calendar'], true) ? $view : 'list';
+        return in_array($view, ['catalog', 'list', 'calendar'], true) ? $view : 'catalog';
     }
 
     /**
