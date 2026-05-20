@@ -1,6 +1,17 @@
 ﻿@php
     $sidebarContext = $sidebarContext ?? 'default';
     $sidebarUser = auth()->user();
+    $sidebarInitials = 'AD';
+    if ($sidebarUser && isset($sidebarUser->name)) {
+        $name = trim((string) $sidebarUser->name);
+        if ($name !== '') {
+            $parts = preg_split('/\\s+/', $name) ?: [];
+            $first = isset($parts[0]) ? strtoupper(substr((string) $parts[0], 0, 1)) : '';
+            $last = isset($parts[count($parts) - 1]) ? strtoupper(substr((string) $parts[count($parts) - 1], 0, 1)) : '';
+            $sidebarInitials = trim($first . $last) ?: strtoupper(substr($name, 0, 1));
+        }
+    }
+    $sidebarRole = $sidebarRole ?? ($sidebarUser && method_exists($sidebarUser, 'getRoleNames') ? (string) ($sidebarUser->getRoleNames()->first() ?? 'Admin') : 'Admin');
     $sidebarBrandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');
     $sidebarBrandLogo = \App\Models\Setting::brandLogoUrl('dark');
     $sidebarBrandHref = route('admin.dashboard');
