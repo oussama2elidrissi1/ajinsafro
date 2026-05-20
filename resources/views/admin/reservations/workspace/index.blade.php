@@ -1358,6 +1358,21 @@
             grid-template-columns: 1fr !important;
         }
     }
+
+    .admin-sales-catalogue-grid-fix {
+        grid-auto-flow: row !important;
+    }
+
+    .admin-sales-catalogue-grid-fix > .admin-sales-catalogue-card-fix,
+    .admin-sales-catalogue-card-fix.ws-offer-card,
+    .admin-sales-catalogue-card-fix.ws-catalog-row {
+        grid-column: auto !important;
+        grid-column-start: auto !important;
+        grid-column-end: auto !important;
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0 !important;
+    }
 </style>
 @endpush
 

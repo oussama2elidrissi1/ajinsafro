@@ -425,7 +425,7 @@
 </tr>
 @else
 <article class="catalog-card ws-catalog-row ws-offer-card ws-offer-card--compact admin-sales-catalogue-card-fix {{ $rowAccent }} {{ $hasLaravel ? '' : 'ws-catalog-row--unlinked' }}{{ $isNearFuture ? ' ws-catalog-row--near' : '' }}{{ $isSellable ? '' : ' ws-catalog-row--configure' }}"
-         style="width:100% !important;max-width:none !important;min-width:0 !important;margin:0 !important;justify-self:stretch !important;"
+         style="width:100% !important;max-width:none !important;min-width:0 !important;margin:0 !important;justify-self:stretch !important;grid-column:auto !important;grid-column-start:auto !important;grid-column-end:auto !important;"
     data-type="{{ $typeKey }}"
     data-row-code="{{ $row['code'] }}"
     data-code="{{ $row['code'] }}"
