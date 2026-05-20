@@ -1492,7 +1492,6 @@
         </div>
         <div id="reservations-calendar-view" class="commercial-v2-panel {{ $workspaceView === 'calendar' ? '' : 'hidden' }}"><div class="ws-calendar-panel"><div id="workspace-calendar" class="w-full min-h-[540px] fc-workspace" data-reset-url="{{ $workspaceResetUrl }}"></div></div></div>
     </div>
-    @else
     <div id="reservations-main-content" class="space-y-4">
         <form id="catalogue-workspace" class="ws-toolbar" method="GET" action="{{ route('admin.reservations.workspace') }}">
             <input type="hidden" name="view" id="ws-filter-view" value="{{ $workspaceView }}">

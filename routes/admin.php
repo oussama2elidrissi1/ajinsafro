@@ -191,6 +191,9 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::post('reservations/messages/{message}/important', fn () => redirect()->route('admin.messagerie.index'))->name('reservations.messages.important')->whereNumber('message');
 
         Route::get('demande-a-la-carte', [TailorMadeRequestController::class, 'index'])->name('tailor-made-requests.index');
+        Route::get('demande-a-la-carte/{tailorMadeRequest}', [TailorMadeRequestController::class, 'show'])->name('tailor-made-requests.show')->whereNumber('tailorMadeRequest');
+        Route::patch('demande-a-la-carte/{tailorMadeRequest}/status', [TailorMadeRequestController::class, 'updateStatus'])->name('tailor-made-requests.status')->whereNumber('tailorMadeRequest');
+        Route::delete('demande-a-la-carte/{tailorMadeRequest}', [TailorMadeRequestController::class, 'destroy'])->name('tailor-made-requests.destroy')->whereNumber('tailorMadeRequest');
         Route::get('reservations/create', [ReservationsController::class, 'create'])->name('reservations.create');
         Route::get('reservations/hotels-rooms', [ReservationsController::class, 'hotelsRooms'])->name('reservations.hotels-rooms');
         Route::get('reservations/voyage-departures', [ReservationsController::class, 'voyageDepartures'])->name('reservations.voyage-departures');
