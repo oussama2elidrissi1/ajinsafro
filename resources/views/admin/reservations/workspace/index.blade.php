@@ -1294,7 +1294,7 @@
         }
     }
 
-    /* === FIX: grille catalogue 4 colonnes desktop === */
+/* === FIX: grille catalogue 4 colonnes desktop === */
     .admin-sales-catalogue-page-fix,
     .admin-sales-catalogue-page-fix .ws-catalog-section {
         width: 100% !important;
@@ -1381,6 +1381,99 @@
             grid-template-columns: 1fr !important;
         }
     }
+/* === FIX: grille catalogue 4 colonnes desktop (override final) === */
+.admin-sales-catalogue-page-fix,
+.admin-sales-catalogue-page-fix .ws-catalog-section {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.admin-sales-catalogue-grid-fix {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    align-items: stretch !important;
+    justify-items: stretch !important;
+}
+
+.admin-sales-catalogue-cell-fix {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    grid-column: auto !important;
+    justify-self: stretch !important;
+    box-sizing: border-box !important;
+}
+
+.admin-sales-catalogue-cell-fix > .admin-sales-catalogue-card-fix,
+.admin-sales-catalogue-cell-fix > article {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    grid-column: auto !important;
+    justify-self: stretch !important;
+    box-sizing: border-box !important;
+}
+
+.admin-sales-catalogue-card-fix,
+.admin-sales-catalogue-card-fix * {
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.admin-sales-catalogue-card-fix .ws-offer-card__media,
+.admin-sales-catalogue-card-fix .ws-offer-card__media--compact {
+    height: 110px !important;
+    max-height: 110px !important;
+    overflow: hidden !important;
+}
+
+.admin-sales-catalogue-card-fix .ws-offer-card__media img,
+.admin-sales-catalogue-card-fix .ws-offer-card__img {
+    width: 100% !important;
+    height: 110px !important;
+    object-fit: cover !important;
+}
+
+.admin-sales-catalogue-card-fix .ws-offer-card__body--compact {
+    padding: 8px !important;
+    gap: 0.25rem !important;
+}
+
+.admin-sales-catalogue-card-fix .ws-offer-card__title--compact {
+    font-size: 0.72rem !important;
+    line-height: 1.15 !important;
+    min-height: 0 !important;
+}
+
+.admin-sales-catalogue-card-fix .ws-offer-card__metric,
+.admin-sales-catalogue-card-fix .ws-offer-card__departures,
+.admin-sales-catalogue-card-fix .ws-offer-card__commercial-bar {
+    padding: 0.4rem 0.5rem !important;
+}
+
+@media (max-width: 1100px) {
+    .admin-sales-catalogue-grid-fix {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 650px) {
+    .admin-sales-catalogue-grid-fix {
+        grid-template-columns: 1fr !important;
+    }
+}
+
 </style>
 @endpush
 
@@ -1874,11 +1967,17 @@
                     <div class="ws-catalog-section"
                          style="width:100% !important;max-width:none !important;margin:0 !important;padding-left:0 !important;padding-right:0 !important;">
                         <h3 class="ws-catalog-section__title">Départs disponibles à la vente</h3>
-                        <div class="admin-sales-catalogue-grid-fix">
-                            @foreach($sellableDepRowsV2 as $depItem)
-                                @include('admin.reservations.workspace.partials.catalog-row', ['row' => $depItem['row'], 'departure' => $depItem['departure'], 'mode' => 'card'])
-                            @endforeach
-                        </div>
+<div class="admin-sales-catalogue-grid-fix">
+    @foreach($sellableDepRowsV2 as $depItem)
+        <div class="admin-sales-catalogue-cell-fix">
+            @include('admin.reservations.workspace.partials.catalog-row', [
+                'row' => $depItem['row'],
+                'departure' => $depItem['departure'],
+                'mode' => 'card'
+            ])
+        </div>
+    @endforeach
+</div>
                     </div>
                 @endif
                 @if($catalogRows->isEmpty())
