@@ -61,7 +61,7 @@
 @php
     $isWorkspaceRoute = request()->routeIs('admin.reservations.workspace');
 @endphp
-<body class="admin-v6{{ $isWorkspaceRoute ? ' admin-v6-compact' : '' }}">
+<body class="admin-v6{{ $isWorkspaceRoute ? ' admin-v6-compact aj-admin-compact' : '' }}">
     <div class="admin-v6-shell" id="admin-v6-root">
         @include('admin.partials.sidebar-v6', ['sidebarContext' => 'admin-v6'])
 
@@ -76,7 +76,7 @@
                 'pendingCount'   => $pendingCount,
             ])
 
-            <main class="admin-v6-content">
+            <main class="admin-v6-content aj-admin-v2-content">
                 @yield('content')
             </main>
         </div>
