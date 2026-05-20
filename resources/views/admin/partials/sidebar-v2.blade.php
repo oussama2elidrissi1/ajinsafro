@@ -50,6 +50,12 @@
             ->count();
     }
 
+    // Some contexts include this sidebar without the menu builder variables.
+    // Keep a safe default to avoid crashing the whole admin layout.
+    $menuByKey = (isset($menuByKey) && is_object($menuByKey) && method_exists($menuByKey, 'get'))
+        ? $menuByKey
+        : collect();
+
     $dashboardNode = $menuByKey->get('dashboard');
     $dashboardChildren = $dashboardNode['children'] ?? [];
     if (\Illuminate\Support\Facades\Route::has('admin.dashboard.v3')) {
