@@ -1,4 +1,4 @@
-﻿@php
+﻿<?php
     use App\Services\View\AgentPortalLayout;
     use Carbon\Carbon;
     $usePortalTailwind = AgentPortalLayout::shouldUse(auth()->user());
@@ -112,25 +112,25 @@
     })->values()->all();
     $workspaceCalendarSeedDate = $workspaceFilters['date_from']
         ?? (collect($workspaceCalendarEvents)->pluck('departure_date')->filter()->sort()->first() ?: Carbon::today()->format('Y-m-d'));
-@endphp
-@extends('layouts.admin-v6')
+?>
 
-@section('title', 'Catalogue des Voyages & Départs')
-@section('page_title', 'Catalogue des Voyages & Départs')
 
-@php
+<?php $__env->startSection('title', 'Catalogue des Voyages & Départs'); ?>
+<?php $__env->startSection('page_title', 'Catalogue des Voyages & Départs'); ?>
+
+<?php
     $breadcrumbs = [
         ['label' => 'Accueil', 'url' => \Illuminate\Support\Facades\Route::has('admin.dashboard.v6') ? route('admin.dashboard.v6') : route('admin.dashboard')],
         ['label' => 'Vente / Catalogue'],
     ];
-@endphp
+?>
 
-@push('styles')
+<?php $__env->startPush('styles'); ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
-    {{-- TODO: remplacer par un build Tailwind local (Vite/PostCSS) avant mise en production --}}
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -155,7 +155,7 @@
             }
         };
     </script>
-<link rel="stylesheet" href="{{ asset('css/reservation-workspace.css') }}?v=workspace-fixed-v7">
+<link rel="stylesheet" href="<?php echo e(asset('css/reservation-workspace.css')); ?>?v=workspace-fixed-v7">
 <style>
     .ws-ring-pulse { animation: wsPulse 1.6s ease-out 1; }
     @keyframes wsPulse {
@@ -1369,10 +1369,10 @@
         }
     }
 </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
-@php
+<?php $__env->startSection('content'); ?>
+<?php
     $catalogFullCount = $catalogFullCount ?? $catalogRows->count();
     $workspaceUser = auth()->user();
     $isCommercialReservationsOnly = $workspaceUser && $workspaceUser->hasRole('commercial_reservations_only');
@@ -1381,31 +1381,31 @@
     $workspaceBrandLogo = \App\Models\Setting::brandLogoUrl('dark');
     $workspaceUserInitials = strtoupper(collect(preg_split('/\s+/', trim((string) ($workspaceUser?->name ?? 'OA'))))->filter()->take(2)->map(fn ($part) => mb_substr($part, 0, 1))->implode(''));
     if ($workspaceUserInitials === '') { $workspaceUserInitials = 'OA'; }
-@endphp
+?>
 <div class="fade-in ws-page max-w-[1680px] mx-auto pb-10 overflow-x-hidden">
-    @if(session('workspace_store_error'))
+    <?php if(session('workspace_store_error')): ?>
         <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 text-red-900 px-4 py-3 text-sm shadow-sm" role="alert">
             <strong class="font-semibold">Enregistrement impossible.</strong>
-            <p class="mb-0 mt-1">{{ session('workspace_store_error') }}</p>
+            <p class="mb-0 mt-1"><?php echo e(session('workspace_store_error')); ?></p>
         </div>
-    @endif
+    <?php endif; ?>
 
-    @if($errors->any())
+    <?php if($errors->any()): ?>
         <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 text-amber-950 px-4 py-3 text-sm shadow-sm" role="alert">
             <strong class="font-semibold">Vérifiez le formulaire :</strong>
             <ul class="mb-0 mt-2 ps-4 list-disc space-y-1">
-                @foreach($errors->all() as $err)
-                    <li>{{ $err }}</li>
-                @endforeach
+                <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $err): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <li><?php echo e($err); ?></li>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </ul>
         </div>
-    @endif
+    <?php endif; ?>
 
-    @if(session('success'))
-        <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-900 px-4 py-3 text-sm font-medium shadow-sm">{{ session('success') }}</div>
-    @endif
+    <?php if(session('success')): ?>
+        <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-900 px-4 py-3 text-sm font-medium shadow-sm"><?php echo e(session('success')); ?></div>
+    <?php endif; ?>
 
-    @php
+    <?php
         $sellableRows = $catalogRows->filter(fn($r) => $r['commercial']['is_sellable'] ?? false)->values();
         $allDepRowsV2 = collect();
         foreach ($catalogRows as $rowV2) {
@@ -1422,51 +1422,51 @@
             }
         }
         $sellableDepRowsV2 = $allDepRowsV2->filter(fn ($i) => $i['is_sellable'])->values();
-    @endphp
+    ?>
 
-    @if($useLegacyWorkspaceMarkup)
+    <?php if($useLegacyWorkspaceMarkup): ?>
     <div id="reservations-main-content" class="commercial-v2-main space-y-6">
-        <form id="catalogue-workspace" method="GET" action="{{ $workspaceFormUrl }}" class="commercial-v2-filters-wrap">
-            <input type="hidden" name="view" id="ws-filter-view" value="{{ $workspaceView }}">
+        <form id="catalogue-workspace" method="GET" action="<?php echo e($workspaceFormUrl); ?>" class="commercial-v2-filters-wrap">
+            <input type="hidden" name="view" id="ws-filter-view" value="<?php echo e($workspaceView); ?>">
             <div class="commercial-v2-header">
                 <div>
                     <h1>Catalogue des Voyages & Départs</h1>
                     <p>Recherchez les départs programmés et initiez un dossier de vente directe en un seul clic.</p>
                 </div>
                 <div class="commercial-v2-view-switch" role="group" aria-label="Mode d'affichage">
-                    <button type="button" id="btn-view-catalog" class="{{ $workspaceView === 'catalog' ? 'is-active' : '' }}"><i class="fas fa-th-large"></i><span>Catalogue</span></button>
-                    <button type="button" id="btn-view-list" class="{{ $workspaceView === 'list' ? 'is-active' : '' }}"><i class="fas fa-list"></i><span>Liste</span></button>
-                    <button type="button" id="btn-view-calendar" class="{{ $workspaceView === 'calendar' ? 'is-active' : '' }}"><i class="far fa-calendar-alt"></i><span>Calendrier</span></button>
+                    <button type="button" id="btn-view-catalog" class="<?php echo e($workspaceView === 'catalog' ? 'is-active' : ''); ?>"><i class="fas fa-th-large"></i><span>Catalogue</span></button>
+                    <button type="button" id="btn-view-list" class="<?php echo e($workspaceView === 'list' ? 'is-active' : ''); ?>"><i class="fas fa-list"></i><span>Liste</span></button>
+                    <button type="button" id="btn-view-calendar" class="<?php echo e($workspaceView === 'calendar' ? 'is-active' : ''); ?>"><i class="far fa-calendar-alt"></i><span>Calendrier</span></button>
                 </div>
             </div>
             <div class="commercial-v2-filters-card">
                 <div class="commercial-v2-filters-grid">
-                    <div><label for="ws-filter-search">Destination / Titre</label><input type="text" id="ws-filter-search" name="search" value="{{ $workspaceFilters['search'] ?? '' }}" placeholder="Ex: Dakhla, Marrakech..."></div>
-                    <div><label for="ws-filter-type">Type de voyage</label><select id="ws-filter-type" name="type"><option value="" {{ ($workspaceFilters['type'] ?? '') === '' ? 'selected' : '' }}>Tous types</option><option value="package" {{ ($workspaceFilters['type'] ?? '') === 'package' ? 'selected' : '' }}>Package</option><option value="vol" {{ ($workspaceFilters['type'] ?? '') === 'vol' ? 'selected' : '' }}>Vol</option><option value="hebergement" {{ ($workspaceFilters['type'] ?? '') === 'hebergement' ? 'selected' : '' }}>Hébergement</option></select></div>
-                    <div><label for="ws-filter-date-from">Départ après le</label><input type="date" id="ws-filter-date-from" name="date_from" value="{{ $workspaceFilters['date_from'] ?? '' }}"></div>
-                    <div><label for="ws-filter-date-to">Départ avant le</label><input type="date" id="ws-filter-date-to" name="date_to" value="{{ $workspaceFilters['date_to'] ?? '' }}"></div>
-                    <input type="hidden" id="ws-filter-budget-min" name="budget_min" value="{{ $workspaceFilters['budget_min'] ?? 0 }}">
-                    <input type="hidden" id="ws-filter-budget-max" name="budget_max" value="{{ $workspaceFilters['budget_max'] ?? 30000 }}">
+                    <div><label for="ws-filter-search">Destination / Titre</label><input type="text" id="ws-filter-search" name="search" value="<?php echo e($workspaceFilters['search'] ?? ''); ?>" placeholder="Ex: Dakhla, Marrakech..."></div>
+                    <div><label for="ws-filter-type">Type de voyage</label><select id="ws-filter-type" name="type"><option value="" <?php echo e(($workspaceFilters['type'] ?? '') === '' ? 'selected' : ''); ?>>Tous types</option><option value="package" <?php echo e(($workspaceFilters['type'] ?? '') === 'package' ? 'selected' : ''); ?>>Package</option><option value="vol" <?php echo e(($workspaceFilters['type'] ?? '') === 'vol' ? 'selected' : ''); ?>>Vol</option><option value="hebergement" <?php echo e(($workspaceFilters['type'] ?? '') === 'hebergement' ? 'selected' : ''); ?>>Hébergement</option></select></div>
+                    <div><label for="ws-filter-date-from">Départ après le</label><input type="date" id="ws-filter-date-from" name="date_from" value="<?php echo e($workspaceFilters['date_from'] ?? ''); ?>"></div>
+                    <div><label for="ws-filter-date-to">Départ avant le</label><input type="date" id="ws-filter-date-to" name="date_to" value="<?php echo e($workspaceFilters['date_to'] ?? ''); ?>"></div>
+                    <input type="hidden" id="ws-filter-budget-min" name="budget_min" value="<?php echo e($workspaceFilters['budget_min'] ?? 0); ?>">
+                    <input type="hidden" id="ws-filter-budget-max" name="budget_max" value="<?php echo e($workspaceFilters['budget_max'] ?? 30000); ?>">
                     <div class="commercial-v2-budget-range">
                         <label for="ws-budget-range-max">Segment budget</label>
                         <div class="commercial-v2-budget-range__labels">
                             <span>MAX</span>
-                            <span id="ws-budget-range-value">{{ (int) ($workspaceFilters['budget_max'] ?? 30000) }} MAD</span>
+                            <span id="ws-budget-range-value"><?php echo e((int) ($workspaceFilters['budget_max'] ?? 30000)); ?> MAD</span>
                         </div>
-                        <input type="range" id="ws-budget-range-max" min="0" max="100000" step="500" value="{{ (int) ($workspaceFilters['budget_max'] ?? 30000) }}">
+                        <input type="range" id="ws-budget-range-max" min="0" max="100000" step="500" value="<?php echo e((int) ($workspaceFilters['budget_max'] ?? 30000)); ?>">
                     </div>
                 </div>
                 <div class="commercial-v2-filters-actions">
                     <button type="submit" class="commercial-v2-apply-btn"><i class="fas fa-filter"></i><span>Filtrer</span></button>
-                    <a href="{{ $workspaceResetUrl }}" class="commercial-v2-reset-btn">Réinitialiser les filtres</a>
+                    <a href="<?php echo e($workspaceResetUrl); ?>" class="commercial-v2-reset-btn">Réinitialiser les filtres</a>
                 </div>
             </div>
         </form>
 
-        <div id="ws-view-table" class="commercial-v2-panel {{ $workspaceView === 'list' ? '' : 'hidden' }}">
+        <div id="ws-view-table" class="commercial-v2-panel <?php echo e($workspaceView === 'list' ? '' : 'hidden'); ?>">
             <div class="commercial-v2-list-table-wrap"><table class="commercial-v2-list-table"><thead><tr><th>Réf</th><th>Voyage &amp; Type</th><th>Destination</th><th>Dates (Aller/Retour)</th><th>Vendu / En attente</th><th>Remplissage</th><th>Actions</th></tr></thead><tbody id="ws-catalog-table-body">
-                @forelse($sellableDepRowsV2 as $depItemV2)
-                    @php
+                <?php $__empty_1 = true; $__currentLoopData = $sellableDepRowsV2; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $depItemV2): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                    <?php
                         $rowV2 = $depItemV2['row']; $departureV2 = $depItemV2['departure'];
                         $depDateV2 = !empty($departureV2['date_iso']) ? \Carbon\Carbon::parse($departureV2['date_iso']) : null;
                         $retDateV2 = !empty($departureV2['return_date_iso']) ? \Carbon\Carbon::parse($departureV2['return_date_iso']) : null;
@@ -1476,18 +1476,18 @@
                         $remainingV2 = data_get($departureV2, 'remaining', $rowV2['commercial']['places_restantes'] ?? null);
                         $fillPctV2 = ($capacityV2 && $capacityV2 > 0) ? min(100, (int) round((($confirmedV2 + $pendingV2) / $capacityV2) * 100)) : 0;
                         $reserveUrlV2 = data_get($departureV2, 'routes.reserve') ?: route('admin.reservations.create', array_filter(['tour_id' => (int) ($rowV2['voyage_id'] ?? 0), 'travel_date_id' => data_get($departureV2, 'travel_date_id')]));
-                    @endphp
-                    <tr><td><span class="commercial-v2-ref">{{ $rowV2['code'] ?? 'N/A' }}</span></td><td><div class="commercial-v2-voyage-title">{{ $rowV2['name'] ?? 'Voyage' }}</div><div class="commercial-v2-voyage-meta"><span class="commercial-v2-type">{{ strtoupper($rowV2['type_label'] ?? $rowV2['type'] ?? 'PACKAGE') }}</span><span>{{ $rowV2['duration_label'] ?? ($rowV2['duration'] ?? 'Durée non renseignée') }}</span></div></td><td><span class="commercial-v2-destination"><i class="fas fa-map-marker-alt"></i>{{ $rowV2['voyage_destination'] ?? '-' }}</span></td><td><div class="commercial-v2-dates"><span>Du: {{ $depDateV2 ? $depDateV2->format('d/m/Y') : '-' }}</span><span>Au: {{ $retDateV2 ? $retDateV2->format('d/m/Y') : '-' }}</span></div></td><td class="text-center"><span class="commercial-v2-sold">Vendu: {{ $confirmedV2 }}</span><span class="commercial-v2-pending">En attente: {{ $pendingV2 }}</span></td><td><div class="commercial-v2-fill"><div class="commercial-v2-fill-bar"><span style="width: {{ $fillPctV2 }}%"></span></div><small>{{ $remainingV2 !== null ? ('Dispo: '.$remainingV2) : 'Dispo: -' }}</small></div></td><td class="text-center"><div class="commercial-v2-actions"><button type="button" class="commercial-v2-btn commercial-v2-btn-view" data-ws-detail-trigger data-row-code="{{ $rowV2['code'] ?? '' }}" data-travel-date-id="{{ data_get($departureV2, 'travel_date_id', '') }}">Voir</button><a href="{{ $reserveUrlV2 }}" class="commercial-v2-btn commercial-v2-btn-book">Réserver</a></div></td></tr>
-                @empty
+                    ?>
+                    <tr><td><span class="commercial-v2-ref"><?php echo e($rowV2['code'] ?? 'N/A'); ?></span></td><td><div class="commercial-v2-voyage-title"><?php echo e($rowV2['name'] ?? 'Voyage'); ?></div><div class="commercial-v2-voyage-meta"><span class="commercial-v2-type"><?php echo e(strtoupper($rowV2['type_label'] ?? $rowV2['type'] ?? 'PACKAGE')); ?></span><span><?php echo e($rowV2['duration_label'] ?? ($rowV2['duration'] ?? 'Durée non renseignée')); ?></span></div></td><td><span class="commercial-v2-destination"><i class="fas fa-map-marker-alt"></i><?php echo e($rowV2['voyage_destination'] ?? '-'); ?></span></td><td><div class="commercial-v2-dates"><span>Du: <?php echo e($depDateV2 ? $depDateV2->format('d/m/Y') : '-'); ?></span><span>Au: <?php echo e($retDateV2 ? $retDateV2->format('d/m/Y') : '-'); ?></span></div></td><td class="text-center"><span class="commercial-v2-sold">Vendu: <?php echo e($confirmedV2); ?></span><span class="commercial-v2-pending">En attente: <?php echo e($pendingV2); ?></span></td><td><div class="commercial-v2-fill"><div class="commercial-v2-fill-bar"><span style="width: <?php echo e($fillPctV2); ?>%"></span></div><small><?php echo e($remainingV2 !== null ? ('Dispo: '.$remainingV2) : 'Dispo: -'); ?></small></div></td><td class="text-center"><div class="commercial-v2-actions"><button type="button" class="commercial-v2-btn commercial-v2-btn-view" data-ws-detail-trigger data-row-code="<?php echo e($rowV2['code'] ?? ''); ?>" data-travel-date-id="<?php echo e(data_get($departureV2, 'travel_date_id', '')); ?>">Voir</button><a href="<?php echo e($reserveUrlV2); ?>" class="commercial-v2-btn commercial-v2-btn-book">Réserver</a></div></td></tr>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <tr><td colspan="7" class="commercial-v2-empty">Aucune offre réservable disponible.</td></tr>
-                @endforelse
+                <?php endif; ?>
             </tbody></table></div>
         </div>
 
-        <div id="ws-view-catalog" class="commercial-v2-panel {{ $workspaceView === 'catalog' ? '' : 'hidden' }}">
+        <div id="ws-view-catalog" class="commercial-v2-panel <?php echo e($workspaceView === 'catalog' ? '' : 'hidden'); ?>">
             <div class="commercial-v2-cards-grid catalogue-grid">
-                @forelse($sellableRows as $row)
-                    @php
+                <?php $__empty_1 = true; $__currentLoopData = $sellableRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                    <?php
                         $img = !empty($row['image_url']) ? (string) $row['image_url'] : asset('build/images/placeholder.png');
                         $typeLabel = strtoupper($row['type_label'] ?? $row['type'] ?? 'CIRCUIT');
                         $code = $row['code'] ?? 'N/A';
@@ -1498,103 +1498,103 @@
                         $rest = $com['places_restantes'] ?? null;
                         $sold = $com['places_vendues'] ?? 0;
                         $departures = collect(data_get($row, 'modal_detail.departures', []));
-                    @endphp
-                    @if($departures->isNotEmpty())
-                        @foreach($departures as $dep)
-                            @php
+                    ?>
+                    <?php if($departures->isNotEmpty()): ?>
+                        <?php $__currentLoopData = $departures; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dep): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php
                                 $reserveUrl = data_get($dep, 'routes.reserve') ?: route('admin.reservations.create', array_filter([
                                     'tour_id' => (int) ($row['voyage_id'] ?? 0),
                                     'travel_date_id' => data_get($dep, 'travel_date_id'),
                                 ]));
-                            @endphp
+                            ?>
                             <article class="voyage-card commercial-voyage-card">
                                 <div class="voyage-card-image">
-                                    <img src="{{ $img }}" alt="{{ $row['name'] ?? 'Voyage' }}" loading="lazy">
+                                    <img src="<?php echo e($img); ?>" alt="<?php echo e($row['name'] ?? 'Voyage'); ?>" loading="lazy">
                                 </div>
                                 <div class="voyage-card-body">
                                     <div class="voyage-card-badges">
-                                        <span class="voyage-chip">{{ $typeLabel }}</span>
-                                        <span class="voyage-chip voyage-chip-ref">#{{ $code }}</span>
+                                        <span class="voyage-chip"><?php echo e($typeLabel); ?></span>
+                                        <span class="voyage-chip voyage-chip-ref">#<?php echo e($code); ?></span>
                                     </div>
-                                    <h3>{{ $row['name'] ?? 'Voyage' }}</h3>
-                                    <p class="voyage-card-destination"><i class="fas fa-map-marker-alt"></i> {{ $dest }}</p>
+                                    <h3><?php echo e($row['name'] ?? 'Voyage'); ?></h3>
+                                    <p class="voyage-card-destination"><i class="fas fa-map-marker-alt"></i> <?php echo e($dest); ?></p>
                                     <div class="voyage-card-meta">
                                         <span>Prix à partir de</span>
-                                        <strong>{{ $price }}</strong>
+                                        <strong><?php echo e($price); ?></strong>
                                     </div>
                                     <div class="voyage-card-stats">
-                                        <span>Capacité: <strong>{{ $cap ?? '-' }}</strong></span>
-                                        <span>Vendu: <strong>{{ $sold }}</strong></span>
-                                        <span>Restant: <strong>{{ $rest ?? '-' }}</strong></span>
+                                        <span>Capacité: <strong><?php echo e($cap ?? '-'); ?></strong></span>
+                                        <span>Vendu: <strong><?php echo e($sold); ?></strong></span>
+                                        <span>Restant: <strong><?php echo e($rest ?? '-'); ?></strong></span>
                                     </div>
                                     <div class="voyage-card-actions">
-                                        <button type="button" class="btn-view" data-ws-detail-trigger data-row-code="{{ $code }}" data-travel-date-id="{{ data_get($dep, 'travel_date_id', '') }}">Voir</button>
-                                        <a href="{{ $reserveUrl }}" class="btn-reserve">Réserver</a>
+                                        <button type="button" class="btn-view" data-ws-detail-trigger data-row-code="<?php echo e($code); ?>" data-travel-date-id="<?php echo e(data_get($dep, 'travel_date_id', '')); ?>">Voir</button>
+                                        <a href="<?php echo e($reserveUrl); ?>" class="btn-reserve">Réserver</a>
                                     </div>
                                 </div>
                             </article>
-                        @endforeach
-                    @else
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    <?php else: ?>
                         <article class="voyage-card commercial-voyage-card">
                             <div class="voyage-card-image">
-                                <img src="{{ $img }}" alt="{{ $row['name'] ?? 'Voyage' }}" loading="lazy">
+                                <img src="<?php echo e($img); ?>" alt="<?php echo e($row['name'] ?? 'Voyage'); ?>" loading="lazy">
                             </div>
                             <div class="voyage-card-body">
                                 <div class="voyage-card-badges">
-                                    <span class="voyage-chip">{{ $typeLabel }}</span>
-                                    <span class="voyage-chip voyage-chip-ref">#{{ $code }}</span>
+                                    <span class="voyage-chip"><?php echo e($typeLabel); ?></span>
+                                    <span class="voyage-chip voyage-chip-ref">#<?php echo e($code); ?></span>
                                 </div>
-                                <h3>{{ $row['name'] ?? 'Voyage' }}</h3>
-                                <p class="voyage-card-destination"><i class="fas fa-map-marker-alt"></i> {{ $dest }}</p>
+                                <h3><?php echo e($row['name'] ?? 'Voyage'); ?></h3>
+                                <p class="voyage-card-destination"><i class="fas fa-map-marker-alt"></i> <?php echo e($dest); ?></p>
                                 <div class="voyage-card-meta">
                                     <span>Prix à partir de</span>
-                                    <strong>{{ $price }}</strong>
+                                    <strong><?php echo e($price); ?></strong>
                                 </div>
                                 <div class="voyage-card-stats">
-                                    <span>Capacité: <strong>{{ $cap ?? '-' }}</strong></span>
-                                    <span>Vendu: <strong>{{ $sold }}</strong></span>
-                                    <span>Restant: <strong>{{ $rest ?? '-' }}</strong></span>
+                                    <span>Capacité: <strong><?php echo e($cap ?? '-'); ?></strong></span>
+                                    <span>Vendu: <strong><?php echo e($sold); ?></strong></span>
+                                    <span>Restant: <strong><?php echo e($rest ?? '-'); ?></strong></span>
                                 </div>
                                 <div class="voyage-card-actions">
-                                    <button type="button" class="btn-view" data-ws-detail-trigger data-row-code="{{ $code }}">Voir</button>
-                                    <a href="{{ route('admin.reservations.create', array_filter(['tour_id' => (int) ($row['voyage_id'] ?? 0)])) }}" class="btn-reserve">Réserver</a>
+                                    <button type="button" class="btn-view" data-ws-detail-trigger data-row-code="<?php echo e($code); ?>">Voir</button>
+                                    <a href="<?php echo e(route('admin.reservations.create', array_filter(['tour_id' => (int) ($row['voyage_id'] ?? 0)]))); ?>" class="btn-reserve">Réserver</a>
                                 </div>
                             </div>
                         </article>
-                    @endif
-                @empty
+                    <?php endif; ?>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <div class="commercial-v2-empty">Aucune offre réservable disponible.</div>
-                @endforelse
+                <?php endif; ?>
             </div>
         </div>
-        <div id="reservations-calendar-view" class="commercial-v2-panel {{ $workspaceView === 'calendar' ? '' : 'hidden' }}"><div class="ws-calendar-panel"><div id="workspace-calendar" class="w-full min-h-[540px] fc-workspace" data-reset-url="{{ $workspaceResetUrl }}"></div></div></div>
+        <div id="reservations-calendar-view" class="commercial-v2-panel <?php echo e($workspaceView === 'calendar' ? '' : 'hidden'); ?>"><div class="ws-calendar-panel"><div id="workspace-calendar" class="w-full min-h-[540px] fc-workspace" data-reset-url="<?php echo e($workspaceResetUrl); ?>"></div></div></div>
     </div>
-    @else
+    <?php else: ?>
     <div id="reservations-main-content" class="space-y-4">
-        <form id="catalogue-workspace" class="ws-toolbar" method="GET" action="{{ $workspaceFormUrl }}">
-            <input type="hidden" name="view" id="ws-filter-view" value="{{ $workspaceView }}">
-            @if(request()->filled('catalog'))
-                <input type="hidden" name="catalog" value="{{ request()->query('catalog') }}">
-            @endif
-            @if(request()->filled('sort'))
-                <input type="hidden" name="sort" value="{{ request()->query('sort') }}">
-            @endif
-            @if(request()->filled('direction'))
-                <input type="hidden" name="direction" value="{{ request()->query('direction') }}">
-            @endif
+        <form id="catalogue-workspace" class="ws-toolbar" method="GET" action="<?php echo e($workspaceFormUrl); ?>">
+            <input type="hidden" name="view" id="ws-filter-view" value="<?php echo e($workspaceView); ?>">
+            <?php if(request()->filled('catalog')): ?>
+                <input type="hidden" name="catalog" value="<?php echo e(request()->query('catalog')); ?>">
+            <?php endif; ?>
+            <?php if(request()->filled('sort')): ?>
+                <input type="hidden" name="sort" value="<?php echo e(request()->query('sort')); ?>">
+            <?php endif; ?>
+            <?php if(request()->filled('direction')): ?>
+                <input type="hidden" name="direction" value="<?php echo e(request()->query('direction')); ?>">
+            <?php endif; ?>
             <div class="ws-toolbar__row ws-toolbar__row--search">
                 <div class="ws-field ws-field--grow">
                     <label class="ws-field__label" for="ws-filter-search">Recherche rapide</label>
                     <div class="ws-field__input-wrap">
                         <i class="fas fa-search ws-field__icon" aria-hidden="true"></i>
-                        <input type="text" id="ws-filter-search" name="search" value="{{ $workspaceFilters['search'] ?? '' }}" placeholder="Nom, code, destination…" autocomplete="off" class="ws-input">
+                        <input type="text" id="ws-filter-search" name="search" value="<?php echo e($workspaceFilters['search'] ?? ''); ?>" placeholder="Nom, code, destination…" autocomplete="off" class="ws-input">
                     </div>
                 </div>
                 <div class="ws-toolbar__views">
                     <div class="ws-seg ws-seg--triple" role="group" aria-label="Mode d'affichage">
-                        <button type="button" id="btn-view-catalog" class="ws-seg__btn {{ $workspaceView === 'catalog' ? 'is-active' : '' }}" data-ws-target-view="catalog" title="Catalogue"><i class="fas fa-th-large" aria-hidden="true"></i><span class="ws-seg__btn-label-catalog">Catalogue</span></button>
-                        <button type="button" id="btn-view-list" class="ws-seg__btn {{ $workspaceView === 'list' ? 'is-active' : '' }}" data-ws-target-view="list" title="Vue liste (tableau)"><i class="fas fa-table" aria-hidden="true"></i><span>Liste</span></button>
-                        <button type="button" id="btn-view-calendar" class="ws-seg__btn {{ $workspaceView === 'calendar' ? 'is-active' : '' }}" data-ws-target-view="calendar" title="Calendrier"><i class="far fa-calendar-alt" aria-hidden="true"></i><span>Calendrier</span></button>
+                        <button type="button" id="btn-view-catalog" class="ws-seg__btn <?php echo e($workspaceView === 'catalog' ? 'is-active' : ''); ?>" data-ws-target-view="catalog" title="Catalogue"><i class="fas fa-th-large" aria-hidden="true"></i><span class="ws-seg__btn-label-catalog">Catalogue</span></button>
+                        <button type="button" id="btn-view-list" class="ws-seg__btn <?php echo e($workspaceView === 'list' ? 'is-active' : ''); ?>" data-ws-target-view="list" title="Vue liste (tableau)"><i class="fas fa-table" aria-hidden="true"></i><span>Liste</span></button>
+                        <button type="button" id="btn-view-calendar" class="ws-seg__btn <?php echo e($workspaceView === 'calendar' ? 'is-active' : ''); ?>" data-ws-target-view="calendar" title="Calendrier"><i class="far fa-calendar-alt" aria-hidden="true"></i><span>Calendrier</span></button>
                     </div>
                 </div>
             </div>
@@ -1602,47 +1602,47 @@
                 <div class="ws-field">
                     <label class="ws-field__label" for="ws-filter-type">Type</label>
                     <select id="ws-filter-type" name="type" class="ws-select">
-                        <option value="" {{ ($workspaceFilters['type'] ?? '') === '' ? 'selected' : '' }}>Tous</option>
-                        <option value="package" {{ ($workspaceFilters['type'] ?? '') === 'package' ? 'selected' : '' }}>Package</option>
-                        <option value="vol" {{ ($workspaceFilters['type'] ?? '') === 'vol' ? 'selected' : '' }}>Vol</option>
-                        <option value="hebergement" {{ ($workspaceFilters['type'] ?? '') === 'hebergement' ? 'selected' : '' }}>Hébergement</option>
+                        <option value="" <?php echo e(($workspaceFilters['type'] ?? '') === '' ? 'selected' : ''); ?>>Tous</option>
+                        <option value="package" <?php echo e(($workspaceFilters['type'] ?? '') === 'package' ? 'selected' : ''); ?>>Package</option>
+                        <option value="vol" <?php echo e(($workspaceFilters['type'] ?? '') === 'vol' ? 'selected' : ''); ?>>Vol</option>
+                        <option value="hebergement" <?php echo e(($workspaceFilters['type'] ?? '') === 'hebergement' ? 'selected' : ''); ?>>Hébergement</option>
                     </select>
                 </div>
                 <div class="ws-field">
                     <label class="ws-field__label" for="ws-filter-destination">Destination</label>
                     <select id="ws-filter-destination" name="destination" class="ws-select">
                         <option value="">Toutes</option>
-                        @foreach(($workspaceFilterOptions['destinations'] ?? []) as $destination)
-                            <option value="{{ $destination }}" {{ ($workspaceFilters['destination'] ?? '') === $destination ? 'selected' : '' }}>{{ $destination }}</option>
-                        @endforeach
+                        <?php $__currentLoopData = ($workspaceFilterOptions['destinations'] ?? []); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $destination): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($destination); ?>" <?php echo e(($workspaceFilters['destination'] ?? '') === $destination ? 'selected' : ''); ?>><?php echo e($destination); ?></option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
                 <div class="ws-field">
                     <label class="ws-field__label" for="ws-filter-date-from">Date départ Du</label>
-                    <input type="date" id="ws-filter-date-from" name="date_from" value="{{ $workspaceFilters['date_from'] ?? '' }}" class="ws-input">
+                    <input type="date" id="ws-filter-date-from" name="date_from" value="<?php echo e($workspaceFilters['date_from'] ?? ''); ?>" class="ws-input">
                 </div>
                 <div class="ws-field">
                     <label class="ws-field__label" for="ws-filter-date-to">Date départ Au</label>
-                    <input type="date" id="ws-filter-date-to" name="date_to" value="{{ $workspaceFilters['date_to'] ?? '' }}" class="ws-input">
+                    <input type="date" id="ws-filter-date-to" name="date_to" value="<?php echo e($workspaceFilters['date_to'] ?? ''); ?>" class="ws-input">
                 </div>
-                <input type="hidden" id="ws-filter-budget-min" name="budget_min" value="{{ $workspaceFilters['budget_min'] ?? 0 }}">
-                <input type="hidden" id="ws-filter-budget-max" name="budget_max" value="{{ $workspaceFilters['budget_max'] ?? 30000 }}">
+                <input type="hidden" id="ws-filter-budget-min" name="budget_min" value="<?php echo e($workspaceFilters['budget_min'] ?? 0); ?>">
+                <input type="hidden" id="ws-filter-budget-max" name="budget_max" value="<?php echo e($workspaceFilters['budget_max'] ?? 30000); ?>">
                 <div class="ws-field ws-field--budget-range full">
                     <label class="ws-field__label" for="ws-budget-range-max">Segment budget</label>
                     <div class="ws-budget-range">
-                        <div class="ws-budget-range__labels"><span>MAX</span><span id="ws-budget-range-value">{{ (int) ($workspaceFilters['budget_max'] ?? 30000) }} MAD</span></div>
-                        <input type="range" id="ws-budget-range-max" min="0" max="100000" step="500" value="{{ (int) ($workspaceFilters['budget_max'] ?? 30000) }}">
+                        <div class="ws-budget-range__labels"><span>MAX</span><span id="ws-budget-range-value"><?php echo e((int) ($workspaceFilters['budget_max'] ?? 30000)); ?> MAD</span></div>
+                        <input type="range" id="ws-budget-range-max" min="0" max="100000" step="500" value="<?php echo e((int) ($workspaceFilters['budget_max'] ?? 30000)); ?>">
                     </div>
                 </div>
                 <div class="ws-filter-actions">
                     <button type="submit" id="ws-filters-apply" class="ws-btn-filter"><i class="fas fa-filter" aria-hidden="true"></i><span>Filtrer</span></button>
-                    <a href="{{ $workspaceResetUrl }}" id="ws-filters-reset" class="ws-btn-reset">Réinitialiser</a>
+                    <a href="<?php echo e($workspaceResetUrl); ?>" id="ws-filters-reset" class="ws-btn-reset">Réinitialiser</a>
                 </div>
             </div>
         </form>
 
-        {{-- Vue liste (tableau) — défaut --}}
-        <div id="ws-view-table" class="ws-table-card {{ $workspaceView === 'list' ? '' : 'hidden' }}">
+        
+        <div id="ws-view-table" class="ws-table-card <?php echo e($workspaceView === 'list' ? '' : 'hidden'); ?>">
             <div class="ws-table-card__head">
                 <h2 class="ws-table-card__title">Vue liste</h2>
                 <p class="ws-table-card__sub">Référence, voyage, départ, capacité et actions.</p>
@@ -1662,45 +1662,45 @@
     <thead>
         <tr>
             <th scope="col" class="ws-data-table__th-ref">
-                <a href="{{ request()->fullUrlWithQuery(['sort' => 'ref', 'direction' => ($currentSort === 'ref' && $currentDirection === 'asc' ? 'desc' : 'asc')]) }}" class="table-sort-link {{ $currentSort === 'ref' ? 'is-active' : '' }}">
+                <a href="<?php echo e(request()->fullUrlWithQuery(['sort' => 'ref', 'direction' => ($currentSort === 'ref' && $currentDirection === 'asc' ? 'desc' : 'asc')])); ?>" class="table-sort-link <?php echo e($currentSort === 'ref' ? 'is-active' : ''); ?>">
                     Réf
-                    <i class="fas {{ $currentSort === 'ref' ? ($currentDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort' }} table-sort-icon" aria-hidden="true"></i>
+                    <i class="fas <?php echo e($currentSort === 'ref' ? ($currentDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'); ?> table-sort-icon" aria-hidden="true"></i>
                 </a>
             </th>
             <th scope="col" class="ws-data-table__th-offer">
-                <a href="{{ request()->fullUrlWithQuery(['sort' => 'voyage', 'direction' => ($currentSort === 'voyage' && $currentDirection === 'asc' ? 'desc' : 'asc')]) }}" class="table-sort-link {{ $currentSort === 'voyage' ? 'is-active' : '' }}">
+                <a href="<?php echo e(request()->fullUrlWithQuery(['sort' => 'voyage', 'direction' => ($currentSort === 'voyage' && $currentDirection === 'asc' ? 'desc' : 'asc')])); ?>" class="table-sort-link <?php echo e($currentSort === 'voyage' ? 'is-active' : ''); ?>">
                     Voyage
-                    <i class="fas {{ $currentSort === 'voyage' ? ($currentDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort' }} table-sort-icon" aria-hidden="true"></i>
+                    <i class="fas <?php echo e($currentSort === 'voyage' ? ($currentDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'); ?> table-sort-icon" aria-hidden="true"></i>
                 </a>
             </th>
             <th scope="col" class="ws-data-table__th-destination">
-                <a href="{{ request()->fullUrlWithQuery(['sort' => 'destination', 'direction' => ($currentSort === 'destination' && $currentDirection === 'asc' ? 'desc' : 'asc')]) }}" class="table-sort-link {{ $currentSort === 'destination' ? 'is-active' : '' }}">
+                <a href="<?php echo e(request()->fullUrlWithQuery(['sort' => 'destination', 'direction' => ($currentSort === 'destination' && $currentDirection === 'asc' ? 'desc' : 'asc')])); ?>" class="table-sort-link <?php echo e($currentSort === 'destination' ? 'is-active' : ''); ?>">
                     Destination
-                    <i class="fas {{ $currentSort === 'destination' ? ($currentDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort' }} table-sort-icon" aria-hidden="true"></i>
+                    <i class="fas <?php echo e($currentSort === 'destination' ? ($currentDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'); ?> table-sort-icon" aria-hidden="true"></i>
                 </a>
             </th>
             <th scope="col" class="ws-data-table__th-dep">
-                <a href="{{ request()->fullUrlWithQuery(['sort' => 'departure_date', 'direction' => ($currentSort === 'departure_date' && $currentDirection === 'asc' ? 'desc' : 'asc')]) }}" class="table-sort-link {{ $currentSort === 'departure_date' ? 'is-active' : '' }}">
+                <a href="<?php echo e(request()->fullUrlWithQuery(['sort' => 'departure_date', 'direction' => ($currentSort === 'departure_date' && $currentDirection === 'asc' ? 'desc' : 'asc')])); ?>" class="table-sort-link <?php echo e($currentSort === 'departure_date' ? 'is-active' : ''); ?>">
                     Départ
-                    <i class="fas {{ $currentSort === 'departure_date' ? ($currentDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort' }} table-sort-icon" aria-hidden="true"></i>
+                    <i class="fas <?php echo e($currentSort === 'departure_date' ? ($currentDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'); ?> table-sort-icon" aria-hidden="true"></i>
                 </a>
             </th>
             <th scope="col" class="ws-data-table__th-sold">
-                <a href="{{ request()->fullUrlWithQuery(['sort' => 'sold_pending', 'direction' => ($currentSort === 'sold_pending' && $currentDirection === 'asc' ? 'desc' : 'asc')]) }}" class="table-sort-link {{ $currentSort === 'sold_pending' ? 'is-active' : '' }}">
+                <a href="<?php echo e(request()->fullUrlWithQuery(['sort' => 'sold_pending', 'direction' => ($currentSort === 'sold_pending' && $currentDirection === 'asc' ? 'desc' : 'asc')])); ?>" class="table-sort-link <?php echo e($currentSort === 'sold_pending' ? 'is-active' : ''); ?>">
                     Vendu / En attente
-                    <i class="fas {{ $currentSort === 'sold_pending' ? ($currentDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort' }} table-sort-icon" aria-hidden="true"></i>
+                    <i class="fas <?php echo e($currentSort === 'sold_pending' ? ($currentDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'); ?> table-sort-icon" aria-hidden="true"></i>
                 </a>
             </th>
             <th scope="col" class="ws-data-table__th-remain">
-                <a href="{{ request()->fullUrlWithQuery(['sort' => 'remaining', 'direction' => ($currentSort === 'remaining' && $currentDirection === 'asc' ? 'desc' : 'asc')]) }}" class="table-sort-link {{ $currentSort === 'remaining' ? 'is-active' : '' }}">
+                <a href="<?php echo e(request()->fullUrlWithQuery(['sort' => 'remaining', 'direction' => ($currentSort === 'remaining' && $currentDirection === 'asc' ? 'desc' : 'asc')])); ?>" class="table-sort-link <?php echo e($currentSort === 'remaining' ? 'is-active' : ''); ?>">
                     Restant
-                    <i class="fas {{ $currentSort === 'remaining' ? ($currentDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort' }} table-sort-icon" aria-hidden="true"></i>
+                    <i class="fas <?php echo e($currentSort === 'remaining' ? ($currentDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'); ?> table-sort-icon" aria-hidden="true"></i>
                 </a>
             </th>
             <th scope="col" class="ws-data-table__th-cap">
-                <a href="{{ request()->fullUrlWithQuery(['sort' => 'capacity', 'direction' => ($currentSort === 'capacity' && $currentDirection === 'asc' ? 'desc' : 'asc')]) }}" class="table-sort-link {{ $currentSort === 'capacity' ? 'is-active' : '' }}">
+                <a href="<?php echo e(request()->fullUrlWithQuery(['sort' => 'capacity', 'direction' => ($currentSort === 'capacity' && $currentDirection === 'asc' ? 'desc' : 'asc')])); ?>" class="table-sort-link <?php echo e($currentSort === 'capacity' ? 'is-active' : ''); ?>">
                     Capacité
-                    <i class="fas {{ $currentSort === 'capacity' ? ($currentDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort' }} table-sort-icon" aria-hidden="true"></i>
+                    <i class="fas <?php echo e($currentSort === 'capacity' ? ($currentDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'); ?> table-sort-icon" aria-hidden="true"></i>
                 </a>
             </th>
             <th scope="col" class="ws-data-table__th-actions">Actions</th>
@@ -1708,7 +1708,7 @@
     </thead>
 
     <tbody id="ws-catalog-table-body">
-        @php
+        <?php
             $today = \Carbon\Carbon::today();
             $allDepRows = collect();
             foreach ($catalogRows as $row) {
@@ -1801,15 +1801,15 @@
                 return $currentDirection === 'desc' ? -$cmp : $cmp;
             })->values();
             $sellableDepRows = $sortedDepRows->filter(fn($i) => $i['is_sellable']);
-        @endphp
+        ?>
 
-        @if($sellableDepRows->isNotEmpty())
-            @foreach($sellableDepRows as $depItem)
-                @include('admin.reservations.workspace.partials.catalog-row', ['row' => $depItem['row'], 'mode' => 'table', 'departure' => $depItem['departure']])
-            @endforeach
-        @endif
+        <?php if($sellableDepRows->isNotEmpty()): ?>
+            <?php $__currentLoopData = $sellableDepRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $depItem): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <?php echo $__env->make('admin.reservations.workspace.partials.catalog-row', ['row' => $depItem['row'], 'mode' => 'table', 'departure' => $depItem['departure']], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+        <?php endif; ?>
 
-        @if($sellableDepRows->isEmpty())
+        <?php if($sellableDepRows->isEmpty()): ?>
             <tr>
                 <td colspan="8" class="ws-table-empty-cell">
                     <div class="ws-catalog-empty ws-catalog-empty--inline">
@@ -1825,7 +1825,7 @@
                     </div>
                 </td>
             </tr>
-        @endif
+        <?php endif; ?>
     </tbody>
 </table>
                 <div class="ws-pagination" id="ws-pagination">
@@ -1845,28 +1845,28 @@
             </div>
         </div>
 
-        {{-- Présentation catalogue (cartes) --}}
-        <div id="ws-view-catalog" class="ws-table-card {{ $workspaceView === 'catalog' ? '' : 'hidden' }}">
+        
+        <div id="ws-view-catalog" class="ws-table-card <?php echo e($workspaceView === 'catalog' ? '' : 'hidden'); ?>">
             <div class="ws-table-card__head">
                 <h2 class="ws-table-card__title">Catalogue</h2>
                 <p class="ws-table-card__sub">Vue compacte des voyages et départs disponibles.</p>
             </div>
-            @php
+            <?php
                 $sellableRows = $catalogRows->filter(fn($r) => $r['commercial']['is_sellable'] ?? false);
                 $nonSellableRows = $catalogRows->filter(fn($r) => !($r['commercial']['is_sellable'] ?? false));
-            @endphp
+            ?>
             <div id="ws-catalog-list">
-                @if($sellableRows->isNotEmpty())
+                <?php if($sellableRows->isNotEmpty()): ?>
                     <div class="ws-catalog-section">
                         <h3 class="ws-catalog-section__title">Voyages disponibles à la vente</h3>
                         <div class="ws-catalog-grid ws-catalog-grid--compact admin-sales-catalogue-grid-fix">
-                            @foreach($sellableRows as $row)
-                                @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'card'])
-                            @endforeach
+                            <?php $__currentLoopData = $sellableRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php echo $__env->make('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'card'], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
                     </div>
-                @endif
-                @if($catalogRows->isEmpty())
+                <?php endif; ?>
+                <?php if($catalogRows->isEmpty()): ?>
                     <div class="ws-catalog-empty">
                         <div class="max-w-md mx-auto text-center py-12 px-6">
                             <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 mb-4 text-2xl">
@@ -1874,34 +1874,34 @@
                             </div>
                             <p class="text-brand-dark font-bold text-lg mb-2">Aucun voyage dans le catalogue</p>
                             <p class="text-gray-500 text-sm mb-6">Créez ou liez des fiches voyages depuis Circuits / voyages.</p>
-                            <a href="{{ route('admin.circuits.voyages.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-brand-blue text-white font-bold text-sm px-5 py-3 hover:bg-brand-dark transition-colors">
+                            <a href="<?php echo e(route('admin.circuits.voyages.index')); ?>" class="inline-flex items-center gap-2 rounded-xl bg-brand-blue text-white font-bold text-sm px-5 py-3 hover:bg-brand-dark transition-colors">
                                 <i class="fas fa-plus-circle"></i> Gérer les voyages
                             </a>
                         </div>
                     </div>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
 
-        {{-- Calendrier --}}
-        <div id="reservations-calendar-view" class="bg-white p-4 sm:p-6 rounded-2xl shadow-custom border border-gray-100/90 {{ $workspaceView === 'calendar' ? '' : 'hidden' }}">
+        
+        <div id="reservations-calendar-view" class="bg-white p-4 sm:p-6 rounded-2xl shadow-custom border border-gray-100/90 <?php echo e($workspaceView === 'calendar' ? '' : 'hidden'); ?>">
             <div class="ws-calendar-panel">
                 <p class="ws-calendar-panel__hint">Vue mensuelle des départs filtrés. Cliquez sur un départ pour ouvrir son détail.</p>
-                <div id="workspace-calendar" class="w-full min-h-[540px] fc-workspace" data-reset-url="{{ $workspaceResetUrl }}"></div>
+                <div id="workspace-calendar" class="w-full min-h-[540px] fc-workspace" data-reset-url="<?php echo e($workspaceResetUrl); ?>"></div>
             </div>
         </div>
     </div>
     </div>
 </div>
-    @endif
+    <?php endif; ?>
 
-<script type="application/json" id="workspace-calendar-json">{!! json_encode($workspaceCalendarEvents, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
-<script type="application/json" id="workspace-calendar-meta-json">{!! json_encode(['seed_date' => $workspaceCalendarSeedDate, 'reset_url' => $workspaceResetUrl], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
-<script type="application/json" id="ws-modal-detail-json">{!! json_encode($catalogRows->mapWithKeys(fn ($r) => [($r['code'] ?? '') => $r['modal_detail'] ?? null])->filter(fn ($v) => $v !== null), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
-@endsection
+<script type="application/json" id="workspace-calendar-json"><?php echo json_encode($workspaceCalendarEvents, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE); ?></script>
+<script type="application/json" id="workspace-calendar-meta-json"><?php echo json_encode(['seed_date' => $workspaceCalendarSeedDate, 'reset_url' => $workspaceResetUrl], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE); ?></script>
+<script type="application/json" id="ws-modal-detail-json"><?php echo json_encode($catalogRows->mapWithKeys(fn ($r) => [($r['code'] ?? '') => $r['modal_detail'] ?? null])->filter(fn ($v) => $v !== null), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE); ?></script>
+<?php $__env->stopSection(); ?>
 
-@push('scripts')
-{{-- Modal hors layout (évite overflow / stacking) — rendu juste avant </body> --}}
+<?php $__env->startPush('scripts'); ?>
+
 <div id="ws-modal-root">
     <div id="ws-voyage-detail-modal" class="ws-md-root hidden" role="dialog" aria-modal="true" aria-labelledby="ws-md-title" aria-hidden="true">
         <div class="ws-md-overlay" data-ws-md-backdrop tabindex="-1" aria-hidden="true"></div>
@@ -1922,9 +1922,9 @@
         </div>
     </div>
 </div>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script>
 (function () {
     var defaults = {
@@ -1938,7 +1938,7 @@
         show_commission_help: true,
         show_departure_report: true
     };
-    var injected = {!! json_encode($wsModalSettings ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!};
+    var injected = <?php echo json_encode($wsModalSettings ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE); ?>;
     if (!injected || typeof injected !== 'object' || Array.isArray(injected)) injected = {};
     window.wsModalSettings = Object.assign({}, defaults, injected);
 })();
@@ -2502,7 +2502,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    wsActivateView(@json($workspaceView));
+    wsActivateView(<?php echo json_encode($workspaceView, 15, 512) ?>);
     applyWsFilters();
 
 });
@@ -3132,7 +3132,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (btnCatalog) btnCatalog.addEventListener('click', function () { setWorkspaceView('catalog'); });
     if (btnList) btnList.addEventListener('click', function () { setWorkspaceView('list'); });
     if (btnCalendar) btnCalendar.addEventListener('click', function () { setWorkspaceView('calendar'); });
-    setWorkspaceView(@json($workspaceView));
+    setWorkspaceView(<?php echo json_encode($workspaceView, 15, 512) ?>);
     window.addEventListener('resize', renderWorkspaceCalendar);
     normalizeWorkspaceButtons();
 
@@ -3180,4 +3180,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }, true);
 });
 </script>
-@endpush
+<?php $__env->stopPush(); ?>
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\reservations\workspace\index.blade.php ENDPATH**/ ?>

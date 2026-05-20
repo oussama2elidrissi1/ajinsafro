@@ -1,4 +1,4 @@
-﻿@php
+﻿<?php
     $hasLaravel = ! empty($row['voyage_id']);
     $wpPostId = $row['wp_post_id'] ?? null;
     $q = $hasLaravel ? array_filter([
@@ -273,280 +273,284 @@
         elseif ($comFillRate >= 75) $progressColor = 'bg-orange-500';
         elseif ($comFillRate >= 50) $progressColor = 'bg-amber-500';
     }
-@endphp
+?>
 
-@if($viewMode === 'table')
-<tr class="ws-catalog-row ws-catalog-table-row {{ $rowAccent }} {{ $hasLaravel ? '' : 'ws-catalog-row--unlinked' }}{{ $isNearFuture ? ' ws-catalog-row--near' : '' }}{{ $isSellableForRow ? '' : ' ws-catalog-row--configure' }}"
-    data-type="{{ $typeKey }}"
-    data-row-code="{{ $row['code'] }}"
-    data-code="{{ $row['code'] }}"
-    data-name="{{ $row['name'] }}"
-    data-search="{{ e($wsSearchBlob) }}"
-    data-dep="{{ $depRowDateIso ?? '' }}"
-    data-ws-avail="{{ e($wsAvail) }}"
-    data-ws-upcoming="{{ $wsUpcoming ? '1' : '0' }}"
-    data-avail-status="{{ $depRowStatusKey }}"
-    data-date-status="{{ $depRowIsPast ? 'past' : ($depRowDateIso ? 'upcoming' : 'none') }}"
-    data-stats-validee="{{ $depRowSoldVal }}"
-    data-stats-pending="{{ $depRowSoldPending }}"
-    data-stats-total="{{ $depRowStatVal + $depRowStatPending + $depRowStatCancel }}"
-    data-sort-dep="{{ $depRowDateIso ? \Carbon\Carbon::parse($depRowDateIso)->timestamp : $depTs }}"
-    data-sort-price="{{ $priceSort }}"
-    data-sort-places="{{ $placesSort }}"
-    data-commercial-priority="{{ $comPriority }}"
-    data-commercial-badge="{{ $comBadge ?? '' }}"
-    data-departure-city="{{ e($row['data_departure_city'] ?? '') }}"
-    data-destination="{{ e($row['voyage_destination'] ?? ($modalDetail['destination'] ?? '')) }}"
-    data-remaining="{{ $depRowRemaining ?? -1 }}"
-    data-sold="{{ $depRowSoldVal + $depRowSoldPending }}"
-    data-days-until="{{ $departureData ? ($departureData['days_until'] ?? 9999) : ($comDaysUntil ?? 9999) }}"
-    data-fill-rate="{{ $depRowFillRate ?? -1 }}"
-    data-price="{{ $priceSort }}"
-    data-is-sellable="{{ $isSellableForRow ? '1' : '0' }}"
-    title="{{ e($rowTitle) }}">
+<?php if($viewMode === 'table'): ?>
+<tr class="ws-catalog-row ws-catalog-table-row <?php echo e($rowAccent); ?> <?php echo e($hasLaravel ? '' : 'ws-catalog-row--unlinked'); ?><?php echo e($isNearFuture ? ' ws-catalog-row--near' : ''); ?><?php echo e($isSellableForRow ? '' : ' ws-catalog-row--configure'); ?>"
+    data-type="<?php echo e($typeKey); ?>"
+    data-row-code="<?php echo e($row['code']); ?>"
+    data-code="<?php echo e($row['code']); ?>"
+    data-name="<?php echo e($row['name']); ?>"
+    data-search="<?php echo e(e($wsSearchBlob)); ?>"
+    data-dep="<?php echo e($depRowDateIso ?? ''); ?>"
+    data-ws-avail="<?php echo e(e($wsAvail)); ?>"
+    data-ws-upcoming="<?php echo e($wsUpcoming ? '1' : '0'); ?>"
+    data-avail-status="<?php echo e($depRowStatusKey); ?>"
+    data-date-status="<?php echo e($depRowIsPast ? 'past' : ($depRowDateIso ? 'upcoming' : 'none')); ?>"
+    data-stats-validee="<?php echo e($depRowSoldVal); ?>"
+    data-stats-pending="<?php echo e($depRowSoldPending); ?>"
+    data-stats-total="<?php echo e($depRowStatVal + $depRowStatPending + $depRowStatCancel); ?>"
+    data-sort-dep="<?php echo e($depRowDateIso ? \Carbon\Carbon::parse($depRowDateIso)->timestamp : $depTs); ?>"
+    data-sort-price="<?php echo e($priceSort); ?>"
+    data-sort-places="<?php echo e($placesSort); ?>"
+    data-commercial-priority="<?php echo e($comPriority); ?>"
+    data-commercial-badge="<?php echo e($comBadge ?? ''); ?>"
+    data-departure-city="<?php echo e(e($row['data_departure_city'] ?? '')); ?>"
+    data-destination="<?php echo e(e($row['voyage_destination'] ?? ($modalDetail['destination'] ?? ''))); ?>"
+    data-remaining="<?php echo e($depRowRemaining ?? -1); ?>"
+    data-sold="<?php echo e($depRowSoldVal + $depRowSoldPending); ?>"
+    data-days-until="<?php echo e($departureData ? ($departureData['days_until'] ?? 9999) : ($comDaysUntil ?? 9999)); ?>"
+    data-fill-rate="<?php echo e($depRowFillRate ?? -1); ?>"
+    data-price="<?php echo e($priceSort); ?>"
+    data-is-sellable="<?php echo e($isSellableForRow ? '1' : '0'); ?>"
+    title="<?php echo e(e($rowTitle)); ?>">
     <td class="ws-td ws-td--ref" data-label="Réf">
-        <span class="ws-td__code">{{ $row['code'] }}</span>
-        @if($typeKey === 'package' && ! $hasLaravel)
+        <span class="ws-td__code"><?php echo e($row['code']); ?></span>
+        <?php if($typeKey === 'package' && ! $hasLaravel): ?>
             <span class="ws-td__hint ws-td__hint--warn">Non lié</span>
-        @endif
+        <?php endif; ?>
     </td>
     <td class="ws-td ws-td--offer" data-label="Voyage">
         <div class="ws-td__offer-compact">
-            <span class="ws-td__type-txt">{{ $typeShort }}</span>
-            <span class="ws-td__title ws-td__title--clamp" title="{{ !empty($row['price_label']) ? 'Prix : '.$row['price_label'] : 'Prix non renseigné' }}">{{ $row['name'] }}</span>
+            <span class="ws-td__type-txt"><?php echo e($typeShort); ?></span>
+            <span class="ws-td__title ws-td__title--clamp" title="<?php echo e(!empty($row['price_label']) ? 'Prix : '.$row['price_label'] : 'Prix non renseigné'); ?>"><?php echo e($row['name']); ?></span>
         </div>
     </td>
     <td class="ws-td ws-td--destination" data-label="Destination">
-        @php
+        <?php
             $destination = $row['voyage_destination'] ?? ($modalDetail['destination'] ?? '');
-        @endphp
-        @if($destination !== '')
-            <span class="ws-td__destination">{{ $destination }}</span>
-        @else
+        ?>
+        <?php if($destination !== ''): ?>
+            <span class="ws-td__destination"><?php echo e($destination); ?></span>
+        <?php else: ?>
             <span class="ws-td__muted">-</span>
-        @endif
+        <?php endif; ?>
     </td>
     <td class="ws-td ws-td--dep" data-label="Départ">
-        @if($depRowDateLabel)
-            <span class="ws-td__dep-date">{{ $depRowDateLabel }}</span>
-            @if($depRowIsPast)
+        <?php if($depRowDateLabel): ?>
+            <span class="ws-td__dep-date"><?php echo e($depRowDateLabel); ?></span>
+            <?php if($depRowIsPast): ?>
                 <span class="ws-td__dep-badge ws-td__dep-badge--past">Passé</span>
-            @endif
-        @else
+            <?php endif; ?>
+        <?php else: ?>
             <span class="ws-td__muted">-</span>
-        @endif
+        <?php endif; ?>
     </td>
     <td class="ws-td ws-td--sold" data-label="Vendu / En attente">
-        <span class="ws-td__sold" title="{{ $depRowSoldVal }} place{{ $depRowSoldVal > 1 ? 's' : '' }} vendue{{ $depRowSoldVal > 1 ? 's' : '' }} confirmée{{ $depRowSoldVal > 1 ? 's' : '' }} - {{ $depRowSoldPending }} place{{ $depRowSoldPending > 1 ? 's' : '' }} en attente">{{ $depRowSoldVal }} / {{ $depRowSoldPending }}</span>
+        <span class="ws-td__sold" title="<?php echo e($depRowSoldVal); ?> place<?php echo e($depRowSoldVal > 1 ? 's' : ''); ?> vendue<?php echo e($depRowSoldVal > 1 ? 's' : ''); ?> confirmée<?php echo e($depRowSoldVal > 1 ? 's' : ''); ?> - <?php echo e($depRowSoldPending); ?> place<?php echo e($depRowSoldPending > 1 ? 's' : ''); ?> en attente"><?php echo e($depRowSoldVal); ?> / <?php echo e($depRowSoldPending); ?></span>
     </td>
     <td class="ws-td ws-td--remain" data-label="Restant">
-        @if($depRowRemaining !== null)
-            <span class="ws-td__remain {{ $depRowRemaining <= 5 ? 'ws-td__remain--danger' : ($depRowRemaining <= 10 ? 'ws-td__remain--warn' : '') }}">{{ $depRowRemaining }}</span>
-        @else
+        <?php if($depRowRemaining !== null): ?>
+            <span class="ws-td__remain <?php echo e($depRowRemaining <= 5 ? 'ws-td__remain--danger' : ($depRowRemaining <= 10 ? 'ws-td__remain--warn' : '')); ?>"><?php echo e($depRowRemaining); ?></span>
+        <?php else: ?>
             <span class="ws-td__muted">-</span>
-        @endif
+        <?php endif; ?>
     </td>
     <td class="ws-td ws-td--cap" data-label="Capacité">
         <div class="ws-td__cap-wrap">
-            <span class="ws-td__cap-text">{{ $depRowCapacity !== null ? $depRowCapacity.' places' : '-' }}</span>
-            @if($depRowCapacity !== null && $depRowCapacity > 0)
+            <span class="ws-td__cap-text"><?php echo e($depRowCapacity !== null ? $depRowCapacity.' places' : '-'); ?></span>
+            <?php if($depRowCapacity !== null && $depRowCapacity > 0): ?>
                 <div class="ws-progress-bar--mini">
                     <div class="ws-progress-bar--mini__track">
-                        <div class="ws-progress-bar--mini__fill {{ $progressColor }}" style="width: {{ min(100, $depRowFillRate ?? 0) }}%"></div>
+                        <div class="ws-progress-bar--mini__fill <?php echo e($progressColor); ?>" style="width: <?php echo e(min(100, $depRowFillRate ?? 0)); ?>%"></div>
                     </div>
-                    <span class="ws-progress-bar--mini__label">{{ $depRowFillRate ?? 0 }}%</span>
+                    <span class="ws-progress-bar--mini__label"><?php echo e($depRowFillRate ?? 0); ?>%</span>
                 </div>
-            @endif
-            @if(!empty($depRowAlerts))
-                <span style="display:block;margin-top:0.25rem;font-size:0.7rem;color:#b45309;font-weight:700">{{ $depRowAlerts[0] }}</span>
-            @endif
+            <?php endif; ?>
+            <?php if(!empty($depRowAlerts)): ?>
+                <span style="display:block;margin-top:0.25rem;font-size:0.7rem;color:#b45309;font-weight:700"><?php echo e($depRowAlerts[0]); ?></span>
+            <?php endif; ?>
         </div>
     </td>
     <td class="ws-td ws-td--actions" data-label="Actions">
         <div class="ws-td__actions">
-            @if(!empty($modalDetail))
+            <?php if(!empty($modalDetail)): ?>
                 <button type="button"
                     class="ws-btn ws-btn--secondary ws-btn--sm ws-btn--iconish btn-ws-open-detail btn-view"
-                    data-row-code="{{ e($row['code']) }}"
-                    @if($departureData && $depRowTravelDateId)
-                        data-travel-date-id="{{ $depRowTravelDateId }}"
-                    @endif
+                    data-row-code="<?php echo e(e($row['code'])); ?>"
+                    <?php if($departureData && $depRowTravelDateId): ?>
+                        data-travel-date-id="<?php echo e($depRowTravelDateId); ?>"
+                    <?php endif; ?>
                     title="Détail">
                     <i class="fas fa-eye" aria-hidden="true"></i><span>Voir</span>
                 </button>
-            @endif
-            @can('reservations.view')
-                @if($isSellableForRow && $hasLaravel)
-                    @if($departureData)
+            <?php endif; ?>
+            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('reservations.view')): ?>
+                <?php if($isSellableForRow && $hasLaravel): ?>
+                    <?php if($departureData): ?>
                         <button type="button"
                             class="ws-btn ws-btn--primary ws-btn--sm ws-btn--iconish"
                             data-ws-reserve-departure="1"
-                            data-row-code="{{ e($row['code']) }}"
-                            data-travel-date-id="{{ $depRowTravelDateId }}"
-                            title="{{ $reserveLabel }}">
-                            @if($typeKey === 'vol')
+                            data-row-code="<?php echo e(e($row['code'])); ?>"
+                            data-travel-date-id="<?php echo e($depRowTravelDateId); ?>"
+                            title="<?php echo e($reserveLabel); ?>">
+                            <?php if($typeKey === 'vol'): ?>
                                 <i class="fas fa-plane-departure" aria-hidden="true"></i>
-                            @else
+                            <?php else: ?>
                                 <i class="fas fa-suitcase-rolling" aria-hidden="true"></i>
-                            @endif
-                            <span>{{ $reserveLabel }}</span>
+                            <?php endif; ?>
+                            <span><?php echo e($reserveLabel); ?></span>
                         </button>
-                    @else
+                    <?php else: ?>
                         <button type="button"
                             class="ws-btn ws-btn--primary ws-btn--sm ws-btn--iconish btn-ws-open-reserve"
-                            data-row-code="{{ e($row['code']) }}"
-                            title="{{ $reserveLabel }}">
-                            @if($typeKey === 'vol')
+                            data-row-code="<?php echo e(e($row['code'])); ?>"
+                            title="<?php echo e($reserveLabel); ?>">
+                            <?php if($typeKey === 'vol'): ?>
                                 <i class="fas fa-plane-departure" aria-hidden="true"></i>
-                            @else
+                            <?php else: ?>
                                 <i class="fas fa-suitcase-rolling" aria-hidden="true"></i>
-                            @endif
-                            <span>{{ $reserveLabel }}</span>
+                            <?php endif; ?>
+                            <span><?php echo e($reserveLabel); ?></span>
                         </button>
-                    @endif
-                @elseif(! $isSellableForRow && $hasLaravel)
-                    <a href="{{ $editTourUrl ?: '#' }}"
-                        class="ws-btn ws-btn--sm ws-btn--iconish {{ $editTourUrl ? 'ws-btn--configure' : 'ws-btn--disabled' }}"
-                        {!! $editTourUrl ? '' : 'aria-disabled="true"' !!}
-                        title="{{ $nonSellableBtnText }}">
-                        <i class="fas fa-cog" aria-hidden="true"></i><span>{{ $nonSellableBtnText }}</span>
+                    <?php endif; ?>
+                <?php elseif(! $isSellableForRow && $hasLaravel): ?>
+                    <a href="<?php echo e($editTourUrl ?: '#'); ?>"
+                        class="ws-btn ws-btn--sm ws-btn--iconish <?php echo e($editTourUrl ? 'ws-btn--configure' : 'ws-btn--disabled'); ?>"
+                        <?php echo $editTourUrl ? '' : 'aria-disabled="true"'; ?>
+
+                        title="<?php echo e($nonSellableBtnText); ?>">
+                        <i class="fas fa-cog" aria-hidden="true"></i><span><?php echo e($nonSellableBtnText); ?></span>
                     </a>
-                @else
-                    <a href="{{ $editTourUrl ?: '#' }}"
-                        class="ws-btn ws-btn--sm ws-btn--iconish {{ $editTourUrl ? 'ws-btn--ghost' : 'ws-btn--disabled' }}"
-                        {!! $editTourUrl ? '' : 'aria-disabled="true"' !!}
+                <?php else: ?>
+                    <a href="<?php echo e($editTourUrl ?: '#'); ?>"
+                        class="ws-btn ws-btn--sm ws-btn--iconish <?php echo e($editTourUrl ? 'ws-btn--ghost' : 'ws-btn--disabled'); ?>"
+                        <?php echo $editTourUrl ? '' : 'aria-disabled="true"'; ?>
+
                         title="Associer la fiche Laravel">
                         <i class="fas fa-link" aria-hidden="true"></i><span>Lier</span>
                     </a>
-                @endif
-            @endcan
+                <?php endif; ?>
+            <?php endif; ?>
         </div>
     </td>
 </tr>
-@else
-<article class="catalog-card ws-catalog-row ws-offer-card ws-offer-card--compact admin-sales-catalogue-card-fix {{ $rowAccent }} {{ $hasLaravel ? '' : 'ws-catalog-row--unlinked' }}{{ $isNearFuture ? ' ws-catalog-row--near' : '' }}{{ $isSellable ? '' : ' ws-catalog-row--configure' }}"
-    data-type="{{ $typeKey }}"
-    data-row-code="{{ $row['code'] }}"
-    data-code="{{ $row['code'] }}"
-    data-name="{{ $row['name'] }}"
-    data-search="{{ e($wsSearchBlob) }}"
-    data-dep="{{ $row['departure_date'] ? \Carbon\Carbon::parse($row['departure_date'])->format('Y-m-d') : '' }}"
-    data-ws-avail="{{ e($wsAvail) }}"
-    data-ws-upcoming="{{ $wsUpcoming ? '1' : '0' }}"
-    data-avail-status="{{ $comAvailStatus }}"
-    data-date-status="{{ $dateStatus }}"
-    data-stats-validee="{{ $statVal }}"
-    data-stats-pending="{{ $statPending }}"
-    data-stats-total="{{ $statTotal }}"
-    data-sort-dep="{{ $depTs }}"
-    data-sort-price="{{ $priceSort }}"
-    data-sort-places="{{ $placesSort }}"
-    data-commercial-priority="{{ $comPriority }}"
-    data-commercial-badge="{{ $comBadge ?? '' }}"
-    data-departure-city="{{ e($row['data_departure_city'] ?? '') }}"
-    data-destination="{{ e($row['voyage_destination'] ?? ($modalDetail['destination'] ?? '')) }}"
-    data-remaining="{{ $comRemaining ?? -1 }}"
-    data-sold="{{ $comSold }}"
-    data-days-until="{{ $comDaysUntil ?? 9999 }}"
-    data-fill-rate="{{ $comFillRate ?? -1 }}"
-    data-price="{{ $priceSort }}"
-    data-is-sellable="{{ $isSellable ? '1' : '0' }}"
-    title="{{ e($rowTitle) }}">
+<?php else: ?>
+<article class="catalog-card ws-catalog-row ws-offer-card ws-offer-card--compact admin-sales-catalogue-card-fix <?php echo e($rowAccent); ?> <?php echo e($hasLaravel ? '' : 'ws-catalog-row--unlinked'); ?><?php echo e($isNearFuture ? ' ws-catalog-row--near' : ''); ?><?php echo e($isSellable ? '' : ' ws-catalog-row--configure'); ?>"
+    data-type="<?php echo e($typeKey); ?>"
+    data-row-code="<?php echo e($row['code']); ?>"
+    data-code="<?php echo e($row['code']); ?>"
+    data-name="<?php echo e($row['name']); ?>"
+    data-search="<?php echo e(e($wsSearchBlob)); ?>"
+    data-dep="<?php echo e($row['departure_date'] ? \Carbon\Carbon::parse($row['departure_date'])->format('Y-m-d') : ''); ?>"
+    data-ws-avail="<?php echo e(e($wsAvail)); ?>"
+    data-ws-upcoming="<?php echo e($wsUpcoming ? '1' : '0'); ?>"
+    data-avail-status="<?php echo e($comAvailStatus); ?>"
+    data-date-status="<?php echo e($dateStatus); ?>"
+    data-stats-validee="<?php echo e($statVal); ?>"
+    data-stats-pending="<?php echo e($statPending); ?>"
+    data-stats-total="<?php echo e($statTotal); ?>"
+    data-sort-dep="<?php echo e($depTs); ?>"
+    data-sort-price="<?php echo e($priceSort); ?>"
+    data-sort-places="<?php echo e($placesSort); ?>"
+    data-commercial-priority="<?php echo e($comPriority); ?>"
+    data-commercial-badge="<?php echo e($comBadge ?? ''); ?>"
+    data-departure-city="<?php echo e(e($row['data_departure_city'] ?? '')); ?>"
+    data-destination="<?php echo e(e($row['voyage_destination'] ?? ($modalDetail['destination'] ?? ''))); ?>"
+    data-remaining="<?php echo e($comRemaining ?? -1); ?>"
+    data-sold="<?php echo e($comSold); ?>"
+    data-days-until="<?php echo e($comDaysUntil ?? 9999); ?>"
+    data-fill-rate="<?php echo e($comFillRate ?? -1); ?>"
+    data-price="<?php echo e($priceSort); ?>"
+    data-is-sellable="<?php echo e($isSellable ? '1' : '0'); ?>"
+    title="<?php echo e(e($rowTitle)); ?>">
 
-    @if($comBadge)
-        <div class="ws-offer-card__badge-overlay {{ $badgeHtmlClass }}">{{ $comBadge }}</div>
-    @elseif(! $isSellable && $nonSellableBadge)
-        <div class="ws-offer-card__badge-overlay {{ $nonSellableBadgeClass }}">{{ $nonSellableBadge }}</div>
-    @endif
+    <?php if($comBadge): ?>
+        <div class="ws-offer-card__badge-overlay <?php echo e($badgeHtmlClass); ?>"><?php echo e($comBadge); ?></div>
+    <?php elseif(! $isSellable && $nonSellableBadge): ?>
+        <div class="ws-offer-card__badge-overlay <?php echo e($nonSellableBadgeClass); ?>"><?php echo e($nonSellableBadge); ?></div>
+    <?php endif; ?>
 
-    <div class="ws-offer-card__media ws-offer-card__media--compact{{ $imageUrl ? ' ws-offer-card__media--has-img' : '' }}">
-        <div class="ws-offer-card__media-fill{{ $imageUrl ? ' ws-offer-card__media-fill--has-img' : '' }}">
+    <div class="ws-offer-card__media ws-offer-card__media--compact<?php echo e($imageUrl ? ' ws-offer-card__media--has-img' : ''); ?>">
+        <div class="ws-offer-card__media-fill<?php echo e($imageUrl ? ' ws-offer-card__media-fill--has-img' : ''); ?>">
             <div class="ws-offer-card__placeholder" aria-hidden="true">
                 <span class="ws-offer-card__placeholder-icon">
-                    @if($typeKey === 'vol')
+                    <?php if($typeKey === 'vol'): ?>
                         <i class="fas fa-plane"></i>
-                    @elseif($typeKey === 'hebergement')
+                    <?php elseif($typeKey === 'hebergement'): ?>
                         <i class="fas fa-hotel"></i>
-                    @else
+                    <?php else: ?>
                         <i class="fas fa-map-location-dot"></i>
-                    @endif
+                    <?php endif; ?>
                 </span>
                 <span class="ws-offer-card__placeholder-text">Visuel indisponible</span>
             </div>
-            @if($imageUrl)
-                <img src="{{ e($imageUrl) }}" alt="" class="ws-offer-card__img" loading="lazy" decoding="async"
+            <?php if($imageUrl): ?>
+                <img src="<?php echo e(e($imageUrl)); ?>" alt="" class="ws-offer-card__img" loading="lazy" decoding="async"
                      width="320" height="180"
                      onerror="this.closest('.ws-offer-card__media-fill')?.classList.add('is-broken')">
-            @endif
+            <?php endif; ?>
         </div>
     </div>
 
     <div class="ws-offer-card__body ws-offer-card__body--compact">
         <div class="ws-offer-card__compact-head">
-            <span class="{{ $badgeClass }} ws-offer-card__type--compact">{{ $typeShort }}</span>
-            <span class="ws-offer-card__code ws-offer-card__code--compact">{{ $row['code'] }}</span>
-            @if($typeKey === 'package' && ! $hasLaravel)
+            <span class="<?php echo e($badgeClass); ?> ws-offer-card__type--compact"><?php echo e($typeShort); ?></span>
+            <span class="ws-offer-card__code ws-offer-card__code--compact"><?php echo e($row['code']); ?></span>
+            <?php if($typeKey === 'package' && ! $hasLaravel): ?>
                 <span class="ws-offer-card__unlink ws-offer-card__unlink--inline">Non lié</span>
-            @endif
+            <?php endif; ?>
         </div>
-        <h3 class="ws-offer-card__title ws-offer-card__title--compact">{{ $row['name'] }}</h3>
-        @if($referenceBits !== [])
-            <p class="ws-offer-card__refs">{{ implode(' · ', $referenceBits) }}</p>
-        @endif
-        @php $cardDestination = $row['voyage_destination'] ?? ($modalDetail['destination'] ?? ''); @endphp
-        @if($cardDestination !== '')
-            <p class="ws-offer-card__city"><i class="fas fa-location-dot" aria-hidden="true"></i> {{ $cardDestination }}</p>
-        @endif
+        <h3 class="ws-offer-card__title ws-offer-card__title--compact"><?php echo e($row['name']); ?></h3>
+        <?php if($referenceBits !== []): ?>
+            <p class="ws-offer-card__refs"><?php echo e(implode(' · ', $referenceBits)); ?></p>
+        <?php endif; ?>
+        <?php $cardDestination = $row['voyage_destination'] ?? ($modalDetail['destination'] ?? ''); ?>
+        <?php if($cardDestination !== ''): ?>
+            <p class="ws-offer-card__city"><i class="fas fa-location-dot" aria-hidden="true"></i> <?php echo e($cardDestination); ?></p>
+        <?php endif; ?>
         <div class="ws-offer-card__meta-list" role="group" aria-label="Tarif et capacité">
             <div class="ws-offer-card__meta-item ws-offer-card__meta-item--price">
                 <span class="ws-offer-card__meta-label"><i class="fas fa-coins" aria-hidden="true"></i>Prix à partir de</span>
                 <span class="ws-offer-card__meta-value ws-offer-card__meta-value--price">
-                    @if(! empty($row['price_label']))
-                        {{ $row['price_label'] }}
-                    @else
+                    <?php if(! empty($row['price_label'])): ?>
+                        <?php echo e($row['price_label']); ?>
+
+                    <?php else: ?>
                         <span class="ws-offer-card__meta-muted">Non renseigné</span>
-                    @endif
+                    <?php endif; ?>
                 </span>
             </div>
             <div class="ws-offer-card__meta-item ws-offer-card__meta-item--cap">
                 <span class="ws-offer-card__meta-label"><i class="fas fa-users" aria-hidden="true"></i>Capacité</span>
                 <span class="ws-offer-card__meta-value" title="Capacité basée sur la répartition des chambres">
-                    @if($typeKey === 'package' && $hasLaravel)
-                        {{ is_numeric(str_replace(' ', '', $capText)) ? $capText.' places' : $capText }}
-                    @else
+                    <?php if($typeKey === 'package' && $hasLaravel): ?>
+                        <?php echo e(is_numeric(str_replace(' ', '', $capText)) ? $capText.' places' : $capText); ?>
+
+                    <?php else: ?>
                         <span class="ws-offer-card__meta-muted">Non applicable</span>
-                    @endif
+                    <?php endif; ?>
                 </span>
             </div>
         </div>
 
-        @if($comCapacity !== null && $comCapacity > 0)
+        <?php if($comCapacity !== null && $comCapacity > 0): ?>
             <div class="ws-offer-card__commercial-bar">
                 <div class="ws-offer-card__commercial-stats">
-                    <span class="ws-offer-card__commercial-stat ws-offer-card__commercial-stat--sold">{{ $comSold }} vendues</span>
-                    <span class="ws-offer-card__commercial-stat ws-offer-card__commercial-stat--remain {{ $comRemaining !== null && $comRemaining <= 5 ? 'ws-offer-card__commercial-stat--danger' : ($comRemaining !== null && $comRemaining <= 10 ? 'ws-offer-card__commercial-stat--warn' : '') }}">
-                        @if($comRemaining !== null)
-                            {{ $comRemaining }} restantes
-                        @else
+                    <span class="ws-offer-card__commercial-stat ws-offer-card__commercial-stat--sold"><?php echo e($comSold); ?> vendues</span>
+                    <span class="ws-offer-card__commercial-stat ws-offer-card__commercial-stat--remain <?php echo e($comRemaining !== null && $comRemaining <= 5 ? 'ws-offer-card__commercial-stat--danger' : ($comRemaining !== null && $comRemaining <= 10 ? 'ws-offer-card__commercial-stat--warn' : '')); ?>">
+                        <?php if($comRemaining !== null): ?>
+                            <?php echo e($comRemaining); ?> restantes
+                        <?php else: ?>
                             -
-                        @endif
+                        <?php endif; ?>
                     </span>
                 </div>
                 <div class="ws-progress-bar--mini">
                     <div class="ws-progress-bar--mini__track">
-                        <div class="ws-progress-bar--mini__fill {{ $progressColor }}" style="width: {{ min(100, $comFillRate ?? 0) }}%"></div>
+                        <div class="ws-progress-bar--mini__fill <?php echo e($progressColor); ?>" style="width: <?php echo e(min(100, $comFillRate ?? 0)); ?>%"></div>
                     </div>
-                    <span class="ws-progress-bar--mini__label">{{ $comFillRate ?? 0 }}%</span>
+                    <span class="ws-progress-bar--mini__label"><?php echo e($comFillRate ?? 0); ?>%</span>
                 </div>
             </div>
-        @endif
+        <?php endif; ?>
 
-        @if($typeKey === 'package' && $departures->isNotEmpty())
+        <?php if($typeKey === 'package' && $departures->isNotEmpty()): ?>
             <div class="ws-offer-card__departures">
                 <div class="ws-offer-card__section-label">Départs disponibles</div>
                 <ul class="ws-offer-card__departure-list" aria-label="Départs disponibles">
-                    @foreach($visibleDepartures as $departure)
-                        @php
+                    <?php $__currentLoopData = $visibleDepartures; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $departure): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php
                             $statusClass = match ($departure['status_key'] ?? 'unknown') {
                                 'available' => 'ws-offer-card__departure-status--ok',
                                 'almost_full' => 'ws-offer-card__departure-status--warn',
@@ -556,79 +560,82 @@
                             $statusLabel = !empty($departure['is_past'])
                                 ? 'Passé'
                                 : (($departure['status_label'] ?? '') === 'Disponible' ? 'À venir' : ($departure['status_label'] ?? 'À venir'));
-                        @endphp
+                        ?>
                         <li class="ws-offer-card__departure-item">
-                            <span class="ws-offer-card__departure-date">{{ $departure['date_label'] ?? 'Date non renseignée' }}</span>
-                            <span class="ws-offer-card__departure-status {{ $statusClass }}">- {{ $statusLabel }}</span>
+                            <span class="ws-offer-card__departure-date"><?php echo e($departure['date_label'] ?? 'Date non renseignée'); ?></span>
+                            <span class="ws-offer-card__departure-status <?php echo e($statusClass); ?>">- <?php echo e($statusLabel); ?></span>
                         </li>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </ul>
-                @if($extraDepartureCount > 0)
-                    <button type="button" class="ws-offer-card__more btn-ws-open-detail" data-row-code="{{ e($row['code']) }}">
-                        + {{ $extraDepartureCount }} autre(s) départ(s)
+                <?php if($extraDepartureCount > 0): ?>
+                    <button type="button" class="ws-offer-card__more btn-ws-open-detail" data-row-code="<?php echo e(e($row['code'])); ?>">
+                        + <?php echo e($extraDepartureCount); ?> autre(s) départ(s)
                     </button>
-                @endif
+                <?php endif; ?>
             </div>
-        @elseif($hasDepDate)
+        <?php elseif($hasDepDate): ?>
             <div class="ws-offer-card__departures">
                 <div class="ws-offer-card__section-label">Départ</div>
                 <div class="ws-offer-card__departure-item ws-offer-card__departure-item--solo">
-                    <span class="ws-offer-card__departure-date">{{ \Carbon\Carbon::parse($row['departure_date'])->locale('fr')->translatedFormat('d M Y') }}</span>
-                    @if($pkgDepCanceled)
+                    <span class="ws-offer-card__departure-date"><?php echo e(\Carbon\Carbon::parse($row['departure_date'])->locale('fr')->translatedFormat('d M Y')); ?></span>
+                    <?php if($pkgDepCanceled): ?>
                         <span class="ws-offer-card__departure-status ws-offer-card__departure-status--muted">Annulé</span>
-                    @endif
+                    <?php endif; ?>
                 </div>
             </div>
-        @endif
+        <?php endif; ?>
 
-        @if($comBadge || $comAvailStatus !== 'unknown')
+        <?php if($comBadge || $comAvailStatus !== 'unknown'): ?>
             <div class="ws-offer-card__avail-row">
-                @if($comBadge)
-                    <span class="{{ $badgeHtmlClass }} ws-offer-card__avail-badge">{{ $comBadge }}</span>
-                @endif
-                <span class="{{ $availHtmlClass }} ws-offer-card__avail-badge">{{ $availLabel }}</span>
+                <?php if($comBadge): ?>
+                    <span class="<?php echo e($badgeHtmlClass); ?> ws-offer-card__avail-badge"><?php echo e($comBadge); ?></span>
+                <?php endif; ?>
+                <span class="<?php echo e($availHtmlClass); ?> ws-offer-card__avail-badge"><?php echo e($availLabel); ?></span>
             </div>
-        @endif
+        <?php endif; ?>
 
         <div class="ws-offer-card__actions ws-offer-card__actions--compact" role="group" aria-label="Actions">
-            @if(!empty($modalDetail))
+            <?php if(!empty($modalDetail)): ?>
                 <button type="button"
                     class="ws-btn ws-btn--secondary ws-btn--sm btn-ws-open-detail btn-view"
-                    data-row-code="{{ e($row['code']) }}"
+                    data-row-code="<?php echo e(e($row['code'])); ?>"
                     title="Détail">
                     <i class="fas fa-eye" aria-hidden="true"></i><span>Voir</span>
                 </button>
-            @endif
-            @can('reservations.view')
-                @if($isSellable && $hasLaravel)
-                    <a href="{{ $reserveUrl }}"
+            <?php endif; ?>
+            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('reservations.view')): ?>
+                <?php if($isSellable && $hasLaravel): ?>
+                    <a href="<?php echo e($reserveUrl); ?>"
                         class="ws-btn ws-btn--primary ws-btn--sm"
-                        title="{{ $reserveLabel }}">
-                        @if($typeKey === 'vol')
+                        title="<?php echo e($reserveLabel); ?>">
+                        <?php if($typeKey === 'vol'): ?>
                             <i class="fas fa-plane-departure" aria-hidden="true"></i>
-                        @else
+                        <?php else: ?>
                             <i class="fas fa-suitcase-rolling" aria-hidden="true"></i>
-                        @endif
-                        <span>{{ $reserveLabel }}</span>
+                        <?php endif; ?>
+                        <span><?php echo e($reserveLabel); ?></span>
                     </a>
-                @elseif(! $isSellable && $hasLaravel)
-                    <a href="{{ $editTourUrl ?: '#' }}"
-                        class="{{ $nonSellableBtnClass }}"
-                        {!! $editTourUrl ? '' : 'aria-disabled="true"' !!}
-                        title="{{ $nonSellableBtnText }}">
-                        <i class="fas fa-cog" aria-hidden="true"></i><span>{{ $nonSellableBtnText }}</span>
+                <?php elseif(! $isSellable && $hasLaravel): ?>
+                    <a href="<?php echo e($editTourUrl ?: '#'); ?>"
+                        class="<?php echo e($nonSellableBtnClass); ?>"
+                        <?php echo $editTourUrl ? '' : 'aria-disabled="true"'; ?>
+
+                        title="<?php echo e($nonSellableBtnText); ?>">
+                        <i class="fas fa-cog" aria-hidden="true"></i><span><?php echo e($nonSellableBtnText); ?></span>
                     </a>
-                @else
-                    <a href="{{ $editTourUrl ?: '#' }}"
-                        class="ws-btn ws-btn--sm {{ $editTourUrl ? 'ws-btn--ghost' : 'ws-btn--disabled' }}"
-                        {!! $editTourUrl ? '' : 'aria-disabled="true"' !!}
+                <?php else: ?>
+                    <a href="<?php echo e($editTourUrl ?: '#'); ?>"
+                        class="ws-btn ws-btn--sm <?php echo e($editTourUrl ? 'ws-btn--ghost' : 'ws-btn--disabled'); ?>"
+                        <?php echo $editTourUrl ? '' : 'aria-disabled="true"'; ?>
+
                         title="Associer la fiche Laravel">
                         <i class="fas fa-link" aria-hidden="true"></i><span>Lier</span>
                     </a>
-                @endif
-            @endcan
+                <?php endif; ?>
+            <?php endif; ?>
         </div>
     </div>
 </article>
-@endif
+<?php endif; ?>
 
+<?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\reservations\workspace\partials\catalog-row.blade.php ENDPATH**/ ?>
