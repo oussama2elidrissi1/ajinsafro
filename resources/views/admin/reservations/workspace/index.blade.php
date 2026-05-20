@@ -1848,12 +1848,13 @@
             @endphp
             <div id="ws-catalog-list">
                 @if($sellableRows->isNotEmpty())
-                    <div class="ws-catalog-section">
-                        <h3 class="ws-catalog-section__title">Voyages disponibles à la vente</h3>
+                    <div class="ws-catalog-section"
+                         style="width:100% !important;max-width:none !important;margin:0 !important;padding-left:0 !important;padding-right:0 !important;">
+                        <h3 class="ws-catalog-section__title">Départs disponibles à la vente</h3>
                         <div class="admin-sales-catalogue-grid-fix"
                              style="display:grid !important;grid-template-columns:repeat(4,minmax(0,1fr)) !important;gap:18px !important;width:100% !important;max-width:none !important;margin:0 !important;padding:0 !important;justify-content:stretch !important;justify-items:stretch !important;align-items:stretch !important;">
-                            @foreach($sellableRows as $row)
-                                @include('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'card'])
+                            @foreach($sellableDepRowsV2 as $depItem)
+                                @include('admin.reservations.workspace.partials.catalog-row', ['row' => $depItem['row'], 'departure' => $depItem['departure'], 'mode' => 'card'])
                             @endforeach
                         </div>
                     </div>

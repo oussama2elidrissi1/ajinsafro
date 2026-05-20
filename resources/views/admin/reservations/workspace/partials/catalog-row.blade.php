@@ -120,9 +120,9 @@
     $comTopDates = $commercial['top_dates'] ?? [];
     $isSellable = $commercial['is_sellable'] ?? false;
 
-    // Per-departure overrides for table mode
+    // Per-departure overrides (table + card per-departure mode)
     $departureData = $departure ?? null;
-    if ($viewMode === 'table' && $departureData) {
+    if ($departureData) {
         $depRowStatVal = (int) data_get($departureData, 'reservations.validee', 0);
         $depRowStatPending = (int) data_get($departureData, 'reservations.en_cours', 0);
         $depRowStatCancel = (int) data_get($departureData, 'reservations.annulee', 0);
@@ -169,7 +169,7 @@
     $depRowSoldTitle = implode(' - ', $depRowSoldTitleParts);
 
     $isSellableForRow = $isSellable;
-    if ($viewMode === 'table' && $departureData) {
+    if ($departureData) {
         $isSellableForRow = $isSellable
             && ! $depRowIsPast
             && $depRowStatusKey !== 'full'
@@ -542,7 +542,23 @@
             </div>
         @endif
 
-        @if($typeKey === 'package' && $departures->isNotEmpty())
+        @if($departureData)
+            <div class="ws-offer-card__departures">
+                <div class="ws-offer-card__section-label">Départ</div>
+                <div class="ws-offer-card__departure-item ws-offer-card__departure-item--solo">
+                    <span class="ws-offer-card__departure-date">{{ $depRowDateLabel ?: 'Date non renseignée' }}</span>
+                    @if($depRowIsPast)
+                        <span class="ws-offer-card__departure-status ws-offer-card__departure-status--muted">Passé</span>
+                    @elseif($depRowStatusKey === 'full')
+                        <span class="ws-offer-card__departure-status ws-offer-card__departure-status--full">Complet</span>
+                    @elseif($depRowStatusKey === 'almost_full')
+                        <span class="ws-offer-card__departure-status ws-offer-card__departure-status--warn">Presque complet</span>
+                    @else
+                        <span class="ws-offer-card__departure-status ws-offer-card__departure-status--ok">Disponible</span>
+                    @endif
+                </div>
+            </div>
+        @elseif($typeKey === 'package' && $departures->isNotEmpty())
             <div class="ws-offer-card__departures">
                 <div class="ws-offer-card__section-label">Départs disponibles</div>
                 <ul class="ws-offer-card__departure-list" aria-label="Départs disponibles">
@@ -596,13 +612,19 @@
                 <button type="button"
                     class="ws-btn ws-btn--secondary ws-btn--sm btn-ws-open-detail btn-view"
                     data-row-code="{{ e($row['code']) }}"
+                    @if($departureData && $depRowTravelDateId)
+                        data-travel-date-id="{{ $depRowTravelDateId }}"
+                    @endif
                     title="Détail">
                     <i class="fas fa-eye" aria-hidden="true"></i><span>Voir</span>
                 </button>
             @endif
             @can('reservations.view')
-                @if($isSellable && $hasLaravel)
-                    <a href="{{ $reserveUrl }}"
+                @php
+                    $cardReserveUrl = $departureData && $depRowRouteReserve ? $depRowRouteReserve : $reserveUrl;
+                @endphp
+                @if($isSellableForRow && $hasLaravel)
+                    <a href="{{ $cardReserveUrl }}"
                         class="ws-btn ws-btn--primary ws-btn--sm"
                         title="{{ $reserveLabel }}">
                         @if($typeKey === 'vol')
@@ -612,7 +634,7 @@
                         @endif
                         <span>{{ $reserveLabel }}</span>
                     </a>
-                @elseif(! $isSellable && $hasLaravel)
+                @elseif(! $isSellableForRow && $hasLaravel)
                     <a href="{{ $editTourUrl ?: '#' }}"
                         class="{{ $nonSellableBtnClass }}"
                         {!! $editTourUrl ? '' : 'aria-disabled="true"' !!}

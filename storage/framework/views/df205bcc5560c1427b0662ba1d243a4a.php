@@ -1848,12 +1848,13 @@
             ?>
             <div id="ws-catalog-list">
                 <?php if($sellableRows->isNotEmpty()): ?>
-                    <div class="ws-catalog-section">
-                        <h3 class="ws-catalog-section__title">Voyages disponibles à la vente</h3>
+                    <div class="ws-catalog-section"
+                         style="width:100% !important;max-width:none !important;margin:0 !important;padding-left:0 !important;padding-right:0 !important;">
+                        <h3 class="ws-catalog-section__title">Départs disponibles à la vente</h3>
                         <div class="admin-sales-catalogue-grid-fix"
                              style="display:grid !important;grid-template-columns:repeat(4,minmax(0,1fr)) !important;gap:18px !important;width:100% !important;max-width:none !important;margin:0 !important;padding:0 !important;justify-content:stretch !important;justify-items:stretch !important;align-items:stretch !important;">
-                            <?php $__currentLoopData = $sellableRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                <?php echo $__env->make('admin.reservations.workspace.partials.catalog-row', ['row' => $row, 'mode' => 'card'], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+                            <?php $__currentLoopData = $sellableDepRowsV2; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $depItem): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php echo $__env->make('admin.reservations.workspace.partials.catalog-row', ['row' => $depItem['row'], 'departure' => $depItem['departure'], 'mode' => 'card'], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
                     </div>

@@ -120,9 +120,9 @@
     $comTopDates = $commercial['top_dates'] ?? [];
     $isSellable = $commercial['is_sellable'] ?? false;
 
-    // Per-departure overrides for table mode
+    // Per-departure overrides (table + card per-departure mode)
     $departureData = $departure ?? null;
-    if ($viewMode === 'table' && $departureData) {
+    if ($departureData) {
         $depRowStatVal = (int) data_get($departureData, 'reservations.validee', 0);
         $depRowStatPending = (int) data_get($departureData, 'reservations.en_cours', 0);
         $depRowStatCancel = (int) data_get($departureData, 'reservations.annulee', 0);
@@ -169,7 +169,7 @@
     $depRowSoldTitle = implode(' - ', $depRowSoldTitleParts);
 
     $isSellableForRow = $isSellable;
-    if ($viewMode === 'table' && $departureData) {
+    if ($departureData) {
         $isSellableForRow = $isSellable
             && ! $depRowIsPast
             && $depRowStatusKey !== 'full'
@@ -546,7 +546,23 @@
             </div>
         <?php endif; ?>
 
-        <?php if($typeKey === 'package' && $departures->isNotEmpty()): ?>
+        <?php if($departureData): ?>
+            <div class="ws-offer-card__departures">
+                <div class="ws-offer-card__section-label">Départ</div>
+                <div class="ws-offer-card__departure-item ws-offer-card__departure-item--solo">
+                    <span class="ws-offer-card__departure-date"><?php echo e($depRowDateLabel ?: 'Date non renseignée'); ?></span>
+                    <?php if($depRowIsPast): ?>
+                        <span class="ws-offer-card__departure-status ws-offer-card__departure-status--muted">Passé</span>
+                    <?php elseif($depRowStatusKey === 'full'): ?>
+                        <span class="ws-offer-card__departure-status ws-offer-card__departure-status--full">Complet</span>
+                    <?php elseif($depRowStatusKey === 'almost_full'): ?>
+                        <span class="ws-offer-card__departure-status ws-offer-card__departure-status--warn">Presque complet</span>
+                    <?php else: ?>
+                        <span class="ws-offer-card__departure-status ws-offer-card__departure-status--ok">Disponible</span>
+                    <?php endif; ?>
+                </div>
+            </div>
+        <?php elseif($typeKey === 'package' && $departures->isNotEmpty()): ?>
             <div class="ws-offer-card__departures">
                 <div class="ws-offer-card__section-label">Départs disponibles</div>
                 <ul class="ws-offer-card__departure-list" aria-label="Départs disponibles">
@@ -600,13 +616,19 @@
                 <button type="button"
                     class="ws-btn ws-btn--secondary ws-btn--sm btn-ws-open-detail btn-view"
                     data-row-code="<?php echo e(e($row['code'])); ?>"
+                    <?php if($departureData && $depRowTravelDateId): ?>
+                        data-travel-date-id="<?php echo e($depRowTravelDateId); ?>"
+                    <?php endif; ?>
                     title="Détail">
                     <i class="fas fa-eye" aria-hidden="true"></i><span>Voir</span>
                 </button>
             <?php endif; ?>
             <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('reservations.view')): ?>
-                <?php if($isSellable && $hasLaravel): ?>
-                    <a href="<?php echo e($reserveUrl); ?>"
+                <?php
+                    $cardReserveUrl = $departureData && $depRowRouteReserve ? $depRowRouteReserve : $reserveUrl;
+                ?>
+                <?php if($isSellableForRow && $hasLaravel): ?>
+                    <a href="<?php echo e($cardReserveUrl); ?>"
                         class="ws-btn ws-btn--primary ws-btn--sm"
                         title="<?php echo e($reserveLabel); ?>">
                         <?php if($typeKey === 'vol'): ?>
@@ -616,7 +638,7 @@
                         <?php endif; ?>
                         <span><?php echo e($reserveLabel); ?></span>
                     </a>
-                <?php elseif(! $isSellable && $hasLaravel): ?>
+                <?php elseif(! $isSellableForRow && $hasLaravel): ?>
                     <a href="<?php echo e($editTourUrl ?: '#'); ?>"
                         class="<?php echo e($nonSellableBtnClass); ?>"
                         <?php echo $editTourUrl ? '' : 'aria-disabled="true"'; ?>
