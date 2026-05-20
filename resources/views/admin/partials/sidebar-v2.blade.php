@@ -12,6 +12,7 @@
         $sidebarBrandHref = route('admin.dashboard.v5');
     } elseif (request()->routeIs('admin.dashboard.v6') && \Illuminate\Support\Facades\Route::has('admin.dashboard.v6')) {
         $sidebarBrandHref = route('admin.dashboard.v6');
+    }
     if ($sidebarUser?->hasRole(\App\Services\BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY)) {
         $adminGroups = array_values(array_filter([
             $makeLeaf(
@@ -408,4 +409,3 @@
         </div>
     </nav>
 </div>
-
