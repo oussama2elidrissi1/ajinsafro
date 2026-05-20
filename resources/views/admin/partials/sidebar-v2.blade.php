@@ -13,6 +13,97 @@
     } elseif (request()->routeIs('admin.dashboard.v6') && \Illuminate\Support\Facades\Route::has('admin.dashboard.v6')) {
         $sidebarBrandHref = route('admin.dashboard.v6');
     }
+
+    // Fallbacks when this sidebar is included without the shared menu builder context.
+    // Keep them minimal and safe: permissions are enforced via $sidebarUser->can() when available.
+    $makeLeaf = (isset($makeLeaf) && is_callable($makeLeaf)) ? $makeLeaf : function (
+        string $key,
+        string $label,
+        ?string $routeName = null,
+        ?string $icon = null,
+        array $activeRoutes = [],
+        array $children = [],
+        $badge = null,
+        $permission = null
+    ) use ($sidebarUser) {
+        if ($permission !== null) {
+            if (!$sidebarUser || !method_exists($sidebarUser, 'can')) {
+                return null;
+            }
+            $perms = is_array($permission) ? $permission : [$permission];
+            $allowed = false;
+            foreach ($perms as $perm) {
+                $perm = is_string($perm) ? trim($perm) : '';
+                if ($perm === '') {
+                    continue;
+                }
+                try {
+                    if ($sidebarUser->can($perm)) {
+                        $allowed = true;
+                        break;
+                    }
+                } catch (Throwable $e) {
+                    // ignore and keep checking
+                }
+            }
+            if (!$allowed) {
+                return null;
+            }
+        }
+
+        $href = 'javascript:void(0);';
+        if (is_string($routeName) && $routeName !== '' && \Illuminate\Support\Facades\Route::has($routeName)) {
+            $href = route($routeName);
+        }
+
+        $active = false;
+        foreach ($activeRoutes as $pattern) {
+            if (is_string($pattern) && $pattern !== '' && request()->routeIs($pattern)) {
+                $active = true;
+                break;
+            }
+        }
+        if (!$active && is_string($routeName) && $routeName !== '' && request()->routeIs($routeName)) {
+            $active = true;
+        }
+
+        return [
+            'key' => $key,
+            'label' => $label,
+            'href' => $href,
+            'icon' => $icon,
+            'badge' => $badge,
+            'children' => $children,
+            'active' => $active,
+            'open' => $active,
+        ];
+    };
+
+    $makeGroup = (isset($makeGroup) && is_callable($makeGroup)) ? $makeGroup : function (
+        string $key,
+        string $label,
+        array $children = [],
+        ?string $icon = null
+    ) {
+        $children = array_values(array_filter($children));
+        $active = false;
+        foreach ($children as $child) {
+            if (!empty($child['active'])) {
+                $active = true;
+                break;
+            }
+        }
+        return [
+            'key' => $key,
+            'label' => $label,
+            'href' => null,
+            'icon' => $icon,
+            'children' => $children,
+            'active' => $active,
+            'open' => $active,
+        ];
+    };
+
     if ($sidebarUser?->hasRole(\App\Services\BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY)) {
         $adminGroups = array_values(array_filter([
             $makeLeaf(
