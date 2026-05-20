@@ -61,7 +61,7 @@
     @stack('styles')
 </head>
 @php
-    $isWorkspaceRoute = request()->routeIs('admin.reservations.workspace');
+    $isWorkspaceRoute = request()->routeIs('admin.reservations.workspace') || request()->routeIs('admin.vente.catalogue');
 @endphp
 <body class="aj-admin-v2-body aj-admin admin-v6 aj-admin-v6{{ $isWorkspaceRoute ? ' admin-v6-compact aj-admin-compact' : '' }}">
     <div class="aj-admin-v2-layout admin-v6-shell" id="admin-v6-root">

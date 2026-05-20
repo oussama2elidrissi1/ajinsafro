@@ -41,6 +41,7 @@ class ReservationWorkspaceController extends Controller
     public function index(Request $request): View
     {
         $this->authorizeWorkspace($request);
+        $catalogRoute = $request->routeIs('admin.vente.catalogue') ? 'admin.vente.catalogue' : 'admin.reservations.workspace';
         $workspaceView = $this->normalizeWorkspaceView($request->query('view'));
         if (! $request->filled('view') && $request->user()?->hasRole('commercial_reservations_only')) {
             $workspaceView = 'catalog';
@@ -115,7 +116,9 @@ class ReservationWorkspaceController extends Controller
             'workspaceView' => $workspaceView,
             'workspaceFilters' => $workspaceFilters,
             'workspaceFilterOptions' => $workspaceFilterOptions,
-            'workspaceResetUrl' => route('admin.reservations.workspace', ['view' => $workspaceView]),
+            'workspaceRouteName' => $catalogRoute,
+            'workspaceFormUrl' => route($catalogRoute),
+            'workspaceResetUrl' => route($catalogRoute, ['view' => $workspaceView]),
             'currentSort' => $sort,
             'currentDirection' => $direction,
         ]);

@@ -1,6 +1,7 @@
-﻿@extends('layouts.dashboard-v5')
+﻿@extends('layouts.admin-v6')
 
-@section('title', 'Espace Client')
+@section('title', 'Espace Admin')
+@section('page_title', 'Espace Admin')
 
 @php
     $dashboardUser = auth()->user();
@@ -19,15 +20,11 @@
     $v6Body = $bodyMatch[1] ?? '';
 
     $v6Body = preg_replace('/<script>[\s\S]*?<\/script>\s*$/i', '', $v6Body);
-    $v6SidebarHtml = view('admin.partials.sidebar-v2', ['sidebarContext' => 'dashboard-v6'])->render();
-    $v6AsideReplacement = '<aside class="sidebar dashboard-v6-sidebar" aria-label="Navigation Ajinsafro">'
-        . '<button class="sidebar-toggle" type="button" id="sidebarToggle" title="Ouvrir / fermer le menu" aria-label="Ouvrir ou fermer le menu">'
-        . '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>'
-        . '</button>'
-        . $v6SidebarHtml
-        . '</aside>';
-    $v6Body = preg_replace('/<aside class="sidebar"[\s\S]*?<\/aside>/i', $v6AsideReplacement, $v6Body, 1);
-    $v6Body = str_replace('<div class="app-shell">', '<div class="app-shell dashboard-v6">', $v6Body);
+    if (preg_match('/<section class="content">[\s\S]*?<\/section>\s*<\/main>/i', $v6Body, $contentMatch)) {
+        $v6Body = '<div class="dashboard-v6 dashboard-v6-embedded">' . preg_replace('/<\/main>\s*$/i', '', $contentMatch[0]) . '</div>';
+    } else {
+        $v6Body = '<div class="dashboard-v6 dashboard-v6-embedded">' . $v6Body . '</div>';
+    }
 
     $v6Body = str_replace(
         '<div class="brand-mark" aria-hidden="true">�-�</div>',
@@ -55,8 +52,6 @@
 @endphp
 
 @push('styles')
-<link href="{{ asset('build/css/icons.min.css') }}" rel="stylesheet">
-<link href="{{ asset('css/admin-sidebar-v2.css') }}" rel="stylesheet">
 <style>
 {{ $v6Css }}
 
@@ -109,184 +104,6 @@
     padding-bottom: 2px !important;
     -webkit-overflow-scrolling: touch;
   }
-}
-
-.sidebar,
-.dashboard-v6-sidebar {
-  height: 100vh !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-}
-
-/* Hide dashboard version links inside the injected sidebar-v2 menu. */
-.dashboard-v6-sidebar a[href*="/admin/dashboard/v2"],
-.dashboard-v6-sidebar a[href*="/admin/dashboard/v3"],
-.dashboard-v6-sidebar a[href*="/admin/dashboard/v4"],
-.dashboard-v6-sidebar a[href*="/admin/dashboard/v5"],
-.dashboard-v6-sidebar a[href*="/admin/dashboard/v6"] {
-  display: none !important;
-}
-
-.main {
-  height: 100vh;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-html[data-sidebar="collapsed"] .sidebar,
-html[data-sidebar="collapsed"] .sidebar:hover {
-  width: var(--sidebar-closed) !important;
-}
-
-html[data-sidebar="collapsed"] .main,
-html[data-sidebar="collapsed"] .sidebar:hover ~ .main {
-  margin-left: var(--sidebar-closed) !important;
-}
-
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__label,
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__section-title,
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__profile,
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__account,
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__submenu,
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__badge,
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__chevron {
-  display: none !important;
-}
-
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__brand,
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__link,
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__toggle {
-  justify-content: center !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-  min-width: 0 !important;
-}
-
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2 {
-  padding-left: 0.35rem !important;
-  padding-right: 0.35rem !important;
-}
-
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__list--depth-1,
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__list--depth-2,
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__list--depth-3 {
-  display: none !important;
-}
-
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__item {
-  display: block !important;
-}
-
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__item.has-direct-link .aj-sidebar-v2__toggle {
-  display: none !important;
-}
-
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__item.has-direct-link .aj-sidebar-v2__link--parent {
-  width: 44px !important;
-  margin: 0 auto !important;
-}
-
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__link,
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__toggle {
-  min-height: 44px !important;
-  height: 44px !important;
-  width: 44px !important;
-  margin: 0 auto !important;
-  border-radius: 12px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__link-group {
-  display: block !important;
-  text-align: center !important;
-}
-
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__icon {
-  width: 1.35rem !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  margin: 0 !important;
-  font-size: 1.15rem !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__icon i {
-  display: inline-block !important;
-  font-size: 1.15rem !important;
-  line-height: 1 !important;
-}
-
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__brand-link {
-  justify-content: center !important;
-}
-
-html[data-sidebar="collapsed"] .sidebar .sidebar-toggle {
-  right: 20px !important;
-}
-
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__brand {
-  border-bottom: 0 !important;
-  padding-bottom: 0 !important;
-  margin-bottom: 10px !important;
-}
-
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__brand-logo {
-  height: 38px !important;
-  max-width: 42px !important;
-}
-
-.dashboard-v6-sidebar .aj-sidebar-v2 {
-  min-height: 100%;
-  padding-top: 1.1rem;
-}
-
-.dashboard-v6-sidebar .aj-sidebar-v2__brand-logo {
-  filter: none;
-  height: 40px !important;
-  max-width: 170px !important;
-  object-fit: contain;
-}
-
-.dashboard-v6-sidebar .aj-sidebar-v2__profile,
-.dashboard-v6-sidebar .aj-sidebar-v2__link,
-.dashboard-v6-sidebar .aj-sidebar-v2__item.is-active > .aj-sidebar-v2__link,
-.dashboard-v6-sidebar .aj-sidebar-v2__item.is-open > .aj-sidebar-v2__link {
-  border-radius: 14px;
-}
-
-.dashboard-v6-sidebar .aj-sidebar-v2__label,
-.dashboard-v6-sidebar .aj-sidebar-v2__section-title,
-.dashboard-v6-sidebar .aj-sidebar-v2__profile-name,
-.dashboard-v6-sidebar .aj-sidebar-v2__profile-role,
-.dashboard-v6-sidebar .aj-sidebar-v2__link,
-.dashboard-v6-sidebar .aj-sidebar-v2__link *,
-.dashboard-v6-sidebar .aj-sidebar-v2__toggle,
-.dashboard-v6-sidebar .aj-sidebar-v2__toggle *,
-.dashboard-v6-sidebar .aj-sidebar-v2__profile-link,
-.dashboard-v6-sidebar .aj-sidebar-v2__profile-link * {
-  font-weight: 400 !important;
-}
-
-.dashboard-v6-sidebar .aj-sidebar-v2__item.is-active > .aj-sidebar-v2__link,
-.dashboard-v6-sidebar .aj-sidebar-v2__item.is-open > .aj-sidebar-v2__link,
-.dashboard-v6-sidebar .aj-sidebar-v2__item.is-active > .aj-sidebar-v2__link-group > .aj-sidebar-v2__link,
-.dashboard-v6-sidebar .aj-sidebar-v2__item.is-open > .aj-sidebar-v2__link-group > .aj-sidebar-v2__link {
-  box-shadow: inset 3px 0 0 #18a9dc;
-}
-
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__item.is-active > .aj-sidebar-v2__link,
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__item.is-open > .aj-sidebar-v2__link,
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__item.is-active > .aj-sidebar-v2__link-group > .aj-sidebar-v2__link,
-html[data-sidebar="collapsed"] .dashboard-v6-sidebar .aj-sidebar-v2__item.is-open > .aj-sidebar-v2__link-group > .aj-sidebar-v2__link {
-  box-shadow: none !important;
-  background: rgba(24, 169, 220, .16) !important;
-  border: 1px solid rgba(15, 93, 141, .2) !important;
 }
 
 .topbar {
@@ -527,56 +344,10 @@ html[data-sidebar="collapsed"] .dashboard-grid.bottom {
 @endsection
 
 @push('scripts')
-<script src="{{ asset('js/admin-sidebar-v2.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     if (window.lucide && typeof window.lucide.createIcons === 'function') {
         window.lucide.createIcons();
-    }
-
-    const root = document.documentElement;
-    const isMobile = window.matchMedia('(max-width: 760px)').matches;
-    const saved = localStorage.getItem('aj-v6-sidebar');
-    if (saved === 'collapsed' || saved === 'expanded') {
-        root.dataset.sidebar = saved;
-    } else if (!root.dataset.sidebar) {
-        root.dataset.sidebar = 'expanded';
-    }
-    if (isMobile) {
-        root.dataset.sidebar = 'collapsed';
-    }
-
-    const toggle = function () {
-        const next = root.dataset.sidebar === 'collapsed' ? 'expanded' : 'collapsed';
-        root.dataset.sidebar = next;
-        localStorage.setItem('aj-v6-sidebar', next);
-    };
-
-    document.getElementById('sidebarToggle')?.addEventListener('click', toggle);
-    document.getElementById('mobileToggle')?.addEventListener('click', toggle);
-
-    if (window.AjSidebarV2 && typeof window.AjSidebarV2.init === 'function') {
-        window.AjSidebarV2.init();
-    }
-
-    const sidebarRoot = document.querySelector('.dashboard-v6-sidebar [data-aj-sidebar-v2]');
-    if (sidebarRoot) {
-        sidebarRoot.addEventListener('click', function (event) {
-            const target = event.target.closest('.aj-sidebar-v2__link, .aj-sidebar-v2__toggle');
-            if (!target || root.dataset.sidebar !== 'collapsed') return;
-            const isLeafLink = target.matches('a.aj-sidebar-v2__link') && target.getAttribute('href') && target.getAttribute('href') !== 'javascript:void(0);';
-            if (isLeafLink) return;
-            root.dataset.sidebar = 'expanded';
-            localStorage.setItem('aj-v6-sidebar', 'expanded');
-        });
-
-        sidebarRoot.querySelectorAll('a.aj-sidebar-v2__link').forEach(function (link) {
-            link.addEventListener('click', function () {
-                if (window.matchMedia('(max-width: 760px)').matches) {
-                    root.dataset.sidebar = 'collapsed';
-                }
-            });
-        });
     }
 });
 </script>

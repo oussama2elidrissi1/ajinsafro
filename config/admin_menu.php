@@ -22,8 +22,8 @@ return [
             'label' => 'Réservations',
             'icon' => 'bx bx-calendar-check',
             'permission' => 'reservations.view',
-            'route' => 'admin.reservations.workspace',
-            'active_patterns' => ['admin.reservations.*'],
+            'route' => 'admin.vente.catalogue',
+            'active_patterns' => ['admin.vente.catalogue', 'admin.reservations.*'],
         ],
         [
             'key' => 'messagerie',
@@ -255,6 +255,7 @@ return [
         'admin.profile.avatar' => ['dashboard.view', 'reservations.view'],
         'admin.reservation-dossiers.index' => 'reservations.view',
         'admin.reservation-dossiers.show' => 'reservations.view',
+        'admin.vente.catalogue' => 'reservations.view',
         'admin.reservations.workspace' => 'reservations.view',
         'admin.reservations.workspace.store' => 'reservations.view',
         'admin.reservations.workspace.prestation.participants' => 'reservations.view',

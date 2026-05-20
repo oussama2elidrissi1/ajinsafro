@@ -163,6 +163,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('reservations/confirmees', [ReservationsController::class, 'page'])->name('reservations.confirmees')->defaults('submenu', 'confirmees');
         Route::get('reservations/annulees', [ReservationsController::class, 'page'])->name('reservations.annulees')->defaults('submenu', 'annulees');
 
+        Route::get('vente/catalogue', [ReservationWorkspaceController::class, 'index'])->name('vente.catalogue');
         Route::get('reservations/workspace', [ReservationWorkspaceController::class, 'index'])->name('reservations.workspace');
         Route::post('reservations/workspace', [ReservationWorkspaceController::class, 'store'])->name('reservations.workspace.store');
         Route::get('reservations/workspace/prestation/participants', [ReservationWorkspaceController::class, 'prestationParticipants'])->name('reservations.workspace.prestation.participants');

@@ -14,7 +14,9 @@
         'budget_max' => null,
     ];
     $workspaceFilterOptions = $workspaceFilterOptions ?? ['destinations' => []];
-    $workspaceResetUrl = $workspaceResetUrl ?? route('admin.reservations.workspace', ['view' => 'catalog']);
+    $workspaceRouteName = $workspaceRouteName ?? (request()->routeIs('admin.vente.catalogue') ? 'admin.vente.catalogue' : 'admin.reservations.workspace');
+    $workspaceFormUrl = $workspaceFormUrl ?? route($workspaceRouteName);
+    $workspaceResetUrl = $workspaceResetUrl ?? route($workspaceRouteName, ['view' => 'catalog']);
     $catalogRows = $workspaceSellableRows ?? $catalogRows;
 
     $workspaceCalendarEvents = $catalogRows->flatMap(function ($r) {
@@ -1349,7 +1351,7 @@
 
     @if($useLegacyWorkspaceMarkup)
     <div id="reservations-main-content" class="commercial-v2-main space-y-6">
-        <form id="catalogue-workspace" method="GET" action="{{ route('admin.reservations.workspace') }}" class="commercial-v2-filters-wrap">
+        <form id="catalogue-workspace" method="GET" action="{{ $workspaceFormUrl }}" class="commercial-v2-filters-wrap">
             <input type="hidden" name="view" id="ws-filter-view" value="{{ $workspaceView }}">
             <div class="commercial-v2-header">
                 <div>
@@ -1494,7 +1496,7 @@
     </div>
     @else
     <div id="reservations-main-content" class="space-y-4">
-        <form id="catalogue-workspace" class="ws-toolbar" method="GET" action="{{ route('admin.reservations.workspace') }}">
+        <form id="catalogue-workspace" class="ws-toolbar" method="GET" action="{{ $workspaceFormUrl }}">
             <input type="hidden" name="view" id="ws-filter-view" value="{{ $workspaceView }}">
             @if(request()->filled('catalog'))
                 <input type="hidden" name="catalog" value="{{ request()->query('catalog') }}">

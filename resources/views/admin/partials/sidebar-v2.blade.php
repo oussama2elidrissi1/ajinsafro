@@ -120,9 +120,9 @@
             $makeLeaf(
                 'sales_workspace_only_final',
                 'Vente / Catalogue',
-                'admin.reservations.workspace',
+                \Illuminate\Support\Facades\Route::has('admin.vente.catalogue') ? 'admin.vente.catalogue' : 'admin.reservations.workspace',
                 'bx bx-briefcase-alt',
-                ['admin.reservations.workspace*', 'admin.reservations.create', 'admin.reservations.store'],
+                ['admin.vente.catalogue', 'admin.reservations.workspace*', 'admin.reservations.create', 'admin.reservations.store'],
                 [],
                 null,
                 'reservations.view'
@@ -256,7 +256,7 @@
 
     $reservationsChildren = array_values(array_filter([
         $makeLeaf('reservations_index', 'Toutes les reservations', 'admin.reservations.index', 'bx bx-calendar-check', ['admin.reservations.index']),
-        $makeLeaf('reservations_workspace', 'Vente', 'admin.reservations.workspace', 'bx bx-briefcase-alt', ['admin.reservations.workspace*']),
+        $makeLeaf('reservations_workspace', 'Vente', \Illuminate\Support\Facades\Route::has('admin.vente.catalogue') ? 'admin.vente.catalogue' : 'admin.reservations.workspace', 'bx bx-briefcase-alt', ['admin.vente.catalogue', 'admin.reservations.workspace*']),
         $makeLeaf('reservations_clients', 'Reservation en ligne', 'admin.reservations.clients', 'bx bx-user-check', ['admin.reservations.clients']),
         $makeLeaf('tailor_made_requests', 'Demande a la carte', 'admin.tailor-made-requests.index', 'bx bx-edit-alt', ['admin.tailor-made-requests.*'], [], null, 'reservations.view'),
         $makeLeaf('messagerie_index', 'Messagerie', 'admin.messagerie.index', 'bx bx-envelope', ['admin.messagerie.*'], [], $unreadCount > 0 ? $unreadCount : null, 'dashboard.view'),
@@ -341,9 +341,10 @@
             $makeLeaf(
                 'sales_workspace_only',
                 'Vente',
-                'admin.reservations.workspace',
+                \Illuminate\Support\Facades\Route::has('admin.vente.catalogue') ? 'admin.vente.catalogue' : 'admin.reservations.workspace',
                 'bx bx-briefcase-alt',
                 [
+                    'admin.vente.catalogue',
                     'admin.reservations.workspace*',
                     'admin.reservations.create',
                     'admin.reservations.store',
@@ -377,9 +378,9 @@
             $makeLeaf(
                 'sales_workspace_only_final',
                 'Vente',
-                'admin.reservations.workspace',
+                \Illuminate\Support\Facades\Route::has('admin.vente.catalogue') ? 'admin.vente.catalogue' : 'admin.reservations.workspace',
                 'bx bx-briefcase-alt',
-                ['admin.reservations.workspace*', 'admin.reservations.create', 'admin.reservations.store'],
+                ['admin.vente.catalogue', 'admin.reservations.workspace*', 'admin.reservations.create', 'admin.reservations.store'],
                 [],
                 null,
                 'reservations.view'
