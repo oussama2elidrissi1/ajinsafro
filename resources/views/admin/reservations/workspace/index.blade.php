@@ -1353,15 +1353,7 @@
         padding: 0.5rem 0.6rem !important;
     }
 
-    @media (max-width: 1300px) {
-        .admin-sales-catalogue-grid-fix > .admin-sales-catalogue-card-fix {
-            flex-basis: calc((100% - 36px) / 3) !important;
-            width: calc((100% - 36px) / 3) !important;
-            max-width: calc((100% - 36px) / 3) !important;
-        }
-    }
-
-    @media (max-width: 1000px) {
+    @media (max-width: 1050px) {
         .admin-sales-catalogue-grid-fix > .admin-sales-catalogue-card-fix {
             flex-basis: calc((100% - 18px) / 2) !important;
             width: calc((100% - 18px) / 2) !important;
