@@ -141,7 +141,7 @@
     background: transparent;
     color: #3c4b64;
     font-size: 0.9rem;
-    font-weight: 700;
+    font-weight: 500;
     line-height: 1.2;
     text-align: left;
     text-decoration: none;
@@ -210,6 +210,7 @@
 .aj-sidebar-v2__label {
     flex: 1;
     min-width: 0;
+    font-weight: inherit;
 }
 
 .aj-sidebar-v2__badge {
@@ -261,6 +262,7 @@
     padding-top: 0.6rem;
     padding-bottom: 0.6rem;
     font-size: 0.82rem;
+    font-weight: 500;
 }
 
 .aj-sidebar-v2__list--depth-1 .aj-sidebar-v2__icon,
