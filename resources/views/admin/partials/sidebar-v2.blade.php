@@ -429,32 +429,38 @@
             if ($hasChildren) {
                 if ($hasDirectLink) {
                     $html .= '<div class="aj-sidebar-v2__link-group">';
-                    $html .= '<a href="' . e((string) $node['href']) . '" class="aj-sidebar-v2__link aj-sidebar-v2__link--parent">';
+                    $labelText = (string) ($node['label'] ?? '');
+                    $safeLabel = e($labelText);
+                    $html .= '<a href="' . e((string) $node['href']) . '" class="aj-sidebar-v2__link aj-sidebar-v2__link--parent" title="' . $safeLabel . '" aria-label="' . $safeLabel . '" data-aj-tooltip="' . $safeLabel . '">';
                     if (!empty($node['icon'])) {
                         $html .= '<span class="aj-sidebar-v2__icon"><i class="' . e((string) $node['icon']) . '"></i></span>';
                     }
-                    $html .= '<span class="aj-sidebar-v2__label">' . e((string) ($node['label'] ?? '')) . '</span>';
+                    $html .= '<span class="aj-sidebar-v2__label">' . $safeLabel . '</span>';
                     $html .= '</a>';
-                    $html .= '<button type="button" class="aj-sidebar-v2__link aj-sidebar-v2__toggle" data-aj-sidebar-toggle aria-expanded="' . (!empty($node['open']) ? 'true' : 'false') . '" aria-label="Afficher le sous-menu ' . e((string) ($node['label'] ?? '')) . '">';
+                    $html .= '<button type="button" class="aj-sidebar-v2__link aj-sidebar-v2__toggle" data-aj-sidebar-toggle aria-expanded="' . (!empty($node['open']) ? 'true' : 'false') . '" aria-label="Afficher le sous-menu ' . $safeLabel . '">';
                     $html .= '<span class="aj-sidebar-v2__chevron"><i class="bx bx-chevron-down"></i></span>';
                     $html .= '</button>';
                     $html .= '</div>';
                 } else {
-                    $html .= '<button type="button" class="aj-sidebar-v2__link aj-sidebar-v2__toggle" data-aj-sidebar-toggle aria-expanded="' . (!empty($node['open']) ? 'true' : 'false') . '">';
+                    $labelText = (string) ($node['label'] ?? '');
+                    $safeLabel = e($labelText);
+                    $html .= '<button type="button" class="aj-sidebar-v2__link aj-sidebar-v2__toggle" data-aj-sidebar-toggle aria-expanded="' . (!empty($node['open']) ? 'true' : 'false') . '" title="' . $safeLabel . '" aria-label="' . $safeLabel . '" data-aj-tooltip="' . $safeLabel . '">';
                     if (!empty($node['icon'])) {
                         $html .= '<span class="aj-sidebar-v2__icon"><i class="' . e((string) $node['icon']) . '"></i></span>';
                     }
-                    $html .= '<span class="aj-sidebar-v2__label">' . e((string) ($node['label'] ?? '')) . '</span>';
+                    $html .= '<span class="aj-sidebar-v2__label">' . $safeLabel . '</span>';
                     $html .= '<span class="aj-sidebar-v2__chevron"><i class="bx bx-chevron-down"></i></span>';
                     $html .= '</button>';
                 }
                 $html .= '<div class="aj-sidebar-v2__submenu">' . $renderNodes($children, $depth + 1) . '</div>';
             } else {
-                $html .= '<a href="' . e((string) ($node['href'] ?? 'javascript:void(0);')) . '" class="aj-sidebar-v2__link">';
+                $labelText = (string) ($node['label'] ?? '');
+                $safeLabel = e($labelText);
+                $html .= '<a href="' . e((string) ($node['href'] ?? 'javascript:void(0);')) . '" class="aj-sidebar-v2__link" title="' . $safeLabel . '" aria-label="' . $safeLabel . '" data-aj-tooltip="' . $safeLabel . '">';
                 if (!empty($node['icon'])) {
                     $html .= '<span class="aj-sidebar-v2__icon"><i class="' . e((string) $node['icon']) . '"></i></span>';
                 }
-                $html .= '<span class="aj-sidebar-v2__label">' . e((string) ($node['label'] ?? '')) . '</span>';
+                $html .= '<span class="aj-sidebar-v2__label">' . $safeLabel . '</span>';
                 if (!empty($node['badge'])) {
                     $html .= '<span class="aj-sidebar-v2__badge">' . e((string) min((int) $node['badge'], 99)) . '</span>';
                 }
@@ -500,7 +506,7 @@
             <ul class="aj-sidebar-v2__list aj-sidebar-v2__list--depth-0">
                 @if(\Illuminate\Support\Facades\Route::has('admin.profile.edit'))
                     <li class="aj-sidebar-v2__item {{ request()->routeIs('admin.profile.*') ? 'is-active' : '' }}">
-                        <a href="{{ route('admin.profile.edit') }}" class="aj-sidebar-v2__link">
+                        <a href="{{ route('admin.profile.edit') }}" class="aj-sidebar-v2__link" title="Mon profil" aria-label="Mon profil" data-aj-tooltip="Mon profil">
                             <span class="aj-sidebar-v2__icon"><i class="bx bx-user-circle"></i></span>
                             <span class="aj-sidebar-v2__label">Mon profil</span>
                         </a>
@@ -508,7 +514,7 @@
                 @endif
                 @if(\Illuminate\Support\Facades\Route::has('logout.get'))
                     <li class="aj-sidebar-v2__item is-danger">
-                        <a href="{{ route('logout.get') }}" class="aj-sidebar-v2__link">
+                        <a href="{{ route('logout.get') }}" class="aj-sidebar-v2__link" title="Déconnexion" aria-label="Déconnexion" data-aj-tooltip="Déconnexion">
                             <span class="aj-sidebar-v2__icon"><i class="bx bx-power-off"></i></span>
                             <span class="aj-sidebar-v2__label">Déconnexion</span>
                         </a>
