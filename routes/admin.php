@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\BusinessReferenceController;
 use App\Http\Controllers\Admin\CircuitsController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\CustomersController;
+use App\Http\Controllers\Admin\CustomReservationRequestController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DepartureController;
 use App\Http\Controllers\Admin\AgentCommissionPortalController;
@@ -169,6 +170,14 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('reservations/workspace/prestation/participants', [ReservationWorkspaceController::class, 'prestationParticipants'])->name('reservations.workspace.prestation.participants');
         Route::get('reservations/workspace/prestation/pdf', [ReservationWorkspaceController::class, 'prestationPdf'])->name('reservations.workspace.prestation.pdf');
         Route::get('reservations/workspace/reservation/{reservation}/pdf', [ReservationWorkspaceController::class, 'reservationPdf'])->name('reservations.workspace.reservation.pdf');
+        Route::get('reservations/custom-requests', [CustomReservationRequestController::class, 'index'])->name('reservations.custom-requests.index');
+        Route::get('reservations/custom-requests/create', [CustomReservationRequestController::class, 'create'])->name('reservations.custom-requests.create');
+        Route::post('reservations/custom-requests', [CustomReservationRequestController::class, 'store'])->name('reservations.custom-requests.store');
+        Route::get('reservations/custom-requests/{customRequest}', [CustomReservationRequestController::class, 'show'])->name('reservations.custom-requests.show')->whereNumber('customRequest');
+        Route::get('reservations/custom-requests/{customRequest}/edit', [CustomReservationRequestController::class, 'edit'])->name('reservations.custom-requests.edit')->whereNumber('customRequest');
+        Route::put('reservations/custom-requests/{customRequest}', [CustomReservationRequestController::class, 'update'])->name('reservations.custom-requests.update')->whereNumber('customRequest');
+        Route::patch('reservations/custom-requests/{customRequest}/status', [CustomReservationRequestController::class, 'updateStatus'])->name('reservations.custom-requests.status')->whereNumber('customRequest');
+        Route::post('reservations/custom-requests/{customRequest}/convert-to-reservation', [CustomReservationRequestController::class, 'convertToReservation'])->name('reservations.custom-requests.convert-to-reservation')->whereNumber('customRequest');
 
         Route::get('assignments', [AssignmentController::class, 'index'])->name('assignments.index');
         Route::post('assignments', [AssignmentController::class, 'store'])->name('assignments.store');

@@ -22,8 +22,12 @@ return [
             'label' => 'Réservations',
             'icon' => 'bx bx-calendar-check',
             'permission' => 'reservations.view',
-            'route' => 'admin.vente.catalogue',
             'active_patterns' => ['admin.vente.catalogue', 'admin.reservations.*'],
+            'children' => [
+                ['label' => 'Espace réservation', 'route' => 'admin.vente.catalogue', 'permission' => 'reservations.view', 'active_patterns' => ['admin.vente.catalogue', 'admin.reservations.workspace']],
+                ['label' => 'Liste des réservations', 'route' => 'admin.reservations.index', 'permission' => 'reservations.view', 'active_patterns' => ['admin.reservations.index', 'admin.reservations.toutes', 'admin.reservations.en-attente', 'admin.reservations.confirmees', 'admin.reservations.annulees']],
+                ['label' => 'Demandes à la carte', 'route' => 'admin.reservations.custom-requests.index', 'permission' => 'reservations.view', 'active_patterns' => ['admin.reservations.custom-requests.*']],
+            ],
         ],
         [
             'key' => 'messagerie',
