@@ -336,6 +336,14 @@ html[data-admin-v6-sidebar="collapsed"] .admin-v6-sidebar .aj-sidebar-v2__icon {
     font-size: 1.18rem;
 }
 
+html[data-admin-v6-sidebar="collapsed"] .admin-v6-sidebar a.aj-sidebar-v2__link:focus,
+html[data-admin-v6-sidebar="collapsed"] .admin-v6-sidebar a.aj-sidebar-v2__link:focus-visible,
+html[data-admin-v6-sidebar="collapsed"] .admin-v6-sidebar button.aj-sidebar-v2__toggle:focus,
+html[data-admin-v6-sidebar="collapsed"] .admin-v6-sidebar button.aj-sidebar-v2__toggle:focus-visible {
+    outline: none;
+    box-shadow: none;
+}
+
 html[data-admin-v6-sidebar="collapsed"] .admin-v6-sidebar .aj-sidebar-v2__link[data-aj-tooltip] {
     position: relative;
 }

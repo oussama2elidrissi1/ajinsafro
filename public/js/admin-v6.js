@@ -111,12 +111,14 @@
 
                 // Plain left-click: first click expands the sidebar, second click navigates.
                 // Keep default behavior for modified clicks (new tab, etc.).
-                var isPlainLeftClick = event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
+                var isPrimaryButton = (typeof event.button !== 'number') ? true : event.button === 0;
+                var isPlainLeftClick = isPrimaryButton && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
                 var link = event.target.closest('a.aj-sidebar-v2__link');
                 var isLeafLink = link && link.getAttribute('href') && link.getAttribute('href') !== 'javascript:void(0);';
 
                 if (isPlainLeftClick && isLeafLink) {
                     event.preventDefault();
+                    event.stopPropagation();
                     setCollapsed(false);
                     window.setTimeout(function () {
                         try { link.focus(); } catch (e) { }
