@@ -57,6 +57,7 @@
     $visibleDepartures = $departures->take(3);
     $extraDepartureCount = max(0, $departures->count() - $visibleDepartures->count());
     $singleDepartureReserveUrl = $departures->count() === 1 ? data_get($departures->first(), 'routes.reserve') : null;
+    $hasMultipleDepartures = $departures->count() > 1;
     $wsAvail = $row['ws_avail'] ?? 'na';
     $wsUpcoming = ! empty($row['ws_has_future']);
     $imageUrl = ! empty($row['image_url']) ? (string) $row['image_url'] : null;
@@ -558,7 +559,7 @@
                 </div>
             </div>
         @elseif($typeKey === 'package' && $departures->isNotEmpty())
-            <div class="ws-offer-card__departures">
+            <div class="ws-offer-card__departures{{ $hasMultipleDepartures ? ' btn-ws-open-departures' : '' }}" @if($hasMultipleDepartures) role="button" tabindex="0" data-row-code="{{ e($row['code']) }}" aria-label="Voir les départs disponibles" @endif>
                 <div class="ws-offer-card__section-label">Départs disponibles</div>
                 <ul class="ws-offer-card__departure-list" aria-label="Départs disponibles">
                     @foreach($visibleDepartures as $departure)
@@ -580,7 +581,7 @@
                     @endforeach
                 </ul>
                 @if($extraDepartureCount > 0)
-                    <button type="button" class="ws-offer-card__more btn-ws-open-detail" data-row-code="{{ e($row['code']) }}">
+                    <button type="button" class="ws-offer-card__more btn-ws-open-departures" data-row-code="{{ e($row['code']) }}">
                         + {{ $extraDepartureCount }} autre(s) départ(s)
                     </button>
                 @endif
@@ -623,16 +624,26 @@
                     $cardReserveUrl = $departureData && $depRowRouteReserve ? $depRowRouteReserve : $reserveUrl;
                 @endphp
                 @if($isSellableForRow && $hasLaravel)
-                    <a href="{{ $cardReserveUrl }}"
-                        class="ws-btn ws-btn--primary ws-btn--sm"
-                        title="{{ $reserveLabel }}">
-                        @if($typeKey === 'vol')
-                            <i class="fas fa-plane-departure" aria-hidden="true"></i>
-                        @else
+                    @if(! $departureData && $typeKey === 'package' && $hasMultipleDepartures)
+                        <button type="button"
+                            class="ws-btn ws-btn--primary ws-btn--sm btn-ws-open-departures"
+                            data-row-code="{{ e($row['code']) }}"
+                            title="Voir départs / Réserver">
                             <i class="fas fa-suitcase-rolling" aria-hidden="true"></i>
-                        @endif
-                        <span>{{ $reserveLabel }}</span>
-                    </a>
+                            <span>Départs / Réserver</span>
+                        </button>
+                    @else
+                        <a href="{{ $cardReserveUrl }}"
+                            class="ws-btn ws-btn--primary ws-btn--sm"
+                            title="{{ $reserveLabel }}">
+                            @if($typeKey === 'vol')
+                                <i class="fas fa-plane-departure" aria-hidden="true"></i>
+                            @else
+                                <i class="fas fa-suitcase-rolling" aria-hidden="true"></i>
+                            @endif
+                            <span>{{ $reserveLabel }}</span>
+                        </a>
+                    @endif
                 @elseif(! $isSellableForRow && $hasLaravel)
                     <a href="{{ $editTourUrl ?: '#' }}"
                         class="{{ $nonSellableBtnClass }}"
@@ -653,4 +664,3 @@
     </div>
 </article>
 @endif
-

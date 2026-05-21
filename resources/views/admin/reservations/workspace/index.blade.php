@@ -1592,83 +1592,14 @@
         </div>
 
         <div id="ws-view-catalog" class="commercial-v2-panel {{ $workspaceView === 'catalog' ? '' : 'hidden' }}">
-            <div class="commercial-v2-cards-grid catalogue-grid">
+            <div class="admin-sales-catalogue-grid-fix">
                 @forelse($sellableRows as $row)
-                    @php
-                        $img = !empty($row['image_url']) ? (string) $row['image_url'] : asset('build/images/placeholder.png');
-                        $typeLabel = strtoupper($row['type_label'] ?? $row['type'] ?? 'CIRCUIT');
-                        $code = $row['code'] ?? 'N/A';
-                        $dest = $row['voyage_destination'] ?? data_get($row, 'modal_detail.destination', '-');
-                        $price = $row['price_label'] ?? data_get($row, 'modal_detail.prices.adult_label', '-');
-                        $com = $row['commercial'] ?? [];
-                        $cap = $com['capacity_total'] ?? null;
-                        $rest = $com['places_restantes'] ?? null;
-                        $sold = $com['places_vendues'] ?? 0;
-                        $departures = collect(data_get($row, 'modal_detail.departures', []));
-                    @endphp
-                    @if($departures->isNotEmpty())
-                        @foreach($departures as $dep)
-                            @php
-                                $reserveUrl = data_get($dep, 'routes.reserve') ?: route('admin.reservations.create', array_filter([
-                                    'tour_id' => (int) ($row['voyage_id'] ?? 0),
-                                    'travel_date_id' => data_get($dep, 'travel_date_id'),
-                                ]));
-                            @endphp
-                            <article class="voyage-card commercial-voyage-card">
-                                <div class="voyage-card-image">
-                                    <img src="{{ $img }}" alt="{{ $row['name'] ?? 'Voyage' }}" loading="lazy">
-                                </div>
-                                <div class="voyage-card-body">
-                                    <div class="voyage-card-badges">
-                                        <span class="voyage-chip">{{ $typeLabel }}</span>
-                                        <span class="voyage-chip voyage-chip-ref">#{{ $code }}</span>
-                                    </div>
-                                    <h3>{{ $row['name'] ?? 'Voyage' }}</h3>
-                                    <p class="voyage-card-destination"><i class="fas fa-map-marker-alt"></i> {{ $dest }}</p>
-                                    <div class="voyage-card-meta">
-                                        <span>Prix à partir de</span>
-                                        <strong>{{ $price }}</strong>
-                                    </div>
-                                    <div class="voyage-card-stats">
-                                        <span>Capacité: <strong>{{ $cap ?? '-' }}</strong></span>
-                                        <span>Vendu: <strong>{{ $sold }}</strong></span>
-                                        <span>Restant: <strong>{{ $rest ?? '-' }}</strong></span>
-                                    </div>
-                                    <div class="voyage-card-actions">
-                                        <button type="button" class="btn-view" data-ws-detail-trigger data-row-code="{{ $code }}" data-travel-date-id="{{ data_get($dep, 'travel_date_id', '') }}">Voir</button>
-                                        <a href="{{ $reserveUrl }}" class="btn-reserve">Réserver</a>
-                                    </div>
-                                </div>
-                            </article>
-                        @endforeach
-                    @else
-                        <article class="voyage-card commercial-voyage-card">
-                            <div class="voyage-card-image">
-                                <img src="{{ $img }}" alt="{{ $row['name'] ?? 'Voyage' }}" loading="lazy">
-                            </div>
-                            <div class="voyage-card-body">
-                                <div class="voyage-card-badges">
-                                    <span class="voyage-chip">{{ $typeLabel }}</span>
-                                    <span class="voyage-chip voyage-chip-ref">#{{ $code }}</span>
-                                </div>
-                                <h3>{{ $row['name'] ?? 'Voyage' }}</h3>
-                                <p class="voyage-card-destination"><i class="fas fa-map-marker-alt"></i> {{ $dest }}</p>
-                                <div class="voyage-card-meta">
-                                    <span>Prix à partir de</span>
-                                    <strong>{{ $price }}</strong>
-                                </div>
-                                <div class="voyage-card-stats">
-                                    <span>Capacité: <strong>{{ $cap ?? '-' }}</strong></span>
-                                    <span>Vendu: <strong>{{ $sold }}</strong></span>
-                                    <span>Restant: <strong>{{ $rest ?? '-' }}</strong></span>
-                                </div>
-                                <div class="voyage-card-actions">
-                                    <button type="button" class="btn-view" data-ws-detail-trigger data-row-code="{{ $code }}">Voir</button>
-                                    <a href="{{ route('admin.reservations.create', array_filter(['tour_id' => (int) ($row['voyage_id'] ?? 0)])) }}" class="btn-reserve">Réserver</a>
-                                </div>
-                            </div>
-                        </article>
-                    @endif
+                    <div class="admin-sales-catalogue-cell-fix">
+                        @include('admin.reservations.workspace.partials.catalog-row', [
+                            'row' => $row,
+                            'mode' => 'card'
+                        ])
+                    </div>
                 @empty
                     <div class="commercial-v2-empty">Aucune offre réservable disponible.</div>
                 @endforelse
@@ -1968,11 +1899,10 @@
                          style="width:100% !important;max-width:none !important;margin:0 !important;padding-left:0 !important;padding-right:0 !important;">
                         <h3 class="ws-catalog-section__title">Départs disponibles à la vente</h3>
 <div class="admin-sales-catalogue-grid-fix">
-    @foreach($sellableDepRowsV2 as $depItem)
+    @foreach($sellableRows as $row)
         <div class="admin-sales-catalogue-cell-fix">
             @include('admin.reservations.workspace.partials.catalog-row', [
-                'row' => $depItem['row'],
-                'departure' => $depItem['departure'],
+                'row' => $row,
                 'mode' => 'card'
             ])
         </div>
@@ -2035,6 +1965,28 @@
             <footer id="ws-md-footer" class="ws-md-footer"></footer>
         </div>
     </div>
+
+    <div id="ws-departures-modal" class="ws-md-root hidden" role="dialog" aria-modal="true" aria-labelledby="ws-dep-title" aria-hidden="true">
+        <div class="ws-md-overlay" data-ws-dep-backdrop tabindex="-1" aria-hidden="true"></div>
+        <div class="ws-md-shell">
+            <header class="ws-md-header">
+                <div class="ws-md-header-top">
+                    <div class="min-w-0" style="display:flex;align-items:center;gap:12px;">
+                        <img id="ws-dep-thumb" src="" alt="" style="width:44px;height:44px;border-radius:14px;object-fit:cover;display:none;border:1px solid rgba(15,39,66,0.10);background:#f1f5f9;">
+                        <div class="min-w-0">
+                            <h2 id="ws-dep-title" class="ws-md-title">Départs</h2>
+                            <div id="ws-dep-sub" class="ws-md-meta"></div>
+                        </div>
+                    </div>
+                    <button type="button" class="ws-md-close" data-ws-dep-close aria-label="Fermer">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </header>
+            <div id="ws-dep-body" class="ws-md-body"></div>
+            <footer id="ws-dep-footer" class="ws-md-footer"></footer>
+        </div>
+    </div>
 </div>
 @endpush
 
@@ -2062,6 +2014,12 @@ document.addEventListener('DOMContentLoaded', function () {
     /* Modal détail : enregistré en premier (avant FullCalendar) pour éviter qu’une erreur JS bloque le clic. */
     var wsModalJson = document.getElementById('ws-modal-detail-json');
     var wsModalEl = document.getElementById('ws-voyage-detail-modal');
+    var wsDepModalEl = document.getElementById('ws-departures-modal');
+    var wsDepTitle = document.getElementById('ws-dep-title');
+    var wsDepSub = document.getElementById('ws-dep-sub');
+    var wsDepBody = document.getElementById('ws-dep-body');
+    var wsDepFooter = document.getElementById('ws-dep-footer');
+    var wsDepThumb = document.getElementById('ws-dep-thumb');
     var wsMdTitle = document.getElementById('ws-md-title');
     var wsMdSub = document.getElementById('ws-md-sub');
     var wsMdBody = document.getElementById('ws-md-body');
@@ -2090,6 +2048,127 @@ document.addEventListener('DOMContentLoaded', function () {
             wsModalEl.setAttribute('aria-hidden', 'true');
             document.body.style.overflow = 'auto';
         }, 280);
+    }
+
+    function closeWsDepModal() {
+        if (!wsDepModalEl) return;
+        wsDepModalEl.classList.remove('ws-md-visible');
+        wsDepModalEl.classList.add('ws-md-leaving');
+        document.body.classList.remove('ws-md-open');
+        setTimeout(function () {
+            wsDepModalEl.classList.add('hidden');
+            wsDepModalEl.classList.remove('ws-md-leaving');
+            wsDepModalEl.style.removeProperty('display');
+            wsDepModalEl.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = 'auto';
+        }, 280);
+    }
+
+    function statusBadgeHtml(dep) {
+        var sk = String((dep && dep.status_key) || 'unknown');
+        var isPast = !!(dep && dep.is_past);
+        if (isPast) {
+            return '<span class="ws-md-report-badge ws-md-report-badge--neutral">Passé</span>';
+        }
+        if (sk === 'available') return '<span class="ws-md-report-badge ws-md-report-badge--info">Disponible</span>';
+        if (sk === 'almost_full') return '<span class="ws-md-report-badge ws-md-report-badge--warn">Presque complet</span>';
+        if (sk === 'full') return '<span class="ws-md-report-badge ws-md-report-badge--danger">Complet</span>';
+        return '<span class="ws-md-report-badge ws-md-report-badge--neutral">—</span>';
+    }
+
+    function renderDeparturesTable(d) {
+        var deps = (d && d.departures) ? d.departures : [];
+        if (!deps || !deps.length) {
+            return '<div class="ws-md-body-inner"><section class="ws-md-card"><div class="ws-md-section-head"><i class="fas fa-route"></i> Départs</div><p style="margin:0;color:#64748b;font-weight:600">Aucun départ disponible.</p></section></div>';
+        }
+
+        var h = '<div class="ws-md-body-inner">';
+        h += '<section class="ws-md-card" aria-label="Départs disponibles">';
+        h += '<div class="ws-md-section-head"><i class="fas fa-route" aria-hidden="true"></i> Départs disponibles</div>';
+        h += '<div style="overflow:auto;border:1px solid rgba(15,39,66,0.10);border-radius:16px;">';
+        h += '<table class="table table-sm mb-0" style="min-width:860px;">';
+        h += '<thead><tr>';
+        h += '<th>Date départ</th>';
+        h += '<th>Retour</th>';
+        h += '<th>Destination</th>';
+        h += '<th>Prix</th>';
+        h += '<th>Vendu</th>';
+        h += '<th>En attente</th>';
+        h += '<th>Restant</th>';
+        h += '<th>Statut</th>';
+        h += '<th style="text-align:right">Action</th>';
+        h += '</tr></thead><tbody>';
+
+        deps.forEach(function (dep) {
+            var pax = dep.pax || {};
+            var routes = dep.routes || {};
+            var reserveUrl = routes.reserve || '';
+            var dest = dep.destination || d.destination || '';
+            var price = dep.price_label || (d.prices && d.prices.adult_label) || '';
+            var dateLabel = dep.date_label || dep.date_iso || '—';
+            var returnLabel = dep.return_label || dep.return_date || dep.return_date_label || '—';
+            var remain = (dep.remaining != null) ? dep.remaining : '—';
+            h += '<tr>';
+            h += '<td style="font-weight:800;color:#0f2742;white-space:nowrap;">' + escapeWsHtml(String(dateLabel)) + '</td>';
+            h += '<td style="white-space:nowrap;">' + escapeWsHtml(String(returnLabel || '—')) + '</td>';
+            h += '<td>' + escapeWsHtml(String(dest || '—')) + '</td>';
+            h += '<td style="white-space:nowrap;font-weight:800;">' + escapeWsHtml(String(price || '—')) + '</td>';
+            h += '<td>' + escapeWsHtml(String(pax.validee != null ? pax.validee : 0)) + '</td>';
+            h += '<td>' + escapeWsHtml(String(pax.en_cours != null ? pax.en_cours : 0)) + '</td>';
+            h += '<td>' + escapeWsHtml(String(remain)) + '</td>';
+            h += '<td>' + statusBadgeHtml(dep) + '</td>';
+            h += '<td style="text-align:right;white-space:nowrap;">';
+            if (reserveUrl) {
+                h += '<a class="ws-md-btn ws-md-btn-success" href="' + escapeWsHtml(reserveUrl) + '"><i class="fas fa-suitcase-rolling"></i> Réserver</a>';
+            } else {
+                h += '<span class="ws-md-report-badge ws-md-report-badge--neutral">Indisponible</span>';
+            }
+            h += '</td>';
+            h += '</tr>';
+        });
+
+        h += '</tbody></table></div></section></div>';
+        return h;
+    }
+
+    function openWsDeparturesModal(code) {
+        wsDetailMap = parseWsDetailMap();
+        var d = wsDetailMap[code];
+        if (!d || !wsDepModalEl) return;
+
+        if (wsDepTitle) wsDepTitle.textContent = (d.title || 'Départs');
+        if (wsDepSub) {
+            var bits = [];
+            if (d.destination) bits.push(d.destination);
+            if (d.departures && d.departures.length) bits.push(d.departures.length + ' départ(s)');
+            wsDepSub.innerHTML = bits.length ? '<span style="color:#475569;font-weight:700">' + escapeWsHtml(bits.join(' · ')) + '</span>' : '<span style="color:#94a3b8">—</span>';
+        }
+
+        if (wsDepThumb) {
+            var img = (d.image_url || d.image || d.thumb || '');
+            if (img) {
+                wsDepThumb.src = img;
+                wsDepThumb.style.display = 'block';
+            } else {
+                wsDepThumb.removeAttribute('src');
+                wsDepThumb.style.display = 'none';
+            }
+        }
+
+        if (wsDepBody) wsDepBody.innerHTML = renderDeparturesTable(d);
+        if (wsDepFooter) {
+            wsDepFooter.innerHTML = '<button type="button" class="ws-md-btn ws-md-btn-secondary" data-ws-dep-close><i class="fas fa-times"></i> Fermer</button>';
+        }
+
+        wsDepModalEl.classList.remove('hidden');
+        wsDepModalEl.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('ws-md-open');
+        document.body.style.overflow = 'hidden';
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+                wsDepModalEl.classList.add('ws-md-visible');
+            });
+        });
     }
     function renderWsDeparturesHtml(d) {
         var deps = d.departures;
@@ -2321,12 +2400,25 @@ document.addEventListener('DOMContentLoaded', function () {
         var t = e.target;
         if (t && t.nodeType !== 1) t = t.parentElement;
         if (!t || !t.closest) return;
+        var depBtn = t.closest('.btn-ws-open-departures');
+        if (depBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            var depCode = depBtn.getAttribute('data-row-code') || '';
+            openWsDeparturesModal(depCode);
+            return;
+        }
         var openBtn = t.closest('.btn-ws-open-detail');
         if (openBtn) {
             e.preventDefault();
             e.stopPropagation();
             var code = openBtn.getAttribute('data-row-code') || '';
             openWsDetailModal(code);
+            return;
+        }
+        if (t.closest('[data-ws-dep-close]')) {
+            e.preventDefault();
+            closeWsDepModal();
             return;
         }
         if (t.closest('[data-ws-md-close]')) {
@@ -2337,6 +2429,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if (t.getAttribute && t.getAttribute('data-ws-md-backdrop') !== null) {
             closeWsDetailModal();
         }
+        if (t.getAttribute && t.getAttribute('data-ws-dep-backdrop') !== null) {
+            closeWsDepModal();
+        }
     }, true);
 
     document.addEventListener('keydown', function (e) {
@@ -2344,6 +2439,25 @@ document.addEventListener('DOMContentLoaded', function () {
         if (wsModalEl.classList.contains('hidden')) return;
         e.preventDefault();
         closeWsDetailModal();
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape' || !wsDepModalEl) return;
+        if (wsDepModalEl.classList.contains('hidden')) return;
+        e.preventDefault();
+        closeWsDepModal();
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        var el = e.target;
+        if (!el || !el.closest) return;
+        var btn = el.closest('.btn-ws-open-departures');
+        if (!btn) return;
+        var code = btn.getAttribute('data-row-code') || '';
+        if (!code) return;
+        e.preventDefault();
+        openWsDeparturesModal(code);
     });
 
     var calEl = document.getElementById('workspace-calendar');
