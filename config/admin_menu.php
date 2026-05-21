@@ -26,7 +26,8 @@ return [
             'children' => [
                 ['label' => 'Espace réservation', 'route' => 'admin.vente.catalogue', 'permission' => 'reservations.view', 'active_patterns' => ['admin.vente.catalogue', 'admin.reservations.workspace']],
                 ['label' => 'Liste des réservations', 'route' => 'admin.reservations.index', 'permission' => 'reservations.view', 'active_patterns' => ['admin.reservations.index', 'admin.reservations.toutes', 'admin.reservations.en-attente', 'admin.reservations.confirmees', 'admin.reservations.annulees']],
-                ['label' => 'Demandes à la carte', 'route' => 'admin.reservations.custom-requests.index', 'permission' => 'reservations.view', 'active_patterns' => ['admin.reservations.custom-requests.*']],
+                ['label' => 'Demandes à la carte', 'route' => 'admin.reservations.custom-requests.index', 'permission' => 'reservations.view', 'active_patterns' => ['admin.reservations.custom-requests.index', 'admin.reservations.custom-requests.show', 'admin.reservations.custom-requests.edit', 'admin.reservations.custom-requests.update', 'admin.reservations.custom-requests.status', 'admin.reservations.custom-requests.convert-to-reservation']],
+                ['label' => 'Nouvelle demande à la carte', 'route' => 'admin.reservations.custom-requests.create', 'permission' => 'reservations.view', 'active_patterns' => ['admin.reservations.custom-requests.create']],
             ],
         ],
         [

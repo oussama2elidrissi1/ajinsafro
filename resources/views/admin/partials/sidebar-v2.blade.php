@@ -257,6 +257,8 @@
     $reservationsChildren = array_values(array_filter([
         $makeLeaf('reservations_index', 'Toutes les reservations', 'admin.reservations.index', 'bx bx-calendar-check', ['admin.reservations.index']),
         $makeLeaf('reservations_workspace', 'Vente', \Illuminate\Support\Facades\Route::has('admin.vente.catalogue') ? 'admin.vente.catalogue' : 'admin.reservations.workspace', 'bx bx-briefcase-alt', ['admin.vente.catalogue', 'admin.reservations.workspace*']),
+        $makeLeaf('custom_reservation_requests', 'Demandes a la carte', 'admin.reservations.custom-requests.index', 'bx bx-message-square-detail', ['admin.reservations.custom-requests.index', 'admin.reservations.custom-requests.show', 'admin.reservations.custom-requests.edit', 'admin.reservations.custom-requests.update', 'admin.reservations.custom-requests.status', 'admin.reservations.custom-requests.convert-to-reservation'], [], null, 'reservations.view'),
+        $makeLeaf('custom_reservation_requests_create', 'Nouvelle demande', 'admin.reservations.custom-requests.create', 'bx bx-plus-circle', ['admin.reservations.custom-requests.create'], [], null, 'reservations.view'),
         $makeLeaf('reservations_clients', 'Reservation en ligne', 'admin.reservations.clients', 'bx bx-user-check', ['admin.reservations.clients']),
         $makeLeaf('tailor_made_requests', 'Demande a la carte', 'admin.tailor-made-requests.index', 'bx bx-edit-alt', ['admin.tailor-made-requests.*'], [], null, 'reservations.view'),
         $makeLeaf('messagerie_index', 'Messagerie', 'admin.messagerie.index', 'bx bx-envelope', ['admin.messagerie.*'], [], $unreadCount > 0 ? $unreadCount : null, 'dashboard.view'),
@@ -391,6 +393,16 @@
                 'admin.reservation-dossiers.index',
                 'bx bx-calendar-check',
                 ['admin.reservations.index', 'admin.reservation-dossiers.*', 'admin.reservations.show', 'admin.reservations.edit', 'admin.reservations.update', 'admin.reservations.destroy'],
+                [],
+                null,
+                'reservations.view'
+            ),
+            $makeLeaf(
+                'custom_requests_only_final',
+                'Demandes a la carte',
+                'admin.reservations.custom-requests.index',
+                'bx bx-message-square-detail',
+                ['admin.reservations.custom-requests.*'],
                 [],
                 null,
                 'reservations.view'
