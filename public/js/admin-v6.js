@@ -106,9 +106,25 @@
             }
 
             if (!isMobile() && html.getAttribute('data-admin-v6-sidebar') === 'collapsed') {
-                var target = event.target.closest('.aj-sidebar-v2__link, .aj-sidebar-v2__toggle');
-                if (!target) return;
-                var isLeafLink = target.matches('a.aj-sidebar-v2__link') && target.getAttribute('href') && target.getAttribute('href') !== 'javascript:void(0);';
+                var anyTarget = event.target.closest('.aj-sidebar-v2__link, .aj-sidebar-v2__toggle');
+                if (!anyTarget) return;
+
+                // Plain left-click: first click expands the sidebar, second click navigates.
+                // Keep default behavior for modified clicks (new tab, etc.).
+                var isPlainLeftClick = event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
+                var link = event.target.closest('a.aj-sidebar-v2__link');
+                var isLeafLink = link && link.getAttribute('href') && link.getAttribute('href') !== 'javascript:void(0);';
+
+                if (isPlainLeftClick && isLeafLink) {
+                    event.preventDefault();
+                    setCollapsed(false);
+                    window.setTimeout(function () {
+                        try { link.focus(); } catch (e) { }
+                    }, 0);
+                    return;
+                }
+
+                // For non-leaf targets (groups), just expand.
                 if (!isLeafLink) setCollapsed(false);
             }
         });
