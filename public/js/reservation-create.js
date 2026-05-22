@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
     'use strict';
 
     var currentStep = 1;
@@ -141,7 +141,7 @@
 
     function getSelectedTripLabel() {
         var select = document.getElementById('select-tour-id');
-        return select && select.selectedOptions.length ? (select.selectedOptions[0].textContent || 'Aucune sélection') : 'Aucune sélection';
+        return select && select.selectedOptions.length ? (select.selectedOptions[0].textContent || 'Aucune sÃ©lection') : 'Aucune sÃ©lection';
     }
 
     function getSelectedTripOption() {
@@ -259,15 +259,15 @@
 
     function derivePaymentStatus(totalAmount, paidAmount) {
         if (paidAmount <= 0) {
-            return 'Non payé';
+            return 'Non payÃ©';
         }
         if (Math.abs(paidAmount - totalAmount) < 0.01) {
-            return 'Payé';
+            return 'PayÃ©';
         }
         if (paidAmount < totalAmount / 2) {
             return 'Acompte';
         }
-        return 'Payé partiellement';
+        return 'PayÃ© partiellement';
     }
 
     function captureExtrasSelections() {
@@ -338,7 +338,7 @@
                 '<div class="reservation-create__extra-head">' +
                     '<div>' +
                         '<h4 class="reservation-create__extra-title">' + (extra.name || 'Extra') + '</h4>' +
-                        '<p class="reservation-create__extra-desc">' + (extra.description || 'Option supplémentaire pour ce dossier.') + '</p>' +
+                        '<p class="reservation-create__extra-desc">' + (extra.description || 'Option supplÃ©mentaire pour ce dossier.') + '</p>' +
                     '</div>' +
                     '<div class="reservation-create__extra-price">' +
                         '<strong>' + formatMoney(parseNumber(extra.price_adult)) + '</strong>' +
@@ -350,11 +350,11 @@
                         '<label class="reservation-create__label">Application</label>' +
                         '<select class="reservation-create__input" data-extra-scope>' +
                             '<option value="dossier"' + (snapshot.scope === 'dossier' ? ' selected' : '') + '>Tout le dossier</option>' +
-                            '<option value="traveler_selection"' + (snapshot.scope === 'traveler_selection' ? ' selected' : '') + '>Voyageurs sélectionnés</option>' +
+                            '<option value="traveler_selection"' + (snapshot.scope === 'traveler_selection' ? ' selected' : '') + '>Voyageurs sÃ©lectionnÃ©s</option>' +
                         '</select>' +
                     '</div>' +
                     '<div class="reservation-create__field">' +
-                        '<label class="reservation-create__label">Quantité</label>' +
+                        '<label class="reservation-create__label">QuantitÃ©</label>' +
                         '<input type="number" class="reservation-create__input" data-extra-quantity min="0" step="1" max="' + maxAllowed + '" value="' + Math.min(snapshot.quantity, maxAllowed) + '">' +
                     '</div>' +
                 '</div>' +
@@ -571,7 +571,7 @@
                   departure_hotel_room_id: room.departure_hotel_room_id || null,
                   tour_hotel_room_id: room.tour_hotel_room_id || null,
                   room_type: room.room_type || room.type || 'Chambre',
-                  hotel_name: hotel.hotel_name || hotel.name || room.hotel_name || 'Hôtel',
+                  hotel_name: hotel.hotel_name || hotel.name || room.hotel_name || 'HÃ´tel',
                   available_rooms: availableRooms,
                   capacity: capacity,
                   available_places: availablePlaces,
@@ -1047,8 +1047,8 @@
         var paymentHelp = document.getElementById('create-payment-help');
         if (paymentHelp) {
             paymentHelp.textContent = summary.paidAmount > summary.totalAmount
-                ? 'Le montant payé dépasse le total du dossier.'
-                : 'Le montant payé ne peut pas dépasser le total du dossier.';
+                ? 'Le montant payÃ© dÃ©passe le total du dossier.'
+                : 'Le montant payÃ© ne peut pas dÃ©passer le total du dossier.';
             paymentHelp.classList.toggle('is-error', summary.paidAmount > summary.totalAmount);
         }
 
@@ -1122,12 +1122,12 @@
         if (!container) return;
 
         if (!items.length) {
-            var title = isError ? 'Erreur lors de la recherche' : 'Aucun client trouvé';
+            var title = isError ? 'Erreur lors de la recherche' : 'Aucun client trouvÃ©';
             var noResultHtml = '<div class="reservation-create__search-result reservation-create__search-result--empty">' +
                 '<span><strong>' + title + '</strong><br><span class="reservation-create__search-result-meta">Pour "' + escapeHtml(query) + '"</span></span>' +
                 '</div>' +
                 '<div class="reservation-create__search-result reservation-create__search-result--action" id="client-search-create-new">' +
-                '<span>Créer un nouveau client avec cette recherche</span>' +
+                '<span>CrÃ©er un nouveau client avec cette recherche</span>' +
                 '<span class="reservation-create__search-result-code">+</span>' +
                 '</div>';
             container.innerHTML = noResultHtml;
@@ -1143,7 +1143,7 @@
             if (item.document) meta.push(item.document);
             return '<div class="reservation-create__search-result" data-client-id="' + item.id + '" data-client-label="[' + (item.client_code || '') + '] ' + name + '">' +
                 '<span><span class="reservation-create__search-result-name">' + name + '</span>' +
-                '<span class="reservation-create__search-result-meta">' + meta.join(' · ') + '</span></span>' +
+                '<span class="reservation-create__search-result-meta">' + meta.join(' Â· ') + '</span></span>' +
                 '<span class="reservation-create__search-result-code">' + (item.client_code || '') + '</span>' +
                 '</div>';
         }).join('');
@@ -1247,7 +1247,7 @@
                     if (typeof callback === 'function') callback(true);
                 } else if (data && data.duplicate) {
                     var dupLabel = data.duplicate.full_name || ('Client #' + data.duplicate.id);
-                    showInlineError('Ce client existe déjà : ' + dupLabel + '. Veuillez le sélectionner dans la liste.');
+                    showInlineError('Ce client existe dÃ©jÃ  : ' + dupLabel + '. Veuillez le sÃ©lectionner dans la liste.');
                     blockContinueButton();
                     if (typeof callback === 'function') callback(false);
                 } else if (data && data.errors) {
@@ -1281,13 +1281,13 @@
                     blockContinueButton();
                     if (typeof callback === 'function') callback(false);
                 } else {
-                    showInlineError('Erreur lors de la création du client. Veuillez réessayer.');
+                    showInlineError('Erreur lors de la crÃ©ation du client. Veuillez rÃ©essayer.');
                     blockContinueButton();
                     if (typeof callback === 'function') callback(false);
                 }
             })
             .catch(function () {
-                showInlineError('Erreur réseau lors de la création du client.');
+                showInlineError('Erreur rÃ©seau lors de la crÃ©ation du client.');
                 blockContinueButton();
                 if (typeof callback === 'function') callback(false);
             });
@@ -1554,15 +1554,15 @@
                 result.errors.push({ field: 'reservation-departure-select', message: 'Sélectionnez un départ avant de continuer.' });
             }
             if (summary.priceMissing) {
-                result.errors.push({ field: null, message: 'Aucun prix configuré pour ce voyage/départ.' });
+                result.errors.push({ field: null, message: 'Aucun prix configurÃ© pour ce voyage/dÃ©part.' });
             }
             if (summary.availableDepartureCapacity > 0 && summary.travelerCount > summary.availableDepartureCapacity) {
-                result.errors.push({ field: null, message: 'Le nombre de voyageurs dépasse le stock disponible sur ce départ.' });
+                result.errors.push({ field: null, message: 'Le nombre de voyageurs dÃ©passe le stock disponible sur ce dÃ©part.' });
             }
 
             if (summary.roomMode === 'places_only') {
                 if (summary.availableDepartureCapacity <= 0) {
-                    result.errors.push({ field: null, message: 'Ce départ n’a plus de places disponibles.' });
+                    result.errors.push({ field: null, message: 'Ce dÃ©part nâ€™a plus de places disponibles.' });
                 }
                 if (summary.travelerCount > summary.availableDepartureCapacity) {
                     result.errors.push({ field: null, message: 'Stock insuffisant : il reste seulement ' + summary.availableDepartureCapacity + ' places.' });
@@ -1585,7 +1585,7 @@
 
         if (step === 5) {
             if (summary.paidAmount > summary.totalAmount) {
-                result.errors.push({ field: 'payment_amount', message: 'Le montant payé ne peut pas dépasser le total du dossier.' });
+                result.errors.push({ field: 'payment_amount', message: 'Le montant payÃ© ne peut pas dÃ©passer le total du dossier.' });
                 result.valid = false;
             }
         }
@@ -1681,18 +1681,18 @@
         row.innerHTML =
             '<div class="reservation-create__companion-head">' +
                 '<h4 class="reservation-create__companion-title">Accompagnant #' + (index + 1) + '</h4>' +
-                '<button type="button" class="btn-remove-companion reservation-create__remove" aria-label="Supprimer">×</button>' +
+                '<button type="button" class="btn-remove-companion reservation-create__remove" aria-label="Supprimer">Ã—</button>' +
             '</div>' +
             '<div class="reservation-create__grid reservation-create__grid--two">' +
                 '<input type="hidden" name="passengers[' + stableId + '][traveler_key]" value="' + stableId + '">' +
-                '<div class="reservation-create__field"><label class="reservation-create__label">Prénom</label><input type="text" name="passengers[' + stableId + '][first_name]" class="reservation-create__input"></div>' +
+                '<div class="reservation-create__field"><label class="reservation-create__label">PrÃ©nom</label><input type="text" name="passengers[' + stableId + '][first_name]" class="reservation-create__input"></div>' +
                 '<div class="reservation-create__field"><label class="reservation-create__label">Nom</label><input type="text" name="passengers[' + stableId + '][last_name]" class="reservation-create__input"></div>' +
-                '<div class="reservation-create__field"><label class="reservation-create__label">Type</label><select name="passengers[' + stableId + '][type]" class="reservation-create__input"><option value="adult">Adulte</option><option value="child">Enfant</option><option value="infant">Bébé</option></select></div>' +
+                '<div class="reservation-create__field"><label class="reservation-create__label">Type</label><select name="passengers[' + stableId + '][type]" class="reservation-create__input"><option value="adult">Adulte</option><option value="child">Enfant</option><option value="infant">BÃ©bÃ©</option></select></div>' +
                 '<div class="reservation-create__field"><label class="reservation-create__label">Sexe</label><select name="passengers[' + stableId + '][gender]" class="reservation-create__input"><option value="">Selectionner...</option><option value="male">Homme</option><option value="female">Femme</option></select></div>' +
                 '<div class="reservation-create__field"><label class="reservation-create__label">Relation</label><select name="passengers[' + stableId + '][relationship_to_main]" class="reservation-create__input"><option value="spouse">Conjoint / conjointe</option><option value="child">Enfant</option><option value="parent">Parent</option><option value="friend">Ami</option><option value="group" selected>Groupe</option><option value="solo">Seul</option></select></div>' +
                 '<div class="reservation-create__field"><label class="reservation-create__label">Date de naissance</label><input type="date" name="passengers[' + stableId + '][birth_date]" class="reservation-create__input"></div>' +
                 '<div class="reservation-create__field"><label class="reservation-create__label">Type document</label><input type="text" name="passengers[' + stableId + '][document_type]" class="reservation-create__input"></div>' +
-                '<div class="reservation-create__field"><label class="reservation-create__label">N° document</label><input type="text" name="passengers[' + stableId + '][document_number]" class="reservation-create__input"></div>' +
+                '<div class="reservation-create__field"><label class="reservation-create__label">NÂ° document</label><input type="text" name="passengers[' + stableId + '][document_number]" class="reservation-create__input"></div>' +
             '</div>';
         container.appendChild(row);
         syncTravelersEmptyState();
@@ -2135,3 +2135,5 @@
         }
     });
 })();
+
+

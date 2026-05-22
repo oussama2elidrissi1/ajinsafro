@@ -2,7 +2,7 @@
     <div class="reservation-create__card">
         <div class="reservation-create__section-head">
             <div>
-                <p class="reservation-create__eyebrow">�?tape 6</p>
+                <p class="reservation-create__eyebrow">Étape 6</p>
                 <h3 class="reservation-create__section-title">Dossier de réservation</h3>
                 <p class="reservation-create__section-subtitle">Relisez le dossier, chargez les documents utiles et confirmez l'ouverture du dossier commercial.</p>
             </div>
@@ -19,22 +19,6 @@
                 <div class="reservation-create__final-line">
                     <span>Statut dossier</span>
                     <strong id="create-dossier-status-preview">En attente</strong>
-                </div>
-                <div class="reservation-create__final-line">
-                    <span>Prestation</span>
-                    <strong id="create-final-trip">Aucune sélection</strong>
-                </div>
-                <div class="reservation-create__final-line">
-                    <span>Départ</span>
-                    <strong id="create-final-departure">�?"</strong>
-                </div>
-                <div class="reservation-create__final-line">
-                    <span>Voyageurs</span>
-                    <strong id="create-final-travelers">1</strong>
-                </div>
-                <div class="reservation-create__final-line">
-                    <span>Extras</span>
-                    <strong id="create-final-extras">0 DH</strong>
                 </div>
                 <div class="reservation-create__final-line reservation-create__final-line--total">
                     <span>Total dossier</span>
@@ -67,7 +51,7 @@
                             <div class="reservation-create__field">
                                 <label class="reservation-create__label" for="visa_status">Statut visa</label>
                                 <select name="visa_status" id="visa_status" class="reservation-create__input">
-                                    <option value="">�?"</option>
+                                    <option value="">Sélectionner...</option>
                                     <option value="not_required" {{ old('visa_status') === 'not_required' ? 'selected' : '' }}>Non requis</option>
                                     <option value="pending" {{ old('visa_status') === 'pending' ? 'selected' : '' }}>En attente</option>
                                     <option value="approved" {{ old('visa_status') === 'approved' ? 'selected' : '' }}>Approuvé</option>
@@ -80,7 +64,7 @@
                             </div>
                             <div class="reservation-create__field reservation-create__field--full">
                                 <label class="reservation-create__label" for="visa_notes">Notes visa</label>
-                                <textarea name="visa_notes" id="visa_notes" class="reservation-create__input reservation-create__input--textarea" rows="4" placeholder="Suivi visa, pièces manquantes, remarques internes�?�">{{ old('visa_notes') }}</textarea>
+                                <textarea name="visa_notes" id="visa_notes" class="reservation-create__input reservation-create__input--textarea" rows="4" placeholder="Suivi visa, pièces manquantes, remarques internes...">{{ old('visa_notes') }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -95,10 +79,14 @@
     </div>
 
     <div class="reservation-create__actions reservation-create__actions--final">
-        <button type="button" class="reservation-create__button reservation-create__button--secondary" data-create-prev data-step-back="5">Retour</button>
+        <button type="button" class="reservation-create__button reservation-create__button--secondary" data-create-prev data-step-back="5">
+            <i class="bx bx-left-arrow-alt" aria-hidden="true"></i><span>Retour</span>
+        </button>
         <div class="reservation-create__submit-group">
             <a href="{{ route('admin.reservations.workspace') }}" class="reservation-create__button reservation-create__button--ghost">Annuler</a>
-            <button type="submit" class="reservation-create__button reservation-create__button--primary">Confirmer la réservation</button>
+            <button type="submit" class="reservation-create__button reservation-create__button--primary">
+                <span>Confirmer la réservation</span><i class="bx bx-right-arrow-alt" aria-hidden="true"></i>
+            </button>
         </div>
     </div>
 </section>

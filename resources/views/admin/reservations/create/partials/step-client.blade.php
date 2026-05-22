@@ -148,8 +148,12 @@
 
     <div class="reservation-create__step-errors" id="step-2-errors" hidden></div>
     <div class="reservation-create__actions">
-        <button type="button" class="reservation-create__button reservation-create__button--secondary" data-create-prev data-step-back="1">Retour</button>
-        <button type="button" class="reservation-create__button reservation-create__button--primary" data-create-next data-step-next="3">Continuer</button>
+        <button type="button" class="reservation-create__button reservation-create__button--secondary" data-create-prev data-step-back="1">
+            <i class="bx bx-left-arrow-alt" aria-hidden="true"></i><span>Retour</span>
+        </button>
+        <button type="button" class="reservation-create__button reservation-create__button--primary" data-create-next data-step-next="3">
+            <span>Continuer</span><i class="bx bx-right-arrow-alt" aria-hidden="true"></i>
+        </button>
     </div>
 </section>
 

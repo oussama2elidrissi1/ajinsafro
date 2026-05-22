@@ -48,8 +48,12 @@
 
     <div class="reservation-create__step-errors" id="step-3-errors" hidden></div>
     <div class="reservation-create__actions">
-        <button type="button" class="reservation-create__button reservation-create__button--secondary" data-create-prev data-step-back="2">Retour</button>
-        <button type="button" class="reservation-create__button reservation-create__button--primary" data-create-next data-step-next="4">Continuer</button>
+        <button type="button" class="reservation-create__button reservation-create__button--secondary" data-create-prev data-step-back="2">
+            <i class="bx bx-left-arrow-alt" aria-hidden="true"></i><span>Retour</span>
+        </button>
+        <button type="button" class="reservation-create__button reservation-create__button--primary" data-create-next data-step-next="4">
+            <span>Continuer</span><i class="bx bx-right-arrow-alt" aria-hidden="true"></i>
+        </button>
     </div>
 </section>
 <?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\reservations\create\partials\step-voyageurs.blade.php ENDPATH**/ ?>

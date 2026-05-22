@@ -63,7 +63,7 @@
                             <option value="fixed" <?php if(old('discount_type', $reservation?->discount_type ?? '') === 'fixed'): echo 'selected'; endif; ?>>DH</option>
                         </select>
                     </div>
-                    <div class="form-text">Prix après réduction : <strong id="reservation-price-after-discount">�?"</strong></div>
+                    <div class="form-text">Prix après réduction : <strong id="reservation-price-after-discount">—</strong></div>
                 </div>
             </div>
         <?php else: ?>
@@ -85,7 +85,7 @@
                             <option value="fixed" <?php if(old('discount_type', $reservation?->discount_type ?? '') === 'fixed'): echo 'selected'; endif; ?>>DH</option>
                         </select>
                     </div>
-                    <div class="form-text">Prix après réduction : <strong id="reservation-price-after-discount">�?"</strong></div>
+                    <div class="form-text">Prix après réduction : <strong id="reservation-price-after-discount">—</strong></div>
                 </div>
             </div>
         <?php endif; ?>
@@ -102,7 +102,7 @@
                         <div class="card-header bg-light py-2">
                             <strong><?php echo e($hotel->hotel_name ?: 'Hôtel J'.($hotel->check_in_day ?? '?')); ?></strong>
                             <?php if($hotel->check_in_day || $hotel->check_out_day): ?>
-                                <span class="text-muted small">�?" J<?php echo e($hotel->check_in_day ?? '?'); ?> à J<?php echo e($hotel->check_out_day ?? '?'); ?></span>
+                                <span class="text-muted small">— J<?php echo e($hotel->check_in_day ?? '?'); ?> à J<?php echo e($hotel->check_out_day ?? '?'); ?></span>
                             <?php endif; ?>
                         </div>
                         <div class="card-body py-2">
@@ -127,7 +127,7 @@
                                             ?>
                                             <tr class="reservation-room-row">
                                                 <td>
-                                                    <?php echo e($room->room_type); ?><?php echo e($room->room_label ? ' �?" '.$room->room_label : ''); ?>
+                                                    <?php echo e($room->room_type); ?><?php echo e($room->room_label ? ' — '.$room->room_label : ''); ?>
 
                                                 </td>
                                                 <td class="text-center"><?php echo e($room->capacity_total); ?> pers.</td>
@@ -145,7 +145,7 @@
                                                         data-room-capacity="<?php echo e($room->capacity_total); ?>"
                                                     >
                                                 </td>
-                                                <td class="text-end reservation-room-total"><?php echo e($roomCount > 0 ? number_format($roomCount * (float) $room->supplement, 0, ',', ' ').' DH' : '�?"'); ?></td>
+                                                <td class="text-end reservation-room-total"><?php echo e($roomCount > 0 ? number_format($roomCount * (float) $room->supplement, 0, ',', ' ').' DH' : '—'); ?></td>
                                             </tr>
                                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </tbody>
@@ -371,7 +371,7 @@
         var total = count * parseNumber(input.getAttribute('data-room-supplement'));
         var target = row.querySelector('.reservation-room-total');
         if (target) {
-            target.textContent = count > 0 ? total.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' DH' : '�?"';
+            target.textContent = count > 0 ? total.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' DH' : '—';
         }
     }
 
@@ -676,7 +676,7 @@
                             (room.tour_hotel_room_id ? '<input type="hidden" name="hotel_rooms[' + index + '][tour_hotel_room_id]" value="' + (room.tour_hotel_room_id || '') + '">' : '') +
                             '<input type="number" name="hotel_rooms[' + index + '][room_count]" class="form-control form-control-sm text-center reservation-room-count" value="' + count + '" min="0" max="' + (room.available_rooms || 0) + '" data-room-supplement="' + supplement + '" data-room-capacity="' + (room.capacity_total || 0) + '">' +
                         '</td>' +
-                        '<td class="text-end reservation-room-total">' + (count > 0 ? subtotal.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' DH' : '�?"') + '</td>' +
+                        '<td class="text-end reservation-room-total">' + (count > 0 ? subtotal.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' DH' : '—') + '</td>' +
                     '</tr>';
                     index += 1;
                 });
@@ -729,7 +729,7 @@
             setAccommodationMode('blocked');
             html = payload.message
                 ? '<div class="alert alert-warning mb-0">' + escapeHtml(payload.message) + '</div>'
-                : '<div class="alert alert-secondary mb-0">Ce départ n�?Ta plus de places disponibles.</div>';
+                : '<div class="alert alert-secondary mb-0">Ce départ n’a plus de places disponibles.</div>';
         }
 
         roomsContainer.innerHTML = html;
@@ -808,7 +808,7 @@
             travel_date_id: travelDateId
         });
 
-        roomsContainer.innerHTML = '<p class="text-muted mb-0">Chargement des chambres�?�</p>';
+        roomsContainer.innerHTML = '<p class="text-muted mb-0">Chargement des chambres...</p>';
         fetch(url, {
             credentials: 'same-origin',
             headers: { 'X-Requested-With': 'XMLHttpRequest' }

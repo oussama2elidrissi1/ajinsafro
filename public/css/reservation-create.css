@@ -132,6 +132,10 @@
     gap: 0.55rem;
 }
 
+.reservation-create__steps--inline {
+    flex-direction: column;
+}
+
 .reservation-create__step {
     display: flex;
     align-items: center;
@@ -144,6 +148,11 @@
     color: #475569;
     text-align: left;
     font-weight: 700;
+}
+
+.reservation-create__button i {
+    font-size: 1.25rem;
+    line-height: 1;
 }
 
 .reservation-create__step.is-active {
@@ -924,6 +933,36 @@
 
     .reservation-create__extras-list {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* Workflow horizontal sur desktop */
+    .reservation-create__steps--inline {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.5rem 0.75rem;
+        align-items: center;
+    }
+    .reservation-create__steps--inline .reservation-create__step {
+        width: auto;
+        padding: 0.55rem 0.7rem;
+        border-radius: 999px;
+        gap: 0.5rem;
+    }
+    .reservation-create__steps--inline .reservation-create__step::after {
+        content: \"→\";
+        margin-left: 0.6rem;
+        color: #94a3b8;
+        font-weight: 900;
+    }
+    .reservation-create__steps--inline .reservation-create__step:last-child::after {
+        content: \"\";
+        margin: 0;
+    }
+
+    /* Sidebar résumé sticky */
+    .reservation-create__summary-card {
+        position: sticky;
+        top: 16px;
     }
 }
 

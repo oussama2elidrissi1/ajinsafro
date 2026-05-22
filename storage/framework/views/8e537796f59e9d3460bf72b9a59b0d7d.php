@@ -2,7 +2,7 @@
     <div class="reservation-create__steps-card">
         <p class="reservation-create__eyebrow">Workflow</p>
         <h2 class="reservation-create__sidebar-title">Nouvelle réservation</h2>
-        <div class="reservation-create__steps" role="tablist" aria-label="�?tapes de création">
+        <div class="reservation-create__steps" role="tablist" aria-label="Étapes de création">
             <button type="button" class="reservation-create__step is-active" data-create-step-nav="1">
                 <span class="reservation-create__step-index">1</span>
                 <span class="reservation-create__step-label">Prestation</span>
@@ -38,7 +38,7 @@
         </div>
         <div class="reservation-create__summary-item">
             <span>Départ</span>
-            <strong id="create-summary-departure">�?"</strong>
+            <strong id="create-summary-departure">—</strong>
         </div>
         <div class="reservation-create__summary-item">
             <span>Voyageurs</span>
@@ -46,7 +46,7 @@
         </div>
         <div class="reservation-create__summary-item">
             <span>Prix unitaire</span>
-            <strong id="create-summary-unit-price">�?"</strong>
+            <strong id="create-summary-unit-price">—</strong>
         </div>
         <div class="reservation-create__summary-item">
             <span>Réduction</span>
@@ -54,11 +54,11 @@
         </div>
         <div class="reservation-create__summary-item">
             <span>Prix après réduction</span>
-            <strong id="create-summary-price-after-discount">�?"</strong>
+            <strong id="create-summary-price-after-discount">—</strong>
         </div>
         <div class="reservation-create__summary-item">
             <span>Total provisoire</span>
-            <strong id="create-summary-total">�?"</strong>
+            <strong id="create-summary-total">—</strong>
         </div>
         <div class="reservation-create__summary-item">
             <span>Total payé</span>
