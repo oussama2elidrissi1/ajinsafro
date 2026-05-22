@@ -440,8 +440,10 @@
     color: #334155;
 }
 
-.reservation-create__label span {
+.required-star {
     color: #dc2626;
+    font-weight: 700;
+    margin-left: 3px;
 }
 
 .reservation-create__input {
