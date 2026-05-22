@@ -270,30 +270,36 @@
 
 @push('styles')
 <style>
-    body.aj-admin-compact .reservation-dossier-page {
+    body.aj-admin-compact .reservation-dossier-page,
+    .reservation-dossier-page {
         max-width: 1400px;
         margin: 0 auto;
         padding-bottom: 110px;
     }
 
-    body.aj-admin-compact .reservation-dossier-page .rd-page {
+    body.aj-admin-compact .reservation-dossier-page .rd-page,
+    .reservation-dossier-page .rd-page {
         display: grid;
         gap: 18px;
     }
 
     body.aj-admin-compact .reservation-dossier-page .rd-panel,
-    body.aj-admin-compact .reservation-dossier-page .rd-header {
+    body.aj-admin-compact .reservation-dossier-page .rd-header,
+    .reservation-dossier-page .rd-panel,
+    .reservation-dossier-page .rd-header {
         background: #fff;
         border: 1px solid #e5edf6;
         border-radius: 18px;
         box-shadow: 0 10px 24px rgba(16, 42, 67, 0.06);
     }
 
-    body.aj-admin-compact .reservation-dossier-page .rd-header {
+    body.aj-admin-compact .reservation-dossier-page .rd-header,
+    .reservation-dossier-page .rd-header {
         padding: 18px 20px;
     }
 
-    body.aj-admin-compact .reservation-dossier-page .rd-header-top {
+    body.aj-admin-compact .reservation-dossier-page .rd-header-top,
+    .reservation-dossier-page .rd-header-top {
         display: flex;
         justify-content: space-between;
         gap: 16px;
@@ -301,7 +307,8 @@
         flex-wrap: wrap;
     }
 
-    body.aj-admin-compact .reservation-dossier-page .rd-title {
+    body.aj-admin-compact .reservation-dossier-page .rd-title,
+    .reservation-dossier-page .rd-title {
         margin: 0 0 6px;
         font-size: clamp(24px, 2.8vw, 34px);
         line-height: 1.05;
@@ -310,13 +317,15 @@
         color: #0b2545;
     }
 
-    body.aj-admin-compact .reservation-dossier-page .rd-lead {
+    body.aj-admin-compact .reservation-dossier-page .rd-lead,
+    .reservation-dossier-page .rd-lead {
         margin: 0;
         color: #6b7a90;
         font-weight: 600;
     }
 
-    body.aj-admin-compact .reservation-dossier-page .rd-meta {
+    body.aj-admin-compact .reservation-dossier-page .rd-meta,
+    .reservation-dossier-page .rd-meta {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 10px;
@@ -325,7 +334,10 @@
 
     body.aj-admin-compact .reservation-dossier-page .rd-meta-card,
     body.aj-admin-compact .reservation-dossier-page .rd-summary-card,
-    body.aj-admin-compact .reservation-dossier-page .rd-mini-card {
+    body.aj-admin-compact .reservation-dossier-page .rd-mini-card,
+    .reservation-dossier-page .rd-meta-card,
+    .reservation-dossier-page .rd-summary-card,
+    .reservation-dossier-page .rd-mini-card {
         border: 1px solid #e5edf6;
         border-radius: 14px;
         background: #f8fbff;
@@ -334,7 +346,10 @@
 
     body.aj-admin-compact .reservation-dossier-page .rd-meta-card span,
     body.aj-admin-compact .reservation-dossier-page .rd-mini-card span,
-    body.aj-admin-compact .reservation-dossier-page .rd-summary-card span {
+    body.aj-admin-compact .reservation-dossier-page .rd-summary-card span,
+    .reservation-dossier-page .rd-meta-card span,
+    .reservation-dossier-page .rd-mini-card span,
+    .reservation-dossier-page .rd-summary-card span {
         display: block;
         color: #6b7a90;
         font-size: 11px;
@@ -1178,6 +1193,13 @@
     </div>
 
     @push('scripts')
+        <script>
+            // Ensure dossier page compact styles are applied even if the layout
+            // doesn't add the class on <body>.
+            document.addEventListener('DOMContentLoaded', function () {
+                try { document.body && document.body.classList.add('aj-admin-compact'); } catch (e) {}
+            });
+        </script>
         <script>
             (function () {
                 var table = document.getElementById('companions-table');
