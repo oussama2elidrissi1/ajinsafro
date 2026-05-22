@@ -1,16 +1,16 @@
-﻿@extends('layouts.admin-v6')
+﻿
 
-@section('title', 'Dossier de réservation')
-@section('page_title', 'Dossier de réservation')
-@section('hide_admin_footer', '1')
-@section('header_primary_action')
-    <a href="{{ route('admin.reservations.create') }}" class="aj-v6-primary-btn">
+<?php $__env->startSection('title', 'Dossier de réservation'); ?>
+<?php $__env->startSection('page_title', 'Dossier de réservation'); ?>
+<?php $__env->startSection('hide_admin_footer', '1'); ?>
+<?php $__env->startSection('header_primary_action'); ?>
+    <a href="<?php echo e(route('admin.reservations.create')); ?>" class="aj-v6-primary-btn">
         <i class="bx bx-plus"></i>
         <span>Créer un dossier</span>
     </a>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@php
+<?php
     use App\Models\Reservation;
     use App\Models\Voyage;
     use Illuminate\Support\Facades\Storage;
@@ -368,9 +368,9 @@
             'traveler_keys' => $extra->traveler_keys ?? [],
         ];
     })->values();
-@endphp
+?>
 
-@push('styles')
+<?php $__env->startPush('styles'); ?>
 <style>
     body.aj-admin-compact .reservation-dossier-page,
     .reservation-dossier-page {
@@ -686,64 +686,64 @@
         }
     }
 </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="reservation-dossier-page">
         <div class="rd-page">
-            @if(session('success'))
-                <div class="alert alert-success shadow-sm border-0">{{ session('success') }}</div>
-            @endif
+            <?php if(session('success')): ?>
+                <div class="alert alert-success shadow-sm border-0"><?php echo e(session('success')); ?></div>
+            <?php endif; ?>
 
-            @if(session('error'))
-                <div class="alert alert-danger shadow-sm border-0">{{ session('error') }}</div>
-            @endif
+            <?php if(session('error')): ?>
+                <div class="alert alert-danger shadow-sm border-0"><?php echo e(session('error')); ?></div>
+            <?php endif; ?>
 
-            @if($errors->any())
+            <?php if($errors->any()): ?>
                 <div class="alert alert-danger shadow-sm border-0 mb-0">
                     <strong>Des champs sont à corriger.</strong>
                     <ul class="mb-0 mt-2 ps-3">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
+                        <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <li><?php echo e($error); ?></li>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </ul>
                 </div>
-            @endif
+            <?php endif; ?>
 
             <section class="rd-header">
                 <div class="rd-header-top">
                     <div class="flex-grow-1">
                         <div class="d-flex flex-wrap gap-2 mb-2">
-                            <span class="rd-pill {{ $dossierBadge['class'] }}">{{ $dossierBadge['label'] }}</span>
-                            <span class="rd-pill {{ $paymentBadge['class'] }}">{{ $paymentBadge['label'] }}</span>
-                            @if($roomCoverageIncomplete)
+                            <span class="rd-pill <?php echo e($dossierBadge['class']); ?>"><?php echo e($dossierBadge['label']); ?></span>
+                            <span class="rd-pill <?php echo e($paymentBadge['class']); ?>"><?php echo e($paymentBadge['label']); ?></span>
+                            <?php if($roomCoverageIncomplete): ?>
                                 <span class="rd-pill is-pending">Affectation chambre incomplète</span>
-                            @endif
+                            <?php endif; ?>
                         </div>
-                        <h1 class="rd-title">Dossier de réservation #{{ $dossier->dossier_number ?: $dossier->id }}</h1>
-                        <p class="rd-lead">Client principal {{ $clientName }} - Voyage {{ $offer?->name ?? 'non renseigne' }} - Depart {{ $departure?->start_date?->format('d/m/Y') ?? '-' }}</p>
-                        @if($roomCoverageIncomplete)
+                        <h1 class="rd-title">Dossier de réservation #<?php echo e($dossier->dossier_number ?: $dossier->id); ?></h1>
+                        <p class="rd-lead">Client principal <?php echo e($clientName); ?> - Voyage <?php echo e($offer?->name ?? 'non renseigne'); ?> - Depart <?php echo e($departure?->start_date?->format('d/m/Y') ?? '-'); ?></p>
+                        <?php if($roomCoverageIncomplete): ?>
                             <div class="alert alert-warning border-0 py-2 px-3 mb-3" role="status">
-                                {{ max(0, $requiredBedCount - $assignedBedCount) }} voyageur(s) ne sont pas encore affectés à une chambre. <a href="#rooms-panel" data-bs-toggle="pill">Ouvrir l’onglet Chambres</a>.
+                                <?php echo e(max(0, $requiredBedCount - $assignedBedCount)); ?> voyageur(s) ne sont pas encore affectés à une chambre. <a href="#rooms-panel" data-bs-toggle="pill">Ouvrir l’onglet Chambres</a>.
                             </div>
-                        @endif
+                        <?php endif; ?>
 
                         <div class="rd-meta">
                             <div class="rd-meta-card">
                                 <span>Client principal</span>
-                                <strong>{{ $clientName }}</strong>
+                                <strong><?php echo e($clientName); ?></strong>
                             </div>
                             <div class="rd-meta-card">
                                 <span>Voyage</span>
-                                <strong>{{ $offer?->name ?? '-' }}</strong>
+                                <strong><?php echo e($offer?->name ?? '-'); ?></strong>
                             </div>
                             <div class="rd-meta-card">
                                 <span>Date départ</span>
-                                <strong>{{ $departure?->start_date?->format('d/m/Y') ?? '-' }}</strong>
+                                <strong><?php echo e($departure?->start_date?->format('d/m/Y') ?? '-'); ?></strong>
                             </div>
                             <div class="rd-meta-card">
                                 <span>Voyageurs</span>
-                                <strong>{{ $travelersCount }}</strong>
+                                <strong><?php echo e($travelersCount); ?></strong>
                             </div>
                         </div>
                     </div>
@@ -752,11 +752,11 @@
                         <a href="#dossier-update-card" class="rd-btn rd-btn-soft rd-btn-sm"><i class="bx bx-edit"></i><span>Modifier dossier</span></a>
                         <a href="#payments-panel" data-bs-toggle="pill" class="rd-btn rd-btn-soft rd-btn-sm"><i class="bx bx-wallet"></i><span>Ajouter paiement</span></a>
                         <a href="#documents-panel" data-bs-toggle="pill" class="rd-btn rd-btn-soft rd-btn-sm"><i class="bx bx-file"></i><span>Ajouter justificatif</span></a>
-                        @if($mailToUrl)
-                            <a href="{{ $mailToUrl }}" class="rd-btn rd-btn-soft rd-btn-sm"><i class="bx bx-envelope"></i><span>Envoyer par email</span></a>
-                        @endif
-                        <form action="{{ route('admin.reservations.cancel', $reservation) }}" method="POST" onsubmit="return confirm('Annuler ce dossier ?');" class="d-inline">
-                            @csrf
+                        <?php if($mailToUrl): ?>
+                            <a href="<?php echo e($mailToUrl); ?>" class="rd-btn rd-btn-soft rd-btn-sm"><i class="bx bx-envelope"></i><span>Envoyer par email</span></a>
+                        <?php endif; ?>
+                        <form action="<?php echo e(route('admin.reservations.cancel', $reservation)); ?>" method="POST" onsubmit="return confirm('Annuler ce dossier ?');" class="d-inline">
+                            <?php echo csrf_field(); ?>
                             <button type="submit" class="rd-btn rd-btn-soft rd-btn-sm text-danger"><i class="bx bx-x-circle"></i><span>Annuler réservation</span></button>
                         </form>
                     </div>
@@ -782,29 +782,29 @@
                                     <p class="rd-panel-subtitle">Totaux compactés pour lecture rapide et suivi du reste à payer.</p>
                                 </div>
                                 <div class="d-flex gap-2 flex-wrap">
-                                    <span class="rd-pill {{ $paymentBadge['class'] }}">{{ $paymentBadge['label'] }}</span>
-                                    <span class="rd-pill is-completed">{{ $paymentProgress }}%</span>
+                                    <span class="rd-pill <?php echo e($paymentBadge['class']); ?>"><?php echo e($paymentBadge['label']); ?></span>
+                                    <span class="rd-pill is-completed"><?php echo e($paymentProgress); ?>%</span>
                                 </div>
                             </div>
                             <div class="rd-panel-body">
-                                @if(! $hasFinancialData)
+                                <?php if(! $hasFinancialData): ?>
                                     <div class="alert alert-warning border-0 mb-3">Aucun paiement enregistré pour ce dossier.</div>
-                                @endif
+                                <?php endif; ?>
 
                                 <div class="rd-summary-grid mb-3">
-                                    <div class="rd-summary-card is-blue"><span>Total base</span><strong>{{ $baseTotal > 0 ? number_format($baseTotal, 2, ',', ' ').' DH' : '-' }}</strong></div>
-                                    <div class="rd-summary-card"><span>Suppléments chambres</span><strong>{{ $roomSupplementTotal > 0 ? number_format($roomSupplementTotal, 2, ',', ' ').' DH' : '-' }}</strong></div>
-                                    <div class="rd-summary-card"><span>Extras</span><strong>{{ $extrasTotal > 0 ? number_format($extrasTotal, 2, ',', ' ').' DH' : '-' }}</strong></div>
-                                    <div class="rd-summary-card is-blue"><span>Total dossier</span><strong>{{ $totalAmount > 0 ? number_format($totalAmount, 2, ',', ' ').' DH' : '-' }}</strong></div>
-                                    <div class="rd-summary-card is-green"><span>Total paye</span><strong>{{ $paidAmount > 0 ? number_format($paidAmount, 2, ',', ' ').' DH' : '-' }}</strong></div>
-                                    <div class="rd-summary-card {{ $remainingAmount > 0 ? 'is-orange' : 'is-green' }}"><span>Reste a payer</span><strong>{{ $remainingAmount > 0 ? number_format($remainingAmount, 2, ',', ' ').' DH' : '-' }}</strong></div>
+                                    <div class="rd-summary-card is-blue"><span>Total base</span><strong><?php echo e($baseTotal > 0 ? number_format($baseTotal, 2, ',', ' ').' DH' : '-'); ?></strong></div>
+                                    <div class="rd-summary-card"><span>Suppléments chambres</span><strong><?php echo e($roomSupplementTotal > 0 ? number_format($roomSupplementTotal, 2, ',', ' ').' DH' : '-'); ?></strong></div>
+                                    <div class="rd-summary-card"><span>Extras</span><strong><?php echo e($extrasTotal > 0 ? number_format($extrasTotal, 2, ',', ' ').' DH' : '-'); ?></strong></div>
+                                    <div class="rd-summary-card is-blue"><span>Total dossier</span><strong><?php echo e($totalAmount > 0 ? number_format($totalAmount, 2, ',', ' ').' DH' : '-'); ?></strong></div>
+                                    <div class="rd-summary-card is-green"><span>Total paye</span><strong><?php echo e($paidAmount > 0 ? number_format($paidAmount, 2, ',', ' ').' DH' : '-'); ?></strong></div>
+                                    <div class="rd-summary-card <?php echo e($remainingAmount > 0 ? 'is-orange' : 'is-green'); ?>"><span>Reste a payer</span><strong><?php echo e($remainingAmount > 0 ? number_format($remainingAmount, 2, ',', ' ').' DH' : '-'); ?></strong></div>
                                 </div>
 
                                 <div class="d-flex justify-content-between align-items-center gap-3 mb-3 flex-wrap">
                                     <div class="flex-grow-1" style="min-width: 260px;">
-                                        <div class="d-flex justify-content-between mb-1"><small class="rd-muted">Progression paiement</small><strong>{{ $paymentProgress }}%</strong></div>
+                                        <div class="d-flex justify-content-between mb-1"><small class="rd-muted">Progression paiement</small><strong><?php echo e($paymentProgress); ?>%</strong></div>
                                         <div class="progress" style="height:10px;border-radius:999px;">
-                                            <div class="progress-bar" role="progressbar" style="width: {{ $paymentProgress }}%; background: linear-gradient(135deg, #0877bd, #12b76a);"></div>
+                                            <div class="progress-bar" role="progressbar" style="width: <?php echo e($paymentProgress); ?>%; background: linear-gradient(135deg, #0877bd, #12b76a);"></div>
                                         </div>
                                     </div>
                                     <a href="#payments-panel" data-bs-toggle="pill" class="rd-btn rd-btn-soft rd-btn-sm"><i class="bx bx-wallet"></i><span>Aller aux paiements</span></a>
@@ -818,54 +818,54 @@
                                     <h2 class="rd-panel-title">Informations dossier</h2>
                                     <p class="rd-panel-subtitle">Zone compacte de modification du dossier et des voyageurs.</p>
                                 </div>
-                                <a href="{{ route('admin.reservations.edit', $reservation) }}" class="rd-btn rd-btn-soft rd-btn-sm"><i class="bx bx-external-link"></i><span>Ouvrir l'edition complete</span></a>
+                                <a href="<?php echo e(route('admin.reservations.edit', $reservation)); ?>" class="rd-btn rd-btn-soft rd-btn-sm"><i class="bx bx-external-link"></i><span>Ouvrir l'edition complete</span></a>
                             </div>
                             <div class="rd-panel-body">
-                                @can('reservations.update')
-                                    <form id="dossier-update-form" action="{{ route('admin.reservations.update', $reservation) }}" method="POST" enctype="multipart/form-data">
-                                        @csrf
-                                        @method('PUT')
+                                <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('reservations.update')): ?>
+                                    <form id="dossier-update-form" action="<?php echo e(route('admin.reservations.update', $reservation)); ?>" method="POST" enctype="multipart/form-data">
+                                        <?php echo csrf_field(); ?>
+                                        <?php echo method_field('PUT'); ?>
 
                                         <input type="hidden" name="accommodation_mode" value="rooms">
-                                        <input type="hidden" name="departure_id" value="{{ $currentDepartureId }}">
-                                        <input type="hidden" name="travel_date_id" value="{{ $currentTravelDateId }}">
+                                        <input type="hidden" name="departure_id" value="<?php echo e($currentDepartureId); ?>">
+                                        <input type="hidden" name="travel_date_id" value="<?php echo e($currentTravelDateId); ?>">
                                         <input type="hidden" name="client_mode" value="new">
                                         <input type="hidden" name="client_traveler_type" value="adult">
-                                        <input type="hidden" name="extras_json" value='@json($currentExtrasPayload, JSON_UNESCAPED_UNICODE)'>
+                                        <input type="hidden" name="extras_json" value='<?php echo json_encode($currentExtrasPayload, JSON_UNESCAPED_UNICODE, 512) ?>'>
 
                                         <div class="row g-3">
                                             <div class="col-md-6">
                                                 <label class="rd-label">Offre / voyage</label>
                                                 <select name="tour_id" class="form-select" required>
                                                     <option value="">Selectionner un voyage...</option>
-                                                    @foreach($voyages as $voyage)
-                                                        <option value="{{ $voyage->id }}" @selected((int) old('tour_id', $currentTourId) === (int) $voyage->id)>{{ $voyage->name ?? $voyage->slug }}</option>
-                                                    @endforeach
+                                                    <?php $__currentLoopData = $voyages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $voyage): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <option value="<?php echo e($voyage->id); ?>" <?php if((int) old('tour_id', $currentTourId) === (int) $voyage->id): echo 'selected'; endif; ?>><?php echo e($voyage->name ?? $voyage->slug); ?></option>
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                 </select>
                                             </div>
                                             <div class="col-md-3">
                                                 <label class="rd-label">Statut dossier</label>
                                                 <div class="form-control d-flex align-items-center justify-content-between bg-light">
-                                                    <span>{{ $dossierBadge['label'] }}</span>
-                                                    <span class="rd-pill {{ $dossierBadge['class'] }}">{{ $dossierBadge['label'] }}</span>
+                                                    <span><?php echo e($dossierBadge['label']); ?></span>
+                                                    <span class="rd-pill <?php echo e($dossierBadge['class']); ?>"><?php echo e($dossierBadge['label']); ?></span>
                                                 </div>
                                             </div>
                                             <div class="col-md-3">
                                                 <label class="rd-label">Mode de paiement</label>
                                                 <select name="payment_type" class="form-select">
                                                     <option value="">-</option>
-                                                    @foreach(['Espèces', 'Virement bancaire', 'Carte bancaire', 'Chèque', 'TPE', 'Autre'] as $paymentType)
-                                                        <option value="{{ $paymentType }}" @selected(old('payment_type', $reservation->payment_type) === $paymentType)>{{ $paymentType }}</option>
-                                                    @endforeach
+                                                    <?php $__currentLoopData = ['Espèces', 'Virement bancaire', 'Carte bancaire', 'Chèque', 'TPE', 'Autre']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $paymentType): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <option value="<?php echo e($paymentType); ?>" <?php if(old('payment_type', $reservation->payment_type) === $paymentType): echo 'selected'; endif; ?>><?php echo e($paymentType); ?></option>
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                 </select>
                                             </div>
 
                                             <div class="col-12">
                                                 <div class="rd-room-alert">
-                                                    <strong>Voyageurs affectés en chambre :</strong> {{ $assignedBedCount }}/{{ $requiredBedCount }}.
-                                                    @if($roomCoverageIncomplete)
-                                                        <span class="ms-2">Il manque {{ max(0, $requiredBedCount - $assignedBedCount) }} voyageur(s). <a href="#rooms-panel" data-bs-toggle="pill">Ouvrir l’onglet Chambres</a>.</span>
-                                                    @endif
+                                                    <strong>Voyageurs affectés en chambre :</strong> <?php echo e($assignedBedCount); ?>/<?php echo e($requiredBedCount); ?>.
+                                                    <?php if($roomCoverageIncomplete): ?>
+                                                        <span class="ms-2">Il manque <?php echo e(max(0, $requiredBedCount - $assignedBedCount)); ?> voyageur(s). <a href="#rooms-panel" data-bs-toggle="pill">Ouvrir l’onglet Chambres</a>.</span>
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
 
@@ -873,39 +873,39 @@
                                                 <div class="row g-3">
                                                     <div class="col-md-6">
                                                         <label class="rd-label">Prénom du client principal</label>
-                                                        <input type="text" name="client_first_name" class="form-control" value="{{ old('client_first_name', $client?->first_name ?? $reservation->client_first_name ?? '') }}">
+                                                        <input type="text" name="client_first_name" class="form-control" value="<?php echo e(old('client_first_name', $client?->first_name ?? $reservation->client_first_name ?? '')); ?>">
                                                     </div>
                                                     <div class="col-md-6">
                                                         <label class="rd-label">Nom du client principal</label>
-                                                        <input type="text" name="client_last_name" class="form-control" value="{{ old('client_last_name', $client?->last_name ?? $reservation->client_last_name ?? '') }}">
+                                                        <input type="text" name="client_last_name" class="form-control" value="<?php echo e(old('client_last_name', $client?->last_name ?? $reservation->client_last_name ?? '')); ?>">
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label class="rd-label">Téléphone</label>
-                                                        <input type="text" name="client_phone" class="form-control" value="{{ old('client_phone', $client?->phone ?? $reservation->client_phone ?? '') }}">
+                                                        <input type="text" name="client_phone" class="form-control" value="<?php echo e(old('client_phone', $client?->phone ?? $reservation->client_phone ?? '')); ?>">
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label class="rd-label">Email</label>
-                                                        <input type="email" name="client_email" class="form-control" value="{{ old('client_email', $client?->email ?? $reservation->client_email ?? '') }}">
+                                                        <input type="email" name="client_email" class="form-control" value="<?php echo e(old('client_email', $client?->email ?? $reservation->client_email ?? '')); ?>">
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label class="rd-label">Date de naissance</label>
-                                                        <input type="date" name="client_birth_date" class="form-control" value="{{ old('client_birth_date', optional($client?->birth_date)->format('Y-m-d') ?? optional($reservation->client_birth_date)->format('Y-m-d')) }}">
+                                                        <input type="date" name="client_birth_date" class="form-control" value="<?php echo e(old('client_birth_date', optional($client?->birth_date)->format('Y-m-d') ?? optional($reservation->client_birth_date)->format('Y-m-d'))); ?>">
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label class="rd-label">Type document</label>
-                                                        <input type="text" name="client_document_type" class="form-control" value="{{ old('client_document_type', $client?->document_type ?? $reservation->client_document_type ?? '') }}">
+                                                        <input type="text" name="client_document_type" class="form-control" value="<?php echo e(old('client_document_type', $client?->document_type ?? $reservation->client_document_type ?? '')); ?>">
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label class="rd-label">Numéro document</label>
-                                                        <input type="text" name="client_document_number" class="form-control" value="{{ old('client_document_number', $client?->document_number ?? $reservation->client_document_number ?? '') }}">
+                                                        <input type="text" name="client_document_number" class="form-control" value="<?php echo e(old('client_document_number', $client?->document_number ?? $reservation->client_document_number ?? '')); ?>">
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label class="rd-label">Nationalité</label>
-                                                        <input type="text" name="client_nationality" class="form-control" value="{{ old('client_nationality', $client?->nationality ?? '') }}">
+                                                        <input type="text" name="client_nationality" class="form-control" value="<?php echo e(old('client_nationality', $client?->nationality ?? '')); ?>">
                                                     </div>
                                                     <div class="col-12">
                                                         <label class="rd-label">Adresse</label>
-                                                        <input type="text" name="client_address" class="form-control" value="{{ old('client_address', $client?->address_line_1 ?? $reservation->client?->address_line_1 ?? '') }}">
+                                                        <input type="text" name="client_address" class="form-control" value="<?php echo e(old('client_address', $client?->address_line_1 ?? $reservation->client?->address_line_1 ?? '')); ?>">
                                                     </div>
                                                 </div>
                                             </div>
@@ -919,11 +919,11 @@
                                                     <button type="button" class="rd-btn rd-btn-soft rd-btn-sm" id="btn-add-companion"><i class="bx bx-plus"></i><span>Ajouter accompagnant</span></button>
                                                 </div>
 
-                                                @if(($duplicateCompanions->count() ?? 0) > 0)
+                                                <?php if(($duplicateCompanions->count() ?? 0) > 0): ?>
                                                     <div class="alert alert-info border-0 py-2 px-3 mb-2">
-                                                        {{ $duplicateCompanions->count() }} doublon(s) identiques au client principal ont été détectés et masqués dans la liste des accompagnants.
+                                                        <?php echo e($duplicateCompanions->count()); ?> doublon(s) identiques au client principal ont été détectés et masqués dans la liste des accompagnants.
                                                     </div>
-                                                @endif
+                                                <?php endif; ?>
 
                                                 <div class="table-responsive">
                                                     <table class="table table-bordered align-middle rd-table mb-0" id="companions-table">
@@ -939,61 +939,61 @@
                                                             </tr>
                                                         </thead>
                                                         <tbody id="companions-container">
-                                                            @foreach($companionTravelers as $index => $traveler)
+                                                            <?php $__currentLoopData = $companionTravelers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $traveler): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                                 <tr class="companion-row">
                                                                     <td style="width: 120px;">
-                                                                        <input type="hidden" name="passengers[{{ $index }}][id]" value="{{ $traveler['id'] ?? '' }}">
-                                                                        <input type="hidden" name="passengers[{{ $index }}][traveler_key]" value="{{ $traveler['traveler_key'] ?? ('companion_'.$index) }}">
-                                                                        <select name="passengers[{{ $index }}][type]" class="form-select form-select-sm">
-                                                                            <option value="adult" @selected(($traveler['type'] ?? '') === 'adult')>Adulte</option>
-                                                                            <option value="child" @selected(($traveler['type'] ?? '') === 'child')>Enfant</option>
-                                                                            <option value="infant" @selected(($traveler['type'] ?? '') === 'infant')>Bébé</option>
+                                                                        <input type="hidden" name="passengers[<?php echo e($index); ?>][id]" value="<?php echo e($traveler['id'] ?? ''); ?>">
+                                                                        <input type="hidden" name="passengers[<?php echo e($index); ?>][traveler_key]" value="<?php echo e($traveler['traveler_key'] ?? ('companion_'.$index)); ?>">
+                                                                        <select name="passengers[<?php echo e($index); ?>][type]" class="form-select form-select-sm">
+                                                                            <option value="adult" <?php if(($traveler['type'] ?? '') === 'adult'): echo 'selected'; endif; ?>>Adulte</option>
+                                                                            <option value="child" <?php if(($traveler['type'] ?? '') === 'child'): echo 'selected'; endif; ?>>Enfant</option>
+                                                                            <option value="infant" <?php if(($traveler['type'] ?? '') === 'infant'): echo 'selected'; endif; ?>>Bébé</option>
                                                                         </select>
                                                                     </td>
-                                                                    <td><input type="text" name="passengers[{{ $index }}][first_name]" class="form-control form-control-sm" value="{{ $traveler['first_name'] ?? '' }}"></td>
-                                                                    <td><input type="text" name="passengers[{{ $index }}][last_name]" class="form-control form-control-sm" value="{{ $traveler['last_name'] ?? '' }}"></td>
-                                                                    <td><input type="date" name="passengers[{{ $index }}][birth_date]" class="form-control form-control-sm" value="{{ $traveler['birth_date'] ?? '' }}"></td>
-                                                                    <td><input type="text" name="passengers[{{ $index }}][document_type]" class="form-control form-control-sm" value="{{ $traveler['document_type'] ?? '' }}"></td>
-                                                                    <td><input type="text" name="passengers[{{ $index }}][document_number]" class="form-control form-control-sm" value="{{ $traveler['document_number'] ?? '' }}"></td>
+                                                                    <td><input type="text" name="passengers[<?php echo e($index); ?>][first_name]" class="form-control form-control-sm" value="<?php echo e($traveler['first_name'] ?? ''); ?>"></td>
+                                                                    <td><input type="text" name="passengers[<?php echo e($index); ?>][last_name]" class="form-control form-control-sm" value="<?php echo e($traveler['last_name'] ?? ''); ?>"></td>
+                                                                    <td><input type="date" name="passengers[<?php echo e($index); ?>][birth_date]" class="form-control form-control-sm" value="<?php echo e($traveler['birth_date'] ?? ''); ?>"></td>
+                                                                    <td><input type="text" name="passengers[<?php echo e($index); ?>][document_type]" class="form-control form-control-sm" value="<?php echo e($traveler['document_type'] ?? ''); ?>"></td>
+                                                                    <td><input type="text" name="passengers[<?php echo e($index); ?>][document_number]" class="form-control form-control-sm" value="<?php echo e($traveler['document_number'] ?? ''); ?>"></td>
                                                                     <td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger btn-remove-companion">Supprimer</button></td>
                                                                 </tr>
-                                                            @endforeach
+                                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
-                                                            @for($i = 0; $i < $missingCompanionsCount; $i++)
-                                                                @php($index = $companionTravelers->count() + $i)
+                                                            <?php for($i = 0; $i < $missingCompanionsCount; $i++): ?>
+                                                                <?php ($index = $companionTravelers->count() + $i); ?>
                                                                 <tr class="companion-row is-placeholder">
                                                                     <td style="width: 120px;">
-                                                                        <input type="hidden" name="passengers[{{ $index }}][traveler_key]" value="{{ 'companion_placeholder_'.$index }}">
-                                                                        <select name="passengers[{{ $index }}][type]" class="form-select form-select-sm">
+                                                                        <input type="hidden" name="passengers[<?php echo e($index); ?>][traveler_key]" value="<?php echo e('companion_placeholder_'.$index); ?>">
+                                                                        <select name="passengers[<?php echo e($index); ?>][type]" class="form-select form-select-sm">
                                                                             <option value="adult" selected>Adulte</option>
                                                                             <option value="child">Enfant</option>
                                                                             <option value="infant">Bébé</option>
                                                                         </select>
                                                                     </td>
-                                                                    <td><input type="text" name="passengers[{{ $index }}][first_name]" class="form-control form-control-sm" placeholder="Accompagnant à compléter"></td>
-                                                                    <td><input type="text" name="passengers[{{ $index }}][last_name]" class="form-control form-control-sm"></td>
-                                                                    <td><input type="date" name="passengers[{{ $index }}][birth_date]" class="form-control form-control-sm"></td>
-                                                                    <td><input type="text" name="passengers[{{ $index }}][document_type]" class="form-control form-control-sm"></td>
-                                                                    <td><input type="text" name="passengers[{{ $index }}][document_number]" class="form-control form-control-sm"></td>
+                                                                    <td><input type="text" name="passengers[<?php echo e($index); ?>][first_name]" class="form-control form-control-sm" placeholder="Accompagnant à compléter"></td>
+                                                                    <td><input type="text" name="passengers[<?php echo e($index); ?>][last_name]" class="form-control form-control-sm"></td>
+                                                                    <td><input type="date" name="passengers[<?php echo e($index); ?>][birth_date]" class="form-control form-control-sm"></td>
+                                                                    <td><input type="text" name="passengers[<?php echo e($index); ?>][document_type]" class="form-control form-control-sm"></td>
+                                                                    <td><input type="text" name="passengers[<?php echo e($index); ?>][document_number]" class="form-control form-control-sm"></td>
                                                                     <td class="text-end"><span class="text-muted small">À compléter</span></td>
                                                                 </tr>
-                                                            @endfor
+                                                            <?php endfor; ?>
                                                         </tbody>
                                                     </table>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        @foreach($currentRoomingPayload as $roomIndex => $roomPayload)
-                                            <input type="hidden" name="hotel_rooms[{{ $roomIndex }}][departure_hotel_room_id]" value="{{ $roomPayload['departure_hotel_room_id'] }}">
-                                            <input type="hidden" name="hotel_rooms[{{ $roomIndex }}][tour_hotel_id]" value="{{ $roomPayload['tour_hotel_id'] }}">
-                                            <input type="hidden" name="hotel_rooms[{{ $roomIndex }}][tour_hotel_room_id]" value="{{ $roomPayload['tour_hotel_room_id'] }}">
-                                            <input type="hidden" name="hotel_rooms[{{ $roomIndex }}][room_count]" value="{{ $roomPayload['room_count'] }}">
-                                        @endforeach
+                                        <?php $__currentLoopData = $currentRoomingPayload; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $roomIndex => $roomPayload): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <input type="hidden" name="hotel_rooms[<?php echo e($roomIndex); ?>][departure_hotel_room_id]" value="<?php echo e($roomPayload['departure_hotel_room_id']); ?>">
+                                            <input type="hidden" name="hotel_rooms[<?php echo e($roomIndex); ?>][tour_hotel_id]" value="<?php echo e($roomPayload['tour_hotel_id']); ?>">
+                                            <input type="hidden" name="hotel_rooms[<?php echo e($roomIndex); ?>][tour_hotel_room_id]" value="<?php echo e($roomPayload['tour_hotel_room_id']); ?>">
+                                            <input type="hidden" name="hotel_rooms[<?php echo e($roomIndex); ?>][room_count]" value="<?php echo e($roomPayload['room_count']); ?>">
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </form>
-                                @else
+                                <?php else: ?>
                                     <div class="rd-empty">Vous n'avez pas l'autorisation de modifier ce dossier.</div>
-                                @endcan
+                                <?php endif; ?>
                             </div>
                         </section>
                     </div>
@@ -1010,33 +1010,33 @@
                                 <button class="rd-btn rd-btn-primary rd-btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#payment-form-collapse"><i class="bx bx-wallet"></i><span>Ajouter paiement</span></button>
                             </div>
                             <div class="rd-panel-body">
-                                @if($paymentRows->isNotEmpty())
+                                <?php if($paymentRows->isNotEmpty()): ?>
                                     <div class="table-responsive mb-3">
                                         <table class="table table-hover align-middle rd-table mb-0">
                                             <thead>
                                                 <tr><th>Date</th><th>Mode</th><th>Référence</th><th>Justificatif</th><th class="text-end">Montant</th></tr>
                                             </thead>
                                             <tbody>
-                                                @foreach($paymentRows as $payment)
+                                                <?php $__currentLoopData = $paymentRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $payment): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                     <tr>
-                                                        <td>{{ optional($payment->payment_date ?? $payment->created_at)->format('d/m/Y') ?? '-' }}</td>
-                                                        <td>{{ $payment->payment_method ?? '-' }}</td>
-                                                        <td>{{ $payment->reference ?? '-' }}</td>
-                                                        <td>{{ $payment->proof_file ?? '-' }}</td>
-                                                        <td class="text-end fw-bold">{{ number_format((float) ($payment->amount ?? 0), 2, ',', ' ') }} DH</td>
+                                                        <td><?php echo e(optional($payment->payment_date ?? $payment->created_at)->format('d/m/Y') ?? '-'); ?></td>
+                                                        <td><?php echo e($payment->payment_method ?? '-'); ?></td>
+                                                        <td><?php echo e($payment->reference ?? '-'); ?></td>
+                                                        <td><?php echo e($payment->proof_file ?? '-'); ?></td>
+                                                        <td class="text-end fw-bold"><?php echo e(number_format((float) ($payment->amount ?? 0), 2, ',', ' ')); ?> DH</td>
                                                     </tr>
-                                                @endforeach
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </tbody>
                                         </table>
                                     </div>
-                                @else
+                                <?php else: ?>
                                     <div class="rd-empty mb-3">Aucun paiement enregistré pour ce dossier.</div>
-                                @endif
+                                <?php endif; ?>
 
                                 <div class="collapse" id="payment-form-collapse">
-                                    <form action="{{ route('admin.reservations.payments.store', $reservation) }}" method="POST" enctype="multipart/form-data" class="row g-3 pt-2 border-top">
-                                        @csrf
-                                        <div class="col-md-3"><label class="rd-label">Date paiement</label><input type="date" name="payment_date" class="form-control" value="{{ now()->toDateString() }}" required></div>
+                                    <form action="<?php echo e(route('admin.reservations.payments.store', $reservation)); ?>" method="POST" enctype="multipart/form-data" class="row g-3 pt-2 border-top">
+                                        <?php echo csrf_field(); ?>
+                                        <div class="col-md-3"><label class="rd-label">Date paiement</label><input type="date" name="payment_date" class="form-control" value="<?php echo e(now()->toDateString()); ?>" required></div>
                                         <div class="col-md-3"><label class="rd-label">Mode paiement</label><select name="payment_method" class="form-select" required><option value="ESPECE">Espèce</option><option value="VIREMENT">Virement</option><option value="CASHPLUS">Cash Plus</option><option value="CARTE">Carte</option><option value="AUTRE">Autre</option></select></div>
                                         <div class="col-md-2"><label class="rd-label">Montant payé</label><input type="number" step="0.01" min="0.01" name="amount" class="form-control" required></div>
                                         <div class="col-md-2"><label class="rd-label">Référence</label><input type="text" name="reference" class="form-control"></div>
@@ -1057,33 +1057,33 @@
                                 <button class="rd-btn rd-btn-primary rd-btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#document-form-collapse"><i class="bx bx-file"></i><span>Ajouter document</span></button>
                             </div>
                             <div class="rd-panel-body">
-                                @if($documentRows->isNotEmpty())
+                                <?php if($documentRows->isNotEmpty()): ?>
                                     <div class="table-responsive mb-3">
                                         <table class="table table-hover align-middle rd-table mb-0">
                                             <thead><tr><th>Type</th><th>Titre</th><th>Date</th><th class="text-end">Action</th></tr></thead>
                                             <tbody>
-                                                @foreach($documentRows as $document)
+                                                <?php $__currentLoopData = $documentRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $document): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                     <tr>
-                                                        <td>{{ ucfirst(str_replace('_', ' ', (string) $document->type)) }}</td>
-                                                        <td>{{ $document->title }}</td>
-                                                        <td>{{ optional($document->created_at)->format('d/m/Y H:i') ?? '-' }}</td>
+                                                        <td><?php echo e(ucfirst(str_replace('_', ' ', (string) $document->type))); ?></td>
+                                                        <td><?php echo e($document->title); ?></td>
+                                                        <td><?php echo e(optional($document->created_at)->format('d/m/Y H:i') ?? '-'); ?></td>
                                                         <td class="text-end">
-                                                            @if($documentUrl($document))
-                                                                <a href="{{ $documentUrl($document) }}" target="_blank" rel="noopener" class="rd-btn rd-btn-soft rd-btn-sm"><i class="bx bx-download"></i><span>Ouvrir</span></a>
-                                                            @endif
+                                                            <?php if($documentUrl($document)): ?>
+                                                                <a href="<?php echo e($documentUrl($document)); ?>" target="_blank" rel="noopener" class="rd-btn rd-btn-soft rd-btn-sm"><i class="bx bx-download"></i><span>Ouvrir</span></a>
+                                                            <?php endif; ?>
                                                         </td>
                                                     </tr>
-                                                @endforeach
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </tbody>
                                         </table>
                                     </div>
-                                @else
+                                <?php else: ?>
                                     <div class="rd-empty mb-3">Aucun document chargé pour ce dossier.</div>
-                                @endif
+                                <?php endif; ?>
 
                                 <div class="collapse" id="document-form-collapse">
-                                    <form action="{{ route('admin.reservations.documents.store', $reservation) }}" method="POST" enctype="multipart/form-data" class="row g-3 pt-2 border-top">
-                                        @csrf
+                                    <form action="<?php echo e(route('admin.reservations.documents.store', $reservation)); ?>" method="POST" enctype="multipart/form-data" class="row g-3 pt-2 border-top">
+                                        <?php echo csrf_field(); ?>
                                         <div class="col-md-4">
                                             <label class="rd-label">Type</label>
                                             <select name="type" class="form-select" required>
@@ -1113,7 +1113,7 @@
                                 <h2 class="rd-panel-title">Voyageurs</h2>
                                 <p class="rd-panel-subtitle">Client principal et accompagnants, affichés ligne par ligne.</p>
                             </div>
-                            <span class="rd-pill is-completed">{{ $travelersCount }} voyageurs</span>
+                            <span class="rd-pill is-completed"><?php echo e($travelersCount); ?> voyageurs</span>
                         </div>
                         <div class="rd-panel-body">
                             <div class="table-responsive">
@@ -1124,26 +1124,26 @@
                                     <tbody>
                                         <tr>
                                             <td>Principal</td>
-                                            <td>{{ $client?->first_name ?? $reservation->client_first_name ?? '-' }}</td>
-                                            <td>{{ $client?->last_name ?? $reservation->client_last_name ?? '-' }}</td>
-                                            <td>{{ optional($client?->birth_date)->format('d/m/Y') ?? optional($reservation->client_birth_date)->format('d/m/Y') ?? '-' }}</td>
-                                            <td>{{ $client?->document_type ?? $reservation->client_document_type ?? '-' }}</td>
-                                            <td>{{ $client?->document_number ?? $reservation->client_document_number ?? '-' }}</td>
+                                            <td><?php echo e($client?->first_name ?? $reservation->client_first_name ?? '-'); ?></td>
+                                            <td><?php echo e($client?->last_name ?? $reservation->client_last_name ?? '-'); ?></td>
+                                            <td><?php echo e(optional($client?->birth_date)->format('d/m/Y') ?? optional($reservation->client_birth_date)->format('d/m/Y') ?? '-'); ?></td>
+                                            <td><?php echo e($client?->document_type ?? $reservation->client_document_type ?? '-'); ?></td>
+                                            <td><?php echo e($client?->document_number ?? $reservation->client_document_number ?? '-'); ?></td>
                                             <td class="text-end"><span class="rd-pill is-completed">Client principal</span></td>
                                         </tr>
-                                        @foreach($companionTravelers as $traveler)
+                                        <?php $__currentLoopData = $companionTravelers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $traveler): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                             <tr>
-                                                <td>{{ ucfirst((string) ($traveler['type'] ?? 'adult')) }}</td>
-                                                <td>{{ $traveler['first_name'] ?? '-' }}</td>
-                                                <td>{{ $traveler['last_name'] ?? '-' }}</td>
-                                                <td>{{ ! empty($traveler['birth_date']) ? \Illuminate\Support\Carbon::parse($traveler['birth_date'])->format('d/m/Y') : '-' }}</td>
-                                                <td>{{ $traveler['document_type'] ?? '-' }}</td>
-                                                <td>{{ $traveler['document_number'] ?? '-' }}</td>
+                                                <td><?php echo e(ucfirst((string) ($traveler['type'] ?? 'adult'))); ?></td>
+                                                <td><?php echo e($traveler['first_name'] ?? '-'); ?></td>
+                                                <td><?php echo e($traveler['last_name'] ?? '-'); ?></td>
+                                                <td><?php echo e(! empty($traveler['birth_date']) ? \Illuminate\Support\Carbon::parse($traveler['birth_date'])->format('d/m/Y') : '-'); ?></td>
+                                                <td><?php echo e($traveler['document_type'] ?? '-'); ?></td>
+                                                <td><?php echo e($traveler['document_number'] ?? '-'); ?></td>
                                                 <td class="text-end"><span class="text-muted small">-</span></td>
                                             </tr>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
-                                        @for($i = 0; $i < $missingCompanionsCount; $i++)
+                                        <?php for($i = 0; $i < $missingCompanionsCount; $i++): ?>
                                             <tr>
                                                 <td>Adulte</td>
                                                 <td colspan="2"><span class="text-muted">Accompagnant à compléter</span></td>
@@ -1152,11 +1152,11 @@
                                                 <td>-</td>
                                                 <td class="text-end"><span class="text-muted small">-</span></td>
                                             </tr>
-                                        @endfor
+                                        <?php endfor; ?>
 
-                                        @if(($companionTravelers->isEmpty() ?? true) && $missingCompanionsCount === 0)
+                                        <?php if(($companionTravelers->isEmpty() ?? true) && $missingCompanionsCount === 0): ?>
                                             <tr><td colspan="7"><div class="rd-empty">Aucun accompagnant enregistré.</div></td></tr>
-                                        @endif
+                                        <?php endif; ?>
                                     </tbody>
                                 </table>
                             </div>
@@ -1172,16 +1172,16 @@
                                 <p class="rd-panel-subtitle">Chambres réelles seulement, sans blocs vides ni debug en production.</p>
                             </div>
                             <div class="d-flex gap-2 flex-wrap">
-                                <span class="rd-pill is-completed">{{ $assignedBedCount }}/{{ $requiredBedCount }} affectés</span>
-                                <span class="rd-pill {{ $roomCoverageIncomplete ? 'is-pending' : 'is-paid' }}">{{ $selectedRoomCount }} chambres sélectionnées</span>
+                                <span class="rd-pill is-completed"><?php echo e($assignedBedCount); ?>/<?php echo e($requiredBedCount); ?> affectés</span>
+                                <span class="rd-pill <?php echo e($roomCoverageIncomplete ? 'is-pending' : 'is-paid'); ?>"><?php echo e($selectedRoomCount); ?> chambres sélectionnées</span>
                             </div>
                         </div>
                         <div class="rd-panel-body">
-                            @if($roomCoverageIncomplete)
-                                <div class="alert alert-warning border-0 mb-3">Affectation chambre incomplète : {{ $assignedBedCount }}/{{ $requiredBedCount }} voyageurs affectés.</div>
-                            @endif
+                            <?php if($roomCoverageIncomplete): ?>
+                                <div class="alert alert-warning border-0 mb-3">Affectation chambre incomplète : <?php echo e($assignedBedCount); ?>/<?php echo e($requiredBedCount); ?> voyageurs affectés.</div>
+                            <?php endif; ?>
 
-                            @if(($allocations->count() ?? 0) > 0)
+                            <?php if(($allocations->count() ?? 0) > 0): ?>
                                 <div class="table-responsive mb-3">
                                     <table class="table table-sm align-middle rd-table mb-0">
                                         <thead>
@@ -1192,39 +1192,40 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach($allocations as $allocation)
-                                                @php($travs = $allocation->travelers ?? collect())
+                                            <?php $__currentLoopData = $allocations; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $allocation): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <?php ($travs = $allocation->travelers ?? collect()); ?>
                                                 <tr>
-                                                    <td>{{ $allocation->room_type ?? 'Chambre' }}</td>
-                                                    <td class="text-center">{{ (int) ($allocation->capacity ?? 0) }}</td>
+                                                    <td><?php echo e($allocation->room_type ?? 'Chambre'); ?></td>
+                                                    <td class="text-center"><?php echo e((int) ($allocation->capacity ?? 0)); ?></td>
                                                     <td>
-                                                        @if($travs->isNotEmpty())
-                                                            {{ $travs->map(fn ($p) => trim(($p->first_name ?? '').' '.($p->last_name ?? '')) ?: 'Voyageur')->implode(', ') }}
-                                                        @else
+                                                        <?php if($travs->isNotEmpty()): ?>
+                                                            <?php echo e($travs->map(fn ($p) => trim(($p->first_name ?? '').' '.($p->last_name ?? '')) ?: 'Voyageur')->implode(', ')); ?>
+
+                                                        <?php else: ?>
                                                             <span class="text-muted">Aucun voyageur affecté</span>
-                                                        @endif
+                                                        <?php endif; ?>
                                                     </td>
                                                 </tr>
-                                            @endforeach
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                         </tbody>
                                     </table>
                                 </div>
-                            @else
+                            <?php else: ?>
                                 <div class="alert alert-secondary border-0 mb-3">
                                     Aucun voyageur n’est encore affecté à une chambre. Sélectionnez vos chambres ci-dessous, puis affectez les voyageurs (fonction à compléter si nécessaire).
                                 </div>
-                            @endif
+                            <?php endif; ?>
 
-                            @if($roomAllocationRows->isEmpty())
+                            <?php if($roomAllocationRows->isEmpty()): ?>
                                 <div class="rd-empty">Aucune chambre disponible/configurée pour ce départ.</div>
-                            @else
+                            <?php else: ?>
                                 <div class="row g-3">
-                                    @foreach($roomAllocationRows as $hotelName => $hotelRows)
+                                    <?php $__currentLoopData = $roomAllocationRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $hotelName => $hotelRows): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <div class="col-12">
                                             <div class="card border-0 shadow-sm">
                                                 <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                                    <strong>{{ $hotelName }}</strong>
-                                                    <span class="rd-pill is-completed">{{ $hotelRows->count() }} ligne{{ $hotelRows->count() > 1 ? 's' : '' }}</span>
+                                                    <strong><?php echo e($hotelName); ?></strong>
+                                                    <span class="rd-pill is-completed"><?php echo e($hotelRows->count()); ?> ligne<?php echo e($hotelRows->count() > 1 ? 's' : ''); ?></span>
                                                 </div>
                                                 <div class="card-body p-0">
                                                     <div class="table-responsive">
@@ -1233,32 +1234,32 @@
                                                                 <tr><th>Type chambre</th><th class="text-center">Places dispo</th><th class="text-center">Chambres dispo</th><th class="text-center">Capacité</th><th class="text-end">Supplément</th><th class="text-end">Sous-total</th></tr>
                                                             </thead>
                                                             <tbody>
-                                                                @foreach($hotelRows as $roomRow)
+                                                                <?php $__currentLoopData = $hotelRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $roomRow): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                                     <tr>
-                                                                        <td>{{ $roomRow['room_type'] }}{{ $roomRow['room_label'] ? ' - '.$roomRow['room_label'] : '' }}</td>
-                                                                        <td class="text-center">{{ $roomRow['capacity'] > 0 ? $roomRow['capacity'].' pers.' : '-' }}</td>
-                                                                        <td class="text-center">{{ $roomRow['room_count'] }}</td>
-                                                                        <td class="text-center">{{ $roomRow['capacity'] > 0 ? $roomRow['capacity'].' pers.' : '-' }}</td>
-                                                                        <td class="text-end">{{ $roomRow['supplement'] > 0 ? number_format((float) $roomRow['supplement'], 2, ',', ' ').' DH' : '-' }}</td>
-                                                                        <td class="text-end fw-bold">{{ $roomRow['subtotal'] > 0 ? number_format((float) $roomRow['subtotal'], 2, ',', ' ').' DH' : '-' }}</td>
+                                                                        <td><?php echo e($roomRow['room_type']); ?><?php echo e($roomRow['room_label'] ? ' - '.$roomRow['room_label'] : ''); ?></td>
+                                                                        <td class="text-center"><?php echo e($roomRow['capacity'] > 0 ? $roomRow['capacity'].' pers.' : '-'); ?></td>
+                                                                        <td class="text-center"><?php echo e($roomRow['room_count']); ?></td>
+                                                                        <td class="text-center"><?php echo e($roomRow['capacity'] > 0 ? $roomRow['capacity'].' pers.' : '-'); ?></td>
+                                                                        <td class="text-end"><?php echo e($roomRow['supplement'] > 0 ? number_format((float) $roomRow['supplement'], 2, ',', ' ').' DH' : '-'); ?></td>
+                                                                        <td class="text-end fw-bold"><?php echo e($roomRow['subtotal'] > 0 ? number_format((float) $roomRow['subtotal'], 2, ',', ' ').' DH' : '-'); ?></td>
                                                                     </tr>
-                                                                @endforeach
+                                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                             </tbody>
                                                         </table>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </div>
-                            @endif
+                            <?php endif; ?>
 
-                            @if(config('app.debug'))
+                            <?php if(config('app.debug')): ?>
                                 <details class="mt-3">
                                     <summary class="rd-label mb-2">Debug technique chambres</summary>
-                                    <pre class="small mb-0">@json($roomAllocationRows, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)</pre>
+                                    <pre class="small mb-0"><?php echo json_encode($roomAllocationRows, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE, 512) ?></pre>
                                 </details>
-                            @endif
+                            <?php endif; ?>
                         </div>
                     </section>
                 </div>
@@ -1270,59 +1271,59 @@
                                 <h2 class="rd-panel-title">Visa / Reçu</h2>
                                 <p class="rd-panel-subtitle">Section réduite si le voyage ne nécessite pas de visa.</p>
                             </div>
-                            @if(! $visaRequired)
+                            <?php if(! $visaRequired): ?>
                                 <span class="rd-pill is-paid">Visa non requis</span>
-                            @endif
+                            <?php endif; ?>
                         </div>
                         <div class="rd-panel-body">
                             <div class="row g-3 mb-3">
                                 <div class="col-md-6">
-                                    <div class="rd-mini-card h-100"><span>Reçu principal</span><strong>{{ $paymentReceiptName ?: 'Aucun fichier' }}</strong></div>
+                                    <div class="rd-mini-card h-100"><span>Reçu principal</span><strong><?php echo e($paymentReceiptName ?: 'Aucun fichier'); ?></strong></div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="rd-mini-card h-100"><span>Document visa</span><strong>{{ $visaDocumentName ?: 'Aucun fichier' }}</strong></div>
+                                    <div class="rd-mini-card h-100"><span>Document visa</span><strong><?php echo e($visaDocumentName ?: 'Aucun fichier'); ?></strong></div>
                                 </div>
                             </div>
 
-                            @if($visaRequired)
-                                @can('reservations.update')
-                                    <form action="{{ route('admin.reservations.update', $reservation) }}" method="POST" enctype="multipart/form-data" class="row g-3">
-                                        @csrf
-                                        @method('PUT')
-                                        <input type="hidden" name="tour_id" value="{{ $currentTourId }}">
-                                        <input type="hidden" name="departure_id" value="{{ $currentDepartureId }}">
-                                        <input type="hidden" name="travel_date_id" value="{{ $currentTravelDateId }}">
+                            <?php if($visaRequired): ?>
+                                <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('reservations.update')): ?>
+                                    <form action="<?php echo e(route('admin.reservations.update', $reservation)); ?>" method="POST" enctype="multipart/form-data" class="row g-3">
+                                        <?php echo csrf_field(); ?>
+                                        <?php echo method_field('PUT'); ?>
+                                        <input type="hidden" name="tour_id" value="<?php echo e($currentTourId); ?>">
+                                        <input type="hidden" name="departure_id" value="<?php echo e($currentDepartureId); ?>">
+                                        <input type="hidden" name="travel_date_id" value="<?php echo e($currentTravelDateId); ?>">
                                         <input type="hidden" name="client_mode" value="new">
-                                        <input type="hidden" name="client_first_name" value="{{ $client?->first_name ?? $reservation->client_first_name ?? '' }}">
-                                        <input type="hidden" name="client_last_name" value="{{ $client?->last_name ?? $reservation->client_last_name ?? '' }}">
-                                        <input type="hidden" name="client_phone" value="{{ $client?->phone ?? $reservation->client_phone ?? '' }}">
-                                        <input type="hidden" name="client_email" value="{{ $client?->email ?? $reservation->client_email ?? '' }}">
-                                        <input type="hidden" name="client_document_type" value="{{ $client?->document_type ?? $reservation->client_document_type ?? '' }}">
-                                        <input type="hidden" name="client_document_number" value="{{ $client?->document_number ?? $reservation->client_document_number ?? '' }}">
-                                        <input type="hidden" name="client_birth_date" value="{{ optional($client?->birth_date)->format('Y-m-d') ?? optional($reservation->client_birth_date)->format('Y-m-d') }}">
-                                        <input type="hidden" name="client_nationality" value="{{ $client?->nationality ?? '' }}">
-                                        <input type="hidden" name="client_address" value="{{ $client?->address_line_1 ?? '' }}">
-                                        <input type="hidden" name="payment_type" value="{{ $reservation->payment_type ?? '' }}">
+                                        <input type="hidden" name="client_first_name" value="<?php echo e($client?->first_name ?? $reservation->client_first_name ?? ''); ?>">
+                                        <input type="hidden" name="client_last_name" value="<?php echo e($client?->last_name ?? $reservation->client_last_name ?? ''); ?>">
+                                        <input type="hidden" name="client_phone" value="<?php echo e($client?->phone ?? $reservation->client_phone ?? ''); ?>">
+                                        <input type="hidden" name="client_email" value="<?php echo e($client?->email ?? $reservation->client_email ?? ''); ?>">
+                                        <input type="hidden" name="client_document_type" value="<?php echo e($client?->document_type ?? $reservation->client_document_type ?? ''); ?>">
+                                        <input type="hidden" name="client_document_number" value="<?php echo e($client?->document_number ?? $reservation->client_document_number ?? ''); ?>">
+                                        <input type="hidden" name="client_birth_date" value="<?php echo e(optional($client?->birth_date)->format('Y-m-d') ?? optional($reservation->client_birth_date)->format('Y-m-d')); ?>">
+                                        <input type="hidden" name="client_nationality" value="<?php echo e($client?->nationality ?? ''); ?>">
+                                        <input type="hidden" name="client_address" value="<?php echo e($client?->address_line_1 ?? ''); ?>">
+                                        <input type="hidden" name="payment_type" value="<?php echo e($reservation->payment_type ?? ''); ?>">
                                         <input type="hidden" name="client_traveler_type" value="adult">
                                         <input type="hidden" name="accommodation_mode" value="rooms">
-                                        <input type="hidden" name="extras_json" value='@json($currentExtrasPayload, JSON_UNESCAPED_UNICODE)'>
-                                        @foreach($currentRoomingPayload as $roomIndex => $roomPayload)
-                                            <input type="hidden" name="hotel_rooms[{{ $roomIndex }}][departure_hotel_room_id]" value="{{ $roomPayload['departure_hotel_room_id'] }}">
-                                            <input type="hidden" name="hotel_rooms[{{ $roomIndex }}][tour_hotel_id]" value="{{ $roomPayload['tour_hotel_id'] }}">
-                                            <input type="hidden" name="hotel_rooms[{{ $roomIndex }}][tour_hotel_room_id]" value="{{ $roomPayload['tour_hotel_room_id'] }}">
-                                            <input type="hidden" name="hotel_rooms[{{ $roomIndex }}][room_count]" value="{{ $roomPayload['room_count'] }}">
-                                        @endforeach
+                                        <input type="hidden" name="extras_json" value='<?php echo json_encode($currentExtrasPayload, JSON_UNESCAPED_UNICODE, 512) ?>'>
+                                        <?php $__currentLoopData = $currentRoomingPayload; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $roomIndex => $roomPayload): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <input type="hidden" name="hotel_rooms[<?php echo e($roomIndex); ?>][departure_hotel_room_id]" value="<?php echo e($roomPayload['departure_hotel_room_id']); ?>">
+                                            <input type="hidden" name="hotel_rooms[<?php echo e($roomIndex); ?>][tour_hotel_id]" value="<?php echo e($roomPayload['tour_hotel_id']); ?>">
+                                            <input type="hidden" name="hotel_rooms[<?php echo e($roomIndex); ?>][tour_hotel_room_id]" value="<?php echo e($roomPayload['tour_hotel_room_id']); ?>">
+                                            <input type="hidden" name="hotel_rooms[<?php echo e($roomIndex); ?>][room_count]" value="<?php echo e($roomPayload['room_count']); ?>">
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
                                         <div class="col-md-6"><label class="rd-label">Remplacer reçu principal</label><input type="file" name="payment_receipt" class="form-control" accept="image/*,.pdf"></div>
                                         <div class="col-md-6"><label class="rd-label">Remplacer document visa</label><input type="file" name="visa_document" class="form-control" accept="image/*,.pdf"></div>
-                                        <div class="col-md-3"><label class="rd-label">Visa OK</label><input type="hidden" name="visa_ok" value="0"><div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="visa_ok" id="visa_ok" value="1" {{ old('visa_ok', $reservation->visa_ok ?? true) ? 'checked' : '' }}><label class="form-check-label" for="visa_ok">Visa OK</label></div></div>
-                                        <div class="col-md-9"><label class="rd-label">Notes visa</label><textarea name="visa_notes" class="form-control" rows="3">{{ old('visa_notes', $reservation->visa_notes) }}</textarea></div>
+                                        <div class="col-md-3"><label class="rd-label">Visa OK</label><input type="hidden" name="visa_ok" value="0"><div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="visa_ok" id="visa_ok" value="1" <?php echo e(old('visa_ok', $reservation->visa_ok ?? true) ? 'checked' : ''); ?>><label class="form-check-label" for="visa_ok">Visa OK</label></div></div>
+                                        <div class="col-md-9"><label class="rd-label">Notes visa</label><textarea name="visa_notes" class="form-control" rows="3"><?php echo e(old('visa_notes', $reservation->visa_notes)); ?></textarea></div>
                                         <div class="col-12 text-end"><button type="submit" class="rd-btn rd-btn-primary rd-btn-sm"><i class="bx bx-save"></i><span>Enregistrer la zone visa</span></button></div>
                                     </form>
-                                @endcan
-                            @else
+                                <?php endif; ?>
+                            <?php else: ?>
                                 <div class="rd-empty">Le voyage ne nécessite pas de visa. La section reste réduite.</div>
-                            @endif
+                            <?php endif; ?>
                         </div>
                     </section>
                 </div>
@@ -1336,44 +1337,44 @@
                             </div>
                         </div>
                         <div class="rd-panel-body">
-                            @if($historyRows->isNotEmpty())
+                            <?php if($historyRows->isNotEmpty()): ?>
                                 <div class="list-group list-group-flush">
-                                    @foreach($historyRows as $history)
-                                        @php($timeline = $historyMeta($history))
+                                    <?php $__currentLoopData = $historyRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $history): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php ($timeline = $historyMeta($history)); ?>
                                         <div class="list-group-item px-0 border-0 border-bottom">
                                             <div class="d-flex justify-content-between gap-3 flex-wrap">
                                                 <div>
-                                                    <div class="fw-bold text-dark">{{ $timeline['label'] }}</div>
-                                                    @if($timeline['details'] !== '')
-                                                        <div class="small text-muted mt-1">{{ $timeline['details'] }}</div>
-                                                    @endif
+                                                    <div class="fw-bold text-dark"><?php echo e($timeline['label']); ?></div>
+                                                    <?php if($timeline['details'] !== ''): ?>
+                                                        <div class="small text-muted mt-1"><?php echo e($timeline['details']); ?></div>
+                                                    <?php endif; ?>
                                                 </div>
                                                 <div class="text-end small text-muted">
-                                                    <div>{{ optional($history->created_at)->format('d/m/Y H:i') ?? '-' }}</div>
-                                                    <div>{{ $history->user?->name ?? 'Système' }}</div>
+                                                    <div><?php echo e(optional($history->created_at)->format('d/m/Y H:i') ?? '-'); ?></div>
+                                                    <div><?php echo e($history->user?->name ?? 'Système'); ?></div>
                                                 </div>
                                             </div>
                                         </div>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </div>
-                            @else
+                            <?php else: ?>
                                 <div class="rd-empty">Aucun historique disponible pour ce dossier.</div>
-                            @endif
+                            <?php endif; ?>
                         </div>
                     </section>
                 </div>
             </div>
 
             <div class="rd-sticky-actions">
-                <a href="{{ $backUrl ?? route('admin.reservation-dossiers.index') }}" class="btn btn-outline-secondary btn-sm">Retour liste</a>
-                @can('reservations.update')
+                <a href="<?php echo e($backUrl ?? route('admin.reservation-dossiers.index')); ?>" class="btn btn-outline-secondary btn-sm">Retour liste</a>
+                <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('reservations.update')): ?>
                     <button type="submit" form="dossier-update-form" class="btn btn-primary btn-sm" id="rd-save-button">Enregistrer les modifications</button>
-                @endcan
+                <?php endif; ?>
             </div>
         </div>
     </div>
 
-    @push('scripts')
+    <?php $__env->startPush('scripts'); ?>
         <script>
             // Ensure dossier page compact styles are applied even if the layout
             // doesn't add the class on <body>.
@@ -1443,6 +1444,8 @@
                 });
             })();
         </script>
-    @endpush
-@endsection
+    <?php $__env->stopPush(); ?>
+<?php $__env->stopSection(); ?>
 
+
+<?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\reservation-dossiers\show.blade.php ENDPATH**/ ?>
