@@ -1063,8 +1063,6 @@
     background: #dcfce7;
     color: #166534;
 }
-    line-height: 1;
-}
 
 .reservation-create__search-selected-clear:hover {
     background: #bae6fd;
@@ -1096,4 +1094,67 @@
 .reservation-create__step-errors:empty,
 .reservation-create__step-errors[hidden] {
     display: none;
+}
+
+/* === FIX: Layout robustness for reservation create === */
+.reservation-create {
+    width: 100% !important;
+    max-width: 1480px !important;
+    margin: 0 auto !important;
+    padding: 1.5rem 1rem 3rem !important;
+    box-sizing: border-box !important;
+}
+
+.reservation-create__layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 1.5rem !important;
+    align-items: start !important;
+    width: 100% !important;
+}
+
+.reservation-create__sidebar {
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+.reservation-create__main {
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+.reservation-create__panel.is-active {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.reservation-create__card,
+.reservation-create__steps-card,
+.reservation-create__summary-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+@media (min-width: 992px) {
+    .reservation-create__layout {
+        grid-template-columns: 300px minmax(0, 1fr) !important;
+    }
+
+    .reservation-create__sidebar {
+        position: sticky !important;
+        top: 1.5rem !important;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .reservation-create__layout {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .reservation-create__sidebar {
+        position: static !important;
+        order: -1 !important;
+    }
 }
