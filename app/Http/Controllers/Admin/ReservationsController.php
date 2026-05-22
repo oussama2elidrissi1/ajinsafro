@@ -352,8 +352,16 @@ class ReservationsController extends Controller
             if ($selectedTravelDate && $requestedTourId > 0) {
                 $voyageForTour = Voyage::find($requestedTourId);
                 if (! $voyageForTour || (int) $selectedTravelDate->travel_id !== (int) $voyageForTour->wp_post_id) {
-                    $selectedTravelDate = null;
-                    $travelDateIncoherent = true;
+                    $voyageFromTravelDate = Voyage::query()
+                        ->where('wp_post_id', (int) $selectedTravelDate->travel_id)
+                        ->first();
+
+                    if ($voyageFromTravelDate) {
+                        $requestedTourId = (int) $voyageFromTravelDate->id;
+                    } else {
+                        $selectedTravelDate = null;
+                        $travelDateIncoherent = true;
+                    }
                 }
             }
         }
@@ -362,7 +370,7 @@ class ReservationsController extends Controller
         if ($requestedDepartureId > 0) {
             $selectedDeparture = Departure::query()->find($requestedDepartureId);
             if ($selectedDeparture && $requestedTourId > 0 && (int) $selectedDeparture->voyage_id !== $requestedTourId) {
-                $selectedDeparture = null;
+                $requestedTourId = (int) $selectedDeparture->voyage_id;
             }
         }
         if (! $selectedDeparture && $requestedTourId > 0 && $travelDateId > 0) {
@@ -370,6 +378,15 @@ class ReservationsController extends Controller
                 ->where('voyage_id', $requestedTourId)
                 ->where('wp_travel_date_id', $travelDateId)
                 ->first();
+        }
+
+        if ($requestedTourId > 0 && $voyages->where('id', $requestedTourId)->isEmpty()) {
+            $requestedVoyage = Voyage::query()
+                ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
+                ->find($requestedTourId);
+            if ($requestedVoyage) {
+                $voyages = $voyages->prepend($requestedVoyage)->unique('id')->values();
+            }
         }
 
         if (config('app.debug')) {

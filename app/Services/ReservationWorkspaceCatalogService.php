@@ -2322,6 +2322,7 @@ class ReservationWorkspaceCatalogService
 
             $reserveUrl = $laravelId ? route('admin.reservations.create', array_filter([
                 'tour_id' => $laravelId,
+                'departure_id' => $departureId,
                 'travel_date_id' => $tid,
             ], fn ($v) => $v !== null && $v !== '')) : null;
 

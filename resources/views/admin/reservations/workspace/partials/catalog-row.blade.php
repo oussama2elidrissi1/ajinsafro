@@ -3,6 +3,7 @@
     $wpPostId = $row['wp_post_id'] ?? null;
     $q = $hasLaravel ? array_filter([
         'voyage_id' => $row['voyage_id'],
+        'departure_id' => $row['departure_id'] ?? null,
         'travel_date_id' => $row['travel_date_id'] ?? null,
     ], fn ($value) => $value !== null && $value !== '') : [];
     $reserveUrl = $hasLaravel ? route('admin.reservations.create', $q) : '#';
