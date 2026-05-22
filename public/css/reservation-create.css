@@ -1144,7 +1144,6 @@
     margin: 0 !important;
 }
 
-.reservation-create__panel,
 .reservation-create__panel.is-active {
     display: block !important;
     width: 100% !important;

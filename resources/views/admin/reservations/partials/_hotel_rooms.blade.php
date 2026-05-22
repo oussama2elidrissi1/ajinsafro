@@ -45,7 +45,7 @@
                         <button type="button" class="btn btn-sm btn-outline-primary" id="btn-toggle-departure">Modifier</button>
                     </div>
                     <select class="form-select" id="reservation-departure-select" disabled>
-                        <option value="">�?" Choisir un départ �?"</option>
+                        <option value="">— Choisir un départ —</option>
                     </select>
                     <input type="hidden" name="departure_id" id="input-departure-id" value="{{ $initialDepartureId }}">
                     <input type="hidden" name="travel_date_id" id="input-travel-date-id" value="{{ $initialTravelDateId }}">
@@ -880,7 +880,7 @@
     function loadDeparturesForTour(tourId, selectedDepartureId) {
         if (!departureSelect) return;
 
-        departureSelect.innerHTML = '<option value="">�?" Choisir un départ �?"</option>';
+        departureSelect.innerHTML = '<option value="">— Choisir un départ —</option>';
         if (!tourId) {
             if (roomsContainer) {
                 roomsContainer.innerHTML = '<p class="text-muted mb-0" id="reservation-hotel-placeholder">Sélectionnez un voyage puis un départ pour charger les chambres du dossier.</p>';
@@ -949,7 +949,7 @@
             })
             .catch(function (error) {
                 console.error('[HotelRooms] loadDeparturesForTour failed', error);
-                departureSelect.innerHTML = '<option value="">�?" Erreur de chargement �?"</option>';
+                departureSelect.innerHTML = '<option value="">— Erreur de chargement —</option>';
                 var wrapper = departureSelect.closest('.col-md-6') || departureSelect.parentElement;
                 if (wrapper && !wrapper.querySelector('.departure-load-error')) {
                     var errDiv = document.createElement('div');
@@ -1057,7 +1057,9 @@
         });
 
         if (tourSelect.value) {
-            loadDeparturesForTour(tourSelect.value, '{{ $initialDepartureId }}');
+            var initialDepFromHidden = inputDepartureId && inputDepartureId.value ? String(inputDepartureId.value) : '';
+            var initialDepFromServer = '{{ $initialDepartureId }}';
+            loadDeparturesForTour(tourSelect.value, initialDepFromHidden || initialDepFromServer);
         }
     } else {
         syncSummary();
