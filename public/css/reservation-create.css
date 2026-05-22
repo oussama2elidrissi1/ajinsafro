@@ -455,6 +455,17 @@
     margin-left: 3px;
 }
 
+/* /admin/reservations/create: reduce excessive bold text (keep headings) */
+.reservation-create strong,
+.reservation-create b {
+    font-weight: 400;
+}
+
+.reservation-create .fw-bold,
+.reservation-create .font-weight-bold {
+    font-weight: 400 !important;
+}
+
 .reservation-create__input {
     width: 100%;
     min-height: 3rem;
