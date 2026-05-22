@@ -685,6 +685,28 @@
             justify-content: center;
         }
     }
+
+    .reservation-dossier-page h1,
+    .reservation-dossier-page h2,
+    .reservation-dossier-page h3,
+    .reservation-dossier-page strong,
+    .reservation-dossier-page .font-bold,
+    .reservation-dossier-page .fw-bold,
+    .reservation-dossier-page .card-title,
+    .reservation-dossier-page .summary-value,
+    .reservation-dossier-page .info-value {
+        font-weight: 500 !important;
+    }
+
+    .reservation-dossier-page h1 {
+        font-weight: 600 !important;
+    }
+
+    .reservation-dossier-page .badge,
+    .reservation-dossier-page .btn,
+    .reservation-dossier-page .rd-btn {
+        font-weight: 500 !important;
+    }
 </style>
 @endpush
 
