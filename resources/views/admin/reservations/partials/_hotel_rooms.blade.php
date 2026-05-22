@@ -532,7 +532,7 @@
                     var opt = departureSelect && departureSelect.options[departureSelect.selectedIndex];
                     if (opt && opt.textContent) selectedLabel = opt.textContent.trim();
                     else if (typeof payload !== 'undefined' && payload && payload.departure && payload.departure.start_date) {
-                        selectedLabel = (payload.departure.start_date || '') + (payload.departure.end_date ? ' �?' ' + payload.departure.end_date : '');
+                        selectedLabel = (payload.departure.start_date || '') + (payload.departure.end_date ? ' -> ' + payload.departure.end_date : '');
                     }
                 }
 
@@ -696,7 +696,7 @@
                 try { selectedLabel = String(window.getSelectedDepartureLabel() || '').trim(); } catch (e) { selectedLabel = ''; }
             }
             if (!selectedLabel && departureData && (departureData.start_date || departureData.end_date)) {
-                selectedLabel = (departureData.start_date || '') + (departureData.end_date ? ' �?' ' + departureData.end_date : '');
+                selectedLabel = (departureData.start_date || '') + (departureData.end_date ? ' -> ' + departureData.end_date : '');
             }
             if (!selectedLabel) {
                 var opt = departureSelect && departureSelect.options[departureSelect.selectedIndex];
@@ -911,7 +911,7 @@
                 departures.forEach(function (departure) {
                     var option = document.createElement('option');
                     option.value = departure.id;
-                    option.textContent = String(departure.label || '').replace(/â�?��?T|�?'/g, ' -> ') + (departure.available_capacity != null ? ' - ' + departure.available_capacity + ' pl.' : '');
+                    option.textContent = String(departure.label || '') + (departure.available_capacity != null ? ' - ' + departure.available_capacity + ' pl.' : '');
                     option.setAttribute('data-wp-travel-date-id', departure.wp_travel_date_id || '');
                     option.setAttribute('data-base-price', departure.base_price || 0);
                     option.setAttribute('data-sale-price', departure.sale_price || 0);
