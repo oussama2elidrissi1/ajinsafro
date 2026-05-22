@@ -1131,7 +1131,7 @@
                                             <td>{{ $client?->document_number ?? $reservation->client_document_number ?? '-' }}</td>
                                             <td class="text-end"><span class="rd-pill is-completed">Client principal</span></td>
                                         </tr>
-                                        @forelse($companionTravelers as $traveler)
+                                        @foreach($companionTravelers as $traveler)
                                             <tr>
                                                 <td>{{ ucfirst((string) ($traveler['type'] ?? 'adult')) }}</td>
                                                 <td>{{ $traveler['first_name'] ?? '-' }}</td>
@@ -1141,7 +1141,7 @@
                                                 <td>{{ $traveler['document_number'] ?? '-' }}</td>
                                                 <td class="text-end"><span class="text-muted small">-</span></td>
                                             </tr>
-                                        @endforelse
+                                        @endforeach
 
                                         @for($i = 0; $i < $missingCompanionsCount; $i++)
                                             <tr>
