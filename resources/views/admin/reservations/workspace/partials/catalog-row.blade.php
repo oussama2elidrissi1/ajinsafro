@@ -378,7 +378,6 @@
                 </button>
             @endif
             @can('reservations.view')
-                @if(!request()->routeIs('admin.vente.catalogue'))
                 @if($isSellableForRow && $hasLaravel)
                     @if($departureData)
                         <button type="button"
@@ -421,7 +420,6 @@
                         title="Associer la fiche Laravel">
                         <i class="fas fa-link" aria-hidden="true"></i><span>Lier</span>
                     </a>
-                @endif
                 @endif
             @endcan
         </div>
