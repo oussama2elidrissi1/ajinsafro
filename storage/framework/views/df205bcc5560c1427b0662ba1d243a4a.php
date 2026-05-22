@@ -573,6 +573,7 @@
     #ws-modal-root {
         position: static;
     }
+    #ws-departures-modal.ws-md-root,
     #ws-voyage-detail-modal.ws-md-root {
         position: fixed !important;
         top: 0 !important;
@@ -595,6 +596,7 @@
         justify-content: center;
         pointer-events: none;
     }
+    #ws-departures-modal.ws-md-root:not(.hidden),
     #ws-voyage-detail-modal.ws-md-root:not(.hidden) {
         display: flex !important;
         pointer-events: auto;
@@ -624,10 +626,12 @@
         opacity: 0;
         transition: transform 0.25s cubic-bezier(0.34, 1.2, 0.64, 1), opacity 0.22s ease;
     }
+    #ws-departures-modal.ws-md-visible .ws-md-shell,
     #ws-voyage-detail-modal.ws-md-visible .ws-md-shell {
         transform: scale(1);
         opacity: 1;
     }
+    #ws-departures-modal.ws-md-leaving .ws-md-shell,
     #ws-voyage-detail-modal.ws-md-leaving .ws-md-shell {
         transform: scale(0.98);
         opacity: 0;
