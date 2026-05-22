@@ -46,17 +46,23 @@
             <input type="hidden" name="extras_total" id="reservation-extras-total-input" value="{{ old('extras_total', 0) }}">
             <input type="hidden" name="total_amount" id="reservation-total-amount-input" value="{{ old('total_amount', 0) }}">
 
-            <div class="reservation-create__layout">
-                @include('admin.reservations.create.partials.stepper')
+            <div class="reservation-create__workflow">
+                @include('admin.reservations.create.partials.workflow')
+            </div>
 
-                <div class="reservation-create__main">
+            <div class="reservation-create__content-grid">
+                <main class="reservation-create__main">
                     @include('admin.reservations.create.partials.step-prestation')
                     @include('admin.reservations.create.partials.step-client')
                     @include('admin.reservations.create.partials.step-voyageurs')
                     @include('admin.reservations.create.partials.step-extras')
                     @include('admin.reservations.create.partials.step-payment')
                     @include('admin.reservations.create.partials.step-dossier')
-                </div>
+                </main>
+
+                <aside class="reservation-create__summary">
+                    @include('admin.reservations.create.partials.summary')
+                </aside>
             </div>
         </form>
 
