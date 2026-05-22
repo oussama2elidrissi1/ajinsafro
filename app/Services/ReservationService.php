@@ -500,6 +500,13 @@ class ReservationService
     private function syncPassengers(Reservation $reservation, array $passengersData): void
     {
         $keepIds = [];
+        $norm = static function (mixed $value): string {
+            $v = trim((string) ($value ?? ''));
+            $v = mb_strtolower($v);
+            $v = preg_replace('/\s+/', ' ', $v) ?: '';
+
+            return $v;
+        };
         $mainPayload = [
             'first_name' => $reservation->client_first_name,
             'last_name' => $reservation->client_last_name,
@@ -534,6 +541,14 @@ class ReservationService
         $mainPassenger->fill($mainPayload)->save();
         $keepIds[] = $mainPassenger->id;
 
+        $mainFingerprint = implode('|', array_filter([
+            $norm($mainPayload['first_name'] ?? null),
+            $norm($mainPayload['last_name'] ?? null),
+            $norm($mainPayload['phone'] ?? null),
+            $norm($mainPayload['email'] ?? null),
+            $norm($mainPayload['document_number'] ?? null),
+        ], fn (string $v) => $v !== ''));
+
         foreach ($passengersData as $row) {
             if (! is_array($row)) {
                 continue;
@@ -541,8 +556,34 @@ class ReservationService
             if (($row['traveler_key'] ?? null) === 'main') {
                 continue;
             }
-            $hasContent = ($row['first_name'] ?? '') !== '' || ($row['last_name'] ?? '') !== '';
-            if (! $hasContent) {
+
+            $rowTravelerKey = trim((string) ($row['traveler_key'] ?? ''));
+            $hasAnyField = collect([
+                $row['first_name'] ?? null,
+                $row['last_name'] ?? null,
+                $row['type'] ?? null,
+                $row['gender'] ?? null,
+                $row['birth_date'] ?? null,
+                $row['document_type'] ?? null,
+                $row['document_number'] ?? null,
+                $row['relationship_to_main'] ?? null,
+                $rowTravelerKey,
+            ])->contains(fn ($v) => trim((string) ($v ?? '')) !== '');
+
+            // Ignore completely empty passenger rows (common when UI adds a template row).
+            if (! $hasAnyField) {
+                continue;
+            }
+
+            // Defensive: never create a companion identical to the main traveler.
+            $rowFingerprint = implode('|', array_filter([
+                $norm($row['first_name'] ?? null),
+                $norm($row['last_name'] ?? null),
+                $norm($row['phone'] ?? null),
+                $norm($row['email'] ?? null),
+                $norm($row['document_number'] ?? null),
+            ], fn (string $v) => $v !== ''));
+            if ($mainFingerprint !== '' && $rowFingerprint !== '' && $rowFingerprint === $mainFingerprint) {
                 continue;
             }
 
@@ -557,7 +598,7 @@ class ReservationService
                 'document_type' => $row['document_type'] ?? null,
                 'document_number' => $row['document_number'] ?? null,
                 'relationship_to_main' => $row['relationship_to_main'] ?? null,
-                'traveler_key' => $row['traveler_key'] ?? ('companion_'.count($keepIds)),
+                'traveler_key' => $rowTravelerKey !== '' ? $rowTravelerKey : ('companion_'.count($keepIds)),
                 'is_main' => false,
                 'consumes_bed' => (bool) ($row['consumes_bed'] ?? (($row['type'] ?? 'adult') !== 'infant')),
             ];

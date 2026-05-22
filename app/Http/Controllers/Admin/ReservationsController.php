@@ -1301,6 +1301,7 @@ class ReservationsController extends Controller
             'passengers.*.birth_date' => 'nullable|date',
             'passengers.*.document_type' => 'nullable|string|max:50',
             'passengers.*.document_number' => 'nullable|string|max:100',
+            'passengers.*.traveler_key' => 'nullable|string|max:80',
         ];
 
         if (! $updating) {
@@ -1559,7 +1560,10 @@ class ReservationsController extends Controller
                 continue;
             }
             $hasName = (trim((string) ($p['first_name'] ?? '')) !== '') || (trim((string) ($p['last_name'] ?? '')) !== '');
-            if ($hasName) {
+            $travelerKey = trim((string) ($p['traveler_key'] ?? ''));
+            $hasTemplate = $travelerKey !== '' && $travelerKey !== 'main';
+            $hasType = trim((string) ($p['type'] ?? '')) !== '';
+            if ($hasName || $hasTemplate || $hasType) {
                 $count++;
             }
         }

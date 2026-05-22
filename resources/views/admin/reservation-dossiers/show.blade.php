@@ -29,7 +29,56 @@
     $payments = $dossier->payments->isNotEmpty() ? $dossier->payments : ($reservation->payments ?? collect());
     $documents = $dossier->documents->isNotEmpty() ? $dossier->documents : ($reservation->documents ?? collect());
     $histories = $dossier->histories->isNotEmpty() ? $dossier->histories : ($reservation->histories ?? collect());
-    $passengers = $reservation->passengers ?? collect();
+    $allPassengers = $reservation->passengers ?? collect();
+    $mainPassengerRecord = $allPassengers->firstWhere('traveler_key', 'main') ?: $allPassengers->firstWhere('is_main', true);
+
+    $normalize = function (mixed $value): string {
+        $v = trim((string) ($value ?? ''));
+        $v = mb_strtolower($v);
+        $v = preg_replace('/\s+/', ' ', $v) ?: '';
+
+        return $v;
+    };
+    $mainFingerprint = implode('|', array_filter([
+        $normalize($client?->first_name ?: $reservation->client_first_name ?: null),
+        $normalize($client?->last_name ?: $reservation->client_last_name ?: null),
+        $normalize($client?->phone ?: $reservation->client_phone ?: null),
+        $normalize($client?->email ?: $reservation->client_email ?: null),
+        $normalize($client?->document_number ?: $reservation->client_document_number ?: null),
+    ], fn (string $v) => $v !== ''));
+
+    $rawCompanions = $allPassengers
+        ->filter(fn ($p) => (bool) ($p?->is_main ?? false) === false && (string) ($p?->traveler_key ?? '') !== 'main')
+        ->values();
+
+    $duplicateCompanions = $rawCompanions->filter(function ($p) use ($mainFingerprint, $normalize) {
+        if ($mainFingerprint === '') {
+            return false;
+        }
+
+        $fp = implode('|', array_filter([
+            $normalize($p->first_name ?? null),
+            $normalize($p->last_name ?? null),
+            $normalize($p->phone ?? null),
+            $normalize($p->email ?? null),
+            $normalize($p->document_number ?? null),
+        ], fn (string $v) => $v !== ''));
+
+        return $fp !== '' && $fp === $mainFingerprint;
+    })->values();
+
+    $passengers = $rawCompanions
+        ->reject(fn ($p) => $duplicateCompanions->contains('id', $p->id))
+        ->values();
+
+    $declaredAdults = (int) ($dossier->adults_count ?? $reservation->adults_count ?? 0);
+    $declaredChildren = (int) ($dossier->children_count ?? $reservation->children_count ?? 0);
+    $declaredInfants = (int) ($dossier->infants_count ?? $reservation->infants_count ?? 0);
+    $declaredTotal = $declaredAdults + $declaredChildren + $declaredInfants;
+
+    $declaredTravelersCount = $declaredTotal > 0
+        ? max(1, $declaredTotal)
+        : max(1, (int) ($reservation->passengers_count ?? (1 + $passengers->count())));
     $rawTotal = $dossier->total_amount ?? $reservation->total_amount ?? null;
     $rawPaid = $dossier->paid_amount ?? $reservation->paid_amount ?? null;
     $hasCalculatedFinancials = $rawTotal !== null && $rawTotal !== '';
@@ -163,6 +212,7 @@
         return [
             'key' => (string) ($passenger->id ?? $index),
             'id' => $passenger->id ?? null,
+            'traveler_key' => $passenger->traveler_key ?? null,
             'is_main' => false,
             'type' => $passenger->type ?: $passenger->traveler_type ?: 'adult',
             'type_label' => ucfirst((string) ($passenger->type ?: $passenger->traveler_type ?: 'adult')),
@@ -177,8 +227,35 @@
         ];
     })->values();
 
+    $expectedCompanionsCount = max(0, $travelersCount - 1);
+    $missingCompanionsCount = max(0, $expectedCompanionsCount - $companionTravelers->count());
+
     $travelerRows = collect([$mainTraveler])->merge($companionTravelers)->values();
-    $travelersCount = max(1, $travelerRows->count());
+    $travelersCount = (int) ($declaredTravelersCount ?? max(1, $travelerRows->count()));
+
+    $missingTravelers = max(0, $travelersCount - $travelerRows->count());
+    if ($missingTravelers > 0) {
+        $placeholders = collect(range(1, $missingTravelers))->map(function ($i) {
+            return [
+                'key' => 'placeholder_'.$i,
+                'id' => null,
+                'is_main' => false,
+                'type' => 'adult',
+                'type_label' => 'Adulte',
+                'first_name' => null,
+                'last_name' => null,
+                'birth_date' => null,
+                'document_type' => null,
+                'document_number' => null,
+                'gender' => null,
+                'relationship_to_main' => null,
+                'consumes_bed' => true,
+                'is_placeholder' => true,
+            ];
+        });
+
+        $travelerRows = $travelerRows->merge($placeholders)->values();
+    }
 
     $roomAllocationRows = ($reservation->reservationRooms ?? collect())
         ->map(function ($roomRow) {
@@ -233,7 +310,32 @@
     $paidAmount = (float) ($dossier->paid_amount ?? $reservation->paid_amount ?? 0);
     $remainingAmount = (float) ($dossier->remaining_amount ?? $reservation->remaining_amount ?? max(0, $totalAmount - $paidAmount));
     $hasFinancialData = $payments->isNotEmpty() || $baseTotal > 0 || $roomSupplementTotal > 0 || $extrasTotal > 0 || $totalAmount > 0 || $paidAmount > 0;
-    $roomCoverageIncomplete = $selectedRoomCapacity < $travelersCount;
+    $allocations = $reservation->roomAllocations ?? collect();
+    $assignedTravelerIds = $allocations
+        ->flatMap(fn ($a) => $a->travelers?->pluck('id') ?? collect())
+        ->filter()
+        ->unique()
+        ->values();
+
+    $requiredBedPassengers = $allPassengers
+        ->filter(fn ($p) => (bool) ($p?->consumes_bed ?? true) === true)
+        ->values();
+
+    $requiredBedTravelerIds = $requiredBedPassengers->pluck('id')->filter()->unique()->values();
+    $assignedBedTravelerIds = $assignedTravelerIds->intersect($requiredBedTravelerIds)->values();
+
+    // When dossier/reservation declares pax counts, use them as the source of truth for "à affecter".
+    // This keeps the dossier coherent even if companion details are still empty.
+    $declaredBedsToAssign = ($declaredAdults + $declaredChildren) > 0
+        ? max(0, (int) ($declaredAdults + $declaredChildren))
+        : null;
+
+    $requiredBedCount = $declaredBedsToAssign !== null
+        ? $declaredBedsToAssign
+        : max(0, (int) $requiredBedTravelerIds->count());
+
+    $assignedBedCount = max(0, (int) $assignedBedTravelerIds->count());
+    $roomCoverageIncomplete = $requiredBedCount > 0 ? ($assignedBedCount < $requiredBedCount) : false;
     $visaRequired = ! in_array(strtolower((string) ($reservation->visa_status ?? '')), ['not_required', 'not required', 'none'], true)
         && ! ((bool) ($offer?->requires_visa ?? true) === false);
 
@@ -620,6 +722,11 @@
                         </div>
                         <h1 class="rd-title">Dossier de réservation #{{ $dossier->dossier_number ?: $dossier->id }}</h1>
                         <p class="rd-lead">Client principal {{ $clientName }} - Voyage {{ $offer?->name ?? 'non renseigne' }} - Depart {{ $departure?->start_date?->format('d/m/Y') ?? '-' }}</p>
+                        @if($roomCoverageIncomplete)
+                            <div class="alert alert-warning border-0 py-2 px-3 mb-3" role="status">
+                                {{ max(0, $requiredBedCount - $assignedBedCount) }} voyageur(s) ne sont pas encore affectés à une chambre. <a href="#rooms-panel" data-bs-toggle="pill">Ouvrir l’onglet Chambres</a>.
+                            </div>
+                        @endif
 
                         <div class="rd-meta">
                             <div class="rd-meta-card">
@@ -755,9 +862,9 @@
 
                                             <div class="col-12">
                                                 <div class="rd-room-alert">
-                                                    <strong>Voyageurs couverts :</strong> {{ min($selectedRoomCapacity, $travelersCount) }}/{{ $travelersCount }} voyageurs.
+                                                    <strong>Voyageurs affectés en chambre :</strong> {{ $assignedBedCount }}/{{ $requiredBedCount }}.
                                                     @if($roomCoverageIncomplete)
-                                                        Affectation chambre incomplète : {{ $selectedRoomCapacity }}/{{ $travelersCount }} voyageurs couverts.
+                                                        <span class="ms-2">Il manque {{ max(0, $requiredBedCount - $assignedBedCount) }} voyageur(s). <a href="#rooms-panel" data-bs-toggle="pill">Ouvrir l’onglet Chambres</a>.</span>
                                                     @endif
                                                 </div>
                                             </div>
@@ -812,6 +919,12 @@
                                                     <button type="button" class="rd-btn rd-btn-soft rd-btn-sm" id="btn-add-companion"><i class="bx bx-plus"></i><span>Ajouter accompagnant</span></button>
                                                 </div>
 
+                                                @if(($duplicateCompanions->count() ?? 0) > 0)
+                                                    <div class="alert alert-info border-0 py-2 px-3 mb-2">
+                                                        {{ $duplicateCompanions->count() }} doublon(s) identiques au client principal ont été détectés et masqués dans la liste des accompagnants.
+                                                    </div>
+                                                @endif
+
                                                 <div class="table-responsive">
                                                     <table class="table table-bordered align-middle rd-table mb-0" id="companions-table">
                                                         <thead>
@@ -830,6 +943,7 @@
                                                                 <tr class="companion-row">
                                                                     <td style="width: 120px;">
                                                                         <input type="hidden" name="passengers[{{ $index }}][id]" value="{{ $traveler['id'] ?? '' }}">
+                                                                        <input type="hidden" name="passengers[{{ $index }}][traveler_key]" value="{{ $traveler['traveler_key'] ?? ('companion_'.$index) }}">
                                                                         <select name="passengers[{{ $index }}][type]" class="form-select form-select-sm">
                                                                             <option value="adult" @selected(($traveler['type'] ?? '') === 'adult')>Adulte</option>
                                                                             <option value="child" @selected(($traveler['type'] ?? '') === 'child')>Enfant</option>
@@ -844,6 +958,26 @@
                                                                     <td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger btn-remove-companion">Supprimer</button></td>
                                                                 </tr>
                                                             @endforeach
+
+                                                            @for($i = 0; $i < $missingCompanionsCount; $i++)
+                                                                @php($index = $companionTravelers->count() + $i)
+                                                                <tr class="companion-row is-placeholder">
+                                                                    <td style="width: 120px;">
+                                                                        <input type="hidden" name="passengers[{{ $index }}][traveler_key]" value="{{ 'companion_placeholder_'.$index }}">
+                                                                        <select name="passengers[{{ $index }}][type]" class="form-select form-select-sm">
+                                                                            <option value="adult" selected>Adulte</option>
+                                                                            <option value="child">Enfant</option>
+                                                                            <option value="infant">Bébé</option>
+                                                                        </select>
+                                                                    </td>
+                                                                    <td><input type="text" name="passengers[{{ $index }}][first_name]" class="form-control form-control-sm" placeholder="Accompagnant à compléter"></td>
+                                                                    <td><input type="text" name="passengers[{{ $index }}][last_name]" class="form-control form-control-sm"></td>
+                                                                    <td><input type="date" name="passengers[{{ $index }}][birth_date]" class="form-control form-control-sm"></td>
+                                                                    <td><input type="text" name="passengers[{{ $index }}][document_type]" class="form-control form-control-sm"></td>
+                                                                    <td><input type="text" name="passengers[{{ $index }}][document_number]" class="form-control form-control-sm"></td>
+                                                                    <td class="text-end"><span class="text-muted small">À compléter</span></td>
+                                                                </tr>
+                                                            @endfor
                                                         </tbody>
                                                     </table>
                                                 </div>
@@ -1007,9 +1141,22 @@
                                                 <td>{{ $traveler['document_number'] ?? '-' }}</td>
                                                 <td class="text-end"><span class="text-muted small">-</span></td>
                                             </tr>
-                                        @empty
-                                            <tr><td colspan="7"><div class="rd-empty">Aucun accompagnant enregistré.</div></td></tr>
                                         @endforelse
+
+                                        @for($i = 0; $i < $missingCompanionsCount; $i++)
+                                            <tr>
+                                                <td>Adulte</td>
+                                                <td colspan="2"><span class="text-muted">Accompagnant à compléter</span></td>
+                                                <td>-</td>
+                                                <td>-</td>
+                                                <td>-</td>
+                                                <td class="text-end"><span class="text-muted small">-</span></td>
+                                            </tr>
+                                        @endfor
+
+                                        @if(($companionTravelers->isEmpty() ?? true) && $missingCompanionsCount === 0)
+                                            <tr><td colspan="7"><div class="rd-empty">Aucun accompagnant enregistré.</div></td></tr>
+                                        @endif
                                     </tbody>
                                 </table>
                             </div>
@@ -1025,13 +1172,47 @@
                                 <p class="rd-panel-subtitle">Chambres réelles seulement, sans blocs vides ni debug en production.</p>
                             </div>
                             <div class="d-flex gap-2 flex-wrap">
-                                <span class="rd-pill is-completed">{{ $selectedRoomCapacity }}/{{ $travelersCount }} couverts</span>
+                                <span class="rd-pill is-completed">{{ $assignedBedCount }}/{{ $requiredBedCount }} affectés</span>
                                 <span class="rd-pill {{ $roomCoverageIncomplete ? 'is-pending' : 'is-paid' }}">{{ $selectedRoomCount }} chambres sélectionnées</span>
                             </div>
                         </div>
                         <div class="rd-panel-body">
                             @if($roomCoverageIncomplete)
-                                <div class="alert alert-warning border-0 mb-3">Affectation chambre incomplète : {{ $selectedRoomCapacity }}/{{ $travelersCount }} voyageurs couverts.</div>
+                                <div class="alert alert-warning border-0 mb-3">Affectation chambre incomplète : {{ $assignedBedCount }}/{{ $requiredBedCount }} voyageurs affectés.</div>
+                            @endif
+
+                            @if(($allocations->count() ?? 0) > 0)
+                                <div class="table-responsive mb-3">
+                                    <table class="table table-sm align-middle rd-table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Chambre</th>
+                                                <th class="text-center">Capacité</th>
+                                                <th>Voyageurs affectés</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($allocations as $allocation)
+                                                @php($travs = $allocation->travelers ?? collect())
+                                                <tr>
+                                                    <td>{{ $allocation->room_type ?? 'Chambre' }}</td>
+                                                    <td class="text-center">{{ (int) ($allocation->capacity ?? 0) }}</td>
+                                                    <td>
+                                                        @if($travs->isNotEmpty())
+                                                            {{ $travs->map(fn ($p) => trim(($p->first_name ?? '').' '.($p->last_name ?? '')) ?: 'Voyageur')->implode(', ') }}
+                                                        @else
+                                                            <span class="text-muted">Aucun voyageur affecté</span>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @else
+                                <div class="alert alert-secondary border-0 mb-3">
+                                    Aucun voyageur n’est encore affecté à une chambre. Sélectionnez vos chambres ci-dessous, puis affectez les voyageurs (fonction à compléter si nécessaire).
+                                </div>
                             @endif
 
                             @if($roomAllocationRows->isEmpty())
@@ -1220,10 +1401,14 @@
                     }
 
                     var index = nextIndex();
+                    var travelerKey = 'companion_dynamic_' + Date.now() + '_' + index;
                     var row = document.createElement('tr');
                     row.className = 'companion-row';
                     row.innerHTML = '' +
-                        '<td><select name="passengers[' + index + '][type]" class="form-select form-select-sm"><option value="adult">Adulte</option><option value="child">Enfant</option><option value="infant">Bébé</option></select></td>' +
+                        '<td>' +
+                            '<input type="hidden" name="passengers[' + index + '][traveler_key]" value="' + travelerKey + '">' +
+                            '<select name="passengers[' + index + '][type]" class="form-select form-select-sm"><option value="adult">Adulte</option><option value="child">Enfant</option><option value="infant">Bébé</option></select>' +
+                        '</td>' +
                         '<td><input type="text" name="passengers[' + index + '][first_name]" class="form-control form-control-sm"></td>' +
                         '<td><input type="text" name="passengers[' + index + '][last_name]" class="form-control form-control-sm"></td>' +
                         '<td><input type="date" name="passengers[' + index + '][birth_date]" class="form-control form-control-sm"></td>' +

@@ -327,6 +327,7 @@ class ReservationDossierController extends Controller
             'reservations.passengers',
             'reservations.extras',
             'reservations.reservationRooms.departureHotelRoom',
+            'reservations.roomAllocations.travelers',
             'mainReservation.client',
             'mainReservation.offer',
             'mainReservation.offer.images',
@@ -341,6 +342,7 @@ class ReservationDossierController extends Controller
             'mainReservation.documents.creator',
             'mainReservation.histories.user',
             'mainReservation.reservationRooms.departureHotelRoom',
+            'mainReservation.roomAllocations.travelers',
         ]);
 
         $reservation = $reservationDossier->mainReservation ?: $reservationDossier->reservations->first();
