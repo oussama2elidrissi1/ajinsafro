@@ -107,6 +107,57 @@
 
     $viewMode = $mode ?? 'card';
 
+    // Mode carte: recalculer le prochain départ uniquement depuis CE voyage (pas de variable $departure partagée).
+    $today = \Carbon\Carbon::now()->startOfDay();
+    $formatCardDate = function (?string $date) {
+        if (! $date) {
+            return null;
+        }
+        try {
+            return \Carbon\Carbon::parse($date)->locale('fr')->translatedFormat('d M Y');
+        } catch (\Throwable $e) {
+            return $date;
+        }
+    };
+
+    $cardDepartures = $departures;
+    $cardNextDeparture = null;
+    $cardNextDepartureLabel = null;
+    if ($cardDepartures->isNotEmpty()) {
+        $cardNextDeparture = $cardDepartures
+            ->filter(function ($dep) use ($today) {
+                $date = data_get($dep, 'date_iso')
+                    ?? data_get($dep, 'date')
+                    ?? data_get($dep, 'departure_date')
+                    ?? data_get($dep, 'start_date');
+
+                if (! $date) {
+                    return false;
+                }
+
+                return \Carbon\Carbon::parse($date)->startOfDay()->gte($today);
+            })
+            ->sortBy(function ($dep) {
+                return data_get($dep, 'date_iso')
+                    ?? data_get($dep, 'date')
+                    ?? data_get($dep, 'departure_date')
+                    ?? data_get($dep, 'start_date');
+            })
+            ->first();
+
+        if ($cardNextDeparture) {
+            $cardNextDepartureLabel = data_get($cardNextDeparture, 'date_label')
+                ?? $formatCardDate(
+                    data_get($cardNextDeparture, 'date_iso')
+                    ?? data_get($cardNextDeparture, 'date')
+                    ?? data_get($cardNextDeparture, 'departure_date')
+                    ?? data_get($cardNextDeparture, 'start_date')
+                );
+        }
+    } elseif ($hasDepDate) {
+        $cardNextDepartureLabel = $formatCardDate($row['departure_date'] ?? null);
+    }
+
     // Commercial data
     $commercial = $row['commercial'] ?? [];
     $comBadge = $commercial['badge'] ?? null;
@@ -122,8 +173,9 @@
     $comTopDates = $commercial['top_dates'] ?? [];
     $isSellable = $commercial['is_sellable'] ?? false;
 
-    // Per-departure overrides (table + card per-departure mode)
-    $departureData = $departure ?? null;
+    // Per-departure overrides (uniquement en mode table / ligne départ).
+    // En mode carte, on ignore totalement $departure pour éviter toute fuite entre cartes.
+    $departureData = $viewMode === 'table' ? ($departure ?? null) : null;
     if ($departureData) {
         $depRowStatVal = (int) data_get($departureData, 'reservations.validee', 0);
         $depRowStatPending = (int) data_get($departureData, 'reservations.en_cours', 0);
@@ -149,7 +201,10 @@
         $depRowRemaining = $comRemaining;
         $depRowCapacity = $comCapacity;
         $depRowFillRate = $comFillRate;
-        $depRowDateLabel = $comNextDep ?: ($row['departure_date'] ?? null);
+        // En mode carte, on préfère le prochain départ issu des départs du voyage courant.
+        $depRowDateLabel = $viewMode === 'card'
+            ? ($cardNextDepartureLabel ?: null)
+            : ($comNextDep ?: ($row['departure_date'] ?? null));
         $depRowDateIso = $row['departure_date'] ? \Carbon\Carbon::parse($row['departure_date'])->format('Y-m-d') : null;
         $depRowRouteReserve = $reserveUrl;
         $depRowIsPast = $isPast;
@@ -562,6 +617,34 @@
                         <span class="ws-offer-card__departure-status ws-offer-card__departure-status--ok">Disponible</span>
                     <?php endif; ?>
                 </div>
+            </div>
+        <?php elseif($viewMode === 'card'): ?>
+            <div class="ws-offer-card__departures<?php echo e($hasMultipleDepartures ? ' btn-ws-open-departures' : ''); ?>"
+                <?php if($hasMultipleDepartures): ?>
+                    role="button" tabindex="0" data-row-code="<?php echo e(e($row['code'])); ?>" aria-label="Voir les départs disponibles"
+                <?php endif; ?>>
+                <div class="ws-offer-card__section-label">Prochain départ</div>
+                <?php if($cardNextDepartureLabel): ?>
+                    <?php
+                        $remaining = $cardNextDeparture ? data_get($cardNextDeparture, 'remaining') : null;
+                        $statusLabel = $remaining !== null ? ($remaining > 0 ? $remaining.' places' : 'Complet') : 'Disponible';
+                        $statusClass = $remaining !== null ? ($remaining > 0 ? 'ws-offer-card__departure-status--ok' : 'ws-offer-card__departure-status--full') : 'ws-offer-card__departure-status--ok';
+                    ?>
+                    <div class="ws-offer-card__departure-item ws-offer-card__departure-item--solo">
+                        <span class="ws-offer-card__departure-date"><?php echo e($cardNextDepartureLabel); ?></span>
+                        <span class="ws-offer-card__departure-status <?php echo e($statusClass); ?>"><?php echo e($statusLabel); ?></span>
+                    </div>
+                <?php else: ?>
+                    <div class="ws-offer-card__departure-item ws-offer-card__departure-item--solo">
+                        <span class="ws-offer-card__departure-date">Aucun départ configuré</span>
+                    </div>
+                <?php endif; ?>
+
+                <?php if($hasMultipleDepartures): ?>
+                    <button type="button" class="ws-offer-card__more btn-ws-open-departures" data-row-code="<?php echo e(e($row['code'])); ?>">
+                        Voir tous les départs (<?php echo e($departures->count()); ?>)
+                    </button>
+                <?php endif; ?>
             </div>
         <?php elseif($typeKey === 'package' && $departures->isNotEmpty()): ?>
             <div class="ws-offer-card__departures<?php echo e($hasMultipleDepartures ? ' btn-ws-open-departures' : ''); ?>" <?php if($hasMultipleDepartures): ?> role="button" tabindex="0" data-row-code="<?php echo e(e($row['code'])); ?>" aria-label="Voir les départs disponibles" <?php endif; ?>>
