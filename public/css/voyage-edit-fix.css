@@ -37,7 +37,7 @@ body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-title,
 body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .voyage-title {
     font-size: 20px;
     line-height: 1.2;
-    font-weight: 800;
+    font-weight: 600;
     margin-bottom: 4px;
 }
 
@@ -67,7 +67,7 @@ body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .voyage-header-work
 
 body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-card-title {
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     color: #5f7691;
     text-transform: uppercase;
     letter-spacing: .04em;
@@ -83,7 +83,7 @@ body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-card-valu
 
 body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-card-value strong {
     font-size: 18px;
-    font-weight: 800;
+    font-weight: 600;
     color: #0b2545;
 }
 
@@ -112,7 +112,7 @@ body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-card-foot
 
 body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-card-footer span {
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     color: #0b2545;
 }
 
@@ -135,16 +135,17 @@ body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .header-actions-gri
 body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .voyage-editor-grid,
 body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-layout {
     display: grid;
-    grid-template-columns: 150px minmax(0, 1fr) !important;
-    gap: 16px !important;
+    grid-template-columns: 190px minmax(0, 1fr) !important;
+    gap: 18px !important;
     align-items: start;
     width: 100% !important;
     max-width: 100% !important;
 }
 
 body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-sidebar {
-    width: 150px;
-    max-width: 150px;
+    width: 190px !important;
+    min-width: 190px !important;
+    max-width: 190px !important;
 }
 
 body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-main,
@@ -153,6 +154,20 @@ body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .voyage-editor-main
     width: 100%;
     min-width: 0;
     max-width: 100%;
+}
+
+@media (max-width: 1366px) {
+    body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .voyage-editor-grid,
+    body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-layout {
+        grid-template-columns: 180px minmax(0, 1fr) !important;
+        gap: 14px !important;
+    }
+
+    body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-sidebar {
+        width: 180px !important;
+        min-width: 180px !important;
+        max-width: 180px !important;
+    }
 }
 
 /* Workflow left column */
@@ -175,8 +190,34 @@ body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-sidebar .
     grid-template-columns: 1fr;
 }
 
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-sidebar .ve-stepper__index {
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10.5px;
+    border-radius: 8px;
+}
+
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-sidebar .ve-stepper__text {
+    font-size: 10.5px;
+    font-weight: 400;
+    line-height: 1.2;
+    color: #243b53;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    max-width: 100%;
+}
+
 body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-sidebar .ve-stepper__step {
-    min-height: 42px;
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 5px 7px;
 }
 
 body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-sidebar .ve-stepper-nav {
@@ -195,10 +236,13 @@ body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-step {
 body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-step-title,
 body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-step-title {
     font-size: 10.5px;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-weight: 400;
+    line-height: 1.2;
+    color: #243b53;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    max-width: 100%;
 }
 
 /* Center content */
@@ -332,7 +376,7 @@ body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .activities-table t
 
 body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .activities-table th {
     font-size: 10.5px;
-    font-weight: 700;
+    font-weight: 600;
     text-transform: uppercase;
     color: #6b7f95;
     background: #f7faff;
@@ -381,6 +425,69 @@ body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .tox,
 body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .tox-tinymce {
     width: 100% !important;
     max-width: 100% !important;
+}
+
+/* Typography: lighten the whole edit page (scoped) */
+body.aj-admin-compact .voyage-edit-page {
+    font-weight: 400 !important;
+}
+
+body.aj-admin-compact .voyage-edit-page * {
+    font-weight: 400 !important;
+}
+
+body.aj-admin-compact .voyage-edit-page h1,
+body.aj-admin-compact .voyage-edit-page h2,
+body.aj-admin-compact .voyage-edit-page h3,
+body.aj-admin-compact .voyage-edit-page .page-title,
+body.aj-admin-compact .voyage-edit-page .section-title,
+body.aj-admin-compact .voyage-edit-page .card-title,
+body.aj-admin-compact .voyage-edit-page .ve-title,
+body.aj-admin-compact .voyage-edit-page .ve-tabs-title,
+body.aj-admin-compact .voyage-edit-page .voyage-title,
+body.aj-admin-compact .voyage-edit-page .product-title {
+    font-weight: 600 !important;
+}
+
+body.aj-admin-compact .voyage-edit-page label,
+body.aj-admin-compact .voyage-edit-page .form-label,
+body.aj-admin-compact .voyage-edit-page .btn,
+body.aj-admin-compact .voyage-edit-page button,
+body.aj-admin-compact .voyage-edit-page .badge,
+body.aj-admin-compact .voyage-edit-page .status-badge {
+    font-weight: 500 !important;
+}
+
+body.aj-admin-compact .voyage-edit-page .nav-tabs .nav-link,
+body.aj-admin-compact .voyage-edit-page .tab-link,
+body.aj-admin-compact .voyage-edit-page .workflow-tab {
+    font-weight: 500 !important;
+}
+
+body.aj-admin-compact .voyage-edit-page input,
+body.aj-admin-compact .voyage-edit-page select,
+body.aj-admin-compact .voyage-edit-page textarea {
+    font-weight: 400 !important;
+}
+
+/* Clamp any "utility bold" classes to max 600 */
+body.aj-admin-compact .voyage-edit-page .fw-bold,
+body.aj-admin-compact .voyage-edit-page .fw-semibold,
+body.aj-admin-compact .voyage-edit-page strong {
+    font-weight: 600 !important;
+}
+
+body.aj-admin-compact .voyage-edit-page .fw-medium {
+    font-weight: 500 !important;
+}
+
+/* Ensure nothing stays at 700/800/900 on edit page */
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .ve-title,
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .voyage-title,
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-card-title,
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-card-footer span,
+body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .workflow-card-value strong {
+    font-weight: 600 !important;
 }
 
 body.aj-admin-compact .voyage-edit-page.voyage-workflow-page .tox-tinymce {
