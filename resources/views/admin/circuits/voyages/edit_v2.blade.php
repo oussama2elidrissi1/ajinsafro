@@ -265,6 +265,10 @@
             font-weight: 600;
         }
 
+        .voyage-edit-v2-page .destination-ux-chip--readonly {
+            padding-right: 10px;
+        }
+
         .voyage-edit-v2-page .destination-modal .modal-content {
             border-radius: 18px;
             border: 1px solid rgba(180, 210, 240, 0.6);

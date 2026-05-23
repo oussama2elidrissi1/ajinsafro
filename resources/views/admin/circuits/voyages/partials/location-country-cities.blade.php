@@ -5,6 +5,31 @@
     $countryCitiesData = $countryCitiesData ?? [];
     $mergedCitiesByCode = $mergedCitiesByCode ?? [];
     $ensureLocationUrl = route('admin.circuits.voyages.ensure-location');
+    $selectedIdStrings = collect($selectedIds)->map(fn ($id) => (string) $id)->filter()->values()->all();
+    $selectedLocationLabels = [];
+
+    foreach ($countryCitiesData as $countryData) {
+        $countryId = isset($countryData['id']) ? (string) $countryData['id'] : null;
+        if ($countryId && in_array($countryId, $selectedIdStrings, true)) {
+            $selectedLocationLabels[$countryId] = (string) ($countryData['title'] ?? $countryId);
+        }
+
+        foreach (($countryData['cities'] ?? []) as $cityData) {
+            $cityId = isset($cityData['id']) ? (string) $cityData['id'] : null;
+            if ($cityId && in_array($cityId, $selectedIdStrings, true)) {
+                $selectedLocationLabels[$cityId] = (string) ($cityData['title'] ?? $cityId);
+            }
+        }
+    }
+
+    foreach ($mergedCitiesByCode as $cities) {
+        foreach (($cities ?? []) as $cityData) {
+            $cityId = isset($cityData['id']) ? (string) $cityData['id'] : null;
+            if ($cityId && in_array($cityId, $selectedIdStrings, true) && !isset($selectedLocationLabels[$cityId])) {
+                $selectedLocationLabels[$cityId] = (string) ($cityData['title'] ?? $cityId);
+            }
+        }
+    }
 @endphp
 
 <div class="destination-country-cities">
@@ -100,8 +125,35 @@
     window.DESTINATION_COUNTRY_CITIES_DATA = @json($countryCitiesData);
     window.DESTINATION_MERGED_CITIES = @json($mergedCitiesByCode);
     window.DESTINATION_SELECTED_IDS = @json($selectedIds);
+    window.DESTINATION_SELECTED_LABELS = @json($selectedLocationLabels);
     window.DESTINATION_WORLD_COUNTRIES = @json($worldCountries);
     window.DESTINATION_ENSURE_LOCATION_URL = @json($ensureLocationUrl);
+
+    document.addEventListener('DOMContentLoaded', function () {
+        window.setTimeout(function () {
+            var chipsContainer = document.getElementById('locationChipsContainer');
+            var countText = document.getElementById('locationCountText');
+            var labels = window.DESTINATION_SELECTED_LABELS || {};
+            var entries = Object.keys(labels).map(function (id) {
+                return { id: id, title: labels[id] };
+            }).filter(function (item) {
+                return item.title;
+            });
+
+            if (!chipsContainer || chipsContainer.children.length || !entries.length) return;
+
+            chipsContainer.innerHTML = '';
+            entries.forEach(function (item) {
+                var chip = document.createElement('span');
+                chip.className = 'destination-ux-chip destination-ux-chip--readonly';
+                chip.textContent = item.title;
+                chipsContainer.appendChild(chip);
+            });
+            if (countText) {
+                countText.textContent = entries.length + ' location(s) sélectionnée(s)';
+            }
+        }, 600);
+    });
 })();
 </script>
 
