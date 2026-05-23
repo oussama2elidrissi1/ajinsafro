@@ -518,5 +518,5 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('js/reservation-create-v2.js') }}"></script>
+    <script src="{{ asset('js/reservation-create-v2.js') }}?v={{ @filemtime(public_path('js/reservation-create-v2.js')) }}"></script>
 @endpush

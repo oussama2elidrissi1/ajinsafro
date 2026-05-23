@@ -86,9 +86,28 @@
         return type !== 'infant';
     }
 
+    function normalizeTravelerType(rawType) {
+        var type = String(rawType || '').toLowerCase().trim();
+        if (!type) return 'adult';
+        if (['adult', 'adulte'].indexOf(type) !== -1) return 'adult';
+        if (['child', 'children', 'enfant'].indexOf(type) !== -1) return 'child';
+        if (['infant', 'baby', 'bebe', 'bébé'].indexOf(type) !== -1) return 'infant';
+        return 'adult';
+    }
+
+    function normalizeGender(rawGender) {
+        var g = String(rawGender || '').toLowerCase().trim();
+        if (!g) return '';
+        if (['m', 'male', 'homme', 'h'].indexOf(g) !== -1) return 'male';
+        if (['f', 'female', 'femme'].indexOf(g) !== -1) return 'female';
+        if (g === '1') return 'male';
+        if (g === '2') return 'female';
+        return g;
+    }
+
     function travelerRows() {
-        var principalType = String(document.getElementById('client_traveler_type') && document.getElementById('client_traveler_type').value || 'adult');
-        var principalGender = String(document.getElementById('client_gender') && document.getElementById('client_gender').value || '');
+        var principalType = normalizeTravelerType(document.getElementById('client_traveler_type') && document.getElementById('client_traveler_type').value || 'adult');
+        var principalGender = normalizeGender(document.getElementById('client_gender') && document.getElementById('client_gender').value || '');
         var rows = [{
             id: 'main',
             label: principalTravelerLabel(),
@@ -117,13 +136,13 @@
             var stableId = travelerKeyInput && travelerKeyInput.value
                 ? String(travelerKeyInput.value)
                 : (row.getAttribute('data-companion-id') || row.getAttribute('data-traveler-key') || ('companion_' + index));
-            var type = String(typeSelect && typeSelect.value || 'adult');
+            var type = normalizeTravelerType(typeSelect && typeSelect.value || 'adult');
             rows.push({
                 id: stableId,
                 label: [firstName, lastName].filter(Boolean).join(' ') || ('Accompagnant #' + (index + 1)),
                 type: type,
                 travelerType: type,
-                gender: String(genderSelect && genderSelect.value || ''),
+                gender: normalizeGender(genderSelect && genderSelect.value || ''),
                 relationship: String(relationSelect && relationSelect.value || 'group'),
                 consumesBed: consumesBedForType(type),
                 priceType: type === 'child' ? 'child' : 'adult',
@@ -744,7 +763,7 @@
         };
     }
 
-    function roomTypeForCapacity(capacity, preferredType) {
+    function roomTypeForCapacity(capacity, preferredType, strictPreferred) {
         var roomPool = Array.isArray(window.availableRoomTypes) && window.availableRoomTypes.length ? window.availableRoomTypes : availableRoomTypes;
         if ((!roomPool || !roomPool.length) && window.reservationState && Array.isArray(window.reservationState.availableRoomTypes)) {
             roomPool = window.reservationState.availableRoomTypes;
@@ -752,7 +771,9 @@
         var rooms = roomPool.filter(function (room) {
             return room.capacity >= capacity && (!preferredType || String(room.room_type).toLowerCase().indexOf(preferredType) !== -1);
         });
-        return rooms[0] || roomPool.filter(function (room) { return room.capacity >= capacity; })[0] || roomPool[0] || null;
+        if (rooms[0]) return rooms[0];
+        if (preferredType && strictPreferred) return null;
+        return roomPool.filter(function (room) { return room.capacity >= capacity; })[0] || roomPool[0] || null;
     }
 
     function makeAllocation(room, travelers, mode) {
@@ -833,16 +854,42 @@
             }
         });
 
+        function isChildTraveler(t) { return t && (t.type === 'child' || t.type === 'infant'); }
+        function isAdultTraveler(t) { return t && t.type === 'adult'; }
+
+        // Pair remaining children with any remaining adult first (gender not required for children)
+        (function pairChildrenWithAdults() {
+            var children = unused(isChildTraveler);
+            if (!children.length) return;
+
+            children.forEach(function (child) {
+                var adult = unused(isAdultTraveler)[0];
+                if (!adult) return;
+                var room = roomTypeForCapacity(2, 'double') || roomTypeForCapacity(2, '');
+                if (!room) return;
+                result.push(makeAllocation(room, [adult, child], 'full'));
+                mark([adult, child]);
+            });
+        })();
+
+        // Remaining travelers (adults or children)
         unused().forEach(function (traveler) {
-            var single = roomTypeForCapacity(1, 'single');
-            if (single) {
-                result.push(makeAllocation(single, [traveler], 'single'));
+            var double = roomTypeForCapacity(2, 'double') || roomTypeForCapacity(2, '');
+            var strictSingle = roomTypeForCapacity(1, 'single', true);
+
+            if (isAdultTraveler(traveler) && strictSingle) {
+                result.push(makeAllocation(strictSingle, [traveler], 'single'));
                 mark([traveler]);
                 return;
             }
-            var double = roomTypeForCapacity(2, 'double');
+
             if (double) {
-                result.push(makeAllocation(double, [traveler], traveler.gender === 'female' ? 'half_female' : 'half_male'));
+                if (isAdultTraveler(traveler)) {
+                    result.push(makeAllocation(double, [traveler], traveler.gender === 'female' ? 'half_female' : 'half_male'));
+                } else {
+                    // child/infant alone: never force half_male/half_female
+                    result.push(makeAllocation(double, [traveler], 'full'));
+                }
                 mark([traveler]);
             }
         });

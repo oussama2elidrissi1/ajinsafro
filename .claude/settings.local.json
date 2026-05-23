@@ -42,7 +42,8 @@
       "Bash(Get-ChildItem -Path \"storage\\\\framework\\\\views\")",
       "Bash(Sort-Object LastWriteTime -Descending)",
       "Bash(Select-Object -First 10)",
-      "Bash(Format-Table Name, LastWriteTime)"
+      "Bash(Format-Table Name, LastWriteTime)",
+      "mcp__ide__executeCode"
     ]
   }
 }
