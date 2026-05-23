@@ -21,6 +21,11 @@
     $initialTravelDateId = old('travel_date_id', $reservation?->travel_date_id ?? ($selectedTravelDate?->id ?? ''));
     $selectedDepartureId = $selectedDepartureId ?? null;
     $initialDepartureId = old('departure_id', $reservation?->departure_id ?? $selectedDepartureId ?? '');
+    $selectedUnitPrice = $selectedUnitPrice ?? null;
+    $initialBasePrice = old(
+        'base_price',
+        $reservation?->base_price ?? ($selectedUnitPrice !== null ? number_format((float) $selectedUnitPrice, 2, '.', '') : '')
+    );
     $roomsDebugEnabled = config('app.debug') || request()->boolean('debug');
 
     $legacyEdit = $reservation && ! $reservation->departure_id && $tourHotelsWithRooms->isNotEmpty();
@@ -52,7 +57,7 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label" for="reservation-base-price">Prix unitaire par voyageur (DH)</label>
-                    <input type="number" id="reservation-base-price" name="base_price" class="form-control" value="{{ old('base_price', $reservation?->base_price ?? '') }}" min="0" step="0.01" placeholder="0.00" readonly>
+                    <input type="number" id="reservation-base-price" name="base_price" class="form-control" value="{{ $initialBasePrice }}" min="0" step="0.01" placeholder="0.00" readonly>
                 </div>
                 <div class="col-md-8">
                     <label class="form-label" for="reservation-discount-value">Réduction</label>
@@ -74,7 +79,7 @@
             <div class="row g-2 mb-3">
                 <div class="col-md-4">
                     <label class="form-label" for="reservation-base-price">Prix unitaire par voyageur (DH)</label>
-                    <input type="number" id="reservation-base-price" name="base_price" class="form-control" value="{{ old('base_price', $reservation?->base_price ?? '') }}" min="0" step="0.01" placeholder="0.00" readonly>
+                    <input type="number" id="reservation-base-price" name="base_price" class="form-control" value="{{ $initialBasePrice }}" min="0" step="0.01" placeholder="0.00" readonly>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label" for="reservation-discount-value">Réduction</label>

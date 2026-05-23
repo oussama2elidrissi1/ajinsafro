@@ -323,7 +323,7 @@ class ReservationsController extends Controller
             ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
             ->orderByDesc('id')
             ->limit(200)
-            ->get(['id', 'name', 'slug', 'wp_post_id']);
+            ->get(['id', 'name', 'slug', 'wp_post_id', 'price_from']);
         if ($requestedTourId > 0 && $voyages->where('id', $requestedTourId)->isEmpty()) {
             $requestedVoyage = Voyage::query()
                 ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
@@ -379,6 +379,53 @@ class ReservationsController extends Controller
                 ->where('voyage_id', $requestedTourId)
                 ->where('wp_travel_date_id', $travelDateId)
                 ->first();
+        }
+
+        $selectedVoyageForPrice = $requestedTourId > 0
+            ? ($voyages->firstWhere('id', $requestedTourId) ?: Voyage::query()->find($requestedTourId))
+            : null;
+        $selectedTravelDateForPrice = $selectedTravelDate;
+        if (! $selectedTravelDateForPrice && $selectedDeparture?->wp_travel_date_id) {
+            $selectedTravelDateForPrice = TravelDate::query()->find((int) $selectedDeparture->wp_travel_date_id);
+        }
+        $selectedUnitPrice = null;
+        $selectedUnitPriceDebug = null;
+        if ($selectedVoyageForPrice) {
+            $selectedUnitPriceDebug = $this->reservationPricing->resolveUnitPrice(
+                $selectedVoyageForPrice,
+                $selectedDeparture,
+                $selectedTravelDateForPrice
+            );
+            $selectedUnitPrice = $selectedUnitPriceDebug['unit_price'];
+
+            Log::info('[Reservation Create Price Debug]', [
+                'tour_id' => $requestedTourId > 0 ? $requestedTourId : null,
+                'departure_id' => $selectedDeparture?->id,
+                'travel_date_id' => $selectedTravelDateForPrice?->id,
+                'selected_departure' => $selectedDeparture ? [
+                    'id' => (int) $selectedDeparture->id,
+                    'voyage_id' => (int) $selectedDeparture->voyage_id,
+                    'wp_travel_date_id' => (int) ($selectedDeparture->wp_travel_date_id ?? 0),
+                    'start_date' => optional($selectedDeparture->start_date)->format('Y-m-d'),
+                    'end_date' => optional($selectedDeparture->end_date)->format('Y-m-d'),
+                    'status' => $selectedDeparture->status,
+                ] : null,
+                'selected_travel_date' => $selectedTravelDateForPrice ? [
+                    'id' => (int) $selectedTravelDateForPrice->id,
+                    'travel_id' => (int) $selectedTravelDateForPrice->travel_id,
+                    'date' => optional($selectedTravelDateForPrice->date)->format('Y-m-d'),
+                    'is_active' => (bool) $selectedTravelDateForPrice->is_active,
+                ] : null,
+                'tour_price' => $selectedVoyageForPrice->price_from ?? null,
+                'tour_adult_price' => $selectedUnitPriceDebug['sources']['wp_adult_price'] ?? null,
+                'departure_price' => $selectedDeparture?->base_price,
+                'departure_sale_price' => $selectedDeparture?->sale_price,
+                'travel_date_price' => $selectedTravelDateForPrice?->price_override,
+                'travel_date_adult_price' => $selectedUnitPriceDebug['sources']['wp_adult_price'] ?? null,
+                'unit_price_final' => $selectedUnitPrice,
+                'unit_price_source' => $selectedUnitPriceDebug['source'] ?? null,
+                'sources' => $selectedUnitPriceDebug['sources'] ?? [],
+            ]);
         }
 
         if ($requestedTourId > 0 && $voyages->where('id', $requestedTourId)->isEmpty()) {
@@ -462,6 +509,8 @@ class ReservationsController extends Controller
             'preselectedTourId' => $preselectedTourId,
             'travelDateIncoherent' => $travelDateIncoherent,
             'extrasByVoyage' => $extrasByVoyage,
+            'selectedUnitPrice' => $selectedUnitPrice,
+            'selectedUnitPriceDebug' => $selectedUnitPriceDebug,
         ]);
     }
 
@@ -558,7 +607,7 @@ class ReservationsController extends Controller
             ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
             ->orderByDesc('id')
             ->limit(200)
-            ->get(['id', 'name', 'slug', 'wp_post_id']);
+            ->get(['id', 'name', 'slug', 'wp_post_id', 'price_from']);
         if ($requestedTourId > 0 && $voyages->where('id', $requestedTourId)->isEmpty()) {
             $requestedVoyage = Voyage::query()
                 ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
@@ -743,6 +792,7 @@ class ReservationsController extends Controller
             'departures' => $deps->map(function (Departure $d) use ($travelDates, $voyage) {
                 $travelDate = $d->wp_travel_date_id ? $travelDates->get((int) $d->wp_travel_date_id) : null;
                 $priceOverride = $travelDate?->price_override !== null ? (float) $travelDate->price_override : null;
+                $resolvedPrice = $this->reservationPricing->resolveUnitPrice($voyage, $d, $travelDate);
 
                 return [
                     'id' => $d->id,
@@ -753,7 +803,9 @@ class ReservationsController extends Controller
                     'base_price' => $d->base_price !== null ? (float) $d->base_price : null,
                     'sale_price' => $d->sale_price !== null ? (float) $d->sale_price : null,
                     'price_override' => $priceOverride,
-                    'unit_price' => (float) ($d->sale_price ?? $d->base_price ?? $priceOverride ?? $voyage->price_from ?? 0),
+                    'unit_price' => $resolvedPrice['unit_price'],
+                    'unit_price_source' => $resolvedPrice['source'],
+                    'unit_price_sources' => config('app.debug') ? $resolvedPrice['sources'] : null,
                     'wp_travel_date_id' => $d->wp_travel_date_id,
                 ];
             })->values()->all(),

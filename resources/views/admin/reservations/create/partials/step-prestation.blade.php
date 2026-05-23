@@ -52,6 +52,7 @@
         'departureHotelsRoomsUrl' => route('admin.reservations.departure-hotels-rooms'),
         'selectedTravelDate' => $selectedTravelDate ?? null,
         'selectedDepartureId' => $selectedDepartureId ?? null,
+        'selectedUnitPrice' => $selectedUnitPrice ?? null,
         'compactAvailabilityOnly' => true,
     ])
 

@@ -16,6 +16,7 @@ use App\Models\Wp\Activity;
 use App\Models\Wp\TourDayActivity;
 use App\Models\Wp\WpPost;
 use App\Models\Wp\WpPostMeta;
+use App\Services\Reservations\ReservationPricingService;
 use App\Services\Wp\WpHeroImageService;
 use App\Support\TourPlacesCalculator;
 use Carbon\Carbon;
@@ -36,6 +37,7 @@ class ReservationWorkspaceCatalogService
         protected BranchScopeService $branchScope,
         protected DepartureInventoryService $departureInventory,
         protected \App\Services\Wp\WpTourRepository $wpTourRepo,
+        protected ReservationPricingService $reservationPricing,
     ) {}
 
     /**
@@ -1126,6 +1128,13 @@ class ReservationWorkspaceCatalogService
      */
     private function formatPackagePriceLabel(mixed $adultPriceMetaRaw, ?Voyage $voyage): ?string
     {
+        if ($voyage) {
+            $resolved = $this->reservationPricing->resolveUnitPrice($voyage);
+            if (($resolved['unit_price'] ?? 0) > 0) {
+                return number_format((float) $resolved['unit_price'], 0, ',', ' ').' MAD';
+            }
+        }
+
         $wpAmount = $this->parseWpAdultPriceToFloat($adultPriceMetaRaw);
         if ($wpAmount !== null && $wpAmount > 0) {
             return number_format($wpAmount, 0, ',', ' ').' MAD';

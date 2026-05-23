@@ -91,6 +91,49 @@ class ReservationPricingService
     }
 
     /**
+     * @return array{unit_price: float, source: string, sources: array<string, mixed>}
+     */
+    public function resolveUnitPrice(Voyage $voyage, ?Departure $departure = null, ?TravelDate $travelDate = null): array
+    {
+        $wpPrices = $this->resolveWordPressTourPrices($voyage, $travelDate);
+
+        $sources = [
+            'departure_sale_price' => $departure?->sale_price !== null ? (float) $departure->sale_price : null,
+            'departure_base_price' => $departure?->base_price !== null ? (float) $departure->base_price : null,
+            'travel_date_price_override' => $travelDate?->price_override !== null ? (float) $travelDate->price_override : null,
+            'wp_adult_price' => $wpPrices['adult_price'],
+            'wp_min_price' => $wpPrices['min_price'],
+            'wp_base_price' => $wpPrices['base_price'],
+            'voyage_price_from' => $voyage->price_from !== null ? (float) $voyage->price_from : null,
+        ];
+
+        foreach ([
+            'departure_sale_price',
+            'departure_base_price',
+            'travel_date_price_override',
+            'wp_adult_price',
+            'wp_min_price',
+            'wp_base_price',
+            'voyage_price_from',
+        ] as $source) {
+            $value = $sources[$source] ?? null;
+            if ($value !== null && (float) $value > 0) {
+                return [
+                    'unit_price' => round((float) $value, 2),
+                    'source' => $source,
+                    'sources' => $sources,
+                ];
+            }
+        }
+
+        return [
+            'unit_price' => 0.0,
+            'source' => 'none',
+            'sources' => $sources,
+        ];
+    }
+
+    /**
      * @param  array<string, mixed>  $payload
      * @return array{discount_type: string|null, discount_value: float, discount_amount: float, unit_price_after_discount: float}
      */
@@ -865,61 +908,96 @@ class ReservationPricingService
      */
     private function resolveBasePrice(array $payload, Voyage $voyage, Departure $departure, ?TravelDate $travelDate = null): float
     {
-        $priceFromDepartureSale = $departure->sale_price;
-        $priceFromDepartureBase = $departure->base_price;
-        $priceFromTravelDate = $travelDate?->price_override;
-        $priceFromVoyage = $voyage->price_from;
-
-        $candidates = [
-            $priceFromDepartureSale,
-            $priceFromDepartureBase,
-            $priceFromTravelDate,
-            $priceFromVoyage,
-        ];
-
-        // Try WordPress meta as a fallback (min_price / base_price)
-        $wpPrice = null;
-        $wpId = $travelDate?->travel_id ?? $voyage->wp_post_id ?? null;
-        if ($wpId) {
-            try {
-                $wp = WpPost::query()->find((int) $wpId);
-                if ($wp) {
-                    $metaMin = $wp->getMeta('min_price');
-                    $metaBase = $wp->getMeta('base_price');
-                    $wpPrice = is_numeric($metaMin) ? (float) $metaMin : (is_numeric($metaBase) ? (float) $metaBase : null);
-                }
-            } catch (\Throwable $e) {
-                // ignore
-            }
-        }
-
-        if ($wpPrice !== null) {
-            $candidates[] = $wpPrice;
-        }
+        $resolved = $this->resolveUnitPrice($voyage, $departure, $travelDate);
 
         // Debug log to compare sources when troubleshooting
         try {
-            Log::info('Reservation pricing debug', [
+            Log::info('Reservation pricing debug', array_merge([
                 'voyage_id' => $voyage->id ?? null,
                 'departure_id' => $departure->id ?? null,
                 'travel_date_id' => $travelDate?->id ?? null,
-                'price_from_travel_date' => $priceFromTravelDate,
-                'price_from_departure_sale' => $priceFromDepartureSale,
-                'price_from_departure_base' => $priceFromDepartureBase,
-                'price_from_voyage' => $priceFromVoyage,
-                'price_from_wordpress' => $wpPrice,
-            ]);
+                'unit_price_final' => $resolved['unit_price'],
+                'unit_price_source' => $resolved['source'],
+            ], $resolved['sources']));
         } catch (\Throwable $e) {
             // ignore logging failures
         }
 
-        foreach ($candidates as $candidate) {
-            if ($candidate !== null && (float) $candidate > 0) {
-                return round((float) $candidate, 2);
-            }
+        return (float) $resolved['unit_price'];
+    }
+
+    /**
+     * @return array{adult_price: float|null, min_price: float|null, base_price: float|null}
+     */
+    private function resolveWordPressTourPrices(Voyage $voyage, ?TravelDate $travelDate = null): array
+    {
+        $wpId = $travelDate?->travel_id ?? $voyage->wp_post_id ?? null;
+        if (! $wpId) {
+            return ['adult_price' => null, 'min_price' => null, 'base_price' => null];
         }
 
-        return 0.0;
+        try {
+            $wp = WpPost::query()->find((int) $wpId);
+            if (! $wp) {
+                return ['adult_price' => null, 'min_price' => null, 'base_price' => null];
+            }
+
+            return [
+                'adult_price' => $this->parsePositivePrice($wp->getMeta('adult_price')),
+                'min_price' => $this->parsePositivePrice($wp->getMeta('min_price')),
+                'base_price' => $this->parsePositivePrice($wp->getMeta('base_price')),
+            ];
+        } catch (\Throwable $e) {
+            return ['adult_price' => null, 'min_price' => null, 'base_price' => null];
+        }
+    }
+
+    private function parsePositivePrice(mixed $raw): ?float
+    {
+        if ($raw === null || $raw === '') {
+            return null;
+        }
+
+        if (is_int($raw) || is_float($raw)) {
+            $value = (float) $raw;
+
+            return $value > 0 ? $value : null;
+        }
+
+        $value = trim((string) $raw);
+        if ($value === '') {
+            return null;
+        }
+
+        if (preg_match('/^[aOs]:/i', $value)) {
+            $unserialized = @unserialize($value, ['allowed_classes' => false]);
+            if (is_numeric($unserialized)) {
+                $amount = (float) $unserialized;
+
+                return $amount > 0 ? $amount : null;
+            }
+            if (is_array($unserialized)) {
+                foreach (['price', 'adult_price', 'adult', 'value'] as $key) {
+                    if (isset($unserialized[$key]) && is_numeric($unserialized[$key])) {
+                        $amount = (float) $unserialized[$key];
+
+                        return $amount > 0 ? $amount : null;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        $value = str_replace(["\xc2\xa0", ' ', 'MAD', 'DH', 'mad', 'dh'], '', $value);
+        $value = str_replace(',', '.', $value);
+        if (! is_numeric($value)) {
+            return null;
+        }
+
+        $amount = (float) $value;
+
+        return $amount > 0 ? $amount : null;
     }
 
     /**
