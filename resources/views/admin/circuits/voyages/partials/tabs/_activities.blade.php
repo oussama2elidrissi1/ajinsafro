@@ -21,31 +21,45 @@
     }
 @endphp
 <div class="tab-pane" id="activities" role="tabpanel" data-ve-pane-title="Activites">
-    <div class="card ve-pane-card">
+    <div class="card ve-pane-card activities-card step-card">
         <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <div class="section-header">
                 <h4 class="card-title mb-0">Activites</h4>
                 <button type="button" class="btn btn-primary" id="btn-open-activities-modal" data-bs-toggle="modal" data-bs-target="#activitiesCatalogModal">
                     <i class="bx bx-plus me-1"></i> Ajouter une activite
                 </button>
             </div>
 
-            <div class="table-responsive" style="overflow-x:auto;">
-                <table class="table table-bordered align-middle mb-0" style="min-width:1760px;">
+            <div class="table-responsive activities-table-wrapper">
+                <table class="table table-bordered align-middle mb-0 activities-table">
+                    <colgroup>
+                        <col style="width:55px;">
+                        <col style="width:260px;">
+                        <col style="width:260px;">
+                        <col style="width:170px;">
+                        <col style="width:130px;">
+                        <col style="width:220px;">
+                        <col>
+                        <col style="width:130px;">
+                        <col style="width:110px;">
+                        <col style="width:110px;">
+                        <col style="width:110px;">
+                        <col style="width:120px;">
+                    </colgroup>
                     <thead class="table-light">
                         <tr>
-                            <th style="width:70px;">Ordre</th>
-                            <th style="min-width:220px;">Activite</th>
-                            <th style="min-width:340px;">Jour / visibilite</th>
-                            <th style="min-width:190px;">Horaires</th>
-                            <th style="min-width:150px;">Statut</th>
-                            <th style="min-width:220px;">Titre affiche</th>
-                            <th style="min-width:260px;">Description</th>
-                            <th style="min-width:130px;">Type</th>
-                            <th style="min-width:120px;">Prix adulte</th>
-                            <th style="min-width:120px;">Prix enfant</th>
-                            <th style="min-width:120px;">Total ligne</th>
-                            <th style="width:110px;">Actions</th>
+                            <th>Ordre</th>
+                            <th>Activite</th>
+                            <th>Jour / visibilite</th>
+                            <th>Horaires</th>
+                            <th>Statut</th>
+                            <th>Titre affiche</th>
+                            <th>Description</th>
+                            <th>Type</th>
+                            <th>Prix adulte</th>
+                            <th>Prix enfant</th>
+                            <th>Total ligne</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="voyage-activities-rows" data-day-options='@json($activityDayOptions->values()->all())'>
@@ -98,7 +112,7 @@
                                     <input type="hidden" data-field="sort_order" name="tour_activities[{{ $idx }}][sort_order]" value="{{ old('tour_activities.'.$idx.'.sort_order', $tourActivity->sort_order ?? $idx) }}">
                                 </td>
                                 <td>
-                                    <div class="fw-medium voyage-activity-title">{{ $tourActivity->title }}</div>
+                                    <div class="activity-title-cell fw-medium voyage-activity-title">{{ $tourActivity->title }}</div>
                                     <input type="hidden" data-field="id" name="tour_activities[{{ $idx }}][id]" value="{{ $tourActivity->id }}">
                                     <input type="hidden" data-field="activity_id" name="tour_activities[{{ $idx }}][activity_id]" value="{{ $activityId }}">
                                     <input type="hidden" data-field="group_uuid" name="tour_activities[{{ $idx }}][group_uuid]" value="{{ $groupUuid }}">
@@ -132,7 +146,7 @@
                                     <div class="small text-muted mt-1 voyage-activity-scope-text"></div>
                                 </td>
                                 <td>
-                                    <div class="d-flex align-items-center gap-1">
+                                    <div class="activity-hours">
                                         <input type="time" class="form-control form-control-sm" data-field="start_time" name="tour_activities[{{ $idx }}][start_time]" value="{{ $startTime }}">
                                         <span class="small text-muted">a</span>
                                         <input type="time" class="form-control form-control-sm" data-field="end_time" name="tour_activities[{{ $idx }}][end_time]" value="{{ $endTime }}">
