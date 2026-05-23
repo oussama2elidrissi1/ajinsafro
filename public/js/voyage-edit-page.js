@@ -1958,7 +1958,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 chipsContainer.innerHTML = '';
                 boxes.forEach(function(cb) {
                     var id = cb.value;
-                    var title = cb.getAttribute('data-loc-title') || id;
+                    var title = cleanTaxonomyLabel(cb.getAttribute('data-loc-title') || id);
                     var chip = document.createElement('span');
                     chip.className = 'destination-ux-chip';
                     chip.innerHTML = escapeHtml(title) + ' <button type="button" class="destination-ux-chip-remove" data-loc-id="' + escapeHtml(id) + '" aria-label="Retirer">×</button>';
@@ -2124,7 +2124,18 @@ document.addEventListener('DOMContentLoaded', function () {
             var ensureLocationUrl = window.DESTINATION_ENSURE_LOCATION_URL || '';
             var selectedIds = window.DESTINATION_SELECTED_IDS || [];
 
-            function escapeAttr(s) { return (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+            function cleanTaxonomyLabel(label) {
+                if (!label) return '';
+                return String(label)
+                    .replace(/�+/g, '')
+                    .replace(/Âº/g, '-')
+                    .replace(/º/g, '-')
+                    .replace(/[»«]/g, '')
+                    .replace(/\s*[-–—]\s*/g, ' - ')
+                    .replace(/\s{2,}/g, ' ')
+                    .trim();
+            }
+            function escapeAttr(s) { return cleanTaxonomyLabel(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
             function escapeHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
             function ensureLocation(countryCode, cityName, cb) {
@@ -2149,6 +2160,33 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
 
+            function updateCityCountryCounts() {
+                if (!panelList) return;
+                panelList.querySelectorAll('.city-country-group').forEach(function(group) {
+                    var checked = group.querySelectorAll('.destination-city-row input.location-checkbox:checked').length;
+                    var counter = group.querySelector('[data-country-city-count]');
+                    if (counter) {
+                        counter.textContent = checked + ' ville' + (checked > 1 ? 's' : '') + ' sélectionnée' + (checked > 1 ? 's' : '');
+                    }
+                });
+            }
+
+            function updateTaxonomySelectionCounts() {
+                var countriesCounter = document.getElementById('destinationCountriesSelectedCount');
+                if (countriesCounter) {
+                    var selectedCountries = document.querySelectorAll('#destinationCountryList .destination-country-option:checked').length;
+                    countriesCounter.textContent = selectedCountries + ' pays sélectionné' + (selectedCountries > 1 ? 's' : '');
+                }
+
+                var citiesCounter = document.getElementById('destinationCitiesSelectedCount');
+                if (citiesCounter && panelList) {
+                    var selectedCities = panelList.querySelectorAll('.destination-city-row input.location-checkbox:checked').length;
+                    citiesCounter.textContent = selectedCities + ' ville' + (selectedCities > 1 ? 's' : '') + ' sélectionnée' + (selectedCities > 1 ? 's' : '');
+                }
+
+                updateCityCountryCounts();
+            }
+
             function getSelectedCountryCodes() {
                 var opts = document.querySelectorAll('#destinationCountryList .destination-country-option:checked');
                 return Array.from(opts).map(function(o) { return o.value; }).filter(Boolean);
@@ -2158,6 +2196,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateChips();
                 updateCount();
                 updateCountryIndeterminate();
+                updateTaxonomySelectionCounts();
             }
 
             function handlePanelCheckboxChange(cb) {
@@ -2230,6 +2269,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!selectedCodes || selectedCodes.length === 0) {
                     if (panelDynamic) panelDynamic.style.display = 'none';
                     if (citySearchInput) citySearchInput.value = '';
+                    updateTaxonomySelectionCounts();
                     return;
                 }
                 if (panelDynamic) panelDynamic.style.display = 'block';
@@ -2238,45 +2278,54 @@ document.addEventListener('DOMContentLoaded', function () {
                 selectedCodes.forEach(function(code) {
                     var cities = mergedCities[code] || [];
                     var data = countryCitiesData[code];
-                    var countryName = (data && data.title) ? data.title : (worldCountries[code] || code);
+                    var countryName = cleanTaxonomyLabel((data && data.title) ? data.title : (worldCountries[code] || code));
 
                     var block = document.createElement('div');
-                    block.className = 'destination-country-block';
+                    block.className = 'destination-country-block city-country-group';
                     block.setAttribute('data-country-code', code);
+
+                    var header = document.createElement('div');
+                    header.className = 'city-country-header';
+                    header.innerHTML = '<strong>' + escapeHtml(countryName) + '</strong><span data-country-city-count>0 ville sélectionnée</span>';
+                    block.appendChild(header);
 
                     var countryId = data && data.id ? data.id : null;
                     var countryChecked = countryId && selectedIdsForBuild.indexOf(countryId) !== -1;
                     var countryLabel = document.createElement('label');
-                    countryLabel.className = 'destination-country-checkbox-label';
+                    countryLabel.className = 'destination-country-checkbox-label taxonomy-option country-full-option';
                     if (countryId) {
-                        countryLabel.innerHTML = '<input type="checkbox" name="locations[]" value="' + countryId + '" class="location-checkbox destination-checkbox destination-country-whole" ' + (countryChecked ? 'checked' : '') + ' data-loc-id="' + countryId + '" data-loc-title="' + escapeAttr(countryName) + '"> <span>Inclure le pays entier (' + escapeHtml(countryName) + ')</span>';
+                        countryLabel.innerHTML = '<input type="checkbox" name="locations[]" value="' + countryId + '" class="location-checkbox destination-checkbox destination-country-whole" ' + (countryChecked ? 'checked' : '') + ' data-loc-id="' + countryId + '" data-loc-title="' + escapeAttr(countryName) + '"> <span>Inclure le pays entier</span>';
                     } else {
-                        countryLabel.innerHTML = '<input type="checkbox" name="locations[]" value="" class="location-checkbox destination-checkbox destination-country-whole" data-country-code="' + escapeAttr(code) + '" data-needs-create="1" data-loc-title="' + escapeAttr(countryName) + '"> <span>Inclure le pays entier (' + escapeHtml(countryName) + ')</span>';
+                        countryLabel.innerHTML = '<input type="checkbox" name="locations[]" value="" class="location-checkbox destination-checkbox destination-country-whole" data-country-code="' + escapeAttr(code) + '" data-needs-create="1" data-loc-title="' + escapeAttr(countryName) + '"> <span>Inclure le pays entier</span>';
                     }
                     block.appendChild(countryLabel);
 
                     if (cities.length === 0) {
                         var p = document.createElement('p');
-                        p.className = 'text-muted small mb-0 mt-1';
+                        p.className = 'taxonomy-empty-state';
                         p.textContent = 'Aucune ville dans le catalogue pour ce pays.';
                         block.appendChild(p);
                     } else {
+                        var cityGrid = document.createElement('div');
+                        cityGrid.className = 'city-grid';
                         cities.forEach(function(city) {
                             var lid = city.id;
-                            var title = city.title || '';
+                            var title = cleanTaxonomyLabel(city.title || '');
                             var checked = lid && selectedIdsForBuild.indexOf(lid) !== -1;
+                            var path = cleanTaxonomyLabel(countryName + ' - ' + title);
                             var label = document.createElement('label');
-                            label.className = 'destination-city-checkbox-label destination-city-row';
+                            label.className = 'destination-city-checkbox-label destination-city-row taxonomy-option';
                             label.setAttribute('data-city-title', title.toLowerCase());
-                            label.setAttribute('data-path', countryName + ' - ' + title);
+                            label.setAttribute('data-path', path);
                             label.setAttribute('data-country-code', code);
                             if (lid) {
-                                label.innerHTML = '<input type="checkbox" name="locations[]" value="' + lid + '" class="location-checkbox destination-checkbox" ' + (checked ? 'checked' : '') + ' data-loc-id="' + lid + '" data-loc-title="' + escapeAttr(title) + '"> <span class="destination-city-path">' + escapeHtml(countryName) + ' - ' + escapeHtml(title) + '</span>';
+                                label.innerHTML = '<input type="checkbox" name="locations[]" value="' + lid + '" class="location-checkbox destination-checkbox" ' + (checked ? 'checked' : '') + ' data-loc-id="' + lid + '" data-loc-title="' + escapeAttr(title) + '"> <span class="destination-city-path">' + escapeHtml(title) + '</span>';
                             } else {
-                                label.innerHTML = '<input type="checkbox" name="locations[]" value="" class="location-checkbox destination-checkbox" data-country-code="' + escapeAttr(code) + '" data-city-name="' + escapeAttr(title) + '" data-needs-create="1" data-loc-title="' + escapeAttr(title) + '"> <span class="destination-city-path">' + escapeHtml(countryName) + ' - ' + escapeHtml(title) + '</span>';
+                                label.innerHTML = '<input type="checkbox" name="locations[]" value="" class="location-checkbox destination-checkbox" data-country-code="' + escapeAttr(code) + '" data-city-name="' + escapeAttr(title) + '" data-needs-create="1" data-loc-title="' + escapeAttr(title) + '"> <span class="destination-city-path">' + escapeHtml(title) + '</span>';
                             }
-                            block.appendChild(label);
+                            cityGrid.appendChild(label);
                         });
+                        block.appendChild(cityGrid);
                     }
                     panelList.appendChild(block);
                 });
@@ -2288,6 +2337,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateCountryIndeterminate();
                 updateChips();
                 updateCount();
+                updateTaxonomySelectionCounts();
             }
 
             function filterCitySearch(term) {
@@ -2310,9 +2360,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!countryListEl) return;
                 countryListEl.querySelectorAll('.destination-country-option-label').forEach(function(label) {
                     var opt = label.querySelector('.destination-country-option');
-                    var name = (opt ? opt.getAttribute('data-country-name') : '') || (label.textContent || '').toLowerCase();
+                    var name = cleanTaxonomyLabel((opt ? opt.getAttribute('data-country-name') : '') || (label.textContent || '')).toLowerCase();
                     if (typeof name !== 'string') name = '';
-                    name = name.toLowerCase();
                     var show = !term || name.indexOf(term) !== -1;
                     label.style.display = show ? '' : 'none';
                 });
@@ -2346,10 +2395,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 var list = [];
                 term = (term || '').toLowerCase().trim();
                 for (var code in worldCountries) {
-                    var name = (worldCountries[code] || '').toLowerCase();
+                    var name = cleanTaxonomyLabel(worldCountries[code] || '');
+                    var searchableName = name.toLowerCase();
                     if (selectedCodes.indexOf(code) !== -1) continue;
-                    if (term && name.indexOf(term) === -1) continue;
-                    list.push({ code: code, name: worldCountries[code] });
+                    if (term && searchableName.indexOf(term) === -1) continue;
+                    list.push({ code: code, name: name });
                 }
                 return list;
             }
@@ -2362,7 +2412,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 list.slice(0, 60).forEach(function(item) {
                     var div = document.createElement('div');
                     div.className = 'destination-country-autocomplete-item';
-                    div.textContent = item.name;
+                    div.textContent = cleanTaxonomyLabel(item.name);
                     div.setAttribute('data-country-code', item.code);
                     countryAutocompleteDropdown.appendChild(div);
                 });
@@ -2420,7 +2470,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (opt) opt.checked = true;
                 });
                 if (codesToSelect.length) fillCitiesPanel(codesToSelect);
-                else if (panelDynamic) panelDynamic.style.display = 'none';
+                else {
+                    if (panelDynamic) panelDynamic.style.display = 'none';
+                    updateTaxonomySelectionCounts();
+                }
             })();
 
             if (citySearchInput) {
@@ -2445,10 +2498,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 var list = [];
                 term = (term || '').toLowerCase().trim();
                 codes.forEach(function(code) {
-                    var countryName = (countryCitiesData[code] && countryCitiesData[code].title) ? countryCitiesData[code].title : (worldCountries[code] || code);
+                    var countryName = cleanTaxonomyLabel((countryCitiesData[code] && countryCitiesData[code].title) ? countryCitiesData[code].title : (worldCountries[code] || code));
                     (mergedCities[code] || []).forEach(function(city) {
-                        var title = city.title || '';
-                        var path = countryName + ' - ' + title;
+                        var title = cleanTaxonomyLabel(city.title || '');
+                        var path = cleanTaxonomyLabel(countryName + ' - ' + title);
                         if (selectedPaths.indexOf(path) !== -1) return;
                         if (term && path.toLowerCase().indexOf(term) === -1 && title.toLowerCase().indexOf(term) === -1) return;
                         list.push({ code: code, countryName: countryName, path: path, city: city });
@@ -2468,7 +2521,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     div.textContent = item.path;
                     div.setAttribute('data-path', item.path);
                     div.setAttribute('data-country-code', item.code);
-                    div.setAttribute('data-city-name', item.city.title || '');
+                    div.setAttribute('data-city-name', cleanTaxonomyLabel(item.city.title || ''));
                     if (item.city.id) div.setAttribute('data-loc-id', item.city.id);
                     cityAutocompleteDropdown.appendChild(div);
                 });
@@ -2532,7 +2585,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         else { cb.checked = true; onCheckboxChange(); }
                     });
                     function runNext(i) {
-                        if (i >= toCreate.length) { updateCountryIndeterminate(); return; }
+                        if (i >= toCreate.length) { updateCountryIndeterminate(); updateTaxonomySelectionCounts(); return; }
                         var cb = toCreate[i];
                         var ccode = cb.getAttribute('data-country-code');
                         var cname = cb.getAttribute('data-city-name');

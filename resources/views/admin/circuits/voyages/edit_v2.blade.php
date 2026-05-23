@@ -285,7 +285,7 @@
         }
 
         .voyage-edit-v2-page .destination-modal .modal-title {
-            font-weight: 800;
+            font-weight: 600;
             letter-spacing: -0.01em;
         }
 
@@ -432,6 +432,316 @@
             font-size: 14px;
             font-weight: 700;
             margin-bottom: 10px;
+        }
+
+        /* Destination taxonomy modals: final edit-v2 UI */
+        .edit-v2-taxonomy-modal .modal-dialog {
+            max-width: 1100px !important;
+        }
+
+        .edit-v2-taxonomy-modal--cities .modal-dialog {
+            max-width: 1050px !important;
+        }
+
+        .edit-v2-taxonomy-modal .modal-content {
+            max-height: 82vh !important;
+            display: flex !important;
+            overflow: hidden !important;
+            border: 1px solid #e4edf7 !important;
+            border-radius: 20px !important;
+            background: #fff !important;
+            box-shadow: 0 24px 70px rgba(15, 39, 66, .18) !important;
+        }
+
+        .edit-v2-taxonomy-modal--cities .modal-content {
+            max-height: 75vh !important;
+        }
+
+        .edit-v2-taxonomy-modal .modal-header {
+            flex: 0 0 auto !important;
+            padding: 18px 22px !important;
+            border-bottom: 1px solid #edf3f8 !important;
+            background: #fff !important;
+        }
+
+        .edit-v2-taxonomy-modal .modal-title {
+            color: #0f2742 !important;
+            font-size: 20px !important;
+            font-weight: 600 !important;
+            letter-spacing: -0.015em !important;
+        }
+
+        .edit-v2-taxonomy-modal .modal-header .small {
+            color: #60758d !important;
+            font-size: 12px !important;
+            font-weight: 400 !important;
+        }
+
+        .edit-v2-taxonomy-modal .modal-body {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+        }
+
+        .edit-v2-taxonomy-modal .destination-country-modal-panel,
+        .edit-v2-taxonomy-modal .destination-country-multi-wrap,
+        .edit-v2-taxonomy-modal .destination-cities-panel {
+            height: 100% !important;
+            margin: 0 !important;
+        }
+
+        .edit-v2-taxonomy-modal .taxonomy-toolbar {
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 5 !important;
+            padding: 14px 18px !important;
+            border-bottom: 1px solid #edf3f8 !important;
+            background: #fff !important;
+        }
+
+        .edit-v2-taxonomy-modal .taxonomy-section-label {
+            margin-bottom: 10px !important;
+            color: #52657c !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            letter-spacing: .01em !important;
+        }
+
+        .edit-v2-taxonomy-modal .taxonomy-toolbar-row {
+            display: grid !important;
+            grid-template-columns: minmax(260px, 1fr) minmax(220px, .7fr) auto auto !important;
+            gap: 10px !important;
+            align-items: center !important;
+            margin: 0 !important;
+        }
+
+        .edit-v2-taxonomy-modal .taxonomy-toolbar input {
+            width: 100% !important;
+            height: 38px !important;
+            min-height: 38px !important;
+            border: 1px solid #dbe7f3 !important;
+            border-radius: 12px !important;
+            padding: 0 12px !important;
+            color: #0f2742 !important;
+            font-size: 12px !important;
+            font-weight: 400 !important;
+            outline: none !important;
+        }
+
+        .edit-v2-taxonomy-modal .taxonomy-toolbar input:focus {
+            border-color: #0081bc !important;
+            box-shadow: 0 0 0 3px rgba(0,129,188,.10) !important;
+        }
+
+        .edit-v2-taxonomy-modal .taxonomy-toolbar .btn,
+        .edit-v2-taxonomy-modal .modal-footer .btn {
+            height: 38px !important;
+            min-height: 38px !important;
+            border-radius: 12px !important;
+            padding: 0 14px !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            white-space: nowrap !important;
+        }
+
+        .edit-v2-taxonomy-modal .taxonomy-scroll {
+            max-height: 58vh !important;
+            overflow-y: auto !important;
+            padding: 18px !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            background: #f8fbff !important;
+        }
+
+        .edit-v2-taxonomy-modal--cities .taxonomy-scroll {
+            max-height: 51vh !important;
+        }
+
+        .edit-v2-taxonomy-modal .taxonomy-grid {
+            display: grid !important;
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            gap: 10px !important;
+        }
+
+        .edit-v2-taxonomy-modal .taxonomy-option {
+            display: flex !important;
+            align-items: center !important;
+            gap: 9px !important;
+            min-height: 42px !important;
+            margin: 0 !important;
+            padding: 10px 12px !important;
+            border: 1px solid #e4edf7 !important;
+            border-radius: 12px !important;
+            background: #fff !important;
+            color: #243b53 !important;
+            font-size: 12px !important;
+            font-weight: 500 !important;
+            line-height: 1.25 !important;
+            cursor: pointer !important;
+            transition: border-color .18s ease, background-color .18s ease, color .18s ease, box-shadow .18s ease !important;
+        }
+
+        .edit-v2-taxonomy-modal .taxonomy-option:hover {
+            border-color: #0081bc !important;
+            background: #f0f9ff !important;
+        }
+
+        .edit-v2-taxonomy-modal .taxonomy-option input[type="checkbox"] {
+            width: 15px !important;
+            height: 15px !important;
+            flex: 0 0 15px !important;
+            margin: 0 !important;
+            accent-color: #0081bc !important;
+        }
+
+        .edit-v2-taxonomy-modal .taxonomy-option.is-selected,
+        .edit-v2-taxonomy-modal .taxonomy-option:has(input:checked) {
+            border-color: #0081bc !important;
+            background: #eaf7ff !important;
+            color: #005f91 !important;
+            box-shadow: 0 8px 18px rgba(0, 129, 188, .08) !important;
+        }
+
+        .edit-v2-taxonomy-modal .destination-city-path,
+        .edit-v2-taxonomy-modal .taxonomy-option span {
+            min-width: 0 !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            font-weight: inherit !important;
+        }
+
+        .edit-v2-taxonomy-modal .city-country-group {
+            display: block !important;
+            margin-bottom: 16px !important;
+            overflow: hidden !important;
+            border: 1px solid #e4edf7 !important;
+            border-radius: 16px !important;
+            background: #fff !important;
+        }
+
+        .edit-v2-taxonomy-modal .city-country-header {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 12px !important;
+            padding: 12px 14px !important;
+            border-bottom: 1px solid #e4edf7 !important;
+            background: #f7faff !important;
+        }
+
+        .edit-v2-taxonomy-modal .city-country-header strong {
+            color: #0f2742 !important;
+            font-size: 13px !important;
+            font-weight: 600 !important;
+        }
+
+        .edit-v2-taxonomy-modal .city-country-header span {
+            color: #71829a !important;
+            font-size: 11px !important;
+            font-weight: 500 !important;
+            white-space: nowrap !important;
+        }
+
+        .edit-v2-taxonomy-modal .country-full-option {
+            margin: 14px 14px 0 !important;
+            background: #f5fbff !important;
+            color: #005f91 !important;
+        }
+
+        .edit-v2-taxonomy-modal .city-grid {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 10px !important;
+            padding: 14px !important;
+        }
+
+        .edit-v2-taxonomy-modal .taxonomy-empty-state {
+            margin: 14px !important;
+            padding: 14px !important;
+            border: 1px dashed #d9e6f3 !important;
+            border-radius: 12px !important;
+            color: #71829a !important;
+            font-size: 12px !important;
+            font-weight: 400 !important;
+        }
+
+        .edit-v2-taxonomy-modal .modal-footer {
+            flex: 0 0 auto !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 14px 18px !important;
+            border-top: 1px solid #edf3f8 !important;
+            background: #f8fafc !important;
+        }
+
+        .edit-v2-taxonomy-modal .taxonomy-selection-count {
+            color: #243b53 !important;
+            font-size: 12px !important;
+            font-weight: 500 !important;
+        }
+
+        .edit-v2-taxonomy-modal .taxonomy-footer-spacer {
+            flex: 1 1 auto !important;
+        }
+
+        .edit-v2-taxonomy-modal .destination-country-autocomplete-dropdown,
+        .edit-v2-taxonomy-modal .destination-city-autocomplete-dropdown {
+            position: absolute !important;
+            top: calc(100% + 6px) !important;
+            left: 0 !important;
+            right: 0 !important;
+            z-index: 20 !important;
+            display: none !important;
+            max-height: 260px !important;
+            overflow-y: auto !important;
+            border: 1px solid #dbe7f3 !important;
+            border-radius: 14px !important;
+            background: #fff !important;
+            box-shadow: 0 18px 40px rgba(15, 39, 66, .14) !important;
+        }
+
+        .edit-v2-taxonomy-modal .destination-country-autocomplete-dropdown.is-open,
+        .edit-v2-taxonomy-modal .destination-city-autocomplete-dropdown.is-open {
+            display: block !important;
+        }
+
+        .edit-v2-taxonomy-modal .destination-country-autocomplete-item,
+        .edit-v2-taxonomy-modal .destination-city-autocomplete-item {
+            padding: 10px 12px !important;
+            color: #243b53 !important;
+            font-size: 12px !important;
+            font-weight: 500 !important;
+            cursor: pointer !important;
+        }
+
+        .edit-v2-taxonomy-modal .destination-country-autocomplete-item:hover,
+        .edit-v2-taxonomy-modal .destination-city-autocomplete-item:hover {
+            background: #f0f9ff !important;
+            color: #005f91 !important;
+        }
+
+        @media (max-width: 1366px) {
+            .edit-v2-taxonomy-modal .taxonomy-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            }
+
+            .edit-v2-taxonomy-modal .city-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .edit-v2-taxonomy-modal .taxonomy-toolbar-row {
+                grid-template-columns: 1fr !important;
+            }
+
+            .edit-v2-taxonomy-modal .taxonomy-grid,
+            .edit-v2-taxonomy-modal .city-grid {
+                grid-template-columns: 1fr !important;
+            }
         }
     </style>
 @endpush

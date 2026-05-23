@@ -43,8 +43,8 @@
     </div>
 </div>
 
-<div class="modal fade destination-modal" id="destinationCountriesModal" tabindex="-1" aria-labelledby="destinationCountriesModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+<div class="modal fade destination-modal edit-v2-taxonomy-modal edit-v2-taxonomy-modal--countries" id="destinationCountriesModal" tabindex="-1" aria-labelledby="destinationCountriesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <div>
@@ -55,20 +55,22 @@
             </div>
             <div class="modal-body" id="destinationCountriesModalBody">
                 <div class="mb-3 destination-country-modal-panel">
-                    <label class="form-label fw-medium">Pays (choix multiple)</label>
                     <div class="destination-country-multi-wrap">
-                        <div class="destination-country-add-wrap position-relative mb-2">
-                            <input type="text" class="form-control form-control-sm destination-country-add-search" id="destinationCountryAddSearch" placeholder="Rechercher et ajouter des pays�?�" autocomplete="off">
-                            <div class="destination-country-autocomplete-dropdown" id="destinationCountryAutocompleteDropdown"></div>
+                        <div class="taxonomy-toolbar">
+                            <div class="taxonomy-section-label">Pays disponibles</div>
+                            <div class="taxonomy-toolbar-row">
+                                <div class="destination-country-add-wrap position-relative">
+                                    <input type="text" class="form-control form-control-sm destination-country-add-search" id="destinationCountryAddSearch" placeholder="Rechercher et ajouter des pays" autocomplete="off">
+                                    <div class="destination-country-autocomplete-dropdown" id="destinationCountryAutocompleteDropdown"></div>
+                                </div>
+                                <input type="text" class="form-control form-control-sm destination-country-search" id="destinationCountrySearch" placeholder="Filtrer la liste des pays" autocomplete="off">
+                                <button type="button" class="btn btn-sm btn-outline-primary" id="destinationSelectAllCountries">Tout sélectionner</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="destinationDeselectAllCountries">Tout désélectionner</button>
+                            </div>
                         </div>
-                        <input type="text" class="form-control form-control-sm destination-country-search mb-2" id="destinationCountrySearch" placeholder="Filtrer la liste des pays�?�" autocomplete="off">
-                        <div class="destination-country-multi-actions mb-2">
-                            <button type="button" class="btn btn-sm btn-outline-primary" id="destinationSelectAllCountries">Tout sélectionner</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" id="destinationDeselectAllCountries">Tout désélectionner</button>
-                        </div>
-                        <div class="destination-country-list" id="destinationCountryList">
+                        <div class="destination-country-list taxonomy-scroll taxonomy-grid" id="destinationCountryList">
                             @foreach($worldCountries as $code => $name)
-                                <label class="destination-country-option-label">
+                                <label class="destination-country-option-label taxonomy-option">
                                     <input type="checkbox" class="destination-country-option" value="{{ $code }}" data-country-name="{{ e($name) }}">
                                     <span>{{ $name }}</span>
                                 </label>
@@ -78,14 +80,17 @@
                 </div>
             </div>
             <div class="modal-footer">
+                <span class="taxonomy-selection-count" id="destinationCountriesSelectedCount">0 pays sélectionné</span>
+                <span class="taxonomy-footer-spacer"></span>
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Valider la sélection</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade destination-modal" id="destinationCitiesModal" tabindex="-1" aria-labelledby="destinationCitiesModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+<div class="modal fade destination-modal edit-v2-taxonomy-modal edit-v2-taxonomy-modal--cities" id="destinationCitiesModal" tabindex="-1" aria-labelledby="destinationCitiesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <div>
@@ -96,25 +101,28 @@
             </div>
             <div class="modal-body" id="destinationCitiesModalBody">
                 <div class="destination-cities-panel destination-cities-panel-dynamic" id="destination-cities-panel-dynamic" style="display: none;">
-                    <div class="destination-cities-panel-header d-flex flex-wrap align-items-center gap-2 mb-2">
-                        <span class="destination-cities-panel-title" id="destination-cities-panel-title">Villes (choix multiple)</span>
-                        <div class="destination-cities-panel-actions ms-auto d-flex flex-wrap align-items-center gap-2">
+                    <div class="taxonomy-toolbar destination-cities-panel-header">
+                        <div class="taxonomy-section-label" id="destination-cities-panel-title">Villes disponibles</div>
+                        <div class="taxonomy-toolbar-row destination-cities-panel-actions">
                             <div class="destination-city-autocomplete-wrap position-relative">
-                                <input type="text" class="form-control form-control-sm destination-city-add-search" id="destinationCityAddSearch" placeholder="Rechercher et ajouter des villes�?�" style="min-width: 220px;" autocomplete="off">
+                                <input type="text" class="form-control form-control-sm destination-city-add-search" id="destinationCityAddSearch" placeholder="Rechercher et ajouter des villes" autocomplete="off">
                                 <div class="destination-city-autocomplete-dropdown" id="destinationCityAutocompleteDropdown"></div>
                             </div>
-                            <input type="text" class="form-control form-control-sm destination-city-search" id="destinationCitySearch" placeholder="Filtrer la liste�?�" style="max-width: 160px;" autocomplete="off">
+                            <input type="text" class="form-control form-control-sm destination-city-search" id="destinationCitySearch" placeholder="Filtrer la liste" autocomplete="off">
                             <button type="button" class="btn btn-sm btn-outline-primary" id="destinationSelectAllCities">Tout sélectionner</button>
                             <button type="button" class="btn btn-sm btn-outline-secondary" id="destinationDeselectAllCities">Tout désélectionner</button>
                         </div>
                     </div>
-                    <div class="destination-cities-list-wrapper">
+                    <div class="destination-cities-list-wrapper taxonomy-scroll">
                         <div class="destination-cities-list" id="destination-cities-list"></div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
+                <span class="taxonomy-selection-count" id="destinationCitiesSelectedCount">0 ville sélectionnée</span>
+                <span class="taxonomy-footer-spacer"></span>
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Valider la sélection</button>
             </div>
         </div>
     </div>
@@ -130,12 +138,29 @@
     window.DESTINATION_ENSURE_LOCATION_URL = @json($ensureLocationUrl);
 
     document.addEventListener('DOMContentLoaded', function () {
+        function cleanTaxonomyLabel(label) {
+            if (!label) return '';
+
+            return String(label)
+                .replace(/�+/g, '')
+                .replace(/Âº/g, '-')
+                .replace(/º/g, '-')
+                .replace(/[»«]/g, '')
+                .replace(/\s*[-–—]\s*/g, ' - ')
+                .replace(/\s{2,}/g, ' ')
+                .trim();
+        }
+
+        document.querySelectorAll('#destinationCountryList .taxonomy-option span').forEach(function (label) {
+            label.textContent = cleanTaxonomyLabel(label.textContent);
+        });
+
         window.setTimeout(function () {
             var chipsContainer = document.getElementById('locationChipsContainer');
             var countText = document.getElementById('locationCountText');
             var labels = window.DESTINATION_SELECTED_LABELS || {};
             var entries = Object.keys(labels).map(function (id) {
-                return { id: id, title: labels[id] };
+                return { id: id, title: cleanTaxonomyLabel(labels[id]) };
             }).filter(function (item) {
                 return item.title;
             });
