@@ -252,6 +252,10 @@
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
+            padding: 12px;
+            border: 1px solid rgba(180, 210, 240, 0.45);
+            border-radius: 14px;
+            background: #f8fbff;
         }
 
         .voyage-edit-v2-page .destination-modal-actions .btn {
@@ -265,6 +269,10 @@
             border-radius: 18px;
             border: 1px solid rgba(180, 210, 240, 0.6);
             box-shadow: 0 18px 44px rgba(20, 40, 70, 0.16);
+        }
+
+        .modal.destination-modal {
+            z-index: 1065;
         }
 
         .voyage-edit-v2-page .destination-modal .modal-header {
