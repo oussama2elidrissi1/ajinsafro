@@ -239,7 +239,7 @@
                                     <input type="text" name="client_nationality" id="v2-client-nationality" class="v2-input" value="{{ old('client_nationality') }}">
                                 </div>
                                 <div class="v2-field">
-                                    <label class="v2-label" for="v2-client-gender">Sexe</label>
+                                    <label class="v2-label" for="v2-client-gender">Sexe <span class="required-star">*</span></label>
                                     <select name="client_gender" id="v2-client-gender" class="v2-input">
                                         <option value="">Sélectionner…</option>
                                         <option value="male" {{ old('client_gender') === 'male' ? 'selected' : '' }}>Homme</option>

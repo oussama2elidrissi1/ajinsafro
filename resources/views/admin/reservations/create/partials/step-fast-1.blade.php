@@ -82,7 +82,7 @@
                     <input type="text" name="client_document_number" id="client_document_number" class="reservation-create__input" value="{{ old('client_document_number') }}">
                 </div>
                 <div class="reservation-create__field">
-                    <label class="reservation-create__label" for="client_gender">Sexe</label>
+                    <label class="reservation-create__label" for="client_gender">Sexe <span class="required-star">*</span></label>
                     <select name="client_gender" id="client_gender" class="reservation-create__input">
                         <option value="">Sélectionner...</option>
                         <option value="male" {{ old('client_gender') === 'male' ? 'selected' : '' }}>Homme</option>
@@ -155,7 +155,7 @@
                             <input type="text" name="passengers[{{ $companionKey }}][last_name]" class="reservation-create__input" value="{{ $passenger['last_name'] ?? '' }}">
                         </div>
                         <div class="reservation-create__field">
-                            <label class="reservation-create__label">Sexe</label>
+                            <label class="reservation-create__label">Sexe <span class="required-star">*</span></label>
                             <select name="passengers[{{ $companionKey }}][gender]" class="reservation-create__input">
                                 <option value="">Sélectionner...</option>
                                 <option value="male" {{ ($passenger['gender'] ?? '') === 'male' ? 'selected' : '' }}>Homme</option>
