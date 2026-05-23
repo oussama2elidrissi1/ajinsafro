@@ -2122,7 +2122,8 @@ document.addEventListener('DOMContentLoaded', function () {
             var mergedCities = window.DESTINATION_MERGED_CITIES || {};
             var worldCountries = window.DESTINATION_WORLD_COUNTRIES || {};
             var ensureLocationUrl = window.DESTINATION_ENSURE_LOCATION_URL || '';
-            var selectedIds = window.DESTINATION_SELECTED_IDS || [];
+            var selectedIds = (window.DESTINATION_SELECTED_IDS || []).map(function(id) { return String(id); });
+            var selectedFallbackContainer = document.getElementById('destinationSelectedLocationsFallback');
 
             function cleanTaxonomyLabel(label) {
                 if (!label) return '';
@@ -2187,12 +2188,35 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateCityCountryCounts();
             }
 
+            function syncSelectedLocationFallbacks() {
+                if (!selectedFallbackContainer) return;
+
+                var selectedValues = [];
+                document.querySelectorAll('.location-checkbox:checked').forEach(function(cb) {
+                    var value = cb.value;
+                    if (value && String(value).trim() !== '' && selectedValues.indexOf(String(value)) === -1) {
+                        selectedValues.push(String(value));
+                    }
+                });
+
+                selectedFallbackContainer.innerHTML = '';
+                selectedValues.forEach(function(value) {
+                    var input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'locations[]';
+                    input.value = value;
+                    input.setAttribute('data-destination-selected-fallback', '1');
+                    selectedFallbackContainer.appendChild(input);
+                });
+            }
+
             function getSelectedCountryCodes() {
                 var opts = document.querySelectorAll('#destinationCountryList .destination-country-option:checked');
                 return Array.from(opts).map(function(o) { return o.value; }).filter(Boolean);
             }
 
             function onCheckboxChange() {
+                syncSelectedLocationFallbacks();
                 updateChips();
                 updateCount();
                 updateCountryIndeterminate();
@@ -2251,14 +2275,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 panelList.querySelectorAll('.location-checkbox:checked').forEach(function(cb) {
                     var v = cb.value;
                     if (v && String(v).trim() !== '') {
-                        var id = parseInt(v, 10);
-                        if (!isNaN(id) && ids.indexOf(id) === -1) ids.push(id);
+                        var id = String(v);
+                        if (ids.indexOf(id) === -1) ids.push(id);
                     }
                 });
                 return ids;
             }
 
-            function fillCitiesPanel(selectedCodes) {
+            function fillCitiesPanel(selectedCodes, shouldSyncFallbacks) {
                 if (!panelList) return;
                 var selectedIdsForBuild = selectedIds.slice();
                 if (panelList.querySelectorAll('.location-checkbox').length > 0) {
@@ -2269,6 +2293,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!selectedCodes || selectedCodes.length === 0) {
                     if (panelDynamic) panelDynamic.style.display = 'none';
                     if (citySearchInput) citySearchInput.value = '';
+                    if (shouldSyncFallbacks) syncSelectedLocationFallbacks();
                     updateTaxonomySelectionCounts();
                     return;
                 }
@@ -2290,7 +2315,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     block.appendChild(header);
 
                     var countryId = data && data.id ? data.id : null;
-                    var countryChecked = countryId && selectedIdsForBuild.indexOf(countryId) !== -1;
+                    var countryChecked = countryId && selectedIdsForBuild.indexOf(String(countryId)) !== -1;
                     var countryLabel = document.createElement('label');
                     countryLabel.className = 'destination-country-checkbox-label taxonomy-option country-full-option';
                     if (countryId) {
@@ -2311,7 +2336,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         cities.forEach(function(city) {
                             var lid = city.id;
                             var title = cleanTaxonomyLabel(city.title || '');
-                            var checked = lid && selectedIdsForBuild.indexOf(lid) !== -1;
+                            var checked = lid && selectedIdsForBuild.indexOf(String(lid)) !== -1;
                             var path = cleanTaxonomyLabel(countryName + ' - ' + title);
                             var label = document.createElement('label');
                             label.className = 'destination-city-checkbox-label destination-city-row taxonomy-option';
@@ -2337,6 +2362,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateCountryIndeterminate();
                 updateChips();
                 updateCount();
+                if (shouldSyncFallbacks) syncSelectedLocationFallbacks();
                 updateTaxonomySelectionCounts();
             }
 
@@ -2369,7 +2395,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (countryListEl) {
                 countryListEl.querySelectorAll('.destination-country-option').forEach(function(opt) {
-                    opt.addEventListener('change', function() { fillCitiesPanel(getSelectedCountryCodes()); });
+                    opt.addEventListener('change', function() { fillCitiesPanel(getSelectedCountryCodes(), true); });
                 });
             }
             if (countrySearchInput) {
@@ -2378,13 +2404,13 @@ document.addEventListener('DOMContentLoaded', function () {
             if (selectAllCountriesBtn && countryListEl) {
                 selectAllCountriesBtn.addEventListener('click', function() {
                     countryListEl.querySelectorAll('.destination-country-option-label:not([style*="display: none"]) .destination-country-option').forEach(function(o) { o.checked = true; });
-                    fillCitiesPanel(getSelectedCountryCodes());
+                    fillCitiesPanel(getSelectedCountryCodes(), true);
                 });
             }
             if (deselectAllCountriesBtn && countryListEl) {
                 deselectAllCountriesBtn.addEventListener('click', function() {
                     countryListEl.querySelectorAll('.destination-country-option').forEach(function(o) { o.checked = false; });
-                    fillCitiesPanel([]);
+                    fillCitiesPanel([], true);
                 });
             }
 
@@ -2426,7 +2452,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 var opt = countryListEl.querySelector('.destination-country-option[value="' + code + '"]');
                 if (opt && !opt.checked) {
                     opt.checked = true;
-                    fillCitiesPanel(getSelectedCountryCodes());
+                    fillCitiesPanel(getSelectedCountryCodes(), true);
                 }
                 openCountryAutocomplete();
             }
@@ -2469,7 +2495,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     var opt = countryListEl && countryListEl.querySelector('.destination-country-option[value="' + code + '"]');
                     if (opt) opt.checked = true;
                 });
-                if (codesToSelect.length) fillCitiesPanel(codesToSelect);
+                if (codesToSelect.length) fillCitiesPanel(codesToSelect, false);
                 else {
                     if (panelDynamic) panelDynamic.style.display = 'none';
                     updateTaxonomySelectionCounts();

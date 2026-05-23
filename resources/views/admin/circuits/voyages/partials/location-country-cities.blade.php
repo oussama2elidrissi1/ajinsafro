@@ -33,6 +33,11 @@
 @endphp
 
 <div class="destination-country-cities">
+    <div id="destinationSelectedLocationsFallback" class="d-none" aria-hidden="true">
+        @foreach($selectedIdStrings as $selectedLocationId)
+            <input type="hidden" name="locations[]" value="{{ $selectedLocationId }}" data-destination-selected-fallback="1">
+        @endforeach
+    </div>
     <div class="destination-modal-actions mb-3">
         <button type="button" class="btn btn-sm btn-outline-primary destination-open-countries" data-bs-toggle="modal" data-bs-target="#destinationCountriesModal">
             <i class="bx bx-world me-1"></i> Choisir les pays
