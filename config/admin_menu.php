@@ -274,6 +274,12 @@ return [
         'admin.reservations.workspace.prestation.participants' => 'reservations.view',
         'admin.reservations.workspace.prestation.pdf' => 'reservations.view',
         'admin.reservations.workspace.reservation.pdf' => 'reservations.view',
+
+        // Reservation create flow (client lookup/creation) should be usable for sales roles
+        // without granting full access to the Customers module.
+        'admin.customers.clients.search' => ['customers.view', 'reservations.view'],
+        'admin.customers.clients.quick-store' => ['customers.view', 'reservations.view'],
+
         'admin.menu-hubs.billetterie' => 'products-services.view',
         'admin.menu-hubs.hebergement' => 'accommodations.view',
         'admin.menu-hubs.hajj-omra' => 'hajj-omra.view',
