@@ -994,7 +994,7 @@
                                                             @endforeach
 
                                                             @for($i = 0; $i < $missingCompanionsCount; $i++)
-                                                                @php($index = $companionTravelers->count() + $i)
+                                                                @php $index = $companionTravelers->count() + $i; @endphp
                                                                 <tr class="companion-row is-placeholder">
                                                                     <td style="width: 120px;">
                                                                         <input type="hidden" name="passengers[{{ $index }}][traveler_key]" value="{{ 'companion_placeholder_'.$index }}">
@@ -1403,7 +1403,7 @@
                             @if($historyRows->isNotEmpty())
                                 <div class="list-group list-group-flush">
                                     @foreach($historyRows as $history)
-                                        @php($timeline = $historyMeta($history))
+                                        @php $timeline = $historyMeta($history); @endphp
                                         <div class="list-group-item px-0 border-0 border-bottom">
                                             <div class="d-flex justify-content-between gap-3 flex-wrap">
                                                 <div>
