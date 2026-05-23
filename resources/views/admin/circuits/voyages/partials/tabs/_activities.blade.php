@@ -186,6 +186,7 @@
                                     <div class="d-flex gap-1">
                                         <button type="button" class="btn btn-sm btn-outline-secondary voyage-activity-duplicate" title="Dupliquer"><i class="bx bx-copy"></i></button>
                                         <button type="button" class="btn btn-sm btn-outline-primary voyage-activity-edit"><i class="bx bx-pencil"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-info voyage-activity-image" title="Image"><i class="bx bx-image"></i></button>
                                         <button type="button" class="btn btn-sm btn-outline-danger voyage-activity-remove"><i class="bx bx-trash"></i></button>
                                     </div>
                                 </td>
@@ -212,13 +213,13 @@
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="activitiesCatalogModalLabel">Catalogue d�?Tactivités</h5>
+                    <h5 class="modal-title" id="activitiesCatalogModalLabel">Catalogue d'activités</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
                 </div>
                 <div class="modal-body">
                     <div id="activities-catalog-list-view">
                         <div class="mb-3">
-                            <input type="text" class="form-control" id="activities-catalog-search" placeholder="Rechercher une activité�?�">
+                            <input type="text" class="form-control" id="activities-catalog-search" placeholder="Rechercher une activité...">
                         </div>
                         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
                             <div class="alert alert-info py-2 small mb-0 flex-grow-1" id="activities-catalog-region-hint">
@@ -255,7 +256,7 @@
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <div>
                                 <h6 class="mb-1">Créer une nouvelle activité</h6>
-                                <p class="text-muted small mb-0">Création rapide sans quitter l�?Tédition du voyage.</p>
+                                <p class="text-muted small mb-0">Création rapide sans quitter l'édition du voyage.</p>
                             </div>
                             <button type="button" class="btn btn-sm btn-light" id="activities-catalog-back-to-list">
                                 <i class="bx bx-arrow-back me-1"></i> Retour à la liste
@@ -266,12 +267,12 @@
 
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label for="activities-create-title" class="form-label">Nom de l�?Tactivité <span class="text-danger">*</span></label>
+                                <label for="activities-create-title" class="form-label">Nom de l'activité <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="activities-create-title">
                                 <div class="small text-danger mt-1 d-none" data-error="title"></div>
                             </div>
                             <div class="col-md-6">
-                                <label for="activities-create-type" class="form-label">Type d�?Tactivité <span class="text-danger">*</span></label>
+                                <label for="activities-create-type" class="form-label">Type d'activité</label>
                                 <input type="text" class="form-control" id="activities-create-type" placeholder="Ex. : excursion, quad">
                                 <div class="small text-danger mt-1 d-none" data-error="activity_type"></div>
                             </div>
@@ -289,7 +290,7 @@
                                 <div class="small text-danger mt-1 d-none" data-error="adult_price"></div>
                             </div>
                             <div class="col-md-6">
-                                <label for="activities-create-child-price" class="form-label">Prix enfant <span class="text-danger">*</span></label>
+                                <label for="activities-create-child-price" class="form-label">Prix enfant</label>
                                 <div class="input-group">
                                     <input type="number" class="form-control" id="activities-create-child-price" min="0" step="0.01" placeholder="0.00">
                                     <span class="input-group-text">MAD</span>
@@ -297,17 +298,17 @@
                                 <div class="small text-danger mt-1 d-none" data-error="child_price"></div>
                             </div>
                             <div class="col-md-4">
-                                <label for="activities-create-min-age" class="form-label">�,ge minimum <span class="text-danger">*</span></label>
+                                <label for="activities-create-min-age" class="form-label">Âge minimum</label>
                                 <input type="number" class="form-control" id="activities-create-min-age" min="0" max="120">
                                 <div class="small text-danger mt-1 d-none" data-error="min_age"></div>
                             </div>
                             <div class="col-md-4">
-                                <label for="activities-create-max-age" class="form-label">�,ge maximum <span class="text-danger">*</span></label>
+                                <label for="activities-create-max-age" class="form-label">Âge maximum</label>
                                 <input type="number" class="form-control" id="activities-create-max-age" min="0" max="120">
                                 <div class="small text-danger mt-1 d-none" data-error="max_age"></div>
                             </div>
                             <div class="col-md-4">
-                                <label for="activities-create-duration" class="form-label">Durée <span class="text-danger">*</span></label>
+                                <label for="activities-create-duration" class="form-label">Durée</label>
                                 <div class="input-group">
                                     <input type="number" class="form-control" id="activities-create-duration" min="1" step="1" placeholder="60">
                                     <span class="input-group-text">min</span>
@@ -315,9 +316,9 @@
                                 <div class="small text-danger mt-1 d-none" data-error="default_duration_minutes"></div>
                             </div>
                             <div class="col-12">
-                                <label for="activities-create-gallery" class="form-label">Images multiples</label>
+                                <label for="activities-create-gallery" class="form-label">Images de l'activité</label>
                                 <input type="file" class="form-control" id="activities-create-gallery" accept="image/jpeg,image/png,image/webp" multiple>
-                                <div class="form-text">Optionnel. Vous pourrez compléter depuis le CRUD activité.</div>
+                                <div class="form-text">Optionnel, vous pouvez ajouter ou modifier les images plus tard.</div>
                                 <div class="small text-danger mt-1 d-none" data-error="gallery_images"></div>
                                 <div class="small text-danger mt-1 d-none" data-error="image"></div>
                             </div>
@@ -326,7 +327,7 @@
                         <div class="d-flex justify-content-end gap-2 mt-4">
                             <button type="button" class="btn btn-light" id="activities-catalog-form-reset">Réinitialiser</button>
                             <button type="button" class="btn btn-primary" id="activities-catalog-form-submit">
-                                <span class="btn-text"><i class="bx bx-save me-1"></i> Enregistrer l�?Tactivité</span>
+                                <span class="btn-text"><i class="bx bx-save me-1"></i> Enregistrer l'activité</span>
                                 <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                             </button>
                         </div>

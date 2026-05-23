@@ -19,7 +19,7 @@ class StoreActivityRequest extends FormRequest
     {
         return [
             'title' => 'required|string|max:255',
-            'activity_type' => 'required|string|max:120',
+            'activity_type' => 'nullable|string|max:120',
             'slug' => [
                 'nullable',
                 'string',
@@ -35,10 +35,10 @@ class StoreActivityRequest extends FormRequest
             'existing_gallery_image_ids' => 'nullable|array',
             'existing_gallery_image_ids.*' => 'integer|min:1',
             'adult_price' => 'required|numeric|min:0',
-            'child_price' => 'required|numeric|min:0',
-            'min_age' => 'required|integer|min:0|max:120',
-            'max_age' => 'required|integer|min:0|max:120|gte:min_age',
-            'default_duration_minutes' => 'required|integer|min:1|max:10080',
+            'child_price' => 'nullable|numeric|min:0',
+            'min_age' => 'nullable|integer|min:0|max:120',
+            'max_age' => 'nullable|integer|min:0|max:120|gte:min_age',
+            'default_duration_minutes' => 'nullable|integer|min:1|max:10080',
             'region_name' => 'required|string|max:255',
             'location_text' => 'nullable|string|max:255',
             'place_text' => 'nullable|string|max:255',
@@ -49,7 +49,8 @@ class StoreActivityRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
-            if ($this->allowsEmptyGallery()) {
+            // Images are optional for quick-create from voyage editor
+            if ($this->allowsEmptyGallery() || $this->boolean('is_quick_create')) {
                 return;
             }
 
@@ -60,7 +61,7 @@ class StoreActivityRequest extends FormRequest
             if (! $this->hasFile('image')
                 && ! $this->hasFile('gallery_images')
                 && $existing === 0) {
-                $validator->errors()->add('gallery_images', 'Ajoutez au moins une image Ã  la galerie.');
+                $validator->errors()->add('gallery_images', 'Ajoutez au moins une image a la galerie.');
             }
         });
     }
