@@ -53,6 +53,7 @@
         'departureHotelsRoomsUrl' => route('admin.reservations.departure-hotels-rooms'),
         'selectedTravelDate' => $selectedTravelDate ?? null,
         'selectedDepartureId' => $selectedDepartureId ?? null,
+        'selectedUnitPrice' => $selectedUnitPrice ?? null,
         'compactAvailabilityOnly' => true,
     ], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
 

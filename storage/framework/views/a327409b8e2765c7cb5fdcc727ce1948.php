@@ -44,7 +44,7 @@
         $normalize($client?->last_name ?: $reservation->client_last_name ?: null),
         $normalize($client?->phone ?: $reservation->client_phone ?: null),
         $normalize($client?->email ?: $reservation->client_email ?: null),
-        $normalize($client?->document_number ?: $reservation->client_document_number ?: null),
+        $normalize($client?->national_id_number ?: ($client?->passport_number ?: ($reservation->client_document_number ?: null))),
     ], fn (string $v) => $v !== ''));
 
     $rawCompanions = $allPassengers
@@ -200,9 +200,9 @@
         'type_label' => 'Principal',
         'first_name' => $client?->first_name ?: $reservation->client_first_name ?: $client?->full_name,
         'last_name' => $client?->last_name ?: $reservation->client_last_name,
-        'birth_date' => optional($client?->birth_date)->format('Y-m-d') ?: optional($reservation->client_birth_date)->format('Y-m-d'),
-        'document_type' => $client?->document_type ?: $reservation->client_document_type,
-        'document_number' => $client?->document_number ?: $reservation->client_document_number,
+        'birth_date' => optional($client?->date_of_birth)->format('Y-m-d') ?: optional($reservation->client_birth_date)->format('Y-m-d'),
+        'document_type' => $client?->national_id_number ? 'cin' : ($client?->passport_number ? 'passport' : ($reservation->client_document_type ?: null)),
+        'document_number' => $client?->national_id_number ?: ($client?->passport_number ?: $reservation->client_document_number),
         'gender' => $client?->gender ?? null,
         'relationship_to_main' => 'main',
         'consumes_bed' => true,
@@ -911,15 +911,15 @@
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label class="rd-label">Date de naissance</label>
-                                                        <input type="date" name="client_birth_date" class="form-control" value="<?php echo e(old('client_birth_date', optional($client?->birth_date)->format('Y-m-d') ?? optional($reservation->client_birth_date)->format('Y-m-d'))); ?>">
+                                                        <input type="date" name="client_birth_date" class="form-control" value="<?php echo e(old('client_birth_date', optional($client?->date_of_birth)->format('Y-m-d') ?? optional($reservation->client_birth_date)->format('Y-m-d'))); ?>">
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label class="rd-label">Type document</label>
-                                                        <input type="text" name="client_document_type" class="form-control" value="<?php echo e(old('client_document_type', $client?->document_type ?? $reservation->client_document_type ?? '')); ?>">
+                                                        <input type="text" name="client_document_type" class="form-control" value="<?php echo e(old('client_document_type', ($client?->national_id_number ? 'cin' : ($client?->passport_number ? 'passport' : ($reservation->client_document_type ?? ''))) )); ?>">
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label class="rd-label">Numéro document</label>
-                                                        <input type="text" name="client_document_number" class="form-control" value="<?php echo e(old('client_document_number', $client?->document_number ?? $reservation->client_document_number ?? '')); ?>">
+                                                        <input type="text" name="client_document_number" class="form-control" value="<?php echo e(old('client_document_number', $client?->national_id_number ?: ($client?->passport_number ?: ($reservation->client_document_number ?? '')))); ?>">
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label class="rd-label">Nationalité</label>
@@ -1148,9 +1148,9 @@
                                             <td>Principal</td>
                                             <td><?php echo e($client?->first_name ?? $reservation->client_first_name ?? '-'); ?></td>
                                             <td><?php echo e($client?->last_name ?? $reservation->client_last_name ?? '-'); ?></td>
-                                            <td><?php echo e(optional($client?->birth_date)->format('d/m/Y') ?? optional($reservation->client_birth_date)->format('d/m/Y') ?? '-'); ?></td>
-                                            <td><?php echo e($client?->document_type ?? $reservation->client_document_type ?? '-'); ?></td>
-                                            <td><?php echo e($client?->document_number ?? $reservation->client_document_number ?? '-'); ?></td>
+                                            <td><?php echo e(optional($client?->date_of_birth)->format('d/m/Y') ?? optional($reservation->client_birth_date)->format('d/m/Y') ?? '-'); ?></td>
+                                            <td><?php echo e($client?->national_id_number ? 'cin' : ($client?->passport_number ? 'passport' : ($reservation->client_document_type ?? '-'))); ?></td>
+                                            <td><?php echo e($client?->national_id_number ?: ($client?->passport_number ?: ($reservation->client_document_number ?? '-'))); ?></td>
                                             <td class="text-end"><span class="rd-pill is-completed">Client principal</span></td>
                                         </tr>
                                         <?php $__currentLoopData = $companionTravelers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $traveler): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -1320,9 +1320,9 @@
                                         <input type="hidden" name="client_last_name" value="<?php echo e($client?->last_name ?? $reservation->client_last_name ?? ''); ?>">
                                         <input type="hidden" name="client_phone" value="<?php echo e($client?->phone ?? $reservation->client_phone ?? ''); ?>">
                                         <input type="hidden" name="client_email" value="<?php echo e($client?->email ?? $reservation->client_email ?? ''); ?>">
-                                        <input type="hidden" name="client_document_type" value="<?php echo e($client?->document_type ?? $reservation->client_document_type ?? ''); ?>">
-                                        <input type="hidden" name="client_document_number" value="<?php echo e($client?->document_number ?? $reservation->client_document_number ?? ''); ?>">
-                                        <input type="hidden" name="client_birth_date" value="<?php echo e(optional($client?->birth_date)->format('Y-m-d') ?? optional($reservation->client_birth_date)->format('Y-m-d')); ?>">
+                                        <input type="hidden" name="client_document_type" value="<?php echo e($client?->national_id_number ? 'cin' : ($client?->passport_number ? 'passport' : ($reservation->client_document_type ?? ''))); ?>">
+                                        <input type="hidden" name="client_document_number" value="<?php echo e($client?->national_id_number ?: ($client?->passport_number ?: ($reservation->client_document_number ?? ''))); ?>">
+                                        <input type="hidden" name="client_birth_date" value="<?php echo e(optional($client?->date_of_birth)->format('Y-m-d') ?? optional($reservation->client_birth_date)->format('Y-m-d')); ?>">
                                         <input type="hidden" name="client_nationality" value="<?php echo e($client?->nationality ?? ''); ?>">
                                         <input type="hidden" name="client_address" value="<?php echo e($client?->address_line_1 ?? ''); ?>">
                                         <input type="hidden" name="payment_type" value="<?php echo e($reservation->payment_type ?? ''); ?>">
@@ -1468,6 +1468,5 @@
         </script>
     <?php $__env->stopPush(); ?>
 <?php $__env->stopSection(); ?>
-
 
 <?php echo $__env->make('layouts.admin-v6', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\oussa\Desktop\themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template\Qovex_Laravel_v3.0.0\Admin\resources\views\admin\reservation-dossiers\show.blade.php ENDPATH**/ ?>

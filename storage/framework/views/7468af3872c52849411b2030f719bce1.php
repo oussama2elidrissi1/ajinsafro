@@ -278,7 +278,7 @@
     ]));
 
     $customersChildren = [];
-    $customersChildren[] = $makeLeaf('customers_clients_index', 'Prospet', 'admin.customers.clients.index', 'bx bx-user-plus', ['admin.customers.clients.*'], [], null, 'customers.clients.view');
+    $customersChildren[] = $makeLeaf('customers_prospects', 'Prospect', 'admin.customers.prospects', 'bx bx-user-plus', ['admin.customers.prospects'], [], null, 'customers.clients.view');
     $customersChildren[] = $makeLeaf('customers_travelers', 'Voyageur', 'admin.customers.voyageurs', 'bx bx-id-card', ['admin.customers.voyageurs'], [], null, 'customers.travelers.view');
     $customersChildren[] = $makeLeaf('partners_list', 'Partenaire', 'admin.partners.partenaires', 'bx bx-group', ['admin.partners.partenaires'], [], null, 'partners.list.view');
     $customersChildren[] = $makeLeaf('partners_suppliers', 'Fournisseure', 'admin.partners.fournisseurs', 'bx bx-briefcase', ['admin.partners.fournisseurs'], [], null, 'partners.suppliers.view');

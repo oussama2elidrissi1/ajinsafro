@@ -259,10 +259,10 @@
                     var start = d.start_date || '—';
                     var end = d.end_date || '—';
                     var cap = d.available_capacity !== undefined ? d.available_capacity : d.capacity;
-                    var price = d.unit_price || d.sale_price || d.base_price || d.price_override || 0;
+                    var price = d.unit_price || 0;
                     var status = d.status || 'active';
                     var statusLabel = status === 'active' ? 'Disponible' : status;
-                    html += '<div class="v2-departure-card" data-departure-id="' + (d.id || '') + '" data-travel-date-id="' + (d.wp_travel_date_id || d.travel_date_id || '') + '">' +
+                    html += '<div class="v2-departure-card" data-departure-id="' + (d.id || '') + '" data-travel-date-id="' + (d.wp_travel_date_id || d.travel_date_id || '') + '" data-unit-price="' + price + '">' +
                         '<div class="v2-departure-card__main">' +
                             '<div class="v2-departure-card__dates">' + start + ' → ' + end + '</div>' +
                             '<div class="v2-departure-card__meta">' +
@@ -270,7 +270,7 @@
                                 '<span>' + statusLabel + '</span>' +
                             '</div>' +
                         '</div>' +
-                        '<div class="v2-departure-card__price">' + formatMoney(price) + '</div>' +
+                        '<div class="v2-departure-card__price">' + (price > 0 ? formatMoney(price) : '') + '</div>' +
                     '</div>';
                 });
                 list.innerHTML = html;
@@ -301,15 +301,15 @@
     function updateDepartureSummary(card) {
         var dates = card.querySelector('.v2-departure-card__dates');
         var meta = card.querySelector('.v2-departure-card__meta');
-        var price = card.querySelector('.v2-departure-card__price');
+        var priceEl = card.querySelector('.v2-departure-card__price');
         document.getElementById('v2-summary-dates').textContent = dates ? dates.textContent : '—';
         var capMatch = meta ? meta.textContent.match(/(\d+)\s+places/) : null;
         document.getElementById('v2-summary-capacity').textContent = capMatch ? capMatch[1] : '—';
-        document.getElementById('v2-summary-unit-price').textContent = price ? price.textContent : '—';
+        document.getElementById('v2-summary-unit-price').textContent = priceEl ? priceEl.textContent : '—';
         document.getElementById('v2-summary-status').textContent = 'Disponible';
         document.getElementById('v2-sidebar-departure').textContent = dates ? dates.textContent : '—';
-        var unitPriceText = price ? price.textContent.replace(/[^\d,.]/g, '').replace(',', '.') : '0';
-        var unitPrice = parseFloat(unitPriceText) || 0;
+        // Le prix unitaire officiel est stockÃ© dans data-unit-price (prix de base de la fiche produit)
+        var unitPrice = parseFloat(card.getAttribute('data-unit-price') || '0') || 0;
         window.reservationState.pricing.unit_price = unitPrice;
         var basePriceHidden = document.getElementById('v2-base-price-hidden');
         if (basePriceHidden) basePriceHidden.value = unitPrice.toFixed(2);

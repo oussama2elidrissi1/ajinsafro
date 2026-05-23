@@ -91,10 +91,61 @@ class ReservationPricingService
     }
 
     /**
+     * RÃ©sout le prix unitaire officiel de rÃ©servation Ã  partir de la fiche produit uniquement.
+     * PrioritÃ© : wp_base_price (Prix de base MAD) > wp_adult_price > wp_min_price > voyage_price_from.
+     *
+     * @return array{unit_price: float, source: string, sources: array<string, mixed>}
+     */
+    public function resolveReservationUnitPrice(Voyage $voyage): array
+    {
+        $wpPrices = $this->resolveWordPressTourPrices($voyage, null);
+
+        $sources = [
+            'wp_base_price'   => $wpPrices['base_price'],
+            'wp_adult_price'  => $wpPrices['adult_price'],
+            'wp_min_price'    => $wpPrices['min_price'],
+            'voyage_price_from' => $voyage->price_from !== null ? (float) $voyage->price_from : null,
+        ];
+
+        foreach (['wp_base_price', 'wp_adult_price', 'wp_min_price', 'voyage_price_from'] as $source) {
+            $value = $sources[$source] ?? null;
+            if ($value !== null && (float) $value > 0) {
+                return [
+                    'unit_price' => round((float) $value, 2),
+                    'source'     => $source,
+                    'sources'    => $sources,
+                ];
+            }
+        }
+
+        return [
+            'unit_price' => 0.0,
+            'source'     => 'none',
+            'sources'    => $sources,
+        ];
+    }
+
+    /**
      * @return array{unit_price: float, source: string, sources: array<string, mixed>}
      */
     public function resolveUnitPrice(Voyage $voyage, ?Departure $departure = null, ?TravelDate $travelDate = null): array
     {
+        // 1) Prix officiel de la fiche produit (rÃ¨gle mÃ©tier)
+        $productPrice = $this->resolveReservationUnitPrice($voyage);
+        if ($productPrice['unit_price'] > 0) {
+            $sources = $productPrice['sources'];
+            $sources['departure_sale_price'] = $departure?->sale_price !== null ? (float) $departure->sale_price : null;
+            $sources['departure_base_price'] = $departure?->base_price !== null ? (float) $departure->base_price : null;
+            $sources['travel_date_price_override'] = $travelDate?->price_override !== null ? (float) $travelDate->price_override : null;
+
+            return [
+                'unit_price' => $productPrice['unit_price'],
+                'source'     => $productPrice['source'],
+                'sources'    => $sources,
+            ];
+        }
+
+        // 2) Fallback absolu : sources dÃ©part / travel-date
         $wpPrices = $this->resolveWordPressTourPrices($voyage, $travelDate);
 
         $sources = [

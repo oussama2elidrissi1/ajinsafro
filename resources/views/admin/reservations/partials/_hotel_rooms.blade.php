@@ -453,21 +453,13 @@
 
     function departureUnitPrice(option) {
         if (!option) return 0;
+        // Le prix unitaire officiel vient de la fiche produit (data-unit-price renvoyÃ© par l'API corrigÃ©e)
         var explicitUnitPrice = parseNumber(option.getAttribute('data-unit-price'));
         if (explicitUnitPrice > 0) {
             return explicitUnitPrice;
         }
 
-        var departurePrice = parseNumber(option.getAttribute('data-sale-price')) || parseNumber(option.getAttribute('data-base-price'));
-        if (departurePrice > 0) {
-            return departurePrice;
-        }
-
-        var travelDatePrice = parseNumber(option.getAttribute('data-price-override'));
-        if (travelDatePrice > 0) {
-            return travelDatePrice;
-        }
-
+        // Fallback sur le prix du voyage sÃ©lectionnÃ© (data-price-from)
         var tripOption = getSelectedTripOption();
         return parseNumber(tripOption && tripOption.getAttribute('data-price-from'));
     }
@@ -941,7 +933,7 @@
                     option.setAttribute('data-base-price', departure.base_price || 0);
                     option.setAttribute('data-sale-price', departure.sale_price || 0);
                     option.setAttribute('data-price-override', departure.price_override || 0);
-                    option.setAttribute('data-unit-price', departure.unit_price || departure.sale_price || departure.base_price || departure.price_override || 0);
+                    option.setAttribute('data-unit-price', departure.unit_price || 0);
                     option.setAttribute('data-available-capacity', departure.available_capacity || 0);
                     departureSelect.appendChild(option);
                 });

@@ -398,33 +398,13 @@ class ReservationsController extends Controller
             );
             $selectedUnitPrice = $selectedUnitPriceDebug['unit_price'];
 
-            Log::info('[Reservation Create Price Debug]', [
+            Log::info('[Reservation Price Source]', [
                 'tour_id' => $requestedTourId > 0 ? $requestedTourId : null,
-                'departure_id' => $selectedDeparture?->id,
-                'travel_date_id' => $selectedTravelDateForPrice?->id,
-                'selected_departure' => $selectedDeparture ? [
-                    'id' => (int) $selectedDeparture->id,
-                    'voyage_id' => (int) $selectedDeparture->voyage_id,
-                    'wp_travel_date_id' => (int) ($selectedDeparture->wp_travel_date_id ?? 0),
-                    'start_date' => optional($selectedDeparture->start_date)->format('Y-m-d'),
-                    'end_date' => optional($selectedDeparture->end_date)->format('Y-m-d'),
-                    'status' => $selectedDeparture->status,
-                ] : null,
-                'selected_travel_date' => $selectedTravelDateForPrice ? [
-                    'id' => (int) $selectedTravelDateForPrice->id,
-                    'travel_id' => (int) $selectedTravelDateForPrice->travel_id,
-                    'date' => optional($selectedTravelDateForPrice->date)->format('Y-m-d'),
-                    'is_active' => (bool) $selectedTravelDateForPrice->is_active,
-                ] : null,
-                'tour_price' => $selectedVoyageForPrice->price_from ?? null,
-                'tour_adult_price' => $selectedUnitPriceDebug['sources']['wp_adult_price'] ?? null,
-                'departure_price' => $selectedDeparture?->base_price,
-                'departure_sale_price' => $selectedDeparture?->sale_price,
-                'travel_date_price' => $selectedTravelDateForPrice?->price_override,
-                'travel_date_adult_price' => $selectedUnitPriceDebug['sources']['wp_adult_price'] ?? null,
-                'unit_price_final' => $selectedUnitPrice,
-                'unit_price_source' => $selectedUnitPriceDebug['source'] ?? null,
-                'sources' => $selectedUnitPriceDebug['sources'] ?? [],
+                'title' => $selectedVoyageForPrice->name ?? null,
+                'product_base_price' => $selectedUnitPriceDebug['sources']['wp_base_price'] ?? null,
+                'adult_price' => $selectedUnitPriceDebug['sources']['wp_adult_price'] ?? null,
+                'min_price' => $selectedUnitPriceDebug['sources']['wp_min_price'] ?? null,
+                'final_reservation_unit_price' => $selectedUnitPrice ?? null,
             ]);
         }
 
@@ -700,6 +680,29 @@ class ReservationsController extends Controller
             ->all();
 
         $preselectedTourId = null;
+        $selectedUnitPrice = null;
+        $selectedUnitPriceDebug = null;
+        if ($requestedTourId > 0) {
+            $voyageForPrice = $voyages->firstWhere('id', $requestedTourId)
+                ?: Voyage::query()->find($requestedTourId);
+            if ($voyageForPrice) {
+                $selectedUnitPriceDebug = $this->reservationPricing->resolveUnitPrice(
+                    $voyageForPrice,
+                    $selectedDeparture,
+                    $selectedTravelDate
+                );
+                $selectedUnitPrice = $selectedUnitPriceDebug['unit_price'];
+
+                Log::info('[Reservation Price Source]', [
+                    'tour_id' => $requestedTourId,
+                    'title' => $voyageForPrice->name ?? null,
+                    'product_base_price' => $selectedUnitPriceDebug['sources']['wp_base_price'] ?? null,
+                    'adult_price' => $selectedUnitPriceDebug['sources']['wp_adult_price'] ?? null,
+                    'min_price' => $selectedUnitPriceDebug['sources']['wp_min_price'] ?? null,
+                    'final_reservation_unit_price' => $selectedUnitPrice ?? null,
+                ]);
+            }
+        }
         if ($requestedTourId > 0 && $voyages->contains('id', $requestedTourId)) {
             $preselectedTourId = $requestedTourId;
         }
@@ -714,6 +717,8 @@ class ReservationsController extends Controller
             'preselectedTourId' => $preselectedTourId,
             'travelDateIncoherent' => $travelDateIncoherent,
             'extrasByVoyage' => $extrasByVoyage,
+            'selectedUnitPrice' => $selectedUnitPrice,
+            'selectedUnitPriceDebug' => $selectedUnitPriceDebug,
         ]);
     }
 

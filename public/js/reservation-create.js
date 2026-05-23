@@ -179,22 +179,14 @@
             return 0;
         }
 
+        // Le prix unitaire officiel est fourni par l'API (prix de base de la fiche produit)
         var explicitUnitPrice = parseNumber(option.getAttribute('data-unit-price'));
         if (explicitUnitPrice > 0) {
             return explicitUnitPrice;
         }
 
-        var departurePrice = parseNumber(option.getAttribute('data-sale-price')) || parseNumber(option.getAttribute('data-base-price'));
-        if (departurePrice > 0) {
-            return departurePrice;
-        }
-
-        var travelDatePrice = parseNumber(option.getAttribute('data-price-override'));
-        if (travelDatePrice > 0) {
-            return travelDatePrice;
-        }
-
-        return 0;
+        // Fallback sur le prix du voyage sÃ©lectionnÃ©
+        return getSelectedTripFallbackPrice();
     }
 
     function getSelectedDepartureLabel() {
@@ -261,20 +253,24 @@
 
     function getBaseUnitPrice() {
         var input = document.querySelector('input[name="base_price"]');
+        var fromInput = parseNumber(input && input.value);
+
+        // Le prix de base injectÃ© par le serveur (prix de base de la fiche produit) est la source de vÃ©ritÃ©
+        if (fromInput > 0) {
+            window.reservationState.pricing = window.reservationState.pricing || {};
+            window.reservationState.pricing.unit_price = fromInput;
+            return fromInput;
+        }
+
+        // Si le champ est vide, utiliser le prix du dÃ©part (API corrigÃ©e qui renvoie le prix produit)
         var departureUnitPrice = getSelectedDepartureUnitPrice();
         if (departureUnitPrice > 0) {
-            if (input && parseNumber(input.value) !== departureUnitPrice) {
+            if (input) {
                 input.value = departureUnitPrice.toFixed(2);
             }
             window.reservationState.pricing = window.reservationState.pricing || {};
             window.reservationState.pricing.unit_price = departureUnitPrice;
-
             return departureUnitPrice;
-        }
-
-        var fromInput = parseNumber(input && input.value);
-        if (fromInput > 0) {
-            return fromInput;
         }
 
         return getSelectedTripFallbackPrice();

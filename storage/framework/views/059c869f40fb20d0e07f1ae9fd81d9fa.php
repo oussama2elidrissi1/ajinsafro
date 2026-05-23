@@ -141,7 +141,7 @@
                             </div>
                         </div>
 
-                        <input type="hidden" name="base_price" id="v2-base-price-hidden" value="<?php echo e(old('base_price', '')); ?>">
+                        <input type="hidden" name="base_price" id="v2-base-price-hidden" value="<?php echo e(old('base_price', $selectedUnitPrice !== null ? number_format((float) $selectedUnitPrice, 2, '.', '') : '')); ?>">
                     </div>
 
                     <div class="v2-actions">
