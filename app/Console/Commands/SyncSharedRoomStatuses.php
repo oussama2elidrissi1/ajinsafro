@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Schema;
 class SyncSharedRoomStatuses extends Command
 {
     protected $signature = 'reservations:sync-shared-room-statuses {--dry-run : Afficher uniquement, ne pas modifier}';
-    protected $description = 'Met Ã  jour les statuts shared_room_status/pending et reservation.status pour les anciens dossiers demi-double partiels.';
+    protected $description = 'Met à jour les statuts shared_room_status/pending et reservation.status pour les anciens dossiers demi-double partiels.';
 
     public function handle(): int
     {
@@ -60,11 +60,11 @@ class SyncSharedRoomStatuses extends Command
         $roomIds = $query->pluck('reservation_id')->unique()->values()->all();
 
         if (empty($roomIds)) {
-            $this->warn('Aucune chambre demi-double partielle trouvÃ©e Ã  mettre Ã  jour.');
+            $this->warn('Aucune chambre demi-double partielle trouvée à mettre à jour.');
             return self::SUCCESS;
         }
 
-        $this->info("Dossiers candidats trouvÃ©s : " . count($roomIds));
+        $this->info("Dossiers candidats trouvés : " . count($roomIds));
 
         foreach (array_chunk($roomIds, 200) as $chunk) {
             $reservations = Reservation::query()
@@ -99,7 +99,7 @@ class SyncSharedRoomStatuses extends Command
                     }
 
                     if ($occupied <= 0 || $occupied >= $capacity || $paired > 0 || $state === 'paired') {
-                        $ignoredReasons[] = "R#{$reservation->id} RR#{$rr->id} : occupÃ©s={$occupied} cap={$capacity} paired={$paired} state={$state}";
+                        $ignoredReasons[] = "R#{$reservation->id} RR#{$rr->id} : occupés={$occupied} cap={$capacity} paired={$paired} state={$state}";
                         $skipped++;
                         continue;
                     }
@@ -122,20 +122,20 @@ class SyncSharedRoomStatuses extends Command
                             $reservation->save();
                         }
                         $updatedReservations++;
-                        $this->info("RÃ©servation #{$reservation->id} passÃ©e en shared_room_pending" . ($dryRun ? ' (simulation)' : ''));
+                        $this->info("Réservation #{$reservation->id} passée en shared_room_pending" . ($dryRun ? ' (simulation)' : ''));
                     }
                 } else {
-                    $ignoredReasons[] = "R#{$reservation->id} : aucune chambre partielle dÃ©tectÃ©e parmi " . $reservation->reservationRooms->count() . " ligne(s)";
+                    $ignoredReasons[] = "R#{$reservation->id} : aucune chambre partielle détectée parmi " . $reservation->reservationRooms->count() . " ligne(s)";
                 }
             }
         }
 
-        $this->info("Mise Ã  jour terminÃ©e : {$updatedReservations} rÃ©servations et {$updatedRooms} lignes chambres mises Ã  jour.");
+        $this->info("Mise à jour terminée : {$updatedReservations} réservations et {$updatedRooms} lignes chambres mises à jour.");
         if ($dryRun) {
-            $this->warn("Mode simulation (dry-run) : aucune modification enregistrÃ©e.");
+            $this->warn("Mode simulation (dry-run) : aucune modification enregistrée.");
         }
         if ($skipped > 0) {
-            $this->warn("{$skipped} lignes ignorÃ©es.");
+            $this->warn("{$skipped} lignes ignorées.");
             foreach (array_slice($ignoredReasons, 0, 20) as $reason) {
                 $this->line("  - {$reason}");
             }

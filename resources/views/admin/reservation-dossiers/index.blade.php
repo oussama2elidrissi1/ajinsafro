@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @section('title', 'Dossiers de réservation')
 @section('page_title', 'Dossiers de réservation')
@@ -766,13 +766,13 @@
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="pairingModalLabel">Jumeler la rÃ©servation</h5>
+                <h5 class="modal-title" id="pairingModalLabel">Jumeler la réservation</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
             </div>
             <div class="modal-body" id="pairing-modal-body">
                 <div class="text-center py-5">
                     <div class="spinner-border text-primary" role="status"></div>
-                    <p class="mt-2 text-muted">Recherche des rÃ©servations compatibles...</p>
+                    <p class="mt-2 text-muted">Recherche des réservations compatibles...</p>
                 </div>
             </div>
             <div class="modal-footer">
@@ -812,9 +812,9 @@
             var resCode = btn.getAttribute('data-res-code');
             if (!resId) return;
             if (pairingModalLabel) {
-                pairingModalLabel.textContent = 'Jumeler la rÃ©servation ' + (resCode || '#'+resId);
+                pairingModalLabel.textContent = 'Jumeler la réservation ' + (resCode || '#'+resId);
             }
-            pairingModalBody.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Recherche des rÃ©servations compatibles...</p></div>';
+            pairingModalBody.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Recherche des réservations compatibles...</p></div>';
             pairingModal.show();
 
             var url = '/admin/reservations/' + encodeURIComponent(resId) + '/pairing-candidates';
@@ -826,18 +826,23 @@
                 }
             })
             .then(function (r) {
-                if (!r.ok) throw new Error('Erreur ' + r.status);
-                return r.json();
+                return r.json().then(function (data) {
+                    if (!r.ok || data.error) {
+                        var msg = data.error || data.message || ('Erreur ' + r.status);
+                        throw new Error(msg);
+                    }
+                    return data;
+                });
             })
             .then(function (data) {
                 if (data.html) {
                     pairingModalBody.innerHTML = data.html;
                 } else {
-                    pairingModalBody.innerHTML = '<div class="alert alert-warning border-0">Aucune donnÃ©e reÃ§ue.</div>';
+                    pairingModalBody.innerHTML = '<div class="alert alert-warning border-0">Aucune donnée reçue.</div>';
                 }
             })
             .catch(function (err) {
-                pairingModalBody.innerHTML = '<div class="alert alert-danger border-0">Impossible de charger les candidats de jumelage. ' + (err.message || '') + '</div>';
+                pairingModalBody.innerHTML = '<div class="alert alert-danger border-0">Impossible de charger les candidats de jumelage. ' + (err.message || 'Erreur serveur') + '</div>';
             });
         });
     }

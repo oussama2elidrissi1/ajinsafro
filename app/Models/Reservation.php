@@ -41,7 +41,7 @@ class Reservation extends Model
 
     public const STATUS_REFUNDED = 'refunded';
 
-    /** @deprecated Utiliser STATUS_PENDING — alias rétrocompatibilité */
+    /** @deprecated Utiliser STATUS_PENDING - alias rtrocompatibilit */
     public const STATUS_EN_COURS = 'pending';
 
     /** @deprecated Utiliser STATUS_CONFIRMED */
@@ -414,7 +414,7 @@ class Reservation extends Model
     }
 
     /**
-     * ID du tour WordPress (pour charger les hôtels/chambres via TourHotel).
+     * ID du tour WordPress (pour charger les htels/chambres via TourHotel).
      */
     public function getWpTourId(): ?int
     {
@@ -424,7 +424,7 @@ class Reservation extends Model
     }
 
     /**
-     * Prix total calculé (base + suppléments chambres).
+     * Prix total calcul (base + supplments chambres).
      */
     public function getTotalPriceAttribute(): ?float
     {
@@ -526,9 +526,9 @@ class Reservation extends Model
 
         return match ($status) {
             self::PAYMENT_STATUS_DEPOSIT => 'Acompte',
-            self::PAYMENT_STATUS_PARTIAL => 'Payé partiellement',
-            self::PAYMENT_STATUS_PAID => 'Payé',
-            default => 'Non payé',
+            self::PAYMENT_STATUS_PARTIAL => 'Pay partiellement',
+            self::PAYMENT_STATUS_PAID => 'Pay',
+            default => 'Non pay',
         };
     }
 
@@ -538,33 +538,33 @@ class Reservation extends Model
 
         return match ($status) {
             self::DOSSIER_DRAFT => 'Brouillon',
-            self::DOSSIER_CONFIRMED => 'Confirmé',
-            self::DOSSIER_CANCELLED => 'Annulé',
-            self::DOSSIER_COMPLETED => 'Terminé',
+            self::DOSSIER_CONFIRMED => 'Confirm',
+            self::DOSSIER_CANCELLED => 'Annul',
+            self::DOSSIER_COMPLETED => 'Termin',
             default => 'En attente',
         };
     }
 
     /**
-     * Libellé statut pour affichage (alias legacy EN_COURS / VALIDEE / ANNULEE inclus).
+     * Libell statut pour affichage (alias legacy EN_COURS / VALIDEE / ANNULEE inclus).
      */
     public function statusLabelFr(): string
     {
         return match ($this->status) {
             self::STATUS_EN_COURS => 'En attente',
-            self::STATUS_VALIDEE => 'Confirmée',
-            self::STATUS_ANNULEE => 'Annulée',
+            self::STATUS_VALIDEE => 'Confirme',
+            self::STATUS_ANNULEE => 'Annule',
             self::STATUS_PENDING => 'En attente',
             self::STATUS_SHARED_ROOM_PENDING => 'En attente de jumelage',
-            self::STATUS_SHARED_ROOM_PAIRED => 'Demi-double jumelée',
-            self::STATUS_CONFIRMED => 'Confirmée',
-            self::STATUS_CANCELLED => 'Annulée',
+            self::STATUS_SHARED_ROOM_PAIRED => 'Demi-double jumele',
+            self::STATUS_CONFIRMED => 'Confirme',
+            self::STATUS_CANCELLED => 'Annule',
             default => (string) $this->status,
         };
     }
 
     /**
-     * Compte ayant saisi l’enregistrement : priorité created_by_user_id ({@see creator}), puis created_by ({@see createdBy}).
+     * Compte ayant saisi lenregistrement : priorit created_by_user_id ({@see creator}), puis created_by ({@see createdBy}).
      */
     public function resolveAuditCreatorUser(): ?User
     {
@@ -572,7 +572,7 @@ class Reservation extends Model
     }
 
     /**
-     * Interlocuteur métier « qui porte la réservation » : agent affecté, sinon created_by, sinon created_by_user_id.
+     * Interlocuteur mtier  qui porte la rservation  : agent affect, sinon created_by, sinon created_by_user_id.
      */
     public function resolveOperationalActorUser(): ?User
     {
@@ -590,7 +590,7 @@ class Reservation extends Model
     }
 
     /**
-     * Source métier utilisée pour {@see resolveOperationalActorUser()} (affichage admin).
+     * Source mtier utilise pour {@see resolveOperationalActorUser()} (affichage admin).
      */
     public function operationalActorDataSourceLabel(): string
     {
@@ -608,7 +608,7 @@ class Reservation extends Model
     }
 
     /**
-     * RÃ©sout la capacitÃ© d'une ligne reservation_rooms.
+     * Résout la capacité d'une ligne reservation_rooms.
      * La colonne capacity n'existe pas toujours sur reservation_rooms :
      * on utilise la relation departureHotelRoom ou tourHotelRoom, puis fallback 2 pour Double.
      */
@@ -645,8 +645,8 @@ class Reservation extends Model
     }
 
     /**
-     * DÃ©tecte si cette rÃ©servation contient une chambre demi-double partielle
-     * non encore jumelÃ©e, indÃ©pendamment du statut texte de la rÃ©servation.
+     * Détecte si cette réservation contient une chambre demi-double partielle
+     * non encore jumelée, indépendamment du statut texte de la réservation.
      */
     public function needsSharedRoomPairing(): bool
     {

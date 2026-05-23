@@ -27,14 +27,14 @@
 
 <div class="pairing-modal-content">
     <div class="mb-3">
-        <div class="fw-semibold mb-2">RÃ©sumÃ© de la rÃ©servation actuelle</div>
+        <div class="fw-semibold mb-2">Résumé de la réservation actuelle</div>
         <div class="table-responsive">
             <table class="table table-sm table-bordered mb-0">
                 <tbody>
                     <tr><td class="text-muted" style="width:140px">Dossier</td><td>{{ $resCode }}</td></tr>
                     <tr><td class="text-muted">Client</td><td>{{ $clientName }}</td></tr>
                     <tr><td class="text-muted">Voyage</td><td>{{ $offerName }}</td></tr>
-                    <tr><td class="text-muted">DÃ©part</td><td>{{ $depDate }}</td></tr>
+                    <tr><td class="text-muted">Départ</td><td>{{ $depDate }}</td></tr>
                     <tr><td class="text-muted">Chambre</td><td>{{ $roomType }}</td></tr>
                     <tr><td class="text-muted">Mode</td><td>{{ $modeLabel }}</td></tr>
                     <tr><td class="text-muted">Occupation</td><td>{{ $occupied }}/{{ $capacity }}</td></tr>
@@ -49,19 +49,19 @@
 
     @if($candidates->isEmpty())
         <div class="alert alert-light border text-center">
-            <strong>Aucune rÃ©servation compatible pour le moment.</strong>
-            <div class="small text-muted mt-1">Cette rÃ©servation restera en attente de jumelage jusqu'Ã  l'arrivÃ©e d'une autre demande compatible.</div>
+            <strong>Aucune réservation compatible pour le moment.</strong>
+            <div class="small text-muted mt-1">Cette réservation restera en attente de jumelage jusqu'à l'arrivée d'une autre demande compatible.</div>
         </div>
     @else
-        <div class="fw-semibold mb-2">RÃ©servations compatibles trouvÃ©es ({{ $candidates->count() }})</div>
+        <div class="fw-semibold mb-2">Réservations compatibles trouvées ({{ $candidates->count() }})</div>
         <div class="table-responsive">
             <table class="table table-sm align-middle">
                 <thead>
                     <tr>
                         <th>Dossier</th>
                         <th>Client</th>
-                        <th>TÃ©lÃ©phone</th>
-                        <th>DÃ©part</th>
+                        <th>Téléphone</th>
+                        <th>Départ</th>
                         <th class="text-center">Chambre</th>
                         <th class="text-center">Mode</th>
                         <th class="text-center">Sexe</th>

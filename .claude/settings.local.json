@@ -43,7 +43,8 @@
       "Bash(Sort-Object LastWriteTime -Descending)",
       "Bash(Select-Object -First 10)",
       "Bash(Format-Table Name, LastWriteTime)",
-      "mcp__ide__executeCode"
+      "mcp__ide__executeCode",
+      "Bash(xxd *)"
     ]
   }
 }
