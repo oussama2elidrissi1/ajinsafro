@@ -2234,10 +2234,17 @@ class ReservationsController extends Controller
 
             return response()->json(['html' => $html, 'count' => $candidates->count()]);
         } catch (\Throwable $e) {
-            report($e);
+            \Log::error('PairingCandidates exception', [
+                'reservation_id' => $reservation->id,
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return response()->json([
                 'error' => 'Erreur serveur lors du chargement des candidats.',
-                'message' => config('app.debug') ? $e->getMessage() : null,
+                'message' => $e->getMessage(),
+                'file' => $e->getFile() . ':' . $e->getLine(),
             ], 500);
         }
     }
