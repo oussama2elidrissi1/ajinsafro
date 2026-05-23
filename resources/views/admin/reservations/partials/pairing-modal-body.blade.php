@@ -1,4 +1,4 @@
-<?php
+@php
     use App\Models\Reservation;
 
     $modeLabel = match ($sourceMode ?? '') {
