@@ -251,7 +251,6 @@ body.aj-admin-compact .voyage-edit-page.workflow-collapsed .workflow-sidebar {
     min-width: 64px !important;
     max-width: 64px !important;
     overflow: hidden !important;
-    outline: 4px solid red !important;
 }
 
 body.aj-admin-compact .voyage-edit-page.workflow-collapsed .voyage-editor-grid,

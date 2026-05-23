@@ -70,6 +70,91 @@
 <link rel="stylesheet" href="{{ asset('css/voyage-edit-fix.css') }}?v={{ filemtime(public_path('css/voyage-edit-fix.css')) }}">
 @endpush
 
+@push('styles')
+<style>
+    /* TEMP WORKFLOW TOGGLE TEST (scoped to edit voyage only, no body dependency) */
+    .voyage-edit-page.workflow-collapsed .workflow-sidebar,
+    .voyage-edit-page.workflow-collapsed .ve-left,
+    .voyage-edit-page.workflow-collapsed .voyage-editor-grid > aside {
+        width: 64px !important;
+        min-width: 64px !important;
+        max-width: 64px !important;
+        overflow: hidden !important;
+        outline: 4px solid red !important;
+    }
+
+    .voyage-edit-page.workflow-collapsed .voyage-editor-grid,
+    .voyage-edit-page.workflow-collapsed .workflow-layout,
+    .voyage-edit-page.workflow-collapsed .voyage-edit-layout {
+        grid-template-columns: 64px minmax(0, 1fr) !important;
+    }
+
+    .voyage-edit-page.workflow-collapsed .workflow-title,
+    .voyage-edit-page.workflow-collapsed .workflow-description,
+    .voyage-edit-page.workflow-collapsed .workflow-section-label,
+    .voyage-edit-page.workflow-collapsed .workflow-step-title,
+    .voyage-edit-page.workflow-collapsed .workflow-step-status,
+    .voyage-edit-page.workflow-collapsed .step-title,
+    .voyage-edit-page.workflow-collapsed .step-status,
+    .voyage-edit-page.workflow-collapsed .ve-tabs-kicker,
+    .voyage-edit-page.workflow-collapsed .ve-tabs-title,
+    .voyage-edit-page.workflow-collapsed .ve-tab-zone-hint,
+    .voyage-edit-page.workflow-collapsed .ve-stepper__text,
+    .voyage-edit-page.workflow-collapsed .ve-step-sections,
+    .voyage-edit-page.workflow-collapsed .ve-stepper-nav {
+        display: none !important;
+    }
+
+    .voyage-edit-page.workflow-collapsed .ve-stepper__step,
+    .voyage-edit-page.workflow-collapsed .workflow-step,
+    .voyage-edit-page.workflow-collapsed .workflow-step-item,
+    .voyage-edit-page.workflow-collapsed .voyage-step-item {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 44px !important;
+        min-height: 38px !important;
+        padding: 6px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+
+    .voyage-edit-page.workflow-collapsed .workflow-step-icon,
+    .voyage-edit-page.workflow-collapsed .step-icon {
+        display: none !important;
+    }
+
+    .voyage-edit-page.workflow-collapsed .workflow-step-number,
+    .voyage-edit-page.workflow-collapsed .step-number {
+        margin: 0 !important;
+    }
+
+    .voyage-edit-page:not(.workflow-collapsed) .workflow-sidebar,
+    .voyage-edit-page:not(.workflow-collapsed) .ve-left,
+    .voyage-edit-page:not(.workflow-collapsed) .voyage-editor-grid > aside {
+        width: 210px !important;
+        min-width: 210px !important;
+        max-width: 210px !important;
+    }
+
+    .voyage-edit-page:not(.workflow-collapsed) .voyage-editor-grid,
+    .voyage-edit-page:not(.workflow-collapsed) .workflow-layout,
+    .voyage-edit-page:not(.workflow-collapsed) .voyage-edit-layout {
+        grid-template-columns: 210px minmax(0, 1fr) !important;
+    }
+
+    .voyage-edit-page:not(.workflow-collapsed) .workflow-step-title,
+    .voyage-edit-page:not(.workflow-collapsed) .step-title,
+    .voyage-edit-page:not(.workflow-collapsed) .workflow-step-status,
+    .voyage-edit-page:not(.workflow-collapsed) .step-status {
+        display: block !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="voyage-edit-page voyage-workflow-page workflow-collapsed">
     <div class="ve-shell">
@@ -183,34 +268,20 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var page = document.querySelector('.voyage-edit-page');
-            var workflowToggleBtn = document.getElementById('workflowToggleBtn');
+            var btn = document.getElementById('workflowToggleBtn');
 
-            if (page) {
-                document.body.classList.add('aj-admin-compact');
-                page.classList.add('workflow-collapsed');
+            if (!page) {
+                console.error('voyage-edit-page introuvable');
+                return;
             }
 
-            if (page && workflowToggleBtn) {
-                var savedState = null;
-                try {
-                    savedState = window.localStorage ? localStorage.getItem('voyageWorkflowCollapsed') : null;
-                } catch (e) {
-                    savedState = null;
-                }
+            page.classList.add('workflow-collapsed');
 
-                if (savedState === '0') {
-                    page.classList.remove('workflow-collapsed');
-                }
-
-                workflowToggleBtn.addEventListener('click', function () {
+            if (!btn) {
+                console.warn('Workflow toggle introuvable', { page: page, btn: btn });
+            } else {
+                btn.addEventListener('click', function () {
                     page.classList.toggle('workflow-collapsed');
-                    try {
-                        if (window.localStorage) {
-                            localStorage.setItem('voyageWorkflowCollapsed', page.classList.contains('workflow-collapsed') ? '1' : '0');
-                        }
-                    } catch (e) {
-                        // ignore
-                    }
                 });
             }
 
