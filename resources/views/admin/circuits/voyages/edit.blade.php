@@ -71,7 +71,7 @@
 @endpush
 
 @section('content')
-<div class="voyage-edit-page voyage-workflow-page">
+<div class="voyage-edit-page voyage-workflow-page workflow-collapsed">
     <div class="ve-shell">
         @include('admin.circuits.voyages.partials._voyage_page_header', [
             'isCreate' => $isCreate,
@@ -185,6 +185,11 @@
             var page = document.querySelector('.voyage-edit-page');
             var workflowToggleBtn = document.getElementById('workflowToggleBtn');
 
+            if (page) {
+                document.body.classList.add('aj-admin-compact');
+                page.classList.add('workflow-collapsed');
+            }
+
             if (page && workflowToggleBtn) {
                 var savedState = null;
                 try {
@@ -193,8 +198,8 @@
                     savedState = null;
                 }
 
-                if (savedState === null || savedState === '1') {
-                    page.classList.add('workflow-collapsed');
+                if (savedState === '0') {
+                    page.classList.remove('workflow-collapsed');
                 }
 
                 workflowToggleBtn.addEventListener('click', function () {

@@ -250,6 +250,8 @@ body.aj-admin-compact .voyage-edit-page.workflow-collapsed .workflow-sidebar {
     width: 64px !important;
     min-width: 64px !important;
     max-width: 64px !important;
+    overflow: hidden !important;
+    outline: 4px solid red !important;
 }
 
 body.aj-admin-compact .voyage-edit-page.workflow-collapsed .voyage-editor-grid,
@@ -279,6 +281,11 @@ body.aj-admin-compact .voyage-edit-page.workflow-collapsed .workflow-sidebar .ve
     gap: 4px;
     padding: 6px !important;
     min-height: 44px !important;
+}
+
+body.aj-admin-compact .voyage-edit-page.workflow-collapsed .workflow-sidebar .workflow-toggle-btn {
+    width: 40px;
+    height: 40px;
 }
 
 body.aj-admin-compact .voyage-edit-page.workflow-collapsed .workflow-sidebar .ve-stepper__icon {
