@@ -259,7 +259,7 @@
                     var start = d.start_date || '—';
                     var end = d.end_date || '—';
                     var cap = d.available_capacity !== undefined ? d.available_capacity : d.capacity;
-                    var price = d.sale_price !== undefined ? d.sale_price : (d.base_price || 0);
+                    var price = d.unit_price || d.sale_price || d.base_price || d.price_override || 0;
                     var status = d.status || 'active';
                     var statusLabel = status === 'active' ? 'Disponible' : status;
                     html += '<div class="v2-departure-card" data-departure-id="' + (d.id || '') + '" data-travel-date-id="' + (d.wp_travel_date_id || d.travel_date_id || '') + '">' +

@@ -448,9 +448,19 @@
 
     function departureUnitPrice(option) {
         if (!option) return 0;
+        var explicitUnitPrice = parseNumber(option.getAttribute('data-unit-price'));
+        if (explicitUnitPrice > 0) {
+            return explicitUnitPrice;
+        }
+
         var departurePrice = parseNumber(option.getAttribute('data-sale-price')) || parseNumber(option.getAttribute('data-base-price'));
         if (departurePrice > 0) {
             return departurePrice;
+        }
+
+        var travelDatePrice = parseNumber(option.getAttribute('data-price-override'));
+        if (travelDatePrice > 0) {
+            return travelDatePrice;
         }
 
         var tripOption = getSelectedTripOption();
@@ -491,6 +501,10 @@
         }
         if (basePriceInput && option && departureSelect.value) {
             basePriceInput.value = departureUnitPrice(option).toFixed(2);
+            if (window.reservationState) {
+                window.reservationState.pricing = window.reservationState.pricing || {};
+                window.reservationState.pricing.unit_price = parseNumber(basePriceInput.value);
+            }
         }
     }
 
@@ -851,6 +865,12 @@
             })
             .then(function (response) {
                 console.log('[Rooming] availableRooms BEFORE renderDepartureRooms', window.reservationState.availableRooms);
+                if (response && response.pricing && parseNumber(response.pricing.unit_price) > 0 && basePriceInput) {
+                    basePriceInput.value = parseNumber(response.pricing.unit_price).toFixed(2);
+                    if (typeof window.reservationCreateRecomputeTotals === 'function') {
+                        window.reservationCreateRecomputeTotals();
+                    }
+                }
                 renderDepartureRooms(response);
                 console.log('[Rooming] availableRooms AFTER renderDepartureRooms', window.reservationState.availableRooms);
             })
@@ -915,6 +935,8 @@
                     option.setAttribute('data-wp-travel-date-id', departure.wp_travel_date_id || '');
                     option.setAttribute('data-base-price', departure.base_price || 0);
                     option.setAttribute('data-sale-price', departure.sale_price || 0);
+                    option.setAttribute('data-price-override', departure.price_override || 0);
+                    option.setAttribute('data-unit-price', departure.unit_price || departure.sale_price || departure.base_price || departure.price_override || 0);
                     option.setAttribute('data-available-capacity', departure.available_capacity || 0);
                     departureSelect.appendChild(option);
                 });
@@ -938,9 +960,17 @@
                     window.reservationState.selectedTourId = String(tourId || window.reservationState.selectedTourId || '');
                     window.reservationState.selectedTravelDateId = String(travelDateValue || window.reservationState.selectedTravelDateId || '');
                     syncDepartureHidden();
+                    syncSummary();
+                    if (typeof window.reservationCreateRecomputeTotals === 'function') {
+                        window.reservationCreateRecomputeTotals();
+                    }
                     loadDepartureRooms(selectedDepartureId, tourId, travelDateValue);
                 } else if (departureSelect.options.length > 1 && departureSelect.selectedIndex > 0) {
                     syncDepartureHidden();
+                    syncSummary();
+                    if (typeof window.reservationCreateRecomputeTotals === 'function') {
+                        window.reservationCreateRecomputeTotals();
+                    }
                     loadDepartureRooms(departureSelect.value, tourId, travelDateValue);
                 }
 
@@ -1017,6 +1047,10 @@
             }
             departurePreviousValue = newValue;
             syncDepartureHidden();
+            syncSummary();
+            if (typeof window.reservationCreateRecomputeTotals === 'function') {
+                window.reservationCreateRecomputeTotals();
+            }
             if (typeof window.resetReservationDownstream === 'function') {
                 window.resetReservationDownstream({ tourChanged: false });
             }

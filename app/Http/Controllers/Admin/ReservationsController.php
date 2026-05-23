@@ -734,18 +734,29 @@ class ReservationsController extends Controller
             ->orderBy('start_date')
             ->orderBy('id')
             ->get();
+        $travelDates = TravelDate::query()
+            ->whereIn('id', $deps->pluck('wp_travel_date_id')->filter()->unique()->values()->all())
+            ->get()
+            ->keyBy('id');
 
         return response()->json([
-            'departures' => $deps->map(fn (Departure $d) => [
-                'id' => $d->id,
-                'label' => ($d->start_date ? $d->start_date->format('d/m/Y') : '-')
-                    .($d->end_date ? ' -> '.$d->end_date->format('d/m/Y') : ''),
-                'status' => $d->status,
-                'available_capacity' => (int) ($d->available_capacity ?? 0),
-                'base_price' => $d->base_price !== null ? (float) $d->base_price : null,
-                'sale_price' => $d->sale_price !== null ? (float) $d->sale_price : null,
-                'wp_travel_date_id' => $d->wp_travel_date_id,
-            ])->values()->all(),
+            'departures' => $deps->map(function (Departure $d) use ($travelDates, $voyage) {
+                $travelDate = $d->wp_travel_date_id ? $travelDates->get((int) $d->wp_travel_date_id) : null;
+                $priceOverride = $travelDate?->price_override !== null ? (float) $travelDate->price_override : null;
+
+                return [
+                    'id' => $d->id,
+                    'label' => ($d->start_date ? $d->start_date->format('d/m/Y') : '-')
+                        .($d->end_date ? ' -> '.$d->end_date->format('d/m/Y') : ''),
+                    'status' => $d->status,
+                    'available_capacity' => (int) ($d->available_capacity ?? 0),
+                    'base_price' => $d->base_price !== null ? (float) $d->base_price : null,
+                    'sale_price' => $d->sale_price !== null ? (float) $d->sale_price : null,
+                    'price_override' => $priceOverride,
+                    'unit_price' => (float) ($d->sale_price ?? $d->base_price ?? $priceOverride ?? $voyage->price_from ?? 0),
+                    'wp_travel_date_id' => $d->wp_travel_date_id,
+                ];
+            })->values()->all(),
         ]);
     }
 

@@ -865,15 +865,15 @@ class ReservationPricingService
      */
     private function resolveBasePrice(array $payload, Voyage $voyage, Departure $departure, ?TravelDate $travelDate = null): float
     {
-        $priceFromTravelDate = $travelDate?->price_override;
         $priceFromDepartureSale = $departure->sale_price;
         $priceFromDepartureBase = $departure->base_price;
+        $priceFromTravelDate = $travelDate?->price_override;
         $priceFromVoyage = $voyage->price_from;
 
         $candidates = [
-            $priceFromTravelDate,
             $priceFromDepartureSale,
             $priceFromDepartureBase,
+            $priceFromTravelDate,
             $priceFromVoyage,
         ];
 

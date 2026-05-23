@@ -173,6 +173,30 @@
         return parseNumber(option && option.getAttribute('data-price-from'));
     }
 
+    function getSelectedDepartureUnitPrice() {
+        var option = getSelectedDepartureOption();
+        if (!option || !option.value) {
+            return 0;
+        }
+
+        var explicitUnitPrice = parseNumber(option.getAttribute('data-unit-price'));
+        if (explicitUnitPrice > 0) {
+            return explicitUnitPrice;
+        }
+
+        var departurePrice = parseNumber(option.getAttribute('data-sale-price')) || parseNumber(option.getAttribute('data-base-price'));
+        if (departurePrice > 0) {
+            return departurePrice;
+        }
+
+        var travelDatePrice = parseNumber(option.getAttribute('data-price-override'));
+        if (travelDatePrice > 0) {
+            return travelDatePrice;
+        }
+
+        return 0;
+    }
+
     function getSelectedDepartureLabel() {
         var select = document.getElementById('reservation-departure-select');
         if (select && select.selectedOptions.length && select.value) {
@@ -237,6 +261,17 @@
 
     function getBaseUnitPrice() {
         var input = document.querySelector('input[name="base_price"]');
+        var departureUnitPrice = getSelectedDepartureUnitPrice();
+        if (departureUnitPrice > 0) {
+            if (input && parseNumber(input.value) !== departureUnitPrice) {
+                input.value = departureUnitPrice.toFixed(2);
+            }
+            window.reservationState.pricing = window.reservationState.pricing || {};
+            window.reservationState.pricing.unit_price = departureUnitPrice;
+
+            return departureUnitPrice;
+        }
+
         var fromInput = parseNumber(input && input.value);
         if (fromInput > 0) {
             return fromInput;
