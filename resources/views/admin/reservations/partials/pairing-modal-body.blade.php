@@ -81,12 +81,13 @@
                             $cRoom = $candidate->reservationRooms->first(function ($rr) {
                                 return in_array((string) ($rr->room_mode ?? ''), ['half_male', 'half_female', 'shared_double'], true);
                             });
-                            $cRoomType = (string) ($cRoom->room_type_snapshot ?? 'Double');
-                            $cMode = (string) ($cRoom->room_mode ?? '');
+                            $cRoomType = $cRoom ? (string) ($cRoom->room_type_snapshot ?? 'Double') : '-';
+                            $cMode = $cRoom ? (string) ($cRoom->room_mode ?? '') : '';
                             $cModeLabel = match ($cMode) {
                                 'half_male' => 'Demi-double homme',
                                 'half_female' => 'Demi-double femme',
                                 'shared_double' => 'Demi-double',
+                                '' => '-',
                                 default => ucfirst(str_replace('_', ' ', $cMode)),
                             };
                             $cGender = match ($cMode) {

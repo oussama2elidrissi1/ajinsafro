@@ -2117,15 +2117,29 @@ class ReservationsController extends Controller
         }
 
         $sourceRooms = $reservation->reservationRooms
-            ->filter(function ($rr) {
+            ->filter(function ($rr) use ($reservation) {
                 $mode = (string) ($rr->room_mode ?? '');
                 $state = (string) ($rr->shared_room_status ?? '');
                 $paired = (int) ($rr->paired_reservation_id ?? 0);
-                return in_array($mode, ['half_male', 'half_female', 'shared_double'], true)
+                $occupied = (int) ($rr->passenger_count ?? 0);
+                $capacity = $reservation->resolveRoomCapacity($rr);
+
+                $isExplicit = in_array($mode, ['half_male', 'half_female', 'shared_double'], true);
+                $normalized = str_replace(['-', '_'], '', strtolower($mode));
+                $isVariant = in_array($normalized, ['halfmale','halffemale','shareddouble','demidoublehomme','demidoublefemme','halfdoublemale','halfdoublefemale'], true);
+
+                $sourceType = (string) ($rr->source_room_type ?? '');
+                $roomSnapshot = strtolower((string) ($rr->room_type_snapshot ?? ''));
+                $isDoubleRoom = str_contains($roomSnapshot, 'double') || str_contains($roomSnapshot, 'demi-double') || $sourceType === 'double' || $sourceType === 'tour_hotel_room';
+                $looksLikeHalfDouble = ($isDoubleRoom && $occupied > 0 && $occupied < $capacity && $capacity === 2);
+
+                $isHalfDouble = $isExplicit || $isVariant || $looksLikeHalfDouble;
+
+                return $isHalfDouble
                     && $state !== 'paired'
                     && $paired <= 0
-                    && (int) ($rr->passenger_count ?? 0) > 0
-                    && (int) ($rr->passenger_count ?? 0) < $reservation->resolveRoomCapacity($rr);
+                    && $occupied > 0
+                    && $occupied < $capacity;
             });
 
         if ($sourceRooms->isEmpty()) {
@@ -2156,36 +2170,35 @@ class ReservationsController extends Controller
                     ->orWhere('dossier_status', '');
             })
             ->whereHas('reservationRooms', function ($q) use ($sourceMode) {
-                $q->where(function ($qq) {
-                    $qq->whereNull('shared_room_status')
-                        ->orWhere('shared_room_status', 'pending')
-                        ->orWhere('shared_room_status', '');
+                $q->where(function ($qq) use ($sourceMode) {
+                    if ($sourceMode === '') {
+                        $qq->whereNull('room_mode')
+                            ->orWhere('room_mode', '');
+                    } else {
+                        $qq->where('room_mode', $sourceMode);
+                    }
                 })
-                    ->where(function ($qq) {
-                        $qq->whereNull('paired_reservation_id')
-                            ->orWhere('paired_reservation_id', 0);
-                    })
-                    ->where('room_mode', $sourceMode)
                     ->whereRaw('COALESCE(passenger_count, 0) > 0');
             })
             ->orderBy('created_at')
             ->get()
-            ->filter(function (Reservation $candidate) use ($genderRequirement, $reservation) {
-                // Same room mode (same gender half-double)
-                $candidateRoom = $candidate->reservationRooms->first(function ($rr) {
+            ->filter(function (Reservation $candidate) use ($genderRequirement, $reservation, $sourceMode) {
+                // Same room mode (same gender half-double) and partial occupancy
+                $candidateRoom = $candidate->reservationRooms->first(function ($rr) use ($sourceMode) {
                     $state = (string) ($rr->shared_room_status ?? '');
                     $paired = (int) ($rr->paired_reservation_id ?? 0);
-                    return in_array((string) ($rr->room_mode ?? ''), ['half_male', 'half_female', 'shared_double'], true)
+                    $occupied = (int) ($rr->passenger_count ?? 0);
+                    $capacity = $candidate->resolveRoomCapacity($rr);
+                    return (string) ($rr->room_mode ?? '') === $sourceMode
                         && $state !== 'paired'
-                        && $paired <= 0;
+                        && $paired <= 0
+                        && $occupied > 0
+                        && $occupied < $capacity;
                 });
                 if (! $candidateRoom) {
                     return false;
                 }
-                $candidateMode = (string) ($candidateRoom->room_mode ?? '');
-                if ($candidateMode !== $sourceMode) {
-                    return false;
-                }
+
                 // Gender compatibility check via passengers
                 if ($genderRequirement) {
                     $hasMatchingGender = $candidate->passengers->some(function ($p) use ($genderRequirement) {
@@ -2195,13 +2208,15 @@ class ReservationsController extends Controller
                         return false;
                     }
                 }
-                // Not already paired
+
+                // Not already paired in any room
                 $alreadyPaired = $candidate->reservationRooms->some(function ($rr) {
                     return (int) ($rr->paired_reservation_id ?? 0) > 0;
                 });
                 if ($alreadyPaired) {
                     return false;
                 }
+
                 return true;
             })
             ->values();
