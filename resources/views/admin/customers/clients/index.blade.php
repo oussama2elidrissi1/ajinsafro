@@ -4,7 +4,7 @@
 @endsection
 @section('content')
     <x-admin.page-header
-        :title="isset($trashed) && $trashed ? 'Corbeille �?" Clients' : 'Liste des clients'"
+        :title="isset($trashed) && $trashed ? 'Corbeille - Clients' : 'Liste des clients'"
         subtitle="Gérez, filtrez et consultez la base clients."
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],

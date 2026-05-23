@@ -4,15 +4,24 @@
 
 <?php $__env->stopSection(); ?>
 <?php $__env->startSection('content'); ?>
-    <x-admin.page-header
-        :title="isset($trashed) && $trashed ? 'Corbeille �?" Clients' : 'Liste des clients'"
-        subtitle="Gérez, filtrez et consultez la base clients."
-        :breadcrumbs="[
+    <?php if (isset($component)) { $__componentOriginalcb19cb35a534439097b02b8af91726ee = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalcb19cb35a534439097b02b8af91726ee = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page-header','data' => ['title' => isset($trashed) && $trashed ? 'Corbeille - Clients' : 'Liste des clients','subtitle' => 'Gérez, filtrez et consultez la base clients.','breadcrumbs' => [
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
             ['label' => 'Clients', 'url' => route('admin.customers.index')],
             ['label' => isset($trashed) && $trashed ? 'Corbeille' : 'Liste clients'],
-        ]"
-    >
+        ]]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
+<?php $component->withName('admin.page-header'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
+<?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(isset($trashed) && $trashed ? 'Corbeille - Clients' : 'Liste des clients'),'subtitle' => 'Gérez, filtrez et consultez la base clients.','breadcrumbs' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
+            ['label' => 'Admin', 'url' => route('admin.dashboard')],
+            ['label' => 'Clients', 'url' => route('admin.customers.index')],
+            ['label' => isset($trashed) && $trashed ? 'Corbeille' : 'Liste clients'],
+        ])]); ?>
          <?php $__env->slot('actions', null, []); ?> 
             <?php if(!isset($trashed) || !$trashed): ?>
                 <a href="<?php echo e(route('admin.customers.clients.create')); ?>" class="aj-btn aj-btn-primary">
@@ -32,13 +41,13 @@
          <?php $__env->endSlot(); ?>
      <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
-<?php if (isset($__attributesOriginal)): ?>
-<?php $attributes = $__attributesOriginal; ?>
-<?php unset($__attributesOriginal); ?>
+<?php if (isset($__attributesOriginalcb19cb35a534439097b02b8af91726ee)): ?>
+<?php $attributes = $__attributesOriginalcb19cb35a534439097b02b8af91726ee; ?>
+<?php unset($__attributesOriginalcb19cb35a534439097b02b8af91726ee); ?>
 <?php endif; ?>
-<?php if (isset($__componentOriginal)): ?>
-<?php $component = $__componentOriginal; ?>
-<?php unset($__componentOriginal); ?>
+<?php if (isset($__componentOriginalcb19cb35a534439097b02b8af91726ee)): ?>
+<?php $component = $__componentOriginalcb19cb35a534439097b02b8af91726ee; ?>
+<?php unset($__componentOriginalcb19cb35a534439097b02b8af91726ee); ?>
 <?php endif; ?>
 
     <?php if (isset($component)) { $__componentOriginaldb1b157d84f8f63332f3508c9e385c0a = $component; } ?>
