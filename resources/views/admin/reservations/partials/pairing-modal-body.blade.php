@@ -18,8 +18,19 @@
     $clientName = $reservation->client
         ? ($reservation->client->full_name ?: '-')
         : (trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? '')) ?: '-');
-    $depDate = $reservation->travelDate?->date ? $reservation->travelDate->date->format('d/m/Y') : '-';
-    $offerName = $reservation->offer?->name ?? '-';
+
+    $depDate = '-';
+    try {
+        if ($reservation->travelDate && $reservation->travelDate->date instanceof \Carbon\Carbon) {
+            $depDate = $reservation->travelDate->date->format('d/m/Y');
+        } elseif ($reservation->travelDate && !empty($reservation->travelDate->date)) {
+            $depDate = (string) $reservation->travelDate->date;
+        }
+    } catch (\Throwable $e) {
+        $depDate = '-';
+    }
+
+    $offerName = $reservation->offer?->name ?? $reservation->tour?->name ?? '-';
     $roomType = (string) ($sourceRoom->room_type_snapshot ?? 'Double');
     $occupied = (int) ($sourceRoom->passenger_count ?? 0);
     $capacity = (int) ($sourceCapacity ?? 2);
@@ -27,14 +38,14 @@
 
 <div class="pairing-modal-content">
     <div class="mb-3">
-        <div class="fw-semibold mb-2">Résumé de la réservation actuelle</div>
+        <div class="fw-semibold mb-2">Resumé de la réservation actuelle</div>
         <div class="table-responsive">
             <table class="table table-sm table-bordered mb-0">
                 <tbody>
                     <tr><td class="text-muted" style="width:140px">Dossier</td><td>{{ $resCode }}</td></tr>
                     <tr><td class="text-muted">Client</td><td>{{ $clientName }}</td></tr>
                     <tr><td class="text-muted">Voyage</td><td>{{ $offerName }}</td></tr>
-                    <tr><td class="text-muted">Départ</td><td>{{ $depDate }}</td></tr>
+                    <tr><td class="text-muted">Depart</td><td>{{ $depDate }}</td></tr>
                     <tr><td class="text-muted">Chambre</td><td>{{ $roomType }}</td></tr>
                     <tr><td class="text-muted">Mode</td><td>{{ $modeLabel }}</td></tr>
                     <tr><td class="text-muted">Occupation</td><td>{{ $occupied }}/{{ $capacity }}</td></tr>
@@ -49,19 +60,19 @@
 
     @if($candidates->isEmpty())
         <div class="alert alert-light border text-center">
-            <strong>Aucune réservation compatible pour le moment.</strong>
-            <div class="small text-muted mt-1">Cette réservation restera en attente de jumelage jusqu'à l'arrivée d'une autre demande compatible.</div>
+            <strong>Aucune reservation compatible pour le moment.</strong>
+            <div class="small text-muted mt-1">Cette reservation restera en attente de jumelage jusqu'a l'arrivee d'une autre demande compatible.</div>
         </div>
     @else
-        <div class="fw-semibold mb-2">Réservations compatibles trouvées ({{ $candidates->count() }})</div>
+        <div class="fw-semibold mb-2">Reservations compatibles trouvees ({{ $candidates->count() }})</div>
         <div class="table-responsive">
             <table class="table table-sm align-middle">
                 <thead>
                     <tr>
                         <th>Dossier</th>
                         <th>Client</th>
-                        <th>Téléphone</th>
-                        <th>Départ</th>
+                        <th>Telephone</th>
+                        <th>Depart</th>
                         <th class="text-center">Chambre</th>
                         <th class="text-center">Mode</th>
                         <th class="text-center">Sexe</th>
@@ -76,8 +87,24 @@
                             $cClientName = $candidate->client
                                 ? ($candidate->client->full_name ?: '-')
                                 : (trim(($candidate->client_first_name ?? '') . ' ' . ($candidate->client_last_name ?? '')) ?: '-');
-                            $cPhone = $candidate->client?->phone ?: $candidate->client?->whatsapp_number ?: $candidate->client_phone ?: '-';
-                            $cDepDate = $candidate->travelDate?->date ? $candidate->travelDate->date->format('d/m/Y') : '-';
+                            $cPhone = '-';
+                            try {
+                                $cPhone = $candidate->client?->phone ?? $candidate->client?->whatsapp_number ?? $candidate->client_phone ?? '-';
+                            } catch (\Throwable $e) {
+                                $cPhone = '-';
+                            }
+
+                            $cDepDate = '-';
+                            try {
+                                if ($candidate->travelDate && $candidate->travelDate->date instanceof \Carbon\Carbon) {
+                                    $cDepDate = $candidate->travelDate->date->format('d/m/Y');
+                                } elseif ($candidate->travelDate && !empty($candidate->travelDate->date)) {
+                                    $cDepDate = (string) $candidate->travelDate->date;
+                                }
+                            } catch (\Throwable $e) {
+                                $cDepDate = '-';
+                            }
+
                             $cRoom = $candidate->reservationRooms->first(function ($rr) {
                                 return in_array((string) ($rr->room_mode ?? ''), ['half_male', 'half_female', 'shared_double'], true);
                             });
