@@ -2268,12 +2268,12 @@ document.addEventListener('DOMContentLoaded', function () {
                             var label = document.createElement('label');
                             label.className = 'destination-city-checkbox-label destination-city-row';
                             label.setAttribute('data-city-title', title.toLowerCase());
-                            label.setAttribute('data-path', countryName + ' "Âº ' + title);
+                            label.setAttribute('data-path', countryName + ' - ' + title);
                             label.setAttribute('data-country-code', code);
                             if (lid) {
-                                label.innerHTML = '<input type="checkbox" name="locations[]" value="' + lid + '" class="location-checkbox destination-checkbox" ' + (checked ? 'checked' : '') + ' data-loc-id="' + lid + '" data-loc-title="' + escapeAttr(title) + '"> <span class="destination-city-path">' + escapeHtml(countryName) + ' "Âº ' + escapeHtml(title) + '</span>';
+                                label.innerHTML = '<input type="checkbox" name="locations[]" value="' + lid + '" class="location-checkbox destination-checkbox" ' + (checked ? 'checked' : '') + ' data-loc-id="' + lid + '" data-loc-title="' + escapeAttr(title) + '"> <span class="destination-city-path">' + escapeHtml(countryName) + ' - ' + escapeHtml(title) + '</span>';
                             } else {
-                                label.innerHTML = '<input type="checkbox" name="locations[]" value="" class="location-checkbox destination-checkbox" data-country-code="' + escapeAttr(code) + '" data-city-name="' + escapeAttr(title) + '" data-needs-create="1" data-loc-title="' + escapeAttr(title) + '"> <span class="destination-city-path">' + escapeHtml(countryName) + ' "Âº ' + escapeHtml(title) + '</span>';
+                                label.innerHTML = '<input type="checkbox" name="locations[]" value="" class="location-checkbox destination-checkbox" data-country-code="' + escapeAttr(code) + '" data-city-name="' + escapeAttr(title) + '" data-needs-create="1" data-loc-title="' + escapeAttr(title) + '"> <span class="destination-city-path">' + escapeHtml(countryName) + ' - ' + escapeHtml(title) + '</span>';
                             }
                             block.appendChild(label);
                         });
@@ -2448,7 +2448,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     var countryName = (countryCitiesData[code] && countryCitiesData[code].title) ? countryCitiesData[code].title : (worldCountries[code] || code);
                     (mergedCities[code] || []).forEach(function(city) {
                         var title = city.title || '';
-                        var path = countryName + ' "Âº ' + title;
+                        var path = countryName + ' - ' + title;
                         if (selectedPaths.indexOf(path) !== -1) return;
                         if (term && path.toLowerCase().indexOf(term) === -1 && title.toLowerCase().indexOf(term) === -1) return;
                         list.push({ code: code, countryName: countryName, path: path, city: city });

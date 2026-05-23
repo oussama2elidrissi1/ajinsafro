@@ -290,7 +290,7 @@
         }
 
         .voyage-edit-v2-page .destination-modal .modal-body {
-            padding: 16px 18px;
+            padding: 18px 20px;
         }
 
         .voyage-edit-v2-page .destination-modal .modal-footer {
@@ -303,8 +303,11 @@
             overflow: auto;
             border-radius: 14px;
             border: 1px solid rgba(180, 210, 240, 0.35);
-            background: #fff;
-            padding: 10px;
+            background: #f8fbff;
+            padding: 12px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 8px;
         }
 
         .voyage-edit-v2-page .destination-modal .destination-cities-list-wrapper {
@@ -312,8 +315,123 @@
             overflow: auto;
             border-radius: 14px;
             border: 1px solid rgba(180, 210, 240, 0.35);
+            background: #f8fbff;
+            padding: 12px;
+        }
+
+        .voyage-edit-v2-page .destination-modal .destination-country-option-label,
+        .voyage-edit-v2-page .destination-modal .destination-city-checkbox-label,
+        .voyage-edit-v2-page .destination-modal .destination-country-checkbox-label {
+            min-height: 38px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin: 0;
+            padding: 8px 10px;
+            border: 1px solid #e2ebf5;
+            border-radius: 12px;
             background: #fff;
-            padding: 10px;
+            color: #50627f;
+            font-size: 13px;
+            line-height: 1.25;
+            cursor: pointer;
+            transition: border-color .15s ease, background-color .15s ease, color .15s ease;
+        }
+
+        .voyage-edit-v2-page .destination-modal .destination-country-option-label:hover,
+        .voyage-edit-v2-page .destination-modal .destination-city-checkbox-label:hover,
+        .voyage-edit-v2-page .destination-modal .destination-country-checkbox-label:hover {
+            border-color: #9bc9ff;
+            background: #f2f8ff;
+            color: #123a66;
+        }
+
+        .voyage-edit-v2-page .destination-modal input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            flex: 0 0 16px;
+            margin: 0;
+            accent-color: #0d6efd;
+        }
+
+        .voyage-edit-v2-page .destination-modal .destination-country-option-label:has(input:checked),
+        .voyage-edit-v2-page .destination-modal .destination-city-checkbox-label:has(input:checked),
+        .voyage-edit-v2-page .destination-modal .destination-country-checkbox-label:has(input:checked) {
+            border-color: #6aaefb;
+            background: #eaf4ff;
+            color: #0b5ed7;
+            font-weight: 600;
+        }
+
+        .voyage-edit-v2-page .destination-modal .destination-country-add-wrap,
+        .voyage-edit-v2-page .destination-modal .destination-city-autocomplete-wrap {
+            flex: 1 1 260px;
+        }
+
+        .voyage-edit-v2-page .destination-modal .destination-country-search,
+        .voyage-edit-v2-page .destination-modal .destination-country-add-search,
+        .voyage-edit-v2-page .destination-modal .destination-city-search,
+        .voyage-edit-v2-page .destination-modal .destination-city-add-search {
+            min-height: 40px;
+            border-radius: 12px;
+            border-color: #dce8f5;
+            font-size: 13px;
+        }
+
+        .voyage-edit-v2-page .destination-modal .destination-country-multi-actions,
+        .voyage-edit-v2-page .destination-modal .destination-cities-panel-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .voyage-edit-v2-page .destination-modal .destination-country-multi-actions .btn,
+        .voyage-edit-v2-page .destination-modal .destination-cities-panel-actions .btn,
+        .voyage-edit-v2-page .destination-modal .modal-footer .btn {
+            min-height: 36px;
+            border-radius: 11px;
+            padding: 0 13px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .voyage-edit-v2-page .destination-modal .destination-country-block {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .voyage-edit-v2-page .destination-modal .destination-country-checkbox-label {
+            grid-column: 1 / -1;
+            background: #f5f0ff;
+            border-color: #dac8ff;
+            color: #6941c6;
+            font-weight: 700;
+        }
+
+        .voyage-edit-v2-page .destination-modal .destination-city-path {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .voyage-edit-v2-page .destination-modal .destination-cities-panel-header {
+            align-items: flex-start !important;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e8f0f8;
+            margin-bottom: 12px !important;
+        }
+
+        .voyage-edit-v2-page .destination-modal .destination-cities-panel-title,
+        .voyage-edit-v2-page .destination-modal .form-label {
+            color: #253a57;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 10px;
         }
     </style>
 @endpush
