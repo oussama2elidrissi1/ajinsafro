@@ -2178,7 +2178,14 @@
             windowReservationState: window.reservationState
         });
         setAvailableRoomTypes(window.reservationAvailableRooms || []);
-        setStep(1);
+        var initialStep = 1;
+        var tourIdHidden = document.getElementById('tour_id_hidden');
+        var inputDepartureId = document.getElementById('input-departure-id');
+        var inputTravelDateId = document.getElementById('input-travel-date-id');
+        if (tourIdHidden && tourIdHidden.value && inputDepartureId && inputDepartureId.value && inputTravelDateId && inputTravelDateId.value) {
+            initialStep = 2;
+        }
+        setStep(initialStep);
         console.log('[Reservation Create] Current step:', window.currentStep);
         console.log('[Reservation Create] State:', window.reservationState);
 
@@ -2229,6 +2236,14 @@
         }
         if (typeof window.getRoomMode !== 'function') {
             window.getRoomMode = getRoomMode;
+        }
+
+        var btnFastModify = document.getElementById('btn-fast-modify-offer');
+        if (btnFastModify) {
+            btnFastModify.addEventListener('click', function (e) {
+                e.preventDefault();
+                setStep(1);
+            });
         }
     });
 })();

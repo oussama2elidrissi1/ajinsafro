@@ -46,6 +46,26 @@
             <input type="hidden" name="extras_total" id="reservation-extras-total-input" value="{{ old('extras_total', 0) }}">
             <input type="hidden" name="total_amount" id="reservation-total-amount-input" value="{{ old('total_amount', 0) }}">
 
+            @if ($preselectedTourId && $selectedDepartureId && $travelDateId)
+                <div class="reservation-create__card mb-3">
+                    <div class="d-flex justify-content-between align-items-start gap-3">
+                        <div>
+                            <p class="reservation-create__eyebrow">Offre sélectionnée</p>
+                            <h3 class="reservation-create__section-title" style="font-size:1.1rem; margin:0;">
+                                {{ $preselectedTour?->name ?? 'Voyage' }}
+                            </h3>
+                            <p class="reservation-create__subtitle" style="margin-top:0.25rem;">
+                                Départ : {{ optional($selectedDeparture?->start_date)->format('d/m/Y') }}
+                                @if($selectedDeparture?->end_date) → {{ optional($selectedDeparture?->end_date)->format('d/m/Y') }} @endif
+                                | Places restantes : {{ $selectedDeparture?->available_capacity ?? 'N/A' }}
+                                | Prix unitaire : {{ number_format((float) ($selectedUnitPrice ?? 0), 2, ',', ' ') }} DH
+                            </p>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="btn-fast-modify-offer">Modifier</button>
+                    </div>
+                </div>
+            @endif
+
             <div class="reservation-create__workflow">
                 @include('admin.reservations.create.partials.workflow')
             </div>
