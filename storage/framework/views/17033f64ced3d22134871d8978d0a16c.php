@@ -71,7 +71,7 @@
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startPush('scripts'); ?>
-    <script src="<?php echo e(asset('js/reservation-create.js')); ?>"></script>
+    <script src="<?php echo e(asset('js/reservation-create.js') . '?v=' . @filemtime(public_path('js/reservation-create.js'))); ?>"></script>
 <?php $__env->stopPush(); ?>
 
 

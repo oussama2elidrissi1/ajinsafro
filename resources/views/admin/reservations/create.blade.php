@@ -71,6 +71,6 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('js/reservation-create.js') }}?v={{ @filemtime(public_path('js/reservation-create.js')) }}"></script>
+    <script src="{{ asset('js/reservation-create.js') . '?v=' . @filemtime(public_path('js/reservation-create.js')) }}"></script>
 @endpush
 
