@@ -112,7 +112,8 @@
             <span>Bebes: <strong data-traveler-stat="infant">0</strong></span>
             <span>Hommes: <strong data-traveler-stat="male">0</strong></span>
             <span>Femmes: <strong data-traveler-stat="female">0</strong></span>
-            <span>Sexe non renseigne: <strong data-traveler-stat="gender_unknown">1</strong></span>
+            <span>Adultes sans sexe: <strong data-traveler-stat="gender_unknown">0</strong></span>
+            <span>Enfants sans sexe: <strong data-traveler-stat="gender_unknown_children">0</strong></span>
         </div>
 
         <div class="reservation-create__toolbar">

@@ -503,9 +503,13 @@
             else stats.adult += 1;
             if (traveler.gender === 'male') stats.male += 1;
             else if (traveler.gender === 'female') stats.female += 1;
-            else stats.genderUnknown += 1;
+            else {
+                stats.genderUnknown += 1;
+                if (traveler.type === 'child' || traveler.type === 'infant') stats.genderUnknownChildren += 1;
+                else stats.genderUnknownAdults += 1;
+            }
             return stats;
-        }, { total: 0, adult: 0, child: 0, infant: 0, male: 0, female: 0, genderUnknown: 0, beds: 0 });
+        }, { total: 0, adult: 0, child: 0, infant: 0, male: 0, female: 0, genderUnknown: 0, genderUnknownAdults: 0, genderUnknownChildren: 0, beds: 0 });
     }
 
     function setStat(selector, value) {
@@ -520,14 +524,16 @@
         setStat('[data-traveler-stat="infant"]', stats.infant);
         setStat('[data-traveler-stat="male"]', stats.male);
         setStat('[data-traveler-stat="female"]', stats.female);
-        setStat('[data-traveler-stat="gender_unknown"]', stats.genderUnknown);
+        setStat('[data-traveler-stat="gender_unknown"]', stats.genderUnknownAdults);
+        setStat('[data-traveler-stat="gender_unknown_children"]', stats.genderUnknownChildren);
         setStat('[data-rooming-stat="total"]', stats.total);
         setStat('[data-rooming-stat="adult"]', stats.adult);
         setStat('[data-rooming-stat="child"]', stats.child);
         setStat('[data-rooming-stat="infant"]', stats.infant);
         setStat('[data-rooming-stat="male"]', stats.male);
         setStat('[data-rooming-stat="female"]', stats.female);
-        setStat('[data-rooming-stat="gender_unknown"]', stats.genderUnknown);
+        setStat('[data-rooming-stat="gender_unknown"]', stats.genderUnknownAdults);
+        setStat('[data-rooming-stat="gender_unknown_children"]', stats.genderUnknownChildren);
         setStat('[data-rooming-stat="beds"]', stats.beds);
     }
 
@@ -786,10 +792,10 @@
             showRoomingAlert('Aucune chambre disponible chargee pour ce depart.');
             return;
         }
-        if (stats.genderUnknown > 0) {
+        if (stats.genderUnknownAdults > 0) {
             roomingAllocations = [];
             renderRooming();
-            showRoomingAlert('Veuillez renseigner le sexe de tous les voyageurs pour faire la repartition des chambres.');
+            showRoomingAlert('Veuillez renseigner le sexe des adultes pour faire la repartition des chambres.');
             return;
         }
         var result = [];
@@ -1471,8 +1477,8 @@
             var summary = financialSummary();
             var stats = travelerStats();
 
-            if (stats.genderUnknown > 0) {
-                errors.push({ field: null, message: 'Veuillez renseigner le sexe de tous les voyageurs pour faire la répartition des chambres.' });
+        if (stats.genderUnknownAdults > 0) {
+                errors.push({ field: null, message: 'Veuillez renseigner le sexe des adultes pour faire la répartition des chambres.' });
             }
             if (summary.roomingStatus === 'pending') {
                 errors.push({ field: null, message: 'Lancez une répartition automatique ou ajoutez une répartition manuelle.' });
