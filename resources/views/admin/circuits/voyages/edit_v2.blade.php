@@ -246,6 +246,63 @@
             justify-content: space-between;
             gap: 10px;
         }
+
+        /* Destination modals (V2 only) */
+        .voyage-edit-v2-page .destination-modal-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .voyage-edit-v2-page .destination-modal-actions .btn {
+            border-radius: 12px;
+            min-height: 38px;
+            padding: 0 14px;
+            font-weight: 600;
+        }
+
+        .voyage-edit-v2-page .destination-modal .modal-content {
+            border-radius: 18px;
+            border: 1px solid rgba(180, 210, 240, 0.6);
+            box-shadow: 0 18px 44px rgba(20, 40, 70, 0.16);
+        }
+
+        .voyage-edit-v2-page .destination-modal .modal-header {
+            border-bottom: 1px solid rgba(180, 210, 240, 0.35);
+            background: linear-gradient(180deg, #ffffff, #f7fbff);
+        }
+
+        .voyage-edit-v2-page .destination-modal .modal-title {
+            font-weight: 800;
+            letter-spacing: -0.01em;
+        }
+
+        .voyage-edit-v2-page .destination-modal .modal-body {
+            padding: 16px 18px;
+        }
+
+        .voyage-edit-v2-page .destination-modal .modal-footer {
+            border-top: 1px solid rgba(180, 210, 240, 0.35);
+            background: #fbfdff;
+        }
+
+        .voyage-edit-v2-page .destination-modal .destination-country-list {
+            max-height: 52vh;
+            overflow: auto;
+            border-radius: 14px;
+            border: 1px solid rgba(180, 210, 240, 0.35);
+            background: #fff;
+            padding: 10px;
+        }
+
+        .voyage-edit-v2-page .destination-modal .destination-cities-list-wrapper {
+            max-height: 58vh;
+            overflow: auto;
+            border-radius: 14px;
+            border: 1px solid rgba(180, 210, 240, 0.35);
+            background: #fff;
+            padding: 10px;
+        }
     </style>
 @endpush
 
