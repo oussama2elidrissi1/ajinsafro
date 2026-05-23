@@ -76,9 +76,15 @@
     $declaredInfants = (int) ($dossier->infants_count ?? $reservation->infants_count ?? 0);
     $declaredTotal = $declaredAdults + $declaredChildren + $declaredInfants;
 
+    $realPassengerCount = max(1, (int) $allPassengers->count());
     $declaredTravelersCount = $declaredTotal > 0
         ? max(1, $declaredTotal)
-        : max(1, (int) ($reservation->passengers_count ?? (1 + $passengers->count())));
+        : max(1, (int) ($reservation->passengers_count ?? $realPassengerCount));
+    // Sanity: never let declared count exceed real passengers by more than a reasonable
+    // buffer (1), and never confuse room capacity with real traveler count.
+    if ($declaredTravelersCount > $realPassengerCount + 1) {
+        $declaredTravelersCount = $realPassengerCount;
+    }
     $rawTotal = $dossier->total_amount ?? $reservation->total_amount ?? null;
     $rawPaid = $dossier->paid_amount ?? $reservation->paid_amount ?? null;
     $hasCalculatedFinancials = $rawTotal !== null && $rawTotal !== '';
@@ -111,6 +117,9 @@
     }
     $whatsAppUrl = $normalizedPhone ? 'https://wa.me/'.$normalizedPhone : null;
     $notesContent = trim((string) $notesContent);
+
+    $hasPendingJumelage = $reservation->status === Reservation::STATUS_SHARED_ROOM_PENDING;
+    $jumelageBadge = ['label' => 'En attente de jumelage', 'class' => 'is-pending'];
 
     $statusMap = [
         'draft' => ['label' => 'Brouillon', 'class' => 'is-draft'],
@@ -738,6 +747,9 @@
                         <div class="d-flex flex-wrap gap-2 mb-2">
                             <span class="rd-pill {{ $dossierBadge['class'] }}">{{ $dossierBadge['label'] }}</span>
                             <span class="rd-pill {{ $paymentBadge['class'] }}">{{ $paymentBadge['label'] }}</span>
+                            @if($hasPendingJumelage)
+                                <span class="rd-pill {{ $jumelageBadge['class'] }}">{{ $jumelageBadge['label'] }}</span>
+                            @endif
                             @if($roomCoverageIncomplete)
                                 <span class="rd-pill is-pending">Affectation chambre incomplète</span>
                             @endif
@@ -1203,22 +1215,60 @@
                                 <div class="alert alert-warning border-0 mb-3">Affectation chambre incomplète : {{ $assignedBedCount }}/{{ $requiredBedCount }} voyageurs affectés.</div>
                             @endif
 
+                            @if($hasPendingJumelage)
+                                <div class="alert alert-info border-0 mb-3">
+                                    <strong>Demande de jumelage en cours.</strong>
+                                    Ce dossier contient une demi-double partielle. La place restante sera jumelée automatiquement avec un voyageur compatible (même voyage, même départ, même sexe).
+                                </div>
+                            @endif
+
                             @if(($allocations->count() ?? 0) > 0)
                                 <div class="table-responsive mb-3">
                                     <table class="table table-sm align-middle rd-table mb-0">
                                         <thead>
                                             <tr>
                                                 <th>Chambre</th>
+                                                <th class="text-center">Mode</th>
                                                 <th class="text-center">Capacité</th>
+                                                <th class="text-center">Occupés</th>
+                                                <th class="text-center">Restant</th>
+                                                <th class="text-center">Statut</th>
                                                 <th>Voyageurs affectés</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @foreach($allocations as $allocation)
-                                                @php($travs = $allocation->travelers ?? collect())
+                                                @php
+                                                    $travs = $allocation->travelers ?? collect();
+                                                    $mode = (string) ($allocation->occupancy_mode ?? '');
+                                                    $status = (string) ($allocation->status ?? '');
+                                                    $capacity = (int) ($allocation->capacity ?? 0);
+                                                    $occupied = (int) ($allocation->occupied_count ?? $travs->count());
+                                                    $remaining = max(0, $capacity - $occupied);
+                                                    $modeLabel = match ($mode) {
+                                                        'half_male' => 'Demi-double homme',
+                                                        'half_female' => 'Demi-double femme',
+                                                        'single' => 'Single',
+                                                        'family' => 'Famille',
+                                                        'full' => 'Complète',
+                                                        default => ucfirst(str_replace('_', ' ', $mode)),
+                                                    };
+                                                    $statusLabel = match ($status) {
+                                                        'partial' => 'En attente de jumelage',
+                                                        'complete' => 'Complète',
+                                                        'pending' => 'En attente',
+                                                        default => ucfirst($status),
+                                                    };
+                                                @endphp
                                                 <tr>
                                                     <td>{{ $allocation->room_type ?? 'Chambre' }}</td>
-                                                    <td class="text-center">{{ (int) ($allocation->capacity ?? 0) }}</td>
+                                                    <td class="text-center">{{ $modeLabel }}</td>
+                                                    <td class="text-center">{{ $capacity > 0 ? $capacity : '-' }}</td>
+                                                    <td class="text-center">{{ $occupied }}</td>
+                                                    <td class="text-center">{{ $remaining > 0 ? $remaining : '-' }}</td>
+                                                    <td class="text-center">
+                                                        <span class="rd-pill {{ $status === 'partial' ? 'is-pending' : 'is-completed' }}">{{ $statusLabel }}</span>
+                                                    </td>
                                                     <td>
                                                         @if($travs->isNotEmpty())
                                                             {{ $travs->map(fn ($p) => trim(($p->first_name ?? '').' '.($p->last_name ?? '')) ?: 'Voyageur')->implode(', ') }}
@@ -1233,7 +1283,7 @@
                                 </div>
                             @else
                                 <div class="alert alert-secondary border-0 mb-3">
-                                    Aucun voyageur n’est encore affecté à une chambre. Sélectionnez vos chambres ci-dessous, puis affectez les voyageurs (fonction à compléter si nécessaire).
+                                    Aucun voyageur n’est encore affecté à une chambre.
                                 </div>
                             @endif
 
@@ -1252,7 +1302,7 @@
                                                     <div class="table-responsive">
                                                         <table class="table table-sm align-middle rd-table mb-0">
                                                             <thead>
-                                                                <tr><th>Type chambre</th><th class="text-center">Places dispo</th><th class="text-center">Chambres dispo</th><th class="text-center">Capacité</th><th class="text-end">Supplément</th><th class="text-end">Sous-total</th></tr>
+                                                                <tr><th>Type chambre</th><th class="text-center">Capacité</th><th class="text-center">Chambres</th><th class="text-end">Supplément</th><th class="text-end">Sous-total</th></tr>
                                                             </thead>
                                                             <tbody>
                                                                 @foreach($hotelRows as $roomRow)
@@ -1260,7 +1310,6 @@
                                                                         <td>{{ $roomRow['room_type'] }}{{ $roomRow['room_label'] ? ' - '.$roomRow['room_label'] : '' }}</td>
                                                                         <td class="text-center">{{ $roomRow['capacity'] > 0 ? $roomRow['capacity'].' pers.' : '-' }}</td>
                                                                         <td class="text-center">{{ $roomRow['room_count'] }}</td>
-                                                                        <td class="text-center">{{ $roomRow['capacity'] > 0 ? $roomRow['capacity'].' pers.' : '-' }}</td>
                                                                         <td class="text-end">{{ $roomRow['supplement'] > 0 ? number_format((float) $roomRow['supplement'], 2, ',', ' ').' DH' : '-' }}</td>
                                                                         <td class="text-end fw-bold">{{ $roomRow['subtotal'] > 0 ? number_format((float) $roomRow['subtotal'], 2, ',', ' ').' DH' : '-' }}</td>
                                                                     </tr>
@@ -1273,13 +1322,6 @@
                                         </div>
                                     @endforeach
                                 </div>
-                            @endif
-
-                            @if(config('app.debug'))
-                                <details class="mt-3">
-                                    <summary class="rd-label mb-2">Debug technique chambres</summary>
-                                    <pre class="small mb-0">@json($roomAllocationRows, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)</pre>
-                                </details>
                             @endif
                         </div>
                     </section>

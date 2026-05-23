@@ -57,12 +57,21 @@
                 ->filter(function ($rr) {
                     $mode = (string) ($rr->room_mode ?? '');
                     $state = (string) ($rr->shared_room_status ?? 'pending');
-                    if ($mode === 'shared_double' && $state !== 'paired') {
+                    $isSharedMode = in_array($mode, ['shared_double', 'half_male', 'half_female'], true);
+                    if ($isSharedMode && $state !== 'paired') {
                         return true;
                     }
                     return $mode === '' && (string) ($rr->source_room_type ?? '') === 'double' && (int) ($rr->passenger_count ?? 0) === 1;
                 })
-                ->sum(fn ($rr) => (int) ($rr->passenger_count ?? 0))
+                ->sum(function ($rr) {
+                    $mode = (string) ($rr->room_mode ?? '');
+                    if (in_array($mode, ['half_male', 'half_female'], true)) {
+                        $cap = (int) ($rr->capacity ?? 2);
+                        $occ = (int) ($rr->passenger_count ?? 0);
+                        return max(0, $cap - $occ);
+                    }
+                    return (int) ($rr->passenger_count ?? 0);
+                })
             : 0;
         $depDate = $reservation->travelDate?->date ? $reservation->travelDate->date->format('d/m/Y') : '-';
         $createdAt = optional($reservation->created_at)->format('d/m/Y H:i');
