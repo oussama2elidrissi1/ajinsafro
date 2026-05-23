@@ -62,6 +62,7 @@ class ReservationDossierController extends Controller
             'agent',
             'creator',
             'branch',
+            'reservationRooms',
         ]);
 
         if ($search !== '') {

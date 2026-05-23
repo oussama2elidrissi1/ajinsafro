@@ -2112,16 +2112,18 @@ class ReservationsController extends Controller
     {
         abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃ¨s non autorisÃ© Ã  cette rÃ©servation.');
 
-        if ($reservation->status !== Reservation::STATUS_SHARED_ROOM_PENDING) {
+        if (! $reservation->needsSharedRoomPairing()) {
             return response()->json(['error' => 'Cette rÃ©servation n\'est pas en attente de jumelage.'], 422);
         }
 
         $sourceRooms = $reservation->reservationRooms
             ->filter(function ($rr) {
                 $mode = (string) ($rr->room_mode ?? '');
-                $state = (string) ($rr->shared_room_status ?? 'pending');
+                $state = (string) ($rr->shared_room_status ?? '');
+                $paired = (int) ($rr->paired_reservation_id ?? 0);
                 return in_array($mode, ['half_male', 'half_female', 'shared_double'], true)
                     && $state !== 'paired'
+                    && $paired <= 0
                     && (int) ($rr->passenger_count ?? 0) > 0
                     && (int) ($rr->passenger_count ?? 0) < (int) ($rr->capacity ?? 2);
             });
@@ -2148,10 +2150,10 @@ class ReservationsController extends Controller
             ->where('id', '!=', $reservation->id)
             ->where('tour_id', $reservation->tour_id)
             ->where('departure_id', $reservation->departure_id)
-            ->where('status', Reservation::STATUS_SHARED_ROOM_PENDING)
             ->where(function ($q) {
                 $q->whereNull('dossier_status')
-                    ->orWhere('dossier_status', '!=', Reservation::DOSSIER_CANCELLED);
+                    ->orWhere('dossier_status', '!=', Reservation::DOSSIER_CANCELLED)
+                    ->orWhere('dossier_status', '');
             })
             ->whereHas('reservationRooms', function ($q) use ($sourceMode, $sourceCapacity) {
                 $q->where(function ($qq) {
@@ -2159,6 +2161,10 @@ class ReservationsController extends Controller
                         ->orWhere('shared_room_status', 'pending')
                         ->orWhere('shared_room_status', '');
                 })
+                    ->where(function ($qq) {
+                        $qq->whereNull('paired_reservation_id')
+                            ->orWhere('paired_reservation_id', 0);
+                    })
                     ->where('room_mode', $sourceMode)
                     ->whereRaw('COALESCE(passenger_count, 0) < COALESCE(capacity, ?)', [$sourceCapacity]);
             })
@@ -2167,9 +2173,11 @@ class ReservationsController extends Controller
             ->filter(function (Reservation $candidate) use ($genderRequirement, $reservation) {
                 // Same room mode (same gender half-double)
                 $candidateRoom = $candidate->reservationRooms->first(function ($rr) {
-                    $state = (string) ($rr->shared_room_status ?? 'pending');
+                    $state = (string) ($rr->shared_room_status ?? '');
+                    $paired = (int) ($rr->paired_reservation_id ?? 0);
                     return in_array((string) ($rr->room_mode ?? ''), ['half_male', 'half_female', 'shared_double'], true)
-                        && $state !== 'paired';
+                        && $state !== 'paired'
+                        && $paired <= 0;
                 });
                 if (! $candidateRoom) {
                     return false;
@@ -2217,7 +2225,7 @@ class ReservationsController extends Controller
     {
         abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃ¨s non autorisÃ© Ã  cette rÃ©servation.');
 
-        if ($reservation->status !== Reservation::STATUS_SHARED_ROOM_PENDING) {
+        if (! $reservation->needsSharedRoomPairing()) {
             return redirect()->back()->with('error', 'Cette rÃ©servation n\'est pas en attente de jumelage demi-double.');
         }
 
@@ -2234,7 +2242,7 @@ class ReservationsController extends Controller
             return redirect()->back()->with('error', 'La rÃ©servation cible n\'existe pas.');
         }
 
-        if ($targetReservation->status !== Reservation::STATUS_SHARED_ROOM_PENDING) {
+        if (! $targetReservation->needsSharedRoomPairing()) {
             return redirect()->back()->with('error', 'La rÃ©servation cible n\'est plus en attente de jumelage.');
         }
 

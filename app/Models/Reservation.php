@@ -606,4 +606,59 @@ class Reservation extends Model
 
         return '';
     }
+
+    /**
+     * DÃ©tecte si cette rÃ©servation contient une chambre demi-double partielle
+     * non encore jumelÃ©e, indÃ©pendamment du statut texte de la rÃ©servation.
+     */
+    public function needsSharedRoomPairing(): bool
+    {
+        if (in_array((string) ($this->dossier_status ?? ''), [self::DOSSIER_CANCELLED, 'cancelled'], true)) {
+            return false;
+        }
+        if (! $this->relationLoaded('reservationRooms')) {
+            $this->load('reservationRooms');
+        }
+        return $this->reservationRooms->some(function ($rr) {
+            $mode = (string) ($rr->room_mode ?? '');
+            $state = (string) ($rr->shared_room_status ?? '');
+            $paired = (int) ($rr->paired_reservation_id ?? 0);
+            $isHalfDouble = in_array($mode, ['half_male', 'half_female', 'shared_double'], true);
+            $occupied = (int) ($rr->passenger_count ?? 0);
+            $capacity = (int) ($rr->capacity ?? 2);
+            return $isHalfDouble
+                && $paired <= 0
+                && $occupied > 0
+                && $occupied < $capacity
+                && $state !== 'paired';
+        });
+    }
+
+    /**
+     * Compte les places restantes en attente de jumelage (demi-double).
+     */
+    public function pendingSharedRoomSeats(): int
+    {
+        if (! $this->relationLoaded('reservationRooms')) {
+            $this->load('reservationRooms');
+        }
+        return (int) $this->reservationRooms
+            ->filter(function ($rr) {
+                $mode = (string) ($rr->room_mode ?? '');
+                $state = (string) ($rr->shared_room_status ?? '');
+                $paired = (int) ($rr->paired_reservation_id ?? 0);
+                return in_array($mode, ['half_male', 'half_female', 'shared_double'], true)
+                    && $paired <= 0
+                    && $state !== 'paired';
+            })
+            ->sum(function ($rr) {
+                $mode = (string) ($rr->room_mode ?? '');
+                $cap = (int) ($rr->capacity ?? 2);
+                $occ = (int) ($rr->passenger_count ?? 0);
+                if (in_array($mode, ['half_male', 'half_female', 'shared_double'], true)) {
+                    return max(0, $cap - $occ);
+                }
+                return (int) ($rr->passenger_count ?? 0);
+            });
+    }
 }

@@ -34,13 +34,14 @@
         $auditUser = $reservation->resolveAuditCreatorUser();
         $opUser = $reservation->resolveOperationalActorUser();
         $opSrc = $reservation->operationalActorDataSourceLabel();
+        $needsPairing = $reservation->needsSharedRoomPairing();
         $statusClass = match ($reservation->status) {
             Reservation::STATUS_EN_COURS, Reservation::STATUS_PENDING => 'badge res-status-badge res-status-badge--pending',
             Reservation::STATUS_SHARED_ROOM_PENDING => 'badge res-status-badge res-status-badge--pairing',
             Reservation::STATUS_SHARED_ROOM_PAIRED => 'badge res-status-badge res-status-badge--paired',
             Reservation::STATUS_VALIDEE, Reservation::STATUS_CONFIRMED => 'badge res-status-badge res-status-badge--confirmed',
             Reservation::STATUS_ANNULEE, Reservation::STATUS_CANCELLED => 'badge res-status-badge res-status-badge--cancelled',
-            default => 'badge res-status-badge res-status-badge--neutral',
+            default => $needsPairing ? 'badge res-status-badge res-status-badge--pairing' : 'badge res-status-badge res-status-badge--neutral',
         };
 
         $clientName = $reservation->client
@@ -52,27 +53,7 @@
         $agencyLabel = $reservation->agency_label ?? '-';
         $names = $reservation->passengers->map(fn ($p) => trim(($p->first_name ?? '') . ' ' . ($p->last_name ?? '')))->filter()->values();
         $passengerPreview = $names->isEmpty() ? '-' : $names->take(3)->join(', ');
-        $pendingSharedSeats = $reservation->status === Reservation::STATUS_SHARED_ROOM_PENDING
-            ? (int) $reservation->reservationRooms
-                ->filter(function ($rr) {
-                    $mode = (string) ($rr->room_mode ?? '');
-                    $state = (string) ($rr->shared_room_status ?? 'pending');
-                    $isSharedMode = in_array($mode, ['shared_double', 'half_male', 'half_female'], true);
-                    if ($isSharedMode && $state !== 'paired') {
-                        return true;
-                    }
-                    return $mode === '' && (string) ($rr->source_room_type ?? '') === 'double' && (int) ($rr->passenger_count ?? 0) === 1;
-                })
-                ->sum(function ($rr) {
-                    $mode = (string) ($rr->room_mode ?? '');
-                    if (in_array($mode, ['half_male', 'half_female'], true)) {
-                        $cap = (int) ($rr->capacity ?? 2);
-                        $occ = (int) ($rr->passenger_count ?? 0);
-                        return max(0, $cap - $occ);
-                    }
-                    return (int) ($rr->passenger_count ?? 0);
-                })
-            : 0;
+        $pendingSharedSeats = $needsPairing ? $reservation->pendingSharedRoomSeats() : 0;
         $depDate = $reservation->travelDate?->date ? $reservation->travelDate->date->format('d/m/Y') : '-';
         $createdAt = optional($reservation->created_at)->format('d/m/Y H:i');
         $paymentType = $reservation->payment_type ?: null;
@@ -142,7 +123,7 @@
                 </td>
             @endif
             <td>
-                <span class="{{ $statusClass }}">{{ $reservation->statusLabelFr() }}</span>
+                <span class="{{ $statusClass }}">{{ $needsPairing ? 'En attente de jumelage' : $reservation->statusLabelFr() }}</span>
                 @if($pendingSharedSeats > 0)
                     <div class="small text-muted mt-1">{{ $pendingSharedSeats }} place(s) demi-double en attente</div>
                 @endif
@@ -162,14 +143,14 @@
         @else
             @if($limitedReservationPresentation)
                 <td>
-                    <span class="{{ $statusClass }}">{{ $reservation->statusLabelFr() }}</span>
+                    <span class="{{ $statusClass }}">{{ $needsPairing ? 'En attente de jumelage' : $reservation->statusLabelFr() }}</span>
                     @if($pendingSharedSeats > 0)
                         <div class="small text-muted mt-1">{{ $pendingSharedSeats }} place(s) demi-double en attente</div>
                     @endif
                 </td>
             @elseif($hubTableMode === ReservationHubTableProfile::MODE_OPERATIONS)
                 <td>
-                    <span class="{{ $statusClass }}">{{ $reservation->statusLabelFr() }}</span>
+                    <span class="{{ $statusClass }}">{{ $needsPairing ? 'En attente de jumelage' : $reservation->statusLabelFr() }}</span>
                     @if($pendingSharedSeats > 0)
                         <div class="small text-muted mt-1">{{ $pendingSharedSeats }} place(s) demi-double en attente</div>
                     @endif
@@ -194,7 +175,7 @@
                     </td>
                 @endif
                 <td>
-                    <span class="{{ $statusClass }}">{{ $reservation->statusLabelFr() }}</span>
+                    <span class="{{ $statusClass }}">{{ $needsPairing ? 'En attente de jumelage' : $reservation->statusLabelFr() }}</span>
                     @if($pendingSharedSeats > 0)
                         <div class="small text-muted mt-1">{{ $pendingSharedSeats }} place(s) demi-double en attente</div>
                     @endif
@@ -272,7 +253,7 @@
                             </button>
                         </form>
                     @endif
-                    @if($reservation->status === Reservation::STATUS_SHARED_ROOM_PENDING)
+                    @if($needsPairing)
                         <button type="button" class="btn btn-sm btn-outline-info btn-res-hub-pair" title="Jumeler"
                             data-res-id="{{ $reservation->id }}"
                             data-res-code="{{ $reservation->catalog_source_code ?: ('RES-' . str_pad((string) $reservation->id, 6, '0', STR_PAD_LEFT)) }}"
