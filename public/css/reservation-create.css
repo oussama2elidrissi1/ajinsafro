@@ -1362,6 +1362,270 @@
     box-sizing: border-box !important;
 }
 
+.reservation-create--fast .reservation-create__steps-card--workflow {
+    padding: 1rem;
+}
+
+.reservation-fast-header {
+    margin-bottom: 1.25rem;
+}
+
+.reservation-fast-header__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.reservation-fast-header__card {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.1rem 1.25rem;
+    border: 1px solid #e6edf5;
+    border-radius: 1.25rem;
+    background: #fff;
+    box-shadow: 0 14px 38px rgba(14, 58, 90, 0.05);
+}
+
+.reservation-fast-header__title {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+}
+
+.reservation-fast-header__subtitle {
+    margin: 0.25rem 0 0;
+    color: #64748b;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.reservation-fast-card {
+    border: 1px solid #e6edf5;
+    border-radius: 1.25rem;
+    background: #fff;
+    box-shadow: 0 14px 38px rgba(14, 58, 90, 0.05);
+    padding: 1.25rem;
+}
+
+.reservation-fast-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.reservation-fast-card__title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+}
+
+.reservation-fast-card__badge {
+    font-size: 0.8rem;
+    color: #64748b;
+    font-weight: 700;
+}
+
+.reservation-fast-tabs {
+    display: inline-flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 0.35rem;
+    border-radius: 0.85rem;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+}
+
+.reservation-fast-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    border-radius: 0.65rem;
+    font-weight: 700;
+    color: #475569;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.reservation-fast-tab input {
+    display: none;
+}
+
+.reservation-fast-tab.is-active,
+.reservation-fast-tab:hover {
+    background: #fff;
+    color: #0e3a5a;
+    box-shadow: 0 2px 8px rgba(14, 58, 90, 0.08);
+}
+
+.reservation-fast-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.reservation-fast-grid .reservation-create__field--full {
+    grid-column: 1 / -1;
+}
+
+.reservation-fast-traveler-counters {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.reservation-fast-counter {
+    text-align: center;
+    padding: 1rem;
+    border: 1px solid #e6edf5;
+    border-radius: 1rem;
+    background: #f8fafc;
+}
+
+.reservation-fast-counter__label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    margin-bottom: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.reservation-fast-counter__control {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.reservation-fast-counter__btn {
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 0.6rem;
+    border: 1px solid #dbe4ee;
+    background: #fff;
+    color: #0e3a5a;
+    font-weight: 800;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.reservation-fast-counter__btn:hover {
+    background: #eff8fc;
+}
+
+.reservation-fast-counter__input {
+    width: 3.5rem;
+    text-align: center;
+    font-weight: 800;
+    font-size: 1.15rem;
+    color: #0f172a;
+    border: none;
+    background: transparent;
+}
+
+.reservation-fast-companions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.reservation-fast-companion {
+    border: 1px solid #e6edf5;
+    border-radius: 1rem;
+    padding: 1rem;
+    background: #f8fafc;
+}
+
+.reservation-fast-companion__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.reservation-fast-companion__num {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #94a3b8;
+    text-transform: uppercase;
+}
+
+.reservation-fast-companion__remove {
+    width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 0.5rem;
+    border: 1px solid #fecdd3;
+    background: #fff1f2;
+    color: #9f1239;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.reservation-fast-summary {
+    border: 1px solid #e6edf5;
+    border-radius: 1.25rem;
+    background: #fff;
+    box-shadow: 0 14px 38px rgba(14, 58, 90, 0.05);
+    padding: 1.25rem;
+}
+
+.reservation-fast-summary__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.9rem;
+}
+
+.reservation-fast-summary__item:last-child {
+    border-bottom: none;
+}
+
+.reservation-fast-summary__item span {
+    color: #64748b;
+}
+
+.reservation-fast-summary__item strong {
+    color: #0f172a;
+    font-weight: 800;
+}
+
+.reservation-fast-summary__item--total {
+    padding-top: 0.75rem;
+    margin-top: 0.5rem;
+    border-top: 2px solid #e2e8f0;
+    border-bottom: none;
+    font-size: 1rem;
+}
+
+.reservation-fast-summary__item--total strong {
+    color: #0e3a5a;
+    font-size: 1.1rem;
+}
+
+.reservation-fast-summary__item--remaining strong {
+    color: #9f1239;
+}
+
 @media (max-width: 1100px) {
     .reservation-create__content-grid {
         grid-template-columns: 1fr !important;
@@ -1372,5 +1636,18 @@
     .reservation-create__summary,
     .reservation-create__summary-card {
         grid-column: 1 !important;
+    }
+
+    .reservation-fast-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .reservation-fast-traveler-counters {
+        grid-template-columns: 1fr;
+    }
+
+    .reservation-fast-header__card {
+        flex-direction: column;
+        gap: 0.75rem;
     }
 }

@@ -481,6 +481,8 @@ class ReservationsController extends Controller
             $preselectedTourId = $requestedTourId;
         }
 
+        $fastCreateMode = $preselectedTourId && $selectedDeparture?->id && $travelDateId > 0;
+
         return view('admin.reservations.create', [
             'voyages' => $voyages,
             'wpTitles' => $wpTitles,
@@ -491,6 +493,7 @@ class ReservationsController extends Controller
             'travelDateId' => $travelDateId > 0 ? $travelDateId : null,
             'preselectedTourId' => $preselectedTourId,
             'preselectedTour' => $preselectedTourId ? ($voyages->firstWhere('id', $preselectedTourId) ?: Voyage::query()->find($preselectedTourId)) : null,
+            'fastCreateMode' => $fastCreateMode,
             'travelDateIncoherent' => $travelDateIncoherent,
             'extrasByVoyage' => $extrasByVoyage,
             'selectedUnitPrice' => $selectedUnitPrice,

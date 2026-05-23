@@ -8,21 +8,25 @@
 @endpush
 
 @section('content')
-    <div class="reservation-create">
-        <header class="reservation-create__header">
-            <nav class="reservation-create__breadcrumb" aria-label="Breadcrumb">
-                <a href="{{ route('admin.reservations.index') }}">Réservations</a>
-                <span>/</span>
-                <span>Nouvelle</span>
-            </nav>
-            <div class="reservation-create__header-main">
-                <div>
-                    <h1 class="reservation-create__title">Créer une réservation</h1>
-                    <p class="reservation-create__subtitle">Tunnel dédié pour ouvrir un dossier de réservation sans confusion avec le workspace.</p>
+    <div class="reservation-create {{ ($fastCreateMode ?? false) ? 'reservation-create--fast' : '' }}" data-fast-create="{{ ($fastCreateMode ?? false) ? '1' : '0' }}">
+        @if ($fastCreateMode ?? false)
+            @include('admin.reservations.create.partials.fast-header')
+        @else
+            <header class="reservation-create__header">
+                <nav class="reservation-create__breadcrumb" aria-label="Breadcrumb">
+                    <a href="{{ route('admin.reservations.index') }}">Réservations</a>
+                    <span>/</span>
+                    <span>Nouvelle</span>
+                </nav>
+                <div class="reservation-create__header-main">
+                    <div>
+                        <h1 class="reservation-create__title">Créer une réservation</h1>
+                        <p class="reservation-create__subtitle">Tunnel dédié pour ouvrir un dossier de réservation sans confusion avec le workspace.</p>
+                    </div>
+                    <a href="{{ route('admin.reservations.workspace') }}" class="reservation-create__back-link">Retour au workspace</a>
                 </div>
-                <a href="{{ route('admin.reservations.workspace') }}" class="reservation-create__back-link">Retour au workspace</a>
-            </div>
-        </header>
+            </header>
+        @endif
 
         @if ($errors->any())
             <div class="reservation-create__alert reservation-create__alert--error">
@@ -46,42 +50,29 @@
             <input type="hidden" name="extras_total" id="reservation-extras-total-input" value="{{ old('extras_total', 0) }}">
             <input type="hidden" name="total_amount" id="reservation-total-amount-input" value="{{ old('total_amount', 0) }}">
 
-            @if ($preselectedTourId && $selectedDepartureId && $travelDateId)
-                <div class="reservation-create__card mb-3">
-                    <div class="d-flex justify-content-between align-items-start gap-3">
-                        <div>
-                            <p class="reservation-create__eyebrow">Offre sélectionnée</p>
-                            <h3 class="reservation-create__section-title" style="font-size:1.1rem; margin:0;">
-                                {{ $preselectedTour?->name ?? 'Voyage' }}
-                            </h3>
-                            <p class="reservation-create__subtitle" style="margin-top:0.25rem;">
-                                Départ : {{ optional($selectedDeparture?->start_date)->format('d/m/Y') }}
-                                @if($selectedDeparture?->end_date) → {{ optional($selectedDeparture?->end_date)->format('d/m/Y') }} @endif
-                                | Places restantes : {{ $selectedDeparture?->available_capacity ?? 'N/A' }}
-                                | Prix unitaire : {{ number_format((float) ($selectedUnitPrice ?? 0), 2, ',', ' ') }} DH
-                            </p>
-                        </div>
-                        <button type="button" class="btn btn-sm btn-outline-primary" id="btn-fast-modify-offer">Modifier</button>
-                    </div>
-                </div>
-            @endif
-
             <div class="reservation-create__workflow">
-                @include('admin.reservations.create.partials.workflow')
+                @include('admin.reservations.create.partials.' . (($fastCreateMode ?? false) ? 'workflow-fast' : 'workflow'))
             </div>
 
             <div class="reservation-create__content-grid">
                 <main class="reservation-create__main">
-                    @include('admin.reservations.create.partials.step-prestation')
-                    @include('admin.reservations.create.partials.step-client')
-                    @include('admin.reservations.create.partials.step-voyageurs')
-                    @include('admin.reservations.create.partials.step-extras')
-                    @include('admin.reservations.create.partials.step-payment')
-                    @include('admin.reservations.create.partials.step-dossier')
+                    @if ($fastCreateMode ?? false)
+                        @include('admin.reservations.create.partials.step-fast-1')
+                        @include('admin.reservations.create.partials.step-fast-2')
+                        @include('admin.reservations.create.partials.step-fast-3')
+                        @include('admin.reservations.create.partials.step-fast-4')
+                    @else
+                        @include('admin.reservations.create.partials.step-prestation')
+                        @include('admin.reservations.create.partials.step-client')
+                        @include('admin.reservations.create.partials.step-voyageurs')
+                        @include('admin.reservations.create.partials.step-extras')
+                        @include('admin.reservations.create.partials.step-payment')
+                        @include('admin.reservations.create.partials.step-dossier')
+                    @endif
                 </main>
 
                 <aside class="reservation-create__summary">
-                    @include('admin.reservations.create.partials.summary')
+                    @include('admin.reservations.create.partials.' . (($fastCreateMode ?? false) ? 'summary-fast' : 'summary'))
                 </aside>
             </div>
         </form>
