@@ -1,0 +1,797 @@
+(function () {
+    'use strict';
+
+    var currentStep = 1;
+    var extrasMap = parseJsonScript('v2-extras-map', {});
+    var roomingAllocations = [];
+    var availableRoomTypes = [];
+    var companionIdCounter = 0;
+    var clientsCache = parseJsonScript('v2-clients-data', []);
+
+    window.reservationState = {
+        currentStep: 1,
+        selectedTourId: null,
+        selectedDepartureId: null,
+        selectedTravelDateId: null,
+        pricing: {},
+        availableRooms: [],
+        roomsMode: null,
+        travelers: [],
+        roomAllocations: [],
+        extras: [],
+        payment: {}
+    };
+
+    function parseJsonScript(id, fallback) {
+        var el = document.getElementById(id);
+        if (!el) return fallback;
+        try { return JSON.parse(el.textContent || '') || fallback; } catch (e) { return fallback; }
+    }
+
+    function debounce(fn, ms) {
+        var t;
+        return function () {
+            var args = arguments;
+            clearTimeout(t);
+            t = setTimeout(function () { fn.apply(null, args); }, ms);
+        };
+    }
+
+    function formatMoney(value) {
+        return (Math.round((Number(value) || 0) * 100) / 100).toLocaleString('fr-FR', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+        }) + ' DH';
+    }
+
+    function parseNumber(value) {
+        var p = parseFloat(value || '0');
+        return Number.isFinite(p) ? p : 0;
+    }
+
+    function el(id) { return document.getElementById(id); }
+
+    function getTravelerCount() { return getTravelerRows().length; }
+
+    function principalTravelerLabel() {
+        var existing = document.getElementById('v2-client-mode-existing');
+        var hiddenId = document.getElementById('v2-client-external-id');
+        var selectedLabel = document.getElementById('v2-client-search-selected-label');
+        if (existing && existing.checked && hiddenId && hiddenId.value && selectedLabel) {
+            return selectedLabel.textContent || 'Client principal';
+        }
+        var first = document.getElementById('v2-client-first-name');
+        var last = document.getElementById('v2-client-last-name');
+        var label = [first ? String(first.value || '').trim() : '', last ? String(last.value || '').trim() : '']
+            .filter(Boolean).join(' ');
+        return label || 'Client principal';
+    }
+
+    function consumesBedForType(type) { return type !== 'infant'; }
+
+    function getTravelerRows() {
+        var principalType = String(document.getElementById('v2-client-traveler-type') && document.getElementById('v2-client-traveler-type').value || 'adult');
+        var principalGender = String(document.getElementById('v2-client-gender') && document.getElementById('v2-client-gender').value || '');
+        var rows = [{
+            id: 'main', label: principalTravelerLabel(), type: principalType, travelerType: principalType,
+            gender: principalGender, relationship: 'main', consumesBed: consumesBedForType(principalType),
+            priceType: principalType === 'child' ? 'child' : 'adult', isMain: true
+        }];
+
+        document.querySelectorAll('#v2-companions-container .v2-companion').forEach(function (row, index) {
+            var first = row.querySelector('input[name*="[first_name]"]');
+            var last = row.querySelector('input[name*="[last_name]"]');
+            var typeSelect = row.querySelector('select[name*="[type]"]');
+            var genderSelect = row.querySelector('select[name*="[gender]"]');
+            var relationSelect = row.querySelector('select[name*="[relationship_to_main]"]');
+            var travelerKeyInput = row.querySelector('input[name*="[traveler_key]"]');
+            var firstName = String(first && first.value || '').trim();
+            var lastName = String(last && last.value || '').trim();
+            if (firstName === '' && lastName === '') return;
+            var stableId = travelerKeyInput && travelerKeyInput.value
+                ? String(travelerKeyInput.value)
+                : (row.getAttribute('data-companion-id') || row.getAttribute('data-traveler-key') || ('companion_' + index));
+            var type = String(typeSelect && typeSelect.value || 'adult');
+            var gender = String(genderSelect && genderSelect.value || '');
+            rows.push({
+                id: stableId, label: firstName + (lastName ? ' ' + lastName : ''),
+                type: type, travelerType: type, gender: gender,
+                relationship: String(relationSelect && relationSelect.value || 'group'),
+                consumesBed: consumesBedForType(type),
+                priceType: type === 'child' ? 'child' : 'adult', isMain: false
+            });
+        });
+        return rows;
+    }
+
+    function updateTravelerBadge() {
+        var rows = getTravelerRows();
+        var total = rows.length;
+        var adults = rows.filter(function (r) { return r.type === 'adult'; }).length;
+        var children = rows.filter(function (r) { return r.type === 'child'; }).length;
+        var infants = rows.filter(function (r) { return r.type === 'infant'; }).length;
+        var badge = document.getElementById('v2-travelers-badge');
+        if (badge) {
+            badge.textContent = total + ' voyageur' + (total > 1 ? 's' : '')
+                + ' (' + adults + ' adulte' + (adults > 1 ? 's' : '')
+                + (children ? ', ' + children + ' enfant' + (children > 1 ? 's' : '') : '')
+                + (infants ? ', ' + infants + ' bébé' + (infants > 1 ? 's' : '') : '') + ')';
+        }
+        var sidebarTravelers = document.getElementById('v2-sidebar-travelers');
+        if (sidebarTravelers) sidebarTravelers.textContent = String(total);
+    }
+
+    function getSelectedTourId() {
+        var hidden = document.getElementById('v2-tour-id-hidden');
+        var select = document.getElementById('v2-select-tour');
+        var val = hidden && hidden.value ? parseInt(hidden.value, 10) : (select && select.value ? parseInt(select.value, 10) : 0);
+        return val || null;
+    }
+
+    function getSelectedDepartureId() {
+        var hidden = document.getElementById('v2-departure-id-hidden');
+        return hidden && hidden.value ? parseInt(hidden.value, 10) : null;
+    }
+
+    function syncFinancialSummary() {
+        var travelers = getTravelerRows();
+        var travelerCount = travelers.length;
+        var selectedTourId = getSelectedTourId();
+        var unitPrice = window.reservationState.pricing && window.reservationState.pricing.unit_price ? window.reservationState.pricing.unit_price : 0;
+        var basePrice = travelerCount * unitPrice;
+        var roomSupplement = parseNumber(document.getElementById('v2-room-supplement-total') && document.getElementById('v2-room-supplement-total').value);
+        var extrasTotal = extrasTotalAmount();
+        var discountValue = parseNumber(document.getElementById('v2-discount-input') && document.getElementById('v2-discount-input').value);
+        var discountType = document.getElementById('v2-discount-type-select') ? document.getElementById('v2-discount-type-select').value : '';
+        var discountAmount = 0;
+        if (discountType === 'fixed') discountAmount = discountValue;
+        else if (discountType === 'percentage') discountAmount = Math.round((basePrice + roomSupplement + extrasTotal) * discountValue) / 100;
+        var totalBeforeDiscount = basePrice + roomSupplement + extrasTotal;
+        var totalAfterDiscount = Math.max(0, totalBeforeDiscount - discountAmount);
+        var paid = parseNumber(document.getElementById('v2-payment-amount') && document.getElementById('v2-payment-amount').value);
+        var remaining = Math.max(0, totalAfterDiscount - paid);
+
+        document.getElementById('v2-total-base').value = basePrice.toFixed(2);
+        document.getElementById('v2-room-supplement-total').value = roomSupplement.toFixed(2);
+        document.getElementById('v2-extras-total').value = extrasTotal.toFixed(2);
+        document.getElementById('v2-total-amount').value = totalAfterDiscount.toFixed(2);
+
+        if (document.getElementById('v2-sidebar-unit-price')) {
+            document.getElementById('v2-sidebar-unit-price').textContent = unitPrice > 0 ? formatMoney(unitPrice) : '—';
+        }
+        if (document.getElementById('v2-sidebar-discount')) {
+            document.getElementById('v2-sidebar-discount').textContent = discountAmount > 0 ? '-' + formatMoney(discountAmount) : 'Aucune';
+        }
+        if (document.getElementById('v2-sidebar-extras')) {
+            document.getElementById('v2-sidebar-extras').textContent = formatMoney(extrasTotal);
+        }
+        if (document.getElementById('v2-sidebar-total')) {
+            document.getElementById('v2-sidebar-total').textContent = totalAfterDiscount > 0 ? formatMoney(totalAfterDiscount) : '—';
+        }
+        if (document.getElementById('v2-sidebar-paid')) {
+            document.getElementById('v2-sidebar-paid').textContent = formatMoney(paid);
+        }
+        if (document.getElementById('v2-sidebar-remaining')) {
+            document.getElementById('v2-sidebar-remaining').textContent = formatMoney(remaining);
+        }
+        if (document.getElementById('v2-preview-base')) {
+            document.getElementById('v2-preview-base').textContent = formatMoney(basePrice);
+        }
+        if (document.getElementById('v2-preview-room-supp')) {
+            document.getElementById('v2-preview-room-supp').textContent = formatMoney(roomSupplement);
+        }
+        if (document.getElementById('v2-preview-extras')) {
+            document.getElementById('v2-preview-extras').textContent = formatMoney(extrasTotal);
+        }
+        if (document.getElementById('v2-preview-subtotal')) {
+            document.getElementById('v2-preview-subtotal').textContent = formatMoney(totalBeforeDiscount);
+        }
+
+        // Stepper completion state
+        document.querySelectorAll('.v2-stepper__step').forEach(function (btn, idx) {
+            btn.classList.toggle('is-completed', idx + 1 < currentStep);
+        });
+    }
+
+    function extrasTotalAmount() {
+        var total = 0;
+        document.querySelectorAll('.v2-extra-card.is-selected').forEach(function (card) {
+            var price = parseNumber(card.getAttribute('data-price'));
+            var qtyInput = card.querySelector('.v2-extra-card__qty input');
+            var qty = qtyInput ? parseInt(qtyInput.value || '1', 10) : 1;
+            total += price * qty;
+        });
+        return total;
+    }
+
+    function updateExtrasJson() {
+        var payload = [];
+        document.querySelectorAll('.v2-extra-card.is-selected').forEach(function (card) {
+            payload.push({
+                voyage_extra_id: parseInt(card.getAttribute('data-extra-id') || '0', 10),
+                name: card.getAttribute('data-name') || '',
+                price_adult: parseNumber(card.getAttribute('data-price')),
+                quantity: parseInt(card.querySelector('.v2-extra-card__qty input').value || '1', 10),
+            });
+        });
+        var input = document.getElementById('v2-extras-json');
+        if (input) input.value = JSON.stringify(payload);
+    }
+
+    function setStep(step) {
+        if (step < 1 || step > 4) return;
+        currentStep = step;
+        window.reservationState.currentStep = step;
+        document.querySelectorAll('.v2-panel[data-v2-step]').forEach(function (panel) {
+            var isTarget = parseInt(panel.getAttribute('data-v2-step'), 10) === step;
+            panel.hidden = !isTarget;
+            panel.classList.toggle('is-active', isTarget);
+        });
+        document.querySelectorAll('.v2-stepper__step').forEach(function (btn) {
+            var btnStep = parseInt(btn.getAttribute('data-v2-step-nav'), 10);
+            btn.classList.toggle('is-active', btnStep === step);
+        });
+        var progressPct = Math.round((step / 4) * 100);
+        var bar = document.getElementById('v2-progress-bar');
+        if (bar) bar.style.width = progressPct + '%';
+        var label = document.getElementById('v2-progress-label');
+        if (label) label.textContent = 'Étape ' + step + ' sur 4';
+        syncFinancialSummary();
+    }
+
+    function loadDepartures(tourId) {
+        var list = document.getElementById('v2-departure-list');
+        var block = document.getElementById('v2-departure-block');
+        if (!list || !block) return;
+        list.innerHTML = '<p class="v2-placeholder">Chargement des départs…</p>';
+        block.hidden = false;
+        var url = '/admin/reservations/voyage-departures?tour_id=' + encodeURIComponent(tourId);
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                var departures = data.departures || [];
+                if (!departures.length) {
+                    list.innerHTML = '<p class="v2-placeholder">Aucun départ disponible pour ce voyage.</p>';
+                    return;
+                }
+                var html = '';
+                departures.forEach(function (d) {
+                    var start = d.start_date || '—';
+                    var end = d.end_date || '—';
+                    var cap = d.available_capacity !== undefined ? d.available_capacity : d.capacity;
+                    var price = d.sale_price !== undefined ? d.sale_price : (d.base_price || 0);
+                    var status = d.status || 'active';
+                    var statusLabel = status === 'active' ? 'Disponible' : status;
+                    html += '<div class="v2-departure-card" data-departure-id="' + (d.id || '') + '" data-travel-date-id="' + (d.wp_travel_date_id || d.travel_date_id || '') + '">' +
+                        '<div class="v2-departure-card__main">' +
+                            '<div class="v2-departure-card__dates">' + start + ' → ' + end + '</div>' +
+                            '<div class="v2-departure-card__meta">' +
+                                '<span>' + cap + ' places</span>' +
+                                '<span>' + statusLabel + '</span>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="v2-departure-card__price">' + formatMoney(price) + '</div>' +
+                    '</div>';
+                });
+                list.innerHTML = html;
+                attachDepartureClicks();
+            })
+            .catch(function () {
+                list.innerHTML = '<p class="v2-placeholder" style="color:#dc2626">Erreur lors du chargement des départs.</p>';
+            });
+    }
+
+    function attachDepartureClicks() {
+        document.querySelectorAll('.v2-departure-card').forEach(function (card) {
+            card.addEventListener('click', function () {
+                document.querySelectorAll('.v2-departure-card').forEach(function (c) { c.classList.remove('is-selected'); });
+                card.classList.add('is-selected');
+                var depId = card.getAttribute('data-departure-id');
+                var travelDateId = card.getAttribute('data-travel-date-id');
+                document.getElementById('v2-departure-id-hidden').value = depId || '';
+                document.getElementById('v2-travel-date-id-hidden').value = travelDateId || '';
+                window.reservationState.selectedDepartureId = depId ? parseInt(depId, 10) : null;
+                window.reservationState.selectedTravelDateId = travelDateId ? parseInt(travelDateId, 10) : null;
+                updateDepartureSummary(card);
+                loadDepartureHotelsRooms(depId);
+            });
+        });
+    }
+
+    function updateDepartureSummary(card) {
+        var dates = card.querySelector('.v2-departure-card__dates');
+        var meta = card.querySelector('.v2-departure-card__meta');
+        var price = card.querySelector('.v2-departure-card__price');
+        document.getElementById('v2-summary-dates').textContent = dates ? dates.textContent : '—';
+        var capMatch = meta ? meta.textContent.match(/(\d+)\s+places/) : null;
+        document.getElementById('v2-summary-capacity').textContent = capMatch ? capMatch[1] : '—';
+        document.getElementById('v2-summary-unit-price').textContent = price ? price.textContent : '—';
+        document.getElementById('v2-summary-status').textContent = 'Disponible';
+        document.getElementById('v2-sidebar-departure').textContent = dates ? dates.textContent : '—';
+        var unitPriceText = price ? price.textContent.replace(/[^\d,.]/g, '').replace(',', '.') : '0';
+        var unitPrice = parseFloat(unitPriceText) || 0;
+        window.reservationState.pricing.unit_price = unitPrice;
+        var basePriceHidden = document.getElementById('v2-base-price-hidden');
+        if (basePriceHidden) basePriceHidden.value = unitPrice.toFixed(2);
+        syncFinancialSummary();
+    }
+
+    function loadDepartureHotelsRooms(departureId) {
+        var tourId = getSelectedTourId();
+        if (!tourId || !departureId) return;
+        var url = '/admin/reservations/departure-hotels-rooms?tour_id=' + encodeURIComponent(tourId) + '&departure_id=' + encodeURIComponent(departureId);
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                availableRoomTypes = data.rooms || [];
+                window.reservationState.availableRooms = availableRoomTypes;
+                window.reservationState.roomsMode = data.mode || null;
+                renderAvailableRooms();
+            })
+            .catch(function () { /* ignore */ });
+    }
+
+    function renderAvailableRooms() {
+        var container = document.getElementById('v2-rooming-available');
+        if (!container) return;
+        if (!availableRoomTypes.length) {
+            container.innerHTML = '<p class="v2-placeholder">Aucune chambre configurée pour ce départ.</p>';
+            return;
+        }
+        var html = '';
+        availableRoomTypes.forEach(function (r) {
+            html += '<div class="v2-room-type-card" data-room-id="' + (r.id || '') + '">' +
+                '<strong>' + (r.room_label || r.room_type || 'Chambre') + '</strong>' +
+                '<span>Capacité: ' + (r.capacity_total || r.capacity_adults || '?') + ' | Supplément: ' + formatMoney(r.supplement || 0) + '</span>' +
+            '</div>';
+        });
+        container.innerHTML = html;
+    }
+
+    function clientSearch(query) {
+        var results = document.getElementById('v2-client-search-results');
+        if (!results) return;
+        if (!query || query.length < 2) { results.hidden = true; return; }
+        fetch('/admin/customers/clients/search?q=' + encodeURIComponent(query), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                var items = data.clients || data.data || [];
+                if (!items.length) { results.hidden = true; return; }
+                var html = '';
+                items.forEach(function (c) {
+                    var label = (c.client_code ? '[' + c.client_code + '] ' : '') + (c.full_name || c.name || '');
+                    html += '<div class="v2-search-results__item" data-client-id="' + (c.id || '') + '" data-client-label="' + label.replace(/"/g, '&quot;') + '">' + label + '</div>';
+                });
+                results.innerHTML = html;
+                results.hidden = false;
+                attachClientResultClicks();
+            })
+            .catch(function () { results.hidden = true; });
+    }
+
+    function attachClientResultClicks() {
+        document.querySelectorAll('#v2-client-search-results .v2-search-results__item').forEach(function (item) {
+            item.addEventListener('click', function () {
+                var id = item.getAttribute('data-client-id');
+                var label = item.getAttribute('data-client-label');
+                document.getElementById('v2-client-external-id').value = id;
+                document.getElementById('v2-client-search-selected-label').textContent = label;
+                document.getElementById('v2-client-search-selected').hidden = false;
+                document.getElementById('v2-client-search-results').hidden = true;
+                document.getElementById('v2-client-search').value = '';
+            });
+        });
+    }
+
+    function addCompanion() {
+        companionIdCounter++;
+        var key = 'companion_' + companionIdCounter;
+        var container = document.getElementById('v2-companions-container');
+        var empty = document.getElementById('v2-no-companions');
+        if (!container) return;
+        if (empty) empty.hidden = true;
+        var div = document.createElement('div');
+        div.className = 'v2-companion';
+        div.setAttribute('data-companion-id', key);
+        div.setAttribute('data-traveler-key', key);
+        div.innerHTML =
+            '<div class="v2-companion__head">' +
+                '<h4 class="v2-companion__title">Accompagnant #' + companionIdCounter + '</h4>' +
+                '<button type="button" class="v2-companion__remove" aria-label="Supprimer">×</button>' +
+            '</div>' +
+            '<div class="v2-grid v2-grid--2">' +
+                '<input type="hidden" name="passengers[' + key + '][traveler_key]" value="' + key + '">' +
+                '<div class="v2-field"><label class="v2-label">Prénom <span class="v2-required">*</span></label><input type="text" name="passengers[' + key + '][first_name]" class="v2-input" required></div>' +
+                '<div class="v2-field"><label class="v2-label">Nom <span class="v2-required">*</span></label><input type="text" name="passengers[' + key + '][last_name]" class="v2-input" required></div>' +
+                '<div class="v2-field"><label class="v2-label">Type voyageur</label><select name="passengers[' + key + '][type]" class="v2-input"><option value="adult">Adulte</option><option value="child">Enfant</option><option value="infant">Bébé</option></select></div>' +
+                '<div class="v2-field"><label class="v2-label">Sexe</label><select name="passengers[' + key + '][gender]" class="v2-input"><option value="">Sélectionner…</option><option value="male">Homme</option><option value="female">Femme</option></select></div>' +
+                '<div class="v2-field"><label class="v2-label">Relation</label><select name="passengers[' + key + '][relationship_to_main]" class="v2-input"><option value="spouse">Conjoint / conjointe</option><option value="child">Enfant</option><option value="parent">Parent</option><option value="friend">Ami</option><option value="group">Groupe</option><option value="solo">Seul</option></select></div>' +
+                '<div class="v2-field"><label class="v2-label">Date naissance</label><input type="date" name="passengers[' + key + '][birth_date]" class="v2-input"></div>' +
+                '<div class="v2-field"><label class="v2-label">Type document</label><input type="text" name="passengers[' + key + '][document_type]" class="v2-input"></div>' +
+                '<div class="v2-field"><label class="v2-label">N° document</label><input type="text" name="passengers[' + key + '][document_number]" class="v2-input"></div>' +
+            '</div>';
+        container.appendChild(div);
+        div.querySelector('.v2-companion__remove').addEventListener('click', function () {
+            div.remove();
+            updateTravelerBadge();
+            if (!container.children.length && empty) empty.hidden = false;
+            syncFinancialSummary();
+        });
+        updateTravelerBadge();
+        syncFinancialSummary();
+    }
+
+    function renderExtras() {
+        var container = document.getElementById('v2-extras-container');
+        var empty = document.getElementById('v2-extras-empty');
+        if (!container) return;
+        var tourId = getSelectedTourId();
+        var list = extrasMap[String(tourId)] || [];
+        if (!list.length) {
+            container.innerHTML = '';
+            if (empty) empty.hidden = false;
+            return;
+        }
+        if (empty) empty.hidden = true;
+        var html = '';
+        list.forEach(function (extra) {
+            var price = parseNumber(extra.price_adult);
+            html += '<div class="v2-extra-card" data-extra-id="' + (extra.id || '') + '" data-name="' + (extra.name || '').replace(/"/g, '&quot;') + '" data-price="' + price + '">' +
+                '<div class="v2-extra-card__check"><i class="bx bx-check"></i></div>' +
+                '<div class="v2-extra-card__body">' +
+                    '<span class="v2-extra-card__name">' + (extra.name || 'Extra') + '</span>' +
+                    '<span class="v2-extra-card__desc">' + (extra.description || '') + '</span>' +
+                    '<span class="v2-extra-card__price">' + formatMoney(price) + '</span>' +
+                    '<div class="v2-extra-card__qty">' +
+                        '<button type="button" class="v2-extra-qty-minus">-</button>' +
+                        '<input type="number" value="1" min="1" max="99">' +
+                        '<button type="button" class="v2-extra-qty-plus">+</button>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        });
+        container.innerHTML = html;
+        attachExtraClicks();
+    }
+
+    function attachExtraClicks() {
+        document.querySelectorAll('.v2-extra-card').forEach(function (card) {
+            card.addEventListener('click', function (e) {
+                if (e.target.closest('.v2-extra-card__qty')) return;
+                card.classList.toggle('is-selected');
+                updateExtrasJson();
+                syncFinancialSummary();
+            });
+            var minus = card.querySelector('.v2-extra-qty-minus');
+            var plus = card.querySelector('.v2-extra-qty-plus');
+            var input = card.querySelector('.v2-extra-card__qty input');
+            if (minus) minus.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var v = Math.max(1, parseInt(input.value || '1', 10) - 1);
+                input.value = v;
+                updateExtrasJson();
+                syncFinancialSummary();
+            });
+            if (plus) plus.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var v = Math.min(99, parseInt(input.value || '1', 10) + 1);
+                input.value = v;
+                updateExtrasJson();
+                syncFinancialSummary();
+            });
+            if (input) input.addEventListener('change', function () {
+                updateExtrasJson();
+                syncFinancialSummary();
+            });
+        });
+    }
+
+    function renderRoomingUnassigned() {
+        var pool = document.getElementById('v2-rooming-unassigned');
+        if (!pool) return;
+        var travelers = getTravelerRows();
+        var assignedIds = new Set();
+        roomingAllocations.forEach(function (alloc) {
+            (alloc.traveler_ids || []).forEach(function (id) { assignedIds.add(id); });
+        });
+        var unassigned = travelers.filter(function (t) { return !assignedIds.has(t.id); });
+        if (!unassigned.length) {
+            pool.innerHTML = '<p class="v2-empty">Tous les voyageurs sont affectés.</p>';
+            return;
+        }
+        var html = '';
+        unassigned.forEach(function (t) {
+            html += '<div class="v2-traveler-chip" draggable="true" data-traveler-id="' + t.id + '">' +
+                '<span>' + t.label + ' <small>(' + t.type + ')</small></span>' +
+                '<i class="bx bx-move-vertical" style="color:#94a3b8"></i>' +
+            '</div>';
+        });
+        pool.innerHTML = html;
+    }
+
+    function renderRoomingBoard() {
+        var board = document.getElementById('v2-rooming-board');
+        if (!board) return;
+        if (!roomingAllocations.length) {
+            board.innerHTML = '';
+            return;
+        }
+        var html = '';
+        roomingAllocations.forEach(function (alloc, idx) {
+            var roomLabel = alloc.room_label || alloc.room_type || 'Chambre';
+            var travelerChips = '';
+            (alloc.traveler_ids || []).forEach(function (tid) {
+                var t = getTravelerRows().find(function (r) { return r.id === tid; });
+                if (t) {
+                    travelerChips += '<span class="v2-traveler-chip" data-traveler-id="' + t.id + '" style="cursor:pointer">' + t.label + ' <small>(' + t.type + ')</small></span>';
+                }
+            });
+            html += '<div class="v2-room-allocation" data-allocation-index="' + idx + '">' +
+                '<div class="v2-room-allocation__head">' +
+                    '<span class="v2-room-allocation__title">' + roomLabel + '</span>' +
+                    '<button type="button" class="v2-room-allocation__remove" aria-label="Retirer">×</button>' +
+                '</div>' +
+                '<div class="v2-room-allocation__travelers">' + (travelerChips || '<em style="color:#94a3b8;font-size:.8125rem">Glissez les voyageurs ici</em>') + '</div>' +
+            '</div>';
+        });
+        board.innerHTML = html;
+        attachAllocationClicks();
+        updateRoomAllocationsJson();
+    }
+
+    function attachAllocationClicks() {
+        document.querySelectorAll('.v2-room-allocation__remove').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var idx = parseInt(btn.closest('.v2-room-allocation').getAttribute('data-allocation-index'), 10);
+                roomingAllocations.splice(idx, 1);
+                renderRoomingBoard();
+                renderRoomingUnassigned();
+                syncFinancialSummary();
+            });
+        });
+        document.querySelectorAll('.v2-room-allocation__travelers .v2-traveler-chip').forEach(function (chip) {
+            chip.addEventListener('click', function () {
+                var tid = chip.getAttribute('data-traveler-id');
+                var allocIdx = parseInt(chip.closest('.v2-room-allocation').getAttribute('data-allocation-index'), 10);
+                roomingAllocations[allocIdx].traveler_ids = (roomingAllocations[allocIdx].traveler_ids || []).filter(function (id) { return id !== tid; });
+                renderRoomingBoard();
+                renderRoomingUnassigned();
+                syncFinancialSummary();
+            });
+        });
+    }
+
+    function updateRoomAllocationsJson() {
+        var input = document.getElementById('v2-room-allocations-json');
+        if (input) input.value = JSON.stringify(roomingAllocations);
+        var sidebarRooms = document.getElementById('v2-sidebar-rooms');
+        if (sidebarRooms) {
+            sidebarRooms.textContent = roomingAllocations.length ? roomingAllocations.length + ' chambre(s)' : '—';
+        }
+    }
+
+    function autoRooming() {
+        var travelers = getTravelerRows();
+        if (!travelers.length || !availableRoomTypes.length) return;
+        // Simple strategy: fill rooms by capacity
+        roomingAllocations = [];
+        var unassigned = travelers.slice();
+        availableRoomTypes.forEach(function (room) {
+            var cap = parseInt(room.capacity_total || room.capacity_adults || 2, 10);
+            while (unassigned.length > 0) {
+                var batch = unassigned.slice(0, cap);
+                if (!batch.length) break;
+                roomingAllocations.push({
+                    room_id: room.id,
+                    room_type: room.room_type,
+                    room_label: room.room_label || room.room_type,
+                    traveler_ids: batch.map(function (t) { return t.id; }),
+                });
+                unassigned = unassigned.slice(cap);
+            }
+        });
+        // If any remaining, add a catch-all
+        if (unassigned.length) {
+            roomingAllocations.push({
+                room_id: null,
+                room_type: 'Autre',
+                room_label: 'Autre affectation',
+                traveler_ids: unassigned.map(function (t) { return t.id; }),
+            });
+        }
+        renderRoomingBoard();
+        renderRoomingUnassigned();
+        syncFinancialSummary();
+    }
+
+    function addRoomAllocation() {
+        roomingAllocations.push({
+            room_id: null,
+            room_type: 'Personnalisé',
+            room_label: 'Chambre #' + (roomingAllocations.length + 1),
+            traveler_ids: []
+        });
+        renderRoomingBoard();
+        renderRoomingUnassigned();
+    }
+
+    function saveDraft() {
+        var payload = {
+            step: currentStep,
+            tourId: getSelectedTourId(),
+            departureId: getSelectedDepartureId(),
+            travelers: getTravelerRows().map(function (t) { return { id: t.id, label: t.label, type: t.type }; }),
+            extras: JSON.parse(document.getElementById('v2-extras-json').value || '[]'),
+            roomAllocations: roomingAllocations,
+            payment: {
+                amount: document.getElementById('v2-payment-amount') ? document.getElementById('v2-payment-amount').value : '',
+                type: document.getElementById('v2-payment-type') ? document.getElementById('v2-payment-type').value : '',
+            },
+            timestamp: new Date().toISOString()
+        };
+        localStorage.setItem('ajinsafro_reservation_v2_draft', JSON.stringify(payload));
+        var btn = document.getElementById('v2-btn-draft');
+        if (btn) {
+            var original = btn.innerHTML;
+            btn.innerHTML = '<i class="bx bx-check"></i> Brouillon enregistré';
+            setTimeout(function () { btn.innerHTML = original; }, 2000);
+        }
+    }
+
+    function restoreDraft() {
+        try {
+            var raw = localStorage.getItem('ajinsafro_reservation_v2_draft');
+            if (!raw) return;
+            var draft = JSON.parse(raw);
+            if (!draft || !draft.timestamp) return;
+            var ageHours = (Date.now() - new Date(draft.timestamp).getTime()) / 3600000;
+            if (ageHours > 48) { localStorage.removeItem('ajinsafro_reservation_v2_draft'); return; }
+            // Optional: ask user before restoring (simplified here)
+            if (draft.tourId) {
+                var select = document.getElementById('v2-select-tour');
+                var hidden = document.getElementById('v2-tour-id-hidden');
+                if (select) { select.value = draft.tourId; }
+                if (hidden) { hidden.value = draft.tourId; }
+                window.reservationState.selectedTourId = draft.tourId;
+                loadDepartures(draft.tourId);
+                renderExtras();
+            }
+        } catch (e) { /* ignore */ }
+    }
+
+    // Event wiring
+    document.addEventListener('DOMContentLoaded', function () {
+        // Stepper navigation
+        document.querySelectorAll('[data-v2-step-nav]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                setStep(parseInt(btn.getAttribute('data-v2-step-nav'), 10));
+            });
+        });
+        document.querySelectorAll('[data-v2-next]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                setStep(parseInt(btn.getAttribute('data-v2-next'), 10));
+            });
+        });
+        document.querySelectorAll('[data-v2-prev]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                setStep(parseInt(btn.getAttribute('data-v2-prev'), 10));
+            });
+        });
+
+        // Tour select
+        var tourSelect = document.getElementById('v2-select-tour');
+        var tourSearch = document.getElementById('v2-tour-search');
+        if (tourSelect) {
+            tourSelect.addEventListener('change', function () {
+                var val = parseInt(tourSelect.value, 10);
+                document.getElementById('v2-tour-id-hidden').value = val || '';
+                window.reservationState.selectedTourId = val || null;
+                if (val) {
+                    loadDepartures(val);
+                    renderExtras();
+                    var selectedOption = tourSelect.options[tourSelect.selectedIndex];
+                    var tripName = selectedOption ? selectedOption.textContent : 'Voyage sélectionné';
+                    document.getElementById('v2-sidebar-trip').textContent = tripName;
+                }
+            });
+        }
+        if (tourSearch) {
+            tourSearch.addEventListener('input', debounce(function () {
+                var q = tourSearch.value.toLowerCase();
+                Array.from(tourSelect.options).forEach(function (opt) {
+                    opt.style.display = (!q || (opt.textContent || '').toLowerCase().indexOf(q) !== -1 || opt.value === '') ? '' : 'none';
+                });
+            }, 200));
+        }
+
+        // Client mode toggle
+        var modeNew = document.getElementById('v2-client-mode-new');
+        var modeExisting = document.getElementById('v2-client-mode-existing');
+        var newBlock = document.getElementById('v2-new-client-block');
+        var existingBlock = document.getElementById('v2-existing-client-block');
+        function toggleClientMode() {
+            var isExisting = modeExisting && modeExisting.checked;
+            if (newBlock) newBlock.hidden = isExisting;
+            if (existingBlock) existingBlock.hidden = !isExisting;
+        }
+        if (modeNew) modeNew.addEventListener('change', toggleClientMode);
+        if (modeExisting) modeExisting.addEventListener('change', toggleClientMode);
+        toggleClientMode();
+
+        // Client search
+        var clientSearchInput = document.getElementById('v2-client-search');
+        if (clientSearchInput) {
+            clientSearchInput.addEventListener('input', debounce(function () {
+                clientSearch(clientSearchInput.value);
+            }, 250));
+        }
+        var clientClear = document.getElementById('v2-client-search-clear');
+        if (clientClear) {
+            clientClear.addEventListener('click', function () {
+                document.getElementById('v2-client-external-id').value = '';
+                document.getElementById('v2-client-search-selected').hidden = true;
+                document.getElementById('v2-client-search').value = '';
+            });
+        }
+
+        // Add companion
+        var addCompanionBtn = document.getElementById('v2-btn-add-companion');
+        if (addCompanionBtn) addCompanionBtn.addEventListener('click', addCompanion);
+
+        // Rooming
+        var autoRoomingBtn = document.getElementById('v2-btn-auto-rooming');
+        var addRoomBtn = document.getElementById('v2-btn-add-room');
+        var resetRoomingBtn = document.getElementById('v2-btn-reset-rooming');
+        if (autoRoomingBtn) autoRoomingBtn.addEventListener('click', autoRooming);
+        if (addRoomBtn) addRoomBtn.addEventListener('click', addRoomAllocation);
+        if (resetRoomingBtn) resetRoomingBtn.addEventListener('click', function () {
+            roomingAllocations = [];
+            renderRoomingBoard();
+            renderRoomingUnassigned();
+            syncFinancialSummary();
+        });
+
+        // Payment inputs
+        var paymentAmount = document.getElementById('v2-payment-amount');
+        var discountInput = document.getElementById('v2-discount-input');
+        var discountType = document.getElementById('v2-discount-type-select');
+        if (paymentAmount) paymentAmount.addEventListener('input', syncFinancialSummary);
+        if (discountInput) discountInput.addEventListener('input', syncFinancialSummary);
+        if (discountType) discountType.addEventListener('change', syncFinancialSummary);
+
+        // Visa toggle
+        var visaOk = document.getElementById('v2-visa-ok');
+        var visaBlock = document.getElementById('v2-visa-block');
+        if (visaOk && visaBlock) {
+            visaOk.addEventListener('change', function () {
+                visaBlock.hidden = visaOk.checked;
+            });
+        }
+
+        // Draft
+        var draftBtn = document.getElementById('v2-btn-draft');
+        if (draftBtn) draftBtn.addEventListener('click', saveDraft);
+
+        // Traveler inputs change
+        document.addEventListener('input', function (e) {
+            if (e.target.closest('#v2-companions-container') || e.target.id === 'v2-client-first-name' || e.target.id === 'v2-client-last-name' || e.target.id === 'v2-client-traveler-type') {
+                updateTravelerBadge();
+                syncFinancialSummary();
+            }
+        });
+
+        // Init
+        setStep(1);
+        updateTravelerBadge();
+        syncFinancialSummary();
+        restoreDraft();
+
+        // If tour preselected
+        var preselectedTourId = document.getElementById('v2-tour-id-hidden') && document.getElementById('v2-tour-id-hidden').value;
+        if (preselectedTourId) {
+            window.reservationState.selectedTourId = parseInt(preselectedTourId, 10);
+            loadDepartures(preselectedTourId);
+            renderExtras();
+        }
+    });
+})();

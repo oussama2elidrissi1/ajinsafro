@@ -1,7 +1,7 @@
 <div class="reservation-create__steps-card reservation-create__steps-card--workflow">
     <p class="reservation-create__eyebrow">Workflow</p>
     <h2 class="reservation-create__sidebar-title">Nouvelle réservation</h2>
-    <div class="reservation-create__steps reservation-create__steps--inline" role="tablist" aria-label="Étapes de création">
+    <div class="reservation-create__steps reservation-create__steps--chevrons" role="tablist" aria-label="Étapes de création">
         <button type="button" class="reservation-create__step is-active" data-create-step-nav="1">
             <span class="reservation-create__step-index">1</span>
             <span class="reservation-create__step-label">Prestation</span>

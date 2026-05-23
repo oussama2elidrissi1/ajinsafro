@@ -457,6 +457,125 @@ class ReservationsController extends Controller
     }
 
     /**
+     * Formulaire de crÃ©ation de rÃ©servation V2 (nouvelle UX).
+     * RÃ©utilise exactement la mÃªme logique que create() mais renvoie la vue V2 isolÃ©e.
+     */
+    public function createV2(Request $request): View
+    {
+        $requestedTourId = (int) $request->query('voyage_id', $request->query('tour_id', 0));
+        $travelDateId = (int) $request->query('travel_date_id', 0);
+        $requestedDepartureId = (int) $request->query('departure_id', 0);
+
+        $clientsQuery = Client::query()->orderByDesc('id')->limit(200);
+        $this->branchScope->scopeClients($clientsQuery, $request->user());
+        $clients = $clientsQuery->get(['id', 'client_code', 'full_name', 'email', 'phone', 'national_id_number', 'passport_number']);
+        $voyages = Voyage::query()
+            ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
+            ->orderByDesc('id')
+            ->limit(200)
+            ->get(['id', 'name', 'slug', 'wp_post_id']);
+        if ($requestedTourId > 0 && $voyages->where('id', $requestedTourId)->isEmpty()) {
+            $requestedVoyage = Voyage::query()
+                ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
+                ->find($requestedTourId);
+            if ($requestedVoyage) {
+                $voyages = $voyages->prepend($requestedVoyage)->unique('id')->values();
+            }
+        }
+
+        $wpPostIds = $voyages->pluck('wp_post_id')->filter()->unique()->values()->all();
+        $wpTitles = collect();
+        if (! empty($wpPostIds)) {
+            try {
+                $wpTitles = WpPost::query()
+                    ->whereIn('ID', $wpPostIds)
+                    ->get(['ID', 'post_title'])
+                    ->keyBy('ID');
+            } catch (\Throwable $e) {
+                // ignore
+            }
+        }
+
+        $selectedTravelDate = null;
+        $travelDateIncoherent = false;
+        if ($travelDateId > 0) {
+            $selectedTravelDate = TravelDate::query()->where('is_active', true)->find($travelDateId);
+            if ($selectedTravelDate && $requestedTourId > 0) {
+                $voyageForTour = Voyage::find($requestedTourId);
+                if (! $voyageForTour || (int) $selectedTravelDate->travel_id !== (int) $voyageForTour->wp_post_id) {
+                    $voyageFromTravelDate = Voyage::query()
+                        ->where('wp_post_id', (int) $selectedTravelDate->travel_id)
+                        ->first();
+
+                    if ($voyageFromTravelDate) {
+                        $requestedTourId = (int) $voyageFromTravelDate->id;
+                    } else {
+                        $selectedTravelDate = null;
+                        $travelDateIncoherent = true;
+                    }
+                }
+            }
+        }
+
+        $selectedDeparture = null;
+        if ($requestedDepartureId > 0) {
+            $selectedDeparture = Departure::query()->find($requestedDepartureId);
+            if ($selectedDeparture && $requestedTourId > 0 && (int) $selectedDeparture->voyage_id !== $requestedTourId) {
+                $requestedTourId = (int) $selectedDeparture->voyage_id;
+            }
+        }
+        if (! $selectedDeparture && $requestedTourId > 0 && $travelDateId > 0) {
+            $selectedDeparture = Departure::query()
+                ->where('voyage_id', $requestedTourId)
+                ->where('wp_travel_date_id', $travelDateId)
+                ->first();
+        }
+
+        if ($requestedTourId > 0 && $voyages->where('id', $requestedTourId)->isEmpty()) {
+            $requestedVoyage = Voyage::query()
+                ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
+                ->find($requestedTourId);
+            if ($requestedVoyage) {
+                $voyages = $voyages->prepend($requestedVoyage)->unique('id')->values();
+            }
+        }
+
+        $extrasByVoyage = $voyages
+            ->mapWithKeys(fn (Voyage $voyage) => [
+                (string) $voyage->id => $voyage->extras
+                    ->where('is_active', true)
+                    ->values()
+                    ->map(fn ($extra) => [
+                        'id' => (int) $extra->id,
+                        'name' => (string) $extra->name,
+                        'description' => (string) ($extra->description ?? ''),
+                        'price_adult' => (float) ($extra->price_adult ?? 0),
+                        'price_child' => (float) ($extra->price_child ?? 0),
+                        'extra_type' => (string) ($extra->extra_type ?? ''),
+                        'icon' => (string) ($extra->icon ?? 'fa-plus-circle'),
+                    ])->all(),
+            ])
+            ->all();
+
+        $preselectedTourId = null;
+        if ($requestedTourId > 0 && $voyages->contains('id', $requestedTourId)) {
+            $preselectedTourId = $requestedTourId;
+        }
+
+        return view('admin.reservations.create-v2', [
+            'voyages' => $voyages,
+            'wpTitles' => $wpTitles,
+            'clients' => $clients,
+            'selectedTravelDate' => $selectedTravelDate,
+            'selectedDepartureId' => $selectedDeparture?->id,
+            'travelDateId' => $travelDateId > 0 ? $travelDateId : null,
+            'preselectedTourId' => $preselectedTourId,
+            'travelDateIncoherent' => $travelDateIncoherent,
+            'extrasByVoyage' => $extrasByVoyage,
+        ]);
+    }
+
+    /**
      * API JSON : hÃ­tels et chambres pour un voyage (tour_id = Voyage.id).
      */
     public function hotelsRooms(Request $request): JsonResponse

@@ -274,6 +274,7 @@
         $makeLeaf('products_activities', 'Activite', 'admin.menu-hubs.activites', 'bx bx-run', ['admin.menu-hubs.activites', 'admin.activity-offers.*', 'admin.circuits.activities.*', 'admin.activities.*'], [], null, 'activities.view'),
         $makeLeaf('products_transfers', 'Transfer', 'admin.menu-hubs.transfers', 'bx bx-transfer-alt', ['admin.menu-hubs.transfers', 'admin.circuits.tour-transfers.*', 'admin.transfers.*'], [], null, 'transfers.view'),
         $makeLeaf('products_visa', 'Visa', 'admin.menu-hubs.visa', 'bx bx-id-card', ['admin.menu-hubs.visa', 'admin.visa.*'], [], null, 'visa.view'),
+        $makeLeaf('products_group_deals', 'Deals', 'admin.group-deals.index', 'bx bx-purchase-tag', ['admin.group-deals.*'], [], null, 'group-deals.offers.view'),
     ]));
 
     $customersChildren = [];
