@@ -9,6 +9,7 @@ use App\Models\ReservationDossier;
 use App\Models\TravelDate;
 use App\Models\User;
 use App\Models\Voyage;
+use App\Services\AdminWpTourCatalogQuery;
 use App\Services\BranchScopeService;
 use App\Services\ReservationListQueryService;
 use App\Services\ReservationService;
@@ -301,7 +302,7 @@ class ReservationDossierController extends Controller
                 'period' => $period,
                 'per_page' => $perPage,
             ],
-            'voyageOptions' => Voyage::query()->orderBy('name')->limit(300)->get(['id', 'name']),
+            'voyageOptions' => AdminWpTourCatalogQuery::reservableVoyageOptions(),
             'agentOptions' => $agentOptionsQuery->get(['id', 'name']),
             'branchOptions' => $this->branchScope->branchesForSelect($request->user()),
         ]);

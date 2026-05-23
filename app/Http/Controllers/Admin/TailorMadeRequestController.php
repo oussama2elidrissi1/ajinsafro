@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\TailorMadeRequest;
 use App\Models\Voyage;
+use App\Services\AdminWpTourCatalogQuery;
 use App\Services\Wp\WpHeroImageService;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
@@ -220,7 +221,7 @@ class TailorMadeRequestController extends Controller
                 'departure_place' => $departurePlace,
                 'per_page' => $perPage,
             ],
-            'voyageOptions' => Voyage::query()->orderBy('name')->limit(300)->get(['id', 'name']),
+            'voyageOptions' => AdminWpTourCatalogQuery::reservableVoyageOptions(),
             'statusOptions' => TailorMadeRequest::statusOptions(),
         ]);
     }

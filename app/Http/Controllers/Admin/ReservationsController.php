@@ -21,6 +21,7 @@ use App\Models\Wp\WpPost;
 use App\Services\BranchScopeService;
 use App\Services\AgentCommissionService;
 use App\Services\ReservationHubTableProfile;
+use App\Services\AdminWpTourCatalogQuery;
 use App\Services\ReservationListQueryService;
 use App\Services\ReservationDossierService;
 use App\Services\ReservationService;
@@ -319,16 +320,17 @@ class ReservationsController extends Controller
         $clientsQuery = Client::query()->orderByDesc('id')->limit(200);
         $this->branchScope->scopeClients($clientsQuery, $request->user());
         $clients = $clientsQuery->get(['id', 'client_code', 'full_name', 'email', 'phone', 'national_id_number', 'passport_number']);
-        $voyages = Voyage::query()
-            ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
-            ->orderByDesc('id')
-            ->limit(200)
-            ->get(['id', 'name', 'slug', 'wp_post_id', 'price_from']);
+        $voyages = AdminWpTourCatalogQuery::reservableVoyages();
         if ($requestedTourId > 0 && $voyages->where('id', $requestedTourId)->isEmpty()) {
             $requestedVoyage = Voyage::query()
                 ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
                 ->find($requestedTourId);
-            if ($requestedVoyage) {
+            // Ne prÃ©remplir que si le voyage est actif et liÃ© Ã  un WP publiÃ©
+            if ($requestedVoyage
+                && $requestedVoyage->status === 'actif'
+                && $requestedVoyage->wp_post_id > 0
+                && WpPost::query()->tours()->where('ID', $requestedVoyage->wp_post_id)->where('post_status', 'publish')->exists()
+            ) {
                 $voyages = $voyages->prepend($requestedVoyage)->unique('id')->values();
             }
         }
@@ -583,16 +585,17 @@ class ReservationsController extends Controller
         $clientsQuery = Client::query()->orderByDesc('id')->limit(200);
         $this->branchScope->scopeClients($clientsQuery, $request->user());
         $clients = $clientsQuery->get(['id', 'client_code', 'full_name', 'email', 'phone', 'national_id_number', 'passport_number']);
-        $voyages = Voyage::query()
-            ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
-            ->orderByDesc('id')
-            ->limit(200)
-            ->get(['id', 'name', 'slug', 'wp_post_id', 'price_from']);
+        $voyages = AdminWpTourCatalogQuery::reservableVoyages();
         if ($requestedTourId > 0 && $voyages->where('id', $requestedTourId)->isEmpty()) {
             $requestedVoyage = Voyage::query()
                 ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
                 ->find($requestedTourId);
-            if ($requestedVoyage) {
+            // Ne prÃ©remplir que si le voyage est actif et liÃ© Ã  un WP publiÃ©
+            if ($requestedVoyage
+                && $requestedVoyage->status === 'actif'
+                && $requestedVoyage->wp_post_id > 0
+                && WpPost::query()->tours()->where('ID', $requestedVoyage->wp_post_id)->where('post_status', 'publish')->exists()
+            ) {
                 $voyages = $voyages->prepend($requestedVoyage)->unique('id')->values();
             }
         }
@@ -1152,7 +1155,15 @@ class ReservationsController extends Controller
     {
         abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃ¨s non autorisÃ© Ã  cette rÃ©servation.');
         $reservation->load(['passengers', 'client', 'offer', 'extras', 'payments.creator', 'documents.creator', 'histories.user', 'reservationRooms.departureHotelRoom', 'departure', 'branch', 'partner', 'creator', 'createdBy']);
-        $voyages = Voyage::orderByDesc('id')->limit(200)->get(['id', 'name', 'slug']);
+        $voyages = AdminWpTourCatalogQuery::reservableVoyages();
+        // Conserver le voyage historique de la rÃ©servation mÃªme s'il n'est plus reservable
+        $reservationVoyageId = $reservation->tour_id;
+        if ($reservationVoyageId && $voyages->where('id', $reservationVoyageId)->isEmpty()) {
+            $historicalVoyage = Voyage::query()->find($reservationVoyageId, ['id', 'name', 'slug']);
+            if ($historicalVoyage) {
+                $voyages = $voyages->prepend($historicalVoyage)->unique('id')->values();
+            }
+        }
         $clientsQuery = Client::query()->orderByDesc('id')->limit(200);
         $this->branchScope->scopeClients($clientsQuery, $request->user());
         $clients = $clientsQuery->get(['id', 'client_code', 'full_name', 'email', 'phone', 'national_id_number', 'passport_number']);
@@ -2372,10 +2383,7 @@ class ReservationsController extends Controller
             }
         }
 
-        $voyageOptions = Voyage::query()
-            ->orderBy('name')
-            ->limit(500)
-            ->get(['id', 'name', 'wp_post_id']);
+        $voyageOptions = AdminWpTourCatalogQuery::reservableVoyageOptions();
 
         $voyageOptions = $this->normalizeVoyageLabels($voyageOptions)
             ->sortBy(fn (Voyage $voyage) => Str::lower((string) ($voyage->resolved_name ?? $voyage->name)))

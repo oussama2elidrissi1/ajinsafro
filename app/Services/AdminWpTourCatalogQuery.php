@@ -283,4 +283,65 @@ final class AdminWpTourCatalogQuery
             ->values()
             ->all();
     }
+
+    /**
+     * IDs WordPress des st_tours publiÃ©s (post_status = 'publish').
+     *
+     * @return list<int>
+     */
+    public static function publishedWpTourIds(): array
+    {
+        return WpPost::query()
+            ->tours()
+            ->where('post_status', 'publish')
+            ->pluck('ID')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Voyages Laravel rÃ©servables : actifs, liÃ©s Ã  un WP post publiÃ©, et non-test.
+     *
+     * @return EloquentCollection<int, Voyage>
+     */
+    public static function reservableVoyages(): EloquentCollection
+    {
+        $publishedIds = static::publishedWpTourIds();
+
+        return Voyage::query()
+            ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
+            ->where('status', 'actif')
+            ->whereNotNull('wp_post_id')
+            ->where('wp_post_id', '>', 0)
+            ->when($publishedIds !== [], fn ($q) => $q->whereIn('wp_post_id', $publishedIds))
+            ->when($publishedIds === [], fn ($q) => $q->whereRaw('1 = 0'))
+            ->whereRaw('LOWER(name) NOT LIKE ?', ['%test%'])
+            ->orderByDesc('id')
+            ->limit(200)
+            ->get();
+    }
+
+    /**
+     * Options allÃ©gÃ©es (id + name) pour les selects simples (index, dossiers, autocomplete).
+     *
+     * @return EloquentCollection<int, Voyage>
+     */
+    public static function reservableVoyageOptions(): EloquentCollection
+    {
+        $publishedIds = static::publishedWpTourIds();
+
+        return Voyage::query()
+            ->select(['id', 'name', 'wp_post_id'])
+            ->where('status', 'actif')
+            ->whereNotNull('wp_post_id')
+            ->where('wp_post_id', '>', 0)
+            ->when($publishedIds !== [], fn ($q) => $q->whereIn('wp_post_id', $publishedIds))
+            ->when($publishedIds === [], fn ($q) => $q->whereRaw('1 = 0'))
+            ->whereRaw('LOWER(name) NOT LIKE ?', ['%test%'])
+            ->orderBy('name')
+            ->limit(500)
+            ->get();
+    }
 }
