@@ -2325,14 +2325,7 @@
             windowReservationState: window.reservationState
         });
         setAvailableRoomTypes(window.reservationAvailableRooms || []);
-        var initialStep = 1;
-        var tourIdHidden = document.getElementById('tour_id_hidden');
-        var inputDepartureId = document.getElementById('input-departure-id');
-        var inputTravelDateId = document.getElementById('input-travel-date-id');
-        if (tourIdHidden && tourIdHidden.value && inputDepartureId && inputDepartureId.value && inputTravelDateId && inputTravelDateId.value) {
-            initialStep = 2;
-        }
-        setStep(initialStep);
+        setStep(1);
         console.log('[Reservation Create] Current step:', window.currentStep);
         console.log('[Reservation Create] State:', window.reservationState);
 
