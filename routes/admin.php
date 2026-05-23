@@ -204,11 +204,11 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('demande-a-la-carte/{tailorMadeRequest}', [TailorMadeRequestController::class, 'show'])->name('tailor-made-requests.show')->whereNumber('tailorMadeRequest');
         Route::patch('demande-a-la-carte/{tailorMadeRequest}/status', [TailorMadeRequestController::class, 'updateStatus'])->name('tailor-made-requests.status')->whereNumber('tailorMadeRequest');
         Route::delete('demande-a-la-carte/{tailorMadeRequest}', [TailorMadeRequestController::class, 'destroy'])->name('tailor-made-requests.destroy')->whereNumber('tailorMadeRequest');
-        Route::get('reservations/create', [ReservationsController::class, 'createV2'])->name('reservations.create');
-        Route::get('reservations/create-classic', [ReservationsController::class, 'create'])->name('reservations.create-classic');
-        Route::get('reservations/create-v2', function () {
+        Route::get('reservations/create', [ReservationsController::class, 'create'])->name('reservations.create');
+        Route::get('reservations/create-v2', [ReservationsController::class, 'createV2'])->name('reservations.create-v2');
+        Route::get('reservations/create-classic', function () {
             return redirect()->route('admin.reservations.create');
-        })->name('reservations.create-v2');
+        })->name('reservations.create-classic');
         Route::get('reservations/hotels-rooms', [ReservationsController::class, 'hotelsRooms'])->name('reservations.hotels-rooms');
         Route::get('reservations/voyage-departures', [ReservationsController::class, 'voyageDepartures'])->name('reservations.voyage-departures');
         Route::get('reservations/departure-hotels-rooms', [ReservationsController::class, 'departureHotelsRooms'])->name('reservations.departure-hotels-rooms');

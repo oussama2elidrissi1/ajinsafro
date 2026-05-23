@@ -42,3 +42,19 @@
 [stacktrace]
 #0 {main}
 "} 
+[2026-05-23 19:11:48] local.ERROR: Command "view:compile" is not defined.
+
+Did you mean one of these?
+    view:cache
+    view:clear {"exception":"[object] (Symfony\\Component\\Console\\Exception\\CommandNotFoundException(code: 0): Command \"view:compile\" is not defined.
+
+Did you mean one of these?
+    view:cache
+    view:clear at C:/Users/oussa/Desktop/themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template/Qovex_Laravel_v3.0.0/Admin/vendor/symfony/console/Application.php:745)
+[stacktrace]
+#0 C:/Users/oussa/Desktop/themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template/Qovex_Laravel_v3.0.0/Admin/vendor/symfony/console/Application.php(266): Symfony/Component/Console/Application->find('view:compile')
+#1 C:/Users/oussa/Desktop/themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template/Qovex_Laravel_v3.0.0/Admin/vendor/symfony/console/Application.php(175): Symfony/Component/Console/Application->doRun(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#2 C:/Users/oussa/Desktop/themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template/Qovex_Laravel_v3.0.0/Admin/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony/Component/Console/Application->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#3 C:/Users/oussa/Desktop/themeforest-uMqxCtcU-qovex-laravel-admin-dashboard-template/Qovex_Laravel_v3.0.0/Admin/artisan(37): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#4 {main}
+"} 
