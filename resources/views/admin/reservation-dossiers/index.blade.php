@@ -26,6 +26,9 @@
     $currentStatus = $currentStatus ?? 'all';
 
     $reservationBadge = function ($reservation) {
+        if ($reservation->needsSharedRoomPairing()) {
+            return ['label' => 'En attente de jumelage', 'class' => 'is-pending'];
+        }
         return match ((string) $reservation->status) {
             Reservation::STATUS_PENDING, Reservation::STATUS_OPTION, Reservation::STATUS_SHARED_ROOM_PENDING => ['label' => 'En attente', 'class' => 'is-pending'],
             Reservation::STATUS_CONFIRMED, Reservation::STATUS_SHARED_ROOM_PAIRED, Reservation::STATUS_PARTIALLY_PAID => ['label' => 'Confirmee', 'class' => 'is-confirmed'],
@@ -693,6 +696,14 @@
                                                     <td>
                                                         <div class="rd-row-actions">
                                                             <a href="{{ $detailUrl }}" class="rd-mini-btn"><i class="bx bx-show"></i><span>Voir</span></a>
+                                                            @if($reservation->needsSharedRoomPairing())
+                                                                <button type="button" class="rd-mini-btn btn-res-hub-pair" title="Jumeler"
+                                                                    data-res-id="{{ $reservation->id }}"
+                                                                    data-res-code="{{ $reservation->catalog_source_code ?: ('RES-' . str_pad((string) $reservation->id, 6, '0', STR_PAD_LEFT)) }}"
+                                                                >
+                                                                    <i class="bx bx-link"></i><span>Jumeler</span>
+                                                                </button>
+                                                            @endif
                                                             @can('reservations.update')
                                                                 @if(in_array($reservation->status, [Reservation::STATUS_PENDING, Reservation::STATUS_OPTION, Reservation::STATUS_SHARED_ROOM_PENDING], true))
                                                                     <form action="{{ route('admin.reservations.validate', $reservation) }}" method="POST">
@@ -710,6 +721,11 @@
                                                                     <i class="bx bx-trash"></i><span>Supprimer</span>
                                                                 </button>
                                                             </form>
+                                                            @if(config('app.debug'))
+                                                                <div class="small text-muted mt-1">
+                                                                    pairing={{ $reservation->needsSharedRoomPairing() ? 'yes' : 'no' }} | rooms={{ $reservation->reservationRooms->count() }}
+                                                                </div>
+                                                            @endif
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -744,6 +760,27 @@
         @endif
     </div>
 </div>
+
+<!-- Modal Jumelage -->
+<div class="modal fade" id="pairingModal" tabindex="-1" aria-labelledby="pairingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="pairingModalLabel">Jumeler la rÃ©servation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body" id="pairing-modal-body">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2 text-muted">Recherche des rÃ©servations compatibles...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -759,6 +796,51 @@
             }
         });
     });
+
+    // Pairing modal handler
+    var pairingModalEl = document.getElementById('pairingModal');
+    var pairingModal = pairingModalEl ? bootstrap.Modal.getOrCreateInstance(pairingModalEl) : null;
+    var pairingModalBody = document.getElementById('pairing-modal-body');
+    var pairingModalLabel = document.getElementById('pairingModalLabel');
+
+    if (pairingModalEl && pairingModalBody) {
+        document.body.addEventListener('click', function (e) {
+            var btn = e.target.closest('.btn-res-hub-pair');
+            if (!btn) return;
+            e.preventDefault();
+            var resId = btn.getAttribute('data-res-id');
+            var resCode = btn.getAttribute('data-res-code');
+            if (!resId) return;
+            if (pairingModalLabel) {
+                pairingModalLabel.textContent = 'Jumeler la rÃ©servation ' + (resCode || '#'+resId);
+            }
+            pairingModalBody.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Recherche des rÃ©servations compatibles...</p></div>';
+            pairingModal.show();
+
+            var url = '/admin/reservations/' + encodeURIComponent(resId) + '/pairing-candidates';
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(function (r) {
+                if (!r.ok) throw new Error('Erreur ' + r.status);
+                return r.json();
+            })
+            .then(function (data) {
+                if (data.html) {
+                    pairingModalBody.innerHTML = data.html;
+                } else {
+                    pairingModalBody.innerHTML = '<div class="alert alert-warning border-0">Aucune donnÃ©e reÃ§ue.</div>';
+                }
+            })
+            .catch(function (err) {
+                pairingModalBody.innerHTML = '<div class="alert alert-danger border-0">Impossible de charger les candidats de jumelage. ' + (err.message || '') + '</div>';
+            });
+        });
+    }
 })();
 </script>
 @endpush

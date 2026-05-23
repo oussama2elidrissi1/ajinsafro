@@ -608,6 +608,43 @@ class Reservation extends Model
     }
 
     /**
+     * RÃ©sout la capacitÃ© d'une ligne reservation_rooms.
+     * La colonne capacity n'existe pas toujours sur reservation_rooms :
+     * on utilise la relation departureHotelRoom ou tourHotelRoom, puis fallback 2 pour Double.
+     */
+    public function resolveRoomCapacity($rr): int
+    {
+        $explicit = (int) ($rr->capacity ?? 0);
+        if ($explicit > 0) {
+            return $explicit;
+        }
+        $fromRelation = 0;
+        if ($rr->relationLoaded('departureHotelRoom') && $rr->departureHotelRoom) {
+            $fromRelation = (int) ($rr->departureHotelRoom->capacity ?? 0);
+        }
+        if ($fromRelation <= 0 && $rr->relationLoaded('tourHotelRoom') && $rr->tourHotelRoom) {
+            $fromRelation = (int) ($rr->tourHotelRoom->capacity ?? 0);
+        }
+        if ($fromRelation > 0) {
+            return $fromRelation;
+        }
+        $roomSnapshot = strtolower((string) ($rr->room_type_snapshot ?? ''));
+        if (str_contains($roomSnapshot, 'triple')) {
+            return 3;
+        }
+        if (str_contains($roomSnapshot, 'single')) {
+            return 1;
+        }
+        if (str_contains($roomSnapshot, 'quadruple') || str_contains($roomSnapshot, 'quad')) {
+            return 4;
+        }
+        if (str_contains($roomSnapshot, 'double') || str_contains($roomSnapshot, 'demi-double')) {
+            return 2;
+        }
+        return 2;
+    }
+
+    /**
      * DÃ©tecte si cette rÃ©servation contient une chambre demi-double partielle
      * non encore jumelÃ©e, indÃ©pendamment du statut texte de la rÃ©servation.
      */
@@ -619,14 +656,32 @@ class Reservation extends Model
         if (! $this->relationLoaded('reservationRooms')) {
             $this->load('reservationRooms');
         }
+        if (! $this->relationLoaded('passengers')) {
+            $this->load('passengers');
+        }
         return $this->reservationRooms->some(function ($rr) {
             $mode = (string) ($rr->room_mode ?? '');
             $state = (string) ($rr->shared_room_status ?? '');
             $paired = (int) ($rr->paired_reservation_id ?? 0);
-            $isHalfDouble = in_array($mode, ['half_male', 'half_female', 'shared_double'], true);
             $occupied = (int) ($rr->passenger_count ?? 0);
-            $capacity = (int) ($rr->capacity ?? 2);
-            return $isHalfDouble
+            $capacity = $this->resolveRoomCapacity($rr);
+
+            // Accepte les modes explicites demi-double
+            $isHalfDouble = in_array($mode, ['half_male', 'half_female', 'shared_double'], true);
+
+            // Fallback : room_mode vide mais source_room_type indique Double
+            // avec occupation partielle (1/2)
+            $sourceType = (string) ($rr->source_room_type ?? '');
+            $roomSnapshot = strtolower((string) ($rr->room_type_snapshot ?? ''));
+            $isDoubleRoom = str_contains($roomSnapshot, 'double') || str_contains($roomSnapshot, 'demi-double') || $sourceType === 'double' || $sourceType === 'tour_hotel_room';
+            $looksLikeHalfDouble = ($isDoubleRoom && $occupied > 0 && $occupied < $capacity && $capacity === 2);
+
+            // Normalise les variantes de mode possibles
+            $normalizedMode = str_replace(['-', '_'], '', strtolower($mode));
+            $modeVariants = ['halfmale', 'halffemale', 'shareddouble', 'demidoublehomme', 'demidoublefemme', 'halfdoublemale', 'halfdoublefemale'];
+            $isVariant = in_array($normalizedMode, $modeVariants, true);
+
+            return ($isHalfDouble || $isVariant || $looksLikeHalfDouble)
                 && $paired <= 0
                 && $occupied > 0
                 && $occupied < $capacity
@@ -647,18 +702,27 @@ class Reservation extends Model
                 $mode = (string) ($rr->room_mode ?? '');
                 $state = (string) ($rr->shared_room_status ?? '');
                 $paired = (int) ($rr->paired_reservation_id ?? 0);
-                return in_array($mode, ['half_male', 'half_female', 'shared_double'], true)
+                $occupied = (int) ($rr->passenger_count ?? 0);
+                $capacity = $this->resolveRoomCapacity($rr);
+
+                $isHalfDouble = in_array($mode, ['half_male', 'half_female', 'shared_double'], true);
+                $normalizedMode = str_replace(['-', '_'], '', strtolower($mode));
+                $modeVariants = ['halfmale', 'halffemale', 'shareddouble', 'demidoublehomme', 'demidoublefemme', 'halfdoublemale', 'halfdoublefemale'];
+                $isVariant = in_array($normalizedMode, $modeVariants, true);
+
+                $sourceType = (string) ($rr->source_room_type ?? '');
+                $roomSnapshot = strtolower((string) ($rr->room_type_snapshot ?? ''));
+                $isDoubleRoom = str_contains($roomSnapshot, 'double') || str_contains($roomSnapshot, 'demi-double') || $sourceType === 'double' || $sourceType === 'tour_hotel_room';
+                $looksLikeHalfDouble = ($isDoubleRoom && $occupied > 0 && $occupied < $capacity && $capacity === 2);
+
+                return ($isHalfDouble || $isVariant || $looksLikeHalfDouble)
                     && $paired <= 0
                     && $state !== 'paired';
             })
             ->sum(function ($rr) {
-                $mode = (string) ($rr->room_mode ?? '');
-                $cap = (int) ($rr->capacity ?? 2);
+                $cap = $this->resolveRoomCapacity($rr);
                 $occ = (int) ($rr->passenger_count ?? 0);
-                if (in_array($mode, ['half_male', 'half_female', 'shared_double'], true)) {
-                    return max(0, $cap - $occ);
-                }
-                return (int) ($rr->passenger_count ?? 0);
+                return max(0, $cap - $occ);
             });
     }
 }

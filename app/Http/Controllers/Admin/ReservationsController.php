@@ -2125,7 +2125,7 @@ class ReservationsController extends Controller
                     && $state !== 'paired'
                     && $paired <= 0
                     && (int) ($rr->passenger_count ?? 0) > 0
-                    && (int) ($rr->passenger_count ?? 0) < (int) ($rr->capacity ?? 2);
+                    && (int) ($rr->passenger_count ?? 0) < $reservation->resolveRoomCapacity($rr);
             });
 
         if ($sourceRooms->isEmpty()) {
@@ -2134,7 +2134,7 @@ class ReservationsController extends Controller
 
         $sourceRoom = $sourceRooms->first();
         $sourceMode = (string) ($sourceRoom->room_mode ?? '');
-        $sourceCapacity = (int) ($sourceRoom->capacity ?? 2);
+        $sourceCapacity = $reservation->resolveRoomCapacity($sourceRoom);
         $sourceOccupied = (int) ($sourceRoom->passenger_count ?? 0);
         $sourceRemaining = max(0, $sourceCapacity - $sourceOccupied);
 
@@ -2155,7 +2155,7 @@ class ReservationsController extends Controller
                     ->orWhere('dossier_status', '!=', Reservation::DOSSIER_CANCELLED)
                     ->orWhere('dossier_status', '');
             })
-            ->whereHas('reservationRooms', function ($q) use ($sourceMode, $sourceCapacity) {
+            ->whereHas('reservationRooms', function ($q) use ($sourceMode) {
                 $q->where(function ($qq) {
                     $qq->whereNull('shared_room_status')
                         ->orWhere('shared_room_status', 'pending')
@@ -2166,7 +2166,7 @@ class ReservationsController extends Controller
                             ->orWhere('paired_reservation_id', 0);
                     })
                     ->where('room_mode', $sourceMode)
-                    ->whereRaw('COALESCE(passenger_count, 0) < COALESCE(capacity, ?)', [$sourceCapacity]);
+                    ->whereRaw('COALESCE(passenger_count, 0) > 0');
             })
             ->orderBy('created_at')
             ->get()
@@ -2210,6 +2210,7 @@ class ReservationsController extends Controller
             'reservation' => $reservation,
             'sourceRoom' => $sourceRoom,
             'sourceMode' => $sourceMode,
+            'sourceCapacity' => $sourceCapacity,
             'sourceRemaining' => $sourceRemaining,
             'candidates' => $candidates,
             'genderRequirement' => $genderRequirement,
@@ -2256,13 +2257,17 @@ class ReservationsController extends Controller
 
         // Identify source room line
         $sourceRoom = $reservation->reservationRooms
-            ->first(function ($rr) {
+            ->first(function ($rr) use ($reservation) {
                 $mode = (string) ($rr->room_mode ?? '');
-                $state = (string) ($rr->shared_room_status ?? 'pending');
+                $state = (string) ($rr->shared_room_status ?? '');
+                $paired = (int) ($rr->paired_reservation_id ?? 0);
+                $occupied = (int) ($rr->passenger_count ?? 0);
+                $capacity = $reservation->resolveRoomCapacity($rr);
                 return in_array($mode, ['half_male', 'half_female', 'shared_double'], true)
                     && $state !== 'paired'
-                    && (int) ($rr->passenger_count ?? 0) > 0
-                    && (int) ($rr->passenger_count ?? 0) < (int) ($rr->capacity ?? 2);
+                    && $paired <= 0
+                    && $occupied > 0
+                    && $occupied < $capacity;
             });
 
         if (! $sourceRoom) {
@@ -2271,15 +2276,17 @@ class ReservationsController extends Controller
 
         // Identify target room line
         $targetRoom = $targetReservation->reservationRooms
-            ->first(function ($rr) use ($sourceRoom) {
+            ->first(function ($rr) use ($sourceRoom, $targetReservation) {
                 $mode = (string) ($rr->room_mode ?? '');
-                $state = (string) ($rr->shared_room_status ?? 'pending');
+                $state = (string) ($rr->shared_room_status ?? '');
                 $paired = (int) ($rr->paired_reservation_id ?? 0);
+                $occupied = (int) ($rr->passenger_count ?? 0);
+                $capacity = $targetReservation->resolveRoomCapacity($rr);
                 return $mode === (string) ($sourceRoom->room_mode ?? '')
                     && $state !== 'paired'
                     && $paired <= 0
-                    && (int) ($rr->passenger_count ?? 0) > 0
-                    && (int) ($rr->passenger_count ?? 0) < (int) ($rr->capacity ?? 2);
+                    && $occupied > 0
+                    && $occupied < $capacity;
             });
 
         if (! $targetRoom) {
@@ -2302,8 +2309,10 @@ class ReservationsController extends Controller
         }
 
         // Capacity check after pairing
+        $sourceCap = $reservation->resolveRoomCapacity($sourceRoom);
+        $targetCap = $targetReservation->resolveRoomCapacity($targetRoom);
+        $capacity = max($sourceCap, $targetCap);
         $totalOccupied = (int) ($sourceRoom->passenger_count ?? 0) + (int) ($targetRoom->passenger_count ?? 0);
-        $capacity = (int) ($sourceRoom->capacity ?? 2);
         if ($totalOccupied > $capacity) {
             return redirect()->back()->with('error', 'Le jumelage dÃ©passerait la capacitÃ© de la chambre ('.$totalOccupied.' / '.$capacity.').');
         }

@@ -22,7 +22,7 @@
     $offerName = $reservation->offer?->name ?? '-';
     $roomType = (string) ($sourceRoom->room_type_snapshot ?? 'Double');
     $occupied = (int) ($sourceRoom->passenger_count ?? 0);
-    $capacity = (int) ($sourceRoom->capacity ?? 2);
+    $capacity = (int) ($sourceCapacity ?? 2);
 @endphp
 
 <div class="pairing-modal-content">
