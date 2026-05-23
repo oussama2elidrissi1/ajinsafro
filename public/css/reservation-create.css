@@ -199,7 +199,11 @@
 .reservation-create__steps--chevrons .reservation-create__step.is-active {
     --chev-bg: #0e3a5a;
     --chev-border: #0e3a5a;
+    background: var(--chev-bg);
+    background-image: none;
+    border-color: var(--chev-border);
     color: #fff;
+    z-index: 3;
 }
 
 .reservation-create__steps--chevrons .reservation-create__step.is-active .reservation-create__step-index {
@@ -215,7 +219,19 @@
 .reservation-create__steps--chevrons .reservation-create__step.is-complete {
     --chev-bg: #e2e8f0;
     --chev-border: #cbd5e1;
+    background: var(--chev-bg);
+    background-image: none;
+    border-color: var(--chev-border);
     color: #0f172a;
+    z-index: 2;
+}
+
+.reservation-create__steps--chevrons .reservation-create__step {
+    z-index: 1;
+}
+
+.reservation-create__steps--chevrons .reservation-create__step + .reservation-create__step {
+    margin-left: -1px;
 }
 
 .reservation-create__steps--chevrons .reservation-create__step.is-complete .reservation-create__step-index {
