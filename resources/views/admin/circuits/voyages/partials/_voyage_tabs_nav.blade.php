@@ -5,6 +5,10 @@
             <h6 class="ve-tabs-title mb-0">�?dition du voyage par étapes</h6>
         </div>
 
+        <button type="button" class="workflow-toggle-btn" id="workflowToggleBtn" aria-label="Afficher / masquer le workflow">
+            <i class="bx bx-menu"></i>
+        </button>
+
         <p class="ve-tab-zone-hint text-muted small mb-0">
             �?tape actuelle: <strong class="ve-stepper-current" data-ve-current-step-label>Informations générales</strong>
         </p>
@@ -15,25 +19,33 @@
             data-ve-step="1" data-ve-step-label="Informations générales" data-ve-step-target="#basic"
             data-ve-step-tabs="#basic,#location,#information">
             <span class="ve-stepper__index">1</span>
+            <span class="ve-stepper__icon" aria-hidden="true"><i class="bx bx-edit-alt"></i></span>
             <span class="ve-stepper__text">Informations générales</span>
+            <span class="step-status" aria-hidden="true">À compléter</span>
         </button>
         <button type="button" class="ve-stepper__step"
             data-ve-step="2" data-ve-step-label="Offre commerciale" data-ve-step-target="#price"
             data-ve-step-tabs="#price,#voyage-extras,#taxonomies">
             <span class="ve-stepper__index">2</span>
+            <span class="ve-stepper__icon" aria-hidden="true"><i class="bx bx-purchase-tag-alt"></i></span>
             <span class="ve-stepper__text">Offre commerciale</span>
+            <span class="step-status" aria-hidden="true">À compléter</span>
         </button>
         <button type="button" class="ve-stepper__step"
             data-ve-step="3" data-ve-step-label="Exploitation / disponibilité" data-ve-step-target="#availability"
             data-ve-step-tabs="#availability,#logistics">
             <span class="ve-stepper__index">3</span>
+            <span class="ve-stepper__icon" aria-hidden="true"><i class="bx bx-calendar-check"></i></span>
             <span class="ve-stepper__text">Exploitation / disponibilité</span>
+            <span class="step-status" aria-hidden="true">À compléter</span>
         </button>
         <button type="button" class="ve-stepper__step"
             data-ve-step="4" data-ve-step-label="Contenu du voyage" data-ve-step-target="#media"
             data-ve-step-tabs="#media,#hotels,#activities,#program-days">
             <span class="ve-stepper__index">4</span>
+            <span class="ve-stepper__icon" aria-hidden="true"><i class="bx bx-images"></i></span>
             <span class="ve-stepper__text">Contenu du voyage</span>
+            <span class="step-status" aria-hidden="true">À compléter</span>
         </button>
     </div>
 

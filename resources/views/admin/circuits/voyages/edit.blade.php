@@ -182,6 +182,33 @@
     <script src="{{ URL::asset('js/flight-options-manager.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            var page = document.querySelector('.voyage-edit-page');
+            var workflowToggleBtn = document.getElementById('workflowToggleBtn');
+
+            if (page && workflowToggleBtn) {
+                var savedState = null;
+                try {
+                    savedState = window.localStorage ? localStorage.getItem('voyageWorkflowCollapsed') : null;
+                } catch (e) {
+                    savedState = null;
+                }
+
+                if (savedState === null || savedState === '1') {
+                    page.classList.add('workflow-collapsed');
+                }
+
+                workflowToggleBtn.addEventListener('click', function () {
+                    page.classList.toggle('workflow-collapsed');
+                    try {
+                        if (window.localStorage) {
+                            localStorage.setItem('voyageWorkflowCollapsed', page.classList.contains('workflow-collapsed') ? '1' : '0');
+                        }
+                    } catch (e) {
+                        // ignore
+                    }
+                });
+            }
+
             var workflow = document.querySelector('[data-ve-workflow]');
             if (!workflow) return;
 
@@ -216,6 +243,25 @@
                 '#activities': 'Activités',
                 '#program-days': 'Programme'
             };
+
+            function updateWorkflowStepStatuses() {
+                var steps = Array.prototype.slice.call(workflow.querySelectorAll('.ve-stepper__step'));
+                if (!steps.length) return;
+
+                var activeIndex = -1;
+                steps.forEach(function (step, index) {
+                    if (step.classList.contains('is-active')) {
+                        activeIndex = index;
+                    }
+                });
+
+                steps.forEach(function (step, index) {
+                    var statusEl = step.querySelector('.step-status');
+                    if (!statusEl) return;
+                    statusEl.textContent = activeIndex >= 0 && index < activeIndex ? 'Validée' : 'À compléter';
+                });
+            }
+            updateWorkflowStepStatuses();
 
             function escapeHtml(value) {
                 return String(value == null ? '' : value)
@@ -618,6 +664,7 @@
                 stepButtons.forEach(function (btn) {
                     btn.classList.toggle('is-active', btn === step);
                 });
+                updateWorkflowStepStatuses();
 
                 paintStepPanes(step, activeTarget);
                 renderDetailNav(step, activeTarget);
