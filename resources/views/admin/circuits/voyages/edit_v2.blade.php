@@ -140,7 +140,6 @@
             min-width: 64px !important;
             max-width: 64px !important;
             overflow: hidden !important;
-            outline: 4px solid red !important;
         }
 
         .voyage-edit-v2-page.workflow-collapsed .v3-steps-card {
