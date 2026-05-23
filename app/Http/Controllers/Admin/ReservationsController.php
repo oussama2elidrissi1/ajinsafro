@@ -440,6 +440,7 @@ class ReservationsController extends Controller
                         'extra_type' => (string) ($extra->extra_type ?? ''),
                         'icon' => (string) ($extra->icon ?? 'fa-plus-circle'),
                     ])
+                    ->toBase()
                     ->merge($optionalActivitiesByVoyage[(string) $voyage->id] ?? [])
                     ->values()
                     ->all(),
@@ -642,6 +643,7 @@ class ReservationsController extends Controller
                         'extra_type' => (string) ($extra->extra_type ?? ''),
                         'icon' => (string) ($extra->icon ?? 'fa-plus-circle'),
                     ])
+                    ->toBase()
                     ->merge($optionalActivitiesByVoyage[(string) $voyage->id] ?? [])
                     ->values()
                     ->all(),
