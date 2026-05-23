@@ -2106,6 +2106,111 @@ class ReservationsController extends Controller
     }
 
     /**
+     * Liste des rÃ©servations compatibles pour jumelage demi-double.
+     */
+    public function pairingCandidates(Request $request, Reservation $reservation)
+    {
+        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃ¨s non autorisÃ© Ã  cette rÃ©servation.');
+
+        if ($reservation->status !== Reservation::STATUS_SHARED_ROOM_PENDING) {
+            return response()->json(['error' => 'Cette rÃ©servation n\'est pas en attente de jumelage.'], 422);
+        }
+
+        $sourceRooms = $reservation->reservationRooms
+            ->filter(function ($rr) {
+                $mode = (string) ($rr->room_mode ?? '');
+                $state = (string) ($rr->shared_room_status ?? 'pending');
+                return in_array($mode, ['half_male', 'half_female', 'shared_double'], true)
+                    && $state !== 'paired'
+                    && (int) ($rr->passenger_count ?? 0) > 0
+                    && (int) ($rr->passenger_count ?? 0) < (int) ($rr->capacity ?? 2);
+            });
+
+        if ($sourceRooms->isEmpty()) {
+            return response()->json(['error' => 'Aucune place demi-double en attente sur cette rÃ©servation.'], 422);
+        }
+
+        $sourceRoom = $sourceRooms->first();
+        $sourceMode = (string) ($sourceRoom->room_mode ?? '');
+        $sourceCapacity = (int) ($sourceRoom->capacity ?? 2);
+        $sourceOccupied = (int) ($sourceRoom->passenger_count ?? 0);
+        $sourceRemaining = max(0, $sourceCapacity - $sourceOccupied);
+
+        // Determine gender compatibility
+        $genderRequirement = match ($sourceMode) {
+            'half_male' => 'male',
+            'half_female' => 'female',
+            default => null,
+        };
+
+        $candidates = Reservation::query()
+            ->with(['client', 'travelDate', 'reservationRooms', 'passengers'])
+            ->where('id', '!=', $reservation->id)
+            ->where('tour_id', $reservation->tour_id)
+            ->where('departure_id', $reservation->departure_id)
+            ->where('status', Reservation::STATUS_SHARED_ROOM_PENDING)
+            ->where(function ($q) {
+                $q->whereNull('dossier_status')
+                    ->orWhere('dossier_status', '!=', Reservation::DOSSIER_CANCELLED);
+            })
+            ->whereHas('reservationRooms', function ($q) use ($sourceMode, $sourceCapacity) {
+                $q->where(function ($qq) {
+                    $qq->whereNull('shared_room_status')
+                        ->orWhere('shared_room_status', 'pending')
+                        ->orWhere('shared_room_status', '');
+                })
+                    ->where('room_mode', $sourceMode)
+                    ->whereRaw('COALESCE(passenger_count, 0) < COALESCE(capacity, ?)', [$sourceCapacity]);
+            })
+            ->orderBy('created_at')
+            ->get()
+            ->filter(function (Reservation $candidate) use ($genderRequirement, $reservation) {
+                // Same room mode (same gender half-double)
+                $candidateRoom = $candidate->reservationRooms->first(function ($rr) {
+                    $state = (string) ($rr->shared_room_status ?? 'pending');
+                    return in_array((string) ($rr->room_mode ?? ''), ['half_male', 'half_female', 'shared_double'], true)
+                        && $state !== 'paired';
+                });
+                if (! $candidateRoom) {
+                    return false;
+                }
+                $candidateMode = (string) ($candidateRoom->room_mode ?? '');
+                if ($candidateMode !== $sourceMode) {
+                    return false;
+                }
+                // Gender compatibility check via passengers
+                if ($genderRequirement) {
+                    $hasMatchingGender = $candidate->passengers->some(function ($p) use ($genderRequirement) {
+                        return (string) ($p->gender ?? '') === $genderRequirement;
+                    });
+                    if (! $hasMatchingGender) {
+                        return false;
+                    }
+                }
+                // Not already paired
+                $alreadyPaired = $candidate->reservationRooms->some(function ($rr) {
+                    return (int) ($rr->paired_reservation_id ?? 0) > 0;
+                });
+                if ($alreadyPaired) {
+                    return false;
+                }
+                return true;
+            })
+            ->values();
+
+        $html = view('admin.reservations.partials.pairing-modal-body', [
+            'reservation' => $reservation,
+            'sourceRoom' => $sourceRoom,
+            'sourceMode' => $sourceMode,
+            'sourceRemaining' => $sourceRemaining,
+            'candidates' => $candidates,
+            'genderRequirement' => $genderRequirement,
+        ])->render();
+
+        return response()->json(['html' => $html, 'count' => $candidates->count()]);
+    }
+
+    /**
      * Jumelage manuel de deux rÃ©servations demi-double compatibles.
      */
     public function pairSharedRoom(Request $request, Reservation $reservation): RedirectResponse
@@ -2113,84 +2218,110 @@ class ReservationsController extends Controller
         abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃ¨s non autorisÃ© Ã  cette rÃ©servation.');
 
         if ($reservation->status !== Reservation::STATUS_SHARED_ROOM_PENDING) {
-            return redirect()->back()->with('error', 'Cette rÃ©servation nâ€™est pas en attente de jumelage demi-double.');
+            return redirect()->back()->with('error', 'Cette rÃ©servation n\'est pas en attente de jumelage demi-double.');
         }
 
-        $hasSourceRoomId = Schema::connection('mysql')->hasColumn('reservation_rooms', 'source_room_id');
-        $hasRoomMode = Schema::connection('mysql')->hasColumn('reservation_rooms', 'room_mode');
-        $hasSharedRoomStatus = Schema::connection('mysql')->hasColumn('reservation_rooms', 'shared_room_status');
-        $hasDepartureHotelId = Schema::connection('mysql')->hasColumn('reservation_rooms', 'departure_hotel_id');
+        $targetReservationId = (int) $request->input('target_reservation_id', 0);
+        if ($targetReservationId <= 0) {
+            return redirect()->back()->with('error', 'Veuillez sÃ©lectionner une rÃ©servation compatible Ã  jumeler.');
+        }
 
-        $targetLines = DB::table('reservation_rooms')
-            ->where('reservation_id', $reservation->id)
-            ->when($hasRoomMode, fn ($q) => $q->where('room_mode', 'shared_double'))
-            ->when($hasSharedRoomStatus, fn ($q) => $q->where(function ($qq) {
-                $qq->whereNull('shared_room_status')->orWhere('shared_room_status', 'pending');
-            }))
-            ->where('passenger_count', 1)
-            ->get();
+        $targetReservation = Reservation::query()
+            ->with('reservationRooms', 'passengers')
+            ->find($targetReservationId);
 
-        if ($targetLines->isEmpty()) {
+        if (! $targetReservation) {
+            return redirect()->back()->with('error', 'La rÃ©servation cible n\'existe pas.');
+        }
+
+        if ($targetReservation->status !== Reservation::STATUS_SHARED_ROOM_PENDING) {
+            return redirect()->back()->with('error', 'La rÃ©servation cible n\'est plus en attente de jumelage.');
+        }
+
+        if ((int) $targetReservation->tour_id !== (int) $reservation->tour_id) {
+            return redirect()->back()->with('error', 'Les deux rÃ©servations doivent concerner le mÃªme voyage.');
+        }
+
+        if ((int) $targetReservation->departure_id !== (int) $reservation->departure_id) {
+            return redirect()->back()->with('error', 'Les deux rÃ©servations doivent concerner le mÃªme dÃ©part.');
+        }
+
+        // Identify source room line
+        $sourceRoom = $reservation->reservationRooms
+            ->first(function ($rr) {
+                $mode = (string) ($rr->room_mode ?? '');
+                $state = (string) ($rr->shared_room_status ?? 'pending');
+                return in_array($mode, ['half_male', 'half_female', 'shared_double'], true)
+                    && $state !== 'paired'
+                    && (int) ($rr->passenger_count ?? 0) > 0
+                    && (int) ($rr->passenger_count ?? 0) < (int) ($rr->capacity ?? 2);
+            });
+
+        if (! $sourceRoom) {
             return redirect()->back()->with('error', 'Aucune place demi-double en attente sur cette rÃ©servation.');
         }
 
-        $candidateReservationId = 0;
-        foreach ($targetLines as $line) {
-            $candidate = Reservation::query()
-                ->where('id', '!=', $reservation->id)
-                ->where('tour_id', $reservation->tour_id)
-                ->where('departure_id', $reservation->departure_id)
-                ->where('status', Reservation::STATUS_SHARED_ROOM_PENDING)
-                ->whereExists(function ($q) use ($line, $hasSourceRoomId, $hasRoomMode, $hasSharedRoomStatus, $hasDepartureHotelId) {
-                    $q->select(DB::raw(1))
-                        ->from('reservation_rooms as rr')
-                        ->whereColumn('rr.reservation_id', 'reservations.id')
-                        ->where('rr.passenger_count', 1)
-                        ->when($hasRoomMode, fn ($qq) => $qq->where('rr.room_mode', 'shared_double'))
-                        ->when($hasSharedRoomStatus, fn ($qq) => $qq->where(function ($qqq) {
-                            $qqq->whereNull('rr.shared_room_status')->orWhere('rr.shared_room_status', 'pending');
-                        }));
+        // Identify target room line
+        $targetRoom = $targetReservation->reservationRooms
+            ->first(function ($rr) use ($sourceRoom) {
+                $mode = (string) ($rr->room_mode ?? '');
+                $state = (string) ($rr->shared_room_status ?? 'pending');
+                $paired = (int) ($rr->paired_reservation_id ?? 0);
+                return $mode === (string) ($sourceRoom->room_mode ?? '')
+                    && $state !== 'paired'
+                    && $paired <= 0
+                    && (int) ($rr->passenger_count ?? 0) > 0
+                    && (int) ($rr->passenger_count ?? 0) < (int) ($rr->capacity ?? 2);
+            });
 
-                    if ($hasSourceRoomId) {
-                        $q->where('rr.source_room_id', (int) ($line->source_room_id ?? 0));
-                    } else {
-                        $q->where('rr.room_type_snapshot', (string) ($line->room_type_snapshot ?? ''));
-                    }
-                    if ($hasDepartureHotelId) {
-                        $q->whereRaw('COALESCE(rr.departure_hotel_id, 0) = ?', [(int) ($line->departure_hotel_id ?? 0)]);
-                    }
-                })
-                ->orderBy('created_at')
-                ->value('id');
+        if (! $targetRoom) {
+            return redirect()->back()->with('error', 'La rÃ©servation cible n\'a pas de place demi-double compatible.');
+        }
 
-            if ((int) $candidate > 0) {
-                $candidateReservationId = (int) $candidate;
-                break;
+        // Gender check
+        $genderRequirement = match ((string) ($sourceRoom->room_mode ?? '')) {
+            'half_male' => 'male',
+            'half_female' => 'female',
+            default => null,
+        };
+        if ($genderRequirement) {
+            $hasMatchingGender = $targetReservation->passengers->some(function ($p) use ($genderRequirement) {
+                return (string) ($p->gender ?? '') === $genderRequirement;
+            });
+            if (! $hasMatchingGender) {
+                return redirect()->back()->with('error', 'Le sexe du voyageur dans la rÃ©servation cible n\'est pas compatible avec ce jumelage.');
             }
         }
 
-        if ($candidateReservationId <= 0) {
-            return redirect()->back()->with('error', 'Aucun dossier demi-double compatible trouvÃ© pour jumelage.');
+        // Capacity check after pairing
+        $totalOccupied = (int) ($sourceRoom->passenger_count ?? 0) + (int) ($targetRoom->passenger_count ?? 0);
+        $capacity = (int) ($sourceRoom->capacity ?? 2);
+        if ($totalOccupied > $capacity) {
+            return redirect()->back()->with('error', 'Le jumelage dÃ©passerait la capacitÃ© de la chambre ('.$totalOccupied.' / '.$capacity.').');
         }
 
-        Reservation::query()
-            ->whereIn('id', [$reservation->id, $candidateReservationId])
-            ->update(['status' => Reservation::STATUS_SHARED_ROOM_PAIRED]);
+        // Update reservation statuses
+        $reservation->status = Reservation::STATUS_SHARED_ROOM_PAIRED;
+        $reservation->save();
+        $targetReservation->status = Reservation::STATUS_SHARED_ROOM_PAIRED;
+        $targetReservation->save();
 
-        if ($hasSharedRoomStatus) {
-            DB::table('reservation_rooms')
-                ->whereIn('reservation_id', [$reservation->id, $candidateReservationId])
-                ->when($hasRoomMode, fn ($q) => $q->where('room_mode', 'shared_double'))
-                ->where(function ($q) {
-                    $q->whereNull('shared_room_status')->orWhere('shared_room_status', 'pending');
-                })
-                ->update([
-                    'shared_room_status' => 'paired',
-                    'updated_at' => now(),
-                ]);
+        // Update room lines
+        $sourceRoom->shared_room_status = 'paired';
+        $sourceRoom->paired_reservation_id = $targetReservation->id;
+        $sourceRoom->save();
+
+        $targetRoom->shared_room_status = 'paired';
+        $targetRoom->paired_reservation_id = $reservation->id;
+        $targetRoom->save();
+
+        // Also update allocation status if table exists
+        if (Schema::connection('mysql')->hasTable('reservation_room_allocations')) {
+            $reservation->roomAllocations()->update(['status' => 'complete']);
+            $targetReservation->roomAllocations()->update(['status' => 'complete']);
         }
 
-        return redirect()->back()->with('success', 'Demi-double jumelÃ©e manuellement avec la rÃ©servation #'.$candidateReservationId.'.');
+        return redirect()->back()->with('success', 'Jumelage confirmÃ© avec la rÃ©servation #'.$targetReservation->catalog_source_code.' (ID '.$targetReservation->id.').');
     }
 
     /**

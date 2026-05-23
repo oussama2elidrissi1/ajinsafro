@@ -119,7 +119,13 @@
     $notesContent = trim((string) $notesContent);
 
     $hasPendingJumelage = $reservation->status === Reservation::STATUS_SHARED_ROOM_PENDING;
+    $hasPairedJumelage = $reservation->status === Reservation::STATUS_SHARED_ROOM_PAIRED;
     $jumelageBadge = ['label' => 'En attente de jumelage', 'class' => 'is-pending'];
+    $pairedBadge = ['label' => 'JumelÃ©', 'class' => 'is-confirmed'];
+
+    // Resolve paired reservation info from room lines
+    $pairedReservationId = (int) ($reservation->reservationRooms->first()?->paired_reservation_id ?? 0);
+    $pairedReservation = $pairedReservationId > 0 ? \App\Models\Reservation::query()->with(['client', 'passengers'])->find($pairedReservationId) : null;
 
     $statusMap = [
         'draft' => ['label' => 'Brouillon', 'class' => 'is-draft'],
@@ -750,6 +756,9 @@
                             @if($hasPendingJumelage)
                                 <span class="rd-pill {{ $jumelageBadge['class'] }}">{{ $jumelageBadge['label'] }}</span>
                             @endif
+                            @if($hasPairedJumelage)
+                                <span class="rd-pill {{ $pairedBadge['class'] }}">{{ $pairedBadge['label'] }}</span>
+                            @endif
                             @if($roomCoverageIncomplete)
                                 <span class="rd-pill is-pending">Affectation chambre incomplète</span>
                             @endif
@@ -1222,6 +1231,18 @@
                                 </div>
                             @endif
 
+                            @if($hasPairedJumelage && $pairedReservation)
+                                <div class="alert alert-success border-0 mb-3">
+                                    <strong>Jumelage confirmé.</strong>
+                                    Cette chambre est jumelée avec le dossier
+                                    <a href="{{ route('admin.reservations.show', $pairedReservation) }}" class="fw-bold text-decoration-underline">
+                                        {{ $pairedReservation->catalog_source_code ?: ('RES-' . str_pad((string) $pairedReservation->id, 6, '0', STR_PAD_LEFT)) }}
+                                    </a>
+                                    (client : {{ $pairedReservation->client ? ($pairedReservation->client->full_name ?: '-') : (trim(($pairedReservation->client_first_name ?? '').' '.($pairedReservation->client_last_name ?? '')) ?: '-') }}).
+                                    Occupation totale : 2/2 — chambre complète.
+                                </div>
+                            @endif
+
                             @if(($allocations->count() ?? 0) > 0)
                                 <div class="table-responsive mb-3">
                                     <table class="table table-sm align-middle rd-table mb-0">
@@ -1257,6 +1278,7 @@
                                                         'partial' => 'En attente de jumelage',
                                                         'complete' => 'Complète',
                                                         'pending' => 'En attente',
+                                                        'paired' => 'Jumelée',
                                                         default => ucfirst($status),
                                                     };
                                                 @endphp
@@ -1267,7 +1289,14 @@
                                                     <td class="text-center">{{ $occupied }}</td>
                                                     <td class="text-center">{{ $remaining > 0 ? $remaining : '-' }}</td>
                                                     <td class="text-center">
-                                                        <span class="rd-pill {{ $status === 'partial' ? 'is-pending' : 'is-completed' }}">{{ $statusLabel }}</span>
+                                                        @php
+                                                            $statusPillClass = match ($status) {
+                                                                'partial' => 'is-pending',
+                                                                'paired' => 'is-confirmed',
+                                                                default => 'is-completed',
+                                                            };
+                                                        @endphp
+                                                        <span class="rd-pill {{ $statusPillClass }}">{{ $statusLabel }}</span>
                                                     </td>
                                                     <td>
                                                         @if($travs->isNotEmpty())

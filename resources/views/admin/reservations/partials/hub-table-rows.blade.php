@@ -273,12 +273,12 @@
                         </form>
                     @endif
                     @if($reservation->status === Reservation::STATUS_SHARED_ROOM_PENDING)
-                        <form action="{{ route('admin.reservations.pair-shared-room', $reservation) }}" method="post" class="d-inline">
-                            @csrf
-                            <button type="submit" class="btn btn-sm btn-outline-info" title="Jumeler demi-double">
-                                <i class="bx bx-link"></i>
-                            </button>
-                        </form>
+                        <button type="button" class="btn btn-sm btn-outline-info btn-res-hub-pair" title="Jumeler"
+                            data-res-id="{{ $reservation->id }}"
+                            data-res-code="{{ $reservation->catalog_source_code ?: ('RES-' . str_pad((string) $reservation->id, 6, '0', STR_PAD_LEFT)) }}"
+                        >
+                            <i class="bx bx-link"></i>
+                        </button>
                     @endif
                 @endcan
                 @can('reservations.destroy')

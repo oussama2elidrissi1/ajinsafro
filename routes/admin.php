@@ -229,6 +229,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::put('reservations/{reservation}', [ReservationsController::class, 'update'])->name('reservations.update');
         Route::delete('reservations/{reservation}', [ReservationsController::class, 'destroy'])->name('reservations.destroy');
         Route::post('reservations/{reservation}/validate', [ReservationsController::class, 'validateReservation'])->name('reservations.validate');
+        Route::get('reservations/{reservation}/pairing-candidates', [ReservationsController::class, 'pairingCandidates'])->name('reservations.pairing-candidates');
         Route::post('reservations/{reservation}/pair-shared-room', [ReservationsController::class, 'pairSharedRoom'])->name('reservations.pair-shared-room');
 
         Route::get('reservations/{reservation}', [ReservationsController::class, 'show'])->name('reservations.show');
