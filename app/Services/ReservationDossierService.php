@@ -462,38 +462,179 @@ class ReservationDossierService
     public function resolveOrCreateClientFromPayload(array $data, ?Reservation $reservation = null): ?Client
     {
         $mode = (string) ($data['client_mode'] ?? 'new');
+        $selectedExisting = null;
         if ($mode === 'existing' && ! empty($data['client_external_id'])) {
-            return Client::query()->find((int) $data['client_external_id']);
+            $selectedExisting = Client::query()->find((int) $data['client_external_id']);
         }
 
-        $existing = $reservation?->client;
+        $existing = $selectedExisting ?: $reservation?->client;
+
+        $firstName = trim((string) ($data['client_first_name'] ?? ''));
+        $lastName = trim((string) ($data['client_last_name'] ?? ''));
+        $fullName = trim((string) (($firstName ?: ($data['client_first_name'] ?? '')) . ' ' . ($lastName ?: ($data['client_last_name'] ?? ''))));
+
+        $passengers = is_array($data['passengers'] ?? null) ? $data['passengers'] : [];
+        $mainPassenger = $passengers['main'] ?? null;
+        if (! is_array($mainPassenger)) {
+            $mainPassenger = collect($passengers)
+                ->filter(fn ($row) => is_array($row))
+                ->first(fn ($row) => (string) ($row['traveler_key'] ?? '') === 'main');
+        }
+
+        $gender = $data['client_gender'] ?? ($mainPassenger['gender'] ?? null);
+        if (is_string($gender)) {
+            $gender = strtolower(trim($gender));
+            if (in_array($gender, ['m', 'male', 'homme'], true)) {
+                $gender = 'male';
+            } elseif (in_array($gender, ['f', 'female', 'femme'], true)) {
+                $gender = 'female';
+            } else {
+                $gender = null;
+            }
+        } else {
+            $gender = null;
+        }
+
+        $birthDate = $data['client_birth_date'] ?? ($mainPassenger['birth_date'] ?? null);
+        if (is_string($birthDate)) {
+            $birthDate = trim($birthDate) !== '' ? trim($birthDate) : null;
+        } else {
+            $birthDate = null;
+        }
+
+        $docType = $data['client_document_type'] ?? ($mainPassenger['document_type'] ?? null);
+        $docType = is_string($docType) ? strtolower(trim($docType)) : '';
+        if ($docType !== 'cin' && $docType !== 'passport') {
+            if (str_contains($docType, 'cin')) {
+                $docType = 'cin';
+            } elseif (str_contains($docType, 'pass')) {
+                $docType = 'passport';
+            } else {
+                $docType = '';
+            }
+        }
+        $docNumber = $data['client_document_number'] ?? ($mainPassenger['document_number'] ?? null);
+        $docNumber = is_string($docNumber) ? trim($docNumber) : null;
+        $docNumber = ($docNumber !== null && $docNumber !== '') ? $docNumber : null;
+
+        $nationalIdNumber = $docType === 'cin' ? $docNumber : null;
+        $passportNumber = $docType === 'passport' ? $docNumber : null;
+
         $payload = [
-            'first_name' => trim((string) ($data['client_first_name'] ?? '')),
-            'last_name' => trim((string) ($data['client_last_name'] ?? '')),
-            'full_name' => trim((string) (($data['client_first_name'] ?? '').' '.($data['client_last_name'] ?? ''))),
-            'phone' => $data['client_phone'] ?? null,
-            'email' => $data['client_email'] ?? null,
-            'nationality' => $data['client_nationality'] ?? null,
-            'address_line_1' => $data['client_address'] ?? null,
-            'national_id_number' => (($data['client_document_type'] ?? '') === 'cin') ? ($data['client_document_number'] ?? null) : null,
-            'passport_number' => (($data['client_document_type'] ?? '') === 'passport') ? ($data['client_document_number'] ?? null) : null,
-            'status' => $existing?->status ?: 'active',
+            'client_type' => $existing?->client_type ?: ($data['client_type'] ?? 'individual'),
+            'status' => $existing?->status ?: ($data['status'] ?? 'active'),
+            'source' => $existing?->source ?: ($data['source'] ?? 'admin'),
             'branch_id' => $data['branch_id'] ?? $existing?->branch_id,
             'partner_id' => $data['partner_id'] ?? $existing?->partner_id,
+
+            'first_name' => $firstName !== '' ? $firstName : null,
+            'last_name' => $lastName !== '' ? $lastName : null,
+            'full_name' => $fullName !== '' ? $fullName : null,
+            'phone' => isset($data['client_phone']) ? (trim((string) $data['client_phone']) ?: null) : null,
+            'whatsapp_number' => isset($data['client_whatsapp']) ? (trim((string) $data['client_whatsapp']) ?: null) : null,
+            'email' => isset($data['client_email']) ? (trim((string) $data['client_email']) ?: null) : null,
+            'gender' => $gender,
+            'date_of_birth' => $birthDate,
+            'nationality' => isset($data['client_nationality']) ? (trim((string) $data['client_nationality']) ?: null) : null,
+            'city' => isset($data['client_city']) ? (trim((string) $data['client_city']) ?: null) : null,
+            'address_line_1' => isset($data['client_address']) ? (trim((string) $data['client_address']) ?: null) : null,
+            'internal_notes' => isset($data['client_notes']) ? (trim((string) $data['client_notes']) ?: null) : null,
+            'national_id_number' => $nationalIdNumber,
+            'passport_number' => $passportNumber,
         ];
 
+        $isFilled = static function ($value): bool {
+            if ($value === null) {
+                return false;
+            }
+            if (is_string($value)) {
+                return trim($value) !== '';
+            }
+
+            return true;
+        };
+
+        $mergeNonDestructive = static function (Client $client, array $values) use ($isFilled): void {
+            foreach ($values as $key => $value) {
+                if (! $isFilled($value)) {
+                    continue;
+                }
+                $current = $client->getAttribute($key);
+                $currentFilled = $isFilled($current);
+                if (! $currentFilled) {
+                    $client->setAttribute($key, $value);
+                }
+            }
+        };
+
         if ($existing) {
-            $existing->fill($payload);
+            $mergeNonDestructive($existing, $payload);
             $existing->save();
 
             return $existing;
         }
 
-        if ($payload['first_name'] === '' && $payload['last_name'] === '') {
+        $duplicate = null;
+        $phone = is_string($payload['phone'] ?? null) ? (string) $payload['phone'] : '';
+        $normalizedPhone = preg_replace('/\\D+/', '', $phone) ?: '';
+        $email = is_string($payload['email'] ?? null) ? strtolower(trim((string) $payload['email'])) : '';
+        $branchId = isset($payload['branch_id']) ? (int) $payload['branch_id'] : 0;
+
+        if ($normalizedPhone !== '' || $email !== '' || $nationalIdNumber || $passportNumber) {
+            $dupQuery = Client::query();
+            if ($branchId > 0) {
+                $dupQuery->where('branch_id', $branchId);
+            }
+            $dupQuery->where(function ($q) use ($normalizedPhone, $email, $nationalIdNumber, $passportNumber, $firstName, $lastName) {
+                if ($normalizedPhone !== '') {
+                    $q->orWhereRaw(
+                        "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '.', ''), '/', ''), '\\\\', ''), '(', ''), ')', '') LIKE ?",
+                        ['%'.$normalizedPhone.'%']
+                    );
+                }
+                if ($email !== '') {
+                    $q->orWhereRaw('LOWER(email) = ?', [$email]);
+                }
+                if ($nationalIdNumber) {
+                    $q->orWhere('national_id_number', $nationalIdNumber);
+                }
+                if ($passportNumber) {
+                    $q->orWhere('passport_number', $passportNumber);
+                }
+                if ($normalizedPhone !== '' && $firstName !== '' && $lastName !== '') {
+                    $q->orWhere(function ($qq) use ($normalizedPhone, $firstName, $lastName) {
+                        $qq->where('first_name', $firstName)
+                            ->where('last_name', $lastName)
+                            ->whereRaw(
+                                "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '.', ''), '/', ''), '\\\\', ''), '(', ''), ')', '') LIKE ?",
+                                ['%'.$normalizedPhone.'%']
+                            );
+                    });
+                }
+            });
+
+            $duplicate = $dupQuery->orderByDesc('id')->first();
+        }
+
+        if ($duplicate) {
+            $mergeNonDestructive($duplicate, $payload);
+            $duplicate->save();
+
+            return $duplicate;
+        }
+
+        if ($firstName === '' && $lastName === '') {
             return null;
         }
 
-        return Client::query()->create($payload);
+        $createData = [];
+        foreach ($payload as $key => $value) {
+            if ($isFilled($value)) {
+                $createData[$key] = $value;
+            }
+        }
+
+        return Client::query()->create($createData);
     }
 
     public function storeDocumentFile(Reservation $reservation, UploadedFile $file): string

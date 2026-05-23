@@ -44,7 +44,7 @@
         $normalize($client?->last_name ?: $reservation->client_last_name ?: null),
         $normalize($client?->phone ?: $reservation->client_phone ?: null),
         $normalize($client?->email ?: $reservation->client_email ?: null),
-        $normalize($client?->document_number ?: $reservation->client_document_number ?: null),
+        $normalize($client?->national_id_number ?: ($client?->passport_number ?: ($reservation->client_document_number ?: null))),
     ], fn (string $v) => $v !== ''));
 
     $rawCompanions = $allPassengers
@@ -200,9 +200,9 @@
         'type_label' => 'Principal',
         'first_name' => $client?->first_name ?: $reservation->client_first_name ?: $client?->full_name,
         'last_name' => $client?->last_name ?: $reservation->client_last_name,
-        'birth_date' => optional($client?->birth_date)->format('Y-m-d') ?: optional($reservation->client_birth_date)->format('Y-m-d'),
-        'document_type' => $client?->document_type ?: $reservation->client_document_type,
-        'document_number' => $client?->document_number ?: $reservation->client_document_number,
+        'birth_date' => optional($client?->date_of_birth)->format('Y-m-d') ?: optional($reservation->client_birth_date)->format('Y-m-d'),
+        'document_type' => $client?->national_id_number ? 'cin' : ($client?->passport_number ? 'passport' : ($reservation->client_document_type ?: null)),
+        'document_number' => $client?->national_id_number ?: ($client?->passport_number ?: $reservation->client_document_number),
         'gender' => $client?->gender ?? null,
         'relationship_to_main' => 'main',
         'consumes_bed' => true,
@@ -911,15 +911,15 @@
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label class="rd-label">Date de naissance</label>
-                                                        <input type="date" name="client_birth_date" class="form-control" value="{{ old('client_birth_date', optional($client?->birth_date)->format('Y-m-d') ?? optional($reservation->client_birth_date)->format('Y-m-d')) }}">
+                                                        <input type="date" name="client_birth_date" class="form-control" value="{{ old('client_birth_date', optional($client?->date_of_birth)->format('Y-m-d') ?? optional($reservation->client_birth_date)->format('Y-m-d')) }}">
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label class="rd-label">Type document</label>
-                                                        <input type="text" name="client_document_type" class="form-control" value="{{ old('client_document_type', $client?->document_type ?? $reservation->client_document_type ?? '') }}">
+                                                        <input type="text" name="client_document_type" class="form-control" value="{{ old('client_document_type', ($client?->national_id_number ? 'cin' : ($client?->passport_number ? 'passport' : ($reservation->client_document_type ?? ''))) ) }}">
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label class="rd-label">Numéro document</label>
-                                                        <input type="text" name="client_document_number" class="form-control" value="{{ old('client_document_number', $client?->document_number ?? $reservation->client_document_number ?? '') }}">
+                                                        <input type="text" name="client_document_number" class="form-control" value="{{ old('client_document_number', $client?->national_id_number ?: ($client?->passport_number ?: ($reservation->client_document_number ?? ''))) }}">
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label class="rd-label">Nationalité</label>
@@ -1148,9 +1148,9 @@
                                             <td>Principal</td>
                                             <td>{{ $client?->first_name ?? $reservation->client_first_name ?? '-' }}</td>
                                             <td>{{ $client?->last_name ?? $reservation->client_last_name ?? '-' }}</td>
-                                            <td>{{ optional($client?->birth_date)->format('d/m/Y') ?? optional($reservation->client_birth_date)->format('d/m/Y') ?? '-' }}</td>
-                                            <td>{{ $client?->document_type ?? $reservation->client_document_type ?? '-' }}</td>
-                                            <td>{{ $client?->document_number ?? $reservation->client_document_number ?? '-' }}</td>
+                                            <td>{{ optional($client?->date_of_birth)->format('d/m/Y') ?? optional($reservation->client_birth_date)->format('d/m/Y') ?? '-' }}</td>
+                                            <td>{{ $client?->national_id_number ? 'cin' : ($client?->passport_number ? 'passport' : ($reservation->client_document_type ?? '-')) }}</td>
+                                            <td>{{ $client?->national_id_number ?: ($client?->passport_number ?: ($reservation->client_document_number ?? '-')) }}</td>
                                             <td class="text-end"><span class="rd-pill is-completed">Client principal</span></td>
                                         </tr>
                                         @foreach($companionTravelers as $traveler)
@@ -1319,9 +1319,9 @@
                                         <input type="hidden" name="client_last_name" value="{{ $client?->last_name ?? $reservation->client_last_name ?? '' }}">
                                         <input type="hidden" name="client_phone" value="{{ $client?->phone ?? $reservation->client_phone ?? '' }}">
                                         <input type="hidden" name="client_email" value="{{ $client?->email ?? $reservation->client_email ?? '' }}">
-                                        <input type="hidden" name="client_document_type" value="{{ $client?->document_type ?? $reservation->client_document_type ?? '' }}">
-                                        <input type="hidden" name="client_document_number" value="{{ $client?->document_number ?? $reservation->client_document_number ?? '' }}">
-                                        <input type="hidden" name="client_birth_date" value="{{ optional($client?->birth_date)->format('Y-m-d') ?? optional($reservation->client_birth_date)->format('Y-m-d') }}">
+                                        <input type="hidden" name="client_document_type" value="{{ $client?->national_id_number ? 'cin' : ($client?->passport_number ? 'passport' : ($reservation->client_document_type ?? '')) }}">
+                                        <input type="hidden" name="client_document_number" value="{{ $client?->national_id_number ?: ($client?->passport_number ?: ($reservation->client_document_number ?? '')) }}">
+                                        <input type="hidden" name="client_birth_date" value="{{ optional($client?->date_of_birth)->format('Y-m-d') ?? optional($reservation->client_birth_date)->format('Y-m-d') }}">
                                         <input type="hidden" name="client_nationality" value="{{ $client?->nationality ?? '' }}">
                                         <input type="hidden" name="client_address" value="{{ $client?->address_line_1 ?? '' }}">
                                         <input type="hidden" name="payment_type" value="{{ $reservation->payment_type ?? '' }}">
@@ -1467,4 +1467,3 @@
         </script>
     @endpush
 @endsection
-

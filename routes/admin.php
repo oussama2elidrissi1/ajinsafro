@@ -244,6 +244,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('customers/clients/{client}/edit', [ClientController::class, 'edit'])->name('customers.clients.edit');
         Route::match(['put', 'patch'], 'customers/clients/{client}', [ClientController::class, 'update'])->name('customers.clients.update');
         Route::delete('customers/clients/{client}', [ClientController::class, 'destroy'])->name('customers.clients.destroy');
+        Route::get('customers/prospects', [CustomersController::class, 'page'])->name('customers.prospects')->defaults('submenu', 'prospects');
         Route::get('customers/voyageurs', [CustomersController::class, 'page'])->name('customers.voyageurs')->defaults('submenu', 'voyageurs');
         Route::get('customers/historique', [CustomersController::class, 'page'])->name('customers.historique')->defaults('submenu', 'historique');
         Route::get('customers/avis-clients', [CustomersController::class, 'page'])->name('customers.avis-clients')->defaults('submenu', 'avis-clients');

@@ -12,7 +12,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Validation\Rule;
 
 class ClientController extends Controller
 {
@@ -351,54 +350,90 @@ class ClientController extends Controller
                 'first_name' => ['required', 'string', 'max:255'],
                 'last_name' => ['required', 'string', 'max:255'],
                 'phone' => ['required', 'string', 'max:50'],
-                'email' => ['nullable', 'email', 'max:255', Rule::unique(Client::class, 'email')],
-                'gender' => ['nullable', 'in:male,female'],
+                'email' => ['nullable', 'email', 'max:255'],
+                'gender' => ['nullable', 'string', 'max:20'],
                 'date_of_birth' => ['nullable', 'date'],
                 'nationality' => ['nullable', 'string', 'max:100'],
                 'national_id_number' => ['nullable', 'string', 'max:50'],
                 'passport_number' => ['nullable', 'string', 'max:50'],
+                'city' => ['nullable', 'string', 'max:150'],
+                'whatsapp_number' => ['nullable', 'string', 'max:50'],
+                'address_line_1' => ['nullable', 'string', 'max:255'],
+                'internal_notes' => ['nullable', 'string', 'max:2000'],
             ]);
 
-            // Duplicate check by phone, email, or document numbers
+            $gender = isset($validated['gender']) && is_string($validated['gender'])
+                ? strtolower(trim($validated['gender']))
+                : null;
+            if (in_array($gender, ['m', 'homme', 'male'], true)) {
+                $validated['gender'] = 'male';
+            } elseif (in_array($gender, ['f', 'femme', 'female'], true)) {
+                $validated['gender'] = 'female';
+            } else {
+                $validated['gender'] = null;
+            }
+
+            $phone = trim((string) ($validated['phone'] ?? ''));
+            $normalizedPhone = preg_replace('/\\D+/', '', $phone) ?: '';
+            $email = isset($validated['email']) && is_string($validated['email'])
+                ? strtolower(trim($validated['email']))
+                : '';
+
+            // Duplicate check by phone, email, or document numbers (merge non-destructif)
             $dupQuery = Client::query();
             $this->branchScope->scopeClients($dupQuery, $request->user());
-            $dupQuery->where(function ($q) use ($validated) {
-                if (!empty($validated['phone'])) {
-                    $q->orWhere('phone', $validated['phone']);
+            $dupQuery->where(function ($q) use ($normalizedPhone, $email, $validated) {
+                if ($normalizedPhone !== '') {
+                    $q->orWhereRaw(
+                        "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '.', ''), '/', ''), '\\\\', ''), '(', ''), ')', '') LIKE ?",
+                        ['%'.$normalizedPhone.'%']
+                    );
                 }
-                if (!empty($validated['email'])) {
-                    $q->orWhere('email', $validated['email']);
+                if ($email !== '') {
+                    $q->orWhereRaw('LOWER(email) = ?', [$email]);
                 }
-                if (!empty($validated['national_id_number'])) {
+                if (! empty($validated['national_id_number'])) {
                     $q->orWhere('national_id_number', $validated['national_id_number']);
                 }
-                if (!empty($validated['passport_number'])) {
+                if (! empty($validated['passport_number'])) {
                     $q->orWhere('passport_number', $validated['passport_number']);
+                }
+                if ($normalizedPhone !== '' && ! empty($validated['first_name']) && ! empty($validated['last_name'])) {
+                    $q->orWhere(function ($qq) use ($normalizedPhone, $validated) {
+                        $qq->where('first_name', $validated['first_name'])
+                            ->where('last_name', $validated['last_name'])
+                            ->whereRaw(
+                                "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '.', ''), '/', ''), '\\\\', ''), '(', ''), ')', '') LIKE ?",
+                                ['%'.$normalizedPhone.'%']
+                            );
+                    });
                 }
             });
 
-            $duplicate = $dupQuery->first([
-                'id',
-                'client_code',
-                'full_name',
-                'first_name',
-                'last_name',
-                'phone',
-                'email',
-            ]);
+            $duplicate = $dupQuery->orderByDesc('id')->first();
 
-            if ($duplicate) {
-                return response()->json([
-                    'success' => false,
-                    'duplicate' => [
-                        'id' => $duplicate->id,
-                        'client_code' => $duplicate->client_code,
-                        'full_name' => $duplicate->full_name ?: trim(($duplicate->first_name ?? '').' '.($duplicate->last_name ?? '')),
-                        'phone' => $duplicate->phone,
-                        'email' => $duplicate->email,
-                    ],
-                ]);
-            }
+            $isFilled = static function ($value): bool {
+                if ($value === null) {
+                    return false;
+                }
+                if (is_string($value)) {
+                    return trim($value) !== '';
+                }
+
+                return true;
+            };
+
+            $mergeNonDestructive = static function (Client $client, array $values) use ($isFilled): void {
+                foreach ($values as $key => $value) {
+                    if (! $isFilled($value)) {
+                        continue;
+                    }
+                    $current = $client->getAttribute($key);
+                    if (! $isFilled($current)) {
+                        $client->setAttribute($key, $value);
+                    }
+                }
+            };
 
             $data = array_merge($validated, [
                 'client_type' => 'individual',
@@ -407,7 +442,19 @@ class ClientController extends Controller
                 'branch_id' => $request->user()->branch_id,
             ]);
 
-            $client = Client::create($data);
+            if ($duplicate) {
+                $mergeNonDestructive($duplicate, $data);
+                $duplicate->save();
+                $client = $duplicate;
+            } else {
+                $createData = [];
+                foreach ($data as $key => $value) {
+                    if ($isFilled($value)) {
+                        $createData[$key] = $value;
+                    }
+                }
+                $client = Client::create($createData);
+            }
 
             return response()->json([
                 'success' => true,
