@@ -265,33 +265,6 @@
         $makeLeaf('messagerie_index', 'Messagerie', 'admin.messagerie.index', 'bx bx-envelope', ['admin.messagerie.*'], [], $unreadCount > 0 ? $unreadCount : null, 'dashboard.view'),
     ]));
 
-    $dealsChildren = array_values(array_filter([
-        $makeLeaf('deals_offers', 'Catalogue Group Deals', 'admin.group-deals.index', 'bx bx-purchase-tag', [
-            'admin.group-deals.index',
-            'admin.group-deals.create',
-            'admin.group-deals.store',
-            'admin.group-deals.show',
-            'admin.group-deals.edit',
-            'admin.group-deals.update',
-            'admin.group-deals.destroy',
-            'admin.group-deals.recalculate',
-        ], [], null, 'group-deals.offers.view'),
-        $makeLeaf('deals_trips', 'Voyages GD', 'admin.group-deals.trips.index', 'bx bx-map-alt', ['admin.group-deals.trips.*'], [], null, 'group-deals.trips.view'),
-        $makeLeaf('deals_departures', 'Départs GD', 'admin.group-deals.departures.index', 'bx bx-calendar', [
-            'admin.group-deals.departures.index',
-            'admin.group-deals.departures.show',
-            'admin.group-deals.departures.recalculate',
-        ], [], null, 'group-deals.departures.view'),
-        $makeLeaf('deals_participants', 'Participants / inscriptions', 'admin.group-deals.participants.index', 'bx bx-user-check', [
-            'admin.group-deals.participants.*',
-            'admin.group-deals.departures.participants.*',
-        ], [], null, 'group-deals.participants.view'),
-        $makeLeaf('deals_tiers', 'Tarifs par palier', 'admin.group-deals.tiers.index', 'bx bx-layer', [
-            'admin.group-deals.tiers.*',
-            'admin.group-deals.trips.tiers.*',
-        ], [], null, 'group-deals.tiers.view'),
-    ]));
-
     $productsChildren = array_values(array_filter([
         $makeLeaf('products_voyages', 'Voyage', 'admin.circuits.voyages.index', 'bx bx-map-alt', ['admin.circuits.voyages.*'], [], null, ['circuits.view', 'products-services.view']),
         $makeLeaf('products_billetterie', 'Billetrie', 'admin.menu-hubs.billetterie', 'bx bx-ticket', ['admin.menu-hubs.billetterie'], [], null, 'products-services.view'),
@@ -301,6 +274,7 @@
         $makeLeaf('products_activities', 'Activite', 'admin.menu-hubs.activites', 'bx bx-run', ['admin.menu-hubs.activites', 'admin.activity-offers.*', 'admin.circuits.activities.*', 'admin.activities.*'], [], null, 'activities.view'),
         $makeLeaf('products_transfers', 'Transfer', 'admin.menu-hubs.transfers', 'bx bx-transfer-alt', ['admin.menu-hubs.transfers', 'admin.circuits.tour-transfers.*', 'admin.transfers.*'], [], null, 'transfers.view'),
         $makeLeaf('products_visa', 'Visa', 'admin.menu-hubs.visa', 'bx bx-id-card', ['admin.menu-hubs.visa', 'admin.visa.*'], [], null, 'visa.view'),
+        $makeLeaf('products_group_deals', 'Deals', 'admin.group-deals.index', 'bx bx-purchase-tag', ['admin.group-deals.*'], [], null, 'group-deals.offers.view'),
     ]));
 
     $customersChildren = [];
@@ -339,7 +313,6 @@
     $adminGroups = array_values(array_filter([
         $makeGroup('grp_dashboard', 'Tableau de board', $dashboardChildren, 'bx bx-home-circle'),
         $makeGroup('grp_reservations', 'Reservation', $reservationsChildren, 'bx bx-calendar-check'),
-        !empty($dealsChildren) ? $makeGroup('grp_deals', 'Deals', $dealsChildren, 'bx bx-purchase-tag-alt') : null,
         $makeGroup('grp_products', 'Produit et service', $productsChildren, 'bx bx-layer'),
         $makeGroup('grp_customers', 'Client', $customersChildren, 'bx bx-group'),
         $makeGroup('grp_points_of_sale', 'Points de vente', $pointsOfSaleChildren, 'bx bx-buildings'),
