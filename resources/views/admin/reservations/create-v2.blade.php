@@ -1,6 +1,6 @@
 @extends('layouts.admin-v6')
 
-@section('title', 'Créer une réservation (V2)')
+@section('title', 'Créer une réservation')
 @section('hidePageFooter', '1')
 
 @push('styles')
@@ -27,7 +27,7 @@
         </div>
         <div class="v2-header__main">
             <h1 class="v2-header__title">Créer une réservation</h1>
-            <p class="v2-header__subtitle">Nouvelle expérience simplifiée — 4 étapes pour un dossier complet.</p>
+            <p class="v2-header__subtitle">Circuit, voyageurs, hébergement et paiement — en 4 étapes.</p>
         </div>
     </header>
 
@@ -59,20 +59,35 @@
                 <div class="v2-stepper" role="tablist" aria-label="Étapes de création">
                     <button type="button" class="v2-stepper__step is-active" data-v2-step-nav="1">
                         <span class="v2-stepper__badge">1</span>
-                        <span class="v2-stepper__label">Prestation</span>
+                        <span class="v2-stepper__label">Tour + départ</span>
                     </button>
                     <button type="button" class="v2-stepper__step" data-v2-step-nav="2">
                         <span class="v2-stepper__badge">2</span>
-                        <span class="v2-stepper__label">Voyageurs</span>
+                        <span class="v2-stepper__label">Client & voyageurs</span>
                     </button>
                     <button type="button" class="v2-stepper__step" data-v2-step-nav="3">
                         <span class="v2-stepper__badge">3</span>
-                        <span class="v2-stepper__label">Hébergement</span>
+                        <span class="v2-stepper__label">Chambres + extras</span>
                     </button>
                     <button type="button" class="v2-stepper__step" data-v2-step-nav="4">
                         <span class="v2-stepper__badge">4</span>
-                        <span class="v2-stepper__label">Paiement</span>
+                        <span class="v2-stepper__label">Paiement & validation</span>
                     </button>
+                </div>
+
+                {{-- Résumé compact du voyage sélectionné (visible dès qu’un voyage + départ sont choisis) --}}
+                <div id="v2-compact-trip-summary" class="v2-compact-summary" hidden>
+                    <div class="v2-compact-summary__body">
+                        <div class="v2-compact-summary__info">
+                            <strong id="v2-compact-trip-name">—</strong>
+                            <span id="v2-compact-dates">—</span>
+                            <span id="v2-compact-capacity">—</span>
+                            <span id="v2-compact-price">—</span>
+                        </div>
+                        <button type="button" class="v2-btn v2-btn--outline v2-btn--sm" id="v2-btn-change-trip">
+                            <i class="bx bx-edit"></i> Modifier voyage/départ
+                        </button>
+                    </div>
                 </div>
 
                 {{-- Étape 1 : Prestation & départ --}}
@@ -116,7 +131,7 @@
                             <div id="v2-departure-list" class="v2-departure-list">
                                 <p class="v2-placeholder">Sélectionnez d’abord un voyage pour voir les départs.</p>
                             </div>
-                            <input type="hidden" name="departure_id" id="v2-departure-id-hidden" value="{{ old('departure_id') }}">
+                            <input type="hidden" name="departure_id" id="v2-departure-id-hidden" value="{{ old('departure_id', $selectedDepartureId) }}">
                             <input type="hidden" name="travel_date_id" id="v2-travel-date-id-hidden" value="{{ old('travel_date_id', $travelDateId) }}">
                         </div>
 

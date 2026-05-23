@@ -239,7 +239,7 @@
         syncFinancialSummary();
     }
 
-    function loadDepartures(tourId) {
+    function loadDepartures(tourId, autoSelectDepartureId) {
         var list = document.getElementById('v2-departure-list');
         var block = document.getElementById('v2-departure-block');
         if (!list || !block) return;
@@ -275,6 +275,26 @@
                 });
                 list.innerHTML = html;
                 attachDepartureClicks();
+
+                if (autoSelectDepartureId) {
+                    var card = list.querySelector('.v2-departure-card[data-departure-id="' + autoSelectDepartureId + '"]');
+                    if (card) {
+                        document.querySelectorAll('.v2-departure-card').forEach(function (c) { c.classList.remove('is-selected'); });
+                        card.classList.add('is-selected');
+                        var depId = card.getAttribute('data-departure-id');
+                        var travelDateId = card.getAttribute('data-travel-date-id');
+                        document.getElementById('v2-departure-id-hidden').value = depId || '';
+                        document.getElementById('v2-travel-date-id-hidden').value = travelDateId || '';
+                        window.reservationState.selectedDepartureId = depId ? parseInt(depId, 10) : null;
+                        window.reservationState.selectedTravelDateId = travelDateId ? parseInt(travelDateId, 10) : null;
+                        updateDepartureSummary(card);
+                        loadDepartureHotelsRooms(depId);
+                    }
+                    if (window.reservationState.pendingSkipToStep2) {
+                        window.reservationState.pendingSkipToStep2 = false;
+                        setStep(card ? 2 : 1);
+                    }
+                }
             })
             .catch(function () {
                 list.innerHTML = '<p class="v2-placeholder" style="color:#dc2626">Erreur lors du chargement des départs.</p>';
@@ -314,6 +334,16 @@
         var basePriceHidden = document.getElementById('v2-base-price-hidden');
         if (basePriceHidden) basePriceHidden.value = unitPrice.toFixed(2);
         syncFinancialSummary();
+
+        // Compact summary (visible on all steps)
+        var compact = document.getElementById('v2-compact-trip-summary');
+        if (compact) compact.hidden = false;
+        var compactDates = document.getElementById('v2-compact-dates');
+        if (compactDates) compactDates.textContent = dates ? dates.textContent : '—';
+        var compactCap = document.getElementById('v2-compact-capacity');
+        if (compactCap) compactCap.textContent = capMatch ? capMatch[1] + ' places restantes' : '—';
+        var compactPrice = document.getElementById('v2-compact-price');
+        if (compactPrice) compactPrice.textContent = priceEl ? priceEl.textContent + ' / pers.' : '—';
     }
 
     function loadDepartureHotelsRooms(departureId) {
@@ -692,6 +722,10 @@
                     var selectedOption = tourSelect.options[tourSelect.selectedIndex];
                     var tripName = selectedOption ? selectedOption.textContent : 'Voyage sélectionné';
                     document.getElementById('v2-sidebar-trip').textContent = tripName;
+                    var compactName = document.getElementById('v2-compact-trip-name');
+                    if (compactName) compactName.textContent = tripName;
+                    var compact = document.getElementById('v2-compact-trip-summary');
+                    if (compact) compact.hidden = true;
                 }
             });
         }
@@ -781,17 +815,45 @@
         });
 
         // Init
-        setStep(1);
         updateTravelerBadge();
         syncFinancialSummary();
         restoreDraft();
 
-        // If tour preselected
         var preselectedTourId = document.getElementById('v2-tour-id-hidden') && document.getElementById('v2-tour-id-hidden').value;
+        var preselectedDepartureId = document.getElementById('v2-departure-id-hidden') && document.getElementById('v2-departure-id-hidden').value;
+
         if (preselectedTourId) {
             window.reservationState.selectedTourId = parseInt(preselectedTourId, 10);
-            loadDepartures(preselectedTourId);
-            renderExtras();
+            var select = document.getElementById('v2-select-tour');
+            if (select) {
+                var option = select.querySelector('option[value="' + preselectedTourId + '"]');
+                if (option) {
+                    select.value = preselectedTourId;
+                    var tripName = option.textContent || 'Voyage sélectionné';
+                    document.getElementById('v2-sidebar-trip').textContent = tripName;
+                    var compactName = document.getElementById('v2-compact-trip-name');
+                    if (compactName) compactName.textContent = tripName;
+                }
+            }
+            if (preselectedDepartureId) {
+                window.reservationState.pendingSkipToStep2 = true;
+                loadDepartures(preselectedTourId, preselectedDepartureId);
+                renderExtras();
+            } else {
+                loadDepartures(preselectedTourId);
+                renderExtras();
+                setStep(1);
+            }
+        } else {
+            setStep(1);
+        }
+
+        // Modifier voyage/départ button
+        var changeTripBtn = document.getElementById('v2-btn-change-trip');
+        if (changeTripBtn) {
+            changeTripBtn.addEventListener('click', function () {
+                setStep(1);
+            });
         }
     });
 })();

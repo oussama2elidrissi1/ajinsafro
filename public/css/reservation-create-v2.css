@@ -1029,6 +1029,41 @@ select.v2-input {
     to   { opacity: 1; transform: translateY(0); }
 }
 
+/* Compact trip summary */
+.v2-compact-summary {
+    background: var(--v2-surface);
+    border: 1px solid var(--v2-border);
+    border-radius: var(--v2-radius);
+    padding: 0.875rem 1rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--v2-shadow);
+}
+.v2-compact-summary__body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.v2-compact-summary__info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    font-size: 0.875rem;
+    color: var(--v2-text-secondary);
+}
+.v2-compact-summary__info strong {
+    color: var(--v2-text);
+    font-weight: 700;
+    font-size: 0.9375rem;
+}
+.v2-compact-summary__info span:not(:last-child)::after {
+    content: '•';
+    margin-left: 0.75rem;
+    color: var(--v2-border);
+}
+
 /* Admin layout overrides for this page */
 .admin-v6-content .reservation-create-v2 {
     max-width: 1400px;
