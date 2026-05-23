@@ -899,6 +899,14 @@ class ReservationsController extends Controller
         $data['room_allocations_payload'] = $this->extractRoomAllocationsPayloadFromRequest($request);
         $this->validateRoomingPayload($data['passengers'], $data['room_allocations_payload']);
 
+        $hasPartialHalfDouble = collect($data['room_allocations_payload'] ?? [])
+            ->contains(function ($allocation) {
+                $mode = (string) ($allocation['occupancy_mode'] ?? '');
+                $status = (string) ($allocation['status'] ?? '');
+
+                return in_array($mode, ['half_male', 'half_female'], true) && $status === 'partial';
+            });
+
         $pricingContext = $this->buildReservationPricingContext($request, $data);
         $extrasPayload = $pricingContext['extras_payload'];
         $paymentAmount = $pricingContext['payment_amount'];
@@ -991,7 +999,9 @@ class ReservationsController extends Controller
             }
         }
 
-        $data['status'] = Reservation::STATUS_EN_COURS;
+        $data['status'] = $hasPartialHalfDouble
+            ? Reservation::STATUS_SHARED_ROOM_PENDING
+            : Reservation::STATUS_EN_COURS;
         $data['dossier_status'] = Reservation::DOSSIER_PENDING;
         $data['visa_ok'] = $request->boolean('visa_ok');
         $user = $request->user();

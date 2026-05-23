@@ -1042,9 +1042,12 @@
         if (pill) pill.textContent = 'Rooming ' + summary.status;
         if (alerts) {
             var warnings = summary.errors.slice();
-            if (summary.status === 'partial') warnings.push('Cette demi-double n est pas encore completee.');
+            if (summary.status === 'partial') warnings.push('Cette reservation sera creee en attente de jumelage.');
+            var isInfoOnly = summary.status === 'partial' && summary.errors.length === 0;
+            alerts.classList.toggle('reservation-create__alert--warn', !isInfoOnly);
+            alerts.classList.toggle('reservation-create__alert--info', isInfoOnly);
             alerts.classList.toggle('d-none', warnings.length === 0);
-            alerts.innerHTML = warnings.length ? '<strong>Alertes rooming</strong><ul><li>' + warnings.join('</li><li>') + '</li></ul>' : '';
+            alerts.innerHTML = warnings.length ? '<strong>' + (isInfoOnly ? 'Information rooming' : 'Alertes rooming') + '</strong><ul><li>' + warnings.join('</li><li>') + '</li></ul>' : '';
         }
         if (hidden) hidden.value = JSON.stringify(roomingAllocations.map(function (allocation) {
             return {
@@ -1574,20 +1577,23 @@
         validateStep3: function () {
             renderRooming();
             var errors = [];
+            var rooming = roomingSummary();
             var summary = financialSummary();
             var stats = travelerStats();
 
-        if (stats.genderUnknownAdults > 0) {
+            if (stats.genderUnknownAdults > 0) {
                 errors.push({ field: null, message: 'Veuillez renseigner le sexe des adultes pour faire la répartition des chambres.' });
             }
-            if (summary.roomingStatus === 'pending') {
+            if (rooming.status === 'pending') {
                 errors.push({ field: null, message: 'Lancez une répartition automatique ou ajoutez une répartition manuelle.' });
             }
-            if (summary.roomingStatus === 'invalid') {
-                (summary.roomingErrors || ['Répartition chambres invalide.']).forEach(function (msg) {
+            if (rooming.status === 'invalid') {
+                (rooming.errors || ['Répartition chambres invalide.']).forEach(function (msg) {
                     errors.push({ field: null, message: msg });
                 });
             }
+            // Partial half-double (1/2 occupant) is a valid business state called
+            // "En attente de jumelage" and must NOT block progression.
             if (summary.selectedRoomCapacity > 0 && summary.travelerCount > summary.selectedRoomCapacity) {
                 errors.push({ field: null, message: 'Le nombre de voyageurs dépasse la capacité des chambres sélectionnées.' });
             }
