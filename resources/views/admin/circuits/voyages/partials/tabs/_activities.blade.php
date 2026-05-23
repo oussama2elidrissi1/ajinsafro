@@ -34,10 +34,9 @@
                 <table class="table table-bordered align-middle mb-0 activities-table">
                     <colgroup>
                         <col style="width:55px;">
+                        <col style="width:300px;">
                         <col style="width:260px;">
-                        <col style="width:260px;">
-                        <col style="width:170px;">
-                        <col style="width:130px;">
+                        <col style="width:150px;">
                         <col style="width:220px;">
                         <col>
                         <col style="width:130px;">
@@ -49,9 +48,8 @@
                     <thead class="table-light">
                         <tr>
                             <th>Ordre</th>
-                            <th>Activite</th>
+                            <th>Activite / nom complet</th>
                             <th>Jour / visibilite</th>
-                            <th>Horaires</th>
                             <th>Statut</th>
                             <th>Titre affiche</th>
                             <th>Description</th>
@@ -74,7 +72,13 @@
                                 $displayTitle = (string) old('tour_activities.'.$idx.'.title', $tourActivity->title ?? ($opts['title'] ?? ''));
                                 $metaJson = is_array($tourActivity->meta_json ?? null) ? $tourActivity->meta_json : [];
                                 $groupUuid = (string) old('tour_activities.'.$idx.'.group_uuid', $metaJson['group_uuid'] ?? '');
-                                $isIncluded = (int) old('tour_activities.'.$idx.'.included', (int) ($tourActivity->included ?? 1)) === 1;
+                                $status = (string) old('tour_activities.'.$idx.'.status', (string) ($opts['status'] ?? ((int) ($tourActivity->included ?? 1) === 1 ? 'included' : 'optional')));
+                                if (!in_array($status, ['included', 'optional', 'proposition'], true)) {
+                                    $status = (int) ($tourActivity->included ?? 1) === 1 ? 'included' : 'optional';
+                                }
+                                $isIncluded = $status === 'included';
+                                $activityTitle = (string) old('tour_activities.'.$idx.'.activity_title', (string) ($opts['activity_title'] ?? $tourActivity->title ?? ''));
+                                $activityType = (string) old('tour_activities.'.$idx.'.activity_type', (string) ($opts['activity_type'] ?? ''));
                                 $dayScope = (string) old('tour_activities.'.$idx.'.day_scope', (string) ($opts['day_scope'] ?? 'fixed'));
                                 if (!in_array($dayScope, ['fixed', 'open'], true)) {
                                     $dayScope = 'fixed';
@@ -103,16 +107,15 @@
                                 if (empty($selectedDays)) {
                                     $selectedDays = [$selectedDay];
                                 }
-                                $startTime = (string) old('tour_activities.'.$idx.'.start_time', (string) ($opts['start_time'] ?? ''));
-                                $endTime = (string) old('tour_activities.'.$idx.'.end_time', (string) ($opts['end_time'] ?? ''));
                             @endphp
-                            <tr class="voyage-activity-row {{ $isIncluded ? '' : 'table-warning' }}" data-activity-id="{{ $activityId }}" data-included="{{ $isIncluded ? '1' : '0' }}">
+                            <tr class="voyage-activity-row {{ $isIncluded ? '' : 'table-warning' }}" data-activity-id="{{ $activityId }}" data-included="{{ $isIncluded ? '1' : '0' }}" data-status="{{ $status }}">
                                 <td class="text-center">
                                     <span class="badge rounded-pill bg-light text-dark voyage-activity-order">{{ $idx + 1 }}</span>
                                     <input type="hidden" data-field="sort_order" name="tour_activities[{{ $idx }}][sort_order]" value="{{ old('tour_activities.'.$idx.'.sort_order', $tourActivity->sort_order ?? $idx) }}">
                                 </td>
                                 <td>
-                                    <div class="activity-title-cell fw-medium voyage-activity-title">{{ $tourActivity->title }}</div>
+                                    <input type="text" class="form-control form-control-sm fw-medium mb-2" data-field="activity_title" name="tour_activities[{{ $idx }}][activity_title]" value="{{ $activityTitle }}" placeholder="Nom complet de l'activité">
+                                    <input type="text" class="form-control form-control-sm" data-field="activity_type" name="tour_activities[{{ $idx }}][activity_type]" value="{{ $activityType }}" placeholder="Type d'activité">
                                     <input type="hidden" data-field="id" name="tour_activities[{{ $idx }}][id]" value="{{ $tourActivity->id }}">
                                     <input type="hidden" data-field="activity_id" name="tour_activities[{{ $idx }}][activity_id]" value="{{ $activityId }}">
                                     <input type="hidden" data-field="group_uuid" name="tour_activities[{{ $idx }}][group_uuid]" value="{{ $groupUuid }}">
@@ -146,19 +149,13 @@
                                     <div class="small text-muted mt-1 voyage-activity-scope-text"></div>
                                 </td>
                                 <td>
-                                    <div class="activity-hours">
-                                        <input type="time" class="form-control form-control-sm" data-field="start_time" name="tour_activities[{{ $idx }}][start_time]" value="{{ $startTime }}">
-                                        <span class="small text-muted">a</span>
-                                        <input type="time" class="form-control form-control-sm" data-field="end_time" name="tour_activities[{{ $idx }}][end_time]" value="{{ $endTime }}">
-                                    </div>
-                                    <div class="small text-muted mt-1">Optionnel</div>
-                                </td>
-                                <td>
-                                    <select class="form-select form-select-sm voyage-activity-included" data-field="included" name="tour_activities[{{ $idx }}][included]">
-                                        <option value="1" @selected($isIncluded)>Inclus</option>
-                                        <option value="0" @selected(!$isIncluded)>Option client</option>
+                                    <select class="form-select form-select-sm voyage-activity-included" data-field="status" name="tour_activities[{{ $idx }}][status]">
+                                        <option value="included" @selected($status === 'included')>Inclus</option>
+                                        <option value="optional" @selected($status === 'optional')>Option client</option>
+                                        <option value="proposition" @selected($status === 'proposition')>Proposition</option>
                                     </select>
-                                    <div class="small text-muted mt-1 voyage-activity-state-text">{{ $isIncluded ? 'Activite incluse dans le programme.' : 'Activite proposee au client comme option.' }}</div>
+                                    <input type="hidden" data-field="included" name="tour_activities[{{ $idx }}][included]" value="{{ $isIncluded ? '1' : '0' }}">
+                                    <div class="small text-muted mt-1 voyage-activity-state-text">{{ $status === 'included' ? 'Activite incluse dans le programme.' : ($status === 'proposition' ? 'Proposition Ajinsafro avec choix client obligatoire.' : 'Activite proposee au client comme option.') }}</div>
                                 </td>
                                 <td>
                                     <input type="text" class="form-control form-control-sm voyage-activity-title" data-field="title" name="tour_activities[{{ $idx }}][title]" value="{{ old('tour_activities.'.$idx.'.title', $displayTitle) }}" placeholder="Titre affiche dans le voyage">
@@ -193,7 +190,7 @@
                             </tr>
                         @empty
                             <tr class="voyage-activities-empty-row">
-                                <td colspan="12" class="text-center text-muted py-3">Aucune activite ajoutee pour ce voyage.</td>
+                                <td colspan="11" class="text-center text-muted py-3">Aucune activite ajoutee pour ce voyage.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -364,16 +361,22 @@
     }
 
     function rowTotalLabel(row) {
+        var statusField = row.querySelector('[data-field="status"]');
         var includedField = row.querySelector('[data-field="included"]');
         var pricingField = row.querySelector('[data-field="pricing_type"]');
         var adultField = row.querySelector('[data-field="unit_price"]');
         var childField = row.querySelector('[data-field="child_price"]');
-        var included = !includedField || String(includedField.value) === '1';
+        var status = statusField ? String(statusField.value || 'included') : (!includedField || String(includedField.value) === '1' ? 'included' : 'optional');
+        var included = status === 'included';
         var pricingType = pricingField ? String(pricingField.value || 'per_person') : 'per_person';
         var adult = adultField ? parsePrice(adultField.value) : 0;
         var child = childField ? parsePrice(childField.value) : 0;
 
-        if (!included) {
+        if (status === 'proposition') {
+            return 'Proposition';
+        }
+
+        if (status === 'optional') {
             return 'Option client';
         }
 
@@ -403,12 +406,14 @@
         var dayNumberField = row.querySelector('[data-field="day_number"]');
         var dayScopeField = row.querySelector('[data-field="day_scope"]');
         var scopeText = row.querySelector('.voyage-activity-scope-text');
+        var statusField = row.querySelector('[data-field="status"]');
 
         if (!visibilityModeField || !dayNumberField || !dayScopeField || !daysField) {
             return;
         }
 
-        var included = !includedField || String(includedField.value) === '1';
+        var status = statusField ? String(statusField.value || 'included') : (!includedField || String(includedField.value) === '1' ? 'included' : 'optional');
+        var included = status === 'included';
         var visibilityMode = String(visibilityModeField.value || 'single_day');
         if (['single_day', 'multiple_days', 'all_days'].indexOf(visibilityMode) === -1) {
             visibilityMode = 'single_day';
@@ -462,15 +467,15 @@
             if (visibilityMode === 'all_days') {
                 scopeText.textContent = included
                     ? 'Activite incluse visible sur tous les jours du programme.'
-                    : 'Option client visible sur tous les jours du programme.';
+                    : (status === 'proposition' ? 'Proposition Ajinsafro visible sur tous les jours.' : 'Option client visible sur tous les jours du programme.');
             } else if (visibilityMode === 'multiple_days') {
                 scopeText.textContent = included
                     ? 'Activite incluse sur plusieurs jours selectionnes.'
-                    : 'Option client visible sur plusieurs jours selectionnes.';
+                    : (status === 'proposition' ? 'Proposition Ajinsafro sur plusieurs jours.' : 'Option client visible sur plusieurs jours selectionnes.');
             } else {
                 scopeText.textContent = included
                     ? 'Affichee sur un jour unique du programme.'
-                    : 'Option client visible sur un jour unique.';
+                    : (status === 'proposition' ? 'Proposition Ajinsafro sur un jour unique.' : 'Option client visible sur un jour unique.');
             }
         }
 
@@ -480,18 +485,26 @@
     }
 
     function refreshRow(row) {
+        var statusField = row.querySelector('[data-field="status"]');
         var includedField = row.querySelector('[data-field="included"]');
         var statusText = row.querySelector('.voyage-activity-state-text');
         var totalEl = row.querySelector('.voyage-activity-line-total');
-        var included = !includedField || String(includedField.value) === '1';
+        var status = statusField ? String(statusField.value || 'included') : (!includedField || String(includedField.value) === '1' ? 'included' : 'optional');
+        var included = status === 'included';
 
         row.classList.toggle('table-warning', !included);
         row.setAttribute('data-included', included ? '1' : '0');
+        row.setAttribute('data-status', status);
+        if (includedField) {
+            includedField.value = included ? '1' : '0';
+        }
 
         syncScopeFields(row);
 
         if (statusText) {
-            statusText.textContent = included ? 'Activite incluse dans le programme.' : 'Activite proposee au client comme option.';
+            statusText.textContent = status === 'included'
+                ? 'Activite incluse dans le programme.'
+                : (status === 'proposition' ? 'Proposition Ajinsafro avec choix client obligatoire.' : 'Activite proposee au client comme option.');
         }
 
         if (totalEl) {
@@ -541,4 +554,3 @@
     refreshAllRows();
 })();
 </script>
-

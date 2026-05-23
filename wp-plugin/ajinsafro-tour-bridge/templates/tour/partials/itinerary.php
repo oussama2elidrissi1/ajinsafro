@@ -184,7 +184,8 @@ $ajtb_day_inclus = function ($day, $index, $total_days) use ($ajtb_day_flights_l
     $act_count = 0;
     if (!empty($day['activities'])) {
         foreach ($day['activities'] as $a) {
-            if (!empty($a['is_included'])) $act_count++;
+            $status = isset($a['status']) ? (string) $a['status'] : (!empty($a['is_included']) ? 'included' : 'optional');
+            if ($status === 'included' || $status === 'proposition') $act_count++;
         }
     }
     if ($act_count > 0) {
@@ -213,7 +214,10 @@ $ajtb_day_includes_raw = function ($day, $index, $total_days) use ($ajtb_day_fli
     $hotels = count($hotels_list_day);
     $act_count = 0;
     if (!empty($day['activities'])) {
-        foreach ($day['activities'] as $a) { if (!empty($a['is_included'])) $act_count++; }
+        foreach ($day['activities'] as $a) {
+            $status = isset($a['status']) ? (string) $a['status'] : (!empty($a['is_included']) ? 'included' : 'optional');
+            if ($status === 'included' || $status === 'proposition') $act_count++;
+        }
     }
     $meals = !empty(trim((string) ($day['meals'] ?? ''))) ? 1 : 0;
     return ['flights' => $flights, 'transfers' => $transfers, 'hotels' => $hotels, 'activities' => $act_count, 'meals' => $meals];
@@ -609,7 +613,10 @@ foreach ($itinerary as $index => $day) {
                         <?php
                         $included_count = 0;
                         if (!empty($activities)) {
-                            foreach ($activities as $a) { if (!empty($a['is_included'])) $included_count++; }
+                            foreach ($activities as $a) {
+                                $status = isset($a['status']) ? (string) $a['status'] : (!empty($a['is_included']) ? 'included' : 'optional');
+                                if ($status === 'included' || $status === 'proposition') $included_count++;
+                            }
                         }
                         ?>
                         <div id="aj-day-activities-<?php echo $day_id; ?>" class="ajtb-tab-block" data-ajtb-tab="activities">
@@ -618,12 +625,14 @@ foreach ($itinerary as $index => $day) {
                             <?php
                             if (!empty($activities)): ?>
                                 <?php foreach ($activities as $act): 
-                                    if (empty($act['is_included'])) { continue; }
+                                    $act_status = isset($act['status']) ? (string) $act['status'] : (!empty($act['is_included']) ? 'included' : 'optional');
+                                    if ($act_status === 'optional') { continue; }
+                                    $is_proposition = $act_status === 'proposition';
                                     $act_title = isset($act['title']) && (string) $act['title'] !== '' ? $act['title'] : '';
                                     $act_desc = isset($act['description']) && (string) $act['description'] !== '' ? $act['description'] : '';
                                     $act_id = (int) ($act['activity_id'] ?? 0);
                                     $is_mandatory = !empty($act['is_mandatory']);
-                                    $show_remove = $can_toggle_activities && !$is_mandatory;
+                                    $show_remove = $can_toggle_activities && !$is_mandatory && !$is_proposition;
                                 ?>
                                     <?php
                                     $act_price = null;
@@ -640,7 +649,7 @@ foreach ($itinerary as $index => $day) {
                                     $act_end_time = $act['end_time'] ?? null;
                                     $day_activity_id = (int) ($act['id'] ?? 0);
                                     ?>
-                                    <li class="day-activity-item day-activity-card-pro" data-activity-id="<?php echo $act_id; ?>" data-day-activity-id="<?php echo $day_activity_id; ?>" data-is-mandatory="<?php echo $is_mandatory ? '1' : '0'; ?>">
+                                    <li class="day-activity-item day-activity-card-pro<?php echo $is_proposition ? ' day-activity-card-proposition' : ''; ?>" data-activity-id="<?php echo $act_id; ?>" data-day-activity-id="<?php echo $day_activity_id; ?>" data-activity-status="<?php echo esc_attr($act_status); ?>" data-activity-price="<?php echo esc_attr($act_price !== null ? (string) $act_price : '0'); ?>" data-is-mandatory="<?php echo $is_mandatory ? '1' : '0'; ?>"<?php echo $is_proposition ? ' data-ajtb-proposition-card="1"' : ''; ?>>
                                         <div class="day-activity-item-content">
                                             <div class="day-activity-image-wrap">
                                                 <?php if ($act_image_url): ?>
@@ -652,6 +661,9 @@ foreach ($itinerary as $index => $day) {
                                             <div class="day-activity-details">
                                                 <div class="day-activity-header">
                                                     <span class="activity-title"><?php echo $act_title !== '' ? esc_html($act_title) : esc_html__('Activité', 'ajinsafro-tour-bridge'); ?></span>
+                                                    <?php if ($is_proposition): ?>
+                                                        <span class="badge badge-proposition">Proposition Ajinsafro</span>
+                                                    <?php endif; ?>
                                                     <?php if ($is_mandatory): ?>
                                                         <span class="badge badge-mandatory">Obligatoire</span>
                                                     <?php endif; ?>
@@ -669,9 +681,23 @@ foreach ($itinerary as $index => $day) {
                                                 <?php if ($act_desc !== ''): ?>
                                                     <div class="activity-description"><?php echo wp_kses_post($act_desc); ?></div>
                                                 <?php endif; ?>
+                                                <?php if ($is_proposition): ?>
+                                                    <div class="ajtb-proposition-choice" data-ajtb-proposition-choice data-activity-id="<?php echo esc_attr((string) $act_id); ?>" data-day-activity-id="<?php echo esc_attr((string) $day_activity_id); ?>" data-title="<?php echo esc_attr($act_title !== '' ? $act_title : __('ActivitÃ©', 'ajinsafro-tour-bridge')); ?>" data-price="<?php echo esc_attr($act_price !== null ? (string) $act_price : '0'); ?>">
+                                                        <div class="ajtb-proposition-choice-title"><?php esc_html_e('Votre choix pour cette proposition', 'ajinsafro-tour-bridge'); ?></div>
+                                                        <label class="ajtb-proposition-radio">
+                                                            <input type="radio" name="ajtb_proposition_<?php echo esc_attr((string) ($day_activity_id ?: $act_id)); ?>" value="libre">
+                                                            <span><?php esc_html_e('Libre', 'ajinsafro-tour-bridge'); ?></span>
+                                                        </label>
+                                                        <label class="ajtb-proposition-radio">
+                                                            <input type="radio" name="ajtb_proposition_<?php echo esc_attr((string) ($day_activity_id ?: $act_id)); ?>" value="participer">
+                                                            <span><?php esc_html_e('Participer', 'ajinsafro-tour-bridge'); ?></span>
+                                                        </label>
+                                                        <p class="ajtb-proposition-error" data-ajtb-proposition-error hidden>Veuillez choisir Libre ou Participer pour les activit&eacute;s propos&eacute;es.</p>
+                                                    </div>
+                                                <?php endif; ?>
                                             </div>
                                             <div class="day-activity-actions">
-                                                <?php if ($can_toggle_activities && !$is_mandatory): ?>
+                                                <?php if ($show_remove): ?>
                                                     <button type="button" class="ajtb-btn-edit-activity" data-day-activity-id="<?php echo $day_activity_id; ?>" data-tour-id="<?php echo $tour_id; ?>" data-day-id="<?php echo $day_id; ?>" data-activity-id="<?php echo $act_id; ?>" aria-label="<?php esc_attr_e('Modifier cette activité', 'ajinsafro-tour-bridge'); ?>">Modifier</button>
                                                     <button type="button" class="ajtb-btn-remove-activity" data-aj-action="remove" data-tour-id="<?php echo $tour_id; ?>" data-day-id="<?php echo $day_id; ?>" data-activity-id="<?php echo $act_id; ?>" aria-label="<?php esc_attr_e('Retirer cette activité', 'ajinsafro-tour-bridge'); ?>">Retirer</button>
                                                 <?php endif; ?>

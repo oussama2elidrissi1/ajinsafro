@@ -191,6 +191,7 @@ class TourProgramService
             'activity_id' => $activityId,
             'sort_order' => $options['sort_order'] ?? $maxOrder + 1,
             'is_included' => $options['is_included'] ?? 1,
+            'status' => $options['status'] ?? (($options['is_included'] ?? 1) ? 'included' : 'optional'),
             'day_scope' => ($options['day_scope'] ?? 'fixed') === 'open' ? 'open' : 'fixed',
             'is_mandatory' => $options['is_mandatory'] ?? 0,
             'is_editable' => $options['is_editable'] ?? 1,
@@ -211,7 +212,7 @@ class TourProgramService
     public function updateDayActivity(int $dayActivityId, array $data): TourDayActivity
     {
         $da = TourDayActivity::findOrFail($dayActivityId);
-        $fillable = ['day_id', 'sort_order', 'is_included', 'day_scope', 'is_mandatory', 'is_editable', 'custom_title', 'custom_description', 'custom_price', 'start_time', 'end_time'];
+        $fillable = ['day_id', 'sort_order', 'is_included', 'status', 'day_scope', 'is_mandatory', 'is_editable', 'custom_title', 'custom_description', 'custom_price', 'start_time', 'end_time'];
         $payload = array_intersect_key($data, array_flip($fillable));
         $payload = $this->filterDayActivityPayload($payload);
         $da->fill($payload);

@@ -237,6 +237,7 @@ class StoreWpTourRequest extends FormRequest
             'programme_days.*.activities.*.sort_order' => 'nullable|integer',
             'programme_days.*.activities.*.is_mandatory' => 'nullable',
             'programme_days.*.activities.*.is_included' => 'nullable',
+            'programme_days.*.activities.*.status' => 'nullable|string|in:included,optional,proposition',
             'programme_days.*.activities.*.custom_title' => 'nullable|string',
             'programme_days.*.activities.*.custom_description' => 'nullable|string',
 

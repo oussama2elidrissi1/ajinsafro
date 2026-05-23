@@ -751,7 +751,9 @@ class VoyageController extends Controller
                 'tour_activities.*.title' => 'nullable|string|max:255',
                 'tour_activities.*.display_title' => 'nullable|string|max:255',
                 'tour_activities.*.description' => 'nullable|string|max:5000',
-                'tour_activities.*.status' => 'nullable|string|in:included,optional',
+                'tour_activities.*.status' => 'nullable|string|in:included,optional,proposition',
+                'tour_activities.*.activity_title' => 'nullable|string|max:255',
+                'tour_activities.*.activity_type' => 'nullable|string|max:120',
                 'tour_activities.*.day_number' => 'nullable|integer|min:1',
                 'tour_activities.*.days' => 'nullable|array',
                 'tour_activities.*.days.*' => 'nullable|integer|min:1',
@@ -1011,14 +1013,18 @@ class VoyageController extends Controller
                 ? $row['included']
                 : (array_key_exists('is_optional', $row) ? ($this->normalizeCheckboxValue($row['is_optional'], 0) ? 0 : 1) : 1);
             $statusRaw = strtolower(trim((string) ($row['status'] ?? '')));
-            if ($statusRaw === 'optional') {
+            if ($statusRaw === 'proposition') {
+                $included = 0;
+            } elseif ($statusRaw === 'optional') {
                 $included = 0;
             } elseif ($statusRaw === 'included') {
                 $included = 1;
             } else {
                 $included = $this->normalizeCheckboxValue($includedSource, 1) ? 1 : 0;
             }
-            $status = $included ? 'included' : 'optional';
+            $status = in_array($statusRaw, ['included', 'optional', 'proposition'], true)
+                ? $statusRaw
+                : ($included ? 'included' : 'optional');
 
             $dayScopeRaw = strtolower(trim((string) ($row['day_scope'] ?? 'fixed')));
             if ($dayScopeRaw === 'all') {
@@ -1093,6 +1099,8 @@ class VoyageController extends Controller
                 'title' => $title !== '' ? $title : null,
                 'display_title' => $title !== '' ? $title : null,
                 'description' => $description !== '' ? $description : null,
+                'activity_title' => trim((string) ($row['activity_title'] ?? '')) ?: null,
+                'activity_type' => trim((string) ($row['activity_type'] ?? '')) ?: null,
                 'status' => $status,
                 'day_number' => $dayNumber,
                 'days' => $days,
@@ -3853,12 +3861,35 @@ class VoyageController extends Controller
             }
 
             $catalogTitle = trim((string) ($activityTitleMap->get($activityId) ?? ''));
+            $activityTitle = trim((string) ($row['activity_title'] ?? ''));
+            $activityType = trim((string) ($row['activity_type'] ?? ''));
+            if ($activityTitle !== '' || $activityType !== '') {
+                try {
+                    $activityUpdate = [];
+                    if ($activityTitle !== '') {
+                        $activityUpdate['title'] = $activityTitle;
+                        $catalogTitle = $activityTitle;
+                    }
+                    if ($activityType !== '') {
+                        $activityUpdate['activity_type'] = $activityType;
+                    }
+                    if ($activityUpdate !== []) {
+                        Activity::query()->where('id', $activityId)->update($activityUpdate);
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('VoyageController@syncActivities catalog activity update failed', [
+                        'activity_id' => $activityId,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
             $title = trim((string) ($row['display_title'] ?? $row['title'] ?? ''));
             $included = $this->normalizeCheckboxValue($row['included'] ?? 1, 1);
             $status = strtolower(trim((string) ($row['status'] ?? ($included ? 'included' : 'optional'))));
-            if (! in_array($status, ['included', 'optional'], true)) {
+            if (! in_array($status, ['included', 'optional', 'proposition'], true)) {
                 $status = $included ? 'included' : 'optional';
             }
+            $included = $status === 'included' ? 1 : 0;
             $visibilityMode = strtolower(trim((string) ($row['visibility_mode'] ?? 'single_day')));
             if (! in_array($visibilityMode, ['single_day', 'multiple_days', 'all_days'], true)) {
                 $visibilityMode = (($row['day_scope'] ?? 'fixed') === 'open') ? 'all_days' : 'single_day';
@@ -3921,6 +3952,8 @@ class VoyageController extends Controller
                     'options_json' => [
                         'activity_id' => $activityId,
                         'status' => $status,
+                        'activity_title' => $activityTitle !== '' ? $activityTitle : $catalogTitle,
+                        'activity_type' => $activityType !== '' ? $activityType : null,
                         'visibility_mode' => $visibilityMode,
                         'days' => $targetDayNumbers,
                         'pricing_type' => $pricingType,
@@ -4091,6 +4124,11 @@ class VoyageController extends Controller
             }
 
             $isIncluded = $this->normalizeCheckboxValue($row['included'] ?? 1, 1);
+            $status = strtolower(trim((string) ($row['status'] ?? ($isIncluded ? 'included' : 'optional'))));
+            if (! in_array($status, ['included', 'optional', 'proposition'], true)) {
+                $status = $isIncluded ? 'included' : 'optional';
+            }
+            $isIncluded = $status === 'included' ? 1 : 0;
             $visibilityMode = strtolower(trim((string) ($row['visibility_mode'] ?? 'single_day')));
             if (! in_array($visibilityMode, ['single_day', 'multiple_days', 'all_days'], true)) {
                 $visibilityMode = (($row['day_scope'] ?? 'fixed') === 'open') ? 'all_days' : 'single_day';
@@ -4155,6 +4193,7 @@ class VoyageController extends Controller
                     'day_id' => $dayId,
                     'sort_order' => $sortOrder,
                     'is_included' => $isIncluded,
+                    'status' => $status,
                     'day_scope' => $dayScope,
                     'is_mandatory' => 0,
                     'is_editable' => 0,

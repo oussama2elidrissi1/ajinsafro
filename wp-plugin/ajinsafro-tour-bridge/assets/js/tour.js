@@ -635,6 +635,9 @@
                 .filter(function (activity) {
                     return activity.activity_id > 0;
                 });
+            collectPropositionActivityChoices(false).forEach(function (activity) {
+                selectedActivities.push(normalizeSelectedActivity(activity));
+            });
         }
 
         function selectedActivitiesTotal() {
@@ -812,6 +815,19 @@
         document.addEventListener("ajtb:v1:travellers-changed", recalculate);
         document.addEventListener("ajtb:v1:date-changed", recalculate);
         document.addEventListener("ajtb:v1:activities-changed", recalculate);
+        document.addEventListener("change", function (event) {
+            if (!event.target || !event.target.matches("[data-ajtb-proposition-choice] input[type='radio']")) {
+                return;
+            }
+            var group = event.target.closest("[data-ajtb-proposition-choice]");
+            if (group) {
+                var error = group.querySelector("[data-ajtb-proposition-error]");
+                if (error) {
+                    error.hidden = true;
+                }
+            }
+            document.dispatchEvent(new CustomEvent("ajtb:v1:activities-changed"));
+        });
         recalculate();
     }
 
@@ -1443,6 +1459,39 @@
             .replace(/'/g, "&#039;");
     }
 
+    function collectPropositionActivityChoices(includeIncomplete) {
+        return Array.prototype.slice.call(document.querySelectorAll("[data-ajtb-proposition-choice]"))
+            .map(function (group) {
+                var checked = group.querySelector("input[type='radio']:checked");
+                var choice = checked ? String(checked.value || "").trim() : "";
+                var rawPrice = parseFloat(group.getAttribute("data-price") || "0");
+                var unitPrice = isFinite(rawPrice) && rawPrice > 0 ? rawPrice : 0;
+                var applied = choice === "participer" ? unitPrice : 0;
+
+                if (!choice && !includeIncomplete) {
+                    return null;
+                }
+
+                return {
+                    activity_id: parseInt(group.getAttribute("data-activity-id") || "0", 10) || 0,
+                    day_activity_id: parseInt(group.getAttribute("data-day-activity-id") || "0", 10) || 0,
+                    title: String(group.getAttribute("data-title") || "Activite").trim() || "Activite",
+                    choice: choice,
+                    price: applied,
+                    price_applied: applied,
+                    unit_price: unitPrice,
+                    kind: "proposition",
+                    source_type: "activity_proposition",
+                    assigned: [],
+                    missing: choice === "",
+                    element: group,
+                };
+            })
+            .filter(function (entry) {
+                return !!entry;
+            });
+    }
+
     function collectRecapPayloadFromSingle() {
         var priceCard = document.getElementById("ajtb-v1-summary-card");
         if (!priceCard) {
@@ -1510,6 +1559,22 @@
                 };
             })
             .filter(function (a) { return a.activity_id > 0; });
+        collectPropositionActivityChoices(false).forEach(function (activity) {
+            if (activity.activity_id > 0) {
+                activities.push({
+                    activity_id: activity.activity_id,
+                    day_activity_id: activity.day_activity_id,
+                    title: activity.title,
+                    price: activity.price,
+                    price_applied: activity.price_applied,
+                    unit_price: activity.unit_price,
+                    choice: activity.choice,
+                    kind: "proposition",
+                    source_type: "activity_proposition",
+                    assigned: [],
+                });
+            }
+        });
 
         // Options shown in summary chips (best deals + activities selections).
         var options = [];
@@ -1618,7 +1683,32 @@
             return ok;
         }
 
+        function validatePropositionChoices() {
+            var choices = collectPropositionActivityChoices(true);
+            var missing = choices.filter(function (entry) {
+                return entry && entry.missing;
+            });
+            choices.forEach(function (entry) {
+                var error = entry && entry.element ? entry.element.querySelector("[data-ajtb-proposition-error]") : null;
+                if (error) {
+                    error.hidden = !(entry && entry.missing);
+                }
+            });
+            if (!missing.length) {
+                return true;
+            }
+            var first = missing[0].element;
+            var target = first ? (first.closest("[data-ajtb-proposition-card]") || first) : document.getElementById("itinerary");
+            if (target && target.scrollIntoView) {
+                target.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+            return false;
+        }
+
         actionEl.addEventListener("click", function () {
+            if (!validatePropositionChoices()) {
+                return;
+            }
             if (!validateCustomInputs()) {
                 return;
             }
@@ -3052,6 +3142,24 @@
                                 price: p,
                                 passenger_key: "slot:" + String(slot),
                             });
+                        });
+                    });
+                }
+                if (payload.activities && payload.activities.length) {
+                    payload.activities.forEach(function (activity) {
+                        if (!activity || !activity.activity_id) return;
+                        var isProposition = String(activity.kind || "") === "proposition" || String(activity.source_type || "") === "activity_proposition";
+                        var price = isProposition ? parseFloat(activity.price_applied || activity.price || "0") : parseFloat(activity.price || "0");
+                        if (!isFinite(price) || price < 0) price = 0;
+                        if (!isProposition && price <= 0) return;
+                        extrasPayload.push({
+                            name: activity.title || "Activite",
+                            price: price,
+                            source_type: isProposition ? "activity_proposition" : "activity_option",
+                            source_id: activity.activity_id,
+                            day_activity_id: activity.day_activity_id || null,
+                            choice: isProposition ? String(activity.choice || "") : "",
+                            price_applied: price,
                         });
                     });
                 }

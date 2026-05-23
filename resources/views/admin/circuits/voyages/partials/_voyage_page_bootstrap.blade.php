@@ -130,6 +130,7 @@
         'wpFeaturedMediaRemoveUrl' => route('admin.wp-media.remove'),
         'ajaxListActivityUrl' => route('admin.circuits.activities.ajax.list'),
         'ajaxStoreActivityUrl' => route('admin.circuits.activities.ajax.store'),
+        'activityEditUrlBase' => url('/admin/circuits/activities'),
         'tourHotelsData' => $tourHotelsBootstrap,
         'tourTransfersData' => [
             'arrival' => $transferArrivalBootstrap,

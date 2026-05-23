@@ -21,6 +21,70 @@
     --ajtb-v1-radius-sm: 10px;
 }
 
+.day-activity-card-proposition {
+    border-color: rgba(243, 122, 31, 0.38);
+    background: linear-gradient(180deg, #fffaf4 0%, #ffffff 100%);
+}
+
+.badge-proposition {
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: #fff1de;
+    color: #9d4d00;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.ajtb-proposition-choice {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px solid #f5d1ad;
+    border-radius: 14px;
+    background: #fff8f0;
+}
+
+.ajtb-proposition-choice-title {
+    flex-basis: 100%;
+    color: #63340b;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.ajtb-proposition-radio {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    border: 1px solid #edc196;
+    border-radius: 999px;
+    background: #fff;
+    color: #13243d;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.ajtb-proposition-radio input {
+    margin: 0;
+}
+
+.ajtb-proposition-error {
+    flex-basis: 100%;
+    margin: 2px 0 0;
+    color: #b42318;
+    font-size: 13px;
+    font-weight: 700;
+}
+
 body.single-st_tours {
     background: var(--ajtb-v1-bg) !important;
 }

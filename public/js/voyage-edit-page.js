@@ -3322,6 +3322,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     var titleEl = row.querySelector('.fw-medium');
                     var customTitleInp = row.querySelector('input[name*="[custom_title]"]');
                     var isIncludedEl = row.querySelector('input[name*="[is_included]"]');
+                    var statusEl = row.querySelector('select[name*="[status]"], input[name*="[status]"]');
                     var title = '';
                     if (customTitleInp && customTitleInp.value.trim()) {
                         title = customTitleInp.value.trim();
@@ -3330,8 +3331,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     } else {
                         title = 'Activité';
                     }
-                    var isIncluded = isIncludedEl ? isIncludedEl.checked : true;
-                    sections.activities.push({ title: title, isIncluded: isIncluded });
+                    var status = statusEl ? String(statusEl.value || '').trim() : '';
+                    var isIncluded = status ? status === 'included' : (isIncludedEl ? isIncludedEl.checked : true);
+                    sections.activities.push({ title: title, isIncluded: isIncluded, status: status || (isIncluded ? 'included' : 'optional') });
                 });
             }
             
@@ -3478,8 +3480,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 var visibleActs = sections.activities.slice(0, 3);
                 visibleActs.forEach(function(act) {
                     html += '<div class="small text-muted mb-1">"Â¢ ' + act.title;
-                    if (act.isIncluded) html += ' <span class="badge bg-success">Inclus</span>';
-                    else html += ' <span class="badge bg-warning text-dark">Optionnel</span>';
+                    if (act.status === 'proposition') html += ' <span class="badge bg-info text-dark">Proposition</span>';
+                    else if (act.isIncluded) html += ' <span class="badge bg-success">Inclus</span>';
+                    else html += ' <span class="badge bg-warning text-dark">Option client</span>';
                     html += '</div>';
                 });
                 if (sections.activities.length > 3) {
@@ -4514,6 +4517,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             function computeLineTotal(row) {
                 var pricing = row.querySelector('.voyage-activity-pricing');
+                var statusField = row.querySelector('[data-field="status"]');
+                var includedHidden = row.querySelector('[data-field="included"]');
                 var priceInput = row.querySelector('.voyage-activity-price');
                 var childInput = row.querySelector('.voyage-activity-child-price');
                 var lineTotal = row.querySelector('.voyage-activity-line-total');
@@ -4522,6 +4527,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 var unitPrice = Math.max(0, toNumber(priceInput.value, 0));
                 var childPrice = childInput ? Math.max(0, toNumber(childInput.value, 0)) : 0;
                 var pricingType = pricing.value === 'fixed' ? 'fixed' : 'per_person';
+                var status = statusField ? String(statusField.value || 'included') : 'included';
+                if (includedHidden) {
+                    includedHidden.value = status === 'included' ? '1' : '0';
+                }
+                row.setAttribute('data-status', status);
+                row.setAttribute('data-included', status === 'included' ? '1' : '0');
 
                 if (childInput) {
                     if (pricingType === 'fixed') {
@@ -4531,6 +4542,15 @@ document.addEventListener('DOMContentLoaded', function () {
                         childInput.removeAttribute('disabled');
                         childInput.classList.remove('bg-light');
                     }
+                }
+
+                if (status === 'proposition') {
+                    lineTotal.textContent = 'Proposition';
+                    return;
+                }
+                if (status === 'optional') {
+                    lineTotal.textContent = 'Option client';
+                    return;
                 }
 
                 var total = pricingType === 'fixed' ? unitPrice : (unitPrice + childPrice);
@@ -4622,6 +4642,7 @@ document.addEventListener('DOMContentLoaded', function () {
             function buildRow(activity) {
                 activity = normalizeActivity(activity);
                 var title = esc(activity.title || ('Activite #' + activity.id));
+                var type = esc(activity.activity_type || '');
                 var description = esc(activity.description || '');
                 var defaultPrice = toNumber(activity.adult_price || activity.base_price, 0).toFixed(2);
                 var defaultChild = toNumber(activity.child_price, 0).toFixed(2);
@@ -4650,7 +4671,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         '<input type="hidden" data-field="sort_order" value="0">' +
                     '</td>' +
                     '<td>' +
-                        '<div class="fw-medium voyage-activity-title">' + title + '</div>' +
+                        '<input type="text" class="form-control form-control-sm fw-medium mb-2" data-field="activity_title" value="' + title + '" placeholder="Nom complet activite">' +
+                        '<input type="text" class="form-control form-control-sm" data-field="activity_type" value="' + type + '" placeholder="Type activite">' +
                         '<input type="hidden" data-field="id" value="">' +
                         '<input type="hidden" data-field="activity_id" value="' + activity.id + '">' +
                         '<input type="hidden" data-field="group_uuid" value="' + esc(groupUuid) + '">' +
@@ -4677,18 +4699,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         '<div class="small text-muted mt-1 voyage-activity-scope-text"></div>' +
                     '</td>' +
                     '<td>' +
-                        '<div class="d-flex align-items-center gap-1">' +
-                            '<input type="time" class="form-control form-control-sm" data-field="start_time" value="">' +
-                            '<span class="small text-muted">a</span>' +
-                            '<input type="time" class="form-control form-control-sm" data-field="end_time" value="">' +
-                        '</div>' +
-                        '<div class="small text-muted mt-1">Optionnel</div>' +
-                    '</td>' +
-                    '<td>' +
-                        '<select class="form-select form-select-sm voyage-activity-included" data-field="included">' +
-                            '<option value="1" selected>Inclus</option>' +
-                            '<option value="0">Option client</option>' +
+                        '<select class="form-select form-select-sm voyage-activity-included" data-field="status">' +
+                            '<option value="included" selected>Inclus</option>' +
+                            '<option value="optional">Option client</option>' +
+                            '<option value="proposition">Proposition</option>' +
                         '</select>' +
+                        '<input type="hidden" data-field="included" value="1">' +
                         '<div class="small text-muted mt-1 voyage-activity-state-text">Activite incluse dans le programme.</div>' +
                     '</td>' +
                     '<td>' +
@@ -4708,7 +4724,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     '<td>' +
                         '<div class="d-flex gap-1">' +
                             '<button type="button" class="btn btn-sm btn-outline-secondary voyage-activity-duplicate" title="Dupliquer"><i class="bx bx-copy"></i></button>' +
-                            '<button type="button" class="btn btn-sm btn-outline-primary voyage-activity-edit"><i class="bx bx-pencil"></i></button>' +
+                            '<button type="button" class="btn btn-sm btn-outline-primary voyage-activity-edit" title="Modifier activité"><i class="bx bx-pencil"></i></button>' +
+                            '<button type="button" class="btn btn-sm btn-outline-info voyage-activity-image" title="Image"><i class="bx bx-image"></i></button>' +
                             '<button type="button" class="btn btn-sm btn-outline-danger voyage-activity-remove"><i class="bx bx-trash"></i></button>' +
                         '</div>' +
                     '</td>';
@@ -4827,10 +4844,26 @@ document.addEventListener('DOMContentLoaded', function () {
                 var editBtn = e.target.closest('.voyage-activity-edit');
                 if (editBtn) {
                     var rowEdit = editBtn.closest('.voyage-activity-row');
-                    var focusTarget = rowEdit ? rowEdit.querySelector('.voyage-activity-price') : null;
+                    var activityId = rowEdit ? toInt(rowEdit.getAttribute('data-activity-id') || (rowEdit.querySelector('[data-field="activity_id"]') && rowEdit.querySelector('[data-field="activity_id"]').value), 0) : 0;
+                    var editBase = (window.VOYAGE_EDIT_BOOTSTRAP && window.VOYAGE_EDIT_BOOTSTRAP.activityEditUrlBase) ? window.VOYAGE_EDIT_BOOTSTRAP.activityEditUrlBase : '';
+                    if (activityId && editBase) {
+                        window.open(editBase.replace(/\/$/, '') + '/' + activityId + '/edit', '_blank', 'noopener');
+                        return;
+                    }
+                    var focusTarget = rowEdit ? rowEdit.querySelector('[data-field="activity_title"]') : null;
                     if (focusTarget) {
                         focusTarget.focus();
                         focusTarget.select();
+                    }
+                }
+
+                var imageBtn = e.target.closest('.voyage-activity-image');
+                if (imageBtn) {
+                    var rowImage = imageBtn.closest('.voyage-activity-row');
+                    var imageActivityId = rowImage ? toInt(rowImage.getAttribute('data-activity-id') || (rowImage.querySelector('[data-field="activity_id"]') && rowImage.querySelector('[data-field="activity_id"]').value), 0) : 0;
+                    var imageEditBase = (window.VOYAGE_EDIT_BOOTSTRAP && window.VOYAGE_EDIT_BOOTSTRAP.activityEditUrlBase) ? window.VOYAGE_EDIT_BOOTSTRAP.activityEditUrlBase : '';
+                    if (imageActivityId && imageEditBase) {
+                        window.open(imageEditBase.replace(/\/$/, '') + '/' + imageActivityId + '/edit', '_blank', 'noopener');
                     }
                 }
             });

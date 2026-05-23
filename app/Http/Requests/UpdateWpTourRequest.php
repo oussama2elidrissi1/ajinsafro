@@ -544,6 +544,7 @@ class UpdateWpTourRequest extends FormRequest
             'programme_days.*.activities.*.sort_order' => 'nullable|integer',
             'programme_days.*.activities.*.is_mandatory' => 'nullable',
             'programme_days.*.activities.*.is_included' => 'nullable',
+            'programme_days.*.activities.*.status' => 'nullable|string|in:included,optional,proposition',
             'programme_days.*.activities.*.custom_title' => 'nullable|string',
             'programme_days.*.activities.*.custom_description' => 'nullable|string',
 
@@ -553,6 +554,9 @@ class UpdateWpTourRequest extends FormRequest
             'tour_activities.*.activity_id' => 'required|integer|exists:wp.aj_activities,id',
             'tour_activities.*.title' => 'nullable|string|max:255',
             'tour_activities.*.description' => 'nullable|string|max:5000',
+            'tour_activities.*.activity_title' => 'nullable|string|max:255',
+            'tour_activities.*.activity_type' => 'nullable|string|max:120',
+            'tour_activities.*.status' => 'nullable|string|in:included,optional,proposition',
             'tour_activities.*.day_number' => 'nullable|integer|min:1',
             'tour_activities.*.day_scope' => 'nullable|string|in:fixed,open',
             'tour_activities.*.sort_order' => 'nullable|integer|min:0',

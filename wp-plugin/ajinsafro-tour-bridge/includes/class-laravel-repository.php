@@ -65,6 +65,15 @@ class AJTB_Laravel_Repository
         return $result === $table_name;
     }
 
+    private function table_has_column($table_name, $column)
+    {
+        return (bool) $this->wpdb->get_var($this->wpdb->prepare(
+            "SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = %s",
+            $table_name,
+            $column
+        ));
+    }
+
     /**
      * Get all Laravel data for a tour
      *
@@ -703,13 +712,17 @@ class AJTB_Laravel_Repository
         if (!$this->table_exists($table_activities) || !$this->table_exists($table_catalog)) {
             return [];
         }
+        $has_activity_status = $this->table_has_column($table_activities, 'status');
+        $status_where = $has_activity_status
+            ? "AND COALESCE(NULLIF(da.status, ''), CASE WHEN da.is_included = 1 THEN 'included' ELSE 'optional' END) = 'optional' "
+            : "AND da.is_included = 0 ";
         $rows = $this->wpdb->get_results(
             $this->wpdb->prepare(
                 "SELECT da.id, da.activity_id, da.custom_title, da.custom_description, da.custom_price, " .
                 "a.title AS activity_title, a.description AS activity_description, a.image_id AS activity_image_id, a.base_price AS activity_base_price " .
                 "FROM {$table_activities} da " .
                 "INNER JOIN {$table_catalog} a ON a.id = da.activity_id " .
-                "WHERE da.tour_id = %d AND da.is_included = 0 AND COALESCE(da.day_scope, 'fixed') = 'open' " .
+                "WHERE da.tour_id = %d {$status_where}AND COALESCE(da.day_scope, 'fixed') = 'open' " .
                 "ORDER BY da.sort_order ASC",
                 $this->tour_id
             ),
@@ -1024,9 +1037,13 @@ class AJTB_Laravel_Repository
             if ($has_activities) {
                 $day_ids = array_keys($days_by_id);
                 if (!empty($day_ids)) {
+                    $has_activity_status = $this->table_has_column($table_activities, 'status');
+                    $status_select = $has_activity_status
+                        ? "COALESCE(NULLIF(da.status, ''), CASE WHEN da.is_included = 1 THEN 'included' ELSE 'optional' END) AS status"
+                        : "CASE WHEN da.is_included = 1 THEN 'included' ELSE 'optional' END AS status";
                     $placeholders = implode(',', array_fill(0, count($day_ids), '%d'));
                     $query = $this->wpdb->prepare(
-                        "SELECT da.id, da.day_id, da.activity_id, da.sort_order, da.is_included, COALESCE(da.day_scope, 'fixed') AS day_scope, da.is_mandatory, da.custom_title, da.custom_description, da.custom_price, da.start_time, da.end_time, " .
+                        "SELECT da.id, da.day_id, da.activity_id, da.sort_order, da.is_included, {$status_select}, COALESCE(da.day_scope, 'fixed') AS day_scope, da.is_mandatory, da.custom_title, da.custom_description, da.custom_price, da.start_time, da.end_time, " .
                         "a.title AS activity_title, a.description AS activity_description, a.image_id AS activity_image_id, a.base_price AS activity_base_price " .
                         "FROM {$table_activities} da " .
                         "INNER JOIN {$table_catalog} a ON a.id = da.activity_id " .
@@ -1049,6 +1066,11 @@ class AJTB_Laravel_Repository
                                     $image_url = wp_get_attachment_image_url((int) $ar['activity_image_id'], 'medium');
                                 }
                             }
+                            $activity_status = isset($ar['status']) ? strtolower(trim((string) $ar['status'])) : '';
+                            if (!in_array($activity_status, ['included', 'optional', 'proposition'], true)) {
+                                $activity_status = !empty($ar['is_included']) ? 'included' : 'optional';
+                            }
+                            $activity_is_included = $activity_status === 'included';
                             $days_by_id[$day_id]['activities'][] = [
                                 'id' => (int) $ar['id'],
                                 'activity_id' => (int) $ar['activity_id'],
@@ -1061,11 +1083,12 @@ class AJTB_Laravel_Repository
                                 'start_time' => $ar['start_time'] ?? null,
                                 'end_time' => $ar['end_time'] ?? null,
                                 'is_mandatory' => !empty($ar['is_mandatory']),
-                                'is_included' => !empty($ar['is_included']),
+                                'is_included' => $activity_is_included,
+                                'status' => $activity_status,
                                 'day_scope' => isset($ar['day_scope']) ? (string) $ar['day_scope'] : 'fixed',
                                 'day_number' => isset($days_by_id[$day_id]['day']) ? (int) $days_by_id[$day_id]['day'] : 1,
                             ];
-                            if (empty($ar['is_included']) && !empty($days_by_id[$day_id]['activities'])) {
+                            if ($activity_status === 'optional' && !empty($days_by_id[$day_id]['activities'])) {
                                 $days_by_id[$day_id]['optional_activities'][] = end($days_by_id[$day_id]['activities']);
                             }
                         }
@@ -1143,7 +1166,8 @@ class AJTB_Laravel_Repository
                             }
 
                             $days_by_id[$target_day_id]['activities'][] = $tab_activity;
-                            if (empty($tab_activity['is_included'])) {
+                            $tab_status = isset($tab_activity['status']) ? (string) $tab_activity['status'] : (!empty($tab_activity['is_included']) ? 'included' : 'optional');
+                            if ($tab_status === 'optional') {
                                 $days_by_id[$target_day_id]['optional_activities'][] = $tab_activity;
                             }
                             if ($candidate_activity_id > 0) {
@@ -1183,7 +1207,8 @@ class AJTB_Laravel_Repository
                             $oaid = isset($oa['activity_id']) ? (int) $oa['activity_id'] : 0;
                             if ($oaid > 0 && isset($seen_in_tgt[$oaid])) { continue; }
                             $days_by_id[$tgt_day_id]['activities'][] = $oa;
-                            if (empty($oa['is_included'])) {
+                            $oa_status = isset($oa['status']) ? (string) $oa['status'] : (!empty($oa['is_included']) ? 'included' : 'optional');
+                            if ($oa_status === 'optional') {
                                 $days_by_id[$tgt_day_id]['optional_activities'][] = $oa;
                             }
                             if ($oaid > 0) { $seen_in_tgt[$oaid] = true; }
@@ -1503,6 +1528,11 @@ class AJTB_Laravel_Repository
                     $by_day[$day_number] = [];
                 }
 
+                $status = isset($options['status']) ? strtolower(trim((string) $options['status'])) : '';
+                if (!in_array($status, ['included', 'optional', 'proposition'], true)) {
+                    $status = isset($row['included']) && !empty($row['included']) ? 'included' : 'optional';
+                }
+
                 $activity_entry = [
                     'id' => isset($row['id']) ? (int) $row['id'] : 0,
                     'activity_id' => $activity_id,
@@ -1515,7 +1545,8 @@ class AJTB_Laravel_Repository
                     'start_time' => !empty($options['start_time']) ? (string) $options['start_time'] : null,
                     'end_time' => !empty($options['end_time']) ? (string) $options['end_time'] : null,
                     'is_mandatory' => false,
-                    'is_included' => isset($row['included']) ? !empty($row['included']) : true,
+                    'is_included' => $status === 'included',
+                    'status' => $status,
                     'day_scope' => $day_scope,
                     'day_number' => $day_number,
                 ];

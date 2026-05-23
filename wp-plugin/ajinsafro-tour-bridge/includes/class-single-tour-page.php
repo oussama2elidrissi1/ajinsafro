@@ -1061,6 +1061,13 @@ class AJTB_Single_Tour_Page
             ]);
         }
 
+        $extrasHasSourceType = self::table_has_column($extras_table, 'source_type');
+        $extrasHasSourceId = self::table_has_column($extras_table, 'source_id');
+        $extrasHasDayActivityId = self::table_has_column($extras_table, 'day_activity_id');
+        $extrasHasChoice = self::table_has_column($extras_table, 'choice');
+        $extrasHasPriceApplied = self::table_has_column($extras_table, 'price_applied');
+        $extrasHasDescription = self::table_has_column($extras_table, 'description');
+
         foreach ($extras as $ex) {
             if (!is_array($ex)) {
                 continue;
@@ -1069,14 +1076,39 @@ class AJTB_Single_Tour_Page
             if ($name === '') {
                 continue;
             }
-            $wpdb->insert($extras_table, [
+            $price = isset($ex['price']) ? (float) $ex['price'] : 0;
+            $extraPayload = [
                 'reservation_id' => $reservation_id,
                 'name' => sanitize_text_field($name),
-                'price' => isset($ex['price']) ? (float) $ex['price'] : 0,
+                'price' => $price,
                 'passenger_key' => !empty($ex['passenger_key']) ? sanitize_text_field((string) $ex['passenger_key']) : null,
                 'created_at' => current_time('mysql', true),
                 'updated_at' => current_time('mysql', true),
-            ]);
+            ];
+            if ($extrasHasSourceType && !empty($ex['source_type'])) {
+                $extraPayload['source_type'] = sanitize_text_field((string) $ex['source_type']);
+            }
+            if ($extrasHasSourceId && !empty($ex['source_id'])) {
+                $extraPayload['source_id'] = (int) $ex['source_id'];
+            }
+            if ($extrasHasDayActivityId && !empty($ex['day_activity_id'])) {
+                $extraPayload['day_activity_id'] = (int) $ex['day_activity_id'];
+            }
+            if ($extrasHasChoice && array_key_exists('choice', $ex)) {
+                $choice = sanitize_text_field((string) $ex['choice']);
+                $extraPayload['choice'] = $choice !== '' ? $choice : null;
+            }
+            if ($extrasHasPriceApplied) {
+                $extraPayload['price_applied'] = isset($ex['price_applied']) ? (float) $ex['price_applied'] : $price;
+            }
+            if ($extrasHasDescription) {
+                $description = isset($ex['description']) ? sanitize_textarea_field((string) $ex['description']) : '';
+                if ($description === '' && !empty($ex['choice'])) {
+                    $description = 'Choix proposition Ajinsafro: ' . sanitize_text_field((string) $ex['choice']);
+                }
+                $extraPayload['description'] = $description !== '' ? $description : null;
+            }
+            $wpdb->insert($extras_table, $extraPayload);
         }
 
         foreach ($normalizedLines as $line) {
