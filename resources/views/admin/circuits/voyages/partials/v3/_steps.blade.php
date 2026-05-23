@@ -1,8 +1,13 @@
 <aside class="v2-sidebar v3-steps-card" id="v2-sidebar">
     <div class="v3-steps-card__head">
-        <p class="v3-card-kicker">Workflow</p>
-        <h2 class="v3-card-title">Etapes du voyage</h2>
-        <p class="v3-card-subtitle">Validation par etape avec sauvegarde guidee.</p>
+        <div class="v3-steps-card__title">
+            <p class="v3-card-kicker">Workflow</p>
+            <h2 class="v3-card-title">Etapes du voyage</h2>
+            <p class="v3-card-subtitle">Validation par etape avec sauvegarde guidee.</p>
+        </div>
+        <button type="button" id="workflowToggleBtn" class="workflow-toggle-btn" aria-label="Ouvrir ou fermer le workflow">
+            <i class="bx bx-menu"></i>
+        </button>
     </div>
 
     @php $lastGroup = null; @endphp

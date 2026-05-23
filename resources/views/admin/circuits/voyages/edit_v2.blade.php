@@ -126,10 +126,132 @@
     <link href="{{ URL::asset('css/flight-options-new.css') }}" rel="stylesheet">
     <link href="{{ URL::asset('css/voyage-v2.css?v=' . $cssV2) }}" rel="stylesheet">
     <link href="{{ URL::asset('css/voyage-v3.css?v=' . $cssV3) }}" rel="stylesheet">
+    <style>
+        .voyage-edit-v2-page.workflow-collapsed .v3-workspace,
+        .voyage-edit-v2-page.workflow-collapsed .v2-body,
+        .voyage-edit-v2-page.workflow-collapsed .workflow-layout,
+        .voyage-edit-v2-page.workflow-collapsed .voyage-editor-grid {
+            grid-template-columns: 64px minmax(0, 1fr) !important;
+        }
+
+        .voyage-edit-v2-page.workflow-collapsed .v2-sidebar,
+        .voyage-edit-v2-page.workflow-collapsed .workflow-sidebar {
+            width: 64px !important;
+            min-width: 64px !important;
+            max-width: 64px !important;
+            overflow: hidden !important;
+            outline: 4px solid red !important;
+        }
+
+        .voyage-edit-v2-page.workflow-collapsed .v3-steps-card {
+            padding: 10px !important;
+            border-radius: 16px !important;
+        }
+
+        .voyage-edit-v2-page.workflow-collapsed .v3-steps-card__head {
+            display: flex !important;
+            justify-content: center !important;
+            margin-bottom: 10px !important;
+        }
+
+        .voyage-edit-v2-page.workflow-collapsed .v3-card-kicker,
+        .voyage-edit-v2-page.workflow-collapsed .v3-card-title,
+        .voyage-edit-v2-page.workflow-collapsed .v3-card-subtitle,
+        .voyage-edit-v2-page.workflow-collapsed .v2-sb-group,
+        .voyage-edit-v2-page.workflow-collapsed .v2-sb-label-wrap,
+        .voyage-edit-v2-page.workflow-collapsed .v2-sb-label,
+        .voyage-edit-v2-page.workflow-collapsed .v2-sb-meta,
+        .voyage-edit-v2-page.workflow-collapsed .v2-sb-dot,
+        .voyage-edit-v2-page.workflow-collapsed .v2-sb-footer,
+        .voyage-edit-v2-page.workflow-collapsed .workflow-title,
+        .voyage-edit-v2-page.workflow-collapsed .workflow-description,
+        .voyage-edit-v2-page.workflow-collapsed .workflow-section-label,
+        .voyage-edit-v2-page.workflow-collapsed .workflow-step-title,
+        .voyage-edit-v2-page.workflow-collapsed .workflow-step-status,
+        .voyage-edit-v2-page.workflow-collapsed .step-title,
+        .voyage-edit-v2-page.workflow-collapsed .step-status {
+            display: none !important;
+        }
+
+        .voyage-edit-v2-page.workflow-collapsed .v2-sb-item,
+        .voyage-edit-v2-page.workflow-collapsed .workflow-step,
+        .voyage-edit-v2-page.workflow-collapsed .workflow-step-item,
+        .voyage-edit-v2-page.workflow-collapsed .voyage-step-item {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 44px !important;
+            min-height: 46px !important;
+            padding: 6px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            gap: 4px !important;
+        }
+
+        .voyage-edit-v2-page.workflow-collapsed .v2-sb-index,
+        .voyage-edit-v2-page.workflow-collapsed .v2-sb-icon {
+            margin: 0 !important;
+            flex: 0 0 auto !important;
+        }
+
+        .voyage-edit-v2-page:not(.workflow-collapsed) .v3-workspace,
+        .voyage-edit-v2-page:not(.workflow-collapsed) .v2-body,
+        .voyage-edit-v2-page:not(.workflow-collapsed) .workflow-layout,
+        .voyage-edit-v2-page:not(.workflow-collapsed) .voyage-editor-grid {
+            grid-template-columns: 210px minmax(0, 1fr) !important;
+        }
+
+        .voyage-edit-v2-page:not(.workflow-collapsed) .v2-sidebar,
+        .voyage-edit-v2-page:not(.workflow-collapsed) .workflow-sidebar {
+            width: 210px !important;
+            min-width: 210px !important;
+            max-width: 210px !important;
+        }
+
+        .voyage-edit-v2-page:not(.workflow-collapsed) .v2-sb-label,
+        .voyage-edit-v2-page:not(.workflow-collapsed) .workflow-step-title,
+        .voyage-edit-v2-page:not(.workflow-collapsed) .step-title,
+        .voyage-edit-v2-page:not(.workflow-collapsed) .workflow-step-status,
+        .voyage-edit-v2-page:not(.workflow-collapsed) .step-status {
+            display: block !important;
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: unset !important;
+        }
+
+        .voyage-edit-v2-page:not(.workflow-collapsed) .v2-sb-meta {
+            display: block !important;
+        }
+
+        .voyage-edit-v2-page .workflow-toggle-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid #d8e5f2;
+            border-radius: 10px;
+            background: #fff;
+            color: #314865;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .voyage-edit-v2-page .workflow-toggle-btn i {
+            font-size: 20px;
+        }
+
+        .voyage-edit-v2-page .v3-steps-card__head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+        }
+    </style>
 @endpush
 
 @section('content')
-<div class="v2-page voyage-edit-page voyage-studio-v3" data-v2-initial-id="{{ $veWpId }}" data-v2-save-create-url="{{ $saveCreateUrl }}" data-v2-save-update-template="{{ $saveUpdateTemplate }}" data-v2-is-create="{{ $isCreate ? '1' : '0' }}" data-v3-public-base-url="{{ $publicVoyagesBaseUrl }}">
+<div class="v2-page voyage-edit-page voyage-edit-v2-page voyage-studio-v3 workflow-collapsed" data-v2-initial-id="{{ $veWpId }}" data-v2-save-create-url="{{ $saveCreateUrl }}" data-v2-save-update-template="{{ $saveUpdateTemplate }}" data-v2-is-create="{{ $isCreate ? '1' : '0' }}" data-v3-public-base-url="{{ $publicVoyagesBaseUrl }}">
     <div class="v3-shell">
         @include('admin.circuits.voyages.partials.v3._hero', [
             'isCreate' => $isCreate,

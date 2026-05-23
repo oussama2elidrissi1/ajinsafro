@@ -7,6 +7,14 @@
         return;
     }
 
+    var workflowToggleBtn = document.getElementById('workflowToggleBtn');
+    page.classList.add('workflow-collapsed');
+    if (workflowToggleBtn) {
+        workflowToggleBtn.addEventListener('click', function () {
+            page.classList.toggle('workflow-collapsed');
+        });
+    }
+
     var config = window.VOYAGE_V2_CONFIG || {};
     var stepIds = Array.isArray(config.sectionIds) ? config.sectionIds.slice() : [];
     var stepButtons = Array.prototype.slice.call(document.querySelectorAll('[data-v2-nav]'));
