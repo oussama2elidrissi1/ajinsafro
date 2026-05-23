@@ -273,9 +273,9 @@
     function captureExtrasSelections() {
         var snapshot = {};
         document.querySelectorAll('.reservation-create__extra-card').forEach(function (card) {
-            var extraId = String(card.getAttribute('data-extra-id') || '');
-            if (!extraId) return;
-            snapshot[extraId] = {
+            var key = String(card.getAttribute('data-extra-key') || '');
+            if (!key) return;
+            snapshot[key] = {
                 quantity: parseInt(card.querySelector('[data-extra-quantity]') && card.querySelector('[data-extra-quantity]').value || '0', 10) || 0,
                 scope: String(card.querySelector('[data-extra-scope]') && card.querySelector('[data-extra-scope]').value || 'dossier'),
                 travelers: Array.prototype.slice.call(card.querySelectorAll('.reservation-create-extra-cb:checked')).map(function (cb) {
@@ -306,7 +306,10 @@
         emptyState.classList.add('d-none');
 
         extras.forEach(function (extra) {
-            var snapshot = preserved[String(extra.id)] || { quantity: 0, scope: 'dossier', travelers: [] };
+            var sourceType = String(extra.source_type || extra.type || 'voyage_extra');
+            var sourceId = sourceType === 'activity' ? String(extra.source_id || '') : String(extra.id || '');
+            var extraKey = sourceType + ':' + sourceId;
+            var snapshot = preserved[extraKey] || { quantity: 0, scope: 'dossier', travelers: [] };
             var travelerHtml = travelers.map(function (traveler) {
                 var unitPrice = traveler.priceType === 'child'
                     ? parseNumber(extra.price_child)
@@ -323,7 +326,10 @@
 
             var card = document.createElement('div');
             card.className = 'reservation-create__extra-card';
-            card.setAttribute('data-extra-id', String(extra.id));
+            card.setAttribute('data-extra-key', extraKey);
+            card.setAttribute('data-extra-source-type', sourceType);
+            card.setAttribute('data-extra-source-id', sourceId);
+            card.setAttribute('data-extra-voyage-extra-id', sourceType === 'voyage_extra' ? String(extra.id) : '');
             card.setAttribute('data-extra-name', String(extra.name || 'Extra'));
             card.setAttribute('data-extra-description', String(extra.description || ''));
             card.setAttribute('data-extra-adult-price', String(parseNumber(extra.price_adult)));
@@ -338,11 +344,13 @@
                 '<div class="reservation-create__extra-head">' +
                     '<div>' +
                         '<h4 class="reservation-create__extra-title">' + (extra.name || 'Extra') + '</h4>' +
+                        ((sourceType === 'activity' || extra.extra_type === 'activity_optional') ? '<div class="reservation-create__extra-badge">Activité optionnelle</div>' : '') +
                         '<p class="reservation-create__extra-desc">' + (extra.description || 'Option supplÃ©mentaire pour ce dossier.') + '</p>' +
                     '</div>' +
                     '<div class="reservation-create__extra-price">' +
                         '<strong>' + formatMoney(parseNumber(extra.price_adult)) + '</strong>' +
                         '<span>prix unitaire adulte</span>' +
+                        ((parseNumber(extra.price_child) > 0 && parseNumber(extra.price_child) !== parseNumber(extra.price_adult)) ? ('<span class="reservation-create__extra-price-child">Enfant: ' + formatMoney(parseNumber(extra.price_child)) + '</span>') : '') +
                     '</div>' +
                 '</div>' +
                 '<div class="reservation-create__grid reservation-create__grid--two reservation-create__extra-controls">' +
@@ -440,6 +448,9 @@
             var unitPrice = parseNumber(card.getAttribute('data-extra-adult-price'));
             var totalPrice = 0;
             var name = String(card.getAttribute('data-extra-name') || 'Extra');
+            var sourceType = String(card.getAttribute('data-extra-source-type') || 'voyage_extra');
+            var sourceId = parseInt(card.getAttribute('data-extra-source-id') || '0', 10) || null;
+            var voyageExtraId = parseInt(card.getAttribute('data-extra-voyage-extra-id') || '0', 10) || null;
 
             if (scope === 'traveler_selection') {
                 var checked = Array.prototype.slice.call(card.querySelectorAll('.reservation-create-extra-cb:checked'));
@@ -455,7 +466,9 @@
             }
 
             selected.push({
-                voyage_extra_id: parseInt(card.getAttribute('data-extra-id') || '0', 10) || null,
+                voyage_extra_id: sourceType === 'voyage_extra' ? voyageExtraId : null,
+                source_type: sourceType,
+                source_id: sourceType === 'activity' ? sourceId : (voyageExtraId || null),
                 name: name,
                 description: String(card.getAttribute('data-extra-description') || ''),
                 unit_price: unitPrice,

@@ -16,6 +16,7 @@ use App\Models\TourHotel;
 use App\Models\TravelDate;
 use App\Models\User;
 use App\Models\Voyage;
+use App\Models\Wp\TourDayActivity;
 use App\Models\Wp\WpPost;
 use App\Services\BranchScopeService;
 use App\Services\AgentCommissionService;
@@ -421,6 +422,7 @@ class ReservationsController extends Controller
             ]);
         }
 
+        $optionalActivitiesByVoyage = $this->optionalActivityExtrasByVoyage($voyages);
         $extrasByVoyage = $voyages
             ->mapWithKeys(fn (Voyage $voyage) => [
                 (string) $voyage->id => $voyage->extras
@@ -428,13 +430,19 @@ class ReservationsController extends Controller
                     ->values()
                     ->map(fn ($extra) => [
                         'id' => (int) $extra->id,
+                        'type' => 'voyage_extra',
+                        'source_type' => 'voyage_extra',
+                        'source_id' => (int) $extra->id,
                         'name' => (string) $extra->name,
                         'description' => (string) ($extra->description ?? ''),
                         'price_adult' => (float) ($extra->price_adult ?? 0),
                         'price_child' => (float) ($extra->price_child ?? 0),
                         'extra_type' => (string) ($extra->extra_type ?? ''),
                         'icon' => (string) ($extra->icon ?? 'fa-plus-circle'),
-                    ])->all(),
+                    ])
+                    ->merge($optionalActivitiesByVoyage[(string) $voyage->id] ?? [])
+                    ->values()
+                    ->all(),
             ])
             ->all();
 
@@ -454,6 +462,82 @@ class ReservationsController extends Controller
             'travelDateIncoherent' => $travelDateIncoherent,
             'extrasByVoyage' => $extrasByVoyage,
         ]);
+    }
+
+    /**
+     * @param  Collection<int, Voyage>  $voyages
+     * @return array<string, array<int, array<string, mixed>>>
+     */
+    private function optionalActivityExtrasByVoyage(Collection $voyages): array
+    {
+        $voyagesByWpId = $voyages
+            ->filter(fn (Voyage $voyage) => (int) ($voyage->wp_post_id ?? 0) > 0)
+            ->keyBy(fn (Voyage $voyage) => (int) $voyage->wp_post_id);
+
+        if ($voyagesByWpId->isEmpty()) {
+            return [];
+        }
+
+        try {
+            $rows = TourDayActivity::query()
+                ->with('activity')
+                ->whereIn('tour_id', $voyagesByWpId->keys()->all())
+                ->where('is_included', 0)
+                ->orderBy('tour_id')
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->get();
+        } catch (\Throwable $e) {
+            Log::warning('reservations.create.optional_activities_failed', ['error' => $e->getMessage()]);
+            return [];
+        }
+
+        return $rows
+            ->groupBy(fn (TourDayActivity $row) => (string) ($voyagesByWpId->get((int) $row->tour_id)?->id ?? 0))
+            ->map(function (Collection $items) {
+                return $items
+                    ->filter(fn (TourDayActivity $row) => (int) ($row->activity_id ?? 0) > 0)
+                    ->unique(function (TourDayActivity $row) {
+                        return implode('|', [
+                            (int) $row->tour_id,
+                            (int) $row->activity_id,
+                            trim((string) ($row->custom_title ?? '')),
+                            trim((string) ($row->custom_description ?? '')),
+                            (string) ($row->custom_price ?? ''),
+                        ]);
+                    })
+                    ->map(function (TourDayActivity $row) {
+                        $activity = $row->activity;
+                        $title = trim((string) ($row->custom_title ?: ($activity?->title ?? 'Activité optionnelle')));
+                        $description = trim((string) ($row->custom_description ?: ($activity?->description ?? '')));
+                        $adultPrice = $row->custom_price !== null
+                            ? (float) $row->custom_price
+                            : (float) ($activity?->adult_price ?? $activity?->base_price ?? 0);
+                        $childPrice = (float) ($activity?->child_price ?? 0);
+                        if ($childPrice <= 0) {
+                            $childPrice = $adultPrice;
+                        }
+
+                        return [
+                            'id' => 'activity-'.$row->id,
+                            'type' => 'activity',
+                            'source_type' => 'activity',
+                            'source_id' => (int) $row->id,
+                            'activity_id' => (int) $row->activity_id,
+                            'name' => $title,
+                            'description' => $description !== '' ? $description : 'Activité proposée au client comme option.',
+                            'price_adult' => round($adultPrice, 2),
+                            'price_child' => round($childPrice, 2),
+                            'extra_type' => 'activity_optional',
+                            'badge' => 'Activité optionnelle',
+                            'icon' => 'fa-map-marker-alt',
+                        ];
+                    })
+                    ->values()
+                    ->all();
+            })
+            ->filter(fn ($items, string $voyageId) => (int) $voyageId > 0)
+            ->all();
     }
 
     /**
@@ -540,6 +624,7 @@ class ReservationsController extends Controller
             }
         }
 
+        $optionalActivitiesByVoyage = $this->optionalActivityExtrasByVoyage($voyages);
         $extrasByVoyage = $voyages
             ->mapWithKeys(fn (Voyage $voyage) => [
                 (string) $voyage->id => $voyage->extras
@@ -547,13 +632,19 @@ class ReservationsController extends Controller
                     ->values()
                     ->map(fn ($extra) => [
                         'id' => (int) $extra->id,
+                        'type' => 'voyage_extra',
+                        'source_type' => 'voyage_extra',
+                        'source_id' => (int) $extra->id,
                         'name' => (string) $extra->name,
                         'description' => (string) ($extra->description ?? ''),
                         'price_adult' => (float) ($extra->price_adult ?? 0),
                         'price_child' => (float) ($extra->price_child ?? 0),
                         'extra_type' => (string) ($extra->extra_type ?? ''),
                         'icon' => (string) ($extra->icon ?? 'fa-plus-circle'),
-                    ])->all(),
+                    ])
+                    ->merge($optionalActivitiesByVoyage[(string) $voyage->id] ?? [])
+                    ->values()
+                    ->all(),
             ])
             ->all();
 
@@ -849,6 +940,8 @@ class ReservationsController extends Controller
         $data['extras_payload'] = collect($pricing['details']['extras'] ?? [])->map(function (array $extra) {
             return [
                 'voyage_extra_id' => $extra['voyage_extra_id'] ?? null,
+                'source_type' => $extra['source_type'] ?? null,
+                'source_id' => $extra['source_id'] ?? null,
                 'name' => $extra['name'] ?? 'Extra',
                 'description' => $extra['description'] ?? null,
                 'unit_price' => $extra['unit_price_adult'] ?? 0,
@@ -1048,6 +1141,8 @@ class ReservationsController extends Controller
         $data['extras_payload'] = collect($pricing['details']['extras'] ?? [])->map(function (array $extra) {
             return [
                 'voyage_extra_id' => $extra['voyage_extra_id'] ?? null,
+                'source_type' => $extra['source_type'] ?? null,
+                'source_id' => $extra['source_id'] ?? null,
                 'name' => $extra['name'] ?? 'Extra',
                 'description' => $extra['description'] ?? null,
                 'unit_price' => $extra['unit_price_adult'] ?? 0,

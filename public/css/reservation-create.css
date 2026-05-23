@@ -812,6 +812,29 @@
     margin-bottom: 0.85rem;
 }
 
+.reservation-create__extra-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 0.4rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 129, 188, 0.28);
+    background: rgba(0, 129, 188, 0.08);
+    color: #005f91;
+    font-size: 0.72rem;
+    font-weight: 700;
+    width: fit-content;
+}
+
+.reservation-create__extra-price-child {
+    display: block;
+    margin-top: 0.25rem;
+    color: #60758d;
+    font-size: 0.74rem;
+    font-weight: 600;
+}
+
 .reservation-create__extra-total {
     margin-top: 0.85rem;
     padding-top: 0.85rem;

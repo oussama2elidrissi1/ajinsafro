@@ -14,6 +14,8 @@ class ReservationExtra extends Model
     protected $fillable = [
         'reservation_id',
         'voyage_extra_id',
+        'source_type',
+        'source_id',
         'name',
         'description',
         'price',
@@ -28,6 +30,7 @@ class ReservationExtra extends Model
     protected $casts = [
         'reservation_id' => 'integer',
         'voyage_extra_id' => 'integer',
+        'source_id' => 'integer',
         'price' => 'decimal:2',
         'unit_price' => 'decimal:2',
         'quantity' => 'integer',

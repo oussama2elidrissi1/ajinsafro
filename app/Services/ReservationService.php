@@ -662,6 +662,8 @@ class ReservationService
 
             $reservation->extras()->create([
                 'voyage_extra_id' => ! empty($row['voyage_extra_id']) ? (int) $row['voyage_extra_id'] : null,
+                'source_type' => isset($row['source_type']) && $row['source_type'] !== '' ? (string) $row['source_type'] : null,
+                'source_id' => ! empty($row['source_id']) ? (int) $row['source_id'] : null,
                 'name' => $name,
                 'description' => $row['description'] ?? null,
                 'price' => $totalPrice,

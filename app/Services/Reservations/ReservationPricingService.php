@@ -8,6 +8,7 @@ use App\Models\TourHotel;
 use App\Models\TravelDate;
 use App\Models\Voyage;
 use App\Models\VoyageExtra;
+use App\Models\Wp\TourDayActivity;
 use App\Models\Wp\WpPost;
 use App\Support\TourPlacesCalculator;
 use Illuminate\Support\Collection;
@@ -1243,16 +1244,85 @@ class ReservationPricingService
 
         $details = [];
         $total = 0.0;
+        $travelerTypes = $this->travelerTypesByKey($payload['passengers'] ?? []);
 
         foreach ($rows as $index => $row) {
             if (! is_array($row)) {
                 continue;
             }
 
+            $sourceType = (string) ($row['source_type'] ?? ($row['type'] ?? 'voyage_extra'));
             $extraId = (int) ($row['voyage_extra_id'] ?? 0);
+            $sourceId = (int) ($row['source_id'] ?? 0);
             $quantity = max(1, (int) ($row['quantity'] ?? 1));
             $scope = (string) ($row['application_scope'] ?? 'dossier');
             $travelerKeys = is_array($row['traveler_keys'] ?? null) ? array_values(array_filter($row['traveler_keys'])) : [];
+
+            if ($sourceType === 'activity') {
+                if ($sourceId <= 0) {
+                    throw ValidationException::withMessages([
+                        "extras_json.$index.source_id" => ['Activité optionnelle invalide.'],
+                    ]);
+                }
+
+                $dayActivity = TourDayActivity::query()
+                    ->with('activity')
+                    ->where('id', $sourceId)
+                    ->where('tour_id', (int) ($voyage->wp_post_id ?? 0))
+                    ->where('is_included', 0)
+                    ->first();
+
+                if (! $dayActivity || ! $dayActivity->activity) {
+                    throw ValidationException::withMessages([
+                        "extras_json.$index.source_id" => ['L’activité optionnelle sélectionnée n’est pas disponible pour ce voyage.'],
+                    ]);
+                }
+
+                $activity = $dayActivity->activity;
+                $adultPrice = round($dayActivity->custom_price !== null
+                    ? (float) $dayActivity->custom_price
+                    : (float) ($activity->adult_price ?? $activity->base_price ?? 0), 2);
+                $childPrice = round((float) ($activity->child_price ?? 0), 2);
+                if ($childPrice <= 0) {
+                    $childPrice = $adultPrice;
+                }
+                $name = trim((string) ($dayActivity->custom_title ?: ($activity->title ?? 'Activité optionnelle')));
+                $description = trim((string) ($dayActivity->custom_description ?: ($activity->description ?? 'Activité proposée au client comme option.')));
+
+                if ($scope === 'traveler_selection') {
+                    if ($travelerKeys === []) {
+                        throw ValidationException::withMessages([
+                            "extras_json.$index.traveler_keys" => ['Sélectionnez au moins un voyageur pour cet extra.'],
+                        ]);
+                    }
+
+                    $lineTotal = round($quantity * collect($travelerKeys)->sum(function ($travelerKey) use ($travelerTypes, $adultPrice, $childPrice) {
+                        return ($travelerTypes[(string) $travelerKey] ?? 'adult') === 'child' ? $childPrice : $adultPrice;
+                    }), 2);
+                } elseif ($scope === 'per_traveler') {
+                    $lineTotal = round(collect($travelerTypes)->sum(fn ($type) => $type === 'child' ? $childPrice : $adultPrice), 2);
+                    $quantity = max(1, count($travelerTypes));
+                } else {
+                    $lineTotal = round($quantity * max($adultPrice, 0), 2);
+                }
+
+                $total += $lineTotal;
+                $details[] = [
+                    'voyage_extra_id' => null,
+                    'source_type' => 'activity',
+                    'source_id' => $sourceId,
+                    'name' => $name !== '' ? $name : 'Activité optionnelle',
+                    'description' => $description,
+                    'quantity' => $quantity,
+                    'application_scope' => $scope,
+                    'traveler_keys' => $travelerKeys,
+                    'unit_price_adult' => $adultPrice,
+                    'unit_price_child' => $childPrice,
+                    'total_price' => $lineTotal,
+                ];
+
+                continue;
+            }
 
             if ($extraId <= 0) {
                 throw ValidationException::withMessages([
@@ -1285,6 +1355,8 @@ class ReservationPricingService
             $total += $lineTotal;
             $details[] = [
                 'voyage_extra_id' => $extraId,
+                'source_type' => 'voyage_extra',
+                'source_id' => $extraId,
                 'name' => (string) $extra->name,
                 'description' => (string) ($extra->description ?? ''),
                 'quantity' => $quantity,
@@ -1300,5 +1372,34 @@ class ReservationPricingService
             'extras_total' => round($total, 2),
             'details' => $details,
         ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function travelerTypesByKey(mixed $passengers): array
+    {
+        $types = [];
+        if (! is_iterable($passengers)) {
+            return ['main' => 'adult'];
+        }
+
+        foreach ($passengers as $key => $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $firstName = trim((string) ($row['first_name'] ?? ''));
+            $lastName = trim((string) ($row['last_name'] ?? ''));
+            if ($firstName === '' && $lastName === '') {
+                continue;
+            }
+
+            $travelerKey = (string) ($row['traveler_key'] ?? ($key === '__main' ? 'main' : $key));
+            $type = (string) ($row['type'] ?? 'adult');
+            $types[$travelerKey] = $type === 'child' ? 'child' : 'adult';
+        }
+
+        return $types !== [] ? $types : ['main' => 'adult'];
     }
 }
