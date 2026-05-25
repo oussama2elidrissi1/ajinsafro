@@ -263,6 +263,11 @@
                                                 <a href="{{ route('admin.circuits.voyages.show', $tour->ID) }}" class="aj-icon-btn" title="Voir">
                                                     <i class="bx bx-show"></i>
                                                 </a>
+                                                @if(!empty($tour->laravel_slug))
+                                                    <a href="{{ url('/voyages/'.$tour->laravel_slug) }}" target="_blank" rel="noopener noreferrer" class="aj-icon-btn" title="Page commerciale">
+                                                        <i class="bx bx-link-external"></i>
+                                                    </a>
+                                                @endif
                                                 <a href="{{ route('admin.circuits.voyages.edit-v2', $tour->ID) }}" class="aj-icon-btn" title="Modifier (V2)">
                                                     <i class="bx bx-layer"></i>
                                                 </a>
@@ -310,6 +315,9 @@
                                         <span class="aj-price">{{ $price > 0 ? number_format($price, 0, ',', ' ') . ' MAD' : '�?"' }}</span>
                                         <div class="aj-actions">
                                             <a href="{{ route('admin.circuits.voyages.show', $tour->ID) }}" class="aj-icon-btn" title="Voir"><i class="bx bx-show"></i></a>
+                                            @if(!empty($tour->laravel_slug))
+                                                <a href="{{ url('/voyages/'.$tour->laravel_slug) }}" target="_blank" rel="noopener noreferrer" class="aj-icon-btn" title="Page commerciale"><i class="bx bx-link-external"></i></a>
+                                            @endif
                                             <a href="{{ route('admin.circuits.voyages.edit-v2', $tour->ID) }}" class="aj-icon-btn" title="Modifier (V2)"><i class="bx bx-layer"></i></a>
                                         </div>
                                     </div>
