@@ -321,6 +321,25 @@ class ReservationsController extends Controller
         $this->branchScope->scopeClients($clientsQuery, $request->user());
         $clients = $clientsQuery->get(['id', 'client_code', 'full_name', 'email', 'phone', 'national_id_number', 'passport_number']);
         $voyages = AdminWpTourCatalogQuery::reservableVoyages();
+
+        // Compat: certains écrans passent un `tour_id` WordPress (wp_post_id) au lieu du Voyage Laravel id.
+        // On tente de le convertir en Voyage id pour que les extras / départs se chargent correctement.
+        if ($requestedTourId > 0 && $voyages->where('id', $requestedTourId)->isEmpty()) {
+            $voyageByWpId = Voyage::query()
+                ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
+                ->where('wp_post_id', $requestedTourId)
+                ->where('status', 'actif')
+                ->first();
+
+            if ($voyageByWpId
+                && $voyageByWpId->wp_post_id > 0
+                && WpPost::query()->tours()->where('ID', $voyageByWpId->wp_post_id)->where('post_status', 'publish')->exists()
+            ) {
+                $requestedTourId = (int) $voyageByWpId->id;
+                $voyages = $voyages->prepend($voyageByWpId)->unique('id')->values();
+            }
+        }
+
         if ($requestedTourId > 0 && $voyages->where('id', $requestedTourId)->isEmpty()) {
             $requestedVoyage = Voyage::query()
                 ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
@@ -591,6 +610,24 @@ class ReservationsController extends Controller
         $this->branchScope->scopeClients($clientsQuery, $request->user());
         $clients = $clientsQuery->get(['id', 'client_code', 'full_name', 'email', 'phone', 'national_id_number', 'passport_number']);
         $voyages = AdminWpTourCatalogQuery::reservableVoyages();
+
+        // Compat: `tour_id` peut être un wp_post_id (WordPress). Convertir en Voyage Laravel id si possible.
+        if ($requestedTourId > 0 && $voyages->where('id', $requestedTourId)->isEmpty()) {
+            $voyageByWpId = Voyage::query()
+                ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
+                ->where('wp_post_id', $requestedTourId)
+                ->where('status', 'actif')
+                ->first();
+
+            if ($voyageByWpId
+                && $voyageByWpId->wp_post_id > 0
+                && WpPost::query()->tours()->where('ID', $voyageByWpId->wp_post_id)->where('post_status', 'publish')->exists()
+            ) {
+                $requestedTourId = (int) $voyageByWpId->id;
+                $voyages = $voyages->prepend($voyageByWpId)->unique('id')->values();
+            }
+        }
+
         if ($requestedTourId > 0 && $voyages->where('id', $requestedTourId)->isEmpty()) {
             $requestedVoyage = Voyage::query()
                 ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
