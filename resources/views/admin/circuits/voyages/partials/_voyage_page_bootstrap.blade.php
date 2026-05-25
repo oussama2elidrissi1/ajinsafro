@@ -137,7 +137,7 @@
         'heroRemoveUrl' => route('admin.circuits.voyages.hero-image.remove', ['id' => $voyageId]),
         'heroGalleryUploadUrl' => route('admin.circuits.voyages.hero-image.upload', ['id' => $voyageId]),
         'heroGallerySelectUrl' => route('admin.circuits.voyages.hero-image.select', ['id' => $voyageId]),
-        'localMediaUploadUrl' => route('admin.local-media.upload'),
+        'localMediaUploadUrl' => url('admin/local-media/upload'),
         'wpMediaSearchUrl' => url('admin/wp-media/search'),
         'wpFeaturedMediaListUrl' => route('admin.wp-media.list'),
         'wpFeaturedMediaUploadUrl' => route('admin.wp-media.upload'),
