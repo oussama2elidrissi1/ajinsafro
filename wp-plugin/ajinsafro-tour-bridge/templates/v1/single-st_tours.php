@@ -521,7 +521,7 @@ get_header();
                                         break;
                                     }
                                 }
-                                $hotel_displayed_once = false;
+                                $last_hotel_signature = null;
                                 ?>
                                 <?php foreach ($days as $day_index => $day): ?>
                                     <?php
@@ -549,9 +549,22 @@ get_header();
                                     $show_hotel_card = false;
                                     $optional_panel_id = 'ajtb-v1-day-options-' . $day_num;
                                     if ($has_any_hotel) {
-                                        if (!$hotel_displayed_once && !empty($hotel)) {
-                                            $show_hotel_card = true;
-                                            $hotel_displayed_once = true;
+                                        if (!empty($hotel)) {
+                                            $hotel_id = (string) ($hotel['id'] ?? $hotel['hotel_id'] ?? '');
+                                            $hotel_name_signature = trim((string) ($hotel['hotel_name'] ?? $hotel['name'] ?? $hotel['title'] ?? ''));
+                                            $hotel_checkin_signature = (string) ($hotel['check_in_day'] ?? $hotel['checkin_day'] ?? $hotel['check_in'] ?? '');
+                                            $hotel_checkout_signature = (string) ($hotel['check_out_day'] ?? $hotel['checkout_day'] ?? $hotel['check_out'] ?? '');
+                                            $hotel_signature = implode('|', [
+                                                $hotel_id,
+                                                $hotel_name_signature,
+                                                $hotel_checkin_signature,
+                                                $hotel_checkout_signature,
+                                            ]);
+
+                                            if ($hotel_signature !== $last_hotel_signature) {
+                                                $show_hotel_card = true;
+                                                $last_hotel_signature = $hotel_signature;
+                                            }
                                         }
                                     } elseif ((int) $day_index === 0) {
                                         $show_hotel_card = true;
@@ -667,6 +680,16 @@ get_header();
                                                     $hotel_stars = $hotel_available
                                                         ? $pick((array) $hotel, ['stars'], '4')
                                                         : '-';
+                                                    $hotel_check_in_day = $hotel_available ? (int) $pick((array) $hotel, ['check_in_day', 'checkin_day'], 0) : 0;
+                                                    $hotel_check_out_day = $hotel_available ? (int) $pick((array) $hotel, ['check_out_day', 'checkout_day'], 0) : 0;
+                                                    $hotel_nights = $hotel_available ? (int) $pick((array) $hotel, ['nights', 'night_count', 'nb_nights'], 0) : 0;
+                                                    $hotel_period_label = '';
+                                                    if ($hotel_check_in_day > 0 && $hotel_check_out_day > 0) {
+                                                        $hotel_period_label = 'Jour ' . $hotel_check_in_day . ' → Jour ' . $hotel_check_out_day;
+                                                    }
+                                                    $hotel_nights_label = $hotel_nights > 0
+                                                        ? ($hotel_nights . ' nuit' . ($hotel_nights > 1 ? 's' : ''))
+                                                        : '';
                                                     ?>
                                                     <div class="ajtb-v1-service-card program-item" data-program-type="hotel">
                                                         <div class="ajtb-v1-service-head"><span>Hôtel<?php echo $hotel_city !== '' ? (' - ' . esc_html($hotel_city)) : (' - ' . esc_html($hotel_city_label)); ?></span><span><?php echo $hotel_available ? 'Voir' : 'Non disponible'; ?></span></div>
@@ -680,6 +703,12 @@ get_header();
                                                                     <span><?php echo esc_html($hotel_available ? ((string) $hotel_stars . '/5') : 'Non disponible'); ?></span>
                                                                     <span><?php echo esc_html($hotel_city !== '' ? $hotel_city : $hotel_city_label); ?></span>
                                                                     <span><?php echo esc_html($hotel_room); ?></span>
+                                                                    <?php if ($hotel_period_label !== ''): ?>
+                                                                        <span><?php echo esc_html($hotel_period_label); ?></span>
+                                                                    <?php endif; ?>
+                                                                    <?php if ($hotel_nights_label !== ''): ?>
+                                                                        <span><?php echo esc_html($hotel_nights_label); ?></span>
+                                                                    <?php endif; ?>
                                                                 </div>
                                                             </div>
                                                         </div>
