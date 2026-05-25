@@ -28,6 +28,7 @@
         try {
             return JSON.parse(el.textContent || '') || fallback;
         } catch (error) {
+            console.error('[Reservation Create] Failed to parse JSON script:', id, error);
             return fallback;
         }
     }
@@ -2398,5 +2399,4 @@
         }
     });
 })();
-
 

@@ -77,11 +77,10 @@
             </div>
         </form>
 
-        <script type="application/json" id="reservation-create-extras-map">{!! json_encode($extrasByVoyage ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
+        <script type="application/json" id="reservation-create-extras-map">{!! json_encode($extrasByVoyage ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) !!}</script>
     </div>
 @endsection
 
 @push('scripts')
     <script src="{{ asset('js/reservation-create.js') . '?v=' . @filemtime(public_path('js/reservation-create.js')) }}"></script>
 @endpush
-
