@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Services\BusinessReferentialService;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -104,7 +105,7 @@ class StoreWpTourRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             // Basic
             'title' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255',
@@ -192,15 +193,6 @@ class StoreWpTourRequest extends FormRequest
             // Map
             'st_google_map' => 'nullable|string',
             
-            // Payment gateways
-            'is_meta_payment_gateway_st_paypal' => 'nullable',
-            'is_meta_payment_gateway_st_onepay' => 'nullable',
-            'is_meta_payment_gateway_st_onepay_atm' => 'nullable',
-            'is_meta_payment_gateway_st_payu' => 'nullable',
-            'is_meta_payment_gateway_st_payulatam' => 'nullable',
-            'is_meta_payment_gateway_st_payumoney' => 'nullable',
-            'is_meta_payment_gateway_st_razor' => 'nullable',
-            
             // Taxonomies
             'st_tour_type' => 'nullable|array',
             'st_tour_type.*' => 'integer',
@@ -270,6 +262,20 @@ class StoreWpTourRequest extends FormRequest
             'flights.1.is_default' => 'nullable',
             'flights.1.is_tentative' => 'nullable',
         ];
+
+        // Payment gateways (piloté par la référence métier)
+        try {
+            foreach (BusinessReferentialService::paymentMethods() as $pm) {
+                $key = (string) ($pm['meta_key'] ?? '');
+                if ($key !== '') {
+                    $rules[$key] = 'nullable';
+                }
+            }
+        } catch (\Throwable) {
+            // Ne pas bloquer la validation si la table n'est pas disponible.
+        }
+
+        return $rules;
     }
 
     /**

@@ -282,6 +282,14 @@ class WpTourRepository
             // Toujours enregistrer la valeur (y compris null/'') pour vider les champs quand l'utilisateur les vide
             $post->setMeta($metaKey, $value === null ? '' : (string) $value);
         }
+
+        // Payment gateways: support dynamique (tous les champs is_meta_payment_gateway_*)
+        foreach ($data as $key => $value) {
+            if (!is_string($key) || !str_starts_with($key, 'is_meta_payment_gateway_')) {
+                continue;
+            }
+            $post->setMeta($key, !empty($value) ? 'on' : '');
+        }
         
         // HTML/Text fields (tours_include, tours_exclude, tours_highlight, tours_faq)
         foreach (['tours_include', 'tours_exclude', 'tours_highlight', 'tours_faq'] as $field) {

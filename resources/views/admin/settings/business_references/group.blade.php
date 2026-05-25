@@ -39,27 +39,39 @@
                         $existingValues = $items->pluck('value')->all();
                         $catalog = is_array($paymentMethodCatalog ?? null) ? $paymentMethodCatalog : [];
                         $availableCatalog = array_values(array_filter($catalog, fn ($row) => !in_array(($row['meta_key'] ?? ''), $existingValues, true)));
-                        $pmAddEnabled = $availableCatalog !== [];
+                        $pmAddEnabled = true;
                     @endphp
                     <div class="col-md-4">
                         <label class="form-label">Moyen de paiement</label>
-                        @if($availableCatalog === [])
-                            <div class="alert alert-info mb-0">
-                                Tous les moyens de paiement connus sont déjà ajoutés.
-                            </div>
-                        @else
-                            <select name="value" class="form-select" required id="pm_value">
-                                @foreach($availableCatalog as $row)
-                                    <option value="{{ $row['meta_key'] }}" data-label="{{ $row['label'] }}">
-                                        {{ $row['label'] }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <div class="form-text">
-                                Vous pouvez renommer le libellé et activer/désactiver le moyen de paiement. Les champs techniques sont gérés automatiquement.
-                            </div>
-                        @endif
+                        <select class="form-select" id="pm_mode">
+                            @if($availableCatalog !== [])
+                                <option value="catalog" selected>Choisir dans la liste</option>
+                            @endif
+                            <option value="custom" @if($availableCatalog === []) selected @endif>Ajouter un nouveau</option>
+                        </select>
+                        <div class="form-text">
+                            Pour la plupart des cas, choisissez dans la liste. Utilisez “Ajouter un nouveau” seulement si nécessaire.
+                        </div>
                     </div>
+
+                    <div class="col-md-4" id="pm_catalog_block" @if($availableCatalog === []) style="display:none" @endif>
+                        <label class="form-label">Liste</label>
+                        <select class="form-select" id="pm_catalog_select">
+                            @foreach($availableCatalog as $row)
+                                <option value="{{ $row['meta_key'] }}" data-label="{{ $row['label'] }}">
+                                    {{ $row['label'] }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-4" id="pm_custom_block" @if($availableCatalog !== []) style="display:none" @endif>
+                        <div class="alert alert-info mb-0">
+                            Renseignez le <strong>libellé</strong> (ex: Virement bancaire). Le code interne est généré automatiquement.
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="value" id="pm_value" value="">
                 @else
                     <div class="col-md-4">
                         <label class="form-label">Valeur (slug)</label>
@@ -107,7 +119,6 @@
                                 <td>
                                     @if($groupKey === 'payment_methods')
                                         <div class="fw-semibold">{{ $item->label }}</div>
-                                        <div class="text-muted small">Code interne : <code>{{ $item->value }}</code></div>
                                     @else
                                         <code>{{ $item->value }}</code>
                                     @endif
@@ -164,21 +175,62 @@
     @if($groupKey === 'payment_methods')
         <script>
             (function () {
-                const select = document.getElementById('pm_value');
+                const mode = document.getElementById('pm_mode');
+                const catalogBlock = document.getElementById('pm_catalog_block');
+                const customBlock = document.getElementById('pm_custom_block');
+                const catalogSelect = document.getElementById('pm_catalog_select');
+                const hiddenValue = document.getElementById('pm_value');
                 const labelInput = document.getElementById('pm_label');
-                if (!select || !labelInput) return;
+                if (!mode || !hiddenValue || !labelInput) return;
 
-                const applyLabel = () => {
-                    const opt = select.options[select.selectedIndex];
-                    const suggested = opt ? (opt.getAttribute('data-label') || '') : '';
+                function slugify(str) {
+                    return (str || '')
+                        .toString()
+                        .trim()
+                        .toLowerCase()
+                        .normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                        .replace(/[^a-z0-9]+/g, '_')
+                        .replace(/^_+|_+$/g, '')
+                        .replace(/_+/g, '_');
+                }
+
+                function setMode(nextMode) {
+                    const isCustom = nextMode === 'custom';
+                    if (catalogBlock) catalogBlock.style.display = isCustom ? 'none' : '';
+                    if (customBlock) customBlock.style.display = isCustom ? '' : 'none';
+                    if (isCustom) {
+                        const slug = slugify(labelInput.value);
+                        hiddenValue.value = slug ? ('is_meta_payment_gateway_st_' + slug) : '';
+                    } else {
+                        const opt = catalogSelect && catalogSelect.options[catalogSelect.selectedIndex];
+                        const v = opt ? (opt.value || '') : '';
+                        hiddenValue.value = v;
+                    }
+                    applyLabelSuggestion();
+                }
+
+                function applyLabelSuggestion() {
+                    let suggested = '';
+                    if (mode.value === 'catalog') {
+                        const opt = catalogSelect && catalogSelect.options[catalogSelect.selectedIndex];
+                        suggested = opt ? (opt.getAttribute('data-label') || '') : '';
+                    }
                     if (!suggested) return;
                     if (!labelInput.value || labelInput.value.trim() === '') {
                         labelInput.value = suggested;
                     }
-                };
+                }
 
-                applyLabel();
-                select.addEventListener('change', applyLabel);
+                mode.addEventListener('change', () => setMode(mode.value));
+                if (catalogSelect) catalogSelect.addEventListener('change', () => setMode('catalog'));
+                labelInput.addEventListener('input', () => {
+                    if (mode.value !== 'custom') return;
+                    const slug = slugify(labelInput.value);
+                    hiddenValue.value = slug ? ('is_meta_payment_gateway_st_' + slug) : '';
+                });
+
+                setMode(mode.value);
             })();
         </script>
     @endif
