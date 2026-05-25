@@ -3,6 +3,7 @@
 
     var currentStep = 1;
     var extrasMap = {};
+    var wpToVoyageIdMap = {};
     var roomingAllocations = [];
     var availableRoomTypes = [];
     var companionIdCounter = 0;
@@ -350,12 +351,28 @@
 
     function renderExtras() {
         var select = document.getElementById('select-tour-id');
+        var hiddenTourId = document.getElementById('tour_id_hidden');
         var container = document.getElementById('reservation-create-extras-container');
         var emptyState = document.getElementById('reservation-create-extras-empty');
         if (!select || !container || !emptyState) return;
 
         var preserved = captureExtrasSelections();
-        var extras = extrasMap[String(select.value || '')] || [];
+        var selectId = String(select.value || '');
+        var extras = extrasMap[selectId] || [];
+
+        if (!extras.length) {
+            var maybeWpId = String(window.reservationState && window.reservationState.selectedTourId ? window.reservationState.selectedTourId : '');
+            var mappedVoyageId = maybeWpId && wpToVoyageIdMap ? wpToVoyageIdMap[maybeWpId] : null;
+            if (mappedVoyageId) {
+                var mappedKey = String(mappedVoyageId);
+                extras = extrasMap[mappedKey] || [];
+                if (extras.length) {
+                    select.value = mappedKey;
+                    if (hiddenTourId) hiddenTourId.value = mappedKey;
+                    if (window.reservationState) window.reservationState.selectedTourId = mappedKey;
+                }
+            }
+        }
         var travelers = travelerRows();
         container.innerHTML = '';
 
@@ -2317,6 +2334,7 @@
         });
 
         extrasMap = parseJsonScript('reservation-create-extras-map', {});
+        wpToVoyageIdMap = parseJsonScript('reservation-create-wp-voyage-map', {});
         bindDelegatedEvents();
         bindLiveValidationClear();
         syncClientMode();
@@ -2399,4 +2417,3 @@
         }
     });
 })();
-
