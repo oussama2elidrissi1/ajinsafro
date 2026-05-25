@@ -391,10 +391,58 @@
   background: var(--v3-card);
   border-radius: 22px;
   padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .voyage-studio-v3 .v3-steps-card__head {
   margin-bottom: 16px;
+}
+
+.voyage-studio-v3 .v3-stepper {
+  display: grid;
+  gap: 12px;
+  min-height: 0;
+}
+
+.voyage-studio-v3 .v3-stepper__mobile {
+  display: none;
+  gap: 6px;
+}
+
+.voyage-studio-v3 .v3-stepper__mobile-label {
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--v3-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0;
+}
+
+.voyage-studio-v3 .v3-stepper__select {
+  border-radius: 14px;
+  border-color: var(--v3-border);
+  min-height: 44px;
+  font-weight: 700;
+}
+
+.voyage-studio-v3 .v3-stepper__list {
+  display: grid;
+  gap: 10px;
+  padding: 0 4px 4px 0;
+  overflow: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.voyage-studio-v3 .v3-stepper__group {
+  color: var(--v3-muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 8px;
 }
 
 .voyage-studio-v3 .v3-card-kicker,
@@ -426,15 +474,129 @@
   transition: 0.18s ease;
 }
 
+.voyage-studio-v3 .v3-step {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+}
+
+.voyage-studio-v3 .v3-step__lead {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.voyage-studio-v3 .v3-step__number {
+  width: 26px;
+  height: 26px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.voyage-studio-v3 .v3-step__icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--v3-border);
+  background: #fff;
+  color: var(--v3-blue);
+}
+
+.voyage-studio-v3 .v3-step__icon i {
+  font-size: 18px;
+}
+
+.voyage-studio-v3 .v3-step__text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.voyage-studio-v3 .v3-step__label {
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--v3-text);
+  line-height: 1.15;
+}
+
+.voyage-studio-v3 .v3-step__status {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--v3-muted);
+}
+
+.voyage-studio-v3 .v3-step__tail {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.voyage-studio-v3 .v3-step__badge {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--v3-border);
+  background: #fff;
+  color: #91a3b7;
+}
+
+.voyage-studio-v3 .v3-step__badge i {
+  font-size: 16px;
+}
+
+.voyage-studio-v3 .v3-step__badge--ok {
+  border-color: #bfe8d1;
+  background: var(--v3-green-soft);
+  color: #0a8a47;
+}
+
+.voyage-studio-v3 .v3-step__badge--err {
+  border-color: #ffd1d1;
+  background: #fff1f1;
+  color: #d62424;
+}
+
 .voyage-studio-v3 .v2-sb-item:hover {
   background: #f2f8ff;
   border-color: #d1e6fb;
 }
 
-.voyage-studio-v3 .v2-sb-item.active {
-  background: linear-gradient(90deg, #eaf5ff, #f8fbff);
-  border-color: #c9e2fa;
-  box-shadow: inset 4px 0 0 var(--v3-blue-2);
+.voyage-studio-v3 .v3-step.active {
+  background: linear-gradient(135deg, var(--v3-blue-2), #0b5ed7);
+  border-color: rgba(13, 110, 253, 0.55);
+  box-shadow: 0 12px 26px rgba(13, 110, 253, 0.18);
+}
+
+.voyage-studio-v3 .v3-step.active .v3-step__label,
+.voyage-studio-v3 .v3-step.active .v3-step__status {
+  color: #fff;
+}
+
+.voyage-studio-v3 .v3-step.active .v3-step__icon {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #fff;
+}
+
+.voyage-studio-v3 .v3-step.active .v3-step__number {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #fff;
 }
 
 .voyage-studio-v3 .v2-sb-index {
@@ -475,6 +637,17 @@
   background: linear-gradient(135deg, var(--v3-orange), #ff6b20);
   border: 0;
   box-shadow: 0 14px 24px rgba(240, 90, 26, 0.18);
+}
+
+/* Responsive: sidebar becomes top block */
+@media (max-width: 1200px) {
+  .voyage-studio-v3 .v3-stepper__mobile {
+    display: grid;
+  }
+
+  .voyage-studio-v3 .v3-stepper__list {
+    display: none;
+  }
 }
 
 .voyage-studio-v3 .v3-main {
