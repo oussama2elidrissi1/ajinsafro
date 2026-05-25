@@ -26,6 +26,7 @@ class TourTransfer extends Model
         'vehicle_type',
         'notes',
         'image_id',
+        'image_path',
     ];
 
     protected $casts = [
@@ -75,3 +76,4 @@ class TourTransfer extends Model
         ];
     }
 }
+

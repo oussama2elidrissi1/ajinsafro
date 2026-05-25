@@ -986,6 +986,7 @@ render();
                 var heroUploadUrl = boot.heroUploadUrl || '';
                 var heroSelectUrl = boot.heroSelectUrl || '';
                 var heroRemoveUrl = boot.heroRemoveUrl || '';
+                window.localMediaUploadUrl = boot.localMediaUploadUrl || window.localMediaUploadUrl || '';
                 var wpMediaSearchUrl = boot.wpMediaSearchUrl || '';
                 var wpFeaturedMediaListUrl = boot.wpFeaturedMediaListUrl || '';
                 var wpFeaturedMediaUploadUrl = boot.wpFeaturedMediaUploadUrl || '';
@@ -1193,35 +1194,114 @@ render();
                     });
                 }
                 function bindLogistiqueMediaButtons() {
-                    document.querySelectorAll('.ajtb-logistique-media-btn').forEach(function(btn) {
-                        btn.addEventListener('click', function() {
+                    if (window.__ajtbLogistiqueMediaButtonsBound) return;
+                    window.__ajtbLogistiqueMediaButtonsBound = true;
+
+                    document.addEventListener('click', function(e) {
+                        var target = e && e.target ? e.target : null;
+                        if (!target || !target.closest) return;
+
+                        var chooseBtn = target.closest('.ajtb-logistique-media-btn');
+                        if (chooseBtn) {
+                            var mode = (chooseBtn.getAttribute('data-upload-mode') || 'wp').toLowerCase();
+                            if (mode === 'local') {
+                                var fileInputId = chooseBtn.getAttribute('data-file-input');
+                                var fileInput = fileInputId ? document.getElementById(fileInputId) : null;
+                                if (fileInput) fileInput.click();
+                                return;
+                            }
                             window.logistiqueMediaTarget = {
-                                inputId: this.getAttribute('data-input'),
-                                previewId: this.getAttribute('data-preview'),
-                                previewWrapId: this.getAttribute('data-preview-wrap')
+                                inputId: chooseBtn.getAttribute('data-input'),
+                                previewId: chooseBtn.getAttribute('data-preview'),
+                                previewWrapId: chooseBtn.getAttribute('data-preview-wrap')
                             };
                             var mediaModalInstance = getModalInstance(mediaModal);
                             if (mediaModalInstance) {
                                 mediaModalInstance.show();
                                 loadMediaSearch(1);
                             }
-                        });
-                    });
-                    document.querySelectorAll('.ajtb-logistique-media-remove').forEach(function(btn) {
-                        btn.addEventListener('click', function() {
-                            var inp = document.getElementById(this.getAttribute('data-input'));
-                            var prev = document.getElementById(this.getAttribute('data-preview'));
-                            var wrap = document.getElementById(this.getAttribute('data-preview-wrap'));
+                            return;
+                        }
+
+                        var removeBtn = target.closest('.ajtb-logistique-media-remove');
+                        if (removeBtn) {
+                            var inp = document.getElementById(removeBtn.getAttribute('data-input'));
+                            var prev = document.getElementById(removeBtn.getAttribute('data-preview'));
+                            var wrap = document.getElementById(removeBtn.getAttribute('data-preview-wrap'));
                             if (inp) inp.value = '';
+                            var pathInpId = removeBtn.getAttribute('data-input-path');
+                            var pathInp = pathInpId ? document.getElementById(pathInpId) : null;
+                            if (pathInp) pathInp.value = '';
                             if (prev) prev.src = '';
                             if (wrap) wrap.style.display = 'none';
+                        }
+                    });
+                }
+
+                function bindLocalImageUploads() {
+                    var uploadUrl = (window.localMediaUploadUrl || '').toString();
+                    if (!uploadUrl) return;
+                    if (window.__ajtbLocalImageUploadsBound) return;
+                    window.__ajtbLocalImageUploadsBound = true;
+
+                    document.addEventListener('change', function(e) {
+                        var inp = e && e.target ? e.target : null;
+                        if (!inp || !inp.matches || !inp.matches('input.ajtb-local-image-input[type=\"file\"]')) return;
+
+                        var file = inp.files && inp.files[0] ? inp.files[0] : null;
+                            if (!file) return;
+
+                        var imageIdInput = document.getElementById(inp.getAttribute('data-image-id-input') || '');
+                        var imagePathInput = document.getElementById(inp.getAttribute('data-image-path-input') || '');
+                        var preview = document.getElementById(inp.getAttribute('data-preview') || '');
+                        var wrap = document.getElementById(inp.getAttribute('data-preview-wrap') || '');
+                        var context = inp.getAttribute('data-context') || 'generic';
+
+                        var fd = new FormData();
+                        fd.append('image', file);
+                        fd.append('context', context);
+                        if (csrfToken) fd.append('_token', csrfToken);
+
+                        fetch(uploadUrl, {
+                            method: 'POST',
+                            body: fd,
+                            credentials: 'same-origin',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken || ''
+                            }
+                        }).then(function(res) {
+                            return res.json().then(function(data) {
+                                return { ok: res.ok, data: data };
+                            }).catch(function() {
+                                return { ok: false, data: { message: 'Réponse serveur invalide.' } };
+                            });
+                        }).then(function(r) {
+                            if (!r.ok || !r.data || !r.data.success) {
+                                var msg = (r.data && (r.data.message || r.data.error)) ? (r.data.message || r.data.error) : 'Upload impossible.';
+                                alert(msg);
+                                return;
+                            }
+                            if (imageIdInput) imageIdInput.value = '';
+                            if (imagePathInput) imagePathInput.value = r.data.path || '';
+                            if (preview) preview.src = r.data.url || '';
+                            if (wrap) wrap.style.display = (r.data.url ? 'flex' : 'none');
+                        }).catch(function() {
+                            alert('Upload impossible.');
+                        }).finally(function() {
+                            inp.value = '';
                         });
                     });
                 }
                 if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', bindLogistiqueMediaButtons);
+                    document.addEventListener('DOMContentLoaded', function() {
+                        bindLogistiqueMediaButtons();
+                        bindLocalImageUploads();
+                    });
                 } else {
                     bindLogistiqueMediaButtons();
+                    bindLocalImageUploads();
                 }
                 if (mediaSearch) {
                     mediaSearch.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); loadMediaSearch(1); } });

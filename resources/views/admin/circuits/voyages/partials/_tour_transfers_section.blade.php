@@ -19,7 +19,10 @@
                 $transferId = optional($transfer)->id;
                 $transferImgId = 'tour_transfer_image_id_' . $ti;
                 $transferImg = optional($transfer)->image_id;
-                $transferImgUrl = $transferImg ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int)$transferImg) : '';
+                $transferImgPath = trim((string) old("tour_transfers.{$ti}.image_path", optional($transfer)->image_path ?? ''));
+                $transferImgUrl = $transferImgPath !== ''
+                    ? \Illuminate\Support\Facades\Storage::disk('public')->url($transferImgPath)
+                    : ($transferImg ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int)$transferImg) : '');
                 // Compatibilité : utiliser day_number si check_in_day/check_out_day n'existent pas
                 $transferDayNumber = old("tour_transfers.{$ti}.day_number", optional($transfer)->day_number ?? 1);
             @endphp
@@ -71,12 +74,22 @@
                         <div class="col-12">
                             <label class="form-label small">Image</label>
                             <input type="hidden" name="tour_transfers[{{ $ti }}][image_id]" id="{{ $transferImgId }}" value="{{ old("tour_transfers.{$ti}.image_id", optional($transfer)->image_id ?? '') }}">
+                            <input type="hidden" name="tour_transfers[{{ $ti }}][image_path]" id="{{ $transferImgId }}_path" value="{{ old("tour_transfers.{$ti}.image_path", optional($transfer)->image_path ?? '') }}">
+                            <input type="file"
+                                class="ajtb-local-image-input d-none"
+                                id="{{ $transferImgId }}_file"
+                                accept="image/*"
+                                data-context="transfer"
+                                data-image-id-input="{{ $transferImgId }}"
+                                data-image-path-input="{{ $transferImgId }}_path"
+                                data-preview="{{ $transferImgId }}_preview"
+                                data-preview-wrap="{{ $transferImgId }}_preview_wrap">
                             <div class="d-flex align-items-center gap-2">
                                 <div id="{{ $transferImgId }}_preview_wrap" class="border rounded overflow-hidden bg-light" style="width: 80px; height: 56px; display: {{ $transferImgUrl ? 'flex' : 'none' }};">
                                     <img id="{{ $transferImgId }}_preview" src="{{ $transferImgUrl }}" alt="" style="max-width:100%; max-height:100%; object-fit: cover;">
                                 </div>
-                                <button type="button" class="btn btn-sm btn-outline-primary ajtb-logistique-media-btn" data-target="transfer" data-input="{{ $transferImgId }}" data-preview="{{ $transferImgId }}_preview" data-preview-wrap="{{ $transferImgId }}_preview_wrap"><i class="bx bx-image"></i> Choisir</button>
-                                <button type="button" class="btn btn-sm btn-outline-danger ajtb-logistique-media-remove" data-input="{{ $transferImgId }}" data-preview="{{ $transferImgId }}_preview" data-preview-wrap="{{ $transferImgId }}_preview_wrap">?</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary ajtb-logistique-media-btn" data-upload-mode="local" data-file-input="{{ $transferImgId }}_file" data-target="transfer" data-input="{{ $transferImgId }}" data-preview="{{ $transferImgId }}_preview" data-preview-wrap="{{ $transferImgId }}_preview_wrap"><i class="bx bx-image"></i> Choisir</button>
+                                <button type="button" class="btn btn-sm btn-outline-danger ajtb-logistique-media-remove" data-input="{{ $transferImgId }}" data-input-path="{{ $transferImgId }}_path" data-preview="{{ $transferImgId }}_preview" data-preview-wrap="{{ $transferImgId }}_preview_wrap">?</button>
                             </div>
                         </div>
                     </div>
@@ -118,6 +131,7 @@
             inp.name = inp.name.replace(/tour_transfers\[\d+\]/, 'tour_transfers[' + nextIdx + ']');
             if (inp.name.indexOf('[day_number]') !== -1) inp.value = '1';
             if (inp.name.indexOf('[is_optional]') !== -1) inp.checked = false;
+            if (inp.name.indexOf('[image_id]') !== -1 || inp.name.indexOf('[image_path]') !== -1) inp.value = '';
             if (inp.type !== 'hidden' && inp.tagName !== 'TEXTAREA') inp.value = '';
             if (inp.tagName === 'TEXTAREA') inp.value = '';
         });
@@ -130,9 +144,17 @@
             var inp = btn.getAttribute('data-input');
             if (inp && inp.indexOf('tour_transfer_image_id_') === 0) {
                 btn.setAttribute('data-input', 'tour_transfer_image_id_' + nextIdx);
+                if (btn.getAttribute('data-input-path')) btn.setAttribute('data-input-path', 'tour_transfer_image_id_' + nextIdx + '_path');
                 btn.setAttribute('data-preview', 'tour_transfer_image_id_' + nextIdx + '_preview');
                 btn.setAttribute('data-preview-wrap', 'tour_transfer_image_id_' + nextIdx + '_preview_wrap');
+                if (btn.getAttribute('data-file-input')) btn.setAttribute('data-file-input', 'tour_transfer_image_id_' + nextIdx + '_file');
             }
+        });
+        clone.querySelectorAll('.ajtb-local-image-input').forEach(function(inp){
+            inp.setAttribute('data-image-id-input', 'tour_transfer_image_id_' + nextIdx);
+            inp.setAttribute('data-image-path-input', 'tour_transfer_image_id_' + nextIdx + '_path');
+            inp.setAttribute('data-preview', 'tour_transfer_image_id_' + nextIdx + '_preview');
+            inp.setAttribute('data-preview-wrap', 'tour_transfer_image_id_' + nextIdx + '_preview_wrap');
         });
         container.appendChild(clone);
     });
@@ -155,9 +177,17 @@
                         var inp = btn.getAttribute('data-input');
                         if (inp && inp.indexOf('tour_transfer_image_id_') === 0) {
                             btn.setAttribute('data-input', 'tour_transfer_image_id_' + i);
+                            if (btn.getAttribute('data-input-path')) btn.setAttribute('data-input-path', 'tour_transfer_image_id_' + i + '_path');
                             btn.setAttribute('data-preview', 'tour_transfer_image_id_' + i + '_preview');
                             btn.setAttribute('data-preview-wrap', 'tour_transfer_image_id_' + i + '_preview_wrap');
+                            if (btn.getAttribute('data-file-input')) btn.setAttribute('data-file-input', 'tour_transfer_image_id_' + i + '_file');
                         }
+                    });
+                    r.querySelectorAll('.ajtb-local-image-input').forEach(function(inp){
+                        inp.setAttribute('data-image-id-input', 'tour_transfer_image_id_' + i);
+                        inp.setAttribute('data-image-path-input', 'tour_transfer_image_id_' + i + '_path');
+                        inp.setAttribute('data-preview', 'tour_transfer_image_id_' + i + '_preview');
+                        inp.setAttribute('data-preview-wrap', 'tour_transfer_image_id_' + i + '_preview_wrap');
                     });
                 });
             }
@@ -165,4 +195,3 @@
     });
 })();
 </script>
-

@@ -1,9 +1,10 @@
 @php
     $voyageId = (int) ($voyage->ID ?? 0);
     $tourHotelsBootstrap = collect($tourHotels ?? [])->mapWithKeys(function ($hotel) {
-        $hotelImgUrl = !empty($hotel->image_id)
-            ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int) $hotel->image_id)
-            : '';
+        $hotelImgPath = trim((string) ($hotel->image_path ?? ''));
+        $hotelImgUrl = $hotelImgPath !== ''
+            ? \Illuminate\Support\Facades\Storage::disk('public')->url($hotelImgPath)
+            : (!empty($hotel->image_id) ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int) $hotel->image_id) : '');
 
         return [
             (string) $hotel->id => [
@@ -14,6 +15,7 @@
                 'meal_plan' => $hotel->meal_plan,
                 'stars' => $hotel->stars !== null ? (int) $hotel->stars : null,
                 'image_id' => $hotel->image_id !== null ? (int) $hotel->image_id : null,
+                'image_path' => $hotelImgPath !== '' ? $hotelImgPath : null,
                 'image_url' => $hotelImgUrl,
                 'check_in_day' => $hotel->check_in_day ?? $hotel->day_number,
                 'check_out_day' => $hotel->check_out_day ?? $hotel->day_number,
@@ -44,6 +46,10 @@
     })->all();
 
     $transferArrivalBootstrap = collect($transferArrivals ?? [])->map(function ($transfer) {
+        $transferImgPath = trim((string) ($transfer->image_path ?? ''));
+        $transferImgUrl = $transferImgPath !== ''
+            ? \Illuminate\Support\Facades\Storage::disk('public')->url($transferImgPath)
+            : (!empty($transfer->image_id) ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int) $transfer->image_id) : '');
         return [
             'id' => (int) $transfer->id,
             'direction' => 'arrival',
@@ -56,10 +62,16 @@
             'day_number' => $transfer->day_number,
             'is_optional' => (bool) $transfer->is_optional,
             'image_id' => $transfer->image_id !== null ? (int) $transfer->image_id : null,
+            'image_path' => $transferImgPath !== '' ? $transferImgPath : null,
+            'image_url' => $transferImgUrl,
         ];
     })->values()->all();
 
     $transferDepartureBootstrap = collect($transferDepartures ?? [])->map(function ($transfer) {
+        $transferImgPath = trim((string) ($transfer->image_path ?? ''));
+        $transferImgUrl = $transferImgPath !== ''
+            ? \Illuminate\Support\Facades\Storage::disk('public')->url($transferImgPath)
+            : (!empty($transfer->image_id) ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int) $transfer->image_id) : '');
         return [
             'id' => (int) $transfer->id,
             'direction' => 'departure',
@@ -72,6 +84,8 @@
             'day_number' => $transfer->day_number,
             'is_optional' => (bool) $transfer->is_optional,
             'image_id' => $transfer->image_id !== null ? (int) $transfer->image_id : null,
+            'image_path' => $transferImgPath !== '' ? $transferImgPath : null,
+            'image_url' => $transferImgUrl,
         ];
     })->values()->all();
 
@@ -123,6 +137,7 @@
         'heroRemoveUrl' => route('admin.circuits.voyages.hero-image.remove', ['id' => $voyageId]),
         'heroGalleryUploadUrl' => route('admin.circuits.voyages.hero-image.upload', ['id' => $voyageId]),
         'heroGallerySelectUrl' => route('admin.circuits.voyages.hero-image.select', ['id' => $voyageId]),
+        'localMediaUploadUrl' => route('admin.local-media.upload'),
         'wpMediaSearchUrl' => url('admin/wp-media/search'),
         'wpFeaturedMediaListUrl' => route('admin.wp-media.list'),
         'wpFeaturedMediaUploadUrl' => route('admin.wp-media.upload'),

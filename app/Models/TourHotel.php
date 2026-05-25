@@ -25,6 +25,7 @@ class TourHotel extends Model
         'meal_plan',
         'notes',
         'image_id',
+        'image_path',
     ];
 
     protected $casts = [
@@ -64,3 +65,4 @@ class TourHotel extends Model
             ->orderBy('id');
     }
 }
+

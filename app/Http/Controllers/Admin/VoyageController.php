@@ -694,6 +694,7 @@ class VoyageController extends Controller
                 'tour_hotels.*.notes' => 'nullable|string|max:2000',
                 'tour_hotels.*.is_optional' => 'nullable|boolean',
                 'tour_hotels.*.image_id' => 'nullable|integer|min:0',
+                'tour_hotels.*.image_path' => 'nullable|string|max:512',
                 'tour_hotels.*.rooms' => 'nullable|array',
                 'tour_hotels.*.rooms.*.id' => 'nullable|integer',
                 'tour_hotels.*.rooms.*.room_type' => 'nullable|string|max:100',
@@ -724,6 +725,7 @@ class VoyageController extends Controller
                 'tour_transfers.*.vehicle_type' => 'nullable|string|max:255',
                 'tour_transfers.*.notes' => 'nullable|string|max:2000',
                 'tour_transfers.*.image_id' => 'nullable|integer|min:0',
+                'tour_transfers.*.image_path' => 'nullable|string|max:512',
                 'tour_transfer_arrivals' => 'nullable|array',
                 'tour_transfer_arrivals.*.day_number' => 'nullable|integer|min:1',
                 'tour_transfer_arrivals.*.from_label' => 'nullable|string|max:255',
@@ -733,6 +735,7 @@ class VoyageController extends Controller
                 'tour_transfer_arrivals.*.vehicle_type' => 'nullable|string|max:255',
                 'tour_transfer_arrivals.*.notes' => 'nullable|string|max:2000',
                 'tour_transfer_arrivals.*.image_id' => 'nullable|integer|min:0',
+                'tour_transfer_arrivals.*.image_path' => 'nullable|string|max:512',
                 'tour_transfer_departures' => 'nullable|array',
                 'tour_transfer_departures.*.day_number' => 'nullable|integer|min:1',
                 'tour_transfer_departures.*.from_label' => 'nullable|string|max:255',
@@ -742,6 +745,7 @@ class VoyageController extends Controller
                 'tour_transfer_departures.*.vehicle_type' => 'nullable|string|max:255',
                 'tour_transfer_departures.*.notes' => 'nullable|string|max:2000',
                 'tour_transfer_departures.*.image_id' => 'nullable|integer|min:0',
+                'tour_transfer_departures.*.image_path' => 'nullable|string|max:512',
             ],
             's-activities' => [
                 'tour_activities' => 'nullable|array',
@@ -2292,11 +2296,13 @@ class VoyageController extends Controller
             $address = trim((string) ($raw['address'] ?? ''));
             $mealPlan = trim((string) ($raw['meal_plan'] ?? ''));
             $notes = trim((string) ($raw['notes'] ?? ''));
+            $imagePath = trim((string) ($raw['image_path'] ?? ''));
             $hasHotelPayload = $hotelName !== ''
                 || $address !== ''
                 || $mealPlan !== ''
                 || $notes !== ''
                 || ! empty($raw['image_id'])
+                || $imagePath !== ''
                 || ! empty($raw['is_optional']);
             if (! $hasHotelPayload) {
                 continue;
@@ -2313,6 +2319,7 @@ class VoyageController extends Controller
                 'meal_plan' => $mealPlan !== '' ? $mealPlan : null,
                 'notes' => $notes !== '' ? $notes : null,
                 'image_id' => isset($raw['image_id']) && $raw['image_id'] !== '' ? (int) $raw['image_id'] : null,
+                'image_path' => $imagePath !== '' ? $imagePath : null,
                 'sort_order' => $sortOrder++,
             ];
             $hotelId = isset($raw['id']) && $raw['id'] !== '' ? (int) $raw['id'] : 0;
@@ -2539,6 +2546,7 @@ class VoyageController extends Controller
                     'vehicle_type' => $transfer['vehicle_type'] ?? null,
                     'notes' => $transfer['notes'] ?? null,
                     'image_id' => isset($transfer['image_id']) && $transfer['image_id'] !== '' ? (int) $transfer['image_id'] : null,
+                    'image_path' => isset($transfer['image_path']) && trim((string) $transfer['image_path']) !== '' ? trim((string) $transfer['image_path']) : null,
                 ]);
             }
         } else {
@@ -2560,6 +2568,7 @@ class VoyageController extends Controller
                     'vehicle_type' => $arr['vehicle_type'] ?? null,
                     'notes' => $arr['notes'] ?? null,
                     'image_id' => isset($arr['image_id']) && $arr['image_id'] !== '' ? (int) $arr['image_id'] : null,
+                    'image_path' => isset($arr['image_path']) && trim((string) $arr['image_path']) !== '' ? trim((string) $arr['image_path']) : null,
                 ]);
             }
             $sortOrder = 0;
@@ -2578,6 +2587,7 @@ class VoyageController extends Controller
                     'vehicle_type' => $dep['vehicle_type'] ?? null,
                     'notes' => $dep['notes'] ?? null,
                     'image_id' => isset($dep['image_id']) && $dep['image_id'] !== '' ? (int) $dep['image_id'] : null,
+                    'image_path' => isset($dep['image_path']) && trim((string) $dep['image_path']) !== '' ? trim((string) $dep['image_path']) : null,
                 ]);
             }
         }

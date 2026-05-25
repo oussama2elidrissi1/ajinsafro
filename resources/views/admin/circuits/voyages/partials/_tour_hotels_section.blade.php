@@ -41,7 +41,10 @@
             @php
                 $hid = 'tour_hotel_image_id_' . $hi;
                 $himg = old("tour_hotels.{$hi}.image_id", optional($h)->image_id);
-                $himgUrl = $himg ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int) $himg) : '';
+                $himgPath = trim((string) old("tour_hotels.{$hi}.image_path", optional($h)->image_path ?? ''));
+                $himgUrl = $himgPath !== ''
+                    ? \Illuminate\Support\Facades\Storage::disk('public')->url($himgPath)
+                    : ($himg ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int) $himg) : '');
                 $oldDayNumber = old("tour_hotels.{$hi}.day_number", optional($h)->day_number);
                 $checkInDay = old("tour_hotels.{$hi}.check_in_day", optional($h)->check_in_day);
                 $checkOutDay = old("tour_hotels.{$hi}.check_out_day", optional($h)->check_out_day);
@@ -231,17 +234,29 @@
                         <div class="col-12 tour-hotel-media-block">
                             <label class="form-label small mb-1">Photo de l'hôtel</label>
                             <input type="hidden" class="tour-hotel-identity-field" name="tour_hotels[{{ $hi }}][image_id]" id="{{ $hid }}" value="{{ old("tour_hotels.{$hi}.image_id", optional($h)->image_id ?? '') }}">
+                            <input type="hidden" class="tour-hotel-identity-field" name="tour_hotels[{{ $hi }}][image_path]" id="{{ $hid }}_path" value="{{ old("tour_hotels.{$hi}.image_path", optional($h)->image_path ?? '') }}">
+                            <input type="file"
+                                class="ajtb-local-image-input d-none"
+                                id="{{ $hid }}_file"
+                                accept="image/*"
+                                data-context="tour_hotel"
+                                data-image-id-input="{{ $hid }}"
+                                data-image-path-input="{{ $hid }}_path"
+                                data-preview="{{ $hid }}_preview"
+                                data-preview-wrap="{{ $hid }}_preview_wrap">
                             <div class="d-flex flex-wrap align-items-center gap-3">
                                 <div id="{{ $hid }}_preview_wrap" class="border rounded overflow-hidden bg-light" style="width:120px;height:80px;display:{{ $himgUrl ? 'flex' : 'none' }};">
                                     <img id="{{ $hid }}_preview" src="{{ $himgUrl }}" alt="" class="img-fluid" style="max-width:100%;max-height:100%;object-fit:cover;">
                                 </div>
                                 <div class="tour-hotel-media-actions d-flex gap-2">
                                     <button type="button" class="btn btn-sm btn-outline-secondary ajtb-logistique-media-btn"
+                                        data-upload-mode="local"
+                                        data-file-input="{{ $hid }}_file"
                                         data-target="tour_hotel" data-input="{{ $hid }}" data-preview="{{ $hid }}_preview" data-preview-wrap="{{ $hid }}_preview_wrap">
                                         <i class="bx bx-images"></i> Choisir une photo
                                     </button>
                                     <button type="button" class="btn btn-sm btn-outline-danger ajtb-logistique-media-remove"
-                                        data-input="{{ $hid }}" data-preview="{{ $hid }}_preview" data-preview-wrap="{{ $hid }}_preview_wrap">
+                                        data-input="{{ $hid }}" data-input-path="{{ $hid }}_path" data-preview="{{ $hid }}_preview" data-preview-wrap="{{ $hid }}_preview_wrap">
                                         <i class="bx bx-x"></i>
                                     </button>
                                 </div>
@@ -847,8 +862,16 @@
             });
             row.querySelectorAll('.ajtb-logistique-media-btn,.ajtb-logistique-media-remove').forEach(function (btn) {
                 if (btn.dataset.input) btn.dataset.input = 'tour_hotel_image_id_' + i;
+                if (btn.dataset.inputPath) btn.dataset.inputPath = 'tour_hotel_image_id_' + i + '_path';
                 if (btn.dataset.preview) btn.dataset.preview = 'tour_hotel_image_id_' + i + '_preview';
                 if (btn.dataset.previewWrap) btn.dataset.previewWrap = 'tour_hotel_image_id_' + i + '_preview_wrap';
+                if (btn.dataset.fileInput) btn.dataset.fileInput = 'tour_hotel_image_id_' + i + '_file';
+            });
+            row.querySelectorAll('.ajtb-local-image-input').forEach(function (inp) {
+                inp.setAttribute('data-image-id-input', 'tour_hotel_image_id_' + i);
+                inp.setAttribute('data-image-path-input', 'tour_hotel_image_id_' + i + '_path');
+                inp.setAttribute('data-preview', 'tour_hotel_image_id_' + i + '_preview');
+                inp.setAttribute('data-preview-wrap', 'tour_hotel_image_id_' + i + '_preview_wrap');
             });
             refreshCard(row);
             syncLinkedSummaryFromRow(row);
@@ -973,6 +996,10 @@
                 el.value = '';
                 return;
             }
+            if (el.name.indexOf('[image_id]') !== -1 || el.name.indexOf('[image_path]') !== -1) {
+                el.value = '';
+                return;
+            }
             if (el.type !== 'hidden') el.value = '';
         });
 
@@ -981,8 +1008,16 @@
         });
         clone.querySelectorAll('.ajtb-logistique-media-btn,.ajtb-logistique-media-remove').forEach(function (btn) {
             if (btn.dataset.input) btn.dataset.input = 'tour_hotel_image_id_' + nextIdx;
+            if (btn.dataset.inputPath) btn.dataset.inputPath = 'tour_hotel_image_id_' + nextIdx + '_path';
             if (btn.dataset.preview) btn.dataset.preview = 'tour_hotel_image_id_' + nextIdx + '_preview';
             if (btn.dataset.previewWrap) btn.dataset.previewWrap = 'tour_hotel_image_id_' + nextIdx + '_preview_wrap';
+            if (btn.dataset.fileInput) btn.dataset.fileInput = 'tour_hotel_image_id_' + nextIdx + '_file';
+        });
+        clone.querySelectorAll('.ajtb-local-image-input').forEach(function (inp) {
+            inp.setAttribute('data-image-id-input', 'tour_hotel_image_id_' + nextIdx);
+            inp.setAttribute('data-image-path-input', 'tour_hotel_image_id_' + nextIdx + '_path');
+            inp.setAttribute('data-preview', 'tour_hotel_image_id_' + nextIdx + '_preview');
+            inp.setAttribute('data-preview-wrap', 'tour_hotel_image_id_' + nextIdx + '_preview_wrap');
         });
 
         var prevWrap = clone.querySelector('[id$="_preview_wrap"]');
@@ -1127,4 +1162,3 @@
     notify();
 })();
 </script>
-
