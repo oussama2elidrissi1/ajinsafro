@@ -267,15 +267,22 @@ class AJTB_V1_Data_Provider
                 $specific_price = (float) $departure_row['specific_price'];
             }
 
+            // V2: per-date supplement (price_override) is stored separately.
+            $price_override = null;
+            if (array_key_exists('price_override', $departure_row) && $departure_row['price_override'] !== null && $departure_row['price_override'] !== '') {
+                $price_override = (float) $departure_row['price_override'];
+            }
+
             $departure_place_id = null;
             if (array_key_exists('departure_place_id', $departure_row) && $departure_row['departure_place_id'] !== null && $departure_row['departure_place_id'] !== '') {
                 $departure_place_id = (int) $departure_row['departure_place_id'];
             }
 
             $raw_dates[] = $raw_date;
-            $date_options_by_value[$raw_date] = self::build_departure_date_option($raw_date, $stock, $specific_price);
+            $date_options_by_value[$raw_date] = self::build_departure_date_option($raw_date, $stock, $specific_price, $price_override);
             $date_prices[$raw_date] = [
                 'specific_price' => $specific_price,
+                'supplement' => $price_override,
                 'departure_place_id' => $departure_place_id,
             ];
         }
@@ -302,7 +309,7 @@ class AJTB_V1_Data_Provider
         ];
     }
 
-    private static function build_departure_date_option(string $raw_date, ?int $stock, ?float $specific_price): array
+    private static function build_departure_date_option(string $raw_date, ?int $stock, ?float $specific_price, ?float $price_override = null): array
     {
         $label = self::format_date_label($raw_date);
         $parts = [$label];
@@ -311,7 +318,9 @@ class AJTB_V1_Data_Provider
             $parts[] = sprintf('%d place%s', $stock, $stock > 1 ? 's' : '');
         }
 
-        if ($specific_price !== null && $specific_price > 0) {
+        if ($price_override !== null && $price_override > 0) {
+            $parts[] = '+' . number_format($price_override, 0, ',', ' ') . ' MAD';
+        } elseif ($specific_price !== null && $specific_price > 0) {
             $parts[] = number_format($specific_price, 0, ',', ' ') . ' MAD';
         }
 
@@ -321,6 +330,7 @@ class AJTB_V1_Data_Provider
             'display' => implode(' - ', $parts),
             'stock' => $stock,
             'specific_price' => $specific_price,
+            'supplement' => $price_override,
         ];
     }
 

@@ -909,6 +909,11 @@ get_header();
                                 <p class="ajtb-v1-summary-price"><span id="ajtb-v1-price-amount"><?php echo esc_html($price_amount); ?></span> <span id="ajtb-v1-price-currency"><?php echo esc_html($price_currency); ?></span></p>
                             </div>
                             <p class="ajtb-v1-summary-unit"><span id="ajtb-v1-price-per-person"><?php echo esc_html($price_amount); ?> <?php echo esc_html($price_currency); ?></span><small>par personne</small></p>
+                            <div class="ajtb-v1-price-breakdown" id="ajtb-v1-price-breakdown" hidden>
+                                <div><span>Prix / pers.</span><strong id="ajtb-v1-breakdown-base">-</strong></div>
+                                <div><span>Supplément date</span><strong id="ajtb-v1-breakdown-supp">-</strong></div>
+                                <div><span>Prix final / pers.</span><strong id="ajtb-v1-breakdown-final">-</strong></div>
+                            </div>
                         </div>
 
                         <dl class="ajtb-v1-summary-list">

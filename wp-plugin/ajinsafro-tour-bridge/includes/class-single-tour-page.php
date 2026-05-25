@@ -963,6 +963,57 @@ class AJTB_Single_Tour_Page
 
         $status = $hasHalfDouble ? 'shared_room_pending' : 'pending';
 
+        // Pricing (base + per-date supplement) — must match front total.
+        $adultBase = 0.0;
+        $childBase = 0.0;
+        try {
+            if (class_exists('AJTB_Laravel_Repository')) {
+                $pricingRepo = new AJTB_Laravel_Repository($tour_id);
+                $pricing = $pricingRepo->get_current_pricing();
+                if (is_array($pricing)) {
+                    if (isset($pricing['adult_price']) && is_numeric($pricing['adult_price'])) {
+                        $adultBase = (float) $pricing['adult_price'];
+                    }
+                    if (isset($pricing['child_price']) && is_numeric($pricing['child_price'])) {
+                        $childBase = (float) $pricing['child_price'];
+                    }
+                }
+            }
+        } catch (Throwable $e) {
+            // Best-effort only.
+        }
+
+        $dateSupplement = 0.0;
+        try {
+            if (self::table_has_column($table_travel_dates, 'price_override')) {
+                $rawSupp = $wpdb->get_var($wpdb->prepare("SELECT price_override FROM {$table_travel_dates} WHERE id = %d LIMIT 1", $travel_date_id));
+                if ($rawSupp !== null && $rawSupp !== '') {
+                    $dateSupplement = max(0.0, (float) $rawSupp);
+                }
+            }
+        } catch (Throwable $e) {
+            // Best-effort only.
+        }
+
+        $adultBase = max(0.0, (float) $adultBase);
+        $childBase = max(0.0, (float) $childBase);
+        $adultUnit = $adultBase + $dateSupplement;
+        $childUnitBase = $childBase > 0 ? $childBase : $adultBase;
+        $childUnit = $childUnitBase + $dateSupplement;
+        $totalBase = ($adults * $adultUnit) + ($children * $childUnit);
+
+        $extrasTotal = 0.0;
+        foreach ($extras as $ex) {
+            if (!is_array($ex)) {
+                continue;
+            }
+            $p = isset($ex['price']) ? (float) $ex['price'] : 0.0;
+            if ($p > 0) {
+                $extrasTotal += $p;
+            }
+        }
+        $totalAmount = $totalBase + $roomSupplementTotal + $extrasTotal;
+
         $notes = 'Front booking (WP) - departure_place_id=' . $departure_place_id
             . ' adults=' . $adults
             . ' children=' . $children
@@ -1017,8 +1068,29 @@ class AJTB_Single_Tour_Page
             'created_at' => current_time('mysql', true),
             'updated_at' => current_time('mysql', true),
         ];
+        if (self::table_has_column($reservations_table, 'base_price')) {
+            $reservation_payload['base_price'] = round($totalBase, 2);
+        }
+        if (self::table_has_column($reservations_table, 'total_base')) {
+            $reservation_payload['total_base'] = round($totalBase, 2);
+        }
         if (self::table_has_column($reservations_table, 'room_supplement_total')) {
             $reservation_payload['room_supplement_total'] = $roomSupplementTotal;
+        }
+        if (self::table_has_column($reservations_table, 'extras_total')) {
+            $reservation_payload['extras_total'] = round($extrasTotal, 2);
+        }
+        if (self::table_has_column($reservations_table, 'total_amount')) {
+            $reservation_payload['total_amount'] = round($totalAmount, 2);
+        }
+        if (self::table_has_column($reservations_table, 'remaining_amount')) {
+            $reservation_payload['remaining_amount'] = round($totalAmount, 2);
+        }
+        if (self::table_has_column($reservations_table, 'payment_status')) {
+            $reservation_payload['payment_status'] = 'non_paid';
+        }
+        if (self::table_has_column($reservations_table, 'dossier_status')) {
+            $reservation_payload['dossier_status'] = 'pending';
         }
         if (self::table_has_column($reservations_table, 'channel')) {
             $reservation_payload['channel'] = 'client';

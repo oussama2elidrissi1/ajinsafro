@@ -52,10 +52,10 @@
         </div>
     </nav>
 
-    <div class="v2-sb-footer">
-        <button type="button" class="v2-sb-save" data-v2-save>
+    <div class="v2-sb-footer v3-steps-card__footer">
+        <button type="button" class="v2-sb-save" data-v2-save title="{{ $isCreate ? 'Creer le voyage' : 'Enregistrer l etape courante' }}">
             <i class="bx bx-save"></i>
-            {{ $isCreate ? 'Creer le voyage' : 'Enregistrer l etape courante' }}
+            <span>{{ $isCreate ? 'Creer le voyage' : 'Enregistrer l etape courante' }}</span>
         </button>
     </div>
 </aside>

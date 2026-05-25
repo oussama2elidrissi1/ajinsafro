@@ -388,20 +388,24 @@
 .voyage-studio-v3 .v3-steps-card {
   background: var(--v3-card);
   border-radius: 18px;
-  padding: 14px 12px;
+  padding: 12px 10px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
 .voyage-studio-v3 .v3-steps-card__head {
-  margin-bottom: 10px;
+  margin-bottom: 6px;
+  flex: 0 0 auto;
 }
 
 .voyage-studio-v3 .v3-stepper {
-  display: grid;
-  gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
   min-height: 0;
+  overflow: hidden;
 }
 
 .voyage-studio-v3 .v3-stepper__mobile {
@@ -427,25 +431,59 @@
 
 .voyage-studio-v3 .v3-stepper__list {
   display: grid;
-  gap: 4px;
+  gap: 2px;
   padding: 0;
   flex: 1 1 auto;
   min-height: 0;
+  overflow: hidden;
+  scrollbar-width: none;
+}
+.voyage-studio-v3 .v3-stepper__list::-webkit-scrollbar {
+  display: none;
 }
 
 .voyage-studio-v3 .v3-stepper__group {
   color: var(--v3-muted);
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin-top: 4px;
-  padding: 2px 8px;
+  margin-top: 2px;
+  padding: 2px 6px;
   line-height: 1.2;
 }
 
 .voyage-studio-v3 .v2-sb-item + .v2-sb-item {
   margin-top: 0;
+}
+
+.voyage-studio-v3 .v2-sb-footer {
+  flex: 0 0 auto;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--v3-border);
+}
+
+.voyage-studio-v3 .v2-sb-save {
+  border-radius: 10px;
+  min-height: 34px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--v3-orange), #ff6b20);
+  border: 0;
+  box-shadow: 0 6px 14px rgba(240, 90, 26, 0.16);
+  color: #fff;
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.voyage-studio-v3 .v2-sb-save i {
+  font-size: 14px;
 }
 
 .voyage-studio-v3 .v3-card-kicker,
@@ -459,20 +497,22 @@
 }
 
 .voyage-studio-v3 .v3-card-title {
-  margin: 4px 0;
-  font-size: 20px;
+  margin: 2px 0;
+  font-size: 18px;
   font-weight: 900;
 }
 
 .voyage-studio-v3 .v3-card-subtitle {
+  font-size: 13px;
+}
   margin: 0;
   color: var(--v3-muted);
   font-size: 13px;
 }
 
 .voyage-studio-v3 .v2-sb-item {
-  border-radius: 10px;
-  padding: 6px 8px;
+  border-radius: 8px;
+  padding: 3px 6px;
   border: 1px solid transparent;
   transition: 0.18s ease;
 }
@@ -481,14 +521,14 @@
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   text-align: left;
 }
 
 .voyage-studio-v3 .v3-step__icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -499,11 +539,11 @@
 }
 
 .voyage-studio-v3 .v3-step__icon i {
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .voyage-studio-v3 .v3-step__label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--v3-text);
   line-height: 1.2;
@@ -515,8 +555,8 @@
 }
 
 .voyage-studio-v3 .v3-step__badge {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
@@ -528,7 +568,7 @@
 }
 
 .voyage-studio-v3 .v3-step__badge i {
-  font-size: 12px;
+  font-size: 10px;
 }
 
 .voyage-studio-v3 .v3-step__badge--ok {
@@ -551,7 +591,7 @@
 .voyage-studio-v3 .v3-step.active {
   background: linear-gradient(135deg, var(--v3-blue-2), #0b5ed7);
   border-color: rgba(13, 110, 253, 0.55);
-  box-shadow: 0 12px 26px rgba(13, 110, 253, 0.18);
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.18);
 }
 
 .voyage-studio-v3 .v3-step.active .v3-step__label {

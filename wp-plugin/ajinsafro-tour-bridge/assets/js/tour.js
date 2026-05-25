@@ -471,6 +471,10 @@
         var currencyEl = document.getElementById("ajtb-v1-price-currency");
         var suffixEl = document.getElementById("ajtb-v1-price-suffix");
         var perPersonEl = document.getElementById("ajtb-v1-price-per-person");
+        var breakdownEl = document.getElementById("ajtb-v1-price-breakdown");
+        var breakdownBaseEl = document.getElementById("ajtb-v1-breakdown-base");
+        var breakdownSuppEl = document.getElementById("ajtb-v1-breakdown-supp");
+        var breakdownFinalEl = document.getElementById("ajtb-v1-breakdown-final");
         var departureEl = document.getElementById("ajtb-v1-summary-departure");
         var dateEl = document.getElementById("ajtb-v1-summary-date");
         var guestsEl = document.getElementById("ajtb-v1-summary-guests");
@@ -656,17 +660,17 @@
             return parsed;
         }
 
-        function getDateSpecificAdultPrice() {
+        function getDatePricingInfo() {
             var isCustom = requestTypeSelect ? isCustomRequestType(requestTypeSelect.value) : false;
             if (isCustom) {
-                return null;
+                return { supplement: 0, overrideAdult: null };
             }
             if (!dateSelect) {
-                return null;
+                return { supplement: 0, overrideAdult: null };
             }
             var selectedDate = dateSelect.value || "";
             if (!selectedDate || !datePrices || !datePrices[selectedDate]) {
-                return null;
+                return { supplement: 0, overrideAdult: null };
             }
 
             var info = datePrices[selectedDate];
@@ -683,20 +687,33 @@
                 selectedPlaceId > 0 &&
                 datePlaceId !== selectedPlaceId
             ) {
-                return null;
+                return { supplement: 0, overrideAdult: null };
             }
 
-            if (
-                info &&
-                info.specific_price !== null &&
-                info.specific_price !== undefined
-            ) {
-                var parsed = parseFloat(info.specific_price);
-                if (isFinite(parsed) && parsed > 0) {
-                    return parsed;
+            var supplement = 0;
+            if (info && info.supplement !== null && info.supplement !== undefined) {
+                var sp = parseFloat(info.supplement);
+                if (isFinite(sp) && sp > 0) {
+                    supplement = sp;
                 }
             }
-            return null;
+
+            // Backward compat: some legacy schemas expose only specific_price.
+            // If it looks like a small number compared to baseAdultPrice, treat as supplement.
+            // Otherwise treat as an absolute per-adult override.
+            var overrideAdult = null;
+            if (supplement <= 0 && info && info.specific_price !== null && info.specific_price !== undefined) {
+                var parsed = parseFloat(info.specific_price);
+                if (isFinite(parsed) && parsed > 0) {
+                    if (baseAdultPrice > 0 && parsed < baseAdultPrice * 0.5) {
+                        supplement = parsed;
+                    } else {
+                        overrideAdult = parsed;
+                    }
+                }
+            }
+
+            return { supplement: supplement, overrideAdult: overrideAdult };
         }
 
         function formatAmount(value) {
@@ -709,16 +726,25 @@
             var adults = Math.max(1, getTravellerValue(adultsInput, 2));
             var children = Math.max(0, getTravellerValue(childrenInput, 0));
 
+            var datePricing = getDatePricingInfo();
+            var supplement = datePricing && isFinite(datePricing.supplement) ? Math.max(0, datePricing.supplement) : 0;
+
             var adultUnit = baseAdultPrice;
-            var dateAdult = getDateSpecificAdultPrice();
-            if (dateAdult !== null) {
-                adultUnit = dateAdult;
+            if (datePricing && datePricing.overrideAdult !== null && datePricing.overrideAdult !== undefined) {
+                adultUnit = datePricing.overrideAdult;
+                supplement = 0;
+            } else {
+                adultUnit = baseAdultPrice + supplement;
             }
             if (!isFinite(adultUnit) || adultUnit < 0) {
                 adultUnit = 0;
             }
 
-            var childUnit = baseChildPrice > 0 ? baseChildPrice : adultUnit;
+            var childUnitBase = baseChildPrice > 0 ? baseChildPrice : baseAdultPrice;
+            var childUnit = childUnitBase + supplement;
+            if (datePricing && datePricing.overrideAdult !== null && datePricing.overrideAdult !== undefined && baseChildPrice <= 0) {
+                childUnit = adultUnit;
+            }
             collectClientActivitiesFromDom();
             var activityTotal = selectedActivitiesTotal();
             var total = adults * adultUnit + children * childUnit;
@@ -733,7 +759,7 @@
             var departureLabel = getSelectedDepartureLabel();
             var dateLabel = getSelectedDateLabel();
             var guestsLabel = getGuestsLabel(adults, children);
-            var availabilityLabel = getAvailabilityLabel(total, dateAdult);
+            var availabilityLabel = getAvailabilityLabel(total, (datePricing && datePricing.overrideAdult !== null) ? adultUnit : null);
 
             amountEl.textContent = formatAmount(total);
             if (currencyEl) {
@@ -744,6 +770,16 @@
             }
             if (perPersonEl) {
                 perPersonEl.textContent = formatAmount(pricePerPerson) + " " + currency;
+            }
+            if (breakdownEl) {
+                if (supplement > 0 && baseAdultPrice > 0 && (!datePricing || datePricing.overrideAdult === null || datePricing.overrideAdult === undefined)) {
+                    breakdownEl.hidden = false;
+                    if (breakdownBaseEl) breakdownBaseEl.textContent = formatAmount(baseAdultPrice) + " " + currency;
+                    if (breakdownSuppEl) breakdownSuppEl.textContent = "+ " + formatAmount(supplement) + " " + currency;
+                    if (breakdownFinalEl) breakdownFinalEl.textContent = formatAmount(baseAdultPrice + supplement) + " " + currency;
+                } else {
+                    breakdownEl.hidden = true;
+                }
             }
             if (departureEl) {
                 departureEl.textContent = departureLabel;
@@ -2155,14 +2191,39 @@
 
             var adultUnit = baseAdult;
             var dateValue = state.date ? String(state.date.value || "") : "";
-            if (dateValue && datePrices && datePrices[dateValue] && datePrices[dateValue].specific_price !== null && datePrices[dateValue].specific_price !== undefined) {
-                var dp = parseFloat(datePrices[dateValue].specific_price);
-                if (isFinite(dp) && dp > 0) {
-                    adultUnit = dp;
+            var supplement = 0;
+            var overrideAdult = null;
+            if (dateValue && datePrices && datePrices[dateValue]) {
+                var info = datePrices[dateValue];
+                if (info && info.supplement !== null && info.supplement !== undefined) {
+                    var sp = parseFloat(info.supplement);
+                    if (isFinite(sp) && sp > 0) {
+                        supplement = sp;
+                    }
+                }
+                if (supplement <= 0 && info && info.specific_price !== null && info.specific_price !== undefined) {
+                    var dp = parseFloat(info.specific_price);
+                    if (isFinite(dp) && dp > 0) {
+                        if (baseAdult > 0 && dp < baseAdult * 0.5) {
+                            supplement = dp;
+                        } else {
+                            overrideAdult = dp;
+                        }
+                    }
                 }
             }
+            if (overrideAdult !== null) {
+                adultUnit = overrideAdult;
+                supplement = 0;
+            } else {
+                adultUnit = baseAdult + supplement;
+            }
             if (!isFinite(adultUnit) || adultUnit < 0) { adultUnit = 0; }
-            var childUnit = baseChild > 0 ? baseChild : adultUnit;
+            var childUnitBase = baseChild > 0 ? baseChild : baseAdult;
+            var childUnit = childUnitBase + supplement;
+            if (overrideAdult !== null && baseChild <= 0) {
+                childUnit = adultUnit;
+            }
 
             var activitiesTotal = 0;
             if (state.activities && state.activities.length) {
@@ -3164,16 +3225,7 @@
                         });
                     });
                 }
-                roomSummary.lines.forEach(function (line) {
-                    var supp = parseFloat(line.room && line.room.supplement ? line.room.supplement : "0");
-                    if (!isFinite(supp) || supp <= 0) {
-                        return;
-                    }
-                    extrasPayload.push({
-                        name: "Supplément chambre (" + (line.room.room_type || "chambre") + ")",
-                        price: supp * line.assigned,
-                    });
-                });
+                // Room supplements are persisted via reservation_rooms + room_supplement_total (do not duplicate as extras).
                 formData.append("extras_json", JSON.stringify(extrasPayload));
 
                 submitBtn.disabled = true;

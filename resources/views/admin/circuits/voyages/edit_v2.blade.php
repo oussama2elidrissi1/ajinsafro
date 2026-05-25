@@ -79,7 +79,7 @@
         ['id' => 's-information', 'icon' => 'bx-list-ul', 'label' => 'Inclus / Exclus', 'group' => 'Contenu', 'partial' => 'tabs._information', 'eyebrow' => 'Contenu', 'title' => 'Inclus / Exclus / FAQ', 'desc' => 'Informations commerciales et pratiques.'],
         ['id' => 's-taxonomies', 'icon' => 'bx-tag', 'label' => 'Categories', 'group' => 'Contenu', 'partial' => 'tabs._taxonomies', 'eyebrow' => 'Contenu', 'title' => 'Categories & tags', 'desc' => 'Classement pour catalogue et SEO.'],
         ['id' => 's-availability', 'icon' => 'bx-calendar', 'label' => 'Disponibilites', 'group' => 'Exploitation', 'partial' => 'tabs._availability', 'eyebrow' => 'Exploitation', 'title' => 'Disponibilites', 'desc' => 'Dates, stock et parametres de reservation.'],
-        ['id' => 's-flights', 'icon' => 'bx-trip', 'label' => 'Vols', 'group' => 'Logistique', 'partial' => 'tabs._flights', 'eyebrow' => 'Logistique', 'title' => 'Vols', 'desc' => 'Compagnies, itineraires et options de vol.'],
+        ['id' => 's-flights', 'icon' => 'bx-paper-plane', 'label' => 'Vols', 'group' => 'Logistique', 'partial' => 'tabs._flights', 'eyebrow' => 'Logistique', 'title' => 'Vols', 'desc' => 'Compagnies, itineraires et options de vol.'],
         ['id' => 's-hotels', 'icon' => 'bx-hotel', 'label' => 'Hotels', 'group' => 'Logistique', 'partial' => 'tabs._hotels', 'eyebrow' => 'Logistique', 'title' => 'Hotels', 'desc' => 'Hebergements et allocations de chambres.'],
         ['id' => 's-transfers', 'icon' => 'bx-bus', 'label' => 'Transferts', 'group' => 'Logistique', 'partial' => 'tabs._transfers', 'eyebrow' => 'Logistique', 'title' => 'Transferts', 'desc' => 'Transferts arrivee / depart.'],
         ['id' => 's-activities', 'icon' => 'bx-run', 'label' => 'Activites', 'group' => 'Logistique', 'partial' => 'tabs._activities', 'eyebrow' => 'Logistique', 'title' => 'Activites', 'desc' => 'Catalogue des activites du voyage.'],
@@ -114,7 +114,7 @@
         ['label' => 'Infos generales', 'step' => 's-general', 'icon' => 'bx-file-blank'],
         ['label' => 'Medias', 'step' => 's-media', 'icon' => 'bx-image-alt'],
         ['label' => 'Disponibilites', 'step' => 's-availability', 'icon' => 'bx-calendar'],
-        ['label' => 'Vols', 'step' => 's-flights', 'icon' => 'bx-trip'],
+        ['label' => 'Vols', 'step' => 's-flights', 'icon' => 'bx-paper-plane'],
     ], fn (array $item) => collect($sections)->contains(fn (array $sec) => $sec['id'] === $item['step'])));
 @endphp
 @extends('layouts.admin-v6')
@@ -150,7 +150,11 @@
         .voyage-edit-v2-page.workflow-collapsed .v3-steps-card__head {
             display: flex !important;
             justify-content: center !important;
-            margin-bottom: 10px !important;
+            margin-bottom: 6px !important;
+            padding: 0 !important;
+        }
+        .voyage-edit-v2-page.workflow-collapsed .v3-steps-card__title {
+            display: none !important;
         }
 
         .voyage-edit-v2-page.workflow-collapsed .v3-card-kicker,
@@ -164,7 +168,6 @@
         .voyage-edit-v2-page.workflow-collapsed .v2-sb-dot,
         .voyage-edit-v2-page.workflow-collapsed .v3-step__label,
         .voyage-edit-v2-page.workflow-collapsed .v3-step__badge,
-        .voyage-edit-v2-page.workflow-collapsed .v2-sb-footer,
         .voyage-edit-v2-page.workflow-collapsed .workflow-title,
         .voyage-edit-v2-page.workflow-collapsed .workflow-description,
         .voyage-edit-v2-page.workflow-collapsed .workflow-section-label,
@@ -184,17 +187,42 @@
             align-items: center !important;
             justify-content: center !important;
             width: 44px !important;
-            min-height: 46px !important;
-            padding: 6px !important;
+            min-height: 40px !important;
+            padding: 4px !important;
             margin-left: auto !important;
             margin-right: auto !important;
-            gap: 4px !important;
+            gap: 2px !important;
         }
 
-        .voyage-edit-v2-page.workflow-collapsed .v2-sb-index,
-        .voyage-edit-v2-page.workflow-collapsed .v2-sb-icon {
+        .voyage-edit-v2-page.workflow-collapsed .v3-step__icon {
             margin: 0 !important;
             flex: 0 0 auto !important;
+            width: 22px !important;
+            height: 22px !important;
+            border-radius: 6px !important;
+        }
+        .voyage-edit-v2-page.workflow-collapsed .v3-step__icon i {
+            font-size: 14px !important;
+        }
+
+        .voyage-edit-v2-page.workflow-collapsed .v2-sb-footer {
+            display: block !important;
+            margin-top: 6px !important;
+            padding-top: 6px !important;
+            border-top: 1px solid rgba(180,210,240,0.35) !important;
+        }
+        .voyage-edit-v2-page.workflow-collapsed .v2-sb-save {
+            min-height: 32px !important;
+            padding: 4px !important;
+            font-size: 0 !important;
+            border-radius: 8px !important;
+        }
+        .voyage-edit-v2-page.workflow-collapsed .v2-sb-save i {
+            font-size: 16px !important;
+            margin: 0 !important;
+        }
+        .voyage-edit-v2-page.workflow-collapsed .v2-sb-save span {
+            display: none !important;
         }
 
         .voyage-edit-v2-page:not(.workflow-collapsed) .v3-workspace,

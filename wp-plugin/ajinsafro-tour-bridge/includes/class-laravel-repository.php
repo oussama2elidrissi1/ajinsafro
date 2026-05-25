@@ -2083,6 +2083,9 @@ class AJTB_Laravel_Repository
         }
 
         $stock_col = $has_col('stock') ? 'stock' : ($has_col('places') ? 'places' : ($has_col('available_seats') ? 'available_seats' : ($has_col('seats_available') ? 'seats_available' : '')));
+        // V2 CRUD stores the per-date supplement in aj_travel_dates.price_override.
+        $supp_col = $has_col('price_override') ? 'price_override' : '';
+        // Legacy absolute per-date price columns (if any).
         $price_col = $has_col('specific_price') ? 'specific_price' : ($has_col('adult_price') ? 'adult_price' : ($has_col('price') ? 'price' : ''));
         $active_col = $has_col('is_active') ? 'is_active' : ($has_col('active') ? 'active' : '');
         $place_id_col = $has_col('departure_place_id') ? 'departure_place_id' : '';
@@ -2091,6 +2094,9 @@ class AJTB_Laravel_Repository
             $sql = "SELECT id, {$date_col} AS departure_date";
             if ($stock_col !== '') {
                 $sql .= ", {$stock_col} AS stock_value";
+            }
+            if ($supp_col !== '') {
+                $sql .= ", {$supp_col} AS supplement_value";
             }
             if ($price_col !== '') {
                 $sql .= ", {$price_col} AS price_value";
@@ -2131,6 +2137,10 @@ class AJTB_Laravel_Repository
                 if (array_key_exists('price_value', $row) && $row['price_value'] !== null && $row['price_value'] !== '') {
                     $specific_price = (float) $row['price_value'];
                 }
+                $price_override = null;
+                if (array_key_exists('supplement_value', $row) && $row['supplement_value'] !== null && $row['supplement_value'] !== '') {
+                    $price_override = (float) $row['supplement_value'];
+                }
 
                 $is_active = true;
                 if (array_key_exists('is_active_value', $row)) {
@@ -2142,6 +2152,7 @@ class AJTB_Laravel_Repository
                     'date' => $raw_date,
                     'stock' => $stock,
                     'specific_price' => $specific_price,
+                    'price_override' => $price_override,
                     'is_active' => $is_active,
                     'departure_place_id' => isset($row['departure_place_id']) && $row['departure_place_id'] !== '' ? (int) $row['departure_place_id'] : null,
                 ];

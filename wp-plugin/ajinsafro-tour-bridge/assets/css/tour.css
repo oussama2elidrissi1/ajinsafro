@@ -1625,6 +1625,38 @@ body.ajtb-modal-open {
     font-weight: 600;
 }
 
+.ajtb-v1-price-breakdown {
+    display: grid;
+    gap: 6px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px dashed rgba(15, 106, 168, 0.25);
+    background: rgba(236, 247, 255, 0.6);
+}
+
+.ajtb-v1-price-breakdown > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 12px;
+    color: #496381;
+    font-weight: 700;
+}
+
+.ajtb-v1-price-breakdown span {
+    color: #6a7d97;
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.ajtb-v1-price-breakdown strong {
+    color: #0f2a46;
+    font-weight: 900;
+}
+
 .ajtb-v1-summary-list {
     margin: 0;
     display: grid;
