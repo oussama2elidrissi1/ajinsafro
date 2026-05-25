@@ -29,8 +29,10 @@
                 @endif
                 @php
                     $stepState = $initialStepStates[$sec['id']] ?? 'incomplete';
-                    $stateLabel = $stepState === 'complete' ? 'Validée' : ($stepState === 'error' ? 'Erreur' : 'À compléter');
                     $isComplete = $stepState === 'complete';
+                    $isError = $stepState === 'error';
+                    $badgeClass = $isComplete ? 'v3-step__badge--ok' : ($isError ? 'v3-step__badge--err' : 'v3-step__badge--todo');
+                    $badgeIcon = $isComplete ? 'bx-check' : ($isError ? 'bx-error' : 'bx-circle');
                 @endphp
                 <button
                     type="button"
@@ -40,22 +42,10 @@
                     title="{{ $sec['label'] }}"
                     aria-label="{{ $sec['label'] }}"
                 >
-                    <span class="v3-step__lead">
-                        <span class="v2-sb-index v3-step__number">{{ $i + 1 }}</span>
-                        <span class="v2-sb-icon v3-step__icon"><i class="bx {{ $sec['icon'] }}"></i></span>
-                    </span>
-                    <span class="v3-step__text">
-                        <span class="v3-step__label">{{ $sec['label'] }}</span>
-                        <span class="v3-step__status" data-v2-step-meta>{{ $stateLabel }}</span>
-                    </span>
-                    <span class="v3-step__tail" aria-hidden="true">
-                        @if($isComplete)
-                            <span class="v3-step__badge v3-step__badge--ok"><i class="bx bx-check"></i></span>
-                        @elseif($stepState === 'error')
-                            <span class="v3-step__badge v3-step__badge--err"><i class="bx bx-error"></i></span>
-                        @else
-                            <span class="v3-step__badge v3-step__badge--todo"><i class="bx bx-circle"></i></span>
-                        @endif
+                    <span class="v3-step__icon"><i class="bx {{ $sec['icon'] }}"></i></span>
+                    <span class="v3-step__label">{{ $sec['label'] }}</span>
+                    <span class="v3-step__badge {{ $badgeClass }}" aria-hidden="true">
+                        <i class="bx {{ $badgeIcon }}"></i>
                     </span>
                 </button>
             @endforeach

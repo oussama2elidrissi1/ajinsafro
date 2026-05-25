@@ -641,9 +641,26 @@ get_header();
                                                     $hotel_desc = $hotel_available
                                                         ? $pick((array) $hotel, ['notes', 'address'], 'Hôtel configuré dans la section Hôtel du CRUD.')
                                                         : 'Aucun hôtel configuré dans la section Hôtel du CRUD.';
-                                                    $hotel_city = $hotel_available
-                                                        ? $pick((array) $hotel, ['city', 'hotel_city', 'location'], $destination)
-                                                        : $destination;
+                                                    $hotel_city = '';
+                                                    if ($hotel_available) {
+                                                        $hotel_city = (string) $pick((array) $hotel, ['city', 'hotel_city', 'location'], '');
+                                                        if (trim($hotel_city) === '') {
+                                                            $hotel_addr = (string) $pick((array) $hotel, ['city_address', 'address', 'cityAddress'], '');
+                                                            $hotel_addr = trim(preg_replace('/\s+/', ' ', $hotel_addr));
+                                                            if ($hotel_addr !== '') {
+                                                                $parts = preg_split('/[,;|\r\n]+/', $hotel_addr);
+                                                                $candidate = trim((string) ($parts[0] ?? ''));
+                                                                if ($candidate !== '') {
+                                                                    $candidate = trim((string) preg_split('/\s+-\s+|\s+\/\s+/', $candidate)[0]);
+                                                                }
+                                                                if ($candidate !== '') {
+                                                                    $hotel_city = $candidate;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                    $hotel_city = trim((string) $hotel_city);
+                                                    $hotel_city_label = $hotel_city !== '' ? $hotel_city : 'Ville à confirmer';
                                                     $hotel_room = $hotel_available
                                                         ? $pick((array) $hotel, ['room_type'], 'Chambre standard')
                                                         : 'Non disponible';
@@ -652,7 +669,7 @@ get_header();
                                                         : '-';
                                                     ?>
                                                     <div class="ajtb-v1-service-card program-item" data-program-type="hotel">
-                                                        <div class="ajtb-v1-service-head"><span>Hôtel - <?php echo esc_html($hotel_city); ?></span><span><?php echo $hotel_available ? 'Voir' : 'Non disponible'; ?></span></div>
+                                                        <div class="ajtb-v1-service-head"><span>Hôtel<?php echo $hotel_city !== '' ? (' - ' . esc_html($hotel_city)) : (' - ' . esc_html($hotel_city_label)); ?></span><span><?php echo $hotel_available ? 'Voir' : 'Non disponible'; ?></span></div>
                                                         <div class="ajtb-v1-service-body ajtb-v1-media-row">
                                                             <span class="ajtb-v1-media-thumb"><img src="<?php echo $safe_image($hotel_img, $default_hotel_image); ?>" alt="Visuel hôtel" loading="lazy"></span>
                                                             <div>
@@ -661,7 +678,7 @@ get_header();
                                                                 <button type="button" class="ajtb-v1-expand-toggle" data-ajtb-expand-toggle hidden>Voir plus</button>
                                                                 <div class="ajtb-v1-meta-line">
                                                                     <span><?php echo esc_html($hotel_available ? ((string) $hotel_stars . '/5') : 'Non disponible'); ?></span>
-                                                                    <span><?php echo esc_html($hotel_city); ?></span>
+                                                                    <span><?php echo esc_html($hotel_city !== '' ? $hotel_city : $hotel_city_label); ?></span>
                                                                     <span><?php echo esc_html($hotel_room); ?></span>
                                                                 </div>
                                                             </div>

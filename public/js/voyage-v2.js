@@ -8,7 +8,6 @@
     }
 
     var workflowToggleBtn = document.getElementById('workflowToggleBtn');
-    page.classList.add('workflow-collapsed');
     if (workflowToggleBtn) {
         workflowToggleBtn.addEventListener('click', function () {
             page.classList.toggle('workflow-collapsed');

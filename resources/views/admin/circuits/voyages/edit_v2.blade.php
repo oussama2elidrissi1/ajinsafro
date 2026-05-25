@@ -162,9 +162,8 @@
         .voyage-edit-v2-page.workflow-collapsed .v2-sb-label,
         .voyage-edit-v2-page.workflow-collapsed .v2-sb-meta,
         .voyage-edit-v2-page.workflow-collapsed .v2-sb-dot,
-        .voyage-edit-v2-page.workflow-collapsed .v2-sb-index,
-        .voyage-edit-v2-page.workflow-collapsed .v3-step__text,
-        .voyage-edit-v2-page.workflow-collapsed .v3-step__tail,
+        .voyage-edit-v2-page.workflow-collapsed .v3-step__label,
+        .voyage-edit-v2-page.workflow-collapsed .v3-step__badge,
         .voyage-edit-v2-page.workflow-collapsed .v2-sb-footer,
         .voyage-edit-v2-page.workflow-collapsed .workflow-title,
         .voyage-edit-v2-page.workflow-collapsed .workflow-description,
@@ -751,7 +750,7 @@
 @endpush
 
 @section('content')
-<div class="v2-page voyage-edit-page voyage-edit-v2-page voyage-studio-v3 workflow-collapsed" data-v2-initial-id="{{ $veWpId }}" data-v2-save-create-url="{{ $saveCreateUrl }}" data-v2-save-update-template="{{ $saveUpdateTemplate }}" data-v2-is-create="{{ $isCreate ? '1' : '0' }}" data-v3-public-base-url="{{ $publicVoyagesBaseUrl }}">
+<div class="v2-page voyage-edit-page voyage-edit-v2-page voyage-studio-v3" data-v2-initial-id="{{ $veWpId }}" data-v2-save-create-url="{{ $saveCreateUrl }}" data-v2-save-update-template="{{ $saveUpdateTemplate }}" data-v2-is-create="{{ $isCreate ? '1' : '0' }}" data-v3-public-base-url="{{ $publicVoyagesBaseUrl }}">
     <div class="v3-shell">
         @include('admin.circuits.voyages.partials.v3._hero', [
             'isCreate' => $isCreate,
