@@ -692,7 +692,7 @@ foreach ($itinerary as $index => $day) {
                                                             <input type="radio" name="ajtb_proposition_<?php echo esc_attr((string) ($day_activity_id ?: $act_id)); ?>" value="participer">
                                                             <span><?php esc_html_e('Participer', 'ajinsafro-tour-bridge'); ?></span>
                                                         </label>
-                                                        <p class="ajtb-proposition-error" data-ajtb-proposition-error hidden>Veuillez choisir Libre ou Participer pour les activit&eacute;s propos&eacute;es.</p>
+                                                        <p class="ajtb-proposition-error" data-ajtb-proposition-error hidden>Veuillez choisir Libre ou Participer pour cette activit&eacute; propos&eacute;e.</p>
                                                     </div>
                                                 <?php endif; ?>
                                             </div>

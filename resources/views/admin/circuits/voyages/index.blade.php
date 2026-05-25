@@ -49,13 +49,9 @@
                 ]"
             >
                 <x-slot name="actions">
-                    <a href="{{ route('admin.circuits.voyages.create') }}" class="aj-btn aj-btn-soft">
-                        <i class="bx bx-plus"></i>
-                        <span>Créer un tour</span>
-                    </a>
                     <a href="{{ route('admin.circuits.voyages.create-v2') }}" class="aj-btn aj-btn-primary">
                         <i class="bx bx-plus"></i>
-                        <span>Créer en V2</span>
+                        <span>Créer un voyage</span>
                     </a>
                 </x-slot>
             </x-admin.page-header>
@@ -207,7 +203,7 @@
                     <x-admin.empty-state
                         title="Aucun voyage trouvé"
                         message="Ajustez vos filtres ou créez un nouveau voyage."
-                        :action-url="route('admin.circuits.voyages.create')"
+                        :action-url="route('admin.circuits.voyages.create-v2')"
                         action-label="Créer un voyage"
                     />
                 @else
@@ -240,7 +236,7 @@
                                         </td>
                                         <td>
                                             <div class="aj-item-title">
-                                                <a href="{{ route('admin.circuits.voyages.edit', $tour->ID) }}">{{ $tour->post_title }}</a>
+                                                <a href="{{ route('admin.circuits.voyages.edit-v2', $tour->ID) }}">{{ $tour->post_title }}</a>
                                                 @if(!empty($tour->laravel_slug))
                                                     <span class="aj-badge -info">Laravel</span>
                                                 @endif
@@ -264,18 +260,10 @@
                                         <td>{{ optional($tour->post_modified)->format('d/m/Y H:i') ?? '-' }}</td>
                                         <td class="text-end">
                                             <div class="aj-actions">
-                                                <a href="https://ajinsafro.net/tours/{{ $tour->post_name }}" target="_blank" class="aj-icon-btn" title="Voir la fiche publique">
+                                                <a href="{{ route('admin.circuits.voyages.show', $tour->ID) }}" class="aj-icon-btn" title="Voir">
                                                     <i class="bx bx-show"></i>
                                                 </a>
-                                                @if(!empty($tour->laravel_slug))
-                                                    <a href="{{ url('/voyages/'.$tour->laravel_slug) }}" target="_blank" rel="noopener noreferrer" class="aj-icon-btn" title="Voir la page commerciale">
-                                                        <i class="bx bx-link-external"></i>
-                                                    </a>
-                                                @endif
-                                                <a href="{{ route('admin.circuits.voyages.edit', $tour->ID) }}" class="aj-icon-btn" title="Modifier">
-                                                    <i class="bx bx-pencil"></i>
-                                                </a>
-                                                <a href="{{ route('admin.circuits.voyages.edit-v2', $tour->ID) }}" class="aj-icon-btn" title="�?diteur V2">
+                                                <a href="{{ route('admin.circuits.voyages.edit-v2', $tour->ID) }}" class="aj-icon-btn" title="Modifier (V2)">
                                                     <i class="bx bx-layer"></i>
                                                 </a>
                                                 <form action="{{ route('admin.circuits.voyages.destroy', $tour->ID) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce tour de WordPress ?');">
@@ -305,7 +293,7 @@
                                     <span class="aj-badge -info">#{{ $tour->ID }}</span>
                                 </div>
                                 <div class="aj-card-body">
-                                    <h4 class="aj-card-title"><a href="{{ route('admin.circuits.voyages.edit', $tour->ID) }}">{{ $tour->post_title }}</a></h4>
+                                    <h4 class="aj-card-title"><a href="{{ route('admin.circuits.voyages.edit-v2', $tour->ID) }}">{{ $tour->post_title }}</a></h4>
                                     <div class="aj-meta-text mb-2">{{ $tour->post_name }}</div>
                                     <div class="aj-meta-text mb-2">{{ $tour->address ?? 'Destination non renseignée' }}</div>
                                     <div class="d-flex flex-wrap gap-2 mb-3">
@@ -321,8 +309,8 @@
                                     <div class="aj-card-actions">
                                         <span class="aj-price">{{ $price > 0 ? number_format($price, 0, ',', ' ') . ' MAD' : '�?"' }}</span>
                                         <div class="aj-actions">
-                                            <a href="{{ route('admin.circuits.voyages.edit', $tour->ID) }}" class="aj-icon-btn" title="Modifier"><i class="bx bx-pencil"></i></a>
-                                            <a href="{{ route('admin.circuits.voyages.edit-v2', $tour->ID) }}" class="aj-icon-btn" title="V2"><i class="bx bx-layer"></i></a>
+                                            <a href="{{ route('admin.circuits.voyages.show', $tour->ID) }}" class="aj-icon-btn" title="Voir"><i class="bx bx-show"></i></a>
+                                            <a href="{{ route('admin.circuits.voyages.edit-v2', $tour->ID) }}" class="aj-icon-btn" title="Modifier (V2)"><i class="bx bx-layer"></i></a>
                                         </div>
                                     </div>
                                 </div>

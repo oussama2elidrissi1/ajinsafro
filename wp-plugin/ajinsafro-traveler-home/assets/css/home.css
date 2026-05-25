@@ -1092,7 +1092,7 @@ body.aj-custom-header #masthead {
     background: #fff;
     border-radius: var(--aj-radius);
     box-shadow: 0 10px 40px -10px rgba(0,0,0,.1);
-    overflow: hidden;
+    overflow: visible !important;
     border: 1px solid #f3f4f6;
     transition: all .3s ease;
 }
@@ -1790,6 +1790,8 @@ body.aj-has-bg-pattern::after {
 .aj-search-tabs {
     display: flex;
     overflow-x: auto;
+    overflow-y: hidden;
+    border-radius: var(--aj-radius) var(--aj-radius) 0 0;
     background: var(--aj-brand-dark, #0e3a5a);
     font-size: .8rem;
     font-weight: 600;
@@ -1840,7 +1842,7 @@ body.aj-has-bg-pattern::after {
     align-items: center;
     background: #fff;
     border-radius: var(--aj-radius);
-    overflow: hidden;
+    overflow: visible;
 }
 
 .aj-search-field {
@@ -1935,6 +1937,155 @@ body.aj-has-bg-pattern::after {
 .aj-search-submit__btn:hover {
     filter: brightness(1.1);
     box-shadow: 0 6px 20px rgba(0,131,196,.35);
+}
+
+.aj-search-field {
+    position: relative;
+}
+
+.aj-search-field--open {
+    z-index: 80;
+}
+
+.aj-search-field__text {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+}
+
+.aj-search-popover {
+    position: absolute;
+    z-index: 1000;
+    top: calc(100% + 12px);
+    left: 0;
+    min-width: 340px;
+    padding: 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, .16);
+}
+
+.aj-search-popover[hidden] {
+    display: none !important;
+}
+
+.aj-search-date-popover {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 380px;
+}
+
+.aj-search-date-popover label,
+.aj-search-class {
+    display: grid;
+    gap: 6px;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.aj-search-date-popover input,
+.aj-search-class select {
+    min-height: 42px;
+    border: 1px solid #dbe3ee;
+    border-radius: 12px;
+    padding: 0 10px;
+    color: #0f172a;
+    font-size: 14px;
+}
+
+.aj-search-guests-popover {
+    display: grid;
+    gap: 12px;
+}
+
+.aj-search-counter {
+    display: grid;
+    grid-template-columns: 1fr 34px 32px 34px;
+    align-items: center;
+    gap: 8px;
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.aj-search-counter button {
+    width: 34px;
+    height: 34px;
+    border: 1px solid #dbe3ee;
+    border-radius: 999px;
+    background: #f8fafc;
+    color: #0e3a5a;
+    cursor: pointer;
+    font-weight: 800;
+}
+
+.aj-search-popover__done {
+    grid-column: 1 / -1;
+    min-height: 40px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--aj-brand-orange, #f37a1f);
+    color: #fff;
+    cursor: pointer;
+    font-weight: 800;
+}
+
+.aj-prepare-page {
+    min-height: 62vh;
+    display: grid;
+    place-items: center;
+    padding: 90px 0;
+    background: linear-gradient(135deg, #eef8ff 0%, #fff7ed 100%);
+}
+
+.aj-prepare-card {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 46px;
+    border: 1px solid #e6edf5;
+    border-radius: 28px;
+    background: #fff;
+    box-shadow: 0 24px 70px rgba(14, 58, 90, .14);
+    text-align: center;
+}
+
+.aj-prepare-kicker {
+    color: var(--aj-brand-orange, #f37a1f);
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.aj-prepare-card h1 {
+    margin: 10px 0 12px;
+    color: var(--aj-brand-dark, #0e3a5a);
+    font-size: clamp(2rem, 5vw, 3.25rem);
+}
+
+.aj-prepare-card p {
+    color: #64748b;
+    font-size: 18px;
+    line-height: 1.65;
+}
+
+.aj-prepare-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    margin-top: 24px;
+    padding: 0 24px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--aj-brand-blue, #0083c4), #00b4db);
+    color: #fff !important;
+    font-weight: 800;
 }
 
 /* ==========================================================================
@@ -3516,6 +3667,15 @@ body.aj-has-bg-pattern::after {
     .aj-search-field + .aj-search-field { border-left: none; border-top: 1px solid #f3f4f6; }
     .aj-search-submit { width: 100%; }
     .aj-search-submit__btn { width: 100%; min-width: unset; }
+    .aj-search-popover {
+        left: 0;
+        right: 0;
+        min-width: 0;
+        width: 100%;
+    }
+    .aj-search-date-popover {
+        grid-template-columns: 1fr;
+    }
     .aj-slider-v2__item { flex: 0 0 80%; min-width: 260px; }
     .aj-theme { padding: 10px 0 12px; }
     .aj-theme__right { padding: 10px; }

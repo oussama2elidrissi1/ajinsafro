@@ -18,9 +18,7 @@ if ( preg_match( '/\[([a-zA-Z0-9_\-:]+)/', $search_shortcode, $m ) ) {
 $voyages_page_url = function_exists( 'ajth_get_voyages_page_url' )
     ? ajth_get_voyages_page_url()
     : home_url( '/voyages/' );
-$vols_page_url = function_exists( 'ajth_get_vols_page_url' )
-    ? ajth_get_vols_page_url()
-    : home_url( '/vols/' );
+$vols_page_url = home_url( '/billet-avion/' );
 $hebergement_page_url = function_exists( 'ajth_get_hebergement_page_url' )
     ? ajth_get_hebergement_page_url()
     : home_url( '/hebergement/' );
@@ -35,10 +33,10 @@ $transfert_page_url = function_exists( 'ajth_get_transfert_page_url' )
 <?php if ( shortcode_exists( $shortcode_tag ) && ! empty( $search_shortcode ) ) : ?>
     <div class="aj-search-native"><?php echo do_shortcode( $search_shortcode ); ?></div>
 <?php else : ?>
-<div class="aj-search-card" style="border-radius: var(--aj-radius); overflow: hidden; border: 1px solid #f3f4f6;">
+<div class="aj-search-card" style="border-radius: var(--aj-radius); overflow: visible; border: 1px solid #f3f4f6;">
     <div class="aj-search-tabs" id="aj-search-tabs">
         <button type="button" class="aj-search-tab aj-search-tab--active" data-target="voyage"><i class="fas fa-globe"></i> <span>Voyage</span></button>
-        <button type="button" class="aj-search-tab" data-target="vol"><i class="fas fa-plane"></i> <span>Billet d'avion</span></button>
+        <button type="button" class="aj-search-tab" data-target="vol" data-prepare-url="<?php echo esc_url( $vols_page_url ); ?>"><i class="fas fa-plane"></i> <span>Billet d'avion</span></button>
         <button type="button" class="aj-search-tab" data-target="hotel"><i class="fas fa-bed"></i> <span>Hébergement</span></button>
         <button type="button" class="aj-search-tab" data-target="transfert"><i class="fas fa-car"></i> <span>Transfert</span></button>
         <button type="button" class="aj-search-tab" data-target="activite"><i class="fas fa-camera"></i> <span>Activité</span></button>
@@ -58,20 +56,28 @@ $transfert_page_url = function_exists( 'ajth_get_transfert_page_url' )
                             <input type="text" name="location_name" class="aj-search-field__input" placeholder="Où voulez-vous partir ?">
                         </div>
                     </div>
-                    <div class="aj-search-field">
+                    <div class="aj-search-field aj-search-field--date" data-aj-date-picker>
                         <div class="aj-search-field__icon aj-search-field__icon--blue"><i class="far fa-calendar-alt"></i></div>
                         <div class="aj-search-field__content">
-                            <span class="aj-search-field__label">Départ - Retour</span>
-                            <input type="text" name="start" class="aj-search-field__input" placeholder="Ajouter des dates">
+                            <span class="aj-search-field__label">Date de départ</span>
+                            <input type="date" name="date_depart" class="aj-search-field__input" data-aj-native-date>
                         </div>
                     </div>
-                    <div class="aj-search-field">
+                    <div class="aj-search-field aj-search-field--guests" data-aj-guests data-aj-guests-mode="voyage">
                         <div class="aj-search-field__icon aj-search-field__icon--purple"><i class="fas fa-user-friends"></i></div>
                         <div class="aj-search-field__content">
                             <span class="aj-search-field__label">Clients</span>
-                            <div class="aj-search-field__text">
-                                <span>1 Adulte - 0 Enfant</span>
+                            <button type="button" class="aj-search-field__text" data-aj-guests-toggle>
+                                <span data-aj-guests-label>1 Adulte - 0 Enfant</span>
                                 <i class="fas fa-chevron-down aj-search-field__caret"></i>
+                            </button>
+                            <input type="hidden" name="adults" value="1" data-aj-guests-value="adults">
+                            <input type="hidden" name="children" value="0" data-aj-guests-value="children">
+                            <div class="aj-search-popover aj-search-guests-popover" data-aj-popover hidden>
+                                <div class="aj-search-counter" data-aj-counter="adults"><span>Adultes</span><button type="button" data-aj-minus>-</button><strong data-aj-count>1</strong><button type="button" data-aj-plus>+</button></div>
+                                <div class="aj-search-counter" data-aj-counter="children"><span>Enfants</span><button type="button" data-aj-minus>-</button><strong data-aj-count>0</strong><button type="button" data-aj-plus>+</button></div>
+                                <div class="aj-search-counter" data-aj-counter="infants"><span>Bébés</span><button type="button" data-aj-minus>-</button><strong data-aj-count>0</strong><button type="button" data-aj-plus>+</button></div>
+                                <button type="button" class="aj-search-popover__done" data-aj-popover-close>Valider</button>
                             </div>
                         </div>
                     </div>
@@ -84,7 +90,7 @@ $transfert_page_url = function_exists( 'ajth_get_transfert_page_url' )
 
         <!-- FORM: BILLET D'AVION -->
         <div id="aj-form-vol" class="aj-search-form">
-            <form method="get" action="<?php echo esc_url( $vols_page_url ); ?>">
+            <form method="get" action="<?php echo esc_url( $vols_page_url ); ?>" data-aj-flight-form>
                 <input type="hidden" name="s" value="">
                 <input type="hidden" name="post_type" value="st_tours">
                 <div class="aj-search-form__row">
@@ -102,18 +108,34 @@ $transfert_page_url = function_exists( 'ajth_get_transfert_page_url' )
                             <input type="text" name="arrival" class="aj-search-field__input" placeholder="Où allez-vous ?">
                         </div>
                     </div>
-                    <div class="aj-search-field">
+                    <div class="aj-search-field aj-search-field--date" data-aj-date-picker>
                         <div class="aj-search-field__icon aj-search-field__icon--gray"><i class="far fa-calendar-alt"></i></div>
                         <div class="aj-search-field__content">
                             <span class="aj-search-field__label">Dates</span>
-                            <input type="text" name="start" class="aj-search-field__input" placeholder="jj/mm - jj/mm">
+                            <input type="text" class="aj-search-field__input" placeholder="jj/mm - jj/mm" readonly data-aj-date-display>
+                            <input type="hidden" name="start" data-aj-date-start>
+                            <input type="hidden" name="end" data-aj-date-end>
+                            <div class="aj-search-popover aj-search-date-popover" data-aj-popover hidden>
+                                <label><span>Départ</span><input type="date" data-aj-date-input="start"></label>
+                                <label><span>Retour</span><input type="date" data-aj-date-input="end"></label>
+                                <button type="button" class="aj-search-popover__done" data-aj-popover-close>Valider</button>
+                            </div>
                         </div>
                     </div>
-                    <div class="aj-search-field">
+                    <div class="aj-search-field aj-search-field--guests" data-aj-guests data-aj-guests-mode="flight">
                         <div class="aj-search-field__icon aj-search-field__icon--purple"><i class="fas fa-user"></i></div>
                         <div class="aj-search-field__content">
                             <span class="aj-search-field__label">Passagers</span>
-                            <div class="aj-search-field__text"><span>1 Adulte, Éco</span></div>
+                            <button type="button" class="aj-search-field__text" data-aj-guests-toggle><span data-aj-guests-label>1 Adulte, Éco</span><i class="fas fa-chevron-down aj-search-field__caret"></i></button>
+                            <input type="hidden" name="adults" value="1" data-aj-guests-value="adults">
+                            <input type="hidden" name="children" value="0" data-aj-guests-value="children">
+                            <input type="hidden" name="class" value="eco" data-aj-flight-class-value>
+                            <div class="aj-search-popover aj-search-guests-popover" data-aj-popover hidden>
+                                <div class="aj-search-counter" data-aj-counter="adults"><span>Adultes</span><button type="button" data-aj-minus>-</button><strong data-aj-count>1</strong><button type="button" data-aj-plus>+</button></div>
+                                <div class="aj-search-counter" data-aj-counter="children"><span>Enfants</span><button type="button" data-aj-minus>-</button><strong data-aj-count>0</strong><button type="button" data-aj-plus>+</button></div>
+                                <label class="aj-search-class"><span>Classe</span><select data-aj-flight-class><option value="eco">Éco</option><option value="business">Business</option></select></label>
+                                <button type="button" class="aj-search-popover__done" data-aj-popover-close>Valider</button>
+                            </div>
                         </div>
                     </div>
                     <div class="aj-search-submit">

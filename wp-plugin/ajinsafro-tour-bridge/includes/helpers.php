@@ -413,7 +413,8 @@ function ajtb_render_day_activities_html($tour_id, $day_id, $day_activities, $se
         return (int) isset($a['activity_id']) ? $a['activity_id'] : 0;
     }, $day_activities);
     $included = array_filter($day_activities, function ($a) {
-        return !empty($a['is_included']);
+        $status = isset($a['status']) ? (string) $a['status'] : (!empty($a['is_included']) ? 'included' : 'optional');
+        return $status === 'included' || $status === 'proposition';
     });
     $included = array_values($included);
 
@@ -424,8 +425,10 @@ function ajtb_render_day_activities_html($tour_id, $day_id, $day_activities, $se
             $day_activity_id = (int) isset($act['id']) ? $act['id'] : 0;
             $title = isset($act['title']) && (string) $act['title'] !== '' ? $act['title'] : __('Activité', 'ajinsafro-tour-bridge');
             $desc = isset($act['description']) && (string) $act['description'] !== '' ? $act['description'] : '';
+            $status = isset($act['status']) ? (string) $act['status'] : (!empty($act['is_included']) ? 'included' : 'optional');
+            $is_proposition = $status === 'proposition';
             $is_mandatory = !empty($act['is_mandatory']);
-            $show_remove = $can_toggle && !$is_mandatory;
+            $show_remove = $can_toggle && !$is_mandatory && !$is_proposition;
             $act_price = null;
             if (isset($act['custom_price']) && $act['custom_price'] !== null) {
                 $act_price = (float) $act['custom_price'];
@@ -438,7 +441,7 @@ function ajtb_render_day_activities_html($tour_id, $day_id, $day_activities, $se
             
             $client_added = !empty($act['client_added']) ? 'true' : 'false';
             $is_included_val = !empty($act['is_included']) ? '1' : '0';
-            $html .= '<li class="day-activity-item day-activity-card-pro" data-activity-id="' . esc_attr($act_id) . '" data-day-activity-id="' . esc_attr($day_activity_id) . '" data-day-id="' . esc_attr($day_id) . '" data-is-mandatory="' . ($is_mandatory ? '1' : '0') . '" data-client-added="' . esc_attr($client_added) . '" data-is-included="' . esc_attr($is_included_val) . '">';
+            $html .= '<li class="day-activity-item day-activity-card-pro' . ($is_proposition ? ' day-activity-card-proposition' : '') . '" data-activity-id="' . esc_attr($act_id) . '" data-day-activity-id="' . esc_attr($day_activity_id) . '" data-day-id="' . esc_attr($day_id) . '" data-activity-status="' . esc_attr($status) . '" data-activity-price="' . esc_attr($act_price !== null ? (string) $act_price : '0') . '" data-is-mandatory="' . ($is_mandatory ? '1' : '0') . '" data-client-added="' . esc_attr($client_added) . '" data-is-included="' . esc_attr($is_included_val) . '"' . ($is_proposition ? ' data-ajtb-proposition-card="1"' : '') . '>';
             $html .= '<div class="day-activity-item-content">';
             $html .= '<div class="day-activity-image-wrap">';
             if ($act_image_url) {
@@ -450,6 +453,9 @@ function ajtb_render_day_activities_html($tour_id, $day_id, $day_activities, $se
             $html .= '<div class="day-activity-details">';
             $html .= '<div class="day-activity-header">';
             $html .= '<span class="activity-title">' . esc_html($title) . '</span>';
+            if ($is_proposition) {
+                $html .= ' <span class="badge badge-proposition">Proposition Ajinsafro</span>';
+            }
             if ($is_mandatory) {
                 $html .= ' <span class="badge badge-mandatory">' . esc_html__('Obligatoire', 'ajinsafro-tour-bridge') . '</span>';
             }
@@ -466,6 +472,15 @@ function ajtb_render_day_activities_html($tour_id, $day_id, $day_activities, $se
             }
             if ($desc !== '') {
                 $html .= '<div class="activity-description">' . wp_kses_post($desc) . '</div>';
+            }
+            if ($is_proposition) {
+                $choice_id = $day_activity_id ?: $act_id;
+                $html .= '<div class="ajtb-proposition-choice" data-ajtb-proposition-choice data-activity-id="' . esc_attr((string) $act_id) . '" data-day-activity-id="' . esc_attr((string) $day_activity_id) . '" data-title="' . esc_attr($title) . '" data-price="' . esc_attr($act_price !== null ? (string) $act_price : '0') . '">';
+                $html .= '<div class="ajtb-proposition-choice-title">Votre choix :</div>';
+                $html .= '<label class="ajtb-proposition-radio"><input type="radio" name="ajtb_proposition_' . esc_attr((string) $choice_id) . '" value="libre"><span>Libre</span></label>';
+                $html .= '<label class="ajtb-proposition-radio"><input type="radio" name="ajtb_proposition_' . esc_attr((string) $choice_id) . '" value="participer"><span>Participer</span></label>';
+                $html .= '<p class="ajtb-proposition-error" data-ajtb-proposition-error hidden>Veuillez choisir Libre ou Participer pour cette activit&eacute; propos&eacute;e.</p>';
+                $html .= '</div>';
             }
             $html .= '</div>';
             $html .= '<div class="day-activity-actions">';

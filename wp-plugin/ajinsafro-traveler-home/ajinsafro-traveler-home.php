@@ -360,6 +360,35 @@ function ajth_homepage_shortcode($atts)
 }
 add_shortcode('ajth_homepage', 'ajth_homepage_shortcode');
 
+function ajth_render_flight_prepare_page(): void
+{
+    $path = trim((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
+    if ($path !== 'billet-avion' && $path !== 'en-cours') {
+        return;
+    }
+
+    status_header(200);
+    nocache_headers();
+    get_header();
+    ?>
+    <main class="aj-home-wrap">
+        <section class="aj-home aj-prepare-page">
+            <div class="aj-container">
+                <div class="aj-prepare-card">
+                    <p class="aj-prepare-kicker">Ajinsafro</p>
+                    <h1>Billet d’avion</h1>
+                    <p>Ce service est en cours de préparation. Il sera bientôt disponible sur Ajinsafro.</p>
+                    <a class="aj-prepare-btn" href="<?php echo esc_url(home_url('/')); ?>">Retour à l’accueil</a>
+                </div>
+            </div>
+        </section>
+    </main>
+    <?php
+    get_footer();
+    exit;
+}
+add_action('template_redirect', 'ajth_render_flight_prepare_page', 0);
+
 /**
  * Render the shared Ajinsafro site header.
  *

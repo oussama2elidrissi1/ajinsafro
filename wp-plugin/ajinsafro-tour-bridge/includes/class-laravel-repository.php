@@ -713,12 +713,15 @@ class AJTB_Laravel_Repository
             return [];
         }
         $has_activity_status = $this->table_has_column($table_activities, 'status');
+        $status_select = $has_activity_status
+            ? "COALESCE(NULLIF(da.status, ''), CASE WHEN da.is_included = 1 THEN 'included' ELSE 'optional' END) AS status, "
+            : "'optional' AS status, ";
         $status_where = $has_activity_status
             ? "AND COALESCE(NULLIF(da.status, ''), CASE WHEN da.is_included = 1 THEN 'included' ELSE 'optional' END) = 'optional' "
             : "AND da.is_included = 0 ";
         $rows = $this->wpdb->get_results(
             $this->wpdb->prepare(
-                "SELECT da.id, da.activity_id, da.custom_title, da.custom_description, da.custom_price, " .
+                "SELECT da.id, da.activity_id, {$status_select}da.custom_title, da.custom_description, da.custom_price, " .
                 "a.title AS activity_title, a.description AS activity_description, a.image_id AS activity_image_id, a.base_price AS activity_base_price " .
                 "FROM {$table_activities} da " .
                 "INNER JOIN {$table_catalog} a ON a.id = da.activity_id " .
@@ -755,6 +758,7 @@ class AJTB_Laravel_Repository
                 'image_url' => $image_url,
                 'base_price' => $ar['activity_base_price'] !== null ? (float) $ar['activity_base_price'] : null,
                 'custom_price' => $ar['custom_price'] !== null ? (float) $ar['custom_price'] : null,
+                'status' => 'optional',
             ];
         }
         return $out;

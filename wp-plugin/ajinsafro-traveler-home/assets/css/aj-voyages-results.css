@@ -134,6 +134,12 @@
     background: #fff;
 }
 
+.aj-voyages-booking .search-field--date {
+    border-top: 3px solid var(--aj-orange);
+    border-bottom: 3px solid var(--aj-orange);
+    padding: 12px 18px;
+}
+
 .aj-voyages-booking .search-field label {
     display: block;
     font-size: 11px;
@@ -153,6 +159,19 @@
     font-weight: 750;
     color: var(--aj-text);
     background: transparent;
+}
+
+.aj-voyages-booking .search-field--date input[type="date"] {
+    min-height: 28px;
+    color: var(--aj-text);
+    font-size: 18px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.aj-voyages-booking .search-field--date input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 1;
 }
 
 .aj-voyages-booking .search-field input:focus,

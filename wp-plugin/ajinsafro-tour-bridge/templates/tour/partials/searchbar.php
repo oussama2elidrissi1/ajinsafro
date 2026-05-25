@@ -183,7 +183,23 @@ if ($start_from !== '' && !isset($departure_cities[ $start_from ])) {
     $departure_cities[ $start_from ] = $start_from;
 }
 
-$travel_date = isset($saved['travel_date']) ? $saved['travel_date'] : (isset($saved['travelling_on']) ? $saved['travelling_on'] : '');
+$requested_travel_date = '';
+foreach (['date_depart', 'departure_date', 'depart_date'] as $date_query_key) {
+    if (isset($_GET[$date_query_key])) {
+        $candidate_date = sanitize_text_field(wp_unslash($_GET[$date_query_key]));
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $candidate_date)) {
+            $requested_travel_date = $candidate_date;
+            break;
+        }
+    }
+}
+if ($requested_travel_date !== '' && !in_array($requested_travel_date, $available_dates, true)) {
+    $requested_travel_date = '';
+}
+
+$travel_date = $requested_travel_date !== ''
+    ? $requested_travel_date
+    : (isset($saved['travel_date']) ? $saved['travel_date'] : (isset($saved['travelling_on']) ? $saved['travelling_on'] : ''));
 $travel_date_display = $travel_date;
 if ($travel_date !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $travel_date)) {
     $dt = new DateTime($travel_date);

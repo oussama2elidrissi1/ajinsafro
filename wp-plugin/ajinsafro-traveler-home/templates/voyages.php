@@ -87,7 +87,6 @@ if (! function_exists('ajinsafro_get_tour_price')) {
             $meta_float($meta, 'base_price'),
         ], static fn ($value) => $value > 0);
 
-        $sale_price = $meta_float($meta, 'sale_price');
         $regular_price = ! empty($regular_candidates) ? min($regular_candidates) : 0.0;
         $min_departure_price = null;
 
@@ -108,15 +107,17 @@ if (! function_exists('ajinsafro_get_tour_price')) {
         } elseif ($next_departure !== null && ($next_departure['price'] ?? null) !== null && (float) $next_departure['price'] > 0) {
             $price_from = (float) $next_departure['price'];
             $price_source = (string) ($next_departure['price_source'] ?? 'departure:next');
-        } elseif ($sale_price > 0) {
-            $price_from = $sale_price;
-            $price_source = 'meta:sale_price';
         } elseif ($min_departure_price !== null && $min_departure_price > 0) {
             $price_from = $min_departure_price;
             $price_source = 'departure:min';
         } elseif ($regular_price > 0) {
             $price_from = $regular_price;
             $price_source = 'meta:regular';
+        }
+
+        if ($regular_price > 0 && $price_from !== null && $price_from > 0 && $price_from < ($regular_price * 0.5)) {
+            $price_from = $regular_price;
+            $price_source = 'meta:regular:deposit-guard';
         }
 
         $price_reference = $regular_price > 0 ? $regular_price : null;
@@ -140,16 +141,18 @@ if (! function_exists('ajinsafro_get_tour_next_departure')) {
         $departures = isset($context['departure_index'][$post_id]) && is_array($context['departure_index'][$post_id])
             ? $context['departure_index'][$post_id]
             : [];
-        $min_date = $today;
-        if ($date_filter !== '' && $date_filter > $min_date) {
-            $min_date = $date_filter;
-        }
-
         foreach ($departures as $row) {
             if (empty($row['is_active'])) {
                 continue;
             }
-            if (($row['date'] ?? '') < $min_date) {
+            $row_date = (string) ($row['date'] ?? '');
+            if ($row_date === '') {
+                continue;
+            }
+            if ($date_filter !== '' && $row_date !== $date_filter) {
+                continue;
+            }
+            if ($date_filter === '' && $row_date < $today) {
                 continue;
             }
 
@@ -264,6 +267,21 @@ $get_int_alias = static function (array $keys) use ($get_int): int {
     return 0;
 };
 
+$normalize_date_filter = static function (string $value): string {
+    $value = trim($value);
+    if ($value === '') {
+        return '';
+    }
+    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+        return $value;
+    }
+    if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $value, $matches)) {
+        return $matches[3] . '-' . $matches[2] . '-' . $matches[1];
+    }
+
+    return '';
+};
+
 $search_text = $get_text('s');
 $location_name = $get_text('location_name');
 $keyword = $location_name !== '' ? $location_name : $search_text;
@@ -272,7 +290,7 @@ $tag_slug = $get_text('tag');
 $tour_type_slug = $get_text('tour_type');
 $location_id = $get_int('location_id');
 $dest = $get_text_alias(['destination', 'dest']);
-$depart_date = $get_text_alias(['date_depart', 'depart_date']);
+$depart_date = $normalize_date_filter($get_text_alias(['date_depart', 'departure_date', 'depart_date']));
 $duration_min = $get_int('duration_min');
 $duration_max = $get_int('duration_max');
 $price_min = $get_int_alias(['budget_min', 'price_min']);
@@ -562,7 +580,7 @@ if (! empty($post_ids)) {
             }
         }
         $price_column = '';
-        foreach (['specific_price', 'price_override', 'adult_price', 'price'] as $candidate_column) {
+        foreach (['price_from', 'specific_price', 'price_override', 'adult_price', 'price', 'base_price'] as $candidate_column) {
             if (in_array($candidate_column, $columns, true)) {
                 $price_column = $candidate_column;
                 break;
@@ -659,7 +677,7 @@ if (! empty($post_ids)) {
 
         if ($date_column !== '' && $tour_column !== '') {
             $select_parts = ['id', "{$tour_column} AS tour_post_id", "{$date_column} AS departure_date"];
-            foreach (['wp_travel_date_id', 'status', 'total_capacity', 'reserved_capacity', 'available_capacity', 'base_price', 'sale_price'] as $candidate_column) {
+            foreach (['wp_travel_date_id', 'status', 'total_capacity', 'reserved_capacity', 'available_capacity', 'price_from', 'adult_price', 'specific_price', 'price_override', 'price', 'base_price', 'sale_price'] as $candidate_column) {
                 if (in_array($candidate_column, $columns, true)) {
                     $select_parts[] = $candidate_column;
                 }
@@ -679,12 +697,12 @@ if (! empty($post_ids)) {
 
                 $price = null;
                 $price_source = '';
-                if (isset($row['sale_price']) && $row['sale_price'] !== '' && $row['sale_price'] !== null && (float) $row['sale_price'] > 0) {
-                    $price = (float) $row['sale_price'];
-                    $price_source = 'departures:sale_price';
-                } elseif (isset($row['base_price']) && $row['base_price'] !== '' && $row['base_price'] !== null && (float) $row['base_price'] > 0) {
-                    $price = (float) $row['base_price'];
-                    $price_source = 'departures:base_price';
+                foreach (['price_from', 'adult_price', 'specific_price', 'price_override', 'price', 'base_price'] as $price_candidate) {
+                    if (isset($row[$price_candidate]) && $row[$price_candidate] !== '' && $row[$price_candidate] !== null && (float) $row[$price_candidate] > 0) {
+                        $price = (float) $row[$price_candidate];
+                        $price_source = 'departures:' . $price_candidate;
+                        break;
+                    }
                 }
 
                 $status_raw = isset($row['status']) ? trim((string) $row['status']) : '';
@@ -993,10 +1011,18 @@ foreach ($post_ids as $post_id) {
         $card_badge = 'Selection Ajinsafro';
     }
 
+    $card_permalink = get_permalink($post_id);
+    if ($depart_date !== '' && $selected_departure !== null) {
+        $card_permalink = add_query_arg([
+            'date_depart' => $depart_date,
+            'departure_date' => $depart_date,
+        ], $card_permalink);
+    }
+
     $cards[] = [
         'id' => $post_id,
         'title' => $title,
-        'permalink' => get_permalink($post_id),
+        'permalink' => $card_permalink,
         'image_html' => $image_html,
         'image_is_fallback' => $image_is_fallback,
         'excerpt' => get_the_excerpt($post_id) !== ''
@@ -1217,7 +1243,7 @@ $rating_label = static function (float $rating): string {
                                 <?php } ?>
                             </select>
                         </div>
-                        <div class="search-field">
+                        <div class="search-field search-field--date">
                             <label for="ajvb-depart-date">Date de depart</label>
                             <input id="ajvb-depart-date" name="date_depart" type="date" value="<?php echo esc_attr($depart_date); ?>">
                         </div>

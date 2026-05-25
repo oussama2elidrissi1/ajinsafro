@@ -136,9 +136,25 @@ if (empty($search_date_options) && $search_date !== '') {
         'display' => $search_date,
     ];
 }
+
+$requested_search_date = '';
+foreach (['date_depart', 'departure_date', 'depart_date'] as $date_query_key) {
+    if (isset($_GET[$date_query_key])) {
+        $candidate_date = sanitize_text_field(wp_unslash($_GET[$date_query_key]));
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $candidate_date)) {
+            $requested_search_date = $candidate_date;
+            break;
+        }
+    }
+}
+
 $selected_search_date = !empty($search_date_options) ? (string) $search_date_options[0]['value'] : '';
 foreach ($search_date_options as $date_option) {
-    if ((string) $date_option['value'] === $search_date || (string) $date_option['display'] === $search_date) {
+    if (
+        ($requested_search_date !== '' && (string) $date_option['value'] === $requested_search_date)
+        || (string) $date_option['value'] === $search_date
+        || (string) $date_option['display'] === $search_date
+    ) {
         $selected_search_date = (string) $date_option['value'];
         break;
     }
@@ -171,7 +187,11 @@ $price_date_map = !empty($tour_data['search']['date_prices']) && is_array($tour_
 $price_date_map_json = wp_json_encode($price_date_map);
 $price_note = !empty($tour_data['pricing']['note']) ? (string) $tour_data['pricing']['note'] : 'Tarif indicatif par adulte.';
 $client_activity_enabled = !empty($tour_data['session_token']) && !empty($tour_id);
-$open_activities = is_array($tour_data['open_activities'] ?? null) ? $tour_data['open_activities'] : [];
+                    $open_activities = is_array($tour_data['open_activities'] ?? null) ? $tour_data['open_activities'] : [];
+                    $open_optional_activities = array_values(array_filter($open_activities, static function ($oa) {
+                        $status = isset($oa['status']) ? (string) $oa['status'] : (!empty($oa['is_included']) ? 'included' : 'optional');
+                        return $status === 'optional';
+                    }));
 $recap_url = class_exists('AJTB_Single_Tour_Page') ? AJTB_Single_Tour_Page::recap_url($tour_id) : '';
 
 if (empty($days)) {
@@ -511,9 +531,12 @@ get_header();
                                     $included_activities = [];
                                     $optional_activities = is_array($day['optional_activities'] ?? null) ? $day['optional_activities'] : [];
                                     foreach ($activities as $activity_row) {
-                                        if (!empty($activity_row['is_included'])) {
+                                        $activity_status = isset($activity_row['status'])
+                                            ? (string) $activity_row['status']
+                                            : (!empty($activity_row['is_included']) ? 'included' : 'optional');
+                                        if ($activity_status === 'included' || $activity_status === 'proposition') {
                                             $included_activities[] = $activity_row;
-                                        } elseif (empty($optional_activities)) {
+                                        } elseif ($activity_status === 'optional' && empty($optional_activities)) {
                                             $optional_activities[] = $activity_row;
                                         }
                                     }
@@ -649,24 +672,32 @@ get_header();
                                                 <div class="ajtb-v1-day-activities" data-day-activities-list data-day-id="<?php echo esc_attr((string) $day_db_id); ?>" data-day-number="<?php echo esc_attr((string) $day_num); ?>">
                                                     <?php foreach ($included_activities as $activity): ?>
                                                         <?php
+                                                        $activity_status = isset($activity['status'])
+                                                            ? (string) $activity['status']
+                                                            : (!empty($activity['is_included']) ? 'included' : 'optional');
+                                                        $is_proposition = $activity_status === 'proposition';
                                                         $act_img = $pick($activity, ['image_url'], '');
                                                         $act_title = $pick($activity, ['title'], 'Activité');
-                                                        $act_desc = $pick($activity, ['description'], 'Activité incluse selon le programme du jour.');
+                                                        $act_desc = $pick($activity, ['description'], $is_proposition ? 'Activité proposée par Ajinsafro.' : 'Activité incluse selon le programme du jour.');
                                                         $act_price = isset($activity['custom_price']) && $activity['custom_price'] !== null
                                                             ? (float) $activity['custom_price']
                                                             : (isset($activity['base_price']) && $activity['base_price'] !== null ? (float) $activity['base_price'] : null);
+                                                        $act_id = (int) ($activity['activity_id'] ?? 0);
+                                                        $day_activity_id = (int) ($activity['id'] ?? 0);
                                                         ?>
-                                                        <div class="activity-card ajtb-v1-service-card program-item" data-program-type="activity" data-activity-id="<?php echo esc_attr((string) (int) ($activity['activity_id'] ?? 0)); ?>" data-activity-title="<?php echo esc_attr($act_title); ?>" data-activity-price="<?php echo esc_attr($act_price !== null ? (string) $act_price : ''); ?>" data-client-added="<?php echo !empty($activity['client_added']) ? '1' : '0'; ?>">
+                                                        <div class="activity-card ajtb-v1-service-card program-item<?php echo $is_proposition ? ' day-activity-card-proposition' : ''; ?>" data-program-type="activity" data-activity-id="<?php echo esc_attr((string) $act_id); ?>" data-day-activity-id="<?php echo esc_attr((string) $day_activity_id); ?>" data-activity-status="<?php echo esc_attr($activity_status); ?>" data-activity-title="<?php echo esc_attr($act_title); ?>" data-activity-price="<?php echo esc_attr($act_price !== null ? (string) $act_price : '0'); ?>" data-client-added="<?php echo !empty($activity['client_added']) ? '1' : '0'; ?>"<?php echo $is_proposition ? ' data-ajtb-proposition-card="1"' : ''; ?>>
                                                             <div class="ajtb-v1-service-head">
                                                                 <span>Activité du programme</span>
-                                                                <?php if (!empty($activity['client_added'])): ?>
+                                                                <?php if ($is_proposition): ?>
+                                                                    <span class="badge badge-proposition">Proposition Ajinsafro</span>
+                                                                <?php elseif (!empty($activity['client_added'])): ?>
                                                                     <button type="button"
                                                                         class="ajtb-v1-service-remove"
                                                                         data-ajtb-v1-action="remove-program-activity"
                                                                         data-tour-id="<?php echo esc_attr((string) $tour_id); ?>"
                                                                         data-day-id="<?php echo esc_attr((string) $day_db_id); ?>"
                                                                         data-day-number="<?php echo esc_attr((string) $day_num); ?>"
-                                                                        data-activity-id="<?php echo esc_attr((string) (int) ($activity['activity_id'] ?? 0)); ?>">
+                                                                        data-activity-id="<?php echo esc_attr((string) $act_id); ?>">
                                                                         Retirer
                                                                     </button>
                                                                 <?php else: ?>
@@ -680,10 +711,24 @@ get_header();
                                                                 <p data-ajtb-expandable-text><?php echo esc_html($translate_ui($act_desc)); ?></p>
                                                                 <button type="button" class="ajtb-v1-expand-toggle" data-ajtb-expand-toggle hidden>Voir plus</button>
                                                                 <div class="ajtb-v1-meta-line">
-                                                                    <?php if ($act_price !== null): ?><span><?php echo esc_html(number_format($act_price, 0, ',', ' ') . ' MAD'); ?></span><?php endif; ?>
+                                                                    <?php if ($act_price !== null): ?><span><?php echo $is_proposition ? 'Prix : ' : ''; ?><?php echo esc_html(number_format($act_price, 0, ',', ' ') . ' MAD'); ?></span><?php endif; ?>
                                                                     <?php if (!empty($activity['start_time'])): ?><span><?php echo esc_html((string) $activity['start_time']); ?></span><?php endif; ?>
                                                                         <?php if (!empty($activity['end_time'])): ?><span><?php echo esc_html((string) $activity['end_time']); ?></span><?php endif; ?>
                                                                     </div>
+                                                                    <?php if ($is_proposition): ?>
+                                                                        <div class="ajtb-proposition-choice" data-ajtb-proposition-choice data-activity-id="<?php echo esc_attr((string) $act_id); ?>" data-day-activity-id="<?php echo esc_attr((string) $day_activity_id); ?>" data-title="<?php echo esc_attr($act_title); ?>" data-price="<?php echo esc_attr($act_price !== null ? (string) $act_price : '0'); ?>">
+                                                                            <div class="ajtb-proposition-choice-title">Votre choix :</div>
+                                                                            <label class="ajtb-proposition-radio">
+                                                                                <input type="radio" name="ajtb_proposition_<?php echo esc_attr((string) ($day_activity_id ?: $act_id)); ?>" value="libre">
+                                                                                <span>Libre</span>
+                                                                            </label>
+                                                                            <label class="ajtb-proposition-radio">
+                                                                                <input type="radio" name="ajtb_proposition_<?php echo esc_attr((string) ($day_activity_id ?: $act_id)); ?>" value="participer">
+                                                                                <span>Participer</span>
+                                                                            </label>
+                                                                            <p class="ajtb-proposition-error" data-ajtb-proposition-error hidden>Veuillez choisir Libre ou Participer pour cette activité proposée.</p>
+                                                                        </div>
+                                                                    <?php endif; ?>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -693,10 +738,13 @@ get_header();
                                                 <?php
                                                 // Pass all optional activities (fixed + open) to the modal via data-day-opts.
                                                 // JS activityMatchesDay() filters per day; open-scope also covered by window.ajtbOpenActivities fallback.
-                                                $day_fixed_optional = $optional_activities;
-                                                $has_optional_cta = !empty($day_fixed_optional) || !empty($open_activities);
+                                                $day_fixed_optional = array_values(array_filter($optional_activities, static function ($oa) {
+                                                    $status = isset($oa['status']) ? (string) $oa['status'] : (!empty($oa['is_included']) ? 'included' : 'optional');
+                                                    return $status === 'optional';
+                                                }));
+                                                $has_optional_cta = !empty($day_fixed_optional) || !empty($open_optional_activities);
                                                 ?>
-                                                <?php if ($day_db_id > 0): ?>
+                                                <?php if ($day_db_id > 0 && $has_optional_cta): ?>
                                                     <?php
                                                     $day_opts_json = wp_json_encode(array_values(array_map(function ($oa) {
                                                         $price = isset($oa['custom_price']) && $oa['custom_price'] !== null
@@ -709,6 +757,7 @@ get_header();
                                                             'description' => (string) ($oa['description'] ?? ''),
                                                             'image_url' => $oa['image_url'] ?? null,
                                                             'price' => $price,
+                                                            'status' => 'optional',
                                                             'visibility' => $scope === 'open' ? 'all_days' : 'fixed',
                                                             'day_number' => (int) ($oa['day_number'] ?? $day_num),
                                                         ];
@@ -754,9 +803,10 @@ get_header();
                             'description' => (string) ($oa['description'] ?? ''),
                             'image_url' => $oa['image_url'] ?? null,
                             'price' => $price,
+                            'status' => 'optional',
                             'visibility' => 'all_days',
                         ];
-                    }, $open_activities))); ?>;
+                    }, $open_optional_activities))); ?>;
                     window.ajtbTourId = <?php echo (int) $tour_id; ?>;
                     </script>
 

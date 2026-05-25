@@ -1039,6 +1039,7 @@
 
         function activityMatchesDay(activity, dayNumber) {
             if (!activity) { return false; }
+            if (activity.status && String(activity.status) !== "optional") { return false; }
             if (activity.visibility === "all_days") { return true; }
             return Number(activity.day_number) === Number(dayNumber);
         }
