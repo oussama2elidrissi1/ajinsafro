@@ -598,7 +598,14 @@
         window.reservationState.availableRooms = window.reservationAvailableRooms;
         window.reservationState.pricing = pricing || {};
         window.reservationState.roomsMode = payload && payload.mode ? payload.mode : null;
-        window.reservationState.selectedTourId = tourSelect && tourSelect.value ? tourSelect.value : null;
+        // `select-tour-id` can be empty when the preselected tour isn't present in the select options (disabled select).
+        // Keep a stable tour id by falling back to hidden input and current state.
+        var hiddenTourId = document.getElementById('tour_id_hidden');
+        window.reservationState.selectedTourId = (tourSelect && tourSelect.value)
+            ? String(tourSelect.value)
+            : (hiddenTourId && hiddenTourId.value)
+                ? String(hiddenTourId.value)
+                : (window.reservationState.selectedTourId ? String(window.reservationState.selectedTourId) : null);
         window.reservationState.selectedDepartureId = inputDepartureId && inputDepartureId.value ? inputDepartureId.value : null;
         window.reservationState.selectedTravelDateId = inputTravelDateId && inputTravelDateId.value ? inputTravelDateId.value : null;
         
@@ -1154,4 +1161,3 @@
     window.reservationCreateRecomputeTotals = window.reservationCreateRecomputeTotals || syncSummary;
 })();
 </script>
-
