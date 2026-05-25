@@ -2128,7 +2128,7 @@ document.addEventListener('DOMContentLoaded', function () {
             function cleanTaxonomyLabel(label) {
                 if (!label) return '';
                 return String(label)
-                    // (ne pas stripper de caractères invalides ici : la source doit être UTF-8)
+                    .replace(/\uFFFD+/g, '')
                     .replace(/Âº/g, '-')
                     .replace(/º/g, '-')
                     .replace(/[»«]/g, '')

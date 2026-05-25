@@ -147,7 +147,7 @@
             if (!label) return '';
 
             return String(label)
-                .replace(/?+/g, '')
+                .replace(/\uFFFD+/g, '')
                 .replace(/Âº/g, '-')
                 .replace(/º/g, '-')
                 .replace(/[»«]/g, '')
