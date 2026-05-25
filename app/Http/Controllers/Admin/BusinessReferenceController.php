@@ -35,7 +35,12 @@ class BusinessReferenceController extends Controller
             ->ordered()
             ->get();
 
-        return view('admin.settings.business_references.group', compact('groupKey', 'label', 'items'));
+        $paymentMethodCatalog = null;
+        if ($groupKey === 'payment_methods') {
+            $paymentMethodCatalog = BusinessReferentialService::defaultPaymentMethodsCatalog();
+        }
+
+        return view('admin.settings.business_references.group', compact('groupKey', 'label', 'items', 'paymentMethodCatalog'));
     }
 
     public function store(Request $request, string $groupKey): RedirectResponse
@@ -45,6 +50,7 @@ class BusinessReferenceController extends Controller
         }
 
         $rules = [
+            'value' => 'nullable|string|max:255',
             'label' => 'required|string|max:500',
             'is_active' => 'nullable|boolean',
             'sort_order' => 'nullable|integer|min:0|max:65535',
@@ -52,7 +58,12 @@ class BusinessReferenceController extends Controller
         ];
 
         if ($groupKey === 'payment_methods') {
-            $rules['meta_json'] = 'required|string';
+            $rules['value'] = [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('business_reference_values', 'value')->where(fn ($q) => $q->where('group_key', $groupKey)),
+            ];
         } else {
             $rules['value'] = [
                 'required',
@@ -73,13 +84,13 @@ class BusinessReferenceController extends Controller
             }
         }
 
+        $value = trim((string) ($validated['value'] ?? ''));
+
         if ($groupKey === 'payment_methods') {
-            if (! is_array($meta) || empty($meta['meta_key'])) {
-                return back()->withErrors(['meta_json' => 'Le champ meta_key est obligatoire pour les moyens de paiement.'])->withInput();
+            if (! is_array($meta)) {
+                $meta = [];
             }
-            $value = trim((string) $meta['meta_key']);
-        } else {
-            $value = trim((string) $validated['value']);
+            $meta['meta_key'] = $value;
         }
 
         BusinessReferenceValue::query()->create([
@@ -118,6 +129,13 @@ class BusinessReferenceController extends Controller
                     return back()->withErrors(['meta_json' => 'JSON meta invalide.'])->withInput();
                 }
             }
+        }
+
+        if ($groupKey === 'payment_methods') {
+            if (! is_array($meta)) {
+                $meta = [];
+            }
+            $meta['meta_key'] = $item->value;
         }
 
         $item->fill([

@@ -163,6 +163,17 @@ final class BusinessReferentialService
     }
 
     /**
+     * Catalogue "technique" des moyens de paiement connus (valeurs par défaut).
+     * Utile pour proposer une liste simple côté admin sans demander de JSON.
+     *
+     * @return list<array{meta_key: string, label: string}>
+     */
+    public static function defaultPaymentMethodsCatalog(): array
+    {
+        return self::normalizePaymentMethods(self::defaults()['payment_methods']);
+    }
+
+    /**
      * @param  list<array<string, mixed>>  $methods
      * @return list<array{meta_key: string, label: string}>
      */

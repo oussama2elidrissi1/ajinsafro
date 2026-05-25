@@ -246,6 +246,37 @@
     .ws-offer-card__departure-status--warn { background: #fef3c7; color: #92400e; }
     .ws-offer-card__departure-status--full,
     .ws-offer-card__departure-status--muted { background: #e2e8f0; color: #475569; }
+    .ws-offer-card__departure-stats {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-top: 0.45rem;
+        flex-wrap: wrap;
+    }
+    .ws-offer-card__departure-stat {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.15rem 0.45rem;
+        border-radius: 8px;
+        background: #f1f5f9;
+        font-size: 0.72rem;
+        color: #475569;
+        font-weight: 600;
+        line-height: 1.3;
+    }
+    .ws-offer-card__departure-stat i {
+        font-size: 0.65rem;
+        color: #94a3b8;
+    }
+    .ws-offer-card__departure-stat strong {
+        color: #0f172a;
+        font-weight: 800;
+    }
+    .ws-offer-card__departure-stat--warn { background: #fef3c7; color: #92400e; }
+    .ws-offer-card__departure-stat--warn strong { color: #92400e; }
+    .ws-offer-card__departure-stat--danger { background: #fee2e2; color: #991b1b; }
+    .ws-offer-card__departure-stat--danger strong { color: #991b1b; }
     .ws-offer-card__more {
         border: 0;
         background: transparent;

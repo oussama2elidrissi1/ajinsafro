@@ -10,7 +10,7 @@
                     <h4 class="page-title mb-1 font-size-18">{{ $label }}</h4>
                     <p class="text-muted small mb-0"><code>{{ $groupKey }}</code></p>
                 </div>
-                <a href="{{ route('admin.settings.referentiels-metier') }}" class="btn btn-light btn-sm">�?� Toutes les familles</a>
+                <a href="{{ route('admin.settings.referentiels-metier') }}" class="btn btn-light btn-sm">← Toutes les familles</a>
             </div>
         </div>
     </div>
@@ -28,14 +28,37 @@
     @endif
 
     <div class="card mb-4">
-        <div class="card-header"><strong>Ajouter une valeur</strong></div>
+        <div class="card-header">
+            <strong>{{ $groupKey === 'payment_methods' ? 'Ajouter un moyen de paiement' : 'Ajouter une valeur' }}</strong>
+        </div>
         <div class="card-body">
             <form action="{{ route('admin.settings.referentiels-metier.store', ['groupKey' => $groupKey]) }}" method="POST" class="row g-3">
                 @csrf
                 @if($groupKey === 'payment_methods')
-                    <div class="col-12">
-                        <label class="form-label">Meta (JSON) �?" doit contenir <code>meta_key</code></label>
-                        <textarea name="meta_json" class="form-control font-monospace" rows="2" required placeholder='{"meta_key":"is_meta_payment_gateway_st_xxx"}'>{{ old('meta_json', '{"meta_key":""}') }}</textarea>
+                    @php
+                        $existingValues = $items->pluck('value')->all();
+                        $catalog = is_array($paymentMethodCatalog ?? null) ? $paymentMethodCatalog : [];
+                        $availableCatalog = array_values(array_filter($catalog, fn ($row) => !in_array(($row['meta_key'] ?? ''), $existingValues, true)));
+                        $pmAddEnabled = $availableCatalog !== [];
+                    @endphp
+                    <div class="col-md-4">
+                        <label class="form-label">Moyen de paiement</label>
+                        @if($availableCatalog === [])
+                            <div class="alert alert-info mb-0">
+                                Tous les moyens de paiement connus sont déjà ajoutés.
+                            </div>
+                        @else
+                            <select name="value" class="form-select" required id="pm_value">
+                                @foreach($availableCatalog as $row)
+                                    <option value="{{ $row['meta_key'] }}" data-label="{{ $row['label'] }}">
+                                        {{ $row['label'] }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="form-text">
+                                Vous pouvez renommer le libellé et activer/désactiver le moyen de paiement. Les champs techniques sont gérés automatiquement.
+                            </div>
+                        @endif
                     </div>
                 @else
                     <div class="col-md-4">
@@ -43,24 +66,26 @@
                         <input type="text" name="value" class="form-control" value="{{ old('value') }}" required>
                     </div>
                 @endif
-                <div class="col-md-4">
-                    <label class="form-label">Libellé</label>
-                    <input type="text" name="label" class="form-control" value="{{ old('label') }}" required>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Tri</label>
-                    <input type="number" name="sort_order" class="form-control" value="{{ old('sort_order', 0) }}" min="0">
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <div class="form-check mb-2">
-                        <input type="hidden" name="is_active" value="0">
-                        <input class="form-check-input" type="checkbox" name="is_active" value="1" id="na" checked>
-                        <label class="form-check-label" for="na">Actif</label>
+                @if(($groupKey !== 'payment_methods') || ($pmAddEnabled ?? false))
+                    <div class="col-md-4">
+                        <label class="form-label">Libellé</label>
+                        <input type="text" name="label" class="form-control" value="{{ old('label') }}" required id="pm_label">
                     </div>
-                </div>
-                <div class="col-12">
-                    <button type="submit" class="btn btn-primary btn-sm">Ajouter</button>
-                </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Tri</label>
+                        <input type="number" name="sort_order" class="form-control" value="{{ old('sort_order', 0) }}" min="0">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <div class="form-check mb-2">
+                            <input type="hidden" name="is_active" value="0">
+                            <input class="form-check-input" type="checkbox" name="is_active" value="1" id="na" checked>
+                            <label class="form-check-label" for="na">Actif</label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary btn-sm">Ajouter</button>
+                    </div>
+                @endif
             </form>
         </div>
     </div>
@@ -71,7 +96,7 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th style="width:22%">Valeur</th>
+                            <th style="width:22%">{{ $groupKey === 'payment_methods' ? 'Moyen de paiement' : 'Valeur' }}</th>
                             <th>Modification</th>
                             <th style="width:110px"></th>
                         </tr>
@@ -79,7 +104,14 @@
                     <tbody>
                         @forelse($items as $item)
                             <tr>
-                                <td><code>{{ $item->value }}</code></td>
+                                <td>
+                                    @if($groupKey === 'payment_methods')
+                                        <div class="fw-semibold">{{ $item->label }}</div>
+                                        <div class="text-muted small">Code interne : <code>{{ $item->value }}</code></div>
+                                    @else
+                                        <code>{{ $item->value }}</code>
+                                    @endif
+                                </td>
                                 <td>
                                     <form action="{{ route('admin.settings.referentiels-metier.update', ['groupKey' => $groupKey, 'item' => $item]) }}" method="POST" class="row g-2 align-items-end">
                                         @csrf
@@ -99,10 +131,12 @@
                                                 <input class="form-check-input" type="checkbox" name="is_active" value="1" @checked($item->is_active)>
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label small mb-0">Meta (JSON)</label>
-                                            <textarea name="meta_json" class="form-control form-control-sm font-monospace" rows="2">{{ $item->meta ? json_encode($item->meta, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) : '' }}</textarea>
-                                        </div>
+                                        @if($groupKey !== 'payment_methods')
+                                            <div class="col-md-4">
+                                                <label class="form-label small mb-0">Meta (JSON)</label>
+                                                <textarea name="meta_json" class="form-control form-control-sm font-monospace" rows="2">{{ $item->meta ? json_encode($item->meta, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) : '' }}</textarea>
+                                            </div>
+                                        @endif
                                         <div class="col-12">
                                             <button type="submit" class="btn btn-sm btn-primary">Enregistrer</button>
                                         </div>
@@ -125,5 +159,29 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    @if($groupKey === 'payment_methods')
+        <script>
+            (function () {
+                const select = document.getElementById('pm_value');
+                const labelInput = document.getElementById('pm_label');
+                if (!select || !labelInput) return;
+
+                const applyLabel = () => {
+                    const opt = select.options[select.selectedIndex];
+                    const suggested = opt ? (opt.getAttribute('data-label') || '') : '';
+                    if (!suggested) return;
+                    if (!labelInput.value || labelInput.value.trim() === '') {
+                        labelInput.value = suggested;
+                    }
+                };
+
+                applyLabel();
+                select.addEventListener('change', applyLabel);
+            })();
+        </script>
+    @endif
+@endpush
 
 

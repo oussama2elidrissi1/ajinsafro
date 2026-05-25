@@ -630,6 +630,30 @@
                         <span class="ws-offer-card__departure-date">{{ $cardNextDepartureLabel }}</span>
                         <span class="ws-offer-card__departure-status {{ $statusClass }}">{{ $statusLabel }}</span>
                     </div>
+                    @if($cardNextDeparture)
+                        @php
+                            $nextCap = data_get($cardNextDeparture, 'capacity');
+                            $nextPax = (int) data_get($cardNextDeparture, 'pax.validee', 0);
+                            $nextRem = data_get($cardNextDeparture, 'remaining');
+                        @endphp
+                        <div class="ws-offer-card__departure-stats">
+                            <span class="ws-offer-card__departure-stat" title="Capacité totale du départ">
+                                <i class="fas fa-users" aria-hidden="true"></i>
+                                <strong>{{ $nextCap !== null ? $nextCap : '-' }}</strong>
+                                <span>places</span>
+                            </span>
+                            <span class="ws-offer-card__departure-stat" title="Places confirmées (passagers)">
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                                <strong>{{ $nextPax }}</strong>
+                                <span>vendues</span>
+                            </span>
+                            <span class="ws-offer-card__departure-stat {{ $nextRem !== null && $nextRem <= 5 ? 'ws-offer-card__departure-stat--danger' : ($nextRem !== null && $nextRem <= 10 ? 'ws-offer-card__departure-stat--warn' : '') }}" title="Places restantes">
+                                <i class="fas fa-chair" aria-hidden="true"></i>
+                                <strong>{{ $nextRem !== null ? $nextRem : '-' }}</strong>
+                                <span>restantes</span>
+                            </span>
+                        </div>
+                    @endif
                 @else
                     <div class="ws-offer-card__departure-item ws-offer-card__departure-item--solo">
                         <span class="ws-offer-card__departure-date">Aucun départ configuré</span>
