@@ -1,4 +1,4 @@
-﻿(function(){
+(function(){
                             var container = document.getElementById('travel-dates-container');
                             var addBtn = document.getElementById('add-travel-date');
                             if (!container || !addBtn) return;
@@ -1462,7 +1462,7 @@ render();
 
                 if (wpFeaturedRemoveBtn) {
                     wpFeaturedRemoveBtn.addEventListener('click', function() {
-                        if (!confirm('Supprimer l\'image Ã  la une WordPress ?')) return;
+                        if (!confirm('Supprimer l\'image ? la une WordPress ?')) return;
 
                         setFeaturedError('');
                         var fd = new FormData();
@@ -1485,7 +1485,7 @@ render();
                             });
                         }).then(function(result) {
                             if (!result.ok || !result.data || !result.data.success) {
-                                setFeaturedError((result.data && result.data.message) || 'Impossible de supprimer l\'image Ã  la une.');
+                                setFeaturedError((result.data && result.data.message) || 'Impossible de supprimer l\'image ? la une.');
                                 return;
                             }
                             setFeaturedPreview('', '');
@@ -1849,7 +1849,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
         });
-        // Ouvrir un onglet donnÃƒÂ© si ?tab=... ou si le hash cible un panneau.
+        // Ouvrir un onglet donn? si ?tab=... ou si le hash cible un panneau.
         document.addEventListener('DOMContentLoaded', function() {
             if (window.VoyageEditorRuntime && window.VoyageEditorRuntime.ownsTabs) return;
             var params = new URLSearchParams(window.location.search);
@@ -2063,7 +2063,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!item || !item.classList.contains('has-children')) return;
                 var childCbs = item.querySelectorAll('.destination-tree-list .location-checkbox');
                 var target = checkbox.checked;
-                if (childCbs.length > 12 && !window.confirm('Appliquer ÃƒÂ  ' + childCbs.length + ' sous-destinations ?')) return;
+                if (childCbs.length > 12 && !window.confirm('Appliquer ? ' + childCbs.length + ' sous-destinations ?')) return;
                 childCbs.forEach(function(c) { c.checked = target; });
                 syncChipsAndCount();
             }
@@ -2111,7 +2111,7 @@ document.addEventListener('DOMContentLoaded', function () {
             updateChips();
             updateIndeterminate();
 
-            // Pays (choix multiple) + catalogue villes : recherche, Tout sélectionner/dÃ©sélectionner, ensureLocation ÃƒÂ  la volÃ©e
+            // Pays (choix multiple) + catalogue villes : recherche, Tout s?lectionner/d?s?lectionner, ensureLocation ? la vol?e
             var panelDynamic = document.getElementById('destination-cities-panel-dynamic');
             var panelTitle = document.getElementById('destination-cities-panel-title');
             var panelList = document.getElementById('destination-cities-list');
@@ -2128,7 +2128,7 @@ document.addEventListener('DOMContentLoaded', function () {
             function cleanTaxonomyLabel(label) {
                 if (!label) return '';
                 return String(label)
-                    .replace(/�+/g, '')
+                    // (ne pas stripper de caractères invalides ici : la source doit être UTF-8)
                     .replace(/Âº/g, '-')
                     .replace(/º/g, '-')
                     .replace(/[»«]/g, '')
@@ -3315,7 +3315,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 flights: { outbound: null, inbound: null, internal: [] }
             };
             
-            // 1. ACTIVITÃ‰S : depuis le DOM
+            // 1. ACTIVIT?S : depuis le DOM
             var activitiesList = card.querySelector('.programme-activities-list');
             if (activitiesList) {
                 activitiesList.querySelectorAll('.programme-activity-row').forEach(function(row) {
@@ -3337,7 +3337,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
             
-            // 2. HÃƒâ€TELS : depuis dayItemsManager OU depuis tour_hotels rows
+            // 2. H?TELS : depuis dayItemsManager OU depuis tour_hotels rows
             var hotelData = null;
             if (day.hotel_id && window.tourHotelsData && window.tourHotelsData[day.hotel_id]) {
                 hotelData = window.tourHotelsData[day.hotel_id];
@@ -3352,7 +3352,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         var checkOut = parseInt(checkOutSel.value || '1', 10);
                         isInRange = (dayNumber >= checkIn && dayNumber <= checkOut);
                     } else {
-                        // CompatibilitÃ© ancien format : day_number
+                        // Compatibilit? ancien format : day_number
                         var daySel = row.querySelector('select[name^="tour_hotels["][name$="[day_number]"]');
                         if (daySel && parseInt(daySel.value || '0', 10) === dayNumber) {
                             isInRange = true;
@@ -3384,7 +3384,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 });
             }
-            // Chercher aussi dans les lignes du formulaire principal (nouveau format unifiÃ©)
+            // Chercher aussi dans les lignes du formulaire principal (nouveau format unifi?)
             document.querySelectorAll('.tour-transfer-row').forEach(function(row) {
                 var daySel = row.querySelector('select[name*="[day_number]"]');
                 if (daySel && parseInt(daySel.value || '0', 10) === dayNumber) {
@@ -3407,7 +3407,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
             });
-            // CompatibilitÃ© ancien format : tour-transfer-arrival-row / tour-transfer-departure-row
+            // Compatibilit? ancien format : tour-transfer-arrival-row / tour-transfer-departure-row
             document.querySelectorAll('.tour-transfer-arrival-row, .tour-transfer-departure-row').forEach(function(row) {
                 var daySel = row.querySelector('select[name*="[day_number]"]');
                 if (daySel && parseInt(daySel.value || '0', 10) === dayNumber) {
@@ -3504,7 +3504,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 html += '<div class="small text-muted mb-1"><strong>' + sections.hotels.hotel_name + '</strong>';
                 if (sections.hotels.stars) {
                     var stars = '';
-                    for (var i = 0; i < parseInt(sections.hotels.stars, 10); i++) stars += 'Ã¢Ëœâ€¦';
+                    for (var i = 0; i < parseInt(sections.hotels.stars, 10); i++) stars += '?Ëœ?';
                     html += ' <span class="badge bg-warning text-dark">' + stars + '</span>';
                 }
                 if (sections.hotels.is_optional) html += ' <span class="badge bg-warning text-dark">Option client</span>';
@@ -3526,7 +3526,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (sections.transfers.arrival.length > 0) {
                     html += '<div class="small mb-1"><span class="badge bg-success">Arrivée</span>';
                     sections.transfers.arrival.slice(0, 2).forEach(function(t) {
-                        html += ' <span class="text-muted">' + (t.from_label || '?') + ' Ã¢â€ â€™ ' + (t.to_label || '?');
+                        html += ' <span class="text-muted">' + (t.from_label || '?') + ' ? ' + (t.to_label || '?');
                         if (t.vehicle_type) html += ' <small>(' + t.vehicle_type + ')</small>';
                         html += '</span>';
                     });
@@ -3536,7 +3536,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (sections.transfers.departure.length > 0) {
                     html += '<div class="small mb-1"><span class="badge bg-danger">Départ</span>';
                     sections.transfers.departure.slice(0, 2).forEach(function(t) {
-                        html += ' <span class="text-muted">' + (t.from_label || '?') + ' Ã¢â€ â€™ ' + (t.to_label || '?');
+                        html += ' <span class="text-muted">' + (t.from_label || '?') + ' ? ' + (t.to_label || '?');
                         if (t.vehicle_type) html += ' <small>(' + t.vehicle_type + ')</small>';
                         html += '</span>';
                     });
@@ -3558,19 +3558,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 html += '<button type="button" class="btn btn-xs btn-outline-danger btn-sm day-summary-remove-btn" data-day-index="' + dayIndex + '" data-type="flights" title="Tout retirer"><i class="bx bx-trash"></i></button>';
                 html += '</div></div>';
                 if (sections.flights.outbound) {
-                    html += '<div class="small mb-1"><span class="badge bg-info">Aller</span> <span class="text-muted">' + (sections.flights.outbound.from || '?') + ' Ã¢â€ â€™ ' + (sections.flights.outbound.to || '?');
+                    html += '<div class="small mb-1"><span class="badge bg-info">Aller</span> <span class="text-muted">' + (sections.flights.outbound.from || '?') + ' ? ' + (sections.flights.outbound.to || '?');
                     if (sections.flights.outbound.date) html += ' <small>(' + sections.flights.outbound.date + ')</small>';
                     html += '</span></div>';
                 }
                 if (sections.flights.inbound) {
-                    html += '<div class="small mb-1"><span class="badge bg-info">Retour</span> <span class="text-muted">' + (sections.flights.inbound.from || '?') + ' Ã¢â€ â€™ ' + (sections.flights.inbound.to || '?');
+                    html += '<div class="small mb-1"><span class="badge bg-info">Retour</span> <span class="text-muted">' + (sections.flights.inbound.from || '?') + ' ? ' + (sections.flights.inbound.to || '?');
                     if (sections.flights.inbound.date) html += ' <small>(' + sections.flights.inbound.date + ')</small>';
                     html += '</span></div>';
                 }
                 if (sections.flights.internal.length > 0) {
                     html += '<div class="small mb-1"><span class="badge bg-secondary">Internes</span>';
                     sections.flights.internal.slice(0, 2).forEach(function(f) {
-                        html += ' <span class="text-muted">' + (f.from || '?') + ' Ã¢â€ â€™ ' + (f.to || '?') + '</span>';
+                        html += ' <span class="text-muted">' + (f.from || '?') + ' ? ' + (f.to || '?') + '</span>';
                     });
                     if (sections.flights.internal.length > 2) html += ' <small class="text-muted">+ ' + (sections.flights.internal.length - 2) + ' autre(s)</small>';
                     html += '</div>';
@@ -3618,7 +3618,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
             
-            // Bouton "Retirer" : retire l'Ã©lÃ©ment du jour
+            // Bouton "Retirer" : retire l'?l?ment du jour
             var removeBtn = e.target.closest('.day-summary-remove-btn');
             if (removeBtn) {
                 e.preventDefault();
@@ -3688,7 +3688,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
         });
-        // Mettre ÃƒÂ  jour les extras quand un vol change dans le formulaire principal (onglet Vols)
+        // Mettre ? jour les extras quand un vol change dans le formulaire principal (onglet Vols)
         document.addEventListener('change', function(e) {
             if (!e.target || !e.target.name) return;
             if (e.target.name.indexOf('flight_options[') === 0 && e.target.name.indexOf('[day_number]') !== -1) {
@@ -3710,7 +3710,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         var checkIn = parseInt(checkInSel.value || '1', 10);
                         var checkOut = parseInt(checkOutSel.value || '1', 10);
                         var hotelId = hotelRow.getAttribute('data-hotel-id');
-                        // Mettre ÃƒÂ  jour tous les jours dans la plage check-in -> check-out
+                        // Mettre ? jour tous les jours dans la plage check-in -> check-out
                         if (hotelId && window.dayItemsManager) {
                             for (var d = checkIn; d <= checkOut; d++) {
                                 var dayIndex = String(d - 1);
@@ -3736,7 +3736,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
             }
-            // CompatibilitÃ© ancien format : day_number
+            // Compatibilit? ancien format : day_number
             if (e.target.name && e.target.name.indexOf('tour_hotels[') === 0 && e.target.name.indexOf('[day_number]') !== -1) {
                 var dayNumber = parseInt(e.target.value || '0', 10);
                 if (dayNumber >= 1) {
@@ -3811,7 +3811,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var flightsManager = document.getElementById('day-builder-flights-manager');
             var dayTargetSelect = document.getElementById('programme-day-target-select');
 
-            // ===== GESTIONNAIRE D'Ã‰TAT UNIFIÃ‰ POUR VOLS/HÃƒâ€TELS/TRANSFERTS PAR JOUR =====
+            // ===== GESTIONNAIRE D'?TAT UNIFI? POUR VOLS/H?TELS/TRANSFERTS PAR JOUR =====
             window.dayItemsManager = {
                 // État interne : {dayIndex: {flights: [], hotel_id: null, transfer_ids: []}}
                 state: {},
@@ -3857,7 +3857,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     return (this.getDay(dayIndex).flights || []).slice();
                 },
 
-                // DÃ©faut l'hôtel pour un jour
+                // D?faut l'hôtel pour un jour
                 setHotel: function(dayIndex, hotelId) {
                     var day = this.getDay(dayIndex);
                     day.hotel_id = hotelId || null;
@@ -3869,7 +3869,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     return this.getDay(dayIndex).hotel_id;
                 },
 
-                // DÃ©faut les transferts pour un jour
+                // D?faut les transferts pour un jour
                 setTransfers: function(dayIndex, transferIds) {
                     var day = this.getDay(dayIndex);
                     day.transfer_ids = Array.isArray(transferIds) ? transferIds : (transferIds ? [transferIds] : []);
@@ -4173,11 +4173,11 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // "â€"â€"â€ Onglet Vols : boutons Ajouter / Modifier / Enregistrer / Annuler / REMOVE "â€"â€"â€
+        // "?"?"? Onglet Vols : boutons Ajouter / Modifier / Enregistrer / Annuler / REMOVE "?"?"?
         (function flightOptionsHandlers() {
             var templatesEl = document.getElementById('flight-opt-templates');
             var nextIndexEl = document.getElementById('flight-opt-next-index');
-            var dash = '"â€';
+            var dash = '"?';
 
             function getNextIndex() {
                 if (!nextIndexEl) return 0;
@@ -4261,7 +4261,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     var cabinBagEl = view && view.querySelector('.flight-opt-cabin-bag');
                     var checkinBagEl = view && view.querySelector('.flight-opt-checkin-bag');
                     var badgeWrap = view && view.querySelector('.flight-opt-badge');
-                    if (route) route.textContent = (fromCity && fromCity.value ? fromCity.value : dash) + ' Ã¢â€ â€™ ' + (toCity && toCity.value ? toCity.value : dash);
+                    if (route) route.textContent = (fromCity && fromCity.value ? fromCity.value : dash) + ' ? ' + (toCity && toCity.value ? toCity.value : dash);
                     var d = depDate && depDate.value ? depDate.value : dash;
                     if (depDateEl) depDateEl.textContent = d;
                     if (arrDateEl) arrDateEl.textContent = d;
@@ -4289,7 +4289,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         })();
 
-        // "â€"â€"â€ Secours : bouton « Enregistrer toutes les modifications » (soumission forcée si le clic est interceptÃ©) "â€"â€"â€
+        // "?"?"? Secours : bouton « Enregistrer toutes les modifications » (soumission forcée si le clic est intercept?) "?"?"?
         (function() {
             function initSaveButtonFallback() {
                 var btn = document.getElementById('edit-voyage-submit-btn');
@@ -4333,7 +4333,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             el.removeAttribute('disabled');
                         }
                     });
-                    // requestSubmit() dÃ©clenche la validation HTML5 (required, etc.) avant envoi
+                    // requestSubmit() d?clenche la validation HTML5 (required, etc.) avant envoi
                     if (window.syncProgrammeDaysPayload) {
                         window.syncProgrammeDaysPayload(true);
                     }
@@ -5318,9 +5318,9 @@ document.addEventListener('DOMContentLoaded', function () {
             syncRegionHint();
         })();
 
-        // "â€"â€"â€ MODE DIAGNOSTIC: Forcer retrait des disabled + logs détaillés (À RETIRER en production) "â€"â€"â€
+        // "?"?"? MODE DIAGNOSTIC: Forcer retrait des disabled + logs détaillés (À RETIRER en production) "?"?"?
         (function diagnosticMode() { return;
-            console.log('Ã°Å¸â€Â§ DIAGNOSTIC MODE - Flight Options Persistence (v2 - Ignore Templates)');
+            console.log('OK:ht Options Persistence (v2 - Ignore Templates)');
             
             function removeDisabledFromFlightOptions() {
                 var count = 0;
@@ -5338,31 +5338,31 @@ document.addEventListener('DOMContentLoaded', function () {
                         return;
                     }
                     
-                    // SKIP les inputs avec index -1 (templates clonÃ©s)
+                    // SKIP les inputs avec index -1 (templates clon?s)
                     if (el.name && el.name.includes('[-1]')) {
                         return;
                     }
                     
                     if (el.hasAttribute('disabled')) {
                         el.removeAttribute('disabled');
-                        console.log('  Ã°Å¸â€â€œ Disabled retiré:', el.name);
+                        console.log('OK:', el.name);
                         count++;
                     }
                 });
                 if (count > 0) {
-                    console.log('Ã¢Å“â€¦ Total disabled retirÃ©s (drawer/templates exclus):', count);
+                    console.log('OK:rawer/templates exclus):', count);
                 }
             }
             
             function interceptFormSubmission() {
                 var form = document.getElementById('edit-voyage-form');
                 if (!form) {
-                    console.error('Ã¢ÂÅ’ Formulaire #edit-voyage-form introuvable!');
+                    console.error('ERROR:form introuvable!');
                     return;
                 }
                 
                 form.addEventListener('submit', function(e) {
-                    console.log('Ã°Å¸Å¡â‚¬ FORMULAIRE SOUMIS (interceptÃ©)');
+                    console.log('OK:ntercept?)');
                     
                     // DÉSACTIVER le drawer pour éviter qu'il soumette ses duplications
                     var drawer = document.getElementById('day-builder-root');
@@ -5376,7 +5376,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             }
                         });
                         if (drawerInputsDisabled.length > 0) {
-                            console.warn('Ã¢Å¡Â Ã¯Â¸Â  Drawer inputs désactivés temporairement:', drawerInputsDisabled.length);
+                            console.warn('WARN:tivés temporairement:', drawerInputsDisabled.length);
                         }
                     }
                     
@@ -5394,31 +5394,31 @@ document.addEventListener('DOMContentLoaded', function () {
                                 templatesCount++;
                             } else {
                                 flightOptionsData[pair[0]] = pair[1];
-                                console.log('  Ã°Å¸â€œÂ¦', pair[0], '=', pair[1]);
+                                console.log('OK:', pair[0], '=', pair[1]);
                                 count++;
                             }
                         }
                     }
                     
                     if (templatesCount > 0) {
-                        console.warn('Ã¢Å¡Â Ã¯Â¸Â  Templates détectés (ignorÃ©s):', templatesCount, 'champs');
+                        console.warn('WARN:(ignor?s):', templatesCount, 'champs');
                     }
                     
-                    console.log('Ã°Å¸â€œÅ  Total flight_options valides:', count);
+                    console.log('OK:alides:', count);
                     
                     if (count === 0) {
-                        console.log('Ã¢Å“â€¦ Aucun flight_options détecté: voyage considÃ©rÃ© sans vol, soumission OK');
+                        console.log('OK:cté: voyage consid?r? sans vol, soumission OK');
                     } else {
-                        console.log('Ã¢Å“â€¦ Flight options detectÃ©s, soumission OK');
+                        console.log('OK:soumission OK');
                     }
                     
                     // Note: Si soumission OK, la page va recharger donc pas besoin de réactiver
                 }, true);
                 
-                console.log('Ã¢Å“â€¦ Intercepteur de formulaire installé');
+                console.log('OK:e installé');
             }
             
-            // ExÃ©cuter au chargement
+            // Ex?cuter au chargement
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', function() {
                     removeDisabledFromFlightOptions();
@@ -5429,9 +5429,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 interceptFormSubmission();
             }
             
-            // Re-vÃ©rifier aprÃ¨s 2 secondes (au cas où des inputs sont ajoutés dynamiquement)
+            // Re-v?rifier apr?s 2 secondes (au cas où des inputs sont ajoutés dynamiquement)
             setTimeout(function() {
-                console.log('Ã°Å¸â€â€ž Re-vérification aprÃ¨s 2s...');
+                console.log('OK: 2s...');
                 removeDisabledFromFlightOptions();
             }, 2000);
         })();

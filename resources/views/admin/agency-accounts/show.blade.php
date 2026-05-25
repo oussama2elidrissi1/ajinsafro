@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @section('title', 'Compte point de vente')
 
@@ -6,11 +6,11 @@
 <div class="aj-page-head" style="margin-bottom:18px;">
     <div>
         <h1>{{ $account->name }}</h1>
-        <p>{{ $account->email }} �?� {{ $account->branch?->display_name ?? 'Aucun point de vente' }}</p>
+        <p>{{ $account->email }} ? {{ $account->branch?->display_name ?? 'Aucun point de vente' }}</p>
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
         @if(Route::has('admin.agency-accounts.edit'))
-            <a href="{{ route('admin.agency-accounts.edit', $account) }}" class="aj-btn primary">�?diter</a>
+            <a href="{{ route('admin.agency-accounts.edit', $account) }}" class="aj-btn primary">?diter</a>
         @endif
         @if(Route::has('admin.agency-accounts.reset-password'))
             <form method="POST" action="{{ route('admin.agency-accounts.reset-password', $account) }}">
@@ -49,8 +49,8 @@
             <div class="aj-card-body">
                 <strong style="display:block;margin-bottom:10px;">Informations</strong>
                 <div class="aj-subtle">Employé lié : {{ $account->agencyEmployee?->full_name ?? 'Aucun' }}</div>
-                <div class="aj-subtle">Fonction : {{ $account->job_title ?? '�?"' }}</div>
-                <div class="aj-subtle">Téléphone : {{ $account->phone ?? '�?"' }}</div>
+                <div class="aj-subtle">Fonction : {{ $account->job_title ?? '?' }}</div>
+                <div class="aj-subtle">Téléphone : {{ $account->phone ?? '?' }}</div>
                 <div class="aj-subtle">Dernière connexion : {{ $account->last_login_at?->timezone('Africa/Casablanca')?->format('d/m/Y H:i') ?? 'Jamais' }}</div>
                 <div class="aj-subtle">Réservations affectées : {{ (int) ($account->assigned_reservations_count ?? 0) }}</div>
             </div>
@@ -92,11 +92,11 @@
                         @forelse($recentReservations as $reservation)
                             <tr>
                                 <td>#{{ $reservation->id }}</td>
-                                <td>{{ trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? '')) ?: '�?"' }}</td>
-                                <td>{{ $reservation->tour?->name ?? '�?"' }}</td>
-                                <td>{{ $reservation->branch?->display_name ?? '�?"' }}</td>
+                                <td>{{ trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? '')) ?: '?' }}</td>
+                                <td>{{ $reservation->tour?->name ?? '?' }}</td>
+                                <td>{{ $reservation->branch?->display_name ?? '?' }}</td>
                                 <td>{{ ucfirst((string) $reservation->status) }}</td>
-                                <td>{{ $reservation->created_at?->timezone('Africa/Casablanca')?->format('d/m/Y H:i') ?? '�?"' }}</td>
+                                <td>{{ $reservation->created_at?->timezone('Africa/Casablanca')?->format('d/m/Y H:i') ?? '?' }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="6" style="text-align:center;color:#71829a;font-weight:700;">Aucune réservation affectée.</td></tr>

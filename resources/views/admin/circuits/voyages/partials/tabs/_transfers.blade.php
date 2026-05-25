@@ -1,4 +1,4 @@
-﻿<div class="tab-pane" id="transfers" role="tabpanel">
+<div class="tab-pane" id="transfers" role="tabpanel">
                 @php
                     $lastDayNumber = ($programDays && $programDays->isNotEmpty()) ? $programDays->count() : max(1, (int)($meta['duration_day'] ?? 1));
                 @endphp

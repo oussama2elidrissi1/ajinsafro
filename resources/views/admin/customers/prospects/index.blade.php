@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @php
     use Illuminate\Support\Str;
@@ -213,7 +213,7 @@
                                 @foreach($clients as $c)
                                     @php
                                         $idDoc = $c->national_id_number ?: ($c->passport_number ?: null);
-                                        $fullName = $c->full_name ?: trim(($c->first_name ?? '').' '.($c->last_name ?? '')) ?: '�?"';
+                                        $fullName = $c->full_name ?: trim(($c->first_name ?? '').' '.($c->last_name ?? '')) ?: '?';
                                         $createdTimestamp = $c->created_at?->timestamp ?? 0;
                                         $reservationCount = (int) ($c->reservations_count ?? 0);
                                     @endphp
@@ -232,18 +232,18 @@
                                             </div>
                                             <div class="aj-meta-text">{{ $c->whatsapp_number ?: 'WhatsApp non renseigné' }}</div>
                                         </td>
-                                        <td>{{ $c->phone ?? '�?"' }}</td>
-                                        <td>{{ $c->email ?? '�?"' }}</td>
+                                        <td>{{ $c->phone ?? '?' }}</td>
+                                        <td>{{ $c->email ?? '?' }}</td>
                                         <td>
                                             @if($c->portal_username)
                                                 <code>{{ $c->portal_username }}</code>
                                             @else
-                                                <span class="aj-meta-text">�?"</span>
+                                                <span class="aj-meta-text">?</span>
                                             @endif
                                         </td>
                                         <td><span class="aj-badge -neutral">{{ $reservationCount }}</span></td>
-                                        <td>{{ $c->city ?? '�?"' }}</td>
-                                        <td>{{ $idDoc ?: '�?"' }}</td>
+                                        <td>{{ $c->city ?? '?' }}</td>
+                                        <td>{{ $idDoc ?: '?' }}</td>
                                         <td>
                                             @if($c->status === 'active')
                                                 <span class="aj-badge -success">Actif</span>
@@ -254,10 +254,10 @@
                                             @elseif($c->status === 'vip')
                                                 <span class="aj-badge -info">VIP</span>
                                             @else
-                                                <span class="aj-badge -neutral">{{ $c->status ?? '�?"' }}</span>
+                                                <span class="aj-badge -neutral">{{ $c->status ?? '?' }}</span>
                                             @endif
                                         </td>
-                                        <td>{{ $c->created_at?->format('d/m/Y') ?? '�?"' }}</td>
+                                        <td>{{ $c->created_at?->format('d/m/Y') ?? '?' }}</td>
                                         <td class="text-end">
                                             <div class="aj-actions">
                                                 <a href="{{ route('admin.customers.clients.show', $c) }}" class="aj-icon-btn" title="Voir">
@@ -277,7 +277,7 @@
                     <div class="aj-grid" data-catalog-view="grid">
                         @foreach($clients as $c)
                             @php
-                                $fullName = $c->full_name ?: trim(($c->first_name ?? '').' '.($c->last_name ?? '')) ?: '�?"';
+                                $fullName = $c->full_name ?: trim(($c->first_name ?? '').' '.($c->last_name ?? '')) ?: '?';
                                 $reservationCount = (int) ($c->reservations_count ?? 0);
                             @endphp
                             <article
@@ -301,7 +301,7 @@
                                     <div class="d-flex flex-wrap gap-2 mb-3">
                                         <span class="aj-badge -neutral">{{ $reservationCount }} réservation(s)</span>
                                         <span class="aj-badge {{ $c->status === 'active' ? '-success' : ($c->status === 'inactive' ? '-warning' : ($c->status === 'blocked' ? '-danger' : '-neutral')) }}">
-                                            {{ $c->status ?? '�?"' }}
+                                            {{ $c->status ?? '?' }}
                                         </span>
                                     </div>
                                     <div class="aj-card-actions">

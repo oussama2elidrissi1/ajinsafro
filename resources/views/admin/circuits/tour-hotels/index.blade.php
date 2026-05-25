@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 @section('title', 'Hôtels (Circuit)')
 
 @section('content')
@@ -53,7 +53,7 @@
         <div class="card shadow-sm">
             <div class="card-body text-center text-muted py-5">
                 <i class="bx bxs-hotel display-4 d-block mb-2"></i>
-                Aucun hôtel. Définir les hôtels depuis la fiche d�?Tun voyage (Hébergement) ou en créant un voyage puis en gérant son hôtel ici après liaison.
+                Aucun hôtel. Définir les hôtels depuis la fiche d?Tun voyage (Hébergement) ou en créant un voyage puis en gérant son hôtel ici après liaison.
             </div>
         </div>
     @else
@@ -76,20 +76,20 @@
                                 @php $tourTitle = $tourTitles[$hotel->tour_id] ?? 'Voyage #' . $hotel->tour_id; @endphp
                                 <tr>
                                     <td>
-                                        <strong>{{ $hotel->hotel_name ?: '�?"' }}</strong>
+                                        <strong>{{ $hotel->hotel_name ?: '?' }}</strong>
                                     </td>
                                     <td>
                                         @if($hotel->stars)
-                                            <span class="text-warning">�~. {{ $hotel->stars }}</span>
+                                            <span class="text-warning">?~. {{ $hotel->stars }}</span>
                                         @else
-                                            <span class="text-muted">�?"</span>
+                                            <span class="text-muted">?</span>
                                         @endif
                                     </td>
                                     <td>
                                         <a href="{{ route('admin.circuits.voyages.edit', $hotel->tour_id) }}">{{ \Str::limit($tourTitle, 40) }}</a>
                                         <br><small class="text-muted">ID {{ $hotel->tour_id }}</small>
                                     </td>
-                                    <td class="small">{{ \Str::limit($hotel->address ?? '�?"', 35) }}</td>
+                                    <td class="small">{{ \Str::limit($hotel->address ?? '?', 35) }}</td>
                                     <td>
                                         @if(isset($hotel->rooms_count) && $hotel->rooms_count > 0)
                                             <span class="badge bg-light text-dark border">{{ $hotel->rooms_count }}</span>

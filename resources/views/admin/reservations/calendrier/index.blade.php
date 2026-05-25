@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 @section('title')
     Calendrier des départs
 @endsection
@@ -47,7 +47,7 @@
         <div class="p-4 sm:p-5 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3 bg-gray-50/50">
             <h2 class="font-bold text-lg text-[#0e3a5a] flex items-center gap-2">
                 <i class="far fa-calendar-alt text-[#0083c4]"></i>
-                <span id="ajin-cal-month-title">�?"</span>
+                <span id="ajin-cal-month-title">?</span>
             </h2>
             <div class="flex items-center gap-2">
                 <button type="button" id="ajin-cal-prev" class="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-[#e6f3fa] hover:text-[#0083c4] hover:border-[#0083c4] transition-colors" title="Mois précédent">

@@ -1,6 +1,6 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
-@section('title', 'Group Deals �?" Participants')
+@section('title', 'Group Deals ? Participants')
 
 @section('content')
 <div class="container-fluid">
@@ -41,13 +41,13 @@
                         <tr>
                             <td>
                                 <div class="fw-semibold">{{ $participant->full_name }}</div>
-                                <div class="text-muted small">{{ $participant->email ?: '�?"' }} · {{ $participant->phone ?: '�?"' }}</div>
+                                <div class="text-muted small">{{ $participant->email ?: '?' }} · {{ $participant->phone ?: '?' }}</div>
                             </td>
                             <td>
                                 @if($participant->groupDeal)
                                     <a href="{{ route('admin.group-deals.show', $participant->groupDeal) }}" class="text-decoration-none">{{ $participant->groupDeal->title }}</a>
                                 @else
-                                    <span class="text-muted">�?"</span>
+                                    <span class="text-muted">?</span>
                                 @endif
                             </td>
                             <td>{{ $participant->participants_count }}</td>
@@ -59,7 +59,7 @@
                             <td>
                                 <span class="badge bg-light text-dark">{{ ucfirst($participant->payment_status) }}</span>
                             </td>
-                            <td class="small text-muted">{{ optional($participant->joined_at)->format('d/m/Y H:i') ?: '�?"' }}</td>
+                            <td class="small text-muted">{{ optional($participant->joined_at)->format('d/m/Y H:i') ?: '?' }}</td>
                             <td class="text-end">
                                 @if($participant->groupDeal)
                                     <a href="{{ route('admin.group-deals.show', $participant->groupDeal) }}" class="btn btn-sm btn-primary">Ouvrir</a>

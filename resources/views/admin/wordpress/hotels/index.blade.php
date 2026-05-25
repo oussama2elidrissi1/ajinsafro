@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @php
     use Illuminate\Support\Str;
@@ -27,10 +27,10 @@
         $activeFilters[] = 'Statut : Brouillons';
     }
     if (filled($filters['star'] ?? null)) {
-        $activeFilters[] = '�?toiles : '.(int) $filters['star'];
+        $activeFilters[] = '?toiles : '.(int) $filters['star'];
     }
     if (($filters['featured'] ?? '') === '1') {
-        $activeFilters[] = 'Sélection : �? la une';
+        $activeFilters[] = 'Sélection : ? la une';
     }
     if (filled($filters['destination'] ?? null)) {
         $activeFilters[] = 'Destination : '.Str::limit($filters['destination'], 28);
@@ -75,8 +75,8 @@
                 :kpis="[
                     ['label' => 'Total hébergements', 'value' => number_format($totalHotels, 0, ',', ' '), 'icon' => 'bx bx-buildings', 'color' => '-blue', 'note' => 'Résultats sur le catalogue courant'],
                     ['label' => 'Publiés', 'value' => $publishedCount, 'icon' => 'bx bx-badge-check', 'color' => '-green', 'note' => 'Sur la page affichée'],
-                    ['label' => 'Brouillons', 'value' => $draftCount, 'icon' => 'bx bx-edit-alt', 'color' => '-orange', 'note' => '�? compléter ou publier'],
-                    ['label' => '�? la une', 'value' => $featuredCount, 'icon' => 'bx bx-star', 'color' => '-violet', 'note' => 'Mis en avant dans cette vue'],
+                    ['label' => 'Brouillons', 'value' => $draftCount, 'icon' => 'bx bx-edit-alt', 'color' => '-orange', 'note' => '? compléter ou publier'],
+                    ['label' => '? la une', 'value' => $featuredCount, 'icon' => 'bx bx-star', 'color' => '-violet', 'note' => 'Mis en avant dans cette vue'],
                 ]"
             />
 
@@ -101,7 +101,7 @@
                         </select>
                     </div>
                     <div class="aj-field">
-                        <label for="hotel_star">�?toiles</label>
+                        <label for="hotel_star">?toiles</label>
                         <select id="hotel_star" name="hotel_star" class="aj-control">
                             <option value="">Toutes les étoiles</option>
                             @for ($i = 1; $i <= 5; $i++)
@@ -113,7 +113,7 @@
                         <label for="featured">Sélection</label>
                         <select id="featured" name="featured" class="aj-control">
                             <option value="">Tous les hébergements</option>
-                            <option value="1" @selected(($filters['featured'] ?? '') === '1')>�? la une</option>
+                            <option value="1" @selected(($filters['featured'] ?? '') === '1')>? la une</option>
                         </select>
                     </div>
                     <div class="aj-field">
@@ -177,7 +177,7 @@
                                     <th>Hébergement</th>
                                     <th>Localisation</th>
                                     <th>Statut</th>
-                                    <th>�?toiles</th>
+                                    <th>?toiles</th>
                                     <th>Prix min</th>
                                     <th>Modifié le</th>
                                     <th class="text-end">Actions</th>
@@ -206,7 +206,7 @@
                                             <div class="aj-item-title">
                                                 <a href="{{ route('admin.wordpress.hotels.edit', $hotel) }}">{{ $hotel->post_title }}</a>
                                                 @if($isFeatured)
-                                                    <span class="aj-badge -info">�? la une</span>
+                                                    <span class="aj-badge -info">? la une</span>
                                                 @endif
                                             </div>
                                             <div class="aj-meta-text">ID #{{ $hotel->ID }}</div>
@@ -229,19 +229,19 @@
                                         </td>
                                         <td>
                                             @if($stars > 0)
-                                                <span class="aj-stars">{{ str_repeat('�~.', $stars) }}<span>{{ $stars }}</span></span>
+                                                <span class="aj-stars">{{ str_repeat('?~.', $stars) }}<span>{{ $stars }}</span></span>
                                             @else
                                                 <span class="aj-meta-text">Non renseigné</span>
                                             @endif
                                         </td>
                                         <td>
                                             <span class="aj-price">
-                                                {{ is_numeric($price) ? number_format((float) $price, 0, ',', ' ') . ' DH' : '�?"' }}
+                                                {{ is_numeric($price) ? number_format((float) $price, 0, ',', ' ') . ' DH' : '?' }}
                                             </span>
                                         </td>
                                         <td>
                                             <span class="aj-date">
-                                                {{ $hotel->post_modified ? \Carbon\Carbon::parse($hotel->post_modified)->format('d/m/Y') : '�?"' }}
+                                                {{ $hotel->post_modified ? \Carbon\Carbon::parse($hotel->post_modified)->format('d/m/Y') : '?' }}
                                                 <small>{{ $hotel->post_modified ? \Carbon\Carbon::parse($hotel->post_modified)->format('H:i') : '' }}</small>
                                             </span>
                                         </td>
@@ -308,7 +308,7 @@
                                             <div class="aj-meta-text">ID #{{ $hotel->ID }}</div>
                                         </div>
                                         @if($isFeatured)
-                                            <span class="aj-badge -info">�? la une</span>
+                                            <span class="aj-badge -info">? la une</span>
                                         @endif
                                     </div>
 
@@ -326,7 +326,7 @@
                                     </div>
 
                                     <div class="aj-card-actions">
-                                        <span class="aj-price">{{ is_numeric($price) ? number_format((float) $price, 0, ',', ' ') . ' DH' : '�?"' }}</span>
+                                        <span class="aj-price">{{ is_numeric($price) ? number_format((float) $price, 0, ',', ' ') . ' DH' : '?' }}</span>
                                         <div class="aj-actions">
                                             @if($wpSiteUrl)
                                                 <a href="{{ $wpSiteUrl }}/?post_type=st_hotel&p={{ $hotel->ID }}" target="_blank" class="aj-icon-btn" title="Voir sur le site">

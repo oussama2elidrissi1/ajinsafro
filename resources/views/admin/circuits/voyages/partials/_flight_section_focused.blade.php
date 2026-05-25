@@ -1,4 +1,4 @@
-﻿{{--
+{{--
 Section de vol focalisée pour modal - affiche une seule section selon contexte
 @param string $type - 'outbound', 'return', ou 'segment'
 @param string $title - Titre de la section

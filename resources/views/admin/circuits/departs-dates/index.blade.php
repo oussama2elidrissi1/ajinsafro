@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 @section('title')
     Départs & Disponibilités
 @endsection
@@ -233,8 +233,8 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-8">
                             <label for="ra-departure-select" class="form-label small fw-semibold text-uppercase text-muted">Départ</label>
-                            <select id="ra-departure-select" class="form-select" data-placeholder="Chargement�?�">
-                                <option value="">�?" Sélectionnez une date de départ �?"</option>
+                            <select id="ra-departure-select" class="form-select" data-placeholder="Chargement??">
+                                <option value="">? Sélectionnez une date de départ ?</option>
                             </select>
                         </div>
                         <div class="col-md-4 d-flex align-items-end">
@@ -252,8 +252,8 @@
                     </div>
 
                     <div id="ra-departure-loading" class="d-none text-center py-5">
-                        <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Chargement�?�</span></div>
-                        <p class="text-muted small mt-2 mb-0">Chargement du stock�?�</p>
+                        <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Chargement??</span></div>
+                        <p class="text-muted small mt-2 mb-0">Chargement du stock??</p>
                     </div>
                 </div>
                 <div class="modal-footer border-top bg-light">

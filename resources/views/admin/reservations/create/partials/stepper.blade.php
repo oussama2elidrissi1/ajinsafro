@@ -1,4 +1,4 @@
-﻿<aside class="reservation-create__sidebar">
+<aside class="reservation-create__sidebar">
     <div class="reservation-create__steps-card">
         <p class="reservation-create__eyebrow">Workflow</p>
         <h2 class="reservation-create__sidebar-title">Nouvelle réservation</h2>

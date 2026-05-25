@@ -1,4 +1,4 @@
-﻿<div class="tab-pane" id="location" role="tabpanel" data-ve-pane-title="Destination">
+<div class="tab-pane" id="location" role="tabpanel" data-ve-pane-title="Destination">
 <div class="card ve-pane-card destination-ux-card">
                     <div class="card-body destination-ux-body">
                         <div class="destination-ux-header">
@@ -54,7 +54,7 @@
                                 </div>
                                 <div class="mb-3">
                                     <label for="website" class="form-label">Site web</label>
-                                    <input type="text" class="form-control" id="website" name="website" value="{{ old('website', $meta['website'] ?? '') }}" placeholder="https://�?�">
+                                    <input type="text" class="form-control" id="website" name="website" value="{{ old('website', $meta['website'] ?? '') }}" placeholder="https://??">
                                 </div>
                             </div>
                         </div>

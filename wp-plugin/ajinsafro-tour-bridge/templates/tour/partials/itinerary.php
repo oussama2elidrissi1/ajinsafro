@@ -682,7 +682,7 @@ foreach ($itinerary as $index => $day) {
                                                     <div class="activity-description"><?php echo wp_kses_post($act_desc); ?></div>
                                                 <?php endif; ?>
                                                 <?php if ($is_proposition): ?>
-                                                    <div class="ajtb-proposition-choice" data-ajtb-proposition-choice data-activity-id="<?php echo esc_attr((string) $act_id); ?>" data-day-activity-id="<?php echo esc_attr((string) $day_activity_id); ?>" data-title="<?php echo esc_attr($act_title !== '' ? $act_title : __('ActivitÃ©', 'ajinsafro-tour-bridge')); ?>" data-price="<?php echo esc_attr($act_price !== null ? (string) $act_price : '0'); ?>">
+                                                    <div class="ajtb-proposition-choice" data-ajtb-proposition-choice data-activity-id="<?php echo esc_attr((string) $act_id); ?>" data-day-activity-id="<?php echo esc_attr((string) $day_activity_id); ?>" data-title="<?php echo esc_attr($act_title !== '' ? $act_title : __('Activit?', 'ajinsafro-tour-bridge')); ?>" data-price="<?php echo esc_attr($act_price !== null ? (string) $act_price : '0'); ?>">
                                                         <div class="ajtb-proposition-choice-title"><?php esc_html_e('Votre choix pour cette proposition', 'ajinsafro-tour-bridge'); ?></div>
                                                         <label class="ajtb-proposition-radio">
                                                             <input type="radio" name="ajtb_proposition_<?php echo esc_attr((string) ($day_activity_id ?: $act_id)); ?>" value="libre">

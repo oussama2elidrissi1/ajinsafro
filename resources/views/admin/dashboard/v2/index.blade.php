@@ -1,4 +1,4 @@
-﻿@php
+@php
     $now      = \Carbon\Carbon::now('Africa/Casablanca')->locale('fr');
     $dateLong = ucfirst($now->translatedFormat('l d F Y'));
     $dateTime = ucfirst($now->translatedFormat('l d F Y · H:i'));
@@ -14,7 +14,7 @@
 
 @push('styles')
 <style>
-    /* �"?�"?�"? DASHBOARD-SPECIFIC CSS VARIABLES (back-compat) �"?�"?�"? */
+    /* ?"??"??"? DASHBOARD-SPECIFIC CSS VARIABLES (back-compat) ?"??"??"? */
     :root {
         --blue:      #005792;
         --blue-dark: #06345c;
@@ -44,7 +44,7 @@
     .kpi-label, .kpi-value, .kpi-footer { margin-top: revert; }
     a { text-decoration: none; color: inherit; }
 
-    /* �"?�"?�"? PAGE HEAD �"?�"?�"? */
+    /* ?"??"??"? PAGE HEAD ?"??"??"? */
     .page-head {
         display: flex; justify-content: space-between; align-items: flex-start;
         gap: 20px; margin-bottom: 26px; flex-wrap: wrap;
@@ -70,7 +70,7 @@
     .control-btn.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
     .control-btn.primary:hover { background: var(--blue-dark); color: #fff; }
 
-    /* �"?�"?�"? CARD BASE �"?�"?�"? */
+    /* ?"??"??"? CARD BASE ?"??"??"? */
     .dv2-card {
         background: #fff;
         border: 1px solid var(--border);
@@ -78,7 +78,7 @@
         box-shadow: var(--shadow);
     }
 
-    /* �"?�"?�"? KPI GRID �"?�"?�"? */
+    /* ?"??"??"? KPI GRID ?"??"??"? */
     .kpi-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -116,7 +116,7 @@
     .badge-red   { background: #fff0ef; color: var(--red); }
     .badge-green { background: #e8fff4; color: var(--green); }
 
-    /* �"?�"?�"? TOP WIDGETS �"?�"?�"? */
+    /* ?"??"??"? TOP WIDGETS ?"??"??"? */
     .top-widgets {
         display: grid;
         grid-template-columns: 1fr 1fr 1.3fr;
@@ -165,7 +165,7 @@
     .blue-btn:hover { background: var(--blue-dark); color: #fff; }
     .message-illu { font-size: 80px; opacity: .09; line-height: 1; color: var(--blue); }
 
-    /* �"?�"?�"? STATUS CARD �"?�"?�"? */
+    /* ?"??"??"? STATUS CARD ?"??"??"? */
     .status-card { padding: 24px; margin-bottom: 22px; }
     .status-card h3 { font-size: 17px; font-weight: 900; margin-bottom: 18px; color: var(--text); }
     .status-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
@@ -179,7 +179,7 @@
     .progress { height: 8px; border-radius: 999px; background: #edf2f7; overflow: hidden; }
     .progress > span { display: block; height: 100%; border-radius: inherit; transition: width 0.5s; }
 
-    /* �"?�"?�"? CHARTS �"?�"?�"? */
+    /* ?"??"??"? CHARTS ?"??"??"? */
     .charts-grid {
         display: grid; grid-template-columns: 1.55fr .9fr;
         gap: 20px; margin-bottom: 22px;
@@ -196,7 +196,7 @@
     .pill-select:hover { background: #d8e9ff; color: var(--blue-dark); }
     .chart-area { width: 100%; min-height: 290px; }
 
-    /* �"?�"?�"? LOWER GRID �"?�"?�"? */
+    /* ?"??"??"? LOWER GRID ?"??"??"? */
     .lower-grid {
         display: grid; grid-template-columns: .75fr 1.55fr;
         gap: 20px; margin-bottom: 22px;
@@ -211,7 +211,7 @@
     .pay-bar { height: 14px; background: #edf2f7; border-radius: 999px; overflow: hidden; }
     .pay-bar > span { display: block; height: 100%; background: linear-gradient(90deg, #294c99, #2f7df4); border-radius: inherit; }
 
-    /* �"?�"?�"? TABLE CARD �"?�"?�"? */
+    /* ?"??"??"? TABLE CARD ?"??"??"? */
     .table-card { padding: 0; overflow: hidden; }
     .table-card .card-head { padding: 22px 22px 16px; }
     .table-wrap { overflow-x: auto; }
@@ -245,7 +245,7 @@
     }
     .view-btn:hover { background: var(--blue-soft); border-color: var(--blue); }
 
-    /* �"?�"?�"? BOTTOM GRID �"?�"?�"? */
+    /* ?"??"??"? BOTTOM GRID ?"??"??"? */
     .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     .trip-list, .agency-list { padding: 0 22px 22px; display: grid; gap: 12px; }
     .trip-item, .agency-item {
@@ -275,7 +275,7 @@
     .agency-city { color: var(--muted); font-size: 11px; font-weight: 700; margin-top: 3px; }
     .empty-row { padding: 30px; color: var(--muted); text-align: center; font-weight: 700; }
 
-    /* �"?�"?�"? ANIMATIONS �"?�"?�"? */
+    /* ?"??"??"? ANIMATIONS ?"??"??"? */
     .fade-in { animation: fadeIn 0.45s ease both; }
     .fade-in.d1 { animation-delay: 0.05s; }
     .fade-in.d2 { animation-delay: 0.10s; }
@@ -287,7 +287,7 @@
         to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* �"?�"?�"? DASHBOARD RESPONSIVE �"?�"?�"? */
+    /* ?"??"??"? DASHBOARD RESPONSIVE ?"??"??"? */
     @media (max-width: 1400px) {
         .top-widgets { grid-template-columns: 1fr 1fr; }
         .top-widgets > :nth-child(3) { grid-column: 1 / -1; }
@@ -318,7 +318,7 @@
         <div class="page-title-icon"><i class="bx bx-grid-alt"></i></div>
         <div>
             <h1>Tableau de bord</h1>
-            <p>Vue d'ensemble de votre activité �?" {{ $dateTime }}</p>
+            <p>Vue d'ensemble de votre activité ? {{ $dateTime }}</p>
         </div>
     </div>
 
@@ -345,7 +345,7 @@
         </div>
         <div class="kpi-footer">
             <span>Tous les voyages</span>
-            <span class="arrow">�?'</span>
+            <span class="arrow">?'</span>
         </div>
         @if(\Illuminate\Support\Facades\Route::has('admin.circuits.voyages.index'))
             <a href="{{ route('admin.circuits.voyages.index') }}" class="kpi-stretched"></a>
@@ -360,7 +360,7 @@
         </div>
         <div class="kpi-footer">
             <span>{{ $stats['branches_active'] ?? 0 }} actives</span>
-            <span class="arrow">�?'</span>
+            <span class="arrow">?'</span>
         </div>
         @if(\Illuminate\Support\Facades\Route::has('admin.agencies.index'))
             <a href="{{ route('admin.agencies.index') }}" class="kpi-stretched"></a>
@@ -374,14 +374,14 @@
             <div class="kpi-value">{{ $stats['reservations_total'] ?? 0 }}</div>
             @php $evo = $stats['reservations_month_evolution'] ?? 0; @endphp
             @if($evo < 0)
-                <span class="badge-red">�?" {{ $evo }}% ce mois</span>
+                <span class="badge-red">? {{ $evo }}% ce mois</span>
             @elseif($evo > 0)
-                <span class="badge-green">�?' +{{ $evo }}% ce mois</span>
+                <span class="badge-green">?' +{{ $evo }}% ce mois</span>
             @endif
         </div>
         <div class="kpi-footer">
             <span>Total enregistré</span>
-            <span class="arrow">�?'</span>
+            <span class="arrow">?'</span>
         </div>
         @if(\Illuminate\Support\Facades\Route::has('admin.reservations.index'))
             <a href="{{ route('admin.reservations.index') }}" class="kpi-stretched"></a>
@@ -396,7 +396,7 @@
         </div>
         <div class="kpi-footer">
             <span>Clients enregistrés</span>
-            <span class="arrow">�?'</span>
+            <span class="arrow">?'</span>
         </div>
         @if(\Illuminate\Support\Facades\Route::has('admin.customers.clients.index'))
             <a href="{{ route('admin.customers.clients.index') }}" class="kpi-stretched"></a>
@@ -419,7 +419,7 @@
             <div class="metric-row"><span>Ce mois</span><strong>{{ $stats['reservations_this_month'] ?? 0 }} réservations</strong></div>
         </div>
         @if(\Illuminate\Support\Facades\Route::has('admin.reservations.index'))
-            <a href="{{ route('admin.reservations.index') }}" class="detail-link">Voir le détail <span>�?'</span></a>
+            <a href="{{ route('admin.reservations.index') }}" class="detail-link">Voir le détail <span>?'</span></a>
         @endif
     </div>
 
@@ -429,18 +429,18 @@
             <h3>Chiffre d'affaires</h3>
         </div>
         <p style="color:var(--muted);font-weight:700;margin:0 0 4px;font-size:12px;">Total validé</p>
-        <div class="revenue-value">{{ number_format($stats['revenue_total'] ?? 0, 0, ',', ' ') }} �,�</div>
+        <div class="revenue-value">{{ number_format($stats['revenue_total'] ?? 0, 0, ',', ' ') }} ?,?</div>
         <p style="color:var(--muted);font-weight:700;margin:0 0 8px;font-size:12px;">
-            Ce mois : <strong style="color:var(--text);">{{ number_format($stats['revenue_this_month'] ?? 0, 0, ',', ' ') }} �,�</strong>
+            Ce mois : <strong style="color:var(--text);">{{ number_format($stats['revenue_this_month'] ?? 0, 0, ',', ' ') }} ?,?</strong>
         </p>
         @php $revEvo = $stats['revenue_month_evolution'] ?? 0; @endphp
         @if($revEvo >= 0)
-            <span class="small-green">�?' +{{ $revEvo }}% vs mois dernier</span>
+            <span class="small-green">?' +{{ $revEvo }}% vs mois dernier</span>
         @else
-            <span class="small-red">�?" {{ $revEvo }}% vs mois dernier</span>
+            <span class="small-red">? {{ $revEvo }}% vs mois dernier</span>
         @endif
         @if(\Illuminate\Support\Facades\Route::has('admin.reservations.index'))
-            <a href="{{ route('admin.reservations.index') }}" class="detail-link">Voir le détail <span>�?'</span></a>
+            <a href="{{ route('admin.reservations.index') }}" class="detail-link">Voir le détail <span>?'</span></a>
         @endif
     </div>
 
@@ -498,7 +498,7 @@
 <div class="charts-grid">
     <div class="dv2-card chart-card fade-in d4">
         <div class="card-head">
-            <h3>�?volution des réservations &amp; du chiffre d'affaires</h3>
+            <h3>?volution des réservations &amp; du chiffre d'affaires</h3>
             <span class="pill-select">6 derniers mois</span>
         </div>
         <div id="dashv2-chart-line" class="chart-area"></div>
@@ -529,7 +529,7 @@
         </div>
         <div style="margin-top:auto;padding-top:24px;">
             @if(\Illuminate\Support\Facades\Route::has('admin.reservations.index'))
-                <a href="{{ route('admin.reservations.index') }}" class="detail-link">Voir le détail <span>�?'</span></a>
+                <a href="{{ route('admin.reservations.index') }}" class="detail-link">Voir le détail <span>?'</span></a>
             @endif
         </div>
     </div>
@@ -538,7 +538,7 @@
         <div class="card-head">
             <h3>Dernières réservations</h3>
             @if(\Illuminate\Support\Facades\Route::has('admin.reservations.index'))
-                <a href="{{ route('admin.reservations.index') }}" class="pill-select">Voir toutes �?'</a>
+                <a href="{{ route('admin.reservations.index') }}" class="pill-select">Voir toutes ?'</a>
             @endif
         </div>
         <div class="table-wrap">
@@ -555,7 +555,7 @@
                         <tr>
                             <td><span style="color:var(--muted);">#{{ $r->id }}</span></td>
                             <td>
-                                <span class="client-name">{{ trim(($r->client_first_name ?? '').' '.($r->client_last_name ?? '')) ?: '�?"' }}</span>
+                                <span class="client-name">{{ trim(($r->client_first_name ?? '').' '.($r->client_last_name ?? '')) ?: '?' }}</span>
                                 @if($r->client_email)
                                     <span class="client-email">{{ $r->client_email }}</span>
                                 @endif
@@ -564,7 +564,7 @@
                                 @if($r->tour)
                                     {{ \Illuminate\Support\Str::limit($r->tour->name, 30) }}
                                 @else
-                                    <span style="color:var(--muted);">�?"</span>
+                                    <span style="color:var(--muted);">?</span>
                                 @endif
                             </td>
                             <td>
@@ -583,16 +583,16 @@
                                 @endphp
                                 <span class="tag {{ $cls }}">{{ $stLabel }}</span>
                             </td>
-                            <td>{{ strtoupper($r->payment_type ?? '�?"') }}</td>
+                            <td>{{ strtoupper($r->payment_type ?? '?') }}</td>
                             <td>
                                 @if(!empty($r->base_price))
-                                    {{ number_format(($r->base_price ?? 0) + ($r->room_supplement_total ?? 0), 0, ',', ' ') }} �,�
+                                    {{ number_format(($r->base_price ?? 0) + ($r->room_supplement_total ?? 0), 0, ',', ' ') }} ?,?
                                 @else
-                                    <span style="color:var(--muted);">�?"</span>
+                                    <span style="color:var(--muted);">?</span>
                                 @endif
                             </td>
                             <td style="white-space:nowrap;font-size:12px;">
-                                {{ $r->created_at ? $r->created_at->timezone('Africa/Casablanca')->format('d/m/Y H:i') : '�?"' }}
+                                {{ $r->created_at ? $r->created_at->timezone('Africa/Casablanca')->format('d/m/Y H:i') : '?' }}
                             </td>
                             <td>
                                 @if(\Illuminate\Support\Facades\Route::has('admin.reservations.edit'))
@@ -656,11 +656,11 @@
                     <div>
                         <div class="agency-title">{{ $b->name }}</div>
                         @if($b->city || $b->code)
-                            <div class="agency-city">{{ $b->city }}{{ $b->code ? ' �?� '.$b->code : '' }}</div>
+                            <div class="agency-city">{{ $b->city }}{{ $b->code ? ' ?? '.$b->code : '' }}</div>
                         @endif
                     </div>
                     @if(\Illuminate\Support\Facades\Route::has('admin.agencies.show'))
-                        <a href="{{ route('admin.agencies.show', $b) }}" class="agency-action" title="Voir">�?'</a>
+                        <a href="{{ route('admin.agencies.show', $b) }}" class="agency-action" title="Voir">?'</a>
                     @endif
                 </div>
             @empty
@@ -684,7 +684,7 @@
         new ApexCharts(elLine, {
             series: [
                 { name: 'Réservations',           type: 'column', data: @json($stats['chart_reservations'] ?? []) },
-                { name: "Chiffre d'affaires (�,�)", type: 'line',   data: @json($stats['chart_revenue'] ?? []) }
+                { name: "Chiffre d'affaires (?,?)", type: 'line',   data: @json($stats['chart_revenue'] ?? []) }
             ],
             chart: {
                 height: 320, type: 'line',
@@ -709,7 +709,7 @@
                 },
                 {
                     opposite: true,
-                    title: { text: 'CA (�,�)', style: { color: '#8c9aad', fontWeight: 700 } },
+                    title: { text: 'CA (?,?)', style: { color: '#8c9aad', fontWeight: 700 } },
                     labels: {
                         style: { colors: '#8c9aad' },
                         formatter: function (v) { return v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v; }

@@ -1,4 +1,4 @@
-﻿@props(['meta' => []])
+@props(['meta' => []])
 
 @php
     $hotelPhone = old('hotel_phone', $meta['hotel_phone'] ?? '');

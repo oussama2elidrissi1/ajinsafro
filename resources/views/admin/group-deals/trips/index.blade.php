@@ -1,11 +1,11 @@
-﻿@extends('layouts.admin-v6')
-@section('title') Group Deals �?" Voyages @endsection
+@extends('layouts.admin-v6')
+@section('title') Group Deals ? Voyages @endsection
 
 @section('content')
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-flex align-items-center justify-content-between">
-            <h4 class="page-title mb-0 font-size-18">Group Deals �?" Voyages</h4>
+            <h4 class="page-title mb-0 font-size-18">Group Deals ? Voyages</h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
                     <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
@@ -30,7 +30,7 @@
             <div class="col-md-4">
                 <label class="form-label small mb-1">Recherche</label>
                 <input type="search" name="q" class="form-control form-control-sm"
-                       value="{{ request('q') }}" placeholder="Nom du voyage�?�">
+                       value="{{ request('q') }}" placeholder="Nom du voyage??">
             </div>
             <div class="col-auto">
                 <button type="submit" class="btn btn-primary btn-sm">Filtrer</button>
@@ -78,10 +78,10 @@
                         <td>
                             <strong>{{ $voyage->name }}</strong>
                             @if($voyage->price_from)
-                                <br><small class="text-muted">à partir de {{ number_format($voyage->price_from, 0, ',', ' ') }} �,�</small>
+                                <br><small class="text-muted">à partir de {{ number_format($voyage->price_from, 0, ',', ' ') }} ?,?</small>
                             @endif
                         </td>
-                        <td class="text-muted small">{{ $voyage->destination ?? '�?"' }}</td>
+                        <td class="text-muted small">{{ $voyage->destination ?? '?' }}</td>
                         <td class="text-center">
                             @if($voyage->pricingTiers->count())
                                 <span class="badge bg-info text-dark">{{ $voyage->pricingTiers->count() }} palier(s)</span>

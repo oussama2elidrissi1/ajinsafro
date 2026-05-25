@@ -1,4 +1,4 @@
-﻿@php
+@php
     $formId = $formId ?? 'edit-voyage-form';
     $currentStatus = $currentStatus ?? old('post_status', $voyage->post_status ?? 'draft');
     $cancelUrl = $cancelUrl ?? route('admin.circuits.voyages.index');
@@ -12,7 +12,7 @@
     };
     $pageSubtitle = $isCreate
         ? 'Complétez la fiche, les départs, le programme et les services.'
-        : 'Fiche voyage �?" départs, programme et options.';
+        : 'Fiche voyage ? départs, programme et options.';
     $lastUpdated = !$isCreate && $voyage->post_modified
         ? \Carbon\Carbon::parse($voyage->post_modified)->locale('fr')->translatedFormat('d M Y H:i')
         : null;
@@ -92,11 +92,11 @@
         </div>
         <div class="ve-quick-item">
             <span>Destination</span>
-            <strong>{{ $veDestination ? Str::limit($veDestination, 28) : '�? définir' }}</strong>
+            <strong>{{ $veDestination ? Str::limit($veDestination, 28) : '? définir' }}</strong>
         </div>
         <div class="ve-quick-item">
             <span>Prix</span>
-            <strong>{{ $vePriceLabel ?: '�? définir' }}</strong>
+            <strong>{{ $vePriceLabel ?: '? définir' }}</strong>
         </div>
     </div>
 </div>

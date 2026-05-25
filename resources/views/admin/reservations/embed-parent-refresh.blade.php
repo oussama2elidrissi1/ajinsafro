@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="utf-8">
@@ -19,7 +19,7 @@
     }
 })();
 </script>
-<p class="text-muted small p-3">{{ $message ?? 'Redirection�?�' }}</p>
+<p class="text-muted small p-3">{{ $message ?? 'Redirection?' }}</p>
 </body>
 </html>
 

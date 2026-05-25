@@ -1,11 +1,11 @@
-﻿{{-- Location Tree (Destination UX) - recursive, path + toggle + indeterminate support --}}
+{{-- Location Tree (Destination UX) - recursive, path + toggle + indeterminate support --}}
 @props(['locations', 'level' => 0, 'selectedIds' => [], 'path' => []])
 
 <ul class="wp-location-list destination-tree-list" data-level="{{ $level }}" style="padding-left: {{ $level > 0 ? '1.25rem' : '0' }}; margin: 0; list-style: none;">
     @foreach($locations as $location)
         @php
             $locPath = array_merge($path, [$location['title']]);
-            $pathStr = implode(' �?� ', $locPath);
+            $pathStr = implode(' ?? ', $locPath);
             $hasChildren = !empty($location['children']);
             $isSelected = in_array($location['id'], $selectedIds);
         @endphp

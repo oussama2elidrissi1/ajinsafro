@@ -1,4 +1,4 @@
-﻿@php
+@php
     use App\Services\View\AgentPortalLayout;
     use Carbon\Carbon;
     $usePortalTailwind = AgentPortalLayout::shouldUse(auth()->user());

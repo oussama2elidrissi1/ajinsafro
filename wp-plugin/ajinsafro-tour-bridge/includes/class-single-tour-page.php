@@ -1292,7 +1292,7 @@ class AJTB_Single_Tour_Page
         $nonce_ok = check_ajax_referer('ajtb_v1_create_tailor_made_request', 'nonce', false);
         if (!$nonce_ok) {
             wp_send_json_error([
-                'message' => __('RequÃªte non autorisÃ©e.', 'ajinsafro-tour-bridge'),
+                'message' => __('Requ?te non autoris?e.', 'ajinsafro-tour-bridge'),
             ], 403);
         }
 
@@ -1321,32 +1321,32 @@ class AJTB_Single_Tour_Page
 
         if ($tour_id <= 0) {
             wp_send_json_error([
-                'message' => __('ParamÃ¨tres incomplets.', 'ajinsafro-tour-bridge'),
+                'message' => __('Param?tres incomplets.', 'ajinsafro-tour-bridge'),
             ], 422);
         }
 
         if ($custom_departure_place === '' || $custom_departure_date === '') {
             wp_send_json_error([
-                'message' => __('Veuillez renseigner le lieu et la date de dÃ©part.', 'ajinsafro-tour-bridge'),
+                'message' => __('Veuillez renseigner le lieu et la date de d?part.', 'ajinsafro-tour-bridge'),
             ], 422);
         }
 
         if (!preg_match('/^\\d{4}-\\d{2}-\\d{2}$/', $custom_departure_date)) {
             wp_send_json_error([
-                'message' => __('Date de dÃ©part invalide.', 'ajinsafro-tour-bridge'),
+                'message' => __('Date de d?part invalide.', 'ajinsafro-tour-bridge'),
             ], 422);
         }
 
         $today = current_time('Y-m-d'); // WP timezone
         if (strtotime($custom_departure_date) < strtotime($today)) {
             wp_send_json_error([
-                'message' => __('La date de dÃ©part ne peut pas Ãªtre dans le passÃ©.', 'ajinsafro-tour-bridge'),
+                'message' => __('La date de d?part ne peut pas ?tre dans le pass?.', 'ajinsafro-tour-bridge'),
             ], 422);
         }
 
         if ($client_first_name === '' || $client_last_name === '' || $client_phone === '') {
             wp_send_json_error([
-                'message' => __('Veuillez renseigner le prÃ©nom, le nom et le tÃ©lÃ©phone.', 'ajinsafro-tour-bridge'),
+                'message' => __('Veuillez renseigner le pr?nom, le nom et le t?l?phone.', 'ajinsafro-tour-bridge'),
             ], 422);
         }
 
@@ -1356,7 +1356,7 @@ class AJTB_Single_Tour_Page
         ]);
         if ($table === '') {
             wp_send_json_error([
-                'message' => __('Table demande Ã  la carte introuvable.', 'ajinsafro-tour-bridge'),
+                'message' => __('Table demande ? la carte introuvable.', 'ajinsafro-tour-bridge'),
             ], 500);
         }
 
@@ -1414,7 +1414,7 @@ class AJTB_Single_Tour_Page
 
         if (!$inserted) {
             wp_send_json_error([
-                'message' => __('Impossible dâ€™enregistrer la demande.', 'ajinsafro-tour-bridge'),
+                'message' => __('Impossible d?enregistrer la demande.', 'ajinsafro-tour-bridge'),
             ], 500);
         }
 

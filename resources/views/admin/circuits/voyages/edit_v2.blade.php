@@ -1,4 +1,4 @@
-﻿@php
+@php
     $isCreate = isset($voyage->ID) && (int) $voyage->ID === 0;
     $veWpId = isset($voyage->ID) ? (int) $voyage->ID : 0;
     $laravelV = $laravelVoyage ?? null;

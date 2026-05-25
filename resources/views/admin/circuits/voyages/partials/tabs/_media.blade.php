@@ -1,4 +1,4 @@
-﻿<div class="tab-pane" id="media" role="tabpanel" data-ve-pane-title="M�dias">
+<div class="tab-pane" id="media" role="tabpanel" data-ve-pane-title="M?dias">
                 <div class="card ve-pane-card">
                     <div class="card-body">
                         <h4 class="card-title mb-2">Images & Vidéos</h4>
@@ -27,18 +27,18 @@
                                             <i class="bx bx-trash"></i> Supprimer
                                         </button>
                                     </div>
-                                    <small class="text-muted d-block">JPG, PNG ou WebP "�?� max 5 Mo.</small>
+                                    <small class="text-muted d-block">JPG, PNG ou WebP "?? max 5 Mo.</small>
                                     <div id="hero-upload-error" class="alert alert-danger mt-2 mb-0 d-none" role="alert"></div>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Option : utiliser l'image principale comme image �f  la une WP --}}
+                        {{-- Option : utiliser l'image principale comme image ? la une WP --}}
                         <div class="mb-3">
                             <div class="form-check">
                                 @php $useHeroAsThumb = old('hero_use_as_thumbnail') !== null ? (bool) old('hero_use_as_thumbnail') : (isset($meta['hero_image_id']) && isset($meta['thumbnail_id']) && (string)$meta['hero_image_id'] === (string)$meta['thumbnail_id']); @endphp
                                 <input class="form-check-input" type="checkbox" name="hero_use_as_thumbnail" value="1" id="hero_use_as_thumbnail" {{ $useHeroAsThumb ? 'checked' : '' }}>
-                                <label class="form-check-label" for="hero_use_as_thumbnail">Utiliser l'image principale comme image �f  la une WordPress</label>
+                                <label class="form-check-label" for="hero_use_as_thumbnail">Utiliser l'image principale comme image ? la une WordPress</label>
                             </div>
                         </div>
 

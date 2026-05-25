@@ -1,4 +1,4 @@
-﻿@php
+@php
     $sidebarContext = $sidebarContext ?? 'admin-v6';
 
     $user = auth()->user();

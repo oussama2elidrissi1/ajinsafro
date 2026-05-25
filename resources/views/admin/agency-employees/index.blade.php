@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @section('title', "Employes des points de vente")
 
@@ -111,14 +111,14 @@
                                         @endif
                                     </td>
                                     <td><a href="{{ route('admin.agency-employees.show', $employee) }}">{{ $employee->full_name }}</a></td>
-                                    <td>{{ $employee->email ?: '�?"' }}</td>
-                                    <td>{{ $employee->phone ?: '�?"' }}</td>
-                                    <td>{{ $employee->branch?->name ?: '�?"' }}</td>
-                                    <td>{{ $employee->position ?: '�?"' }}</td>
-                                    <td>{{ $employee->user?->roles->pluck('name')->join(', ') ?: '�?"' }}</td>
+                                    <td>{{ $employee->email ?: '?' }}</td>
+                                    <td>{{ $employee->phone ?: '?' }}</td>
+                                    <td>{{ $employee->branch?->name ?: '?' }}</td>
+                                    <td>{{ $employee->position ?: '?' }}</td>
+                                    <td>{{ $employee->user?->roles->pluck('name')->join(', ') ?: '?' }}</td>
                                     <td>{{ $statusLabels[$employee->status] ?? $employee->status }}</td>
                                     <td>{{ $employee->handled_reservations_count }}</td>
-                                    <td>{{ $employee->user?->last_login_at?->format('d/m/Y H:i') ?: '�?"' }}</td>
+                                    <td>{{ $employee->user?->last_login_at?->format('d/m/Y H:i') ?: '?' }}</td>
                                     <td class="text-end">
                                         <div class="d-flex justify-content-end gap-2 flex-wrap">
                                             <a href="{{ route('admin.agency-employees.show', $employee) }}" class="aj-btn aj-btn-soft" style="min-height:34px;padding:0 10px;font-size:12px;">Voir</a>

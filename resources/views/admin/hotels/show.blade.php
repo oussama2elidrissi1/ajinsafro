@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 @section('title', 'Détail hôtel')
 
 @section('content')
@@ -37,8 +37,8 @@
                                     @if($hotel->address)
                                         <tr><td class="text-nowrap pe-2 fw-medium text-dark">Adresse</td><td>{{ $hotel->address }}</td></tr>
                                     @endif
-                                    <tr><td class="text-nowrap pe-2 fw-medium text-dark">Ville</td><td>{{ $hotel->city ?? '�?"' }}</td></tr>
-                                    <tr><td class="text-nowrap pe-2 fw-medium text-dark">Pays</td><td>{{ $hotel->country ?? '�?"' }}</td></tr>
+                                    <tr><td class="text-nowrap pe-2 fw-medium text-dark">Ville</td><td>{{ $hotel->city ?? '?' }}</td></tr>
+                                    <tr><td class="text-nowrap pe-2 fw-medium text-dark">Pays</td><td>{{ $hotel->country ?? '?' }}</td></tr>
                                     @if($hotel->latitude && $hotel->longitude)
                                         <tr><td class="text-nowrap pe-2 fw-medium text-dark">Coordonnées</td><td>{{ $hotel->latitude }}, {{ $hotel->longitude }}</td></tr>
                                     @endif
@@ -84,7 +84,7 @@
             @if($hotel->amenities->isNotEmpty())
                 <div class="card shadow-sm mb-3">
                     <div class="card-header bg-light">
-                        <h5 class="mb-0">�?quipements</h5>
+                        <h5 class="mb-0">?quipements</h5>
                     </div>
                     <div class="card-body">
                         @foreach($hotel->amenities as $amenity)
@@ -126,7 +126,7 @@
             <div class="col-12">
                 <div class="card shadow-sm">
                     <div class="card-header bg-light">
-                        <h5 class="mb-0">Types de chambres �?" détail</h5>
+                        <h5 class="mb-0">Types de chambres ? détail</h5>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -146,18 +146,18 @@
                                     @foreach($hotel->roomTypes as $rt)
                                         <tr>
                                             <td><strong>{{ $rt->name }}</strong></td>
-                                            <td><code class="small">{{ $rt->code ?? '�?"' }}</code></td>
+                                            <td><code class="small">{{ $rt->code ?? '?' }}</code></td>
                                             <td>{{ $rt->capacity_adults }} adulte(s) / {{ $rt->capacity_children }} enfant(s)</td>
                                             <td>{{ $rt->quantity }}</td>
                                             <td>
                                                 @if($rt->base_price !== null)
                                                     {{ number_format((float) $rt->base_price, 0, ',', ' ') }} {{ $rt->currency ?? 'MAD' }}
                                                 @else
-                                                    <span class="text-muted">�?"</span>
+                                                    <span class="text-muted">?</span>
                                                 @endif
                                             </td>
                                             <td class="small text-muted" style="max-width:200px;">
-                                                {{ $rt->description ? \Str::limit($rt->description, 60) : '�?"' }}
+                                                {{ $rt->description ? \Str::limit($rt->description, 60) : '?' }}
                                             </td>
                                             <td class="small">
                                                 @if(is_array($rt->amenities) && count($rt->amenities) > 0)
@@ -165,7 +165,7 @@
                                                         <span class="badge bg-light text-dark border me-1">{{ is_array($opt) ? ($opt['label'] ?? $opt['name'] ?? json_encode($opt)) : $opt }}</span>
                                                     @endforeach
                                                 @else
-                                                    <span class="text-muted">�?"</span>
+                                                    <span class="text-muted">?</span>
                                                 @endif
                                             </td>
                                         </tr>

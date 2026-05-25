@@ -1,6 +1,6 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
-@section('title', 'Fiche Formule �?conomique')
+@section('title', 'Fiche Formule ?conomique')
 
 @section('content')
     <x-admin.page-header
@@ -8,7 +8,7 @@
         :subtitle="$offer->short_description ?: 'Offre économique Ajinsafro'"
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Formule �?conomique', 'url' => route('admin.economic-offers.index')],
+            ['label' => 'Formule ?conomique', 'url' => route('admin.economic-offers.index')],
             ['label' => 'Fiche offre'],
         ]"
     >
@@ -29,8 +29,8 @@
                     <div><strong>Catégorie :</strong> {{ $offer->category_label }}</div>
                     <div><strong>Statut :</strong> {{ $offer->status_label }}</div>
                     <div><strong>Disponibilité :</strong> {{ $offer->availability_label }}</div>
-                    <div><strong>Ville de départ :</strong> {{ $offer->departure_city ?: '�?"' }}</div>
-                    <div><strong>Destination :</strong> {{ $offer->destination ?: '�?"' }}</div>
+                    <div><strong>Ville de départ :</strong> {{ $offer->departure_city ?: '?' }}</div>
+                    <div><strong>Destination :</strong> {{ $offer->destination ?: '?' }}</div>
                     <div><strong>Prix à partir de :</strong> {{ $offer->price_from_value !== null ? number_format($offer->price_from_value, 0, ',', ' ') . ' ' . $offer->currency : 'Sur demande' }}</div>
                     <div><strong>Places restantes :</strong> {{ $offer->remaining_places }}</div>
                 </div>
@@ -38,17 +38,17 @@
         </div>
         <div class="col-lg-8">
             <x-admin.form-section title="Présentation">
-                <div class="mb-3"><strong>Description courte</strong><br>{{ $offer->short_description ?: '�?"' }}</div>
-                <div><strong>Description détaillée</strong><br>{!! nl2br(e($offer->description ?: '�?"')) !!}</div>
+                <div class="mb-3"><strong>Description courte</strong><br>{{ $offer->short_description ?: '?' }}</div>
+                <div><strong>Description détaillée</strong><br>{!! nl2br(e($offer->description ?: '?')) !!}</div>
             </x-admin.form-section>
 
             <x-admin.form-section title="Prix et conditions">
                 <div class="row g-3">
-                    <div class="col-md-4"><strong>Ancien prix :</strong> {{ $offer->old_price !== null ? number_format((float) $offer->old_price, 0, ',', ' ') . ' ' . $offer->currency : '�?"' }}</div>
-                    <div class="col-md-4"><strong>Type de prix :</strong> {{ \App\Models\EconomicOffer::priceTypeOptions()[$offer->price_type] ?? '�?"' }}</div>
-                    <div class="col-md-4"><strong>Acompte :</strong> {{ $offer->deposit_amount !== null ? number_format((float) $offer->deposit_amount, 0, ',', ' ') . ' ' . $offer->currency : '�?"' }}</div>
-                    <div class="col-md-6"><strong>Ville d arrivée :</strong> {{ $offer->arrival_city ?: '�?"' }}</div>
-                    <div class="col-md-6"><strong>Zone / adresse :</strong> {{ $offer->address_zone ?: '�?"' }}</div>
+                    <div class="col-md-4"><strong>Ancien prix :</strong> {{ $offer->old_price !== null ? number_format((float) $offer->old_price, 0, ',', ' ') . ' ' . $offer->currency : '?' }}</div>
+                    <div class="col-md-4"><strong>Type de prix :</strong> {{ \App\Models\EconomicOffer::priceTypeOptions()[$offer->price_type] ?? '?' }}</div>
+                    <div class="col-md-4"><strong>Acompte :</strong> {{ $offer->deposit_amount !== null ? number_format((float) $offer->deposit_amount, 0, ',', ' ') . ' ' . $offer->currency : '?' }}</div>
+                    <div class="col-md-6"><strong>Ville d arrivée :</strong> {{ $offer->arrival_city ?: '?' }}</div>
+                    <div class="col-md-6"><strong>Zone / adresse :</strong> {{ $offer->address_zone ?: '?' }}</div>
                 </div>
             </x-admin.form-section>
         </div>
@@ -67,7 +67,7 @@
                             @foreach($offer->prices as $price)
                                 <tr>
                                     <td>{{ $price->label }}</td>
-                                    <td>{{ $price->type ?: '�?"' }}</td>
+                                    <td>{{ $price->type ?: '?' }}</td>
                                     <td>{{ number_format((float) $price->price, 0, ',', ' ') }} {{ $offer->currency }}</td>
                                     <td>{{ $price->stock }}</td>
                                 </tr>
@@ -90,7 +90,7 @@
                             @foreach($offer->departures as $departure)
                                 <tr>
                                     <td>{{ $departure->departure_date?->format('d/m/Y') }}</td>
-                                    <td>{{ $departure->return_date?->format('d/m/Y') ?: '�?"' }}</td>
+                                    <td>{{ $departure->return_date?->format('d/m/Y') ?: '?' }}</td>
                                     <td>{{ $departure->status_label }}</td>
                                     <td>{{ $departure->remaining_places }}</td>
                                 </tr>

@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @section('title', 'Demandes Hajj & Omra')
 
@@ -67,7 +67,7 @@
                                 <div class="text-muted small">{{ $requestItem->phone }} · {{ $requestItem->email }}</div>
                             </td>
                             <td>{{ $requestItem->package_title ?: optional($requestItem->package)->title ?: 'Non associee' }}</td>
-                            <td>{{ $requestItem->selected_departure_date?->format('d/m/Y') ?: '�?"' }}</td>
+                            <td>{{ $requestItem->selected_departure_date?->format('d/m/Y') ?: '?' }}</td>
                             <td>
                                 <x-admin.badge
                                     :type="match($requestItem->status){

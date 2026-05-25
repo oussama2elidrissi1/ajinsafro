@@ -1,11 +1,11 @@
-﻿<form id="calendar-filters" class="space-y-4 mb-6">
+<form id="calendar-filters" class="space-y-4 mb-6">
     <input type="hidden" name="date_from" id="ajin-cal-date-from" value="{{ $dateFrom ?? '' }}">
     <input type="hidden" name="date_to" id="ajin-cal-date-to" value="{{ $dateTo ?? '' }}">
 
     <div class="bg-white p-3 sm:p-4 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-100 flex flex-wrap items-center gap-3">
         <div class="flex-1 min-w-[200px] w-full sm:w-auto relative shrink-0">
             <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-            <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Rechercher (client, voyage, ref�?�)"
+            <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Rechercher (client, voyage, ref.)"
                    class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:border-[#0083c4] focus:bg-white transition-colors text-[#0e3a5a] font-medium placeholder-gray-400">
         </div>
 
@@ -21,7 +21,7 @@
 
         <div class="relative flex items-center bg-gray-50 border border-gray-100 rounded-xl px-4 py-2 focus-within:border-[#0083c4] focus-within:bg-white transition-colors flex-1 min-w-[220px] sm:flex-none">
             <i class="far fa-calendar-alt text-[#0083c4] mr-2"></i>
-            <input type="text" id="ajin-cal-range" placeholder="Période (optionnel)�?�" autocomplete="off"
+            <input type="text" id="ajin-cal-range" placeholder="Période (optionnel)" autocomplete="off"
                    class="bg-transparent border-none outline-none text-[#0e3a5a] font-medium text-sm w-full min-w-0 cursor-pointer placeholder-gray-400">
         </div>
 
@@ -75,4 +75,3 @@
         </div>
     </details>
 </form>
-

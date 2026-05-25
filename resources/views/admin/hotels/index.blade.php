@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 @section('title', 'Hôtels')
 
 @push('styles')
@@ -133,9 +133,9 @@
                         <h5 class="card-title">{{ $hotel->name }}</h5>
                         <div class="hotel-meta">
                             @if($hotel->city || $hotel->country)
-                                <span><i class="bx bx-map-pin me-1"></i>{{ trim(implode(', ', array_filter([$hotel->city, $hotel->country]))) ?: '�?"' }}</span>
+                                <span><i class="bx bx-map-pin me-1"></i>{{ trim(implode(', ', array_filter([$hotel->city, $hotel->country]))) ?: '?' }}</span>
                             @else
-                                <span>�?"</span>
+                                <span>?</span>
                             @endif
                         </div>
                         <div class="hotel-badges">

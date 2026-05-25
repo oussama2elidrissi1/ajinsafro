@@ -1,6 +1,6 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
-@section('title'){{ $isEdit ? 'Modifier rôle' : 'Créer rôle' }} �?" Rôles & Permissions@endsection
+@section('title'){{ $isEdit ? 'Modifier rôle' : 'Créer rôle' }} ? Rôles & Permissions@endsection
 
 @push('styles')
     <style>
@@ -193,7 +193,7 @@
                                         <h5 class="mb-0">{{ $section['label'] }}</h5>
                                         <span class="badge bg-soft-dark text-dark section-count" data-count-for="section:{{ $sectionKey }}">0 / 0</span>
                                     </div>
-                                    <p class="text-muted small mb-0 mt-1">Permissions alignées sur la sidebar réelle de l�?Tadmin.</p>
+                                    <p class="text-muted small mb-0 mt-1">Permissions alignées sur la sidebar réelle de l?Tadmin.</p>
                                 </div>
                                 <div class="d-flex flex-wrap gap-2">
                                     <button type="button" class="btn btn-sm btn-outline-primary check-section" data-section="{{ $sectionKey }}">Cocher section</button>
@@ -290,7 +290,7 @@
                     <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                         <div>
                             <div class="fw-semibold">Enregistrement du rôle</div>
-                            <div class="text-muted small">Les permissions existantes non touchées sont conservées jusqu�?Tà la validation.</div>
+                            <div class="text-muted small">Les permissions existantes non touchées sont conservées jusqu?Tà la validation.</div>
                         </div>
                         <div class="d-flex gap-2">
                             <a href="{{ route('admin.settings.roles-permissions') }}" class="btn btn-light">Annuler</a>

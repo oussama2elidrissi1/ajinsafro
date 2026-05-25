@@ -1,4 +1,4 @@
-﻿@php
+@php
     $clientMode = old('client_mode', 'new');
     $oldPassengers = collect(old('passengers', []));
 @endphp

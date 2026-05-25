@@ -82,7 +82,7 @@ $(document).ready(function () {
         max: 70,
         from: 30,
         prefix: "Age ",
-        max_postfix: "+"
+        max_postfix: "?"
     });
     $("#range_10").ionRangeSlider({
         skin: "round",
@@ -92,7 +92,7 @@ $(document).ready(function () {
         from: 145,
         to: 155,
         prefix: "Weight: ",
-        postfix: " million pounds",
+        postfix: "?",
         decorate_both: true
     });
     $("#range_11").ionRangeSlider({
@@ -102,7 +102,7 @@ $(document).ready(function () {
         min: -90,
         max: 90,
         from: 0,
-        postfix: "Ã‚Â°"
+        postfix: "?"
     });
     $("#range_12").ionRangeSlider({
         skin: "round",

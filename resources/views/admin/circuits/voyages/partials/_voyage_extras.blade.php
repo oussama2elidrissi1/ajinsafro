@@ -1,4 +1,4 @@
-﻿@php
+@php
     $veOld = old('voyage_extras');
     if ($veOld !== null && is_array($veOld)) {
         $veRows = $veOld;

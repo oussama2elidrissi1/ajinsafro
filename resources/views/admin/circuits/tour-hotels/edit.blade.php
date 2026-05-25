@@ -1,5 +1,5 @@
-﻿@extends('layouts.admin-v6')
-@section('title', 'Gérer l\'hôtel �?" ' . $tour->post_title)
+@extends('layouts.admin-v6')
+@section('title', 'Gérer l\'hôtel ? ' . $tour->post_title)
 
 @section('content')
     <div class="row mb-3">
@@ -53,7 +53,7 @@
                                 <input type="text" class="form-control" id="hotel_name" name="hotel_name" value="{{ old('hotel_name', $hotel?->hotel_name ?? '') }}" placeholder="Ex. Hôtel Les Almoravides">
                             </div>
                             <div class="col-md-4">
-                                <label for="stars" class="form-label">�?toiles (0�?"5)</label>
+                                <label for="stars" class="form-label">?toiles (0?5)</label>
                                 <input type="number" class="form-control" id="stars" name="stars" value="{{ old('stars', $hotel?->stars ?? '') }}" min="0" max="5" placeholder="3">
                             </div>
                             <div class="col-12">
@@ -70,7 +70,7 @@
                             </div>
                             <div class="col-12">
                                 <label for="notes" class="form-label">Notes</label>
-                                <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="Informations complémentaires�?�">{{ old('notes', $hotel?->notes ?? '') }}</textarea>
+                                <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="Informations complémentaires??">{{ old('notes', $hotel?->notes ?? '') }}</textarea>
                             </div>
                         </div>
 
@@ -140,7 +140,7 @@
                                                 </div>
                                             </div>
                                             <div class="col-md-1">
-                                                <button type="button" class="btn btn-sm btn-outline-danger tour-hotel-remove-room" data-room-index="{{ $ri }}" aria-label="Supprimer">�-</button>
+                                                <button type="button" class="btn btn-sm btn-outline-danger tour-hotel-remove-room" data-room-index="{{ $ri }}" aria-label="Supprimer">?</button>
                                             </div>
                                         </div>
                                         <div class="row g-2 mt-1">

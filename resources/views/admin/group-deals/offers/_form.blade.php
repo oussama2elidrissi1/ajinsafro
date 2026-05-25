@@ -1,4 +1,4 @@
-﻿@csrf
+@csrf
 @if($isEdit)
     @method('PUT')
 @endif
@@ -111,7 +111,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="alert alert-info mb-0">Pour ajouter d�?Tautres paliers, dupliquez une ligne ou utilisez ensuite la gestion inline sur la fiche détail.</div>
+                <div class="alert alert-info mb-0">Pour ajouter d?Tautres paliers, dupliquez une ligne ou utilisez ensuite la gestion inline sur la fiche détail.</div>
             </div>
         </div>
     </div>

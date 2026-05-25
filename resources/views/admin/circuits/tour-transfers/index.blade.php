@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 @section('title')
     Transferts des circuits
 @endsection
@@ -37,7 +37,7 @@
             <div class="card">
                 <div class="card-body">
                     <p class="text-muted mb-3">
-                        Transfert aller (Jour 1) : Aéroport �?' Hôtel. Transfert retour (dernier jour) : Hôtel �?' Aéroport.
+                        Transfert aller (Jour 1) : Aéroport ?' Hôtel. Transfert retour (dernier jour) : Hôtel ?' Aéroport.
                     </p>
                     @if($tours->isEmpty())
                         <p class="text-muted mb-0">Aucun tour. <a href="{{ route('admin.circuits.voyages.create') }}">Créer un tour</a> puis revenir ici pour définir les transferts.</p>
@@ -63,16 +63,16 @@
                                             </td>
                                             <td>
                                                 @if($tr['arrival'] && ($tr['arrival']->from_label || $tr['arrival']->to_label))
-                                                    {{ $tr['arrival']->from_label ?? '�?"' }} �?' {{ $tr['arrival']->to_label ?? '�?"' }}
+                                                    {{ $tr['arrival']->from_label ?? '?' }} ?' {{ $tr['arrival']->to_label ?? '?' }}
                                                 @else
-                                                    <span class="text-muted">�?"</span>
+                                                    <span class="text-muted">?</span>
                                                 @endif
                                             </td>
                                             <td>
                                                 @if($tr['departure'] && ($tr['departure']->from_label || $tr['departure']->to_label))
-                                                    {{ $tr['departure']->from_label ?? '�?"' }} �?' {{ $tr['departure']->to_label ?? '�?"' }}
+                                                    {{ $tr['departure']->from_label ?? '?' }} ?' {{ $tr['departure']->to_label ?? '?' }}
                                                 @else
-                                                    <span class="text-muted">�?"</span>
+                                                    <span class="text-muted">?</span>
                                                 @endif
                                             </td>
                                             <td class="text-end">

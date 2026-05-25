@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @section('title', 'Fiche Group Deal')
 
@@ -164,7 +164,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="7" class="text-center text-muted py-4">Aucun participant pour l�?Tinstant.</td></tr>
+                                <tr><td colspan="7" class="text-center text-muted py-4">Aucun participant pour l?Tinstant.</td></tr>
                             @endforelse
                             </tbody>
                         </table>
@@ -241,7 +241,7 @@
                         <li><strong>Meilleur prix:</strong> {{ optional($stats['best_tier'])->price_per_person ? number_format((float) $stats['best_tier']->price_per_person, 0, ',', ' ') . ' DH' : 'N/A' }}</li>
                         <li><strong>Prochain palier:</strong>
                             @if($stats['next_tier'])
-                                {{ $stats['next_tier']->min_participants }} pers. �?' {{ number_format((float) $stats['next_tier']->price_per_person, 0, ',', ' ') }} DH
+                                {{ $stats['next_tier']->min_participants }} pers. ?' {{ number_format((float) $stats['next_tier']->price_per_person, 0, ',', ' ') }} DH
                             @else
                                 Aucun
                             @endif

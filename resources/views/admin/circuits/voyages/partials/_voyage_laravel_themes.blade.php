@@ -1,4 +1,4 @@
-﻿@php
+@php
     $allVoyageThemes = $allVoyageThemes ?? collect();
     $laravelV = $laravelVoyage ?? null;
     $selectedThemeIds = $laravelV ? $laravelV->themes->pluck('id')->map(fn ($id) => (int) $id)->all() : [];
@@ -194,8 +194,8 @@
                         const lines = impact.voyages.map(function(v) {
                             const id = v.id != null ? '#' + v.id : '';
                             const vn = (v.name || '').toString();
-                            const slug = v.slug ? ' �?" ' + v.slug : '';
-                            return '�?� ' + id + ' ' + vn + slug;
+                            const slug = v.slug ? ' ? ' + v.slug : '';
+                            return '?? ' + id + ' ' + vn + slug;
                         });
                         msg = 'Voyages concernés (' + impact.voyages.length + ') :\n\n' + lines.join('\n') + '\n\nConfirmer la suppression du thème « ' + name + ' » ?';
                     }
@@ -203,7 +203,7 @@
                     runDelete();
                 }).catch(function() {
                     self.disabled = false;
-                    if (!confirm('Impossible de charger l�?Timpact. Supprimer quand même le thème « ' + name + ' » ?')) return;
+                    if (!confirm('Impossible de charger l?Timpact. Supprimer quand même le thème « ' + name + ' » ?')) return;
                     runDelete();
                 });
             });
@@ -213,7 +213,7 @@
     document.querySelectorAll('.ve-voyage-theme-add').forEach(function(btn) {
         btn.addEventListener('click', function() {
             const modal = document.getElementById('voyageThemeModal');
-            document.getElementById('voyageThemeModalLabel').textContent = 'Ajouter un thème �?" ' + (this.dataset.label || 'Voyage');
+            document.getElementById('voyageThemeModalLabel').textContent = 'Ajouter un thème ? ' + (this.dataset.label || 'Voyage');
             document.getElementById('voyageThemeId').value = '';
             document.getElementById('voyageThemeName').value = '';
             document.getElementById('voyageThemeSlug').value = '';

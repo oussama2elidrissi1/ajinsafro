@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @section('title', 'Points de vente')
 
@@ -133,11 +133,11 @@
                                         <a href="{{ route('admin.agencies.show', $agency) }}" class="fw-semibold text-decoration-none">{{ $agency->name }}</a>
                                         <div class="text-muted small">{{ $agency->code }} · {{ $agencyTypeLabels[$agency->agency_type] ?? $agency->agency_type }}</div>
                                     </td>
-                                    <td>{{ $agency->city ?: '�?"' }}</td>
-                                    <td>{{ $agency->country ?: '�?"' }}</td>
-                                    <td>{{ $agency->phone ?: '�?"' }}</td>
-                                    <td>{{ $agency->email ?: '�?"' }}</td>
-                                    <td>{{ $agency->manager?->name ?: '�?"' }}</td>
+                                    <td>{{ $agency->city ?: '?' }}</td>
+                                    <td>{{ $agency->country ?: '?' }}</td>
+                                    <td>{{ $agency->phone ?: '?' }}</td>
+                                    <td>{{ $agency->email ?: '?' }}</td>
+                                    <td>{{ $agency->manager?->name ?: '?' }}</td>
                                     <td>{{ $agency->agency_employees_count }}</td>
                                     <td>{{ $agency->reservations_count }}</td>
                                     <td>{{ number_format((float) ($agency->revenue_total ?? 0), 0, ',', ' ') }} DH</td>

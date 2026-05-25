@@ -38,7 +38,7 @@ class ReservationPricingService
 
         if ($unitPriceBeforeDiscount <= 0) {
             throw ValidationException::withMessages([
-                'tour_id' => ['Aucun prix nâ€™a Ã©tÃ© trouvÃ© pour ce voyage ou ce dÃ©part.'],
+                'tour_id' => ['Aucun prix n?a ?t? trouv? pour ce voyage ou ce d?part.'],
             ]);
         }
 
@@ -51,7 +51,7 @@ class ReservationPricingService
 
         if ($paidAmount > $totalAmount + 0.009) {
             throw ValidationException::withMessages([
-                'payment_amount' => ['Le montant payÃ© ne peut pas dÃ©passer le total du dossier.'],
+                'payment_amount' => ['Le montant pay? ne peut pas d?passer le total du dossier.'],
             ]);
         }
 
@@ -91,8 +91,8 @@ class ReservationPricingService
     }
 
     /**
-     * RÃ©sout le prix unitaire officiel de rÃ©servation Ã  partir de la fiche produit uniquement.
-     * PrioritÃ© : wp_base_price (Prix de base MAD) > wp_adult_price > wp_min_price > voyage_price_from.
+          * R?sout le prix unitaire officiel de r?servation ? partir de la fiche produit uniquement.
+     * Priorit? : wp_base_price (Prix de base MAD) > wp_adult_price > wp_min_price > voyage_price_from.
      *
      * @return array{unit_price: float, source: string, sources: array<string, mixed>}
      */
@@ -130,7 +130,7 @@ class ReservationPricingService
      */
     public function resolveUnitPrice(Voyage $voyage, ?Departure $departure = null, ?TravelDate $travelDate = null): array
     {
-        // 1) Prix officiel de la fiche produit (rÃ¨gle mÃ©tier)
+        // 1) Prix officiel de la fiche produit (r?gle m?tier)
         $productPrice = $this->resolveReservationUnitPrice($voyage);
         if ($productPrice['unit_price'] > 0) {
             $sources = $productPrice['sources'];
@@ -145,7 +145,7 @@ class ReservationPricingService
             ];
         }
 
-        // 2) Fallback absolu : sources dÃ©part / travel-date
+        // 2) Fallback absolu : sources d?part / travel-date
         $wpPrices = $this->resolveWordPressTourPrices($voyage, $travelDate);
 
         $sources = [
@@ -261,7 +261,7 @@ class ReservationPricingService
 
         if ($unitPrice <= 0) {
             throw ValidationException::withMessages([
-                'tour_id' => ['Aucun prix configurÃ© pour ce voyage ou ce dÃ©part.'],
+                'tour_id' => ['Aucun prix configur? pour ce voyage ou ce d?part.'],
             ]);
         }
 
@@ -345,7 +345,7 @@ class ReservationPricingService
                 ->map(function ($hotel) {
                     return [
                         'departure_hotel_id' => (int) $hotel->id,
-                        'hotel_name' => $hotel->hotel_name ?: 'HÃ´tel',
+                        'hotel_name' => $hotel->hotel_name ?: 'H?tel',
                         'rooms' => $hotel->rooms
                             ->filter(fn ($room) => !in_array($room->status ?? null, ['inactive', 'closed'], true))
                             ->map(fn ($room) => [
@@ -420,7 +420,7 @@ class ReservationPricingService
                                 'departure_hotel_room_id' => null, // use tour_hotel_room_id below to reference WP room IDs
                                 'tour_hotel_room_id' => (int) ($room->id ?? 0),
                                 'departure_hotel_id' => (int) ($hotel->id ?? 0),
-                                'hotel_name' => (string) ($hotel->hotel_name ?? 'HÃ´tel'),
+                                'hotel_name' => (string) ($hotel->hotel_name ?? 'H?tel'),
                                 'room_type' => (string) ($room->room_type ?? ''),
                                 'capacity' => (int) ($room->capacity_total ?? $room->capacity_total ?? 0),
                                 'capacity_total' => (int) ($room->capacity_total ?? 0),
@@ -436,7 +436,7 @@ class ReservationPricingService
 
                         return $rooms ? [
                             'departure_hotel_id' => (int) $hotel->id,
-                            'hotel_name' => (string) ($hotel->hotel_name ?? 'HÃ´tel'),
+                            'hotel_name' => (string) ($hotel->hotel_name ?? 'H?tel'),
                             'rooms' => $rooms,
                         ] : null;
                     })->filter()->values()->all();
@@ -465,9 +465,9 @@ class ReservationPricingService
 
             if ($mode !== 'rooms') {
                 if ($hasAssociatedHotels) {
-                    $message = 'Configuration incomplÃ¨te : des hÃ´tels sont liÃ©s Ã  ce dÃ©part mais aucune chambre nâ€™est configurÃ©e.';
+                    $message = 'Configuration incompl?te : des h?tels sont li?s ? ce d?part mais aucune chambre n?est configur?e.';
                 } else {
-                    $message = 'Ce dÃ©part nâ€™a plus de places disponibles.';
+                    $message = 'Ce d?part n?a plus de places disponibles.';
                 }
             }
         }
@@ -920,7 +920,7 @@ class ReservationPricingService
         $voyage = $voyageId > 0 ? Voyage::query()->find($voyageId) : null;
         if (! $voyage) {
             throw ValidationException::withMessages([
-                'tour_id' => ['Le voyage sÃ©lectionnÃ© est introuvable.'],
+                'tour_id' => ['Le voyage s?lectionn? est introuvable.'],
             ]);
         }
 
@@ -942,12 +942,12 @@ class ReservationPricingService
         $departure = $departureId > 0 ? Departure::query()->find($departureId) : null;
         if (! $departure) {
             throw ValidationException::withMessages([
-                'departure_id' => ['Le dÃ©part sÃ©lectionnÃ© est introuvable.'],
+                'departure_id' => ['Le d?part s?lectionn? est introuvable.'],
             ]);
         }
         if ((int) $departure->voyage_id !== (int) $voyage->id) {
             throw ValidationException::withMessages([
-                'departure_id' => ['Le dÃ©part sÃ©lectionnÃ© ne correspond pas au voyage demandÃ©.'],
+                'departure_id' => ['Le d?part s?lectionn? ne correspond pas au voyage demand?.'],
             ]);
         }
 
@@ -1101,7 +1101,7 @@ class ReservationPricingService
         $departure = Departure::query()->where('voyage_id', $voyage->id)->orderBy('start_date')->orderBy('id')->first();
         if (! $departure) {
             throw ValidationException::withMessages([
-                'departure_id' => ['Le dÃ©part sÃ©lectionnÃ© est introuvable.'],
+                'departure_id' => ['Le d?part s?lectionn? est introuvable.'],
             ]);
         }
 
@@ -1233,13 +1233,13 @@ class ReservationPricingService
             if ($rooms->isEmpty()) {
                 if ($departure->departureHotels->where('is_active', true)->isNotEmpty()) {
                     throw ValidationException::withMessages([
-                        'hotel_rooms' => ['Configuration incomplÃ¨te : ajoutez les chambres pour ce dÃ©part.'],
+                        'hotel_rooms' => ['Configuration incompl?te : ajoutez les chambres pour ce d?part.'],
                     ]);
                 }
 
                 if ((int) ($departure->available_capacity ?? 0) <= 0) {
                     throw ValidationException::withMessages([
-                        'hotel_rooms' => ['Ce dÃ©part nâ€™a plus de places disponibles.'],
+                        'hotel_rooms' => ['Ce d?part n?a plus de places disponibles.'],
                     ]);
                 }
 
@@ -1258,7 +1258,7 @@ class ReservationPricingService
 
         if ($selectedRows->isEmpty()) {
             throw ValidationException::withMessages([
-                'hotel_rooms' => ['SÃ©lectionnez au moins une chambre pour continuer.'],
+                'hotel_rooms' => ['S?lectionnez au moins une chambre pour continuer.'],
             ]);
         }
 
@@ -1278,7 +1278,7 @@ class ReservationPricingService
 
             if ($roomId <= 0) {
                 throw ValidationException::withMessages([
-                    "hotel_rooms.$index.departure_hotel_room_id" => ['Chaque ligne chambre doit rÃ©fÃ©rencer une vraie chambre de dÃ©part ou une chambre du catalogue.'],
+                    "hotel_rooms.$index.departure_hotel_room_id" => ['Chaque ligne chambre doit r?f?rencer une vraie chambre de d?part ou une chambre du catalogue.'],
                 ]);
             }
 
@@ -1288,7 +1288,7 @@ class ReservationPricingService
 
             if (! $room) {
                 throw ValidationException::withMessages([
-                    "hotel_rooms.$index.departure_hotel_room_id" => ['La chambre sÃ©lectionnÃ©e est introuvable pour ce dÃ©part.'],
+                    "hotel_rooms.$index.departure_hotel_room_id" => ['La chambre s?lectionn?e est introuvable pour ce d?part.'],
                 ]);
             }
 
@@ -1300,14 +1300,14 @@ class ReservationPricingService
 
             if ($roomCount > $availableRooms) {
                 throw ValidationException::withMessages([
-                    "hotel_rooms.$index.room_count" => ['Le nombre de chambres demandÃ© dÃ©passe le stock disponible.'],
+                    "hotel_rooms.$index.room_count" => ['Le nombre de chambres demand? d?passe le stock disponible.'],
                 ]);
             }
 
             $lineCapacity = $roomCount * $capacity;
             if ($lineCapacity > $availablePlaces) {
                 throw ValidationException::withMessages([
-                    "hotel_rooms.$index.room_count" => ['Le nombre de places demandÃ© dÃ©passe le stock disponible pour cette chambre.'],
+                    "hotel_rooms.$index.room_count" => ['Le nombre de places demand? d?passe le stock disponible pour cette chambre.'],
                 ]);
             }
 
@@ -1328,13 +1328,13 @@ class ReservationPricingService
 
         if ($totalCapacity < $travelersCount) {
             throw ValidationException::withMessages([
-                'hotel_rooms' => ['La capacitÃ© des chambres sÃ©lectionnÃ©es est insuffisante pour le nombre de voyageurs.'],
+                'hotel_rooms' => ['La capacit? des chambres s?lectionn?es est insuffisante pour le nombre de voyageurs.'],
             ]);
         }
 
         if ((int) ($departure->available_capacity ?? 0) > 0 && $travelersCount > (int) $departure->available_capacity) {
             throw ValidationException::withMessages([
-                'hotel_rooms' => ['Le nombre de voyageurs dÃ©passe la capacitÃ© disponible sur ce dÃ©part.'],
+                'hotel_rooms' => ['Le nombre de voyageurs d?passe la capacit? disponible sur ce d?part.'],
             ]);
         }
 
@@ -1455,14 +1455,14 @@ class ReservationPricingService
 
             if ($extraId <= 0) {
                 throw ValidationException::withMessages([
-                    "extras_json.$index.voyage_extra_id" => ['Chaque extra doit rÃ©fÃ©rencer un extra actif du voyage.'],
+                    "extras_json.$index.voyage_extra_id" => ['Chaque extra doit r?f?rencer un extra actif du voyage.'],
                 ]);
             }
 
             $extra = $extras->get($extraId);
             if (! $extra) {
                 throw ValidationException::withMessages([
-                    "extras_json.$index.voyage_extra_id" => ['Lâ€™extra sÃ©lectionnÃ© nâ€™est pas disponible pour ce voyage.'],
+                    "extras_json.$index.voyage_extra_id" => ['L?extra s?lectionn? n?est pas disponible pour ce voyage.'],
                 ]);
             }
 
@@ -1472,7 +1472,7 @@ class ReservationPricingService
             if ($scope === 'traveler_selection') {
                 if ($travelerKeys === []) {
                     throw ValidationException::withMessages([
-                        "extras_json.$index.traveler_keys" => ['SÃ©lectionnez au moins un voyageur pour cet extra.'],
+                        "extras_json.$index.traveler_keys" => ['S?lectionnez au moins un voyageur pour cet extra.'],
                     ]);
                 }
 

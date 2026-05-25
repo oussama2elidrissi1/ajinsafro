@@ -1,4 +1,4 @@
-﻿@php
+@php
     $availabilityStatuses = [
         'available' => 'Disponible',
         'limited' => 'Limité',

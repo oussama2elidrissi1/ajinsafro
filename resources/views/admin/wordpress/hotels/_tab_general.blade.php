@@ -1,4 +1,4 @@
-﻿@props(['hotel' => null, 'stHotel' => null, 'featuredUrl' => null])
+@props(['hotel' => null, 'stHotel' => null, 'featuredUrl' => null])
 
 @php
     $postTitle = old('post_title', $hotel->post_title ?? '');
@@ -45,9 +45,9 @@
 </div>
 <div class="row">
     <div class="col-md-6 mb-3">
-        <label for="hotel_star" class="form-label">�?toiles (1�?"5)</label>
+        <label for="hotel_star" class="form-label">?toiles (1?5)</label>
         <select class="form-select @error('hotel_star') is-invalid @enderror" id="hotel_star" name="hotel_star">
-            <option value="">�?"</option>
+            <option value="">?</option>
             @for ($i = 1; $i <= 5; $i++)
                 <option value="{{ $i }}" {{ (string)$i === (string)$hotelStar ? 'selected' : '' }}>{{ $i }} étoile(s)</option>
             @endfor
@@ -76,7 +76,7 @@
     <div class="form-check form-switch">
         <input type="hidden" name="is_featured" value="off">
         <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured" value="on" {{ $isFeatured === 'on' ? 'checked' : '' }}>
-        <label class="form-check-label" for="is_featured">�? la une (st_hotel)</label>
+        <label class="form-check-label" for="is_featured">? la une (st_hotel)</label>
     </div>
 </div>
 <div class="mb-3">

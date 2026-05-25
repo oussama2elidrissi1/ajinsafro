@@ -1,4 +1,4 @@
-﻿@php
+@php
     $selectedTourId = (int) ($preselectedTourId ?? old('tour_id'));
     $wpTitles = $wpTitles ?? collect();
 @endphp

@@ -678,11 +678,11 @@
                                                 @endphp
                                                 <tr>
                                                     <td>{{ $reservation->dossier_number ?? ('RES-'.str_pad((string) $reservation->id, 6, '0', STR_PAD_LEFT)) }}</td>
-                                                    <td>{{ $reservation->client?->full_name ?: trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? '')) ?: '�?"' }}</td>
-                                                    <td>{{ $reservation->client?->phone ?: $reservation->client_phone ?: '�?"' }}</td>
-                                                    <td>{{ $reservation->travelDate?->date?->format('d/m/Y') ?? $reservation->departure?->start_date?->format('d/m/Y') ?? '�?"' }}</td>
-                                                    <td>{{ optional($reservation->created_at)->format('d/m/Y H:i') ?? '�?"' }}</td>
-                                                    <td>{{ $actor?->name ?? '�?"' }}</td>
+                                                    <td>{{ $reservation->client?->full_name ?: trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? '')) ?: '?' }}</td>
+                                                    <td>{{ $reservation->client?->phone ?: $reservation->client_phone ?: '?' }}</td>
+                                                    <td>{{ $reservation->travelDate?->date?->format('d/m/Y') ?? $reservation->departure?->start_date?->format('d/m/Y') ?? '?' }}</td>
+                                                    <td>{{ optional($reservation->created_at)->format('d/m/Y H:i') ?? '?' }}</td>
+                                                    <td>{{ $actor?->name ?? '?' }}</td>
                                                     <td><span class="rd-badge {{ $resBadge['class'] }}">{{ $resBadge['label'] }}</span></td>
                                                     <td><span class="rd-badge {{ $payBadge['class'] }}">{{ $payBadge['label'] }}</span></td>
                                                     <td>{{ number_format((float) $reservation->effective_total_amount, 2, ',', ' ') }} DH</td>

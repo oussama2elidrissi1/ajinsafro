@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @section('title', $message->subject)
 
@@ -161,7 +161,7 @@
                         </div>
                         <div class="flex-grow-1 min-w-0">
                             <div class="d-flex flex-wrap align-items-center gap-2">
-                                <strong class="font-size-15">{{ $message->fromBranch?->name ?? '�?"' }}</strong>
+                                <strong class="font-size-15">{{ $message->fromBranch?->name ?? '?' }}</strong>
                                 @if($message->fromBranch?->email)
                                     <span class="text-muted small">{{ $message->fromBranch->email }}</span>
                                 @endif

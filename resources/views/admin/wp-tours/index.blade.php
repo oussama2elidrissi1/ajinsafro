@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @section('title', 'Tours WordPress')
 @section('page_title', 'Tours WordPress')
@@ -86,7 +86,7 @@
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('admin.wordpress.tours.edit', $tour->ID) }}" 
                                                class="btn btn-sm btn-primary" 
-                                               title="�?Éditer">
+                                               title="?Éditer">
                                                 <i class="mdi mdi-pencil"></i>
                                             </a>
                                             <a href="https://ajinsafro.net/tours/{{ $tour->post_name }}" 

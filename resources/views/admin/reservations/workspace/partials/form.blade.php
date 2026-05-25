@@ -1,4 +1,4 @@
-﻿@php
+@php
     $__wsRd = 999999999;
     $wsReservationDataUrlTemplate = str_replace((string) $__wsRd, '__VOYAGE__', route('admin.circuits.voyages.reservation-data', ['voyage' => $__wsRd]));
 @endphp
@@ -25,7 +25,7 @@
             <div class="ws-flow-nav-card">
                 <p class="ws-flow-nav-card__eyebrow">Nouvelle réservation</p>
                 <h3 class="ws-flow-nav-card__title">Workflow</h3>
-                <div class="ws-flow-nav" role="tablist" aria-label="�?tapes de réservation">
+                <div class="ws-flow-nav" role="tablist" aria-label="?tapes de réservation">
                     <button type="button" class="ws-flow-nav__item is-active" data-ws-step-nav="1">
                         <span class="ws-flow-nav__index">1</span>
                         <span class="ws-flow-nav__text">Prestation</span>
@@ -57,7 +57,7 @@
                 </div>
                 <div class="ws-sticky-summary__item">
                     <span>Date de départ</span>
-                    <strong id="ws-sticky-date">�?"</strong>
+                    <strong id="ws-sticky-date">?</strong>
                 </div>
                 <div class="ws-sticky-summary__item">
                     <span>Voyageurs</span>
@@ -75,7 +75,7 @@
                 <div id="ws-prefill-panel" class="hidden ws-section ws-section--voyage">
                     <div class="ws-step-head">
                         <div>
-                            <p class="ws-step-head__eyebrow">�?tape 1</p>
+                            <p class="ws-step-head__eyebrow">?tape 1</p>
                             <h3 class="ws-step-head__title">Sélection de la prestation</h3>
                             <p class="ws-step-head__desc">Vérifiez le voyage, le départ, la disponibilité et la formule avant de continuer.</p>
                         </div>
@@ -85,7 +85,7 @@
                     <div class="ws-premium-trip-card">
                         <div class="ws-premium-trip-card__main">
                             <p class="ws-section__kicker">Voyage sélectionné</p>
-                            <h3 id="ws-prefill-heading" class="ws-section__heading">�?"</h3>
+                            <h3 id="ws-prefill-heading" class="ws-section__heading">?</h3>
                             <p id="ws-prefill-sub" class="ws-section__sub hidden"></p>
                         </div>
                         <div id="ws-prefill-sections"></div>
@@ -100,13 +100,13 @@
                     <div id="details-package" class="details-block ws-step-block">
                         <div class="ws-step-block__header">
                             <h4 class="ws-step-block__title">Formule et chambre</h4>
-                            <p class="ws-step-block__sub">Choisissez l�?Toption de séjour la plus adaptée au dossier.</p>
+                            <p class="ws-step-block__sub">Choisissez l?Toption de séjour la plus adaptée au dossier.</p>
                         </div>
                         <div class="ws-form-grid ws-form-grid--two">
                             <div class="ws-form-field">
                                 <label class="ws-form-label" for="ws-package-room-type">Type de chambre</label>
                                 <select name="package_room_type" id="ws-package-room-type" class="ws-input-shell">
-                                    <option value="">�?" Choisir �?"</option>
+                                    <option value="">? Choisir ?</option>
                                     <option>Chambre Double</option>
                                     <option>Chambre Twin</option>
                                     <option>Chambre Triple</option>
@@ -114,7 +114,7 @@
                             </div>
                             <div class="ws-form-field ws-form-field--full">
                                 <label class="ws-form-label" for="ws-package-remarks">Remarques séjour</label>
-                                <textarea name="package_remarks" id="ws-package-remarks" rows="3" placeholder="Préférences chambre, contraintes client, points d�?Tattention�?�" class="ws-input-shell ws-input-shell--textarea"></textarea>
+                                <textarea name="package_remarks" id="ws-package-remarks" rows="3" placeholder="Préférences chambre, contraintes client, points d’attention…" class="ws-input-shell ws-input-shell--textarea"></textarea>
                             </div>
                         </div>
                     </div>
@@ -144,7 +144,7 @@
                 <div class="ws-section">
                     <div class="ws-step-head">
                         <div>
-                            <p class="ws-step-head__eyebrow">�?tape 2</p>
+                            <p class="ws-step-head__eyebrow">?tape 2</p>
                             <h3 class="ws-step-head__title">Informations client</h3>
                             <p class="ws-step-head__desc">Identifiez le client ou créez un nouveau dossier avec les informations utiles au voyage.</p>
                         </div>
@@ -161,9 +161,9 @@
                         <div class="ws-form-field ws-form-field--full hidden" id="ws-client-existing-wrap">
                             <label class="ws-form-label" for="ws-client-external-id">Recherche client existant</label>
                             <select name="client_external_id" id="ws-client-external-id" class="ws-input-shell">
-                                <option value="">�?" Sélectionner un client �?"</option>
+                                <option value="">? Sélectionner un client ?</option>
                                 @foreach($clients as $c)
-                                    <option value="{{ $c->id }}">{{ $c->client_code }} �?" {{ $c->full_name ?: $c->email }}</option>
+                                    <option value="{{ $c->id }}">{{ $c->client_code }} ? {{ $c->full_name ?: $c->email }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -235,7 +235,7 @@
                 <div class="ws-section">
                     <div class="ws-step-head">
                         <div>
-                            <p class="ws-step-head__eyebrow">�?tape 3</p>
+                            <p class="ws-step-head__eyebrow">?tape 3</p>
                             <h3 class="ws-step-head__title">Participants</h3>
                             <p class="ws-step-head__desc">Ajoutez les accompagnants et répartissez clairement adulte, enfant et bébé.</p>
                         </div>
@@ -267,7 +267,7 @@
                 <div id="section-extras" class="ws-section">
                     <div class="ws-step-head">
                         <div>
-                            <p class="ws-step-head__eyebrow">�?tape 4</p>
+                            <p class="ws-step-head__eyebrow">?tape 4</p>
                             <h3 class="ws-step-head__title">Extras et activités</h3>
                             <p class="ws-step-head__desc">Ajoutez les options de réservation pertinentes et visualisez leur impact sur le total.</p>
                         </div>
@@ -286,7 +286,7 @@
                 <div class="ws-section ws-section--final">
                     <div class="ws-step-head">
                         <div>
-                            <p class="ws-step-head__eyebrow">�?tape 5</p>
+                            <p class="ws-step-head__eyebrow">?tape 5</p>
                             <h3 class="ws-step-head__title">Paiement et validation</h3>
                             <p class="ws-step-head__desc">Vérifiez le récapitulatif final, enregistrez le paiement et confirmez la réservation.</p>
                         </div>
@@ -339,7 +339,7 @@
                                 </div>
                                 <div>
                                     <label class="ws-form-label" for="ws-workspace-notes">Notes internes</label>
-                                    <textarea name="workspace_notes" id="ws-workspace-notes" rows="4" placeholder="Instructions internes, suivi commercial, contraintes client�?�" class="ws-input-shell ws-input-shell--textarea"></textarea>
+                                    <textarea name="workspace_notes" id="ws-workspace-notes" rows="4" placeholder="Instructions internes, suivi commercial, contraintes client…" class="ws-input-shell ws-input-shell--textarea"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -361,4 +361,3 @@
         </div>
     </div>
 </form>
-

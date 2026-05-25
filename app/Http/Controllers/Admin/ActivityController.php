@@ -43,7 +43,7 @@ class ActivityController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => __('ActivitÃ© crÃ©Ã©e avec succÃ¨s.'),
+                'message' => __('Activit? cr??e avec succ?s.'),
                 'data' => $payload,
                 'activity' => $payload,
                 'errors' => (object) [],
@@ -52,7 +52,7 @@ class ActivityController extends Controller
 
         return redirect()
             ->route('admin.circuits.activities.index')
-            ->with('success', 'ActivitÃ© crÃ©Ã©e avec succÃ¨s.');
+            ->with('success', 'Activit? cr??e avec succ?s.');
     }
 
     public function edit(Activity $activity): View
@@ -68,7 +68,7 @@ class ActivityController extends Controller
         if ($this->expectsJson($request)) {
             return response()->json([
                 'success' => true,
-                'message' => __('ActivitÃ© mise Ã  jour.'),
+                'message' => __('Activit? mise ? jour.'),
                 'data' => $this->serializeActivity($activity->fresh()),
                 'errors' => (object) [],
             ]);
@@ -76,7 +76,7 @@ class ActivityController extends Controller
 
         return redirect()
             ->route('admin.circuits.activities.index')
-            ->with('success', 'ActivitÃ© mise Ã  jour.');
+            ->with('success', 'Activit? mise ? jour.');
     }
 
     public function destroy(Request $request, Activity $activity): RedirectResponse|JsonResponse
@@ -87,7 +87,7 @@ class ActivityController extends Controller
         if ($this->expectsJson($request)) {
             return response()->json([
                 'success' => true,
-                'message' => __('ActivitÃ© supprimÃ©e.'),
+                'message' => __('Activit? supprim?e.'),
                 'data' => ['id' => $deletedId],
                 'errors' => (object) [],
             ]);
@@ -95,7 +95,7 @@ class ActivityController extends Controller
 
         return redirect()
             ->route('admin.circuits.activities.index')
-            ->with('success', 'ActivitÃ© supprimÃ©e.');
+            ->with('success', 'Activit? supprim?e.');
     }
 
     public function ajaxList(Request $request): JsonResponse
@@ -122,7 +122,7 @@ class ActivityController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Liste des activitÃ©s chargÃ©e.',
+            'message' => 'Liste des activit?s charg?e.',
             'data' => $activities,
             'errors' => (object) [],
         ]);
@@ -132,7 +132,7 @@ class ActivityController extends Controller
     {
         return response()->json([
             'success' => true,
-            'message' => 'ActivitÃ© chargÃ©e.',
+            'message' => 'Activit? charg?e.',
             'data' => $this->serializeActivity($activity),
             'errors' => (object) [],
         ]);
@@ -144,7 +144,7 @@ class ActivityController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'ActivitÃ© crÃ©Ã©e avec succÃ¨s.',
+            'message' => 'Activit? cr??e avec succ?s.',
             'data' => $this->serializeActivity($activity),
             'errors' => (object) [],
         ]);
@@ -156,7 +156,7 @@ class ActivityController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'ActivitÃ© mise Ã  jour.',
+            'message' => 'Activit? mise ? jour.',
             'data' => $this->serializeActivity($activity->fresh()),
             'errors' => (object) [],
         ]);
@@ -169,7 +169,7 @@ class ActivityController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'ActivitÃ© supprimÃ©e.',
+            'message' => 'Activit? supprim?e.',
             'data' => ['id' => $deletedId],
             'errors' => (object) [],
         ]);

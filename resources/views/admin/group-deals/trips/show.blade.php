@@ -1,5 +1,5 @@
-﻿@extends('layouts.admin-v6')
-@section('title') Group Deal �?" {{ $voyage->name }} @endsection
+@extends('layouts.admin-v6')
+@section('title') Group Deal ? {{ $voyage->name }} @endsection
 
 @section('content')
 <div class="row">
@@ -33,17 +33,17 @@
 
 <div class="row g-3">
 
-    {{-- �"?�"? Informations voyage �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"? --}}
+    {{-- ?"??"? Informations voyage ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"? --}}
     <div class="col-12">
         <div class="card border-0 shadow-sm">
             <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-2">
                 <div>
                     <span class="text-muted small">Destination :</span>
-                    <strong class="ms-1">{{ $voyage->destination ?? '�?"' }}</strong>
+                    <strong class="ms-1">{{ $voyage->destination ?? '?' }}</strong>
                     <span class="ms-3 text-muted small">Durée :</span>
-                    <strong class="ms-1">{{ $voyage->duration_text ?? '�?"' }}</strong>
+                    <strong class="ms-1">{{ $voyage->duration_text ?? '?' }}</strong>
                     <span class="ms-3 text-muted small">Prix de base :</span>
-                    <strong class="ms-1">{{ $voyage->price_from ? number_format($voyage->price_from, 0, ',', ' ').' �,�' : '�?"' }}</strong>
+                    <strong class="ms-1">{{ $voyage->price_from ? number_format($voyage->price_from, 0, ',', ' ').' ?,?' : '?' }}</strong>
                 </div>
                 <a href="{{ route('admin.circuits.voyages.edit', $voyage->id) }}" class="btn btn-outline-secondary btn-sm">
                     <i class="bx bx-edit me-1"></i> Modifier le voyage
@@ -52,7 +52,7 @@
         </div>
     </div>
 
-    {{-- �"?�"? Grille tarifaire �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"? --}}
+    {{-- ?"??"? Grille tarifaire ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"? --}}
     <div class="col-lg-5">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between">
@@ -79,9 +79,9 @@
                         <tbody>
                         @foreach($voyage->pricingTiers as $tier)
                             <tr>
-                                <td><strong>�?� {{ $tier->min_participants }}</strong> pers.</td>
-                                <td class="text-success fw-semibold">{{ number_format($tier->price_per_person, 0, ',', ' ') }} �,�</td>
-                                <td class="text-muted small">{{ $tier->label ?? '�?"' }}</td>
+                                <td><strong>?? {{ $tier->min_participants }}</strong> pers.</td>
+                                <td class="text-success fw-semibold">{{ number_format($tier->price_per_person, 0, ',', ' ') }} ?,?</td>
+                                <td class="text-muted small">{{ $tier->label ?? '?' }}</td>
                                 <td class="text-end">
                                     <button class="btn btn-sm btn-outline-secondary me-1"
                                             data-bs-toggle="modal"
@@ -107,7 +107,7 @@
         </div>
     </div>
 
-    {{-- �"?�"? Départs Group Deal �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"? --}}
+    {{-- ?"??"? Départs Group Deal ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"? --}}
     <div class="col-lg-7">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between">
@@ -137,9 +137,9 @@
                         @foreach($voyage->departures as $dep)
                             <tr>
                                 <td class="small">
-                                    {{ $dep->start_date?->format('d/m/Y') ?? '�?"' }}
+                                    {{ $dep->start_date?->format('d/m/Y') ?? '?' }}
                                     @if($dep->end_date)
-                                        <br><span class="text-muted">�?' {{ $dep->end_date->format('d/m/Y') }}</span>
+                                        <br><span class="text-muted">?' {{ $dep->end_date->format('d/m/Y') }}</span>
                                     @endif
                                 </td>
                                 <td class="text-center">
@@ -151,11 +151,11 @@
                                 <td class="text-center text-muted small">{{ $dep->guaranteed_threshold }}</td>
                                 <td>
                                     @if($dep->active_tier_price)
-                                        <span class="text-success fw-semibold">{{ number_format($dep->active_tier_price, 0, ',', ' ') }} �,�</span>
+                                        <span class="text-success fw-semibold">{{ number_format($dep->active_tier_price, 0, ',', ' ') }} ?,?</span>
                                     @elseif($dep->sale_price)
-                                        {{ number_format($dep->sale_price, 0, ',', ' ') }} �,�
+                                        {{ number_format($dep->sale_price, 0, ',', ' ') }} ?,?
                                     @else
-                                        �?"
+                                        ?
                                     @endif
                                 </td>
                                 <td>
@@ -179,7 +179,7 @@
     </div>
 </div>
 
-{{-- �"?�"? Modal Ajouter palier �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"? --}}
+{{-- ?"??"? Modal Ajouter palier ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"? --}}
 <div class="modal fade" id="modalAddTier" tabindex="-1">
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
@@ -195,7 +195,7 @@
                         <input type="number" name="min_participants" class="form-control form-control-sm" min="1" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small">Prix par personne (�,�) <span class="text-danger">*</span></label>
+                        <label class="form-label small">Prix par personne (?,?) <span class="text-danger">*</span></label>
                         <input type="number" name="price_per_person" class="form-control form-control-sm" step="0.01" min="0" required>
                     </div>
                     <div class="mb-2">
@@ -212,7 +212,7 @@
     </div>
 </div>
 
-{{-- �"?�"? Modals Modifier palier �"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"?�"? --}}
+{{-- ?"??"? Modals Modifier palier ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"? --}}
 @foreach($voyage->pricingTiers as $tier)
 <div class="modal fade" id="modalEditTier{{ $tier->id }}" tabindex="-1">
     <div class="modal-dialog modal-sm">
@@ -230,7 +230,7 @@
                                min="1" value="{{ $tier->min_participants }}" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small">Prix par personne (�,�) <span class="text-danger">*</span></label>
+                        <label class="form-label small">Prix par personne (?,?) <span class="text-danger">*</span></label>
                         <input type="number" name="price_per_person" class="form-control form-control-sm"
                                step="0.01" min="0" value="{{ $tier->price_per_person }}" required>
                     </div>

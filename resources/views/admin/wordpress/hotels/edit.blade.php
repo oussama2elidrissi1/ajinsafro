@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 @section('title')
     Modifier l'hébergement
 @endsection
@@ -79,16 +79,16 @@
                                 <p class="text-muted mb-0">Prix minimum est géré dans l'onglet Location. Cet onglet peut être étendu plus tard.</p>
                             </div>
                             <div class="tab-pane fade" id="pane-checkinout" role="tabpanel">
-                                <p class="text-muted mb-0">Check in / Check out �?" à configurer si nécessaire.</p>
+                                <p class="text-muted mb-0">Check in / Check out ? à configurer si nécessaire.</p>
                             </div>
                             <div class="tab-pane fade" id="pane-other" role="tabpanel">
                                 @include('admin.wordpress.hotels._tab_other', ['meta' => $meta ?? []])
                             </div>
                             <div class="tab-pane fade" id="pane-policy" role="tabpanel">
-                                <p class="text-muted mb-0">Hotel policy �?" à configurer si nécessaire.</p>
+                                <p class="text-muted mb-0">Hotel policy ? à configurer si nécessaire.</p>
                             </div>
                             <div class="tab-pane fade" id="pane-inventory" role="tabpanel">
-                                <p class="text-muted mb-0">Inventory �?" à configurer si nécessaire.</p>
+                                <p class="text-muted mb-0">Inventory ? à configurer si nécessaire.</p>
                             </div>
                         </div>
                     </div>

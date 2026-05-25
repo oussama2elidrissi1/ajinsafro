@@ -1,4 +1,4 @@
-﻿<style>
+<style>
 #day-builder-hotels-manager .day-builder-context {
     background: #e7f1ff;
     border: 1px solid #b6d7ff;
@@ -16,9 +16,9 @@
 </style>
 <div id="day-builder-hotels-manager">
     <div class="alert alert-warning border-warning mb-3" role="alert">
-        <h6 class="mb-2"><i class="bx bx-error me-1"></i>Section en cours de construction �?" ne pas modifier</h6>
-        <p class="mb-1">Cette section n�?Test pas encore finalisée et ses champs ne sont pas pris en charge par la logique actuelle (enregistrement, validation, affichage).</p>
-        <p class="mb-0">Merci de ne rien modifier ici pour le moment afin d�?Téviter incohérences, erreurs de sauvegarde ou comportements inattendus. Cette partie sera activée dès qu�?Telle sera prête.</p>
+        <h6 class="mb-2"><i class="bx bx-error me-1"></i>Section en cours de construction ? ne pas modifier</h6>
+        <p class="mb-1">Cette section n?Test pas encore finalisée et ses champs ne sont pas pris en charge par la logique actuelle (enregistrement, validation, affichage).</p>
+        <p class="mb-0">Merci de ne rien modifier ici pour le moment afin d?Téviter incohérences, erreurs de sauvegarde ou comportements inattendus. Cette partie sera activée dès qu?Telle sera prête.</p>
     </div>
 
     {{-- Bloc config du jour (même pattern que Vols) --}}
@@ -26,13 +26,13 @@
         <div class="d-flex align-items-start gap-2">
             <i class="bx bx-hotel text-primary mt-1"></i>
             <div class="flex-grow-1">
-                <div class="fw-semibold text-primary" id="hotels-context-title">Hôtels �?" Jour 1</div>
+                <div class="fw-semibold text-primary" id="hotels-context-title">Hôtels ? Jour 1</div>
                 <div class="small text-muted" id="hotels-context-description">Configurez l'hôtel pour ce jour. Un seul hôtel par jour.</div>
             </div>
         </div>
     </div>
 
-    {{-- �?tat / résumé --}}
+    {{-- ?tat / résumé --}}
     <div class="day-builder-summary-block">
         <div id="hotels-summary-text" class="small">Aucun hôtel configuré</div>
     </div>
@@ -65,7 +65,7 @@
                 <input type="text" class="form-control form-control-sm" id="day-builder-hotel-name" placeholder="Ex. Hôtel Les Almoravides">
             </div>
             <div class="col-6">
-                <label class="form-label small">�?toiles (0�?"5)</label>
+                <label class="form-label small">?toiles (0?5)</label>
                 <input type="number" class="form-control form-control-sm" id="day-builder-hotel-stars" min="0" max="5" placeholder="3">
             </div>
             <div class="col-6">
@@ -87,7 +87,7 @@
             <div class="col-12 mt-3 pt-3 border-top">
                 <div class="d-flex justify-content-between align-items-center mb-2 gap-2 flex-wrap">
                     <label class="form-label small mb-0 fw-semibold">Chambres de l'hôtel</label>
-                    <span class="text-muted small" id="hotels-rooms-hint">�?"</span>
+                    <span class="text-muted small" id="hotels-rooms-hint">?</span>
                 </div>
                 <div class="d-flex justify-content-end mb-2">
                     <button type="button" class="btn btn-sm btn-soft-primary d-none" id="hotels-rooms-add-btn">
@@ -105,7 +105,7 @@
                     </div>
                     <div>
                         <button type="button" class="btn btn-sm btn-outline-primary ajtb-logistique-media-btn" data-target="tour_hotel" data-input="day_builder_hotel_image" data-preview="day_builder_hotel_image_preview" data-preview-wrap="day_builder_hotel_image_preview_wrap"><i class="bx bx-images"></i> Choisir</button>
-                        <button type="button" class="btn btn-sm btn-outline-danger ajtb-logistique-media-remove" data-input="day_builder_hotel_image" data-preview="day_builder_hotel_image_preview" data-preview-wrap="day_builder_hotel_image_preview_wrap">�-</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger ajtb-logistique-media-remove" data-input="day_builder_hotel_image" data-preview="day_builder_hotel_image_preview" data-preview-wrap="day_builder_hotel_image_preview_wrap">?</button>
                     </div>
                 </div>
             </div>
@@ -192,7 +192,7 @@
     function clearRoomsEditor() {
         if (roomsEditor) roomsEditor.innerHTML = '';
         if (roomsEditor) roomsEditor.classList.add('d-none');
-        if (roomsHintEl) roomsHintEl.textContent = '�?"';
+        if (roomsHintEl) roomsHintEl.textContent = '?';
     }
 
     function getRoomsFromTourHotelRow(tourHotelRow) {
@@ -448,7 +448,7 @@
     function refreshUI() {
         var day = getDrawerDay();
         currentDayIndex = day.index;
-        if (titleEl) titleEl.textContent = 'Hôtels �?" Jour ' + day.number;
+        if (titleEl) titleEl.textContent = 'Hôtels ? Jour ' + day.number;
         if (descEl) descEl.textContent = 'Configurez l\'hôtel pour ce jour. Un seul hôtel par jour. Pas de champ "Jour" : le jour est imposé par le contexte.';
         if (addBtnLabel) addBtnLabel.textContent = '+ Ajouter un hôtel (Jour ' + day.number + ')';
         if (chooseBtnLabel) chooseBtnLabel.textContent = 'Choisir / Modifier l\'hôtel (Jour ' + day.number + ')';
@@ -477,7 +477,7 @@
                 var details = [];
                 if (h.stars !== null && h.stars !== undefined) {
                     var starsText = '';
-                    for (var i = 0; i < parseInt(h.stars, 10); i++) starsText += '�~.';
+                    for (var i = 0; i < parseInt(h.stars, 10); i++) starsText += '?~.';
                     details.push(starsText || 'Non classé');
                 }
                 if (h.room_type) details.push('Chambre: ' + h.room_type);
@@ -488,7 +488,7 @@
                     var detailsEl = document.createElement('div');
                     detailsEl.className = 'mt-1 text-muted';
                     detailsEl.style.fontSize = '11px';
-                    detailsEl.innerHTML = details.join(' �?� ');
+                    detailsEl.innerHTML = details.join(' ?? ');
                     infoDiv.appendChild(detailsEl);
                 }
                 if (h.notes) {

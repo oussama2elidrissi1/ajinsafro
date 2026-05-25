@@ -1,4 +1,4 @@
-﻿@php
+@php
     $adminUser = auth()->user();
     $brandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');
 

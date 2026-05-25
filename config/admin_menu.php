@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 return [
     'items' => [
@@ -149,7 +149,7 @@ return [
                 ],
                 [
                     'key' => 'economic_offers',
-                    'label' => 'Formule �f�?�conomique',
+                    'label' => 'Formule ?conomique',
                     'icon' => 'bx bx-wallet-alt',
                     'permission' => 'economic-offers.view',
                     'children' => [

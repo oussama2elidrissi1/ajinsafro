@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @section('title', 'Dossier de réservation')
 @section('page_title', 'Dossier de réservation')
@@ -121,7 +121,7 @@
     $hasPendingJumelage = $reservation->status === Reservation::STATUS_SHARED_ROOM_PENDING;
     $hasPairedJumelage = $reservation->status === Reservation::STATUS_SHARED_ROOM_PAIRED;
     $jumelageBadge = ['label' => 'En attente de jumelage', 'class' => 'is-pending'];
-    $pairedBadge = ['label' => 'JumelÃ©', 'class' => 'is-confirmed'];
+    $pairedBadge = ['label' => 'Jumel?', 'class' => 'is-confirmed'];
 
     // Resolve paired reservation info from room lines
     $pairedReservationId = (int) ($reservation->reservationRooms->first()?->paired_reservation_id ?? 0);

@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @section('title', 'Packs hébergement')
 
@@ -70,8 +70,8 @@
                                     <div style="font-size:12px;font-weight:600;color:#7a879a;">{{ $package->country ?? '' }}</div>
                                 </td>
                                 <td>{{ $package->duration_days }}j / {{ $package->nights }}n</td>
-                                <td>{{ $package->pension_type ?? '�?"' }}</td>
-                                <td>{{ $package->accommodation_type ?? '�?"' }}</td>
+                                <td>{{ $package->pension_type ?? '?' }}</td>
+                                <td>{{ $package->accommodation_type ?? '?' }}</td>
                                 <td>
                                     <span style="color:var(--ajp-ink);font-size:15px;font-weight:900;white-space:nowrap;">
                                         {{ number_format($package->price_from, 0, ',', ' ') }} {{ $package->currency }}

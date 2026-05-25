@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @section('title', $isEdit ? "Modifier employe du point de vente" : "Creer employe du point de vente")
 

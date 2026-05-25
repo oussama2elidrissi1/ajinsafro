@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @section('title', $agency->name)
 
@@ -31,7 +31,7 @@
     <x-admin.flash-messages />
 
     <x-admin.kpi-cards :kpis="[
-        ['label' => 'Réservations', 'value' => number_format($totals['reservations_total'], 0, ',', ' '), 'icon' => 'bx bx-calendar-check', 'color' => '-blue', 'note' => 'Depuis l�?Touverture'],
+        ['label' => 'Réservations', 'value' => number_format($totals['reservations_total'], 0, ',', ' '), 'icon' => 'bx bx-calendar-check', 'color' => '-blue', 'note' => 'Depuis l?Touverture'],
         ['label' => 'Ce mois', 'value' => number_format($totals['reservations_month'], 0, ',', ' '), 'icon' => 'bx bx-time-five', 'color' => '-green', 'note' => 'Activité mensuelle'],
         ['label' => 'CA', 'value' => number_format($totals['revenue_total'], 0, ',', ' ') . ' DH', 'icon' => 'bx bx-line-chart', 'color' => '-orange', 'note' => 'Montant estimé'],
         ['label' => 'Commission', 'value' => number_format($totals['estimated_commission'], 0, ',', ' ') . ' DH', 'icon' => 'bx bx-wallet', 'color' => '-violet', 'note' => 'Projection'],
@@ -48,15 +48,15 @@
                         <dt class="col-sm-5">Code</dt><dd class="col-sm-7">{{ $agency->code }}</dd>
                         <dt class="col-sm-5">Type</dt><dd class="col-sm-7">{{ \App\Models\Branch::agencyTypeLabels()[$agency->agency_type] ?? $agency->agency_type }}</dd>
                         <dt class="col-sm-5">Statut</dt><dd class="col-sm-7">{{ \App\Models\Branch::statusLabels()[$agency->status] ?? $agency->status }}</dd>
-                        <dt class="col-sm-5">Ville</dt><dd class="col-sm-7">{{ $agency->city ?: '�?"' }}</dd>
-                        <dt class="col-sm-5">Pays</dt><dd class="col-sm-7">{{ $agency->country ?: '�?"' }}</dd>
-                        <dt class="col-sm-5">Téléphone</dt><dd class="col-sm-7">{{ $agency->phone ?: '�?"' }}</dd>
-                        <dt class="col-sm-5">Email</dt><dd class="col-sm-7">{{ $agency->email ?: '�?"' }}</dd>
-                        <dt class="col-sm-5">Manager</dt><dd class="col-sm-7">{{ $agency->manager?->name ?: '�?"' }}</dd>
-                        <dt class="col-sm-5">Commission</dt><dd class="col-sm-7">{{ $agency->default_commission_value ? number_format((float) $agency->default_commission_value, 2, ',', ' ') . ' ' . (\App\Models\Branch::commissionTypeLabels()[$agency->default_commission_type] ?? '') : ($agency->default_commission_rate ? number_format($agency->default_commission_rate, 2, ',', ' ') . '%' : '�?"') }}</dd>
+                        <dt class="col-sm-5">Ville</dt><dd class="col-sm-7">{{ $agency->city ?: '?' }}</dd>
+                        <dt class="col-sm-5">Pays</dt><dd class="col-sm-7">{{ $agency->country ?: '?' }}</dd>
+                        <dt class="col-sm-5">Téléphone</dt><dd class="col-sm-7">{{ $agency->phone ?: '?' }}</dd>
+                        <dt class="col-sm-5">Email</dt><dd class="col-sm-7">{{ $agency->email ?: '?' }}</dd>
+                        <dt class="col-sm-5">Manager</dt><dd class="col-sm-7">{{ $agency->manager?->name ?: '?' }}</dd>
+                        <dt class="col-sm-5">Commission</dt><dd class="col-sm-7">{{ $agency->default_commission_value ? number_format((float) $agency->default_commission_value, 2, ',', ' ') . ' ' . (\App\Models\Branch::commissionTypeLabels()[$agency->default_commission_type] ?? '') : ($agency->default_commission_rate ? number_format($agency->default_commission_rate, 2, ',', ' ') . '%' : '?') }}</dd>
                         <dt class="col-sm-5">Devise</dt><dd class="col-sm-7">{{ $agency->currency ?: 'MAD' }}</dd>
-                        <dt class="col-sm-5">Objectif CA</dt><dd class="col-sm-7">{{ $agency->monthly_revenue_target ? number_format((float) $agency->monthly_revenue_target, 0, ',', ' ') . ' ' . ($agency->currency ?: 'MAD') : '�?"' }}</dd>
-                        <dt class="col-sm-5">Objectif reservations</dt><dd class="col-sm-7">{{ $agency->monthly_reservations_target ?: '�?"' }}</dd>
+                        <dt class="col-sm-5">Objectif CA</dt><dd class="col-sm-7">{{ $agency->monthly_revenue_target ? number_format((float) $agency->monthly_revenue_target, 0, ',', ' ') . ' ' . ($agency->currency ?: 'MAD') : '?' }}</dd>
+                        <dt class="col-sm-5">Objectif reservations</dt><dd class="col-sm-7">{{ $agency->monthly_reservations_target ?: '?' }}</dd>
                     </dl>
                     @if($agency->address)
                         <div class="mt-3">
@@ -147,11 +147,11 @@
                                 @forelse($employees as $employee)
                                     <tr>
                                         <td><a href="{{ route('admin.agency-employees.show', $employee) }}">{{ $employee->full_name }}</a></td>
-                                        <td>{{ $employee->position ?: '�?"' }}</td>
-                                        <td>{{ $employee->user?->roles->pluck('name')->join(', ') ?: '�?"' }}</td>
+                                        <td>{{ $employee->position ?: '?' }}</td>
+                                        <td>{{ $employee->user?->roles->pluck('name')->join(', ') ?: '?' }}</td>
                                         <td>{{ \App\Models\AgencyEmployee::statusLabels()[$employee->status] ?? $employee->status }}</td>
-                                        <td>{{ $employee->email ?: '�?"' }}</td>
-                                        <td>{{ $employee->phone ?: '�?"' }}</td>
+                                        <td>{{ $employee->email ?: '?' }}</td>
+                                        <td>{{ $employee->phone ?: '?' }}</td>
                                     </tr>
                                 @empty
                                     <tr><td colspan="6" class="text-center text-muted">Aucun employé rattaché.</td></tr>
@@ -183,11 +183,11 @@
                                 @forelse($recentReservations as $reservation)
                                     <tr>
                                         <td>#{{ $reservation->id }}</td>
-                                        <td>{{ trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? '')) ?: '�?"' }}</td>
+                                        <td>{{ trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? '')) ?: '?' }}</td>
                                         <td>{{ $reservation->status }}</td>
-                                        <td>{{ $reservation->payment_type ?: '�?"' }}</td>
+                                        <td>{{ $reservation->payment_type ?: '?' }}</td>
                                         <td>{{ number_format((float) $reservation->paid_amount, 0, ',', ' ') }} DH</td>
-                                        <td>{{ $reservation->created_at?->format('d/m/Y H:i') ?: '�?"' }}</td>
+                                        <td>{{ $reservation->created_at?->format('d/m/Y H:i') ?: '?' }}</td>
                                     </tr>
                                 @empty
                                     <tr><td colspan="6" class="text-center text-muted">Aucune réservation liée.</td></tr>
@@ -222,8 +222,8 @@
                                     <tr>
                                         <td>#{{ $reservation->id }}</td>
                                         <td>{{ number_format($reservationRevenue, 0, ',', ' ') }} DH</td>
-                                        <td>{{ $rate ? number_format($rate, 2, ',', ' ') . '%' : '�?"' }}</td>
-                                        <td>{{ $rate ? number_format($reservationRevenue * ($rate / 100), 0, ',', ' ') . ' DH' : '�?"' }}</td>
+                                        <td>{{ $rate ? number_format($rate, 2, ',', ' ') . '%' : '?' }}</td>
+                                        <td>{{ $rate ? number_format($reservationRevenue * ($rate / 100), 0, ',', ' ') . ' DH' : '?' }}</td>
                                     </tr>
                                 @empty
                                     <tr><td colspan="4" class="text-center text-muted">Aucune donnée de commission.</td></tr>

@@ -1,6 +1,6 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 @section('title')
-    Transferts du circuit �?" {{ $tour->post_title }}
+    Transferts du circuit ? {{ $tour->post_title }}
 @endsection
 @section('content')
     <div class="row">
@@ -37,7 +37,7 @@
             <div class="col-lg-6">
                 <div class="card">
                     <div class="card-header bg-light">
-                        <h5 class="card-title mb-0">Transfert aller �?" Jour 1 (Aéroport �?' Hôtel)</h5>
+                        <h5 class="card-title mb-0">Transfert aller ? Jour 1 (Aéroport ?' Hôtel)</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
@@ -45,7 +45,7 @@
                             <input type="text" class="form-control" id="arrival_from_label" name="arrival[from_label]" value="{{ old('arrival.from_label', $arrival->from_label ?? '') }}" placeholder="Ex. Aéroport Marrakech">
                         </div>
                         <div class="mb-3">
-                            <label for="arrival_to_label" class="form-label">�? (lieu)</label>
+                            <label for="arrival_to_label" class="form-label">? (lieu)</label>
                             <input type="text" class="form-control" id="arrival_to_label" name="arrival[to_label]" value="{{ old('arrival.to_label', $arrival?->to_label ?? '') }}" placeholder="Ex. Hôtel">
                         </div>
                         <div class="row">
@@ -76,7 +76,7 @@
             <div class="col-lg-6">
                 <div class="card">
                     <div class="card-header bg-light">
-                        <h5 class="card-title mb-0">Transfert retour �?" Dernier jour (Hôtel �?' Aéroport)</h5>
+                        <h5 class="card-title mb-0">Transfert retour ? Dernier jour (Hôtel ?' Aéroport)</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
@@ -84,7 +84,7 @@
                             <input type="text" class="form-control" id="departure_from_label" name="departure[from_label]" value="{{ old('departure.from_label', $departure?->from_label ?? '') }}" placeholder="Ex. Hôtel">
                         </div>
                         <div class="mb-3">
-                            <label for="departure_to_label" class="form-label">�? (lieu)</label>
+                            <label for="departure_to_label" class="form-label">? (lieu)</label>
                             <input type="text" class="form-control" id="departure_to_label" name="departure[to_label]" value="{{ old('departure.to_label', $departure?->to_label ?? '') }}" placeholder="Ex. Aéroport Marrakech">
                         </div>
                         <div class="row">

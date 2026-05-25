@@ -1,4 +1,4 @@
-﻿@php
+@php
     $adminV2User          = $adminV2User          ?? auth()->user();
     $adminV2UserName      = $adminV2UserName      ?? ($adminV2User?->name ?? 'Admin');
     $adminV2UserRole      = $adminV2UserRole      ?? ($adminV2User?->getRoleNames()->first() ?? 'Administrateur');
@@ -17,7 +17,7 @@
         <div class="aj-topbar-search">
             <span class="aj-search-icon"><i class="bx bx-search"></i></span>
             <input type="text" placeholder="Rechercher (voyage, agence, réservation...)">
-            <span class="aj-search-shortcut">�O~ K</span>
+            <span class="aj-search-shortcut">Ctrl + K</span>
         </div>
     </div>
 

@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 @section('title')
     {{ $isEdit ? 'Modifier utilisateur' : 'Créer utilisateur' }}
 @endsection
@@ -67,7 +67,7 @@
                                     <div class="col-md-6">
                                         <label class="form-label">Agence</label>
                                         <select name="branch_id" class="form-select @error('branch_id') is-invalid @enderror">
-                                            <option value="">�?" Aucune �?"</option>
+                                            <option value="">? Aucune ?</option>
                                             @foreach($branches ?? [] as $b)
                                                 <option value="{{ $b->id }}" {{ old('branch_id', $userModel->branch_id) == $b->id ? 'selected' : '' }}>{{ $b->name }} ({{ $b->code }})</option>
                                             @endforeach
@@ -77,7 +77,7 @@
                                     <div class="col-md-6">
                                         <label class="form-label">Responsable (manager)</label>
                                         <select name="manager_id" class="form-select @error('manager_id') is-invalid @enderror">
-                                            <option value="">�?" Aucun �?"</option>
+                                            <option value="">? Aucun ?</option>
                                             @foreach($managers ?? [] as $m)
                                                 @if($isEdit && $m->id == $userModel->id) @continue @endif
                                                 <option value="{{ $m->id }}" {{ old('manager_id', $userModel->manager_id) == $m->id ? 'selected' : '' }}>{{ $m->name }} ({{ $m->email }})</option>
@@ -93,7 +93,7 @@
                                     <div class="col-md-3">
                                         <label class="form-label">Type utilisateur</label>
                                         <select name="user_type" class="form-select @error('user_type') is-invalid @enderror">
-                                            <option value="">�?"</option>
+                                            <option value="">?</option>
                                             <option value="agent" {{ old('user_type', $userModel->user_type) === 'agent' ? 'selected' : '' }}>Agent</option>
                                             <option value="commercial" {{ old('user_type', $userModel->user_type) === 'commercial' ? 'selected' : '' }}>Commercial</option>
                                             <option value="chef_commercial" {{ old('user_type', $userModel->user_type) === 'chef_commercial' ? 'selected' : '' }}>Chef Commercial</option>

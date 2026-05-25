@@ -1,4 +1,4 @@
-﻿<div class="tab-pane" id="flights" role="tabpanel">
+<div class="tab-pane" id="flights" role="tabpanel">
                 @php 
                     $lastDayNumber = $lastDayNumber ?? (($programDays && $programDays->isNotEmpty()) ? $programDays->count() : 1); 
                 @endphp

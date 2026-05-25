@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Single Tour V1 Template.
  */

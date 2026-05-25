@@ -1,6 +1,6 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 @section('title')
-    Fiche voyage �?" {{ $voyage->name }}
+    Fiche voyage ? {{ $voyage->name }}
 @endsection
 @section('content')
     <div class="row">
@@ -59,7 +59,7 @@
                 <h4 class="card-title mb-3">Prix & Promotion</h4>
                 <div class="row align-items-center">
                     <div class="col-md-6">
-                        <p class="mb-1 font-size-18 fw-medium">�? partir de {{ number_format($voyage->price_from ?? 0, 0, ',', ' ') }} {{ $voyage->currency_symbol }}</p>
+                        <p class="mb-1 font-size-18 fw-medium">? partir de {{ number_format($voyage->price_from ?? 0, 0, ',', ' ') }} {{ $voyage->currency_symbol }}</p>
                         @if($voyage->old_price && $voyage->old_price > ($voyage->price_from ?? 0))
                             <p class="text-muted mb-0">Valeur : {{ number_format($voyage->old_price, 0, ',', ' ') }} {{ $voyage->currency_symbol }}</p>
                         @endif
@@ -67,7 +67,7 @@
                     @if($voyage->discount_percent !== null && $voyage->discount_percent > 0)
                         <div class="col-md-6 text-md-end">
                             <span class="badge bg-danger font-size-14 me-2">Remise : {{ $voyage->discount_percent }} %</span>
-                            <span class="badge bg-success font-size-14">�?conomie : {{ number_format($voyage->discount_amount, 0, ',', ' ') }} {{ $voyage->currency_symbol }}</span>
+                            <span class="badge bg-success font-size-14">?conomie : {{ number_format($voyage->discount_amount, 0, ',', ' ') }} {{ $voyage->currency_symbol }}</span>
                         </div>
                     @endif
                 </div>
@@ -105,7 +105,7 @@
         </div>
     @endif
 
-    {{-- Programme du circuit (uniquement $programDays issu de TourProgramService->loadProgram) �?" timeline accordion --}}
+    {{-- Programme du circuit (uniquement $programDays issu de TourProgramService->loadProgram) ? timeline accordion --}}
     @if(isset($programDays) && $programDays->isNotEmpty())
         <div class="card mb-4">
             <div class="card-body">
@@ -124,7 +124,7 @@
                                 <button class="accordion-button {{ $idx > 0 ? 'collapsed' : '' }}" type="button" data-bs-toggle="collapse" data-bs-target="#programme-day-{{ $idx }}" aria-expanded="{{ $idx === 0 ? 'true' : 'false' }}" aria-controls="programme-day-{{ $idx }}">
                                     <span class="fw-semibold">JOUR {{ $day->day_number }}</span>
                                     @if(!empty($dayTitleDisplay))
-                                        <span class="ms-2 text-muted">�?" {{ $dayTitleDisplay }}</span>
+                                        <span class="ms-2 text-muted">? {{ $dayTitleDisplay }}</span>
                                     @endif
                                     @if($mode === 'free')
                                         <span class="badge bg-secondary ms-2">Jour libre</span>

@@ -1,4 +1,4 @@
-﻿@props([
+@props([
     'transfer' => null,
     'stCar' => null,
     'meta' => [],

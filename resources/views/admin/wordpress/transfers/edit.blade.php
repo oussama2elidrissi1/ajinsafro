@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 @section('title', 'Modifier un transfert')
 @section('content')
     <div class="row">

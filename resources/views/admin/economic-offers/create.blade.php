@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @section('title', 'Nouvelle offre économique')
 
@@ -8,7 +8,7 @@
         subtitle="Ajoutez une offre voyage, omra, hébergement ou activité à petit budget."
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Formule �?conomique', 'url' => route('admin.economic-offers.index')],
+            ['label' => 'Formule ?conomique', 'url' => route('admin.economic-offers.index')],
             ['label' => 'Création'],
         ]"
     />

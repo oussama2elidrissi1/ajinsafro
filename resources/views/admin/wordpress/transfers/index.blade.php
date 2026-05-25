@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 @section('title', 'WordPress - Transferts')
 @section('content')
     <div class="row">
@@ -67,25 +67,25 @@
                                     @if($thumb)
                                         <img src="{{ $thumb }}" alt="" class="rounded" style="width:50px;height:50px;object-fit:cover;">
                                     @else
-                                        <span class="text-muted">�?"</span>
+                                        <span class="text-muted">?</span>
                                     @endif
                                 </td>
                                 <td>
                                     <div class="fw-semibold">{{ $transfer->post_title }}</div>
                                     <div class="text-muted small">{{ $transfer->post_name }}</div>
                                 </td>
-                                <td>{{ $detail->cars_address ?: '�?"' }}</td>
+                                <td>{{ $detail->cars_address ?: '?' }}</td>
                                 <td>
-                                    {{ $transfer->getMeta('aj_transfer_from') ?: '�?"' }}
-                                    �?'
-                                    {{ $transfer->getMeta('aj_transfer_to') ?: '�?"' }}
+                                    {{ $transfer->getMeta('aj_transfer_from') ?: '?' }}
+                                    ?'
+                                    {{ $transfer->getMeta('aj_transfer_to') ?: '?' }}
                                 </td>
-                                <td>{{ $transfer->getMeta('aj_transfer_vehicle_type') ?: ($transfer->getMeta('aj_transfer_type') ?: '�?"') }}</td>
+                                <td>{{ $transfer->getMeta('aj_transfer_vehicle_type') ?: ($transfer->getMeta('aj_transfer_type') ?: '?') }}</td>
                                 <td>
                                     @if($detail && ($detail->cars_price || $detail->min_price))
                                         {{ number_format((float) ($detail->cars_price ?: $detail->min_price), 0, ',', ' ') }} MAD
                                     @else
-                                        �?"
+                                        ?
                                     @endif
                                 </td>
                                 <td>

@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @section('title', 'Messages')
 
@@ -150,7 +150,7 @@
                             <a href="{{ route('admin.reservations.messages.show', $msg->id) }}" class="flex-grow-1 min-w-0 text-decoration-none text-body">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <span class="{{ $isUnread ? 'fw-bold' : '' }}">
-                                        {{ $msg->fromBranch?->name ?? '�?"' }}
+                                        {{ $msg->fromBranch?->name ?? '?' }}
                                     </span>
                                     <span class="text-muted small">{{ $msg->created_at->format('d M') }}</span>
                                 </div>

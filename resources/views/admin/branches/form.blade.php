@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 @section('title')
     {{ $isEdit ? 'Modifier agence' : 'Nouvelle agence' }}
 @endsection
@@ -61,7 +61,7 @@
                             <div class="col-md-4">
                                 <label class="form-label">Responsable</label>
                                 <select name="manager_user_id" class="form-select @error('manager_user_id') is-invalid @enderror">
-                                    <option value="">�?" Aucun �?"</option>
+                                    <option value="">? Aucun ?</option>
                                     @foreach($users as $u)
                                         <option value="{{ $u->id }}" {{ old('manager_user_id', $branch->manager_user_id) == $u->id ? 'selected' : '' }}>{{ $u->name }} ({{ $u->email }})</option>
                                     @endforeach

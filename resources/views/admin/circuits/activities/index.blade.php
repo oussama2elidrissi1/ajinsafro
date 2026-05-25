@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @php
     use Illuminate\Support\Str;
@@ -81,7 +81,7 @@
                         <div>
                             <span class="aj-kpi-label">Inactives</span>
                             <strong class="aj-kpi-value">{{ $inactiveCount }}</strong>
-                            <span class="aj-kpi-note">�? vérifier</span>
+                            <span class="aj-kpi-note">? vérifier</span>
                         </div>
                     </div>
                 </article>
@@ -148,7 +148,7 @@
                                     <th>Activité</th>
                                     <th>Région</th>
                                     <th>Tarifs</th>
-                                    <th>�,ges</th>
+                                    <th>?,ges</th>
                                     <th>Durée</th>
                                     <th>Galerie</th>
                                     <th>Statut</th>

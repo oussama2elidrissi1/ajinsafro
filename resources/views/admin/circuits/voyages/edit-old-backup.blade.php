@@ -1,4 +1,4 @@
-﻿@extends('layouts.master-ajinsafro')
+@extends('layouts.master-ajinsafro')
 @section('title')
     Modifier le tour WordPress
 @endsection
@@ -397,7 +397,7 @@
                     <p class="text-muted">Cette action supprimera définitivement le tour de WordPress.</p>
                     <form action="{{ route('admin.circuits.voyages.destroy', $voyage->ID) }}" 
                           method="POST" 
-                          onsubmit="return confirm('�s�️ ATTENTION : Supprimer définitivement ce tour de WordPress ?\n\nCette action est irréversible.');">
+                          onsubmit="return confirm('?s?️ ATTENTION : Supprimer définitivement ce tour de WordPress ?\n\nCette action est irréversible.');">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-danger waves-effect waves-light">

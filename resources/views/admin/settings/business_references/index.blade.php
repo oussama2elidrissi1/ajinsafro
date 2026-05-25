@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 @section('title')
     Référence métier
 @endsection
@@ -9,7 +9,7 @@
                 <h4 class="page-title mb-0 font-size-18">Référence métier</h4>
                 <div class="d-flex gap-2">
                     <form action="{{ route('admin.settings.referentiels-metier.import-legacy') }}" method="POST" class="d-inline"
-                          onsubmit="return confirm('Fusionner les valeurs depuis l�?Tancien JSON (settings) vers la base ?');">
+                          onsubmit="return confirm('Fusionner les valeurs depuis l?Tancien JSON (settings) vers la base ?');">
                         @csrf
                         <button type="submit" class="btn btn-outline-secondary btn-sm">Importer ancien JSON</button>
                     </form>

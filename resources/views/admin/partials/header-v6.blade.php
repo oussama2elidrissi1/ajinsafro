@@ -1,4 +1,4 @@
-﻿@php
+@php
     $adminUser      = $adminUser      ?? auth()->user();
     $adminUserName  = $adminUserName  ?? ($adminUser?->name ?? 'Admin');
     $adminUserRole  = $adminUserRole  ?? ($adminUser?->getRoleNames()->first() ?? 'Administrateur');

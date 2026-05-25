@@ -372,7 +372,7 @@
   }
 
   function renderCard(activity, index) {
-    const featureText = activity.features.map((key) => labels[key]).filter(Boolean).slice(0, 3).join(' · ');
+    const featureText = activity.features.map((key) => labels[key]).filter(Boolean).slice(0, 3).join(' Â· ');
     const languageText = activity.languages.map((key) => labels[key]).filter(Boolean).join(', ');
     const badgeMarkup = activity.badges[0] ? `<span class="activity-badge">${activity.badges[0]}</span>` : '';
     const oldPriceMarkup = activity.oldPrice ? `<span class="old-price">${activity.oldPrice} EUR</span>` : '';
@@ -380,7 +380,7 @@
       ? `<span class="availability">-${activity.discount}% aujourd'hui</span>`
       : '<span class="availability">Disponible</span>';
     const promoMarkup = index > 0 && index % 4 === 0
-      ? '<div class="promo-strip">OFFRES AJINSAFRO · Reservez votre prochaine activite</div>'
+      ? '<div class="promo-strip">OFFRES AJINSAFRO Â· Reservez votre prochaine activite</div>'
       : '';
 
     return `${promoMarkup}
@@ -391,7 +391,7 @@
           ${badgeMarkup}
         </div>
         <div class="activity-content">
-          <div class="activity-kind">${activity.city} · ${labels[activity.category] || 'Activite'}</div>
+          <div class="activity-kind">${activity.city} Â· ${labels[activity.category] || 'Activite'}</div>
           <h3>${activity.title}</h3>
           <div class="rating-line">
             <span class="stars">?????</span>
@@ -403,7 +403,7 @@
             <span>Guide : ${languageText}</span>
             <span>${featureText}</span>
           </div>
-          <div class="green-note">Reservation simple · Support Ajinsafro</div>
+          <div class="green-note">Reservation simple Â· Support Ajinsafro</div>
         </div>
         <aside class="activity-side">
           ${availabilityMarkup}

@@ -1,4 +1,4 @@
-﻿@extends('layouts.dashboard-v5')
+@extends('layouts.dashboard-v5')
 
 @section('title', 'Dashboard V5')
 
@@ -167,8 +167,8 @@ HTML;
     );
 
     $bodyHtml = str_replace(
-        '<p class="text-xs font-semibold text-slate-400 mt-1">Vue d\'ensemble de votre activité �?" mardi 19 mai 2026 - 09:53</p>',
-        '<p class="text-xs font-semibold text-slate-400 mt-1">Vue d\'ensemble de votre activité �?" ' . e($dashboardDateTimeLabel) . '</p>',
+        '<p class="text-xs font-semibold text-slate-400 mt-1">Vue d\'ensemble de votre activité ? mardi 19 mai 2026 - 09:53</p>',
+        '<p class="text-xs font-semibold text-slate-400 mt-1">Vue d\'ensemble de votre activité ? ' . e($dashboardDateTimeLabel) . '</p>',
         $bodyHtml
     );
 
@@ -212,7 +212,7 @@ HTML;
 
     $currency = (string) ($stats['currency'] ?? 'DH');
     $currencySymbol = match (strtoupper($currency)) {
-        'EUR' => '�,�',
+        'EUR' => '?,?',
         'USD' => '$',
         default => 'DH',
     };
@@ -361,7 +361,7 @@ HTML;
                 <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
                     <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm xl:col-span-2 flex flex-col justify-between overflow-hidden">
                         <div>
-                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6"><div><h3 class="font-bold text-slate-800 text-sm">�?volution des réservations & du chiffre d\'affaires</h3><p class="text-[11px] text-slate-400 mt-0.5 font-medium">Aperçu interactif des performances</p></div><span class="self-start sm:self-center bg-blue-50 text-[#0b548b] text-[10px] font-bold px-2.5 py-1 rounded-full border border-blue-100">6 derniers mois</span></div>
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6"><div><h3 class="font-bold text-slate-800 text-sm">?volution des réservations & du chiffre d\'affaires</h3><p class="text-[11px] text-slate-400 mt-0.5 font-medium">Aperçu interactif des performances</p></div><span class="self-start sm:self-center bg-blue-50 text-[#0b548b] text-[10px] font-bold px-2.5 py-1 rounded-full border border-blue-100">6 derniers mois</span></div>
                             <div class="flex justify-end space-x-4 mb-4 text-xs font-semibold"><div class="flex items-center space-x-1.5"><span class="w-3.5 h-3.5 rounded bg-blue-600 block"></span><span class="text-slate-500">Réservations</span></div><div class="flex items-center space-x-1.5"><span class="w-3.5 h-1.5 rounded-full bg-amber-500 block"></span><span class="text-slate-500">Chiffre d\'affaires (' . e($currencySymbol) . ')</span></div></div>
                             <div class="relative w-full h-64 mt-2">
                                 <div class="absolute inset-x-0 top-0 h-full flex flex-col justify-between pointer-events-none"><div class="border-b border-dashed border-slate-100 w-full h-0"></div><div class="border-b border-dashed border-slate-100 w-full h-0"></div><div class="border-b border-dashed border-slate-100 w-full h-0"></div><div class="border-b border-dashed border-slate-100 w-full h-0"></div><div class="border-b border-slate-100 w-full h-0"></div></div>
@@ -428,7 +428,7 @@ HTML;
 
     $agenciesRows = '';
     foreach ($activeAgencies as $agency) {
-        $agenciesRows .= '<div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg"><div class="flex items-center space-x-3"><div class="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100"><i data-lucide="building-2" class="w-5 h-5 text-emerald-600"></i></div><div><div class="text-xs font-bold text-slate-800">' . e((string) $agency['name']) . '</div><div class="text-[10px] text-slate-400 font-semibold">' . e(trim((string) (($agency['city'] ?: '') . (($agency['code'] ?? '') ? ' - ' . $agency['code'] : '')))) . ' �?� ' . number_format((int) ($agency['reservations_count'] ?? 0), 0, ',', ' ') . ' résa</div></div></div><span class="w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-emerald-50"></span></div>';
+        $agenciesRows .= '<div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg"><div class="flex items-center space-x-3"><div class="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100"><i data-lucide="building-2" class="w-5 h-5 text-emerald-600"></i></div><div><div class="text-xs font-bold text-slate-800">' . e((string) $agency['name']) . '</div><div class="text-[10px] text-slate-400 font-semibold">' . e(trim((string) (($agency['city'] ?: '') . (($agency['code'] ?? '') ? ' - ' . $agency['code'] : '')))) . ' ?? ' . number_format((int) ($agency['reservations_count'] ?? 0), 0, ',', ' ') . ' résa</div></div></div><span class="w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-emerald-50"></span></div>';
     }
     if ($agenciesRows === '') {
         $agenciesRows = '<div class="text-xs text-slate-400">Aucune agence active.</div>';

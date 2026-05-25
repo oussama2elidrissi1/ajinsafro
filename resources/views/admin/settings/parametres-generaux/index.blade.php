@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 @section('title')
     Paramètres généraux
 @endsection
@@ -64,7 +64,7 @@
                                     <span class="text-muted small d-block">{{ $hasCustomLogo ? 'Logo actuel' : 'Logo par défaut' }}</span>
                                 </div>
                                 <input class="form-control" type="file" name="brand_logo" id="brand_logo" accept="image/jpeg,image/png,image/gif,image/svg+xml,image/webp">
-                                <small class="text-muted">Laisser vide pour conserver l�?Timage actuelle. Stockage : storage/app/public/front/brand/</small>
+                                <small class="text-muted">Laisser vide pour conserver l?Timage actuelle. Stockage : storage/app/public/front/brand/</small>
                             </div>
                         </div>
                     </div>
@@ -77,7 +77,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="card-title mb-0">B) Topbar �?" Contacts</h5>
+                        <h5 class="card-title mb-0">B) Topbar ? Contacts</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3 row">
@@ -126,7 +126,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="card-title mb-0">C) Hero (page d�?Taccueil publique)</h5>
+                        <h5 class="card-title mb-0">C) Hero (page d?Taccueil publique)</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3 row">
@@ -163,7 +163,7 @@
                             </div>
                         </div>
                         <div class="mb-3 row">
-                            <label for="hero_overlay_opacity" class="col-md-3 col-form-label">Opacité overlay (0�?"1) <span class="text-danger">*</span></label>
+                            <label for="hero_overlay_opacity" class="col-md-3 col-form-label">Opacité overlay (0?1) <span class="text-danger">*</span></label>
                             <div class="col-md-9">
                                 <input class="form-control" type="number" name="hero_overlay_opacity" id="hero_overlay_opacity" value="{{ old('hero_overlay_opacity', $settings['hero_overlay_opacity'] ?? '0.45') }}" step="0.01" min="0" max="1" required>
                             </div>
@@ -224,12 +224,12 @@
             </div>
         </div>
 
-        {{-- E) Workspace commercial �?" modal départ --}}
+        {{-- E) Workspace commercial ? modal départ --}}
         <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="card-title mb-0">E) Workspace commercial �?" modal départ</h5>
+                        <h5 class="card-title mb-0">E) Workspace commercial ? modal départ</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3 row">

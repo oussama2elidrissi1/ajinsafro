@@ -1,11 +1,11 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 @section('title', 'Détail partenaire')
 
 @section('content')
     <div class="row mb-3">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">Compte partenaire �?" {{ $partner->display_name }}</h4>
+                <h4 class="page-title mb-0 font-size-18">Compte partenaire ? {{ $partner->display_name }}</h4>
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
@@ -39,14 +39,14 @@
                 <div class="card-body">
                     <div class="row g-2">
                         <div class="col-md-6"><strong>Raison sociale</strong><br>{{ $partner->raison_sociale }}</div>
-                        <div class="col-md-6"><strong>Nom commercial</strong><br>{{ $partner->nom_commercial ?? '�?"' }}</div>
+                        <div class="col-md-6"><strong>Nom commercial</strong><br>{{ $partner->nom_commercial ?? '?' }}</div>
                         <div class="col-md-6"><strong>Responsable</strong><br>{{ $partner->nom_responsable }}</div>
                         <div class="col-md-6"><strong>Email</strong><br>{{ $partner->email }}</div>
-                        <div class="col-md-6"><strong>Téléphone</strong><br>{{ $partner->telephone ?? '�?"' }}</div>
-                        <div class="col-12"><strong>Adresse</strong><br>{{ $partner->adresse ?? '�?"' }}, {{ $partner->code_postal ?? '' }} {{ $partner->ville ?? '' }}, {{ $partner->pays ?? '�?"' }}</div>
-                        <div class="col-md-4"><strong>ICE</strong><br>{{ $partner->ice ?? '�?"' }}</div>
-                        <div class="col-md-4"><strong>IF</strong><br>{{ $partner->if ?? '�?"' }}</div>
-                        <div class="col-md-4"><strong>RC</strong><br>{{ $partner->rc ?? '�?"' }}</div>
+                        <div class="col-md-6"><strong>Téléphone</strong><br>{{ $partner->telephone ?? '?' }}</div>
+                        <div class="col-12"><strong>Adresse</strong><br>{{ $partner->adresse ?? '?' }}, {{ $partner->code_postal ?? '' }} {{ $partner->ville ?? '' }}, {{ $partner->pays ?? '?' }}</div>
+                        <div class="col-md-4"><strong>ICE</strong><br>{{ $partner->ice ?? '?' }}</div>
+                        <div class="col-md-4"><strong>IF</strong><br>{{ $partner->if ?? '?' }}</div>
+                        <div class="col-md-4"><strong>RC</strong><br>{{ $partner->rc ?? '?' }}</div>
                         @if($partner->partner_type ?? null)
                             <div class="col-md-6"><strong>Type partenaire</strong><br>{{ $partner->partner_type_label ?? $partner->partner_type }}</div>
                         @endif
@@ -147,8 +147,8 @@
                                 </div>
                             @endforeach
                         </div>
-                        <p class="small text-muted mt-2">Ne cochez rien pour laisser l�?Taccès à tous les voyages. Cochez des voyages pour restreindre l�?Taccès.</p>
-                        <button type="submit" class="btn btn-primary btn-sm">Enregistrer l�?Taccès</button>
+                        <p class="small text-muted mt-2">Ne cochez rien pour laisser l?Taccès à tous les voyages. Cochez des voyages pour restreindre l?Taccès.</p>
+                        <button type="submit" class="btn btn-primary btn-sm">Enregistrer l?Taccès</button>
                     </form>
                 </div>
             </div>

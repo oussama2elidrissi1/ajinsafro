@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @section('title', 'Dashboard point de vente')
 
@@ -21,7 +21,7 @@
 <div class="row g-3 mb-3">
     <div class="col-md-3"><div class="aj-card"><div class="aj-card-body"><div class="aj-subtle">Réservations</div><div style="font-size:28px;font-weight:900;color:#172b4d;">{{ (int) $agency->reservations_count }}</div></div></div></div>
     <div class="col-md-3"><div class="aj-card"><div class="aj-card-body"><div class="aj-subtle">Employés actifs</div><div style="font-size:28px;font-weight:900;color:#172b4d;">{{ (int) $agency->agency_employees_count }}</div></div></div></div>
-    <div class="col-md-3"><div class="aj-card"><div class="aj-card-body"><div class="aj-subtle">CA point de vente</div><div style="font-size:28px;font-weight:900;color:#172b4d;">{{ number_format($revenueTotal, 0, ',', ' ') }} �,�</div></div></div></div>
+    <div class="col-md-3"><div class="aj-card"><div class="aj-card-body"><div class="aj-subtle">CA point de vente</div><div style="font-size:28px;font-weight:900;color:#172b4d;">{{ number_format($revenueTotal, 0, ',', ' ') }} MAD</div></div></div></div>
     <div class="col-md-3"><div class="aj-card"><div class="aj-card-body"><div class="aj-subtle">Non affectées</div><div style="font-size:28px;font-weight:900;color:#172b4d;">{{ (int) $unassignedReservationsCount }}</div></div></div></div>
 </div>
 
@@ -38,11 +38,11 @@
                         @forelse($reservations as $reservation)
                             <tr>
                                 <td>#{{ $reservation->id }}</td>
-                                <td>{{ trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? '')) ?: '�?"' }}</td>
-                                <td>{{ $reservation->tour?->name ?? '�?"' }}</td>
-                                <td>{{ $reservation->agent?->name ?? '�?"' }}</td>
+                                <td>{{ trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? '')) ?: '?' }}</td>
+                                <td>{{ $reservation->tour?->name ?? '?' }}</td>
+                                <td>{{ $reservation->agent?->name ?? '?' }}</td>
                                 <td>{{ ucfirst((string) $reservation->status) }}</td>
-                                <td>{{ $reservation->created_at?->timezone('Africa/Casablanca')?->format('d/m/Y H:i') ?? '�?"' }}</td>
+                                <td>{{ $reservation->created_at?->timezone('Africa/Casablanca')?->format('d/m/Y H:i') ?? '?' }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="6" style="text-align:center;color:#71829a;font-weight:700;">Aucune réservation.</td></tr>
@@ -60,7 +60,7 @@
                     <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #edf2f7;">
                         <div>
                             <div style="font-weight:900;color:#172b4d;">{{ $employee->full_name }}</div>
-                            <div class="aj-subtle">{{ $employee->position ?? '�?"' }}</div>
+                            <div class="aj-subtle">{{ $employee->position ?? '?' }}</div>
                         </div>
                         <span class="aj-badge ok">{{ $employee->user?->roles->first()?->name ?? 'Employé' }}</span>
                     </div>
@@ -75,8 +75,8 @@
             <div class="aj-card-body">
                 <div class="aj-subtle">Réservations en attente : {{ $pendingReservationsCount }}</div>
                 <div class="aj-subtle">Réservations non affectées : {{ $unassignedReservationsCount }}</div>
-                <div class="aj-subtle">Point de vente : {{ $agency->agency_type ? ucfirst($agency->agency_type) : '�?"' }}</div>
-                <div class="aj-subtle">Manager : {{ $agency->manager?->name ?? '�?"' }}</div>
+                <div class="aj-subtle">Point de vente : {{ $agency->agency_type ? ucfirst($agency->agency_type) : '?' }}</div>
+                <div class="aj-subtle">Manager : {{ $agency->manager?->name ?? '?' }}</div>
             </div>
         </div>
     </div>

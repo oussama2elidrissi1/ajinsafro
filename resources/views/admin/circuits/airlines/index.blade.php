@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 @section('title')
     Compagnies aériennes
 @endsection
@@ -36,7 +36,7 @@
                         </a>
                     </div>
                     @if($airlines->isEmpty())
-                        <p class="text-muted mb-0">Aucune compagnie. <a href="{{ route('admin.circuits.airlines.create') }}">Créer une compagnie</a> pour l�?Tutiliser dans les vols des voyages.</p>
+                        <p class="text-muted mb-0">Aucune compagnie. <a href="{{ route('admin.circuits.airlines.create') }}">Créer une compagnie</a> pour l?Tutiliser dans les vols des voyages.</p>
                     @else
                         <div class="table-responsive">
                             <table class="table table-hover table-centered mb-0">
@@ -54,7 +54,7 @@
                                     <tr>
                                         <td>{{ $airline->id }}</td>
                                         <td>{{ $airline->name }}</td>
-                                        <td>{{ $airline->code_iata ?? '�?"' }}</td>
+                                        <td>{{ $airline->code_iata ?? '?' }}</td>
                                         <td>
                                             @if($airline->is_active)
                                                 <span class="badge bg-success">Active</span>

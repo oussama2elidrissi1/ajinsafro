@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
     'use strict';
 
     var currentStep = 1;
@@ -161,11 +161,11 @@
     function getSelectedTripLabel() {
         var select = document.getElementById('select-tour-id');
         if (select && select.selectedOptions.length) {
-            return select.selectedOptions[0].textContent || 'Aucune sÃ©lection';
+            return select.selectedOptions[0].textContent || 'Aucune s?lection';
         }
         var titleEl = document.querySelector('.reservation-fast-header__title');
         if (titleEl) return titleEl.textContent || 'Voyage';
-        return 'Aucune sÃ©lection';
+        return 'Aucune s?lection';
     }
 
     function getSelectedTripOption() {
@@ -190,7 +190,7 @@
             return explicitUnitPrice;
         }
 
-        // Fallback sur le prix du voyage sÃ©lectionnÃ©
+        // Fallback sur le prix du voyage s?lectionn?
         return getSelectedTripFallbackPrice();
     }
 
@@ -203,7 +203,7 @@
         var headerSubtitle = document.querySelector('.reservation-fast-header__subtitle');
         if (headerSubtitle) {
             var text = headerSubtitle.textContent || '';
-            var match = text.match(/DÃ©part\s*:\s*([^Â·|]+)/);
+            var match = text.match(/D?part\s*:\s*([^Â·|]+)/);
             if (match) return match[1].trim();
         }
         return '—';
@@ -266,14 +266,14 @@
         var input = document.querySelector('input[name="base_price"]');
         var fromInput = parseNumber(input && input.value);
 
-        // Le prix de base injectÃ© par le serveur (prix de base de la fiche produit) est la source de vÃ©ritÃ©
+        // Le prix de base inject? par le serveur (prix de base de la fiche produit) est la source de v?rit?
         if (fromInput > 0) {
             window.reservationState.pricing = window.reservationState.pricing || {};
             window.reservationState.pricing.unit_price = fromInput;
             return fromInput;
         }
 
-        // Si le champ est vide, utiliser le prix du dÃ©part (API corrigÃ©e qui renvoie le prix produit)
+        // Si le champ est vide, utiliser le prix du d?part (API corrig?e qui renvoie le prix produit)
         var departureUnitPrice = getSelectedDepartureUnitPrice();
         if (departureUnitPrice > 0) {
             if (input) {
@@ -320,15 +320,15 @@
 
     function derivePaymentStatus(totalAmount, paidAmount) {
         if (paidAmount <= 0) {
-            return 'Non payÃ©';
+            return 'Non pay?';
         }
         if (Math.abs(paidAmount - totalAmount) < 0.01) {
-            return 'PayÃ©';
+            return 'Pay?';
         }
         if (paidAmount < totalAmount / 2) {
             return 'Acompte';
         }
-        return 'PayÃ© partiellement';
+        return 'Pay? partiellement';
     }
 
     function captureExtrasSelections() {
@@ -406,7 +406,7 @@
                     '<div>' +
                         '<h4 class="reservation-create__extra-title">' + (extra.name || 'Extra') + '</h4>' +
                         ((sourceType === 'activity' || extra.extra_type === 'activity_optional') ? '<div class="reservation-create__extra-badge">Activité optionnelle</div>' : '') +
-                        '<p class="reservation-create__extra-desc">' + (extra.description || 'Option supplÃ©mentaire pour ce dossier.') + '</p>' +
+                        '<p class="reservation-create__extra-desc">' + (extra.description || 'Option suppl?mentaire pour ce dossier.') + '</p>' +
                     '</div>' +
                     '<div class="reservation-create__extra-price">' +
                         '<strong>' + formatMoney(parseNumber(extra.price_adult)) + '</strong>' +
@@ -419,11 +419,11 @@
                         '<label class="reservation-create__label">Application</label>' +
                         '<select class="reservation-create__input" data-extra-scope>' +
                             '<option value="dossier"' + (snapshot.scope === 'dossier' ? ' selected' : '') + '>Tout le dossier</option>' +
-                            '<option value="traveler_selection"' + (snapshot.scope === 'traveler_selection' ? ' selected' : '') + '>Voyageurs sÃ©lectionnÃ©s</option>' +
+                            '<option value="traveler_selection"' + (snapshot.scope === 'traveler_selection' ? ' selected' : '') + '>Voyageurs s?lectionn?s</option>' +
                         '</select>' +
                     '</div>' +
                     '<div class="reservation-create__field">' +
-                        '<label class="reservation-create__label">QuantitÃ©</label>' +
+                        '<label class="reservation-create__label">Quantit?</label>' +
                         '<input type="number" class="reservation-create__input" data-extra-quantity min="0" step="1" max="' + maxAllowed + '" value="' + Math.min(snapshot.quantity, maxAllowed) + '">' +
                     '</div>' +
                 '</div>' +
@@ -651,7 +651,7 @@
                   departure_hotel_room_id: room.departure_hotel_room_id || null,
                   tour_hotel_room_id: room.tour_hotel_room_id || null,
                   room_type: room.room_type || room.type || 'Chambre',
-                  hotel_name: hotel.hotel_name || hotel.name || room.hotel_name || 'HÃ´tel',
+                  hotel_name: hotel.hotel_name || hotel.name || room.hotel_name || 'H?tel',
                   available_rooms: availableRooms,
                   capacity: capacity,
                   available_places: availablePlaces,
@@ -1159,8 +1159,8 @@
         var paymentHelp = document.getElementById('create-payment-help');
         if (paymentHelp) {
             paymentHelp.textContent = summary.paidAmount > summary.totalAmount
-                ? 'Le montant payÃ© dÃ©passe le total du dossier.'
-                : 'Le montant payÃ© ne peut pas dÃ©passer le total du dossier.';
+                ? 'Le montant pay? d?passe le total du dossier.'
+                : 'Le montant pay? ne peut pas d?passer le total du dossier.';
             paymentHelp.classList.toggle('is-error', summary.paidAmount > summary.totalAmount);
         }
 
@@ -1244,12 +1244,12 @@
         if (!container) return;
 
         if (!items.length) {
-            var title = isError ? 'Erreur lors de la recherche' : 'Aucun client trouvÃ©';
+            var title = isError ? 'Erreur lors de la recherche' : 'Aucun client trouv?';
             var noResultHtml = '<div class="reservation-create__search-result reservation-create__search-result--empty">' +
                 '<span><strong>' + title + '</strong><br><span class="reservation-create__search-result-meta">Pour "' + escapeHtml(query) + '"</span></span>' +
                 '</div>' +
                 '<div class="reservation-create__search-result reservation-create__search-result--action" id="client-search-create-new">' +
-                '<span>CrÃ©er un nouveau client avec cette recherche</span>' +
+                '<span>Cr?er un nouveau client avec cette recherche</span>' +
                 '<span class="reservation-create__search-result-code">+</span>' +
                 '</div>';
             container.innerHTML = noResultHtml;
@@ -1369,7 +1369,7 @@
                     if (typeof callback === 'function') callback(true);
                 } else if (data && data.duplicate) {
                     var dupLabel = data.duplicate.full_name || ('Client #' + data.duplicate.id);
-                    showInlineError('Ce client existe dÃ©jÃ  : ' + dupLabel + '. Veuillez le sÃ©lectionner dans la liste.');
+                    showInlineError('Ce client existe d?j? : ' + dupLabel + '. Veuillez le s?lectionner dans la liste.');
                     blockContinueButton();
                     if (typeof callback === 'function') callback(false);
                 } else if (data && data.errors) {
@@ -1403,13 +1403,13 @@
                     blockContinueButton();
                     if (typeof callback === 'function') callback(false);
                 } else {
-                    showInlineError('Erreur lors de la crÃ©ation du client. Veuillez rÃ©essayer.');
+                    showInlineError('Erreur lors de la cr?ation du client. Veuillez r?essayer.');
                     blockContinueButton();
                     if (typeof callback === 'function') callback(false);
                 }
             })
             .catch(function () {
-                showInlineError('Erreur rÃ©seau lors de la crÃ©ation du client.');
+                showInlineError('Erreur r?seau lors de la cr?ation du client.');
                 blockContinueButton();
                 if (typeof callback === 'function') callback(false);
             });
@@ -1732,15 +1732,15 @@
                     result.errors.push({ field: 'reservation-departure-select', message: 'Sélectionnez un départ avant de continuer.' });
                 }
                 if (summary.priceMissing) {
-                    result.errors.push({ field: null, message: 'Aucun prix configurÃ© pour ce voyage/dÃ©part.' });
+                    result.errors.push({ field: null, message: 'Aucun prix configur? pour ce voyage/d?part.' });
                 }
                 if (summary.availableDepartureCapacity > 0 && summary.travelerCount > summary.availableDepartureCapacity) {
-                    result.errors.push({ field: null, message: 'Le nombre de voyageurs dÃ©passe le stock disponible sur ce dÃ©part.' });
+                    result.errors.push({ field: null, message: 'Le nombre de voyageurs d?passe le stock disponible sur ce d?part.' });
                 }
 
                 if (summary.roomMode === 'places_only') {
                     if (summary.availableDepartureCapacity <= 0) {
-                        result.errors.push({ field: null, message: 'Ce dÃ©part nâ€™a plus de places disponibles.' });
+                        result.errors.push({ field: null, message: 'Ce d?part n?a plus de places disponibles.' });
                     }
                     if (summary.travelerCount > summary.availableDepartureCapacity) {
                         result.errors.push({ field: null, message: 'Stock insuffisant : il reste seulement ' + summary.availableDepartureCapacity + ' places.' });
@@ -1764,7 +1764,7 @@
         if (step === 3) {
             if (isFastMode) {
                 if (summary.paidAmount > summary.totalAmount) {
-                    result.errors.push({ field: 'payment_amount', message: 'Le montant payÃ© ne peut pas dÃ©passer le total du dossier.' });
+                    result.errors.push({ field: 'payment_amount', message: 'Le montant pay? ne peut pas d?passer le total du dossier.' });
                     result.valid = false;
                 }
             } else {
@@ -1783,7 +1783,7 @@
 
         if (step === 5) {
             if (!isFastMode && summary.paidAmount > summary.totalAmount) {
-                result.errors.push({ field: 'payment_amount', message: 'Le montant payÃ© ne peut pas dÃ©passer le total du dossier.' });
+                result.errors.push({ field: 'payment_amount', message: 'Le montant pay? ne peut pas d?passer le total du dossier.' });
                 result.valid = false;
             }
         }

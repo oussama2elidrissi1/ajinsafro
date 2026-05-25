@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 @section('title')
     Créer un tour WordPress
 @endsection
@@ -71,11 +71,11 @@
                         </div>
                     </div>
                 </div>
-        {{-- Vols �?" Flight cards (même style qu�?Tédition) --}}
+        {{-- Vols ? Flight cards (même style qu?Tédition) --}}
         @php
             $airlines = $airlines ?? collect();
             $hasSecondFlightCreate = old('flights.1.airline_id') || old('flights.1.cabin_class');
-            $flightDash = '�?"';
+            $flightDash = '?';
         @endphp
                 <div id="create-flights-content" class="create-flights-crud">
                 <style>
@@ -104,14 +104,14 @@
                     <div class="flight-card-view" id="create-flight-0-card-view">
                         <div class="flight-card-admin" style="min-width: 320px;">
                             <div class="flight-card-header">
-                                <span class="flight-card-title">�o^ FLIGHT �?� <span id="create-flight-0-dep-label">{{ old('flights.0.depart_airport') ?: old('flights.0.depart_city') ?: $flightDash }}</span> to <span id="create-flight-0-arr-label">{{ old('flights.0.arrive_airport') ?: old('flights.0.arrive_city') ?: $flightDash }}</span></span>
+                                <span class="flight-card-title">?o^ FLIGHT ?? <span id="create-flight-0-dep-label">{{ old('flights.0.depart_airport') ?: old('flights.0.depart_city') ?: $flightDash }}</span> to <span id="create-flight-0-arr-label">{{ old('flights.0.arrive_airport') ?: old('flights.0.arrive_city') ?: $flightDash }}</span></span>
                                 <button type="button" class="flight-remove-btn create-flight-reset-btn" data-index="0">REMOVE</button>
                             </div>
                             <div class="flight-card-body">
                                 <div class="flight-card-col"><div class="flight-icon-circle"><i class="bx bx-trip"></i></div></div>
                                 <div class="flight-card-col flight-card-center">
                                     <div class="flight-dep"><div class="flight-date" id="create-flight-0-dep-date">{{ $flightDash }}</div><div class="flight-place" id="create-flight-0-dep-place">{{ old('flights.0.depart_airport') ?: old('flights.0.depart_city') ?: $flightDash }}</div></div>
-                                    <div class="flight-arrow">�?'</div>
+                                    <div class="flight-arrow">?'</div>
                                     <div class="flight-arr"><div class="flight-date" id="create-flight-0-arr-date">{{ $flightDash }}</div><div class="flight-place" id="create-flight-0-arr-place">{{ old('flights.0.arrive_airport') ?: old('flights.0.arrive_city') ?: $flightDash }}</div></div>
                                 </div>
                                 <div class="flight-card-col flight-card-baggage">
@@ -128,7 +128,7 @@
                     <div class="flight-card-edit" id="create-flight-0-edit" style="display:none;">
                         <div class="row g-3">
                             <div class="col-md-6"><label class="form-label">Compagnie aérienne</label>
-                                <select class="form-select" name="flights[0][airline_id]"><option value="">�?" Choisir �?"</option>
+                                <select class="form-select" name="flights[0][airline_id]"><option value="">? Choisir ?</option>
                                     @foreach($airlines as $airline)
                                         <option value="{{ $airline->id }}" {{ old('flights.0.airline_id') == $airline->id ? 'selected' : '' }}>{{ $airline->name }} @if($airline->code_iata)({{ $airline->code_iata }})@endif</option>
                                     @endforeach
@@ -160,14 +160,14 @@
                     <div class="flight-card-view" id="create-flight-1-card-view">
                         <div class="flight-card-admin" style="min-width: 320px;">
                             <div class="flight-card-header">
-                                <span class="flight-card-title">�o^ FLIGHT �?� <span id="create-flight-1-dep-label">{{ old('flights.1.departure_airport') ?: $flightDash }}</span> to <span id="create-flight-1-arr-label">{{ old('flights.1.arrival_airport') ?: $flightDash }}</span></span>
+                                <span class="flight-card-title">?o^ FLIGHT ?? <span id="create-flight-1-dep-label">{{ old('flights.1.departure_airport') ?: $flightDash }}</span> to <span id="create-flight-1-arr-label">{{ old('flights.1.arrival_airport') ?: $flightDash }}</span></span>
                                 <button type="button" class="flight-remove-btn create-flight-remove-vol2-btn">REMOVE</button>
                             </div>
                             <div class="flight-card-body">
                                 <div class="flight-card-col"><div class="flight-icon-circle"><i class="bx bx-trip"></i></div></div>
                                 <div class="flight-card-col flight-card-center">
                                     <div class="flight-dep"><div class="flight-date" id="create-flight-1-dep-date">{{ $flightDash }}</div><div class="flight-place" id="create-flight-1-dep-place">{{ old('flights.1.depart_airport') ?: old('flights.1.depart_city') ?: $flightDash }}</div></div>
-                                    <div class="flight-arrow">�?'</div>
+                                    <div class="flight-arrow">?'</div>
                                     <div class="flight-arr"><div class="flight-date" id="create-flight-1-arr-date">{{ $flightDash }}</div><div class="flight-place" id="create-flight-1-arr-place">{{ old('flights.1.arrive_airport') ?: old('flights.1.arrive_city') ?: $flightDash }}</div></div>
                                 </div>
                                 <div class="flight-card-col flight-card-baggage">
@@ -184,7 +184,7 @@
                     <div class="flight-card-edit" id="create-flight-1-edit" style="display:none;">
                         <div class="row g-3">
                             <div class="col-md-6"><label class="form-label">Compagnie aérienne</label>
-                                <select class="form-select" name="flights[1][airline_id]"><option value="">�?" Choisir �?"</option>
+                                <select class="form-select" name="flights[1][airline_id]"><option value="">? Choisir ?</option>
                                     @foreach($airlines as $airline)
                                         <option value="{{ $airline->id }}" {{ old('flights.1.airline_id') == $airline->id ? 'selected' : '' }}>{{ $airline->name }} @if($airline->code_iata)({{ $airline->code_iata }})@endif</option>
                                     @endforeach
@@ -257,7 +257,7 @@
                     <div class="card-body">
                         <h4 class="card-title mb-4">Activités</h4>
                         @include('admin.circuits.voyages.partials._under_construction_notice', [
-                            'title' => '�s�️ Section en cours de construction �?" ne pas modifier',
+                            'title' => '?s?️ Section en cours de construction ? ne pas modifier',
                             'tabName' => 'Activités',
                         ])
                     </div>
@@ -274,7 +274,7 @@
         <aside class="ve-sidebar-col">
             <div class="ve-sticky-sidebar">
 
-                {{-- �"?�"? ACTIONS (unique zone : créer / annuler) �"?�"? --}}
+                {{-- ?"??"? ACTIONS (unique zone : créer / annuler) ?"??"? --}}
                 <div class="card ve-sidebar-card ve-actions-card">
                     <div class="card-body">
                         <button type="submit" form="create-voyage-form" class="btn btn-primary">
@@ -286,7 +286,7 @@
                     </div>
                 </div>
 
-                {{-- �"?�"? PARAM�^TRES & PRIX �"?�"? --}}
+                {{-- ?"??"? PARAM?^TRES & PRIX ?"??"? --}}
                 <div class="card ve-sidebar-card">
                     <div class="card-body">
                         <h5 class="ve-sidebar-title mb-3 fw-bold"><i class="bx bx-cog text-primary"></i> Paramètres & Prix</h5>
@@ -497,7 +497,7 @@
         
         // Vols: flight cards + edit mode (create form)
         document.addEventListener('DOMContentLoaded', function() {
-            var dash = '�?"';
+            var dash = '?';
             function parseDateTimeLocal(val) {
                 if (!val) return null;
                 var d = new Date(val);
@@ -769,7 +769,7 @@
         // Initialize hidden input
         updateHeroGalleryHidden();
 
-        // �?viter "An invalid form control with name='...' is not focusable" : retirer required des champs dans modals/onglets cachés avant submit
+        // ?viter "An invalid form control with name='...' is not focusable" : retirer required des champs dans modals/onglets cachés avant submit
         (function() {
             function stripRequiredFromHiddenInForm(form) {
                 var list = [];

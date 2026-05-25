@@ -1,11 +1,11 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @section('title', 'Performance points de vente')
 
 @section('content')
     <x-admin.page-header
         title="Performance points de vente"
-        subtitle="Comparatif des réservations, du chiffre d�?Taffaires et des commissions estimées par point de vente."
+        subtitle="Comparatif des réservations, du chiffre d?Taffaires et des commissions estimées par point de vente."
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
             ['label' => 'Points de vente', 'url' => route('admin.agencies.index')],
@@ -104,7 +104,7 @@
                                 <div>
                                     <div class="fw-semibold">{{ $row['employee']->full_name }}</div>
                                     <div class="text-muted small">
-                                        {{ $row['employee']->branch?->name ?: '�?"' }} · {{ $row['employee']->position ?: '�?"' }}
+                                        {{ $row['employee']->branch?->name ?: '?' }} · {{ $row['employee']->position ?: '?' }}
                                     </div>
                                 </div>
                                 <span class="aj-badge aj-badge-info">{{ $row['count'] }} résa</span>

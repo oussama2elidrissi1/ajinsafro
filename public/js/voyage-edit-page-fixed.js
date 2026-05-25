@@ -1,4 +1,4 @@
-﻿(function(){
+(function(){
                             var container = document.getElementById('travel-dates-container');
                             var addBtn = document.getElementById('add-travel-date');
                             if (!container || !addBtn) return;
@@ -20,8 +20,8 @@
                                                 <input type="number" class="form-control form-control-sm" name="travel_dates[${nextIndex}][seats]" value="0" min="0" required>
                                             </div>
                                             <div class="col-6 col-md-2">
-                                                <label class="form-label small mb-1">Suppl�ment date</label>
-                                                <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[${nextIndex}][price_override]" placeholder="�">
+                                                <label class="form-label small mb-1">Suppl?ment date</label>
+                                                <input type="number" step="0.01" class="form-control form-control-sm" name="travel_dates[${nextIndex}][price_override]" placeholder="?">
                                             </div>
                                             <div class="col-6 col-md-2">
                                                 <div class="form-check mb-0 pb-1">
@@ -30,7 +30,7 @@
                                                 </div>
                                             </div>
                                             <div class="col-12 col-md-1 text-md-end">
-                                                <button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer">�</button>
+                                                <button type="button" class="btn btn-sm btn-outline-danger remove-travel-date" aria-label="Supprimer">?</button>
                                             </div>
                                         </div>
                                     </div>
@@ -606,7 +606,7 @@
 
         if (!travelDates.length) {
             summaryEl.innerHTML = '';
-            listEl.innerHTML = '<div class="alert alert-warning mb-0">Ajoutez au moins une date active avec un nombre de places dans l�onglet Disponibilit�.</div>';
+            listEl.innerHTML = '<div class="alert alert-warning mb-0">Ajoutez au moins une date active avec un nombre de places dans l?onglet Disponibilit?.</div>';
             return;
         }
 
@@ -666,7 +666,7 @@
                 '      <div>' +
                 '        <h6 class="mb-1">Depart du ' + escapeHtml(row.travelDate.label) + '</h6>' +
                 '        <div class="text-muted small">Capacite de depart (source): <strong>' + row.expectedCapacity + '</strong> place(s)</div>' +
-                '        <div class="text-muted small">Reservations: <strong>' + (row.state.reservedCapacity == null ? '�' : row.state.reservedCapacity) + '</strong> � Disponibles: <strong>' + (row.state.availableCapacity == null ? '�' : row.state.availableCapacity) + '</strong>' + (row.state.departureStatusLabel ? (' � Statut: <strong>' + escapeHtml(row.state.departureStatusLabel) + '</strong>') : '') + '</div>' +
+                '        <div class="text-muted small">Reservations: <strong>' + (row.state.reservedCapacity == null ? '?' : row.state.reservedCapacity) + '</strong> ? Disponibles: <strong>' + (row.state.availableCapacity == null ? '?' : row.state.availableCapacity) + '</strong>' + (row.state.departureStatusLabel ? (' ? Statut: <strong>' + escapeHtml(row.state.departureStatusLabel) + '</strong>') : '') + '</div>' +
                 '      </div>' +
                 '      <div class="text-end">' +
                 '        <div class="small mb-1">Sejours exacts : <strong>' + row.coverage.exactCount + '/' + row.coverage.stays.length + '</strong></div>' +
@@ -739,7 +739,7 @@
             var hotelOptions = hotelSelectOptions(hotelIndex, hotelId);
             var availableRoomsInfo = resolveRoomStockForSelection(travelDate, room, hotelOptions);
             var availableRooms = availableRoomsInfo.availableRooms;
-            var stockLabel = availableRooms == null ? '�' : String(availableRooms);
+            var stockLabel = availableRooms == null ? '?' : String(availableRooms);
             var stockHelp = availableRoomsInfo.sourceLabel ? ('<div class="small text-muted mt-1">' + escapeHtml(availableRoomsInfo.sourceLabel) + '</div>') : '';
             var invalidQty = availableRooms != null && quantity > availableRooms;
             return '' +
@@ -762,7 +762,7 @@
                 stockHelp +
                 '  </td>' +
                 '  <td><span class="small fw-semibold">' + (quantity * capacityPerRoom) + '</span></td>' +
-                '  <td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger" data-allocation-action="remove-room" data-room-index="' + roomIndex + '">�</button></td>' +
+                '  <td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger" data-allocation-action="remove-room" data-room-index="' + roomIndex + '">?</button></td>' +
                 '</tr>';
         }).join('');
     }
@@ -836,7 +836,7 @@
         }
         if (!allocationState[key]) {
             console.warn('[DepartureRoomAllocation] Unknown allocation key', key, Object.keys(allocationState || {}));
-            alert('Impossible d�ajouter un type: depart introuvable (rechargez la page).');
+            alert('Impossible d?ajouter un type: depart introuvable (rechargez la page).');
             return;
         }
 
@@ -857,7 +857,7 @@
                 render();
             } catch (e) {
                 console.error('[DepartureRoomAllocation] render failed after add-room', e);
-                alert('Erreur JS lors de l�ajout d�un type (voir console).');
+                alert('Erreur JS lors de l?ajout d?un type (voir console).');
             }
             return;
         }
@@ -1849,7 +1849,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
         });
-        // Ouvrir un onglet donnÃ© si ?tab=... ou si le hash cible un panneau.
+        // Ouvrir un onglet donn? si ?tab=... ou si le hash cible un panneau.
         document.addEventListener('DOMContentLoaded', function() {
             if (window.VoyageEditorRuntime && window.VoyageEditorRuntime.ownsTabs) return;
             var params = new URLSearchParams(window.location.search);
@@ -2063,7 +2063,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!item || !item.classList.contains('has-children')) return;
                 var childCbs = item.querySelectorAll('.destination-tree-list .location-checkbox');
                 var target = checkbox.checked;
-                if (childCbs.length > 12 && !window.confirm('Appliquer Ã  ' + childCbs.length + ' sous-destinations ?')) return;
+                if (childCbs.length > 12 && !window.confirm('Appliquer ? ' + childCbs.length + ' sous-destinations ?')) return;
                 childCbs.forEach(function(c) { c.checked = target; });
                 syncChipsAndCount();
             }
@@ -2111,7 +2111,7 @@ document.addEventListener('DOMContentLoaded', function () {
             updateChips();
             updateIndeterminate();
 
-            // Pays (choix multiple) + catalogue villes : recherche, Tout sélectionner/désélectionner, ensureLocation Ã  la volée
+            // Pays (choix multiple) + catalogue villes : recherche, Tout sélectionner/désélectionner, ensureLocation ? la volée
             var panelDynamic = document.getElementById('destination-cities-panel-dynamic');
             var panelTitle = document.getElementById('destination-cities-panel-title');
             var panelList = document.getElementById('destination-cities-list');
@@ -2809,7 +2809,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 var hasData = toRemove.some(dayCardHasMeaningfulData);
                 if (hasData && opts.force !== true) {
-                    var ok = confirm('La dur�e est inf�rieure au nombre de jours existants. Les derniers jours contiennent des donn�es. Voulez-vous les supprimer ?');
+                    var ok = confirm('La dur?e est inf?rieure au nombre de jours existants. Les derniers jours contiennent des donn?es. Voulez-vous les supprimer ?');
                     if (!ok) {
                         durationInput.value = current;
                         return;
@@ -2829,7 +2829,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 var list = (window.PROGRAM_DAY_TYPES && window.PROGRAM_DAY_TYPES.length)
                     ? window.PROGRAM_DAY_TYPES
                     : [
-                        { value: 'arrivee', label: 'Arriv�e' },
+                        { value: 'arrivee', label: 'Arriv?e' },
                         { value: 'visite', label: 'Visite' },
                         { value: 'transfert', label: 'Transfert' },
                         { value: 'libre', label: 'Libre' }
@@ -2859,7 +2859,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     var titleInput = card.querySelector('input[name$="[day_title]"]');
                     var dayNum = i + 1;
                     var title = (titleInput && titleInput.value.trim()) ? titleInput.value.trim() : ('Jour ' + dayNum);
-                    if (label) label.textContent = 'JOUR ' + dayNum + ' � ' + title;
+                    if (label) label.textContent = 'JOUR ' + dayNum + ' ? ' + title;
                 });
                 updateBadge();
                 updateDuration();
@@ -2870,9 +2870,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 var collapseId = 'collapse-day-new-' + index + '-' + Date.now();
                 return '<div class="accordion-item programme-day-card" data-day-id="" data-day-index="' + index + '">' +
                     '<h2 class="accordion-header programme-day-header">' +
-                    '<span class="drag-handle me-2 text-muted cursor-grab" title="D�placer"><i class="bx bx-dots-vertical-rounded"></i></span>' +
+                    '<span class="drag-handle me-2 text-muted cursor-grab" title="D?placer"><i class="bx bx-dots-vertical-rounded"></i></span>' +
                     '<button class="accordion-button collapsed flex-grow-1" type="button" data-bs-toggle="collapse" data-bs-target="#' + collapseId + '" aria-expanded="false" aria-controls="' + collapseId + '">' +
-                    '<span class="programme-day-label">JOUR ' + (index + 1) + ' � Jour ' + (index + 1) + '</span></button>' +
+                    '<span class="programme-day-label">JOUR ' + (index + 1) + ' ? Jour ' + (index + 1) + '</span></button>' +
                     '<button type="button" class="btn btn-sm btn-outline-danger me-2 btn-remove-program-day" title="Supprimer ce jour"><i class="bx bx-trash"></i></button></h2>' +
                     '<div id="' + collapseId + '" class="accordion-collapse collapse" data-bs-parent="#accordionProgrammeDays">' +
                     '<div class="accordion-body" data-day-index="' + index + '" data-day-id="">' +
@@ -2886,13 +2886,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     '<select name="programme_days[' + index + '][day_type]" class="form-select">' +
                     buildProgramDayTypeOptionsHtml('visite') + '</select></div>' +
                     '<div class="field-title"><label class="form-label">Titre du jour</label>' +
-                    '<input type="text" class="form-control" name="programme_days[' + index + '][day_title]" placeholder="Ex. : Jour ' + (index + 1) + ' � Arriv�e"></div>' +
+                    '<input type="text" class="form-control" name="programme_days[' + index + '][day_title]" placeholder="Ex. : Jour ' + (index + 1) + ' ? Arriv?e"></div>' +
                     '<div class="field-ville"><label class="form-label">Ville</label>' +
                     '<input type="text" class="form-control" name="programme_days[' + index + '][city]" placeholder="Ex. : Marrakech"></div>' +
-                    '<div class="field-resume ve-rich-field"><label class="form-label">R�sum�</label>' +
-                    '<textarea class="form-control programme-plain-editor" name="programme_days[' + index + '][description]" rows="3" placeholder="R�sum� du jour"></textarea></div>' +
-                    '<div class="field-description programme-day-detail ve-rich-field"><label class="form-label">Description d�taill�e</label>' +
-                    '<textarea class="form-control programme-plain-editor" name="programme_days[' + index + '][content_html]" rows="5" placeholder="Programme d�taill� du jour"></textarea></div>' +
+                    '<div class="field-resume ve-rich-field"><label class="form-label">R?sum??</label>' +
+                    '<textarea class="form-control programme-plain-editor" name="programme_days[' + index + '][description]" rows="3" placeholder="R?sum?? du jour"></textarea></div>' +
+                    '<div class="field-description programme-day-detail ve-rich-field"><label class="form-label">Description d?taill?e</label>' +
+                    '<textarea class="form-control programme-plain-editor" name="programme_days[' + index + '][content_html]" rows="5" placeholder="Programme d?taill? du jour"></textarea></div>' +
                     '<div class="field-notes programme-day-notes ve-rich-field"><label class="form-label">Notes</label>' +
                     '<textarea class="form-control programme-plain-editor" name="programme_days[' + index + '][notes]" rows="4" placeholder="Notes du jour"></textarea></div>' +
                     '</div>' +
@@ -2900,7 +2900,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     '<input type="hidden" name="programme_days[' + index + '][flights]" value="">' +
                     '<input type="hidden" name="programme_days[' + index + '][hotel_id]" value="">' +
                     '<input type="hidden" name="programme_days[' + index + '][transfer_ids]" value="">' +
-                    '<h6 class="mt-4 mb-2">Activit�s du jour</h6>' +
+                    '<h6 class="mt-4 mb-2">Activit?s du jour</h6>' +
                     '<div class="programme-activities-list mb-3" data-day-index="' + index + '" data-day-id="">' + '</div>' +
                     '</div></div></div>';
             }
@@ -2954,7 +2954,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     alert('Il doit rester au moins un jour.');
                     return;
                 }
-                if (!confirm('Supprimer ce jour ? Les activit�s du jour seront supprim�es. La sauvegarde sera effective au clic sur � Enregistrer �.')) return;
+                if (!confirm('Supprimer ce jour ? Les activit?s du jour seront supprim?es. La sauvegarde sera effective au clic sur ? Enregistrer ?.')) return;
                 card.remove();
                 if (count() === 0 && noDaysAlert) noDaysAlert.style.display = '';
                 renumber();
@@ -2985,7 +2985,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         var hiddenTitle = card.querySelector('input[name$="[title]"]');
                         var currentTitle = e.target.value.trim() || ('Jour ' + (i + 1));
                         if (hiddenTitle) hiddenTitle.value = currentTitle;
-                        if (label) label.textContent = 'JOUR ' + (i + 1) + ' � ' + (e.target.value.trim() || ('Jour ' + (i + 1)));
+                        if (label) label.textContent = 'JOUR ' + (i + 1) + ' ? ' + (e.target.value.trim() || ('Jour ' + (i + 1)));
                     }
                 });
                 document.getElementById('edit-voyage-form') && document.getElementById('edit-voyage-form').addEventListener('submit', function() {
@@ -3256,7 +3256,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
             
-            // 2. HÃ”TELS : depuis dayItemsManager OU depuis tour_hotels rows
+            // 2. HÔTELS : depuis dayItemsManager OU depuis tour_hotels rows
             var hotelData = null;
             if (day.hotel_id && window.tourHotelsData && window.tourHotelsData[day.hotel_id]) {
                 hotelData = window.tourHotelsData[day.hotel_id];
@@ -3422,7 +3422,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 html += '<div class="small text-muted mb-1"><strong>' + sections.hotels.hotel_name + '</strong>';
                 if (sections.hotels.stars) {
                     var stars = '';
-                    for (var i = 0; i < parseInt(sections.hotels.stars, 10); i++) stars += 'â˜…';
+                    for (var i = 0; i < parseInt(sections.hotels.stars, 10); i++) stars += '?';
                     html += ' <span class="badge bg-warning text-dark">' + stars + '</span>';
                 }
                 if (sections.hotels.is_optional) html += ' <span class="badge bg-warning text-dark">Option client</span>';
@@ -3444,7 +3444,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (sections.transfers.arrival.length > 0) {
                     html += '<div class="small mb-1"><span class="badge bg-success">Arrivée</span>';
                     sections.transfers.arrival.slice(0, 2).forEach(function(t) {
-                        html += ' <span class="text-muted">' + (t.from_label || '?') + ' â†’ ' + (t.to_label || '?');
+                        html += ' <span class="text-muted">' + (t.from_label || '?') + ' ? ' + (t.to_label || '?');
                         if (t.vehicle_type) html += ' <small>(' + t.vehicle_type + ')</small>';
                         html += '</span>';
                     });
@@ -3454,7 +3454,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (sections.transfers.departure.length > 0) {
                     html += '<div class="small mb-1"><span class="badge bg-danger">Départ</span>';
                     sections.transfers.departure.slice(0, 2).forEach(function(t) {
-                        html += ' <span class="text-muted">' + (t.from_label || '?') + ' â†’ ' + (t.to_label || '?');
+                        html += ' <span class="text-muted">' + (t.from_label || '?') + ' ? ' + (t.to_label || '?');
                         if (t.vehicle_type) html += ' <small>(' + t.vehicle_type + ')</small>';
                         html += '</span>';
                     });
@@ -3476,19 +3476,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 html += '<button type="button" class="btn btn-xs btn-outline-danger btn-sm day-summary-remove-btn" data-day-index="' + dayIndex + '" data-type="flights" title="Tout retirer"><i class="bx bx-trash"></i></button>';
                 html += '</div></div>';
                 if (sections.flights.outbound) {
-                    html += '<div class="small mb-1"><span class="badge bg-info">Aller</span> <span class="text-muted">' + (sections.flights.outbound.from || '?') + ' â†’ ' + (sections.flights.outbound.to || '?');
+                    html += '<div class="small mb-1"><span class="badge bg-info">Aller</span> <span class="text-muted">' + (sections.flights.outbound.from || '?') + ' ? ' + (sections.flights.outbound.to || '?');
                     if (sections.flights.outbound.date) html += ' <small>(' + sections.flights.outbound.date + ')</small>';
                     html += '</span></div>';
                 }
                 if (sections.flights.inbound) {
-                    html += '<div class="small mb-1"><span class="badge bg-info">Retour</span> <span class="text-muted">' + (sections.flights.inbound.from || '?') + ' â†’ ' + (sections.flights.inbound.to || '?');
+                    html += '<div class="small mb-1"><span class="badge bg-info">Retour</span> <span class="text-muted">' + (sections.flights.inbound.from || '?') + ' ? ' + (sections.flights.inbound.to || '?');
                     if (sections.flights.inbound.date) html += ' <small>(' + sections.flights.inbound.date + ')</small>';
                     html += '</span></div>';
                 }
                 if (sections.flights.internal.length > 0) {
                     html += '<div class="small mb-1"><span class="badge bg-secondary">Internes</span>';
                     sections.flights.internal.slice(0, 2).forEach(function(f) {
-                        html += ' <span class="text-muted">' + (f.from || '?') + ' â†’ ' + (f.to || '?') + '</span>';
+                        html += ' <span class="text-muted">' + (f.from || '?') + ' ? ' + (f.to || '?') + '</span>';
                     });
                     if (sections.flights.internal.length > 2) html += ' <small class="text-muted">+ ' + (sections.flights.internal.length - 2) + ' autre(s)</small>';
                     html += '</div>';
@@ -3606,7 +3606,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
         });
-        // Mettre Ã  jour les extras quand un vol change dans le formulaire principal (onglet Vols)
+        // Mettre ? jour les extras quand un vol change dans le formulaire principal (onglet Vols)
         document.addEventListener('change', function(e) {
             if (!e.target || !e.target.name) return;
             if (e.target.name.indexOf('flight_options[') === 0 && e.target.name.indexOf('[day_number]') !== -1) {
@@ -3616,7 +3616,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (window.updateProgrammeDayExtras) window.updateProgrammeDayExtras(dayIndex);
                 }
             }
-            // Mettre Ã  jour quand un hôtel change dans tour_hotels (onglet Hôtels)
+            // Mettre ? jour quand un hôtel change dans tour_hotels (onglet Hôtels)
             // Nouveau format : check_in_day / check_out_day
             if (e.target.name && e.target.name.indexOf('tour_hotels[') === 0 && 
                 (e.target.name.indexOf('[check_in_day]') !== -1 || e.target.name.indexOf('[check_out_day]') !== -1)) {
@@ -3628,7 +3628,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         var checkIn = parseInt(checkInSel.value || '1', 10);
                         var checkOut = parseInt(checkOutSel.value || '1', 10);
                         var hotelId = hotelRow.getAttribute('data-hotel-id');
-                        // Mettre Ã  jour tous les jours dans la plage check-in -> check-out
+                        // Mettre ? jour tous les jours dans la plage check-in -> check-out
                         if (hotelId && window.dayItemsManager) {
                             for (var d = checkIn; d <= checkOut; d++) {
                                 var dayIndex = String(d - 1);
@@ -3687,11 +3687,11 @@ document.addEventListener('DOMContentLoaded', function () {
             row.setAttribute('data-day-activity-id', '0');
             row.setAttribute('draggable', 'true');
             row.innerHTML = '<div class="card-body py-2"><div class="d-flex flex-wrap align-items-start gap-2">' +
-                '<span class="programme-activity-drag-handle text-muted cursor-grab me-1" title="R�ordonner"><i class="bx bx-dots-vertical-rounded"></i></span>' +
+                '<span class="programme-activity-drag-handle text-muted cursor-grab me-1" title="R?ordonner"><i class="bx bx-dots-vertical-rounded"></i></span>' +
                 '<input type="hidden" name="' + prefix + '[day_activity_id]" value="">' +
                 '<input type="hidden" name="' + prefix + '[activity_id]" value="' + activityId + '">' +
                 '<input type="hidden" name="' + prefix + '[sort_order]" value="' + k + '">' +
-                '<span class="fw-medium">' + (activityTitle || 'Activit�').replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</span>' +
+                '<span class="fw-medium">' + (activityTitle || 'Activit?').replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</span>' +
                 '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_included]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_included]" value="1" checked><label class="form-check-label small">Inclus</label></span>' +
                 '<span class="form-check form-check-inline mb-0"><input type="hidden" name="' + prefix + '[is_mandatory]" value="0"><input class="form-check-input" type="checkbox" name="' + prefix + '[is_mandatory]" value="1"><label class="form-check-label small">Obligatoire</label></span>' +
                 '<input type="text" class="form-control form-control-sm" style="max-width:200px" name="' + prefix + '[custom_title]" placeholder="Titre">' +
@@ -3729,7 +3729,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var flightsManager = document.getElementById('day-builder-flights-manager');
             var dayTargetSelect = document.getElementById('programme-day-target-select');
 
-            // ===== GESTIONNAIRE D'ÉTAT UNIFIÉ POUR VOLS/HÃ”TELS/TRANSFERTS PAR JOUR =====
+            // ===== GESTIONNAIRE D'ÉTAT UNIFIÉ POUR VOLS/HÔTELS/TRANSFERTS PAR JOUR =====
             window.dayItemsManager = {
                 // État interne : {dayIndex: {flights: [], hotel_id: null, transfer_ids: []}}
                 state: {},
@@ -3886,7 +3886,7 @@ document.addEventListener('DOMContentLoaded', function () {
             function updateDrawerSummary(dayNum, dayIndex) {
                 if (!summaryEl) return;
                 var count = getDayItemsCount(dayIndex);
-                summaryEl.textContent = 'Jour ' + dayNum + ' � ' + count + ' �l�ment' + (count > 1 ? 's' : '');
+                summaryEl.textContent = 'Jour ' + dayNum + ' ? ' + count + ' ?l?ment' + (count > 1 ? 's' : '');
             }
 
             function setDrawerContext(dayIndex, dayId, dayNumber) {
@@ -3900,9 +3900,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 drawer.setAttribute('data-day-id', dayId || '');
                 drawer.setAttribute('data-day-number', String(dayNum));
 
-                if (titleEl) titleEl.textContent = 'Jour ' + dayNum + ' � configuration';
+                if (titleEl) titleEl.textContent = 'Jour ' + dayNum + ' ? configuration';
                 updateDrawerSummary(dayNum, dayIndex || String(dayNum - 1));
-                if (contextEl) contextEl.textContent = 'G�rez les activit�s, l�h�tel et les transferts pour le jour ' + dayNum + '.';
+                if (contextEl) contextEl.textContent = 'G?rez les activit?s, l?h?tel et les transferts pour le jour ' + dayNum + '.';
 
                 if (flightsManager) {
                     var manager = flightsManager.querySelector('.flight-manager');
@@ -3945,7 +3945,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     opt.value = String(idx);
                     var titleInp = card.querySelector('input[name$="[day_title]"]');
                     var t = titleInp && titleInp.value.trim() ? titleInp.value.trim() : ('Jour ' + (idx + 1));
-                    opt.textContent = 'Jour ' + (idx + 1) + ' � ' + t;
+                    opt.textContent = 'Jour ' + (idx + 1) + ' ? ' + t;
                     dayTargetSelect.appendChild(opt);
                 });
                 if (prev && dayTargetSelect.querySelector('option[value="' + prev + '"]')) {
@@ -3980,7 +3980,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 e.preventDefault();
                 var dayIndex = drawer.getAttribute('data-day-index');
                 var activityId = addBtn.getAttribute('data-activity-id');
-                var activityTitle = addBtn.getAttribute('data-activity-title') || 'Activit�';
+                var activityTitle = addBtn.getAttribute('data-activity-title') || 'Activit?';
                 if (!appendActivityToDay(dayIndex, activityId, activityTitle)) return;
                 if (window.autosaveProgram) window.autosaveProgram();
             });
@@ -4154,7 +4154,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     return;
                 }
 
-                // Enregistrer : met � jour l'affichage local uniquement.
+                // Enregistrer : met ? jour l'affichage local uniquement.
                 // La persistance serveur se fait une seule fois via le bouton principal "Enregistrer".
                 if (e.target.closest('.flight-opt-save-btn')) {
                     var card = e.target.closest('.flight-opt-card');
@@ -4179,7 +4179,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     var cabinBagEl = view && view.querySelector('.flight-opt-cabin-bag');
                     var checkinBagEl = view && view.querySelector('.flight-opt-checkin-bag');
                     var badgeWrap = view && view.querySelector('.flight-opt-badge');
-                    if (route) route.textContent = (fromCity && fromCity.value ? fromCity.value : dash) + ' â†’ ' + (toCity && toCity.value ? toCity.value : dash);
+                    if (route) route.textContent = (fromCity && fromCity.value ? fromCity.value : dash) + ' ? ' + (toCity && toCity.value ? toCity.value : dash);
                     var d = depDate && depDate.value ? depDate.value : dash;
                     if (depDateEl) depDateEl.textContent = d;
                     if (arrDateEl) arrDateEl.textContent = d;
@@ -4207,14 +4207,14 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         })();
 
-        // "”"”"” Secours : bouton Â« Enregistrer toutes les modifications Â» (soumission forcée si le clic est intercepté) "”"”"”
+        // "”"”"” Secours : bouton ? Enregistrer toutes les modifications ? (soumission forcée si le clic est intercepté) "”"”"”
         (function() {
             function initSaveButtonFallback() {
                 var btn = document.getElementById('edit-voyage-submit-btn');
                 var form = document.getElementById('edit-voyage-form');
                 if (!btn || !form) return;
 
-                // Anti double-submit: une seule requ�te active � la fois.
+                // Anti double-submit: une seule requ?te active ? la fois.
                 if (form.dataset.singleSubmitBound !== '1') {
                     form.dataset.singleSubmitBound = '1';
                     form.addEventListener('submit', function(e) {
@@ -4688,14 +4688,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 var current = filteredCatalog.slice(start, start + pageSize);
 
                 if (countLabel) {
-                    countLabel.textContent = total + ' r�sultat' + (total > 1 ? 's' : '') + ' � Page ' + page + '/' + totalPages;
+                    countLabel.textContent = total + ' r?sultat' + (total > 1 ? 's' : '') + ' ? Page ' + page + '/' + totalPages;
                 }
 
                 if (prevBtn) prevBtn.disabled = page <= 1;
                 if (nextBtn) nextBtn.disabled = page >= totalPages;
 
                 if (!current.length) {
-                    catalogBody.innerHTML = '<tr><td colspan="4" class="text-muted text-center">Aucune activit� trouv�e.</td></tr>';
+                    catalogBody.innerHTML = '<tr><td colspan="4" class="text-muted text-center">Aucune activit? trouv?e.</td></tr>';
                     return;
                 }
 
@@ -4704,7 +4704,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     return '<tr' + highlightClass + '>' +
                         '<td>' + item.id + '</td>' +
                         '<td>' + esc(item.title) + '</td>' +
-                        '<td><div class="fw-medium">' + esc(item.activity_type || 'Non renseign�') + '</div><div class="small text-muted">' + esc(item.region_name || item.location_text || 'Non renseign�e') + '</div></td>' +
+                        '<td><div class="fw-medium">' + esc(item.activity_type || 'Non renseign?') + '</div><div class="small text-muted">' + esc(item.region_name || item.location_text || 'Non renseign?e') + '</div></td>' +
                         '<td><button type="button" class="btn btn-sm btn-success add-catalog-activity" data-activity-id="' + item.id + '">Ajouter</button></td>' +
                     '</tr>';
                 }).join('');
@@ -4736,7 +4736,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 var removeBtn = e.target.closest('.voyage-activity-remove');
                 if (removeBtn) {
                     var row = removeBtn.closest('.voyage-activity-row');
-                    if (row && confirm('Supprimer cette activit� du voyage ?')) {
+                    if (row && confirm('Supprimer cette activit? du voyage ?')) {
                         row.remove();
                         reindexRows();
                         refreshCatalog();
@@ -4819,8 +4819,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         var filtered = Array.isArray(window.TOUR_ACTIVITIES_CATALOG) ? window.TOUR_ACTIVITIES_CATALOG : [];
                         var all = fullCatalog();
                         regionHint.textContent = filtered.length > 0
-                            ? 'Le catalogue est filtr� automatiquement selon la destination du voyage.'
-                            : 'Aucune activit� ne correspond au filtre destination. Le catalogue global est affich�.';
+                            ? 'Le catalogue est filtr? automatiquement selon la destination du voyage.'
+                            : 'Aucune activit? ne correspond au filtre destination. Le catalogue global est affich?.';
                     }
                     if (searchInput) searchInput.focus();
                 });
@@ -5208,7 +5208,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // "”"”"” MODE DIAGNOSTIC: Forcer retrait des disabled + logs détaillés (À RETIRER en production) "”"”"”
         (function diagnosticMode() { return;
-            console.log('ðŸ”§ DIAGNOSTIC MODE - Flight Options Persistence (v2 - Ignore Templates)');
+            console.log('OK:Options Persistence (v2 - Ignore Templates)');
             
             function removeDisabledFromFlightOptions() {
                 var count = 0;
@@ -5221,7 +5221,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         return; // Ne PAS retirer disabled des templates
                     }
                     
-                    // SKIP les inputs dans le panneau programme (day-builder-root) � doublons hors flux principal
+                    // SKIP les inputs dans le panneau programme (day-builder-root) ? doublons hors flux principal
                     if (drawerContainer && drawerContainer.contains(el)) {
                         return;
                     }
@@ -5233,24 +5233,24 @@ document.addEventListener('DOMContentLoaded', function () {
                     
                     if (el.hasAttribute('disabled')) {
                         el.removeAttribute('disabled');
-                        console.log('  ðŸ”“ Disabled retiré:', el.name);
+                        console.log('OK:', el.name);
                         count++;
                     }
                 });
                 if (count > 0) {
-                    console.log('âœ… Total disabled retirés (drawer/templates exclus):', count);
+                    console.log('OK:awer/templates exclus):', count);
                 }
             }
             
             function interceptFormSubmission() {
                 var form = document.getElementById('edit-voyage-form');
                 if (!form) {
-                    console.error('âŒ Formulaire #edit-voyage-form introuvable!');
+                    console.error('ERROR:rm introuvable!');
                     return;
                 }
                 
                 form.addEventListener('submit', function(e) {
-                    console.log('ðŸš€ FORMULAIRE SOUMIS (intercepté)');
+                    console.log('OK:epté)');
                     
                     // DÉSACTIVER le drawer pour éviter qu'il soumette ses duplications
                     var drawer = document.getElementById('day-builder-root');
@@ -5264,7 +5264,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             }
                         });
                         if (drawerInputsDisabled.length > 0) {
-                            console.warn('âš ï¸  Drawer inputs désactivés temporairement:', drawerInputsDisabled.length);
+                            console.warn('WARN:és temporairement:', drawerInputsDisabled.length);
                         }
                     }
                     
@@ -5282,28 +5282,28 @@ document.addEventListener('DOMContentLoaded', function () {
                                 templatesCount++;
                             } else {
                                 flightOptionsData[pair[0]] = pair[1];
-                                console.log('  ðŸ“¦', pair[0], '=', pair[1]);
+                                console.log('OK:', pair[0], '=', pair[1]);
                                 count++;
                             }
                         }
                     }
                     
                     if (templatesCount > 0) {
-                        console.warn('âš ï¸  Templates détectés (ignorés):', templatesCount, 'champs');
+                        console.warn('WARN:norés):', templatesCount, 'champs');
                     }
                     
-                    console.log('ðŸ“Š Total flight_options valides:', count);
+                    console.log('OK:des:', count);
                     
                     if (count === 0) {
-                        console.log('âœ… Aucun flight_options détecté: voyage considéré sans vol, soumission OK');
+                        console.log('OK:té: voyage considéré sans vol, soumission OK');
                     } else {
-                        console.log('âœ… Flight options detectés, soumission OK');
+                        console.log('OK:oumission OK');
                     }
                     
                     // Note: Si soumission OK, la page va recharger donc pas besoin de réactiver
                 }, true);
                 
-                console.log('âœ… Intercepteur de formulaire installé');
+                console.log('OK: installé');
             }
             
             // Exécuter au chargement
@@ -5319,7 +5319,7 @@ document.addEventListener('DOMContentLoaded', function () {
             
             // Re-vérifier après 2 secondes (au cas où des inputs sont ajoutés dynamiquement)
             setTimeout(function() {
-                console.log('ðŸ”„ Re-vérification après 2s...');
+                console.log('OK:..');
                 removeDisabledFromFlightOptions();
             }, 2000);
         })();

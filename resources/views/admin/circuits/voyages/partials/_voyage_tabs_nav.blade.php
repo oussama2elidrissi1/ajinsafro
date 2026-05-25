@@ -1,8 +1,8 @@
-﻿<div class="ve-tabs-wrapper ve-tabs-wrapper--workflow" data-ve-workflow>
+<div class="ve-tabs-wrapper ve-tabs-wrapper--workflow" data-ve-workflow>
     <div class="ve-tabs-header">
         <div>
             <p class="ve-tabs-kicker mb-1">Parcours de saisie</p>
-            <h6 class="ve-tabs-title mb-0">�?dition du voyage par étapes</h6>
+            <h6 class="ve-tabs-title mb-0">?dition du voyage par étapes</h6>
         </div>
 
         <button type="button" class="workflow-toggle-btn" id="workflowToggleBtn" aria-label="Afficher / masquer le workflow">
@@ -10,11 +10,11 @@
         </button>
 
         <p class="ve-tab-zone-hint text-muted small mb-0">
-            �?tape actuelle: <strong class="ve-stepper-current" data-ve-current-step-label>Informations générales</strong>
+            ?tape actuelle: <strong class="ve-stepper-current" data-ve-current-step-label>Informations générales</strong>
         </p>
     </div>
 
-    <div class="ve-stepper" role="tablist" aria-label="�?tapes du voyage">
+    <div class="ve-stepper" role="tablist" aria-label="?tapes du voyage">
         <button type="button" class="ve-stepper__step is-active"
             data-ve-step="1" data-ve-step-label="Informations générales" data-ve-step-target="#basic"
             data-ve-step-tabs="#basic,#location,#information">
@@ -49,17 +49,17 @@
         </button>
     </div>
 
-    <div class="ve-step-sections" aria-label="Sections de l�?Tétape courante">
-        <p class="ve-step-sections__title mb-0">Sections de l�?Tétape</p>
+    <div class="ve-step-sections" aria-label="Sections de l?Tétape courante">
+        <p class="ve-step-sections__title mb-0">Sections de l?Tétape</p>
         <nav class="ve-detail-nav" data-ve-detail-nav></nav>
     </div>
 
     <div class="ve-stepper-nav">
         <button type="button" class="btn btn-outline-secondary btn-sm" data-ve-step-prev>
-            <i class="bx bx-chevron-left"></i> �?tape précédente
+            <i class="bx bx-chevron-left"></i> ?tape précédente
         </button>
         <button type="button" class="btn btn-primary btn-sm" data-ve-step-next>
-            �?tape suivante <i class="bx bx-chevron-right"></i>
+            ?tape suivante <i class="bx bx-chevron-right"></i>
         </button>
     </div>
 

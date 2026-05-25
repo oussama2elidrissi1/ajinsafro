@@ -285,7 +285,7 @@ final class AdminWpTourCatalogQuery
     }
 
     /**
-     * IDs WordPress des st_tours publiÃ©s (post_status = 'publish').
+     * IDs WordPress des st_tours publi?s (post_status = 'publish').
      *
      * @return list<int>
      */
@@ -302,7 +302,7 @@ final class AdminWpTourCatalogQuery
     }
 
     /**
-     * Voyages Laravel rÃ©servables : actifs, liÃ©s Ã  un WP post publiÃ©, et non-test.
+          * Voyages Laravel r?servables : actifs, li?s ? un WP post publi?, et non-test.
      *
      * @return EloquentCollection<int, Voyage>
      */
@@ -324,7 +324,7 @@ final class AdminWpTourCatalogQuery
     }
 
     /**
-     * Options allÃ©gÃ©es (id + name) pour les selects simples (index, dossiers, autocomplete).
+     * Options all?g?es (id + name) pour les selects simples (index, dossiers, autocomplete).
      *
      * @return EloquentCollection<int, Voyage>
      */

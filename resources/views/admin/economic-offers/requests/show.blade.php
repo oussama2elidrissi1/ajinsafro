@@ -1,6 +1,6 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
-@section('title', 'Détail demande Formule �?conomique')
+@section('title', 'Détail demande Formule ?conomique')
 
 @section('content')
     <x-admin.page-header
@@ -23,9 +23,9 @@
                     <div><strong>Téléphone :</strong> {{ $requestItem->phone }}</div>
                     <div><strong>Email :</strong> {{ $requestItem->email }}</div>
                     <div><strong>Offre :</strong> {{ $requestItem->offer_title ?: optional($requestItem->offer)->title ?: 'Non associée' }}</div>
-                    <div><strong>Départ :</strong> {{ $requestItem->selected_departure_date?->format('d/m/Y') ?: '�?"' }}</div>
+                    <div><strong>Départ :</strong> {{ $requestItem->selected_departure_date?->format('d/m/Y') ?: '?' }}</div>
                     <div><strong>Adultes / Enfants :</strong> {{ $requestItem->adults }} / {{ $requestItem->children }}</div>
-                    <div><strong>Message :</strong><br>{!! nl2br(e($requestItem->message ?: '�?"')) !!}</div>
+                    <div><strong>Message :</strong><br>{!! nl2br(e($requestItem->message ?: '?')) !!}</div>
                 </div>
             </x-admin.form-section>
         </div>

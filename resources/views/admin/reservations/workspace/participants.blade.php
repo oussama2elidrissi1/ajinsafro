@@ -1,6 +1,6 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
-@section('title', 'Participants �?" '.($prestationDisplayTitle ?? $voyage->name))
+@section('title', 'Participants ? '.($prestationDisplayTitle ?? $voyage->name))
 
 @push('styles')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
@@ -96,7 +96,7 @@
         <div class="col-sm-4">
             <div class="card border-0 shadow-sm rounded-3 h-100 bg-light">
                 <div class="card-body py-3 small text-muted">
-                    Même périmètre que la liste admin : voyage Laravel + date de départ (TravelDate) lorsque l�?TURL inclut <code>travel_date_id</code>.
+                    Même périmètre que la liste admin : voyage Laravel + date de départ (TravelDate) lorsque l?TURL inclut <code>travel_date_id</code>.
                 </div>
             </div>
         </div>
@@ -123,12 +123,12 @@
                             <td class="px-3 py-3 fw-bold" style="color: #0e3a5a;">#{{ $reservation->id }}</td>
                             <td class="px-3 py-3"><span class="{{ $statusClass($reservation->status) }}">{{ $statusLabel($reservation->status) }}</span></td>
                             <td class="px-3 py-3 text-muted">
-                                {{ trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? '')) ?: '�?"' }}
+                                {{ trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? '')) ?: '?' }}
                                 <div class="small text-warning mt-1"><i class="fas fa-info-circle me-1"></i>Aucun passager enregistré</div>
                             </td>
-                            <td class="px-3 py-3">�?"</td>
-                            <td class="px-3 py-3">�?"</td>
-                            <td class="px-3 py-3">�?"</td>
+                            <td class="px-3 py-3">?</td>
+                            <td class="px-3 py-3">?</td>
+                            <td class="px-3 py-3">?</td>
                             <td class="px-3 py-3 text-end">
                                 <a href="{{ route('admin.reservations.edit', $reservation) }}" class="btn btn-sm btn-outline-primary rounded-pill me-1">Modifier</a>
                                 <a href="{{ route('admin.reservations.workspace.reservation.pdf', $reservation) }}" class="btn btn-sm btn-outline-danger rounded-pill">PDF</a>
@@ -139,10 +139,10 @@
                             <tr>
                                 <td class="px-3 py-3 fw-bold" style="color: #0e3a5a;">#{{ $reservation->id }}</td>
                                 <td class="px-3 py-3"><span class="{{ $statusClass($reservation->status) }}">{{ $statusLabel($reservation->status) }}</span></td>
-                                <td class="px-3 py-3 text-muted">{{ trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? '')) ?: '�?"' }}</td>
+                                <td class="px-3 py-3 text-muted">{{ trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? '')) ?: '?' }}</td>
                                 <td class="px-3 py-3 fw-medium">{{ trim(($p->first_name ?? '').' '.($p->last_name ?? '')) }}</td>
                                 <td class="px-3 py-3"><span class="ws-pax-type">{{ $paxTypeLabel($p->type) }}</span></td>
-                                <td class="px-3 py-3 small font-monospace">{{ $p->document_number ?? '�?"' }}</td>
+                                <td class="px-3 py-3 small font-monospace">{{ $p->document_number ?? '?' }}</td>
                                 <td class="px-3 py-3 text-end text-nowrap">
                                     @if($loop->first)
                                         <a href="{{ route('admin.reservations.edit', $reservation) }}" class="btn btn-sm btn-outline-primary rounded-pill me-1">Modifier</a>

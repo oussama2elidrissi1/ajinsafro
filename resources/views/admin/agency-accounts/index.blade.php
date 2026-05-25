@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @section('title', 'Comptes points de vente')
 
@@ -113,9 +113,9 @@
                                 </div>
                             </div>
                         </td>
-                        <td>{{ $account->branch?->display_name ?? '�?"' }}</td>
-                        <td>{{ $account->agencyEmployee?->full_name ?? '�?"' }}</td>
-                        <td>{{ $account->roles->first()?->name ?? '�?"' }}</td>
+                        <td>{{ $account->branch?->display_name ?? '?' }}</td>
+                        <td>{{ $account->agencyEmployee?->full_name ?? '?' }}</td>
+                        <td>{{ $account->roles->first()?->name ?? '?' }}</td>
                         <td>
                             @if($account->is_active)
                                 <span class="aj-badge ok">Actif</span>
@@ -136,7 +136,7 @@
                                     <a href="{{ route('admin.agency-accounts.show', $account) }}" class="aj-btn">Voir</a>
                                 @endif
                                 @if(Route::has('admin.agency-accounts.edit'))
-                                    <a href="{{ route('admin.agency-accounts.edit', $account) }}" class="aj-btn">�?diter</a>
+                                    <a href="{{ route('admin.agency-accounts.edit', $account) }}" class="aj-btn">?diter</a>
                                 @endif
                             </div>
                         </td>

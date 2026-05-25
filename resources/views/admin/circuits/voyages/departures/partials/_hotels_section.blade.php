@@ -1,4 +1,4 @@
-﻿@php
+@php
     $modalAjax = $modalAjax ?? false;
     $layout = $layout ?? 'default';
 @endphp
@@ -15,9 +15,9 @@
                 <div class="col-md-4">
                     <label class="form-label small">Catalogue (optionnel)</label>
                     <select name="hotel_id" class="form-select form-select-sm">
-                        <option value="">�?" Saisie manuelle �?"</option>
+                        <option value="">? Saisie manuelle ?</option>
                         @foreach($hotelsCatalog as $h)
-                            <option value="{{ $h->id }}">{{ $h->name }} @if($h->city) �?" {{ $h->city }} @endif</option>
+                            <option value="{{ $h->id }}">{{ $h->name }} @if($h->city) ? {{ $h->city }} @endif</option>
                         @endforeach
                     </select>
                 </div>
@@ -26,7 +26,7 @@
                     <input type="text" name="hotel_name" class="form-control form-control-sm" placeholder="Si pas de catalogue">
                 </div>
                 <div class="col-md-1">
-                    <label class="form-label small">�?toiles</label>
+                    <label class="form-label small">?toiles</label>
                     <input type="number" name="stars" class="form-control form-control-sm" min="0" max="5">
                 </div>
                 <div class="col-md-3">

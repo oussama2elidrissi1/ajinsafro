@@ -1,11 +1,11 @@
-﻿@extends('layouts.admin-v6')
-@section('title') Group Deals �?" Départs @endsection
+@extends('layouts.admin-v6')
+@section('title') Group Deals ? Départs @endsection
 
 @section('content')
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-flex align-items-center justify-content-between">
-            <h4 class="page-title mb-0 font-size-18">Group Deals �?" Départs</h4>
+            <h4 class="page-title mb-0 font-size-18">Group Deals ? Départs</h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
                     <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
@@ -75,15 +75,15 @@
                     <tr>
                         <td>
                             <a href="{{ route('admin.group-deals.trips.show', $dep->voyage) }}"
-                               class="text-body fw-semibold">{{ $dep->voyage?->name ?? '�?"' }}</a>
+                               class="text-body fw-semibold">{{ $dep->voyage?->name ?? '?' }}</a>
                             @if($dep->voyage?->destination)
                                 <br><small class="text-muted">{{ $dep->voyage->destination }}</small>
                             @endif
                         </td>
                         <td class="small">
-                            {{ $dep->start_date?->format('d/m/Y') ?? '�?"' }}
+                            {{ $dep->start_date?->format('d/m/Y') ?? '?' }}
                             @if($dep->end_date)
-                                <br><span class="text-muted">�?' {{ $dep->end_date->format('d/m/Y') }}</span>
+                                <br><span class="text-muted">?' {{ $dep->end_date->format('d/m/Y') }}</span>
                             @endif
                         </td>
                         <td class="text-center">
@@ -97,11 +97,11 @@
                         <td class="text-center text-muted small">{{ $dep->guaranteed_threshold }}</td>
                         <td>
                             @if($dep->active_tier_price)
-                                <span class="text-success fw-semibold">{{ number_format($dep->active_tier_price, 0, ',', ' ') }} �,�</span>
+                                <span class="text-success fw-semibold">{{ number_format($dep->active_tier_price, 0, ',', ' ') }} ?,?</span>
                             @elseif($dep->sale_price)
-                                {{ number_format($dep->sale_price, 0, ',', ' ') }} �,�
+                                {{ number_format($dep->sale_price, 0, ',', ' ') }} ?,?
                             @else
-                                �?"
+                                ?
                             @endif
                         </td>
                         <td>

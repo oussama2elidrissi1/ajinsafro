@@ -1,4 +1,4 @@
-﻿@php
+@php
     // Certaines installs WP exposent "language" ou "languages". On n'affiche qu'un seul bloc "Langue".
     $taxonomyConfig = [
         'st_tour_type' => 'Type de tour',
@@ -171,7 +171,7 @@
         btn.addEventListener('click', function() {
             const taxonomy = this.dataset.taxonomy;
             const modal = document.getElementById('taxonomyTermModal');
-            document.getElementById('taxonomyTermModalLabel').textContent = 'Ajouter une catégorie �?" ' + (this.dataset.label || taxonomy);
+            document.getElementById('taxonomyTermModalLabel').textContent = 'Ajouter une catégorie ? ' + (this.dataset.label || taxonomy);
             document.getElementById('taxonomyTermTaxonomy').value = taxonomy;
             document.getElementById('taxonomyTermId').value = '';
             document.getElementById('taxonomyTermName').value = '';

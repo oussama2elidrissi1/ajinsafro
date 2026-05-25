@@ -1,5 +1,5 @@
-﻿{{--
-  V2 Section footer �?" Précédent / Enregistrer / Suivant
+{{--
+  V2 Section footer ? Précédent / Enregistrer / Suivant
   Params: $prev, $prevLabel, $next, $nextLabel, $formId
 --}}
 <div class="v2-section-footer">

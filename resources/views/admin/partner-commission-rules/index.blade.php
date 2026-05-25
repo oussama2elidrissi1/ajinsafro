@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 @section('title', 'Règles de commission')
 
 @section('content')
@@ -60,12 +60,12 @@
                     <tbody>
                         @forelse($rules as $rule)
                             <tr>
-                                <td>{{ $rule->partner ? $rule->partner->display_name : '�?" Global' }}</td>
-                                <td>{{ $rule->voyage ? $rule->voyage->name : '�?" Tous' }}</td>
+                                <td>{{ $rule->partner ? $rule->partner->display_name : '? Global' }}</td>
+                                <td>{{ $rule->voyage ? $rule->voyage->name : '? Tous' }}</td>
                                 <td>{{ $rule->type === 'percent' ? '%' : 'Fixe' }}</td>
                                 <td>{{ $rule->type === 'percent' ? $rule->value . ' %' : number_format($rule->value, 0, ',', ' ') . ' DH' }}</td>
                                 <td>
-                                    {{ $rule->valid_from?->format('d/m/Y') ?? '�?"' }} �?' {{ $rule->valid_until?->format('d/m/Y') ?? '�?"' }}
+                                    {{ $rule->valid_from?->format('d/m/Y') ?? '?' }} ?' {{ $rule->valid_until?->format('d/m/Y') ?? '?' }}
                                 </td>
                                 <td><span class="badge bg-{{ $rule->is_active ? 'success' : 'secondary' }}">{{ $rule->is_active ? 'Oui' : 'Non' }}</span></td>
                                 <td class="text-end">

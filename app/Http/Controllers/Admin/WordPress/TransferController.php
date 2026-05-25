@@ -82,7 +82,7 @@ class TransferController extends Controller
 
         return redirect()
             ->route('admin.wordpress.transfers.index')
-            ->with('success', 'Transfert crÃ©Ã© avec succÃ¨s.');
+            ->with('success', 'Transfert cr?? avec succ?s.');
     }
 
     public function edit(int $transfer): View
@@ -121,7 +121,7 @@ class TransferController extends Controller
 
         return redirect()
             ->route('admin.wordpress.transfers.index')
-            ->with('success', 'Transfert mis Ã  jour.');
+            ->with('success', 'Transfert mis ? jour.');
     }
 
     public function destroy(int $transfer): RedirectResponse
@@ -130,6 +130,6 @@ class TransferController extends Controller
 
         return redirect()
             ->route('admin.wordpress.transfers.index')
-            ->with('success', 'Transfert dÃ©placÃ© dans la corbeille.');
+            ->with('success', 'Transfert d?plac? dans la corbeille.');
     }
 }

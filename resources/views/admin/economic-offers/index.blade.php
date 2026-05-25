@@ -1,15 +1,15 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
-@section('title', 'Formule �?conomique')
+@section('title', 'Formule ?conomique')
 
 @section('content')
     <x-admin.page-header
-        title="Formule �?conomique"
+        title="Formule ?conomique"
         subtitle="Pilotez les offres petit budget Ajinsafro depuis un espace unique."
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
             ['label' => 'Produits & Services'],
-            ['label' => 'Formule �?conomique'],
+            ['label' => 'Formule ?conomique'],
         ]"
     >
         <x-slot name="actions">
@@ -124,8 +124,8 @@
                                 <div style="font-size:12px;font-weight:700;color:#7a879a;">{{ $offer->internal_reference ?: 'Sans reference' }}</div>
                             </td>
                             <td><x-admin.badge type="info" :label="$offer->type_label" /></td>
-                            <td>{{ $offer->destination ?: '�?"' }}</td>
-                            <td>{{ $offer->departure_city ?: '�?"' }}</td>
+                            <td>{{ $offer->destination ?: '?' }}</td>
+                            <td>{{ $offer->departure_city ?: '?' }}</td>
                             <td>
                                 @if($offer->price_from_value !== null)
                                     <strong>{{ number_format($offer->price_from_value, 0, ',', ' ') }} {{ $offer->currency }}</strong>
@@ -137,10 +137,10 @@
                                 @if($offer->old_price !== null)
                                     <span style="text-decoration:line-through;color:#7a879a;">{{ number_format((float) $offer->old_price, 0, ',', ' ') }} {{ $offer->currency }}</span>
                                 @else
-                                    <span class="text-muted">�?"</span>
+                                    <span class="text-muted">?</span>
                                 @endif
                             </td>
-                            <td>{{ $nextDeparture?->departure_date?->format('d/m/Y') ?? ($offer->departure_date?->format('d/m/Y') ?: '�?"') }}</td>
+                            <td>{{ $nextDeparture?->departure_date?->format('d/m/Y') ?? ($offer->departure_date?->format('d/m/Y') ?: '?') }}</td>
                             <td>{{ $offer->remaining_places }}</td>
                             <td>
                                 <x-admin.badge

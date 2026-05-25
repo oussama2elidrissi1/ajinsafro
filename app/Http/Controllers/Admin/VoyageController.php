@@ -154,7 +154,7 @@ class VoyageController extends Controller
         } catch (\Throwable $e) {
             \Log::warning('VoyageController@index: WP connection failed', ['error' => $e->getMessage()]);
             $wpConnectionFailed = true;
-            $wpCatalogErrorMessage = 'La liste des voyages ne peut pas Ãªtre chargÃ©e pour le moment.';
+            $wpCatalogErrorMessage = 'La liste des voyages ne peut pas ?tre charg?e pour le moment.';
             $tours = new \Illuminate\Pagination\LengthAwarePaginator(
                 [],
                 0,
@@ -175,21 +175,21 @@ class VoyageController extends Controller
     }
 
     /**
-     * Show single tour (dÃƒÂ©tail).
+     * Show single tour (d?tail).
      */
     public function show(int $id): View
     {
         $wpPost = WpPost::tours()->where('ID', $id)->firstOrFail();
         
-        // CrÃƒÂ©er un objet compatible avec les vues existantes
+        // Cr?er un objet compatible avec les vues existantes
         $voyage = $wpPost;
-        $voyage->name = $wpPost->post_title; // Alias pour compatibilitÃƒÂ©
+        $voyage->name = $wpPost->post_title; // Alias pour compatibilit?
         $voyage->slug = $wpPost->post_name;
         $voyage->description = $wpPost->post_content;
         $voyage->updated_at = $wpPost->post_modified;
         $voyage->created_at = $wpPost->post_date;
         
-        // Charger les metas (max_people et places sont calculÃƒÂ©s ÃƒÂ  partir des chambres et enregistrÃƒÂ©s ÃƒÂ  la sauvegarde)
+        // Charger les metas (max_people et places sont calcul?s ? partir des chambres et enregistr?s ? la sauvegarde)
         $meta = [
             'adult_price' => $wpPost->getMeta('adult_price'),
             'child_price' => $wpPost->getMeta('child_price'),
@@ -205,7 +205,7 @@ class VoyageController extends Controller
             'gallery' => $wpPost->getMeta('gallery'),
         ];
 
-        // Programme par jours (aj_tour_days + activitÃƒÂ©s) pour la timeline "Programme du circuit"
+        // Programme par jours (aj_tour_days + activit?s) pour la timeline "Programme du circuit"
         $programDays = collect();
         try {
             $programDays = $this->programService->loadProgram((int) $id);
@@ -275,7 +275,7 @@ class VoyageController extends Controller
             $airlines = collect();
         }
 
-        // Pas de modÃƒÂ¨le Voyage Laravel tant que le tour WP nÃ¢â‚¬â„¢existe pas : null ÃƒÂ©vite les accÃƒÂ¨s ÃƒÂ  des attributs manquants dans la vue partagÃƒÂ©e create/edit.
+        // Pas de mod?le Voyage Laravel tant que le tour WP n?â‚¬â„¢existe pas : null ?vite les acc?s ? des attributs manquants dans la vue partag?e create/edit.
         $laravelVoyage = null;
         $outboundFlight = null;
         $inboundFlight = null;
@@ -1593,7 +1593,7 @@ class VoyageController extends Controller
     {
         $validated = $request->validated();
 
-        // GÃƒÂ©nÃƒÂ©rer slug si vide
+        // G?n?rer slug si vide
         if (empty($validated['slug'])) {
             $validated['slug'] = Str::slug($validated['title']);
         }
@@ -1647,7 +1647,7 @@ class VoyageController extends Controller
     {
         $wpPost = WpPost::tours()->where('ID', $id)->firstOrFail();
         
-        // CrÃƒÂ©er un objet compatible avec les vues existantes
+        // Cr?er un objet compatible avec les vues existantes
         $voyage = $wpPost;
         $voyage->name = $wpPost->post_title;
         $voyage->slug = $wpPost->post_name;
@@ -1657,7 +1657,7 @@ class VoyageController extends Controller
         $voyage->created_at = $wpPost->post_date;
         $voyage->status = $wpPost->post_status;
         
-        // Charger TOUTES les metas Traveler (lecture complÃƒÂ¨te)
+        // Charger TOUTES les metas Traveler (lecture compl?te)
         $meta = [
             // LOCATION
             'address' => $wpPost->getMeta('address'),
@@ -1750,7 +1750,7 @@ class VoyageController extends Controller
         // Charger les taxonomies disponibles
         $availableTaxonomies = $this->getAvailableTaxonomies();
         
-        // Charger les taxonomies assignÃƒÂ©es ÃƒÂ  ce tour
+        // Charger les taxonomies assign?es ? ce tour
         $assignedTaxonomies = $this->getPostTaxonomies($id);
         
         // Charger les locations (tree)
@@ -1766,9 +1766,9 @@ class VoyageController extends Controller
         $worldCities = config('world_cities', []);
         $mergedCitiesByCode = $this->buildMergedCitiesByCode($worldCountries, $worldCities, $countryCitiesData);
 
-        // Programme par jours (Laravel: aj_tour_days + activitÃƒÂ©s). The Blade loop iterates over
+        // Programme par jours (Laravel: aj_tour_days + activit?s). The Blade loop iterates over
         // loadProgram() (WP aj_tour_days). If duration_day meta is stale (e.g. 4) but travel_program_days
-        // has 7 rows, ensureDaysExist() only used meta and WP stayed at 4 days Ã¢â‚¬â€ the UI showed 4 cards.
+        // has 7 rows, ensureDaysExist() only used meta and WP stayed at 4 days ?â‚¬? the UI showed 4 cards.
         $laravelVoyage = Voyage::firstOrCreate(
             ['wp_post_id' => $id],
             ['name' => $wpPost->post_title ?? 'Tour', 'slug' => 'tour-' . $id]
@@ -1813,7 +1813,7 @@ class VoyageController extends Controller
         }
 
         // Charger les TravelProgramDay avec relations hotels/transfers pour le modal par jour
-        // ClÃƒÂ© par index du jour (0, 1, 2...) pour correspondre ÃƒÂ  $dayIndex dans la vue (programme_days)
+        // Cl? par index du jour (0, 1, 2...) pour correspondre ? $dayIndex dans la vue (programme_days)
         $programDayHotelsTransfers = [];
         $travelProgramDaysWithRelations = collect();
         try {
@@ -1905,12 +1905,12 @@ class VoyageController extends Controller
             $heroImageUrl = WpHeroImageService::getAttachmentUrl($heroId);
         }
 
-        // HÃƒÂ´tel + Transferts (aj_tour_hotels, aj_tour_transfers) Ã¢â‚¬â€ multi-row support
+        // H?tel + Transferts (aj_tour_hotels, aj_tour_transfers) ?â‚¬? multi-row support
         $tourHotels = TourHotel::getAllForTour($id)->load([
             'rooms.dateAvailabilities' => fn ($query) => $query->orderBy('travel_date_id')->orderBy('id'),
         ]);
         $tourHotel = $tourHotels->first();
-        // Liste dÃ¢â‚¬â„¢hÃƒÂ´tels dÃ¢â‚¬â„¢autres voyages pour Ã‚Â« Choisir un hÃƒÂ´tel existant Ã‚Â» (copie des donnÃƒÂ©es)
+        // Liste d?â‚¬â„¢h?tels d?â‚¬â„¢autres voyages pour ? Choisir un h?tel existant ? (copie des donn?es)
         $otherTourHotelsForCopy = $this->getHotelsFromWordPress();
         $otherTourTitles = [];
         $transfers = TourTransfer::getForTour($id);
@@ -1918,7 +1918,7 @@ class VoyageController extends Controller
         $transferDepartures = $transfers['departure'];
         $transferArrival = $transferArrivals->first();
         $transferDeparture = $transferDepartures->first();
-        // Valeurs suggÃƒÂ©rÃƒÂ©es : transfert aller = aÃƒÂ©roport d'arrivÃƒÂ©e (vol aller to_city) Ã¢â€ â€™ hÃƒÂ´tel ; transfert retour = hÃƒÂ´tel Ã¢â€ â€™ aÃƒÂ©roport de dÃƒÂ©part (vol retour from_city)
+        // Valeurs sugg?r?es : transfert aller = a?roport d'arriv?e (vol aller to_city) ?â€ ? h?tel ; transfert retour = h?tel ?â€ ? a?roport de d?part (vol retour from_city)
         $suggestedArrivalFrom = $outboundFlight ? trim($outboundFlight->to_city ?? $outboundFlight->to_label ?? '') : '';
         $suggestedArrivalTo = $tourHotel ? trim($tourHotel->hotel_name ?? '') : '';
         $suggestedDepartureFrom = $tourHotel ? trim($tourHotel->hotel_name ?? '') : '';
@@ -1932,7 +1932,7 @@ class VoyageController extends Controller
         $departurePlaces = $laravelVoyage
             ? VoyageDeparturePlace::where('voyage_id', $laravelVoyage->id)->orderBy('sort_order')->orderBy('id')->get()
             : collect();
-        // Vols associÃƒÂ©s par lieu (source unique : aj_tour_flights.departure_place_id) pour l'onglet Lieux de dÃƒÂ©part en lecture seule
+        // Vols associ?s par lieu (source unique : aj_tour_flights.departure_place_id) pour l'onglet Lieux de d?part en lecture seule
         $departurePlaceFlightsFromTour = collect();
         try {
             if (\Illuminate\Support\Facades\Schema::connection('wp')->hasColumn('aj_tour_flights', 'departure_place_id')) {
@@ -1968,7 +1968,7 @@ class VoyageController extends Controller
             \Log::warning('VoyageController@edit: getProgram failed', ['tour_id' => $id, 'error' => $e->getMessage()]);
         }
 
-        // Total places calculÃƒÂ© ÃƒÂ  partir des chambres (affichÃƒÂ© en lecture seule dans paramÃƒÂ¨tres gÃƒÂ©nÃƒÂ©raux)
+        // Total places calcul? ? partir des chambres (affich? en lecture seule dans param?tres g?n?raux)
         $totalPlacesVoyage = $this->computeTourTotalPlacesFromRooms($id);
 
         $voyageExtras = ($laravelVoyage && $this->voyageExtrasTableAvailable())
@@ -1987,7 +1987,7 @@ class VoyageController extends Controller
     }
 
     /**
-     * Source des hÃƒÂ´tels "Ajouter comme nouveau sÃƒÂ©jour" depuis WordPress (post_type=st_hotel).
+     * Source des h?tels "Ajouter comme nouveau s?jour" depuis WordPress (post_type=st_hotel).
      *
      * @return \Illuminate\Support\Collection<int, object>
      */
@@ -2121,7 +2121,7 @@ class VoyageController extends Controller
     }
 
     /**
-     * Associer les pays du monde (config) aux locations WP (arbre) et produire les donnÃƒÂ©es pour le select + villes.
+     * Associer les pays du monde (config) aux locations WP (arbre) et produire les donn?es pour le select + villes.
      *
      * @param array $worldCountries [ code => nom ]
      * @param array $locationsTree  [ [ 'id', 'title', 'children' => [...] ], ... ]
@@ -2131,7 +2131,7 @@ class VoyageController extends Controller
     {
         $normalize = function (string $s): string {
             $s = mb_strtolower($s, 'UTF-8');
-            $accents = ['Ã '=>'a','Ã¡'=>'a','Ã¢'=>'a','Ã£'=>'a','Ã¤'=>'a','Ã¥'=>'a','Ã¦'=>'ae','Ã§'=>'c','Ã¨'=>'e','Ã©'=>'e','Ãª'=>'e','Ã«'=>'e','Ã¬'=>'i','Ã­'=>'i','Ã®'=>'i','Ã¯'=>'i','Ã±'=>'n','Ã²'=>'o','Ã³'=>'o','Ã´'=>'o','Ãµ'=>'o','Ã¶'=>'o','Ã¹'=>'u','Ãº'=>'u','Ã»'=>'u','Ã¼'=>'u','Ã½'=>'y','Ã¿'=>'y','Å“'=>'oe'];
+            $accents = ['?'=>'a','?'=>'a','?'=>'a','?'=>'a','?'=>'a','?'=>'a','?'=>'ae','?'=>'c','?'=>'e','?'=>'e','?'=>'e','?'=>'e','?'=>'i','?'=>'i','?'=>'i','?'=>'i','?'=>'n','?'=>'o','?'=>'o','?'=>'o','?'=>'o','?'=>'o','?'=>'u','?'=>'u','?'=>'u','?'=>'u','?'=>'y','?'=>'y','?'=>'oe'];
             return strtr($s, $accents);
         };
         $nameToCode = [];
@@ -2161,7 +2161,7 @@ class VoyageController extends Controller
     }
 
     /**
-     * Construire la liste fusionnÃƒÂ©e Pays Ã¢â€ â€™ Villes (catalogue + WP) pour lÃ¢â‚¬â„¢UI.
+     * Construire la liste fusionn?e Pays ?â€ ? Villes (catalogue + WP) pour l?â‚¬â„¢UI.
      * Chaque ville a : id (WP ou null), title, needsCreate (true si pas encore en WP).
      *
      * @param array $worldCountries [ code => nom ]
@@ -2173,7 +2173,7 @@ class VoyageController extends Controller
     {
         $normalize = function (string $s): string {
             $s = mb_strtolower($s, 'UTF-8');
-            $accents = ['Ã '=>'a','Ã¡'=>'a','Ã¢'=>'a','Ã£'=>'a','Ã¤'=>'a','Ã¥'=>'a','Ã¦'=>'ae','Ã§'=>'c','Ã¨'=>'e','Ã©'=>'e','Ãª'=>'e','Ã«'=>'e','Ã¬'=>'i','Ã­'=>'i','Ã®'=>'i','Ã¯'=>'i','Ã±'=>'n','Ã²'=>'o','Ã³'=>'o','Ã´'=>'o','Ãµ'=>'o','Ã¶'=>'o','Ã¹'=>'u','Ãº'=>'u','Ã»'=>'u','Ã¼'=>'u','Ã½'=>'y','Ã¿'=>'y','Å“'=>'oe'];
+            $accents = ['?'=>'a','?'=>'a','?'=>'a','?'=>'a','?'=>'a','?'=>'a','?'=>'ae','?'=>'c','?'=>'e','?'=>'e','?'=>'e','?'=>'e','?'=>'i','?'=>'i','?'=>'i','?'=>'i','?'=>'n','?'=>'o','?'=>'o','?'=>'o','?'=>'o','?'=>'o','?'=>'u','?'=>'u','?'=>'u','?'=>'u','?'=>'y','?'=>'y','?'=>'oe'];
             return strtr($s, $accents);
         };
         
@@ -2190,7 +2190,7 @@ class VoyageController extends Controller
             $list = [];
             $seenNorm = [];
 
-            // DÃ¢â‚¬â„¢abord les villes du catalogue world_cities
+            // D?â‚¬â„¢abord les villes du catalogue world_cities
             foreach ($worldCities[$code] ?? [] as $title) {
                 $norm = $normalize($title);
                 $seenNorm[$norm] = true;
@@ -2459,7 +2459,7 @@ class VoyageController extends Controller
     }
 
     /**
-     * @see TourPlacesCalculator Logique unique partagÃƒÂ©e avec le formulaire (JS).
+     * @see TourPlacesCalculator Logique unique partag?e avec le formulaire (JS).
      */
     private function computeTourTotalPlacesFromRooms(int $tourId): int
     {
@@ -2480,7 +2480,7 @@ class VoyageController extends Controller
     {
         $transfers = [];
         
-        // Nouveau format unifiÃƒÂ© : tour_transfers[]
+        // Nouveau format unifi? : tour_transfers[]
         if ($request->has('tour_transfers') && is_array($request->input('tour_transfers'))) {
             foreach ($request->input('tour_transfers') as $transfer) {
                 if (is_array($transfer) && (isset($transfer['from_label']) || isset($transfer['to_label']) || isset($transfer['pickup_time']))) {
@@ -2489,7 +2489,7 @@ class VoyageController extends Controller
             }
         }
         
-        // Ancien format : tour_transfer_arrivals[] et tour_transfer_departures[] (compatibilitÃƒÂ©)
+        // Ancien format : tour_transfer_arrivals[] et tour_transfer_departures[] (compatibilit?)
         $arrivals = [];
         if ($request->has('tour_transfer_arrivals') && is_array($request->input('tour_transfer_arrivals'))) {
             foreach ($request->input('tour_transfer_arrivals') as $arr) {
@@ -2518,17 +2518,17 @@ class VoyageController extends Controller
             }
         }
         
-        // Si nouveau format utilisÃƒÂ©, ignorer l'ancien format
+        // Si nouveau format utilis?, ignorer l'ancien format
         if (!empty($transfers)) {
             TourTransfer::where('tour_id', $tourId)->delete();
             $sortOrder = 0;
             foreach ($transfers as $transfer) {
                 $dayNumber = isset($transfer['day_number']) && $transfer['day_number'] !== '' ? max(1, (int) $transfer['day_number']) : 1;
-                // Par dÃƒÂ©faut, on utilise 'arrival' comme direction (peut ÃƒÂªtre changÃƒÂ© plus tard si nÃƒÂ©cessaire)
-                // Pour l'instant, on garde la compatibilitÃƒÂ© avec le modÃƒÂ¨le qui nÃƒÂ©cessite une direction
+                // Par d?faut, on utilise 'arrival' comme direction (peut ?tre chang? plus tard si n?cessaire)
+                // Pour l'instant, on garde la compatibilit? avec le mod?le qui n?cessite une direction
                 TourTransfer::create([
                     'tour_id' => $tourId,
-                    'direction' => TourTransfer::DIRECTION_ARRIVAL, // Par dÃƒÂ©faut, peut ÃƒÂªtre adaptÃƒÂ© selon besoin
+                    'direction' => TourTransfer::DIRECTION_ARRIVAL, // Par d?faut, peut ?tre adapt? selon besoin
                     'day_number' => $dayNumber,
                     'sort_order' => $sortOrder++,
                     'is_optional' => !empty($transfer['is_optional']) ? 1 : 0,
@@ -2647,7 +2647,7 @@ class VoyageController extends Controller
     }
 
     /**
-     * Extras rÃƒÂ©servation (workspace) : une ligne par option, liÃƒÂ©e au voyage Laravel.
+     * Extras r?servation (workspace) : une ligne par option, li?e au voyage Laravel.
      */
     private function syncVoyageExtras(Voyage $voyage, Request $request): void
     {
@@ -2736,7 +2736,7 @@ class VoyageController extends Controller
         $existingDates = TravelDate::where('travel_id', $tourId)->orderBy('date')->orderBy('id')->get();
         $existingById = $existingDates->keyBy('id');
         $existingByDate = $existingDates->keyBy(fn (TravelDate $travelDate) => optional($travelDate->date)->format('Y-m-d'));
-        /** @var array<string, TravelDate> MÃªme requÃªte : Ã©vite plusieurs lignes aj_travel_dates pour la mÃªme date (clÃ© unique travel_id+date). */
+        /** @var array<string, TravelDate> M?me requ?te : ?vite plusieurs lignes aj_travel_dates pour la m?me date (cl? unique travel_id+date). */
         $resolvedByDate = [];
         foreach ($existingByDate as $ymd => $td) {
             $resolvedByDate[$ymd] = $td;
@@ -2920,8 +2920,8 @@ class VoyageController extends Controller
     }
 
     /**
-     * CompatibilitÃ© : 1 date WP (aj_travel_dates) = 1 dÃ©part Laravel (departures).
-     * Stocke wp_travel_date_id pour faire le lien avec les rÃ©servations existantes (travel_date_id).
+     * Compatibilit? : 1 date WP (aj_travel_dates) = 1 d?part Laravel (departures).
+     * Stocke wp_travel_date_id pour faire le lien avec les r?servations existantes (travel_date_id).
      */
     private function syncDepartureRoomAllocations(Voyage $voyage, Request $request, Collection $travelDates, array $hotelIdsOrdered = []): void
     {
@@ -3305,7 +3305,7 @@ class VoyageController extends Controller
     {
         $validated = $request->validated();
 
-        // Option "Utiliser l'image principale comme image ÃƒÂ  la une WP"
+        // Option "Utiliser l'image principale comme image ? la une WP"
         if (!empty($validated['hero_use_as_thumbnail']) && !empty($validated['hero_image_id'])) {
             $validated['thumbnail_id'] = $validated['hero_image_id'];
         }
@@ -3318,7 +3318,7 @@ class VoyageController extends Controller
         try {
             $this->repository->updateTour($id, $validated);
 
-            // Programme par jours uniquement (aj_tour_days + aj_tour_day_activities). Plus d'ÃƒÂ©dition tours_program.
+            // Programme par jours uniquement (aj_tour_days + aj_tour_day_activities). Plus d'?dition tours_program.
             if ($request->has('programme_days')) {
                 try {
                     $voyage = Voyage::firstOrCreate(
@@ -3374,7 +3374,7 @@ class VoyageController extends Controller
                 // keep 1
             }
             
-            // Log TOUTES les clÃƒÂ©s de la requÃƒÂªte pour diagnostic
+            // Log TOUTES les cl?s de la requ?te pour diagnostic
             \Log::info('VoyageController@update - Request keys received', [
                 'tour_id' => $id,
                 'has_flight_options' => $request->has('flight_options'),
@@ -3383,7 +3383,7 @@ class VoyageController extends Controller
                 'flight_options_count' => $request->has('flight_options') ? count($request->input('flight_options', [])) : 0,
             ]);
 
-            // Diagnostic chambres: vÃƒÂ©rifier si le payload contient bien tour_hotels[*].rooms
+            // Diagnostic chambres: v?rifier si le payload contient bien tour_hotels[*].rooms
             try {
                 $tourHotels = $request->input('tour_hotels', []);
                 $tourHotels = is_array($tourHotels) ? $tourHotels : [];
@@ -3451,15 +3451,15 @@ class VoyageController extends Controller
                 }
             }
 
-            // HÃƒÂ´tels puis chambres (IDs nouveaux aprÃƒÂ¨s delete/create) Ã¢â‚¬â€ un seul sync hÃƒÂ´tels
+            // H?tels puis chambres (IDs nouveaux apr?s delete/create) ?â‚¬? un seul sync h?tels
             $hotelIdsOrdered = $this->syncTourHotels($id, $request);
             $this->syncTourTransfers($id, $request, $lastDayNumber);
 
             // Synchroniser les lieux de d?part et les dates disponibles
             $this->syncDeparturePlaces($id, $request);
             $this->syncTravelDates($id, $request);
-            // VÃ©ritÃ© terrain aprÃ¨s Ã©criture WP : la collection retournÃ©e par syncTravelDates peut Ãªtre vide
-            // si le POST ne repasse pas travel_dates (ex. soumission partielle), alors que aj_travel_dates contient dÃ©jÃ  des lignes.
+            // V?rit? terrain apr?s ?criture WP : la collection retourn?e par syncTravelDates peut ?tre vide
+            // si le POST ne repasse pas travel_dates (ex. soumission partielle), alors que aj_travel_dates contient d?j? des lignes.
             $travelDates = TravelDate::getDatesForTour($id);
 
             \Log::info('AVAILABILITY_SYNC_CHECK', [
@@ -3500,7 +3500,7 @@ class VoyageController extends Controller
 
             $this->syncVoyageExtras($laravelVoyage, $request);
             $this->syncVoyageLogisticsMeta($laravelVoyage, $request);
-            // Toujours synchroniser les vols Laravel Ã¢â€ â€™ WP aprÃƒÂ¨s chaque enregistrement (pour que le plugin affiche les vols)
+            // Toujours synchroniser les vols Laravel ?â€ ? WP apr?s chaque enregistrement (pour que le plugin affiche les vols)
             if ($laravelVoyage && $laravelVoyage->wp_post_id) {
                 try {
                     $this->voyageFlightOptionService->syncOptionsToWp(
@@ -3518,11 +3518,11 @@ class VoyageController extends Controller
 
             return redirect()
                 ->route('admin.circuits.voyages.edit', $id)
-                ->with('success', 'Tour mis Ã  jour avec succÃ¨s dans WordPress ! Modifications visibles immÃ©diatement.');
+                ->with('success', 'Tour mis ? jour avec succ?s dans WordPress ! Modifications visibles imm?diatement.');
         } catch (\Exception $e) {
             return back()
                 ->withInput()
-                ->withErrors(['error' => 'Erreur lors de la mise Ã  jour : ' . $e->getMessage()]);
+                ->withErrors(['error' => 'Erreur lors de la mise ? jour : ' . $e->getMessage()]);
         }
     }
 
@@ -3587,8 +3587,8 @@ class VoyageController extends Controller
     }
 
     /**
-     * Charge les thÃ¨mes Laravel pour l'onglet taxonomies.
-     * Si la table est vide, initialise une seule fois les thÃ¨mes par dÃ©faut.
+     * Charge les th?mes Laravel pour l'onglet taxonomies.
+     * Si la table est vide, initialise une seule fois les th?mes par d?faut.
      */
     protected function loadVoyageThemesForEdit(): Collection
     {
@@ -3735,7 +3735,7 @@ class VoyageController extends Controller
                 }
             }
 
-            // Sync hotel & transfers for this day (TravelProgramDay, rÃƒÂ©solu depuis TourDay)
+            // Sync hotel & transfers for this day (TravelProgramDay, r?solu depuis TourDay)
             $this->syncDayHotelsAndTransfers($tourId, $dayId, is_array($dayRow) ? $dayRow : []);
         }
 
@@ -3761,7 +3761,7 @@ class VoyageController extends Controller
     }
 
     /**
-     * Sync inline "ActivitÃƒÂ©s" tab rows for a voyage (save-global strategy).
+     * Sync inline "Activit?s" tab rows for a voyage (save-global strategy).
      * Stores rows in travel_day_items with type=activity and source=voyage_activities_tab.
      */
     protected function syncActivities(Voyage $voyage, array $payload): void
@@ -4234,9 +4234,9 @@ class VoyageController extends Controller
     /**
      * Sync hotel and transfers for a specific day.
      * - $tourId: WP tour id (wp_posts.ID)
-     * - $dayId: TourDay.id (aj_tour_days) envoyÃƒÂ© par le formulaire
+     * - $dayId: TourDay.id (aj_tour_days) envoy? par le formulaire
      * - $dayRow: current programme_days[$i] request array
-     * On rÃƒÂ©sout TourDay -> day_number puis TravelProgramDay par voyage_id + day_number.
+     * On r?sout TourDay -> day_number puis TravelProgramDay par voyage_id + day_number.
      */
     protected function syncDayHotelsAndTransfers(int $tourId, int $dayId, array $dayRow): void
     {
@@ -4263,7 +4263,7 @@ class VoyageController extends Controller
                 $day->update(['hotel_id' => null]);
             }
         } else {
-            // Chercher un hÃƒÂ´tel oÃƒÂ¹ le jour est dans la plage check-in -> check-out
+            // Chercher un h?tel o? le jour est dans la plage check-in -> check-out
             $dayNumber = (int) $tourDay->day_number;
             $hotelForDay = TourHotel::where('tour_id', $tourId)
                 ->where(function($query) use ($dayNumber) {
@@ -4274,7 +4274,7 @@ class VoyageController extends Controller
                           ->where('check_in_day', '<=', $dayNumber)
                           ->where('check_out_day', '>=', $dayNumber);
                     })
-                    // CompatibilitÃƒÂ© ancien format : day_number
+                    // Compatibilit? ancien format : day_number
                     ->orWhere(function($q) use ($dayNumber) {
                         $q->whereNull('check_in_day')
                           ->whereNull('check_out_day')
@@ -4303,7 +4303,7 @@ class VoyageController extends Controller
 
         // Valider que chaque transfert existe, puis syncer
         // Utiliser directement DB::connection('mysql') pour forcer la bonne connexion pour la table pivot
-        // car la relation belongsToMany utilise la connexion du modÃƒÂ¨le liÃƒÂ© (TourTransfer sur 'wp')
+        // car la relation belongsToMany utilise la connexion du mod?le li? (TourTransfer sur 'wp')
         if (!empty($transferIds)) {
             $validIds = TourTransfer::whereIn('id', $transferIds)->pluck('id')->toArray();
             
@@ -4316,7 +4316,7 @@ class VoyageController extends Controller
                 ->where('program_day_id', $programDayId)
                 ->delete();
             
-            // InsÃƒÂ©rer les nouvelles associations
+            // Ins?rer les nouvelles associations
             if (!empty($validIds)) {
                 $insertData = array_map(function($transferId) use ($programDayId) {
                     return [
@@ -4471,7 +4471,7 @@ class VoyageController extends Controller
                         'custom_title' => (string) ($activityRow['custom_title'] ?? ''),
                         'custom_description' => (string) ($activityRow['custom_description'] ?? ''),
                         'activity' => (object) [
-                            'title' => $catalogActivity->title ?? ('ActivitÃ© #' . $activityId),
+                            'title' => $catalogActivity->title ?? ('Activit? #' . $activityId),
                         ],
                     ];
                 });
@@ -4550,7 +4550,7 @@ class VoyageController extends Controller
             $this->programService->addDay($id);
             return redirect()
                 ->route('admin.circuits.voyages.edit', $id)
-                ->with('success', 'Jour ajoutÃ©.')
+                ->with('success', 'Jour ajout?.')
                 ->withFragment('program-days');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Impossible d\'ajouter le jour : ' . $e->getMessage()]);
@@ -4571,7 +4571,7 @@ class VoyageController extends Controller
             $this->repository->updateTour($id, ['duration_day' => $this->programService->countDays($id)]);
             return redirect()
                 ->route('admin.circuits.voyages.edit', $id)
-                ->with('success', 'Jour supprimÃ©.')
+                ->with('success', 'Jour supprim?.')
                 ->withFragment('program-days');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Impossible de supprimer le jour : ' . $e->getMessage()]);
@@ -4588,7 +4588,7 @@ class VoyageController extends Controller
 
             return redirect()
                 ->route('admin.circuits.voyages.index')
-                ->with('success', 'Tour supprimÃ© avec succÃ¨s de WordPress !');
+                ->with('success', 'Tour supprim? avec succ?s de WordPress !');
         } catch (\Exception $e) {
             return back()
                 ->withErrors(['error' => 'Erreur lors de la suppression : ' . $e->getMessage()]);

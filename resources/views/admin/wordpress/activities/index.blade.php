@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 @section('title', 'WordPress - Activités')
 @section('content')
     <div class="row">
@@ -67,23 +67,23 @@
                                     @if($thumb)
                                         <img src="{{ $thumb }}" alt="" class="rounded" style="width:50px;height:50px;object-fit:cover;">
                                     @else
-                                        <span class="text-muted">�?"</span>
+                                        <span class="text-muted">?</span>
                                     @endif
                                 </td>
                                 <td>
                                     <div class="fw-semibold">{{ $activity->post_title }}</div>
                                     <div class="text-muted small">{{ $activity->post_name }}</div>
                                 </td>
-                                <td>{{ $detail->address ?? ($activity->getMeta('aj_activity_place_text') ?: '�?"') }}</td>
-                                <td>{{ $detail->type_activity ?: ($activity->getMeta('aj_activity_category') ?: '�?"') }}</td>
+                                <td>{{ $detail->address ?? ($activity->getMeta('aj_activity_place_text') ?: '?') }}</td>
+                                <td>{{ $detail->type_activity ?: ($activity->getMeta('aj_activity_category') ?: '?') }}</td>
                                 <td>
                                     @if($detail && ($detail->adult_price || $detail->min_price))
                                         {{ number_format((float) ($detail->adult_price ?: $detail->min_price), 0, ',', ' ') }} MAD
                                     @else
-                                        �?"
+                                        ?
                                     @endif
                                 </td>
-                                <td>{{ $detail->duration ?? '�?"' }}</td>
+                                <td>{{ $detail->duration ?? '?' }}</td>
                                 <td>
                                     <span class="badge bg-{{ $activity->post_status === 'publish' ? 'success' : 'secondary' }}">
                                         {{ $activity->post_status === 'publish' ? 'Publié' : 'Brouillon' }}

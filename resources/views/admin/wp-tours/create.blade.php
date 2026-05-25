@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @section('title', 'Créer un tour WordPress')
 @section('page_title', 'Créer un tour WordPress')

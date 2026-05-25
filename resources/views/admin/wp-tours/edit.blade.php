@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @section('title', 'ÉÉditer tour WordPress')
 @section('page_title', 'ÉÉditer tour WordPress')
@@ -13,7 +13,7 @@
     <div class="col-lg-12">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h4 class="card-title mb-0">�?Éditer Tour #{{ $tour['id'] }}</h4>
+                <h4 class="card-title mb-0">?Éditer Tour #{{ $tour['id'] }}</h4>
                 <a href="https://ajinsafro.net/tours/{{ $tour['slug'] }}" target="_blank" class="btn btn-sm btn-info">
                     <i class="mdi mdi-eye me-1"></i> Voir sur WordPress
                 </a>

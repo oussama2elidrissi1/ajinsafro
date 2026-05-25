@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @section('title', 'Group Deals')
 
@@ -82,7 +82,7 @@
                                 <td>
                                     <div style="font-weight:700;color:#253754;font-size:13px;">{{ optional($deal->start_date)->format('d/m/Y') ?: 'N/A' }}</div>
                                     @if($deal->end_date)
-                                        <div style="font-size:12px;font-weight:600;color:#7a879a;">�?' {{ $deal->end_date->format('d/m/Y') }}</div>
+                                        <div style="font-size:12px;font-weight:600;color:#7a879a;">?' {{ $deal->end_date->format('d/m/Y') }}</div>
                                     @endif
                                 </td>
                                 <td>

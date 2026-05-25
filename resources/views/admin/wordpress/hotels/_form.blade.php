@@ -1,4 +1,4 @@
-﻿@props(['hotel' => null, 'stHotel' => null, 'meta' => [], 'galleryUrls' => [], 'featuredUrl' => null])
+@props(['hotel' => null, 'stHotel' => null, 'meta' => [], 'galleryUrls' => [], 'featuredUrl' => null])
 
 @php
     $isEdit = $hotel !== null;
@@ -114,9 +114,9 @@
 
 <div class="row">
     <div class="col-md-6 mb-3">
-        <label for="hotel_star" class="form-label">�?toiles (1�?"5)</label>
+        <label for="hotel_star" class="form-label">?toiles (1?5)</label>
         <select class="form-select @error('hotel_star') is-invalid @enderror" id="hotel_star" name="hotel_star">
-            <option value="">�?"</option>
+            <option value="">?</option>
             @for ($i = 1; $i <= 5; $i++)
                 <option value="{{ $i }}" {{ (string)$i === (string)$hotelStar ? 'selected' : '' }}>{{ $i }} étoile(s)</option>
             @endfor
@@ -155,7 +155,7 @@
     <div class="form-check form-switch">
         <input type="hidden" name="is_featured" value="off">
         <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured" value="on" {{ $isFeatured === 'on' ? 'checked' : '' }}>
-        <label class="form-check-label" for="is_featured">�? la une</label>
+        <label class="form-check-label" for="is_featured">? la une</label>
     </div>
 </div>
 
@@ -163,7 +163,7 @@
 <h5 class="mb-3">Meta (postmeta)</h5>
 
 <div class="mb-3">
-    <label for="hotel_amenities" class="form-label">�?quipements (amenities)</label>
+    <label for="hotel_amenities" class="form-label">?quipements (amenities)</label>
     <textarea class="form-control @error('hotel_amenities') is-invalid @enderror" id="hotel_amenities" name="hotel_amenities" rows="3" placeholder="JSON ou texte libre">{{ $hotelAmenities }}</textarea>
     @error('hotel_amenities')
         <div class="invalid-feedback">{{ $message }}</div>

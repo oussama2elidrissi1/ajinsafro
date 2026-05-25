@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 @section('title', 'Modifier la règle de commission')
 
 @section('content')
@@ -31,7 +31,7 @@
                     <div class="col-md-6">
                         <label class="form-label">Partenaire (vide = règle globale)</label>
                         <select name="partner_id" class="form-select">
-                            <option value="">�?" Tous les partenaires</option>
+                            <option value="">? Tous les partenaires</option>
                             @foreach($partners as $p)
                                 <option value="{{ $p->id }}" {{ old('partner_id', $rule->partner_id) == $p->id ? 'selected' : '' }}>{{ $p->raison_sociale }}</option>
                             @endforeach
@@ -40,7 +40,7 @@
                     <div class="col-md-6">
                         <label class="form-label">Voyage (vide = tous les voyages)</label>
                         <select name="voyage_id" class="form-select">
-                            <option value="">�?" Tous les voyages</option>
+                            <option value="">? Tous les voyages</option>
                             @foreach($voyages as $v)
                                 <option value="{{ $v->id }}" {{ old('voyage_id', $rule->voyage_id) == $v->id ? 'selected' : '' }}>{{ $v->name }}</option>
                             @endforeach

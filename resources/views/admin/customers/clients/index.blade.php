@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 @section('title')
     {{ isset($trashed) && $trashed ? 'Clients supprimés' : 'Clients' }}
 @endsection
@@ -184,13 +184,13 @@
                                                 @endphp
                                                 <x-admin.badge :type="$typeColor" :label="$typeLabel" />
                                             </td>
-                                            <td>{{ $c->email ?? '�?"' }}</td>
-                                            <td>{{ $c->phone ?? '�?"' }}</td>
-                                            <td>{{ $c->whatsapp_number ?? '�?"' }}</td>
-                                            <td>{{ $c->nationality ?? '�?"' }}</td>
-                                            <td>{{ $c->city ?? '�?"' }}</td>
-                                            <td>{{ $c->traveler_category ?? '�?"' }}</td>
-                                            <td>{{ $c->budget_display ?? '�?"' }}</td>
+                                            <td>{{ $c->email ?? '?' }}</td>
+                                            <td>{{ $c->phone ?? '?' }}</td>
+                                            <td>{{ $c->whatsapp_number ?? '?' }}</td>
+                                            <td>{{ $c->nationality ?? '?' }}</td>
+                                            <td>{{ $c->city ?? '?' }}</td>
+                                            <td>{{ $c->traveler_category ?? '?' }}</td>
+                                            <td>{{ $c->budget_display ?? '?' }}</td>
                                             <td>
                                                 @php
                                                     $statusColor = match($c->status) {
@@ -203,8 +203,8 @@
                                                 @endphp
                                                 <x-admin.badge :type="$statusColor" :label="strtoupper($c->status)" />
                                             </td>
-                                            <td>{{ $c->assignedTo?->name ?? '�?"' }}</td>
-                                            <td>{{ $c->last_contacted_at?->format('d/m/Y') ?? '�?"' }}</td>
+                                            <td>{{ $c->assignedTo?->name ?? '?' }}</td>
+                                            <td>{{ $c->last_contacted_at?->format('d/m/Y') ?? '?' }}</td>
                                             <td>{{ $c->created_at->format('d/m/Y') }}</td>
                                             <td class="text-end">
                                                 @if (isset($trashed) && $trashed)

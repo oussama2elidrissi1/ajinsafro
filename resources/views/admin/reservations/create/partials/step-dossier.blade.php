@@ -1,4 +1,4 @@
-﻿<section class="reservation-create__panel" data-create-step="6" data-reservation-step="6" hidden>
+<section class="reservation-create__panel" data-create-step="6" data-reservation-step="6" hidden>
     <div class="reservation-create__card">
         <div class="reservation-create__section-head">
             <div>

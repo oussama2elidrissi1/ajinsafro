@@ -1,4 +1,4 @@
-﻿@php
+@php
     $lastDayNumber = isset($lastDayNumber) ? $lastDayNumber : (($programDays && $programDays->isNotEmpty()) ? $programDays->count() : max(1, (int) ($meta['duration_day'] ?? 1)));
     $hotelsList = $tourHotels->isEmpty() ? [null] : $tourHotels->all();
     $otherHotels = $otherTourHotelsForCopy ?? collect();
@@ -89,7 +89,7 @@
                 <div class="card-body tour-hotel-card-body">
                     <div class="row g-3">
 
-                        {{-- �"?�"? SECTION : Période du séjour �"?�"? --}}
+                        {{-- ?"??"? SECTION : Période du séjour ?"??"? --}}
                         <div class="col-12">
                             <p class="text-uppercase text-muted fw-semibold small mb-0" style="font-size:.7rem;letter-spacing:.05em;">Période du séjour</p>
                             <hr class="mt-1 mb-2">
@@ -111,7 +111,7 @@
                                     <option value="{{ $d }}" {{ $checkOutDay === $d ? 'selected' : '' }}>Jour {{ $d }}</option>
                                 @endfor
                             </select>
-                            <small class="text-danger d-none tour-hotel-checkout-error">Check-out �?� check-in requis.</small>
+                            <small class="text-danger d-none tour-hotel-checkout-error">Check-out ?? check-in requis.</small>
                         </div>
 
                         <div class="col-md-3 d-flex align-items-end">
@@ -128,7 +128,7 @@
                             </div>
                         </div>
 
-                        {{-- �"?�"? SECTION : Identification de l'hôtel �"?�"? --}}
+                        {{-- ?"??"? SECTION : Identification de l'hôtel ?"??"? --}}
                         <div class="col-12 mt-2">
                             <p class="text-uppercase text-muted fw-semibold small mb-0" style="font-size:.7rem;letter-spacing:.05em;">Identification de l'hôtel</p>
                             <hr class="mt-1 mb-2">
@@ -196,11 +196,11 @@
                         </div>
 
                         <div class="col-md-2">
-                            <label class="form-label small mb-1">�?toiles</label>
+                            <label class="form-label small mb-1">?toiles</label>
                             <input type="number" class="form-control form-control-sm tour-hotel-stars-input tour-hotel-identity-field"
                                 name="tour_hotels[{{ $hi }}][stars]"
                                 value="{{ old("tour_hotels.{$hi}.stars", optional($h)->stars ?? '') }}"
-                                min="0" max="5" placeholder="0�?"5">
+                                min="0" max="5" placeholder="0?5">
                         </div>
 
                         <div class="col-md-4">
@@ -506,8 +506,8 @@
         if (stars !== null && !isNaN(stars) && stars > 0) {
             var filled = Math.min(5, stars);
             starsHtml = '<div style="color:#f59e0b;font-size:.9rem;letter-spacing:.05em;margin-bottom:6px;">';
-            for (var s = 0; s < filled; s++) starsHtml += '�~.';
-            for (var s = filled; s < 5; s++) starsHtml += '<span style="opacity:.2">�~.</span>';
+            for (var s = 0; s < filled; s++) starsHtml += '?~.';
+            for (var s = filled; s < 5; s++) starsHtml += '<span style="opacity:.2">?~.</span>';
             starsHtml += '</div>';
         }
 
@@ -570,7 +570,7 @@
             cardsHtml += buildHotelCard(hotel);
         });
 
-        // Wrap ALL cards in a single grid container (inline style �?" not dependent on ancestor class)
+        // Wrap ALL cards in a single grid container (inline style ? not dependent on ancestor class)
         var gridHtml = '<div style="'
             + 'display:grid;'
             + 'grid-template-columns:repeat(auto-fill,minmax(260px,1fr));'
@@ -584,7 +584,7 @@
         pickerResultsEl.innerHTML = gridHtml;
 
         // Debug (remove after confirmation)
-        console.log('[HotelPicker] grid rendered �?" cards:', limited.length, '�?" first child tag:', pickerResultsEl.firstElementChild && pickerResultsEl.firstElementChild.tagName);
+        console.log('[HotelPicker] grid rendered ? cards:', limited.length, '? first child tag:', pickerResultsEl.firstElementChild && pickerResultsEl.firstElementChild.tagName);
     }
 
     function openHotelPickerForRow(row) {

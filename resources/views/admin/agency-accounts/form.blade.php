@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @section('title', $isEdit ? 'Editer le compte point de vente' : 'Creer un compte point de vente')
 
@@ -53,7 +53,7 @@
                             <select name="employee_id" class="aj-select">
                                 <option value="">Aucun employe</option>
                                 @foreach($employees as $employeeOption)
-                                    <option value="{{ $employeeOption->id }}" @selected((int) old('employee_id', $employee?->id) === $employeeOption->id)>{{ $employeeOption->full_name }} @if($employeeOption->branch) �?" {{ $employeeOption->branch->display_name }} @endif</option>
+                                    <option value="{{ $employeeOption->id }}" @selected((int) old('employee_id', $employee?->id) === $employeeOption->id)>{{ $employeeOption->full_name }} @if($employeeOption->branch) ? {{ $employeeOption->branch->display_name }} @endif</option>
                                 @endforeach
                             </select>
                         </div>
@@ -62,7 +62,7 @@
                             <select name="existing_user_id" class="aj-select">
                                 <option value="">Créer un nouveau compte</option>
                                 @foreach($users as $user)
-                                    <option value="{{ $user->id }}" @selected((int) old('existing_user_id') === $user->id || $account->id === $user->id)>{{ $user->name }} �?" {{ $user->email }}</option>
+                                    <option value="{{ $user->id }}" @selected((int) old('existing_user_id') === $user->id || $account->id === $user->id)>{{ $user->name }} ? {{ $user->email }}</option>
                                 @endforeach
                             </select>
                         </div>

@@ -1,4 +1,4 @@
-﻿@php
+@php
     $hotelsRoomsUrl = $hotelsRoomsUrl ?? route('admin.reservations.hotels-rooms');
     $voyageDeparturesUrl = $voyageDeparturesUrl ?? route('admin.reservations.voyage-departures');
     $departureHotelsRoomsUrl = $departureHotelsRoomsUrl ?? route('admin.reservations.departure-hotels-rooms');
@@ -453,13 +453,13 @@
 
     function departureUnitPrice(option) {
         if (!option) return 0;
-        // Le prix unitaire officiel vient de la fiche produit (data-unit-price renvoyÃ© par l'API corrigÃ©e)
+        // Le prix unitaire officiel vient de la fiche produit (data-unit-price renvoy? par l'API corrig?e)
         var explicitUnitPrice = parseNumber(option.getAttribute('data-unit-price'));
         if (explicitUnitPrice > 0) {
             return explicitUnitPrice;
         }
 
-        // Fallback sur le prix du voyage sÃ©lectionnÃ© (data-price-from)
+        // Fallback sur le prix du voyage s?lectionn? (data-price-from)
         var tripOption = getSelectedTripOption();
         return parseNumber(tripOption && tripOption.getAttribute('data-price-from'));
     }

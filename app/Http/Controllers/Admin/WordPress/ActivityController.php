@@ -76,7 +76,7 @@ class ActivityController extends Controller
 
         return redirect()
             ->route('admin.wordpress.activities.index')
-            ->with('success', 'ActivitÃ© crÃ©Ã©e avec succÃ¨s.');
+            ->with('success', 'Activit? cr??e avec succ?s.');
     }
 
     public function edit(int $activity): View
@@ -118,7 +118,7 @@ class ActivityController extends Controller
 
         return redirect()
             ->route('admin.wordpress.activities.index')
-            ->with('success', 'ActivitÃ© mise Ã  jour.');
+            ->with('success', 'Activit? mise ? jour.');
     }
 
     public function destroy(int $activity): RedirectResponse
@@ -127,6 +127,6 @@ class ActivityController extends Controller
 
         return redirect()
             ->route('admin.wordpress.activities.index')
-            ->with('success', 'ActivitÃ© dÃ©placÃ©e dans la corbeille.');
+            ->with('success', 'Activit? d?plac?e dans la corbeille.');
     }
 }

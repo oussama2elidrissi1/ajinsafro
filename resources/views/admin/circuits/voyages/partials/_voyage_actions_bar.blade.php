@@ -1,8 +1,8 @@
-﻿<div class="ve-form-toolbar ve-pane-card">
+<div class="ve-form-toolbar ve-pane-card">
     <div class="ve-form-actions-body">
         <div class="ve-form-toolbar__copy">
             <p class="ve-form-toolbar__eyebrow mb-0">Sauvegarde rapide</p>
-            <h5 class="mb-0">Enregistrer sans quitter l�?Tédition</h5>
+            <h5 class="mb-0">Enregistrer sans quitter l?Tédition</h5>
         </div>
 
         <div class="ve-form-actions-buttons">

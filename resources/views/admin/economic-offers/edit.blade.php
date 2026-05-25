@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @section('title', 'Modifier offre économique')
 
@@ -8,7 +8,7 @@
         subtitle="Mettez à jour le contenu, les départs et les tarifs de cette offre."
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Formule �?conomique', 'url' => route('admin.economic-offers.index')],
+            ['label' => 'Formule ?conomique', 'url' => route('admin.economic-offers.index')],
             ['label' => 'Modification'],
         ]"
     />

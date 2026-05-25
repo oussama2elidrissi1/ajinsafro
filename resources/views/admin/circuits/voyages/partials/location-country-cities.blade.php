@@ -1,4 +1,4 @@
-﻿{{-- Choix multiple de pays + catalogue villes (world_cities + WP). Recherche pays et villes, Tout sélectionner/désélectionner. --}}
+{{-- Choix multiple de pays + catalogue villes (world_cities + WP). Recherche pays et villes, Tout sélectionner/désélectionner. --}}
 @php
     $selectedIds = $selectedLocationIds ?? [];
     $worldCountries = $worldCountries ?? [];
@@ -147,7 +147,7 @@
             if (!label) return '';
 
             return String(label)
-                .replace(/�+/g, '')
+                .replace(/?+/g, '')
                 .replace(/Âº/g, '-')
                 .replace(/º/g, '-')
                 .replace(/[»«]/g, '')

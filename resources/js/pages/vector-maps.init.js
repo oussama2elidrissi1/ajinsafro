@@ -103,7 +103,7 @@ File: Vector maps
 				name : 'Singapore'
 			}, {
 				latLng : [0.33, 6.73],
-				name : 'SÃ£o TomÃ© and PrÃ­ncipe'
+				name : 'S?o Tom? and Pr?ncipe'
 			}]
     });
     

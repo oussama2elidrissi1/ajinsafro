@@ -1,4 +1,4 @@
-﻿{{-- Modal for Adding/Editing Travel Day Items --}}
+{{-- Modal for Adding/Editing Travel Day Items --}}
 <div class="modal fade" id="itemModal" tabindex="-1" aria-labelledby="itemModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">

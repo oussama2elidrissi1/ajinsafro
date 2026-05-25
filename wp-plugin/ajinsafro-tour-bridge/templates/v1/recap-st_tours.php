@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Tour recap step (V1).
  *

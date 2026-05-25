@@ -94,7 +94,7 @@ class TourHotelController extends Controller
     }
 
     /**
-     * DonnÃ©es JSON d'un hÃ´tel WordPress (post_type=st_hotel) pour prÃ©remplir un nouveau sÃ©jour.
+     * Donn?es JSON d'un h?tel WordPress (post_type=st_hotel) pour pr?remplir un nouveau s?jour.
      */
     public function wpHotelData(int $hotelId): JsonResponse
     {

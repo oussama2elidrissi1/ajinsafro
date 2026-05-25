@@ -1,4 +1,4 @@
-﻿@php
+@php
     $voyageActivityPricingTypes = \App\Services\BusinessReferentialService::voyageActivityPricingTypes();
     $activityDayOptions = collect($programDays ?? [])->map(function ($entry, $index) {
         $day = is_array($entry) ? ($entry['day'] ?? null) : ($entry->day ?? null);

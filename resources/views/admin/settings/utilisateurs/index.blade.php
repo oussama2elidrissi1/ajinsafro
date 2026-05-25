@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 @section('title')
     Utilisateurs
 @endsection
@@ -63,7 +63,7 @@
                                         <td>{{ $user->id }}</td>
                                         <td>{{ $user->name }}</td>
                                         <td>{{ $user->email }}</td>
-                                        <td>{{ $user->roles->first()->name ?? $user->base_role ?? '�?"' }}</td>
+                                        <td>{{ $user->roles->first()->name ?? $user->base_role ?? '?' }}</td>
                                         <td>
                                             @if($user->access_mode === 'custom')
                                                 <span class="badge bg-warning">Personnalisé</span>

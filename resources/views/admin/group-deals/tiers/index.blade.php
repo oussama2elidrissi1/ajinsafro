@@ -1,6 +1,6 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
-@section('title', 'Group Deals �?" Tarifs par palier')
+@section('title', 'Group Deals ? Tarifs par palier')
 
 @section('content')
 <div class="container-fluid">
@@ -44,13 +44,13 @@
                                 @elseif($tier->voyage)
                                     <span class="fw-semibold">{{ $tier->voyage->name }}</span>
                                 @else
-                                    <span class="text-muted">�?"</span>
+                                    <span class="text-muted">?</span>
                                 @endif
                             </td>
-                            <td>{{ $tier->label ?: '�?"' }}</td>
-                            <td>{{ $tier->min_participants ?? $tier->min_people ?? '�?"' }}</td>
-                            <td>{{ $tier->max_people ?: '�?"' }}</td>
-                            <td class="fw-semibold">{{ $tier->price_per_person ? number_format((float) $tier->price_per_person, 2, ',', ' ') . ' DH' : '�?"' }}</td>
+                            <td>{{ $tier->label ?: '?' }}</td>
+                            <td>{{ $tier->min_participants ?? $tier->min_people ?? '?' }}</td>
+                            <td>{{ $tier->max_people ?: '?' }}</td>
+                            <td class="fw-semibold">{{ $tier->price_per_person ? number_format((float) $tier->price_per_person, 2, ',', ' ') . ' DH' : '?' }}</td>
                             <td class="text-end">
                                 @if($tier->groupDeal)
                                     <a href="{{ route('admin.group-deals.show', $tier->groupDeal) }}" class="btn btn-sm btn-primary">Ouvrir</a>

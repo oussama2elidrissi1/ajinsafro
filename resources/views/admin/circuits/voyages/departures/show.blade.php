@@ -1,6 +1,6 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
-@section('title', 'Départ �?" '.$voyage->name)
+@section('title', 'Départ ? '.$voyage->name)
 
 @section('content')
 <div class="row mb-3">
@@ -9,7 +9,7 @@
             <div>
                 <h4 class="page-title mb-1 font-size-18">Gestion du départ</h4>
                 <p class="text-muted mb-0 small">
-                    <a href="{{ route('admin.circuits.voyages.edit', $voyage->wp_post_id ?? $voyage->id) }}">�?� Retour au voyage</a>
+                    <a href="{{ route('admin.circuits.voyages.edit', $voyage->wp_post_id ?? $voyage->id) }}">?? Retour au voyage</a>
                     @if($departure->wp_travel_date_id)
                         <span class="ms-2">· WP travel_date_id : {{ $departure->wp_travel_date_id }}</span>
                     @endif

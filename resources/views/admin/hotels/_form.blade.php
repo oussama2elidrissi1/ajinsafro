@@ -1,4 +1,4 @@
-﻿@php
+@php
     /** @var \App\Models\Hotel|null $hotel */
     $hotel = $hotel ?? null;
 @endphp
@@ -89,7 +89,7 @@
 
 <div class="card shadow-sm mb-3">
     <div class="card-header bg-light">
-        <h5 class="mb-0">�?quipements</h5>
+        <h5 class="mb-0">?quipements</h5>
     </div>
     <div class="card-body">
         <div class="row g-2">

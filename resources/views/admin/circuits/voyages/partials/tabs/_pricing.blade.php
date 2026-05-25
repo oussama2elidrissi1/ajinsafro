@@ -1,4 +1,4 @@
-﻿@php
+@php
     $paymentMethodOptions = $paymentMethodOptions ?? \App\Services\BusinessReferentialService::paymentMethods();
     $ref = $businessReferentials ?? \App\Services\BusinessReferentialService::allMerged();
     $discountScopes = $ref['discount_scopes'] ?? [];
@@ -106,7 +106,7 @@
                                     <input type="hidden" name="discount_rules[{{ $i }}][is_active]" value="0">
                                     <input type="checkbox" class="form-check-input" name="discount_rules[{{ $i }}][is_active]" value="1" @checked(old('discount_rules.'.$i.'.is_active', $rule->is_active ?? true))>
                                 </td>
-                                <td><button type="button" class="btn btn-sm btn-outline-danger ve-remove-discount-rule">�-</button></td>
+                                <td><button type="button" class="btn btn-sm btn-outline-danger ve-remove-discount-rule">?</button></td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -158,7 +158,7 @@
     <div class="card ve-pane-card mb-3">
         <div class="card-body">
             <p class="text-uppercase text-muted small fw-bold mb-2">Moyens de paiement</p>
-            <p class="text-muted small mb-3">Liste pilotée depuis <a href="{{ $paymentMethodsRefUrl }}">Référence métier �?' Moyens de paiement</a>.</p>
+            <p class="text-muted small mb-3">Liste pilotée depuis <a href="{{ $paymentMethodsRefUrl }}">Référence métier ?' Moyens de paiement</a>.</p>
             <div class="row g-2">
                 @foreach($paymentMethodOptions as $pm)
                     @php $mk = $pm['meta_key']; @endphp
@@ -196,7 +196,7 @@
             '<td><input type="number" class="form-control form-control-sm text-center" name="discount_rules['+idx+'][priority]" value="100"></td>' +
             '<td class="text-center"><input type="hidden" name="discount_rules['+idx+'][is_active]" value="0">' +
             '<input type="checkbox" class="form-check-input" name="discount_rules['+idx+'][is_active]" value="1" checked></td>' +
-            '<td><button type="button" class="btn btn-sm btn-outline-danger ve-remove-discount-rule">�-</button></td>';
+            '<td><button type="button" class="btn btn-sm btn-outline-danger ve-remove-discount-rule">?</button></td>';
         tbody.appendChild(tr);
         idx++;
     }

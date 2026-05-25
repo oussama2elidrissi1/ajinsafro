@@ -1,4 +1,4 @@
-﻿@php
+@php
     $sidebarContext = $sidebarContext ?? 'default';
     $sidebarUser = auth()->user();
     $sidebarInitials = 'AD';
@@ -129,7 +129,7 @@
             ),
             $makeLeaf(
                 'reservations_index_only_final',
-                'R�servations',
+                'R?servations',
                 'admin.reservation-dossiers.index',
                 'bx bx-calendar-check',
                 ['admin.reservation-dossiers.*', 'admin.reservations.index', 'admin.reservations.show', 'admin.reservations.edit', 'admin.reservations.update', 'admin.reservations.destroy'],
@@ -359,7 +359,7 @@
             ),
             $makeLeaf(
                 'reservations_index_only_flat',
-                'R�f©servations',
+                'R?servations',
                 'admin.reservations.index',
                 'bx bx-calendar-check',
                 [

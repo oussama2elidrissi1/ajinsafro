@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 @section('title', 'Revendeurs')
 
 @section('content')
@@ -80,7 +80,7 @@
                                         </td>
                                         <td>{{ $partner->nom_responsable }}</td>
                                         <td>{{ $partner->email }}</td>
-                                        <td>{{ $partner->telephone ?? '�?"' }}</td>
+                                        <td>{{ $partner->telephone ?? '?' }}</td>
                                         <td>{{ $partner->created_at?->format('d/m/Y H:i') }}</td>
                                         <td>
                                             @php

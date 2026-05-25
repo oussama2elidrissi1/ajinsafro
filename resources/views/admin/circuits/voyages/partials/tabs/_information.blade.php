@@ -1,4 +1,4 @@
-﻿<div class="tab-pane" id="information" role="tabpanel" data-ve-pane-title="D�tails">
+<div class="tab-pane" id="information" role="tabpanel" data-ve-pane-title="D?tails">
                 <div class="card ve-pane-card">
                     <div class="card-body">
                         <h4 class="card-title mb-2">Contenu du tour</h4>
@@ -34,6 +34,6 @@
                 </div>
             </div>
 
-            {{-- TAB: EXTRAS R�?SERVATION (Laravel) --}}
+            {{-- TAB: EXTRAS R?SERVATION (Laravel) --}}
 
 

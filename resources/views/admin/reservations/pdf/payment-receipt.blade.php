@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="fr">
 <head>
     <meta charset="utf-8">
@@ -21,30 +21,30 @@
     <table>
         <tr>
             <th width="40%">Client</th>
-            <td>{{ $reservation->client?->full_name ?: trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? '')) ?: '�?"' }}</td>
+            <td>{{ $reservation->client?->full_name ?: trim(($reservation->client_first_name ?? '').' '.($reservation->client_last_name ?? '')) ?: '?' }}</td>
         </tr>
         <tr>
             <th>Voyage</th>
-            <td>{{ $reservation->offer?->name ?? '�?"' }}</td>
+            <td>{{ $reservation->offer?->name ?? '?' }}</td>
         </tr>
         <tr>
             <th>Départ</th>
-            <td>{{ $reservation->departure?->start_date?->format('d/m/Y') ?? '�?"' }}</td>
+            <td>{{ $reservation->departure?->start_date?->format('d/m/Y') ?? '?' }}</td>
         </tr>
     </table>
 
     <table>
         <tr>
             <th>Date paiement</th>
-            <td>{{ $payment->payment_date?->format('d/m/Y') ?? '�?"' }}</td>
+            <td>{{ $payment->payment_date?->format('d/m/Y') ?? '?' }}</td>
         </tr>
         <tr>
             <th>Mode de paiement</th>
-            <td>{{ $payment->payment_method ?: '�?"' }}</td>
+            <td>{{ $payment->payment_method ?: '?' }}</td>
         </tr>
         <tr>
             <th>Référence</th>
-            <td>{{ $payment->reference ?: '�?"' }}</td>
+            <td>{{ $payment->reference ?: '?' }}</td>
         </tr>
         <tr>
             <th>Montant</th>
@@ -52,7 +52,7 @@
         </tr>
         <tr>
             <th>Note</th>
-            <td>{{ $payment->note ?: '�?"' }}</td>
+            <td>{{ $payment->note ?: '?' }}</td>
         </tr>
     </table>
 

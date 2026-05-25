@@ -1,4 +1,4 @@
-﻿@php
+@php
     $hasLaravel = ! empty($row['voyage_id']);
     $wpPostId = $row['wp_post_id'] ?? null;
     $q = $hasLaravel ? array_filter([

@@ -328,7 +328,7 @@
         document.getElementById('v2-summary-unit-price').textContent = priceEl ? priceEl.textContent : '—';
         document.getElementById('v2-summary-status').textContent = 'Disponible';
         document.getElementById('v2-sidebar-departure').textContent = dates ? dates.textContent : '—';
-        // Le prix unitaire officiel est stockÃ© dans data-unit-price (prix de base de la fiche produit)
+        // Le prix unitaire officiel est stock? dans data-unit-price (prix de base de la fiche produit)
         var unitPrice = parseFloat(card.getAttribute('data-unit-price') || '0') || 0;
         window.reservationState.pricing.unit_price = unitPrice;
         var basePriceHidden = document.getElementById('v2-base-price-hidden');

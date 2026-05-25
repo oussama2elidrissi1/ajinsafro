@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @section('title', 'Affectations')
 
@@ -56,7 +56,7 @@
                     @foreach($branches as $branch)
                         <optgroup label="{{ $branch->display_name }}">
                             @foreach(($agentsByBranch[$branch->id] ?? []) as $agent)
-                                <option value="{{ $agent['id'] }}" @selected((int)($filters['agent_id'] ?? 0) === (int) $agent['id'])>{{ $agent['name'] }} @if(!empty($agent['job_title'])) �?" {{ $agent['job_title'] }} @endif</option>
+                                <option value="{{ $agent['id'] }}" @selected((int)($filters['agent_id'] ?? 0) === (int) $agent['id'])>{{ $agent['name'] }} @if(!empty($agent['job_title'])) ? {{ $agent['job_title'] }} @endif</option>
                             @endforeach
                         </optgroup>
                     @endforeach
@@ -66,7 +66,7 @@
                     @foreach($branches as $branch)
                         <optgroup label="{{ $branch->display_name }}">
                             @foreach(($agentsByBranch[$branch->id] ?? []) as $agent)
-                                <option value="{{ $agent['id'] }}" @selected((int)($filters['sales_manager_id'] ?? 0) === (int) $agent['id'])>{{ $agent['name'] }} @if(!empty($agent['job_title'])) �?" {{ $agent['job_title'] }} @endif</option>
+                                <option value="{{ $agent['id'] }}" @selected((int)($filters['sales_manager_id'] ?? 0) === (int) $agent['id'])>{{ $agent['name'] }} @if(!empty($agent['job_title'])) ? {{ $agent['job_title'] }} @endif</option>
                             @endforeach
                         </optgroup>
                     @endforeach
@@ -181,14 +181,14 @@
                     <tr>
                         <td><input type="checkbox" name="reservation_ids[]" value="{{ $reservation->id }}" form="bulk-assign-form" class="reservation-checkbox"></td>
                         <td>#{{ $reservation->id }}</td>
-                        <td>{{ trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? '')) ?: ($reservation->client_email ?? '�?"') }}</td>
-                        <td>{{ $reservation->tour?->name ?? '�?"' }}</td>
-                        <td>{{ $reservation->branch?->display_name ?? '�?"' }}</td>
-                        <td>{{ $reservation->agent?->name ?? '�?"' }}</td>
-                        <td>{{ $reservation->salesManager?->name ?? '�?"' }}</td>
+                        <td>{{ trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? '')) ?: ($reservation->client_email ?? '?') }}</td>
+                        <td>{{ $reservation->tour?->name ?? '?' }}</td>
+                        <td>{{ $reservation->branch?->display_name ?? '?' }}</td>
+                        <td>{{ $reservation->agent?->name ?? '?' }}</td>
+                        <td>{{ $reservation->salesManager?->name ?? '?' }}</td>
                         <td><span class="aj-badge soft">{{ ucfirst((string) $reservation->status) }}</span></td>
                         <td><span class="aj-badge {{ in_array($reservation->assignment_priority, ['high','urgent'], true) ? 'off' : 'ok' }}">{{ ucfirst((string) ($reservation->assignment_priority ?? 'normal')) }}</span></td>
-                        <td>{{ $reservation->updated_at?->timezone('Africa/Casablanca')?->format('d/m/Y H:i') ?? '�?"' }}</td>
+                        <td>{{ $reservation->updated_at?->timezone('Africa/Casablanca')?->format('d/m/Y H:i') ?? '?' }}</td>
                         <td>
                             <button type="button" class="aj-btn assignment-open" data-bs-toggle="modal" data-bs-target="#assignmentModal"
                                 data-reservation-id="{{ $reservation->id }}"

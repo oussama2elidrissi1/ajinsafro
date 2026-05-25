@@ -1,14 +1,14 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
-@section('title', 'Demandes Formule �?conomique')
+@section('title', 'Demandes Formule ?conomique')
 
 @section('content')
     <x-admin.page-header
-        title="Demandes Formule �?conomique"
+        title="Demandes Formule ?conomique"
         subtitle="Suivez les demandes envoyées depuis la page publique."
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Formule �?conomique', 'url' => route('admin.economic-offers.index')],
+            ['label' => 'Formule ?conomique', 'url' => route('admin.economic-offers.index')],
             ['label' => 'Demandes'],
         ]"
     />
@@ -59,7 +59,7 @@
                                 <div class="text-muted small">{{ $requestItem->phone }} · {{ $requestItem->email }}</div>
                             </td>
                             <td>{{ $requestItem->offer_title ?: optional($requestItem->offer)->title ?: 'Non associée' }}</td>
-                            <td>{{ $requestItem->selected_departure_date?->format('d/m/Y') ?: '�?"' }}</td>
+                            <td>{{ $requestItem->selected_departure_date?->format('d/m/Y') ?: '?' }}</td>
                             <td>
                                 <x-admin.badge
                                     :type="match($requestItem->status){
@@ -71,7 +71,7 @@
                                     :label="$requestItem->status_label"
                                 />
                             </td>
-                            <td>{{ $requestItem->responsible_agent ?: '�?"' }}</td>
+                            <td>{{ $requestItem->responsible_agent ?: '?' }}</td>
                             <td class="text-end">
                                 <a href="{{ route('admin.economic-offers.requests.show', $requestItem) }}" class="aj-btn aj-btn-soft btn-sm">
                                     Voir le détail

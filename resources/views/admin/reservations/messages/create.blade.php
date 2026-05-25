@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin-v6')
+@extends('layouts.admin-v6')
 
 @section('title', 'Nouveau message')
 
@@ -30,7 +30,7 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Message <span class="text-danger">*</span></label>
-                            <textarea name="body" class="form-control" rows="8" required placeholder="Contenu du message�?�">{{ old('body') }}</textarea>
+                            <textarea name="body" class="form-control" rows="8" required placeholder="Contenu du message…">{{ old('body') }}</textarea>
                             @error('body')<span class="text-danger small">{{ $message }}</span>@enderror
                         </div>
                         <p class="text-muted small">Le message sera envoyé au nom de votre agence.</p>
@@ -44,5 +44,4 @@
         </div>
     </div>
 @endsection
-
 

@@ -1,5 +1,5 @@
-﻿@extends('layouts.admin-v6')
-@section('title', 'Hôtel du circuit �?" ' . $tour->post_title)
+@extends('layouts.admin-v6')
+@section('title', 'Hôtel du circuit ? ' . $tour->post_title)
 
 @section('content')
     <div class="row mb-3">
@@ -44,19 +44,19 @@
                     <div class="card-header bg-light d-flex align-items-center">
                         <h5 class="mb-0">Informations hôtel</h5>
                         @if($hotel->stars)
-                            <span class="badge bg-warning text-dark ms-auto">�~. {{ $hotel->stars }} étoiles</span>
+                            <span class="badge bg-warning text-dark ms-auto">?~. {{ $hotel->stars }} étoiles</span>
                         @endif
                     </div>
                     <div class="card-body">
                         <table class="table table-sm table-borderless mb-0">
                             <tbody>
                                 <tr><td class="text-nowrap pe-3 fw-medium text-muted" style="width:140px;">ID hôtel circuit</td><td><code>{{ $hotel->id }}</code></td></tr>
-                                <tr><td class="pe-3 fw-medium text-muted">Nom</td><td>{{ $hotel->hotel_name ?? '�?"' }}</td></tr>
-                                <tr><td class="pe-3 fw-medium text-muted">Adresse</td><td>{{ $hotel->address ?? '�?"' }}</td></tr>
-                                <tr><td class="pe-3 fw-medium text-muted">Type de chambre</td><td>{{ $hotel->room_type ?? '�?"' }}</td></tr>
-                                <tr><td class="pe-3 fw-medium text-muted">Formule repas</td><td>{{ $hotel->meal_plan ?? '�?"' }}</td></tr>
+                                <tr><td class="pe-3 fw-medium text-muted">Nom</td><td>{{ $hotel->hotel_name ?? '?' }}</td></tr>
+                                <tr><td class="pe-3 fw-medium text-muted">Adresse</td><td>{{ $hotel->address ?? '?' }}</td></tr>
+                                <tr><td class="pe-3 fw-medium text-muted">Type de chambre</td><td>{{ $hotel->room_type ?? '?' }}</td></tr>
+                                <tr><td class="pe-3 fw-medium text-muted">Formule repas</td><td>{{ $hotel->meal_plan ?? '?' }}</td></tr>
                                 @if($hotel->check_in_day !== null || $hotel->check_out_day !== null)
-                                    <tr><td class="pe-3 fw-medium text-muted">Jours</td><td>Check-in jour {{ $hotel->check_in_day ?? '�?"' }} / Check-out jour {{ $hotel->check_out_day ?? '�?"' }}</td></tr>
+                                    <tr><td class="pe-3 fw-medium text-muted">Jours</td><td>Check-in jour {{ $hotel->check_in_day ?? '?' }} / Check-out jour {{ $hotel->check_out_day ?? '?' }}</td></tr>
                                 @endif
                                 <tr><td class="pe-3 fw-medium text-muted">Optionnel</td><td>{{ $hotel->is_optional ? 'Oui' : 'Non' }}</td></tr>
                                 <tr><td class="pe-3 fw-medium text-muted">Ordre</td><td>{{ $hotel->sort_order ?? 0 }}</td></tr>
@@ -88,7 +88,7 @@
                         <ul class="list-unstyled mb-0 small">
                             <li><strong>Voyage</strong> : {{ \Str::limit($tour->post_title, 35) }}</li>
                             <li><strong>ID voyage</strong> : {{ $tour->ID }}</li>
-                            <li><strong>Hôtel</strong> : {{ $hotel->hotel_name ?: '�?"' }}</li>
+                            <li><strong>Hôtel</strong> : {{ $hotel->hotel_name ?: '?' }}</li>
                             <li><strong>Types de chambres</strong> : {{ $hotel->rooms->count() }}</li>
                         </ul>
                     </div>
@@ -125,13 +125,13 @@
                                     @foreach($hotel->rooms as $room)
                                         <tr>
                                             <td><strong>{{ $room->room_type }}</strong></td>
-                                            <td>{{ $room->room_label ?? '�?"' }}</td>
-                                            <td><code class="small">{{ $room->room_code ?? '�?"' }}</code></td>
+                                            <td>{{ $room->room_label ?? '?' }}</td>
+                                            <td><code class="small">{{ $room->room_code ?? '?' }}</code></td>
                                             <td>{{ $room->room_count }}</td>
                                             <td>{{ $room->capacity_adults }}A / {{ $room->capacity_children }}E ({{ $room->capacity_total }} total)</td>
-                                            <td>{{ $room->supplement ? number_format((float) $room->supplement, 0, ',', ' ') . ' DH' : '�?"' }}</td>
-                                            <td class="small text-muted" style="max-width:180px;">{{ $room->description ? \Str::limit($room->description, 50) : '�?"' }}</td>
-                                            <td>@if($room->is_default)<span class="badge bg-success">Oui</span>@else<span class="text-muted">�?"</span>@endif</td>
+                                            <td>{{ $room->supplement ? number_format((float) $room->supplement, 0, ',', ' ') . ' DH' : '?' }}</td>
+                                            <td class="small text-muted" style="max-width:180px;">{{ $room->description ? \Str::limit($room->description, 50) : '?' }}</td>
+                                            <td>@if($room->is_default)<span class="badge bg-success">Oui</span>@else<span class="text-muted">?</span>@endif</td>
                                             <td>@if($room->is_active)<span class="badge bg-success">Oui</span>@else<span class="badge bg-secondary">Non</span>@endif</td>
                                         </tr>
                                     @endforeach
@@ -140,7 +140,7 @@
                         </div>
                     </div>
                 </div>
-                <p class="small text-muted mt-2 mb-0">La gestion détaillée des chambres se fait dans l�?Tédition du voyage (onglet programme / hôtels).</p>
+                <p class="small text-muted mt-2 mb-0">La gestion détaillée des chambres se fait dans l?Tédition du voyage (onglet programme / hôtels).</p>
             </div>
         </div>
     @endif
