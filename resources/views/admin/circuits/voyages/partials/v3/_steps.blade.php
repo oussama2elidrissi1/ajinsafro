@@ -2,8 +2,7 @@
     <div class="v3-steps-card__head">
         <div class="v3-steps-card__title">
             <p class="v3-card-kicker">Workflow</p>
-            <h2 class="v3-card-title">Etapes du voyage</h2>
-            <p class="v3-card-subtitle">Validation par etape avec sauvegarde guidee.</p>
+            <h2 class="v3-card-title">Etapes</h2>
         </div>
         <button type="button" id="workflowToggleBtn" class="workflow-toggle-btn" aria-label="Ouvrir ou fermer le workflow">
             <i class="bx bx-menu"></i>
@@ -53,9 +52,9 @@
     </nav>
 
     <div class="v2-sb-footer v3-steps-card__footer">
-        <button type="button" class="v2-sb-save" data-v2-save title="{{ $isCreate ? 'Creer le voyage' : 'Enregistrer l etape courante' }}">
+        <button type="button" class="v2-sb-save" data-v2-save title="{{ $isCreate ? 'Creer le voyage' : 'Enregistrer' }}">
             <i class="bx bx-save"></i>
-            <span>{{ $isCreate ? 'Creer le voyage' : 'Enregistrer l etape courante' }}</span>
+            <span>{{ $isCreate ? 'Creer le voyage' : 'Enregistrer' }}</span>
         </button>
     </div>
 </aside>
