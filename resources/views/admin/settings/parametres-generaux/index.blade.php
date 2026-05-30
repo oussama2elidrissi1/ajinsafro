@@ -291,6 +291,74 @@
                 <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary waves-effect waves-light ms-2">Annuler</a>
             </div>
         </div>
+
+        {{-- Images par défaut (V2) --}}
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Images par dÃ©faut</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3 row">
+                            <label for="default_hotel_image" class="col-md-3 col-form-label">Image par dÃ©faut HÃ´tel</label>
+                            <div class="col-md-9">
+                                @if(!empty($settings['default_hotel_image_url']))
+                                    <div class="mb-2">
+                                        <img src="{{ $settings['default_hotel_image_url'] }}" alt="Image par dÃ©faut HÃ´tel" class="img-thumbnail" style="max-height: 120px;">
+                                        <div class="form-check mt-2">
+                                            <input class="form-check-input" type="checkbox" name="remove_default_hotel_image" id="remove_default_hotel_image" value="1">
+                                            <label class="form-check-label" for="remove_default_hotel_image">Supprimer l'image actuelle</label>
+                                        </div>
+                                    </div>
+                                @endif
+                                <input class="form-control" type="file" name="default_hotel_image" id="default_hotel_image" accept="image/jpeg,image/png,image/webp">
+                                <small class="text-muted">Stockage : storage/app/public/settings/default-images/hotel/</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3 row">
+                            <label for="default_transfer_image" class="col-md-3 col-form-label">Image par dÃ©faut Transfert</label>
+                            <div class="col-md-9">
+                                @if(!empty($settings['default_transfer_image_url']))
+                                    <div class="mb-2">
+                                        <img src="{{ $settings['default_transfer_image_url'] }}" alt="Image par dÃ©faut Transfert" class="img-thumbnail" style="max-height: 120px;">
+                                        <div class="form-check mt-2">
+                                            <input class="form-check-input" type="checkbox" name="remove_default_transfer_image" id="remove_default_transfer_image" value="1">
+                                            <label class="form-check-label" for="remove_default_transfer_image">Supprimer l'image actuelle</label>
+                                        </div>
+                                    </div>
+                                @endif
+                                <input class="form-control" type="file" name="default_transfer_image" id="default_transfer_image" accept="image/jpeg,image/png,image/webp">
+                                <small class="text-muted">Stockage : storage/app/public/settings/default-images/transfer/</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3 row">
+                            <label for="default_activity_image" class="col-md-3 col-form-label">Image par dÃ©faut ActivitÃ©</label>
+                            <div class="col-md-9">
+                                @if(!empty($settings['default_activity_image_url']))
+                                    <div class="mb-2">
+                                        <img src="{{ $settings['default_activity_image_url'] }}" alt="Image par dÃ©faut ActivitÃ©" class="img-thumbnail" style="max-height: 120px;">
+                                        <div class="form-check mt-2">
+                                            <input class="form-check-input" type="checkbox" name="remove_default_activity_image" id="remove_default_activity_image" value="1">
+                                            <label class="form-check-label" for="remove_default_activity_image">Supprimer l'image actuelle</label>
+                                        </div>
+                                    </div>
+                                @endif
+                                <input class="form-control" type="file" name="default_activity_image" id="default_activity_image" accept="image/jpeg,image/png,image/webp">
+                                <small class="text-muted">Stockage : storage/app/public/settings/default-images/activity/</small>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info py-2 mb-0">
+                            PrioritÃ© d'affichage : <strong>image personnalisÃ©e</strong> &gt; <strong>image par dÃ©faut</strong> &gt; <strong>placeholder</strong>.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </form>
 @endsection
 @push('scripts')
@@ -310,5 +378,4 @@
         })();
     </script>
 @endpush
-
 

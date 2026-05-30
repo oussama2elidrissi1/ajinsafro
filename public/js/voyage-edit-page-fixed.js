@@ -1232,8 +1232,15 @@ render();
                             var pathInpId = removeBtn.getAttribute('data-input-path');
                             var pathInp = pathInpId ? document.getElementById(pathInpId) : null;
                             if (pathInp) pathInp.value = '';
-                            if (prev) prev.src = '';
-                            if (wrap) wrap.style.display = 'none';
+                            var defaultUrl = (removeBtn.getAttribute('data-default-url') || '').toString();
+                            var labelId = removeBtn.getAttribute('data-preview-label') || '';
+                            var labelEl = labelId ? document.getElementById(labelId) : null;
+                            if (prev) prev.src = defaultUrl || '';
+                            if (wrap) wrap.style.display = (defaultUrl ? 'flex' : 'none');
+                            if (labelEl) {
+                                labelEl.textContent = defaultUrl ? (removeBtn.getAttribute('data-default-label') || 'Image par dÃ©faut utilisÃ©e') : '';
+                                labelEl.style.display = defaultUrl ? 'block' : 'none';
+                            }
                         }
                     });
                 }
@@ -1255,6 +1262,7 @@ render();
                         var imagePathInput = document.getElementById(inp.getAttribute('data-image-path-input') || '');
                         var preview = document.getElementById(inp.getAttribute('data-preview') || '');
                         var wrap = document.getElementById(inp.getAttribute('data-preview-wrap') || '');
+                        var label = document.getElementById(inp.getAttribute('data-preview-label') || '');
                         var context = inp.getAttribute('data-context') || 'generic';
 
                         var fd = new FormData();
@@ -1287,6 +1295,10 @@ render();
                             if (imagePathInput) imagePathInput.value = r.data.path || '';
                             if (preview) preview.src = r.data.url || '';
                             if (wrap) wrap.style.display = (r.data.url ? 'flex' : 'none');
+                            if (label) {
+                                label.textContent = r.data.url ? 'Image personnalisÃ©e' : '';
+                                label.style.display = r.data.url ? 'block' : 'none';
+                            }
                         }).catch(function() {
                             alert('Upload impossible.');
                         }).finally(function() {

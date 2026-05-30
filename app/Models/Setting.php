@@ -32,6 +32,9 @@ class Setting extends Model
         'hero_overlay_opacity' => '0.45',
         'hero_title' => 'Let the journey begin',
         'hero_subtitle' => 'Get the best prices on 2,000,000+ properties, worldwide',
+        'default_hotel_image' => null,
+        'default_transfer_image' => null,
+        'default_activity_image' => null,
     ];
 
     /**
@@ -74,6 +77,28 @@ class Setting extends Model
         }
 
         $baseUrl = rtrim((string) config('app.admin_url', config('app.url', URL::to('/'))), '/');
+        return $baseUrl . '/storage/' . ltrim($normalized, '/');
+    }
+
+    /**
+     * Get a public URL for a stored file path using the current host (front domain).
+     */
+    public static function storageUrlPublic(?string $path): ?string
+    {
+        if (empty($path)) {
+            return null;
+        }
+
+        $normalized = self::normalizePublicDiskPath($path);
+        if ($normalized === null) {
+            return null;
+        }
+
+        if (!Storage::disk('public')->exists($normalized)) {
+            return null;
+        }
+
+        $baseUrl = rtrim((string) URL::to('/'), '/');
         return $baseUrl . '/storage/' . ltrim($normalized, '/');
     }
 

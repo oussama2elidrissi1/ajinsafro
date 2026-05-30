@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Departure;
 use App\Models\DepartureHotelRoom;
 use App\Models\Hotel;
+use App\Models\Setting;
 use App\Models\TourHotel;
 use App\Models\TourTransfer;
 use App\Models\Voyage;
@@ -19,6 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class VoyageController extends Controller
@@ -194,6 +196,37 @@ class VoyageController extends Controller
         $wpTourId = $voyage->wp_post_id ? (int) $voyage->wp_post_id : null;
         $tourHotels = $wpTourId ? TourHotel::getAllForTour($wpTourId) : collect();
         $transfers = $wpTourId ? TourTransfer::getForTour($wpTourId) : ['arrival' => collect(), 'departure' => collect()];
+
+        $defaultHotelUrl = Setting::storageUrlPublic(Setting::getValue('default_hotel_image'));
+        $defaultTransferUrl = Setting::storageUrlPublic(Setting::getValue('default_transfer_image'));
+
+        $tourHotels = $tourHotels->map(function (TourHotel $hotel) use ($defaultHotelUrl) {
+            $customUrl = null;
+            if (!empty($hotel->image_path)) {
+                $relative = Storage::disk('public')->url((string) $hotel->image_path);
+                $customUrl = url($relative);
+            } elseif (!empty($hotel->image_id)) {
+                $customUrl = WpHeroImageService::getAttachmentUrl((int) $hotel->image_id);
+            }
+            $hotel->resolved_image_url = $customUrl ?: ($defaultHotelUrl ?: null);
+            $hotel->resolved_image_kind = $customUrl ? 'custom' : ($defaultHotelUrl ? 'default' : 'none');
+            return $hotel;
+        });
+
+        foreach (['arrival', 'departure'] as $dir) {
+            $transfers[$dir] = ($transfers[$dir] ?? collect())->map(function (TourTransfer $t) use ($defaultTransferUrl) {
+                $customUrl = null;
+                if (!empty($t->image_path)) {
+                    $relative = Storage::disk('public')->url((string) $t->image_path);
+                    $customUrl = url($relative);
+                } elseif (!empty($t->image_id)) {
+                    $customUrl = WpHeroImageService::getAttachmentUrl((int) $t->image_id);
+                }
+                $t->resolved_image_url = $customUrl ?: ($defaultTransferUrl ?: null);
+                $t->resolved_image_kind = $customUrl ? 'custom' : ($defaultTransferUrl ? 'default' : 'none');
+                return $t;
+            });
+        }
 
         $priceFrom = $voyage->price_from;
         if (! $priceFrom && $wpTourId) {

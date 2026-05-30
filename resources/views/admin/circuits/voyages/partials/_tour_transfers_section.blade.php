@@ -1,5 +1,7 @@
 @php
     $lastDayNumber = isset($lastDayNumber) ? $lastDayNumber : (($programDays && $programDays->isNotEmpty()) ? $programDays->count() : max(1, (int)($meta['duration_day'] ?? 1)));
+    $defaultTransferImgPath = \App\Models\Setting::normalizePublicDiskPath(\App\Models\Setting::getValue('default_transfer_image'));
+    $defaultTransferImgUrl = $defaultTransferImgPath ? \Illuminate\Support\Facades\Storage::disk('public')->url($defaultTransferImgPath) : '';
     // Fusionner arrivals et departures en une seule liste unifiée
     $allTransfers = collect();
     foreach ($transferArrivals as $arr) {
@@ -22,7 +24,9 @@
                 $transferImgPath = trim((string) old("tour_transfers.{$ti}.image_path", optional($transfer)->image_path ?? ''));
                 $transferImgUrl = $transferImgPath !== ''
                     ? \Illuminate\Support\Facades\Storage::disk('public')->url($transferImgPath)
-                    : ($transferImg ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int)$transferImg) : '');
+	                    : ($transferImg ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int)$transferImg) : '');
+	                $transferEffectiveImgUrl = $transferImgUrl ?: ($defaultTransferImgUrl ?: '');
+	                $transferImgLabel = $transferImgUrl ? 'Image personnalisÃ©e' : ($defaultTransferImgUrl ? 'Image par dÃ©faut utilisÃ©e' : '');
                 // Compatibilité : utiliser day_number si check_in_day/check_out_day n'existent pas
                 $transferDayNumber = old("tour_transfers.{$ti}.day_number", optional($transfer)->day_number ?? 1);
             @endphp
@@ -83,13 +87,17 @@
                                 data-image-id-input="{{ $transferImgId }}"
                                 data-image-path-input="{{ $transferImgId }}_path"
                                 data-preview="{{ $transferImgId }}_preview"
-                                data-preview-wrap="{{ $transferImgId }}_preview_wrap">
+                                data-preview-wrap="{{ $transferImgId }}_preview_wrap"
+                                data-preview-label="{{ $transferImgId }}_preview_label">
                             <div class="d-flex align-items-center gap-2">
-                                <div id="{{ $transferImgId }}_preview_wrap" class="border rounded overflow-hidden bg-light" style="width: 80px; height: 56px; display: {{ $transferImgUrl ? 'flex' : 'none' }};">
-                                    <img id="{{ $transferImgId }}_preview" src="{{ $transferImgUrl }}" alt="" style="max-width:100%; max-height:100%; object-fit: cover;">
+                                <div>
+                                    <div id="{{ $transferImgId }}_preview_wrap" class="border rounded overflow-hidden bg-light" style="width: 80px; height: 56px; display: {{ $transferEffectiveImgUrl ? 'flex' : 'none' }};">
+                                        <img id="{{ $transferImgId }}_preview" src="{{ $transferEffectiveImgUrl }}" alt="" style="max-width:100%; max-height:100%; object-fit: cover;">
+                                    </div>
+                                    <div id="{{ $transferImgId }}_preview_label" class="text-muted small" style="line-height:1.1; margin-top:4px; display: {{ $transferEffectiveImgUrl ? 'block' : 'none' }};">{{ $transferImgLabel }}</div>
                                 </div>
                                 <button type="button" class="btn btn-sm btn-outline-primary ajtb-logistique-media-btn" data-upload-mode="local" data-file-input="{{ $transferImgId }}_file" data-target="transfer" data-input="{{ $transferImgId }}" data-preview="{{ $transferImgId }}_preview" data-preview-wrap="{{ $transferImgId }}_preview_wrap"><i class="bx bx-image"></i> Choisir</button>
-                                <button type="button" class="btn btn-sm btn-outline-danger ajtb-logistique-media-remove" data-input="{{ $transferImgId }}" data-input-path="{{ $transferImgId }}_path" data-preview="{{ $transferImgId }}_preview" data-preview-wrap="{{ $transferImgId }}_preview_wrap">?</button>
+                                <button type="button" class="btn btn-sm btn-outline-danger ajtb-logistique-media-remove" data-input="{{ $transferImgId }}" data-input-path="{{ $transferImgId }}_path" data-preview="{{ $transferImgId }}_preview" data-preview-wrap="{{ $transferImgId }}_preview_wrap" data-preview-label="{{ $transferImgId }}_preview_label" data-default-url="{{ $defaultTransferImgUrl }}" data-default-label="Image par dÃ©faut utilisÃ©e">?</button>
                             </div>
                         </div>
                     </div>
@@ -138,7 +146,8 @@
         clone.querySelectorAll('[id^="tour_transfer_image_id_"]').forEach(function(el){
             var newId = el.id.replace(/tour_transfer_image_id_\d+/, 'tour_transfer_image_id_' + nextIdx);
             el.id = newId;
-            if (el.id.indexOf('_preview_wrap') !== -1) el.style.display = 'none';
+            if (el.id.indexOf('_preview_wrap') !== -1) el.style.display = '';
+            if (el.id.indexOf('_preview_label') !== -1) el.style.display = '';
         });
         clone.querySelectorAll('.ajtb-logistique-media-btn, .ajtb-logistique-media-remove').forEach(function(btn){
             var inp = btn.getAttribute('data-input');
@@ -147,6 +156,7 @@
                 if (btn.getAttribute('data-input-path')) btn.setAttribute('data-input-path', 'tour_transfer_image_id_' + nextIdx + '_path');
                 btn.setAttribute('data-preview', 'tour_transfer_image_id_' + nextIdx + '_preview');
                 btn.setAttribute('data-preview-wrap', 'tour_transfer_image_id_' + nextIdx + '_preview_wrap');
+                if (btn.getAttribute('data-preview-label')) btn.setAttribute('data-preview-label', 'tour_transfer_image_id_' + nextIdx + '_preview_label');
                 if (btn.getAttribute('data-file-input')) btn.setAttribute('data-file-input', 'tour_transfer_image_id_' + nextIdx + '_file');
             }
         });
@@ -155,7 +165,24 @@
             inp.setAttribute('data-image-path-input', 'tour_transfer_image_id_' + nextIdx + '_path');
             inp.setAttribute('data-preview', 'tour_transfer_image_id_' + nextIdx + '_preview');
             inp.setAttribute('data-preview-wrap', 'tour_transfer_image_id_' + nextIdx + '_preview_wrap');
+            inp.setAttribute('data-preview-label', 'tour_transfer_image_id_' + nextIdx + '_preview_label');
         });
+
+        // Apply default image preview when no custom image is set.
+        (function () {
+            var removeBtn = clone.querySelector('.ajtb-logistique-media-remove');
+            var defaultUrl = removeBtn ? (removeBtn.getAttribute('data-default-url') || '') : '';
+            var defaultLabel = removeBtn ? (removeBtn.getAttribute('data-default-label') || 'Image par dÃ©faut utilisÃ©e') : 'Image par dÃ©faut utilisÃ©e';
+            var prev = clone.querySelector('[id$="_preview"]');
+            var wrap = clone.querySelector('[id$="_preview_wrap"]');
+            var label = clone.querySelector('[id$="_preview_label"]');
+            if (prev) prev.src = defaultUrl || '';
+            if (wrap) wrap.style.display = defaultUrl ? 'flex' : 'none';
+            if (label) {
+                label.textContent = defaultUrl ? defaultLabel : '';
+                label.style.display = defaultUrl ? 'block' : 'none';
+            }
+        })();
         container.appendChild(clone);
     });
 
@@ -180,6 +207,7 @@
                             if (btn.getAttribute('data-input-path')) btn.setAttribute('data-input-path', 'tour_transfer_image_id_' + i + '_path');
                             btn.setAttribute('data-preview', 'tour_transfer_image_id_' + i + '_preview');
                             btn.setAttribute('data-preview-wrap', 'tour_transfer_image_id_' + i + '_preview_wrap');
+                            if (btn.getAttribute('data-preview-label')) btn.setAttribute('data-preview-label', 'tour_transfer_image_id_' + i + '_preview_label');
                             if (btn.getAttribute('data-file-input')) btn.setAttribute('data-file-input', 'tour_transfer_image_id_' + i + '_file');
                         }
                     });
@@ -188,6 +216,7 @@
                         inp.setAttribute('data-image-path-input', 'tour_transfer_image_id_' + i + '_path');
                         inp.setAttribute('data-preview', 'tour_transfer_image_id_' + i + '_preview');
                         inp.setAttribute('data-preview-wrap', 'tour_transfer_image_id_' + i + '_preview_wrap');
+                        inp.setAttribute('data-preview-label', 'tour_transfer_image_id_' + i + '_preview_label');
                     });
                 });
             }

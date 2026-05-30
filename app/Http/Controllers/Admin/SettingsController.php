@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
@@ -47,6 +48,12 @@ class SettingsController extends Controller
                 'invoice_header_image_url' => Setting::storageUrl(Setting::getValue('invoice_header_image')),
                 'invoice_footer_image' => Setting::getValue('invoice_footer_image'),
                 'invoice_footer_image_url' => Setting::storageUrl(Setting::getValue('invoice_footer_image')),
+                'default_hotel_image' => Setting::getValue('default_hotel_image'),
+                'default_hotel_image_url' => Setting::storageUrl(Setting::getValue('default_hotel_image')),
+                'default_transfer_image' => Setting::getValue('default_transfer_image'),
+                'default_transfer_image_url' => Setting::storageUrl(Setting::getValue('default_transfer_image')),
+                'default_activity_image' => Setting::getValue('default_activity_image'),
+                'default_activity_image_url' => Setting::storageUrl(Setting::getValue('default_activity_image')),
                 'ws_modal_show_commission' => Setting::getValue('ws_modal_show_commission', '1'),
                 'ws_modal_show_commission_type' => Setting::getValue('ws_modal_show_commission_type', '1'),
                 'ws_modal_show_commission_amount' => Setting::getValue('ws_modal_show_commission_amount', '1'),
@@ -89,6 +96,12 @@ class SettingsController extends Controller
             'hero_subtitle' => ['nullable', 'string', 'max:500'],
             'invoice_header_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:5120'],
             'invoice_footer_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:5120'],
+            'default_hotel_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'default_transfer_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'default_activity_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'remove_default_hotel_image' => ['nullable', 'in:0,1'],
+            'remove_default_transfer_image' => ['nullable', 'in:0,1'],
+            'remove_default_activity_image' => ['nullable', 'in:0,1'],
             'ws_modal_show_commission' => ['nullable', 'in:0,1'],
             'ws_modal_show_commission_type' => ['nullable', 'in:0,1'],
             'ws_modal_show_commission_amount' => ['nullable', 'in:0,1'],
@@ -175,6 +188,51 @@ class SettingsController extends Controller
             }
             $path = $request->file('invoice_footer_image')->store('settings/invoices', 'public');
             Setting::setValue('invoice_footer_image', Setting::normalizePublicDiskPath($path));
+        }
+
+        // Default images (hotels/transfers/activities) used as fallback when no per-item image is set.
+        foreach ([
+            'default_hotel_image' => 'settings/default-images/hotel',
+            'default_transfer_image' => 'settings/default-images/transfer',
+            'default_activity_image' => 'settings/default-images/activity',
+        ] as $key => $dir) {
+            $removeKey = 'remove_' . $key;
+            if ($request->input($removeKey) === '1') {
+                $oldPath = Setting::normalizePublicDiskPath(Setting::getValue($key));
+                if ($oldPath) {
+                    Storage::disk('public')->delete($oldPath);
+                }
+                Setting::setValue($key, '');
+            }
+
+            if ($request->hasFile($key)) {
+                $oldPath = Setting::normalizePublicDiskPath(Setting::getValue($key));
+                if ($oldPath) {
+                    Storage::disk('public')->delete($oldPath);
+                }
+                $path = $request->file($key)->store($dir, 'public');
+                Setting::setValue($key, Setting::normalizePublicDiskPath($path));
+            }
+        }
+
+        // Make defaults available to the WP connection too (options table) for theme consumption if needed.
+        try {
+            $payload = [
+                'default_hotel_image_url' => Setting::storageUrl(Setting::getValue('default_hotel_image')),
+                'default_transfer_image_url' => Setting::storageUrl(Setting::getValue('default_transfer_image')),
+                'default_activity_image_url' => Setting::storageUrl(Setting::getValue('default_activity_image')),
+                'updated_at' => now()->toIso8601String(),
+            ];
+
+            DB::connection('wp')->table('options')->updateOrInsert(
+                ['option_name' => 'aj_default_images'],
+                [
+                    'option_value' => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                    'autoload' => 'no',
+                ]
+            );
+        } catch (\Throwable $e) {
+            // Non-blocking: defaults are still stored in Laravel settings.
         }
 
         return redirect()

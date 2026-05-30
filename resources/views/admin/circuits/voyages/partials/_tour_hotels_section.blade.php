@@ -1,5 +1,7 @@
 @php
     $lastDayNumber = isset($lastDayNumber) ? $lastDayNumber : (($programDays && $programDays->isNotEmpty()) ? $programDays->count() : max(1, (int) ($meta['duration_day'] ?? 1)));
+    $defaultHotelImgPath = \App\Models\Setting::normalizePublicDiskPath(\App\Models\Setting::getValue('default_hotel_image'));
+    $defaultHotelImgUrl = $defaultHotelImgPath ? \Illuminate\Support\Facades\Storage::disk('public')->url($defaultHotelImgPath) : '';
     $hotelsList = $tourHotels->isEmpty() ? [null] : $tourHotels->all();
     $otherHotels = $otherTourHotelsForCopy ?? collect();
     $wpSiteUrl = rtrim((string) config('wordpress.site_url', ''), '/');
@@ -45,6 +47,8 @@
                 $himgUrl = $himgPath !== ''
                     ? \Illuminate\Support\Facades\Storage::disk('public')->url($himgPath)
                     : ($himg ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int) $himg) : '');
+                $himgEffectiveUrl = $himgUrl ?: ($defaultHotelImgUrl ?: '');
+                $himgLabel = $himgUrl ? 'Image personnalisÃ©e' : ($defaultHotelImgUrl ? 'Image par dÃ©faut utilisÃ©e' : '');
                 $oldDayNumber = old("tour_hotels.{$hi}.day_number", optional($h)->day_number);
                 $checkInDay = old("tour_hotels.{$hi}.check_in_day", optional($h)->check_in_day);
                 $checkOutDay = old("tour_hotels.{$hi}.check_out_day", optional($h)->check_out_day);
@@ -243,10 +247,14 @@
                                 data-image-id-input="{{ $hid }}"
                                 data-image-path-input="{{ $hid }}_path"
                                 data-preview="{{ $hid }}_preview"
-                                data-preview-wrap="{{ $hid }}_preview_wrap">
+                                data-preview-wrap="{{ $hid }}_preview_wrap"
+                                data-preview-label="{{ $hid }}_preview_label">
                             <div class="d-flex flex-wrap align-items-center gap-3">
-                                <div id="{{ $hid }}_preview_wrap" class="border rounded overflow-hidden bg-light" style="width:120px;height:80px;display:{{ $himgUrl ? 'flex' : 'none' }};">
-                                    <img id="{{ $hid }}_preview" src="{{ $himgUrl }}" alt="" class="img-fluid" style="max-width:100%;max-height:100%;object-fit:cover;">
+                                <div>
+                                    <div id="{{ $hid }}_preview_wrap" class="border rounded overflow-hidden bg-light" style="width:120px;height:80px;display:{{ $himgEffectiveUrl ? 'flex' : 'none' }};">
+                                        <img id="{{ $hid }}_preview" src="{{ $himgEffectiveUrl }}" alt="" class="img-fluid" style="max-width:100%;max-height:100%;object-fit:cover;">
+                                    </div>
+                                    <div id="{{ $hid }}_preview_label" class="text-muted small" style="line-height:1.1; margin-top:4px; display: {{ $himgEffectiveUrl ? 'block' : 'none' }};">{{ $himgLabel }}</div>
                                 </div>
                                 <div class="tour-hotel-media-actions d-flex gap-2">
                                     <button type="button" class="btn btn-sm btn-outline-secondary ajtb-logistique-media-btn"
@@ -256,7 +264,7 @@
                                         <i class="bx bx-images"></i> Choisir une photo
                                     </button>
                                     <button type="button" class="btn btn-sm btn-outline-danger ajtb-logistique-media-remove"
-                                        data-input="{{ $hid }}" data-input-path="{{ $hid }}_path" data-preview="{{ $hid }}_preview" data-preview-wrap="{{ $hid }}_preview_wrap">
+                                        data-input="{{ $hid }}" data-input-path="{{ $hid }}_path" data-preview="{{ $hid }}_preview" data-preview-wrap="{{ $hid }}_preview_wrap" data-preview-label="{{ $hid }}_preview_label" data-default-url="{{ $defaultHotelImgUrl }}" data-default-label="Image par dÃ©faut utilisÃ©e">
                                         <i class="bx bx-x"></i>
                                     </button>
                                 </div>
@@ -658,8 +666,20 @@
 
         var preview = document.getElementById(imageInputId + '_preview');
         var previewWrap = document.getElementById(imageInputId + '_preview_wrap');
-        if (preview) preview.src = imageUrl || '';
-        if (previewWrap) previewWrap.style.display = imageUrl ? 'flex' : 'none';
+        var previewLabel = document.getElementById(imageInputId + '_preview_label');
+        var removeBtn = row.querySelector('.ajtb-logistique-media-remove');
+        var defaultUrl = removeBtn ? (removeBtn.getAttribute('data-default-url') || '') : '';
+        var defaultLabel = removeBtn ? (removeBtn.getAttribute('data-default-label') || 'Image par dÃ©faut utilisÃ©e') : 'Image par dÃ©faut utilisÃ©e';
+
+        var finalUrl = imageUrl || defaultUrl || '';
+        var isCustom = !!imageUrl;
+
+        if (preview) preview.src = finalUrl;
+        if (previewWrap) previewWrap.style.display = finalUrl ? 'flex' : 'none';
+        if (previewLabel) {
+            previewLabel.textContent = finalUrl ? (isCustom ? 'Image personnalisÃ©e' : defaultLabel) : '';
+            previewLabel.style.display = finalUrl ? 'block' : 'none';
+        }
     }
 
     function getRowImageUrl(row) {
@@ -865,6 +885,7 @@
                 if (btn.dataset.inputPath) btn.dataset.inputPath = 'tour_hotel_image_id_' + i + '_path';
                 if (btn.dataset.preview) btn.dataset.preview = 'tour_hotel_image_id_' + i + '_preview';
                 if (btn.dataset.previewWrap) btn.dataset.previewWrap = 'tour_hotel_image_id_' + i + '_preview_wrap';
+                if (btn.dataset.previewLabel) btn.dataset.previewLabel = 'tour_hotel_image_id_' + i + '_preview_label';
                 if (btn.dataset.fileInput) btn.dataset.fileInput = 'tour_hotel_image_id_' + i + '_file';
             });
             row.querySelectorAll('.ajtb-local-image-input').forEach(function (inp) {
@@ -872,6 +893,7 @@
                 inp.setAttribute('data-image-path-input', 'tour_hotel_image_id_' + i + '_path');
                 inp.setAttribute('data-preview', 'tour_hotel_image_id_' + i + '_preview');
                 inp.setAttribute('data-preview-wrap', 'tour_hotel_image_id_' + i + '_preview_wrap');
+                inp.setAttribute('data-preview-label', 'tour_hotel_image_id_' + i + '_preview_label');
             });
             refreshCard(row);
             syncLinkedSummaryFromRow(row);
@@ -1011,6 +1033,7 @@
             if (btn.dataset.inputPath) btn.dataset.inputPath = 'tour_hotel_image_id_' + nextIdx + '_path';
             if (btn.dataset.preview) btn.dataset.preview = 'tour_hotel_image_id_' + nextIdx + '_preview';
             if (btn.dataset.previewWrap) btn.dataset.previewWrap = 'tour_hotel_image_id_' + nextIdx + '_preview_wrap';
+            if (btn.dataset.previewLabel) btn.dataset.previewLabel = 'tour_hotel_image_id_' + nextIdx + '_preview_label';
             if (btn.dataset.fileInput) btn.dataset.fileInput = 'tour_hotel_image_id_' + nextIdx + '_file';
         });
         clone.querySelectorAll('.ajtb-local-image-input').forEach(function (inp) {
@@ -1018,10 +1041,21 @@
             inp.setAttribute('data-image-path-input', 'tour_hotel_image_id_' + nextIdx + '_path');
             inp.setAttribute('data-preview', 'tour_hotel_image_id_' + nextIdx + '_preview');
             inp.setAttribute('data-preview-wrap', 'tour_hotel_image_id_' + nextIdx + '_preview_wrap');
+            inp.setAttribute('data-preview-label', 'tour_hotel_image_id_' + nextIdx + '_preview_label');
         });
 
         var prevWrap = clone.querySelector('[id$="_preview_wrap"]');
-        if (prevWrap) prevWrap.style.display = 'none';
+        var prevImg = clone.querySelector('[id$="_preview"]');
+        var prevLabel = clone.querySelector('[id$="_preview_label"]');
+        var removeMediaBtn = clone.querySelector('.ajtb-logistique-media-remove');
+        var defaultUrl = removeMediaBtn ? (removeMediaBtn.getAttribute('data-default-url') || '') : '';
+        var defaultLabel = removeMediaBtn ? (removeMediaBtn.getAttribute('data-default-label') || 'Image par dÃ©faut utilisÃ©e') : 'Image par dÃ©faut utilisÃ©e';
+        if (prevImg) prevImg.src = defaultUrl || '';
+        if (prevWrap) prevWrap.style.display = defaultUrl ? 'flex' : 'none';
+        if (prevLabel) {
+            prevLabel.textContent = defaultUrl ? defaultLabel : '';
+            prevLabel.style.display = defaultUrl ? 'block' : 'none';
+        }
 
         var wpSearch = clone.querySelector('.tour-hotel-wp-search');
         if (wpSearch) wpSearch.value = '';
