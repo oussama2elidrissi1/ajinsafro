@@ -96,9 +96,10 @@ class SettingsController extends Controller
             'hero_subtitle' => ['nullable', 'string', 'max:500'],
             'invoice_header_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:5120'],
             'invoice_footer_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:5120'],
-            'default_hotel_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-            'default_transfer_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-            'default_activity_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            // Do not use Laravel's "image" rule here (it relies on getimagesize and may reject valid WEBP depending on PHP build).
+            'default_hotel_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'default_transfer_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'default_activity_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'remove_default_hotel_image' => ['nullable', 'in:0,1'],
             'remove_default_transfer_image' => ['nullable', 'in:0,1'],
             'remove_default_activity_image' => ['nullable', 'in:0,1'],
