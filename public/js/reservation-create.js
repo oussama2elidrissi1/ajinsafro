@@ -416,10 +416,10 @@
         var hiddenTourId = document.getElementById('tour_id_hidden');
         var container = document.getElementById('reservation-create-extras-container');
         var emptyState = document.getElementById('reservation-create-extras-empty');
-        if (!select || !container || !emptyState) return;
+        if ((!select && !hiddenTourId) || !container || !emptyState) return;
 
         var preserved = captureExtrasSelections();
-        var selectId = String(select.value || '');
+        var selectId = String((select && select.value) || (hiddenTourId && hiddenTourId.value) || '');
         var extras = extrasMap[selectId] || [];
         var requestedKey = [
             selectId,
@@ -434,7 +434,7 @@
                 var mappedKey = String(mappedVoyageId);
                 extras = extrasMap[mappedKey] || [];
                 if (extras.length) {
-                    select.value = mappedKey;
+                    if (select) select.value = mappedKey;
                     if (hiddenTourId) hiddenTourId.value = mappedKey;
                     if (window.reservationState) window.reservationState.selectedTourId = mappedKey;
                 }
