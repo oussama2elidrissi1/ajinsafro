@@ -195,24 +195,78 @@
 
     function extrasTotalAmount() {
         var total = 0;
-        document.querySelectorAll('.v2-extra-card.is-selected').forEach(function (card) {
-            var price = parseNumber(card.getAttribute('data-price'));
-            var qtyInput = card.querySelector('.v2-extra-card__qty input');
-            var qty = qtyInput ? parseInt(qtyInput.value || '1', 10) : 1;
-            total += price * qty;
+        document.querySelectorAll('.v2-extra-card').forEach(function (card) {
+            var adultPrice = parseNumber(card.getAttribute('data-price-adult'));
+            var childPrice = parseNumber(card.getAttribute('data-price-child'));
+            var unit = Math.max(adultPrice, childPrice, 0);
+            var selected = card.querySelectorAll('.v2-extra-traveler-check:checked').length;
+            if (selected > 0) {
+                total += unit * selected;
+            }
         });
         return total;
     }
 
+    function readExtrasSelectionMap() {
+        var input = document.getElementById('v2-extras-json');
+        if (!input || !input.value) return {};
+        try {
+            var decoded = JSON.parse(input.value);
+            if (!Array.isArray(decoded)) return {};
+            var map = {};
+            decoded.forEach(function (row) {
+                if (!row || typeof row !== 'object') return;
+                var sourceType = row.source_type || row.type || 'voyage_extra';
+                var sourceId = row.source_id || row.voyage_extra_id || 0;
+                var key = String(sourceType) + ':' + String(sourceId);
+                var travelerKeys = Array.isArray(row.traveler_keys) ? row.traveler_keys.map(String) : [];
+                if (travelerKeys.length) {
+                    map[key] = travelerKeys;
+                }
+            });
+            return map;
+        } catch (e) {
+            return {};
+        }
+    }
+
     function updateExtrasJson() {
         var payload = [];
-        document.querySelectorAll('.v2-extra-card.is-selected').forEach(function (card) {
-            payload.push({
-                voyage_extra_id: parseInt(card.getAttribute('data-extra-id') || '0', 10),
+        document.querySelectorAll('.v2-extra-card').forEach(function (card) {
+            var travelerKeys = Array.prototype.slice.call(card.querySelectorAll('.v2-extra-traveler-check:checked'))
+                .map(function (cb) { return cb.getAttribute('data-traveler-key'); })
+                .filter(Boolean);
+            if (!travelerKeys.length) return;
+
+            var sourceType = card.getAttribute('data-source-type') || 'voyage_extra';
+            var sourceId = parseInt(card.getAttribute('data-source-id') || '0', 10);
+            var extraId = parseInt(card.getAttribute('data-extra-id') || '0', 10);
+            var adultPrice = parseNumber(card.getAttribute('data-price-adult'));
+            var childPrice = parseNumber(card.getAttribute('data-price-child'));
+            var unit = Math.max(adultPrice, childPrice, 0);
+
+            var row = {
+                application_scope: 'traveler_selection',
+                traveler_keys: travelerKeys,
+                quantity: 1,
                 name: card.getAttribute('data-name') || '',
-                price_adult: parseNumber(card.getAttribute('data-price')),
-                quantity: parseInt(card.querySelector('.v2-extra-card__qty input').value || '1', 10),
-            });
+                unit_price_adult: adultPrice,
+                unit_price_child: childPrice,
+            };
+
+            if (sourceType === 'activity') {
+                row.source_type = 'activity';
+                row.source_id = sourceId;
+                row.unit_price_adult = adultPrice;
+                row.unit_price_child = childPrice;
+            } else {
+                row.source_type = 'voyage_extra';
+                row.source_id = extraId;
+                row.voyage_extra_id = extraId;
+                row.unit_price_adult = unit;
+            }
+
+            payload.push(row);
         });
         var input = document.getElementById('v2-extras-json');
         if (input) input.value = JSON.stringify(payload);
@@ -445,6 +499,7 @@
             div.remove();
             updateTravelerBadge();
             if (!container.children.length && empty) empty.hidden = false;
+            renderExtras();
             syncFinancialSummary();
         });
         updateTravelerBadge();
@@ -457,6 +512,8 @@
         if (!container) return;
         var tourId = getSelectedTourId();
         var list = extrasMap[String(tourId)] || [];
+        var travelers = getTravelerRows();
+        var selectionMap = readExtrasSelectionMap();
         if (!list.length) {
             container.innerHTML = '';
             if (empty) empty.hidden = false;
@@ -465,53 +522,65 @@
         if (empty) empty.hidden = true;
         var html = '';
         list.forEach(function (extra) {
-            var price = parseNumber(extra.price_adult);
-            html += '<div class="v2-extra-card" data-extra-id="' + (extra.id || '') + '" data-name="' + (extra.name || '').replace(/"/g, '&quot;') + '" data-price="' + price + '">' +
+            var sourceType = String(extra.source_type || extra.type || 'voyage_extra');
+            var sourceId = parseInt(extra.source_id || extra.id || '0', 10);
+            var extraId = parseInt(extra.id || '0', 10);
+            var adultPrice = parseNumber(extra.price_adult);
+            var childPrice = parseNumber(extra.price_child);
+            var unit = Math.max(adultPrice, childPrice, 0);
+            var key = sourceType + ':' + String(sourceId || extraId);
+            var selectedTravelerKeys = Array.isArray(selectionMap[key]) ? selectionMap[key] : [];
+
+            var priceLabel = formatMoney(unit) + ' / pers';
+            if (childPrice > 0 && Math.abs(childPrice - adultPrice) > 0.01) {
+                priceLabel = 'Adulte: ' + formatMoney(adultPrice) + ' â€” Enfant: ' + formatMoney(childPrice);
+            }
+
+            var travelersHtml = '';
+            travelers.forEach(function (t) {
+                var checked = selectedTravelerKeys.indexOf(t.id) !== -1 ? ' checked' : '';
+                travelersHtml += '<label class="v2-extra-traveler">' +
+                    '<input type="checkbox" class="v2-extra-traveler-check" data-traveler-key="' + t.id + '"' + checked + '>' +
+                    '<span>' + (t.label || 'Voyageur') + ' <small>(' + (t.type || 'adult') + ')</small></span>' +
+                '</label>';
+            });
+
+            html += '<div class="v2-extra-card" data-extra-id="' + extraId + '" data-source-type="' + sourceType + '" data-source-id="' + sourceId + '" data-name="' + (extra.name || '').replace(/\"/g, '&quot;') + '" data-price-adult="' + adultPrice + '" data-price-child="' + childPrice + '">' +
                 '<div class="v2-extra-card__check"><i class="bx bx-check"></i></div>' +
                 '<div class="v2-extra-card__body">' +
                     '<span class="v2-extra-card__name">' + (extra.name || 'Extra') + '</span>' +
                     '<span class="v2-extra-card__desc">' + (extra.description || '') + '</span>' +
-                    '<span class="v2-extra-card__price">' + formatMoney(price) + '</span>' +
-                    '<div class="v2-extra-card__qty">' +
-                        '<button type="button" class="v2-extra-qty-minus">-</button>' +
-                        '<input type="number" value="1" min="1" max="99">' +
-                        '<button type="button" class="v2-extra-qty-plus">+</button>' +
-                    '</div>' +
+                    '<span class="v2-extra-card__price">' + priceLabel + '</span>' +
+                    '<div class="v2-extra-card__travelers">' + (travelersHtml || '<em class="v2-extra-traveler-empty">Ajoutez au moins 1 voyageur Ã  lâ€™Ã©tape 2.</em>') + '</div>' +
+                    '<div class="v2-extra-card__meta"><span class="v2-extra-card__count">0 voyageur</span></div>' +
                 '</div>' +
             '</div>';
         });
         container.innerHTML = html;
         attachExtraClicks();
+        document.querySelectorAll('.v2-extra-card').forEach(function (card) { updateExtraCardState(card); });
+        updateExtrasJson();
+        syncFinancialSummary();
+    }
+
+    function updateExtraCardState(card) {
+        var count = card.querySelectorAll('.v2-extra-traveler-check:checked').length;
+        card.classList.toggle('is-selected', count > 0);
+        var label = card.querySelector('.v2-extra-card__count');
+        if (label) {
+            label.textContent = count ? (count + ' voyageur' + (count > 1 ? 's' : '')) : '0 voyageur';
+        }
     }
 
     function attachExtraClicks() {
         document.querySelectorAll('.v2-extra-card').forEach(function (card) {
-            card.addEventListener('click', function (e) {
-                if (e.target.closest('.v2-extra-card__qty')) return;
-                card.classList.toggle('is-selected');
-                updateExtrasJson();
-                syncFinancialSummary();
-            });
-            var minus = card.querySelector('.v2-extra-qty-minus');
-            var plus = card.querySelector('.v2-extra-qty-plus');
-            var input = card.querySelector('.v2-extra-card__qty input');
-            if (minus) minus.addEventListener('click', function (e) {
-                e.stopPropagation();
-                var v = Math.max(1, parseInt(input.value || '1', 10) - 1);
-                input.value = v;
-                updateExtrasJson();
-                syncFinancialSummary();
-            });
-            if (plus) plus.addEventListener('click', function (e) {
-                e.stopPropagation();
-                var v = Math.min(99, parseInt(input.value || '1', 10) + 1);
-                input.value = v;
-                updateExtrasJson();
-                syncFinancialSummary();
-            });
-            if (input) input.addEventListener('change', function () {
-                updateExtrasJson();
-                syncFinancialSummary();
+            card.querySelectorAll('.v2-extra-traveler-check').forEach(function (cb) {
+                cb.addEventListener('change', function (e) {
+                    e.stopPropagation();
+                    updateExtraCardState(card);
+                    updateExtrasJson();
+                    syncFinancialSummary();
+                });
             });
         });
     }
@@ -810,6 +879,7 @@
         document.addEventListener('input', function (e) {
             if (e.target.closest('#v2-companions-container') || e.target.id === 'v2-client-first-name' || e.target.id === 'v2-client-last-name' || e.target.id === 'v2-client-traveler-type') {
                 updateTravelerBadge();
+                renderExtras();
                 syncFinancialSummary();
             }
         });

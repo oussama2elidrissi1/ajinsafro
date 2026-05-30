@@ -313,7 +313,9 @@ class ReservationsController extends Controller
      */
     public function create(Request $request): View
     {
-        $requestedTourId = (int) $request->query('voyage_id', $request->query('tour_id', 0));
+        $voyageIdParam = $request->query('voyage_id');
+        $tourIdParam = $request->query('tour_id');
+        $requestedTourId = (int) ($voyageIdParam !== null ? $voyageIdParam : ($tourIdParam ?? 0));
         $travelDateId = (int) $request->query('travel_date_id', 0);
         $requestedDepartureId = (int) $request->query('departure_id', 0);
 
@@ -324,7 +326,7 @@ class ReservationsController extends Controller
 
         // Compat: certains écrans passent un `tour_id` WordPress (wp_post_id) au lieu du Voyage Laravel id.
         // On tente de le convertir en Voyage id pour que les extras / départs se chargent correctement.
-        if ($requestedTourId > 0 && $voyages->where('id', $requestedTourId)->isEmpty()) {
+        if ($requestedTourId > 0 && $voyageIdParam === null) {
             $voyageByWpId = Voyage::query()
                 ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
                 ->where('wp_post_id', $requestedTourId)
@@ -340,7 +342,7 @@ class ReservationsController extends Controller
             }
         }
 
-        if ($requestedTourId > 0 && $voyages->where('id', $requestedTourId)->isEmpty()) {
+        if ($requestedTourId > 0 && $voyageIdParam === null) {
             $requestedVoyage = Voyage::query()
                 ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
                 ->find($requestedTourId);
@@ -602,7 +604,9 @@ class ReservationsController extends Controller
      */
     public function createV2(Request $request): View
     {
-        $requestedTourId = (int) $request->query('voyage_id', $request->query('tour_id', 0));
+        $voyageIdParam = $request->query('voyage_id');
+        $tourIdParam = $request->query('tour_id');
+        $requestedTourId = (int) ($voyageIdParam !== null ? $voyageIdParam : ($tourIdParam ?? 0));
         $travelDateId = (int) $request->query('travel_date_id', 0);
         $requestedDepartureId = (int) $request->query('departure_id', 0);
 
@@ -611,8 +615,9 @@ class ReservationsController extends Controller
         $clients = $clientsQuery->get(['id', 'client_code', 'full_name', 'email', 'phone', 'national_id_number', 'passport_number']);
         $voyages = AdminWpTourCatalogQuery::reservableVoyages();
 
-        // Compat: `tour_id` peut être un wp_post_id (WordPress). Convertir en Voyage Laravel id si possible.
-        if ($requestedTourId > 0 && $voyages->where('id', $requestedTourId)->isEmpty()) {
+        // Compat: `tour_id` est historiquement un wp_post_id (WordPress). Si `voyage_id` n'est pas fourni,
+        // résoudre d'abord `tour_id` comme wp_post_id afin d'éviter les collisions avec un id Voyage Laravel.
+        if ($requestedTourId > 0 && $voyageIdParam === null) {
             $voyageByWpId = Voyage::query()
                 ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
                 ->where('wp_post_id', $requestedTourId)

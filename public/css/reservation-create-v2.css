@@ -819,6 +819,32 @@ select.v2-input {
     font-weight: 700;
     color: var(--v2-blue);
 }
+.v2-extra-card__travelers {
+    margin-top: 0.5rem;
+    display: grid;
+    gap: 0.25rem;
+}
+.v2-extra-traveler {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--v2-text-secondary);
+    cursor: pointer;
+    user-select: none;
+}
+.v2-extra-traveler input {
+    margin-top: 0.15rem;
+}
+.v2-extra-card__meta {
+    margin-top: 0.4rem;
+    font-size: 0.75rem;
+    color: var(--v2-text-secondary);
+}
+.v2-extra-traveler-empty {
+    font-size: 0.8125rem;
+    color: var(--v2-text-secondary);
+}
 .v2-extra-card__qty {
     display: flex;
     align-items: center;
