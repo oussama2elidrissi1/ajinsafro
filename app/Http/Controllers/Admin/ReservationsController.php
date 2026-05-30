@@ -431,6 +431,17 @@ class ReservationsController extends Controller
             ]);
         }
 
+        // S'assurer que le voyage sélectionné est présent avec ses extras chargés,
+        // même si la liste catalogue ne l'a pas inclus (ou sans eager-load).
+        if ($requestedTourId > 0) {
+            $selectedVoyage = Voyage::query()
+                ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
+                ->find($requestedTourId);
+            if ($selectedVoyage) {
+                $voyages = $voyages->prepend($selectedVoyage)->unique('id')->values();
+            }
+        }
+
         if ($requestedTourId > 0 && $voyages->where('id', $requestedTourId)->isEmpty()) {
             $requestedVoyage = Voyage::query()
                 ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
@@ -701,6 +712,16 @@ class ReservationsController extends Controller
                 ->find($requestedTourId);
             if ($requestedVoyage) {
                 $voyages = $voyages->prepend($requestedVoyage)->unique('id')->values();
+            }
+        }
+
+        // S'assurer que le voyage sélectionné est présent avec ses extras chargés.
+        if ($requestedTourId > 0) {
+            $selectedVoyage = Voyage::query()
+                ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
+                ->find($requestedTourId);
+            if ($selectedVoyage) {
+                $voyages = $voyages->prepend($selectedVoyage)->unique('id')->values();
             }
         }
 

@@ -2341,8 +2341,8 @@
         filterExistingClients();
         syncVisaMode();
         syncTravelersEmptyState();
-        renderExtras();
         initializeReservationState();
+        renderExtras();
         
         // Now safely call setAvailableRoomTypes with existing rooms
         console.log('[Reservation Create] Setting initial available rooms', {
