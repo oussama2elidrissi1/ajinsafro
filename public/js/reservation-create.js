@@ -193,7 +193,7 @@
             return explicitUnitPrice;
         }
 
-        // Fallback sur le prix du voyage s?lectionn?
+        // Fallback sur le prix du voyage sélectionné
         return getSelectedTripFallbackPrice();
     }
 
@@ -340,7 +340,6 @@
             var key = String(card.getAttribute('data-extra-key') || '');
             if (!key) return;
             snapshot[key] = {
-                quantity: parseInt(card.querySelector('[data-extra-quantity]') && card.querySelector('[data-extra-quantity]').value || '0', 10) || 0,
                 scope: String(card.querySelector('[data-extra-scope]') && card.querySelector('[data-extra-scope]').value || 'dossier'),
                 travelers: Array.prototype.slice.call(card.querySelectorAll('.reservation-create-extra-cb:checked')).map(function (cb) {
                     return String(cb.getAttribute('data-traveler-id') || '');
@@ -466,7 +465,7 @@
             var sourceType = String(extra.source_type || extra.type || 'voyage_extra');
             var sourceId = sourceType === 'activity' ? String(extra.source_id || '') : String(extra.id || '');
             var extraKey = sourceType + ':' + sourceId;
-            var snapshot = preserved[extraKey] || { quantity: 0, scope: 'dossier', travelers: [] };
+            var snapshot = preserved[extraKey] || { scope: 'traveler_selection', travelers: [] };
             var travelerHtml = travelers.map(function (traveler) {
                 var unitPrice = traveler.priceType === 'child'
                     ? parseNumber(extra.price_child)
@@ -491,18 +490,12 @@
             card.setAttribute('data-extra-description', String(extra.description || ''));
             card.setAttribute('data-extra-adult-price', String(parseNumber(extra.price_adult)));
             card.setAttribute('data-extra-child-price', String(parseNumber(extra.price_child)));
-            var maxAllowed = 1;
-            if (snapshot.scope === 'traveler_selection') {
-                maxAllowed = snapshot.travelers.length || 1;
-            } else if (snapshot.scope === 'per_traveler') {
-                maxAllowed = travelers.length;
-            }
             card.innerHTML =
                 '<div class="reservation-create__extra-head">' +
                     '<div>' +
                         '<h4 class="reservation-create__extra-title">' + (extra.name || 'Extra') + '</h4>' +
                         ((sourceType === 'activity' || extra.extra_type === 'activity_optional') ? '<div class="reservation-create__extra-badge">Activité optionnelle</div>' : '') +
-                        '<p class="reservation-create__extra-desc">' + (extra.description || 'Option suppl?mentaire pour ce dossier.') + '</p>' +
+                        '<p class="reservation-create__extra-desc">' + (extra.description || 'Option supplémentaire pour ce dossier.') + '</p>' +
                     '</div>' +
                     '<div class="reservation-create__extra-price">' +
                         '<strong>' + formatMoney(parseNumber(extra.price_adult)) + '</strong>' +
@@ -514,13 +507,13 @@
                     '<div class="reservation-create__field">' +
                         '<label class="reservation-create__label">Application</label>' +
                         '<select class="reservation-create__input" data-extra-scope>' +
-                            '<option value="dossier"' + (snapshot.scope === 'dossier' ? ' selected' : '') + '>Tout le dossier</option>' +
-                            '<option value="traveler_selection"' + (snapshot.scope === 'traveler_selection' ? ' selected' : '') + '>Voyageurs s?lectionn?s</option>' +
+                            '<option value="per_traveler"' + (snapshot.scope === 'per_traveler' ? ' selected' : '') + '>Tout le dossier</option>' +
+                            '<option value="traveler_selection"' + (snapshot.scope === 'traveler_selection' ? ' selected' : '') + '>Voyageurs sélectionnés</option>' +
                         '</select>' +
                     '</div>' +
                     '<div class="reservation-create__field">' +
-                        '<label class="reservation-create__label">Quantit?</label>' +
-                        '<input type="number" class="reservation-create__input" data-extra-quantity min="0" step="1" max="' + maxAllowed + '" value="' + Math.min(snapshot.quantity, maxAllowed) + '">' +
+                        '<label class="reservation-create__label">Appliqué à</label>' +
+                        '<div class="reservation-create__input reservation-create__input--static"><strong data-extra-applied-count>0</strong> voyageur</div>' +
                     '</div>' +
                 '</div>' +
                 '<div class="reservation-create__extra-travelers' + (snapshot.scope === 'traveler_selection' ? '' : ' d-none') + '" data-extra-travelers>' +
@@ -538,27 +531,22 @@
     function bindExtrasEvents() {
         document.querySelectorAll('.reservation-create__extra-card').forEach(function (card) {
             var scope = card.querySelector('[data-extra-scope]');
-            var quantity = card.querySelector('[data-extra-quantity]');
             var travelersBlock = card.querySelector('[data-extra-travelers]');
 
             function refreshCard() {
                 if (scope && travelersBlock) {
                     travelersBlock.classList.toggle('d-none', scope.value !== 'traveler_selection');
                 }
-                if (quantity) {
-                    var currentScope = scope ? String(scope.value || 'dossier') : 'dossier';
-                    var maxAllowed = 1;
-                    if (currentScope === 'traveler_selection') {
-                        maxAllowed = card.querySelectorAll('.reservation-create-extra-cb:checked').length || 1;
-                    } else if (currentScope === 'per_traveler') {
-                        maxAllowed = travelerRows().length;
-                    }
-                    quantity.setAttribute('max', maxAllowed);
-                    var currentQty = parseInt(quantity.value || '0', 10) || 0;
-                    if (currentQty > maxAllowed) {
-                        quantity.value = maxAllowed;
-                    }
+
+                var appliedCount = 0;
+                var currentScope = scope ? String(scope.value || 'per_traveler') : 'per_traveler';
+                if (currentScope === 'traveler_selection') {
+                    appliedCount = card.querySelectorAll('.reservation-create-extra-cb:checked').length;
+                } else if (currentScope === 'per_traveler') {
+                    appliedCount = travelerRows().length;
                 }
+                var appliedEl = card.querySelector('[data-extra-applied-count]');
+                if (appliedEl) appliedEl.textContent = String(appliedCount);
                 var totalEl = card.querySelector('[data-extra-total]');
                 if (totalEl) {
                     totalEl.textContent = formatMoney(extraCardTotal(card));
@@ -567,7 +555,6 @@
             }
 
             if (scope) scope.addEventListener('change', refreshCard);
-            if (quantity) quantity.addEventListener('input', refreshCard);
             card.querySelectorAll('.reservation-create-extra-cb').forEach(function (cb) {
                 cb.addEventListener('change', refreshCard);
             });
@@ -577,30 +564,30 @@
     }
 
     function extraCardTotal(card) {
-        var quantity = Math.max(0, parseInt(card.querySelector('[data-extra-quantity]') && card.querySelector('[data-extra-quantity]').value || '0', 10) || 0);
-        if (quantity < 1) {
-            return 0;
-        }
-
-        var scope = String(card.querySelector('[data-extra-scope]') && card.querySelector('[data-extra-scope]').value || 'dossier');
+        var scope = String(card.querySelector('[data-extra-scope]') && card.querySelector('[data-extra-scope]').value || 'traveler_selection');
         if (scope === 'traveler_selection') {
             return Array.prototype.slice.call(card.querySelectorAll('.reservation-create-extra-cb:checked')).reduce(function (sum, cb) {
-                return sum + (parseNumber(cb.getAttribute('data-price')) * quantity);
+                return sum + parseNumber(cb.getAttribute('data-price'));
             }, 0);
         }
 
-        return parseNumber(card.getAttribute('data-extra-adult-price')) * quantity;
+        if (scope === 'per_traveler') {
+            var adultPrice = parseNumber(card.getAttribute('data-extra-adult-price'));
+            var childPrice = parseNumber(card.getAttribute('data-extra-child-price'));
+            return travelerRows().reduce(function (sum, traveler) {
+                var type = traveler && traveler.priceType === 'child' ? 'child' : 'adult';
+                var unit = type === 'child' && childPrice > 0 ? childPrice : adultPrice;
+                return sum + unit;
+            }, 0);
+        }
+
+        return 0;
     }
 
     function collectExtras() {
         var selected = [];
         document.querySelectorAll('.reservation-create__extra-card').forEach(function (card) {
-            var quantity = Math.max(0, parseInt(card.querySelector('[data-extra-quantity]') && card.querySelector('[data-extra-quantity]').value || '0', 10) || 0);
-            if (quantity < 1) {
-                return;
-            }
-
-            var scope = String(card.querySelector('[data-extra-scope]') && card.querySelector('[data-extra-scope]').value || 'dossier');
+            var scope = String(card.querySelector('[data-extra-scope]') && card.querySelector('[data-extra-scope]').value || 'traveler_selection');
             var travelerKeys = [];
             var unitPrice = parseNumber(card.getAttribute('data-extra-adult-price'));
             var totalPrice = 0;
@@ -616,10 +603,17 @@
                 }
                 travelerKeys = checked.map(function (cb) { return String(cb.getAttribute('data-traveler-id') || ''); });
                 totalPrice = checked.reduce(function (sum, cb) {
-                    return sum + (parseNumber(cb.getAttribute('data-price')) * quantity);
+                    return sum + parseNumber(cb.getAttribute('data-price'));
                 }, 0);
+            } else if (scope === 'per_traveler') {
+                travelerKeys = travelerRows().map(function (t) { return String(t.id); });
+                totalPrice = extraCardTotal(card);
             } else {
-                totalPrice = unitPrice * quantity;
+                return;
+            }
+
+            if (totalPrice <= 0) {
+                return;
             }
 
             selected.push({
@@ -629,7 +623,7 @@
                 name: name,
                 description: String(card.getAttribute('data-extra-description') || ''),
                 unit_price: unitPrice,
-                quantity: quantity,
+                quantity: 1,
                 total_price: totalPrice,
                 application_scope: scope,
                 traveler_keys: travelerKeys
@@ -1706,22 +1700,16 @@
 
             document.querySelectorAll('.reservation-create__extra-card').forEach(function (card) {
                 var name = String(card.getAttribute('data-extra-name') || 'Extra');
-                var quantityInput = card.querySelector('[data-extra-quantity]');
                 var scopeInput = card.querySelector('[data-extra-scope]');
-                var quantity = Math.max(0, parseInt(quantityInput && quantityInput.value || '0', 10) || 0);
-                var scope = String(scopeInput && scopeInput.value || 'dossier');
+                var scope = String(scopeInput && scopeInput.value || 'traveler_selection');
 
-                if (quantity < 1) return;
-
-                var maxAllowed = 1;
                 if (scope === 'traveler_selection') {
-                    maxAllowed = card.querySelectorAll('.reservation-create-extra-cb:checked').length;
-                } else if (scope === 'per_traveler') {
-                    maxAllowed = travelerCount;
+                    // nothing selected => extra not applied
+                    return;
                 }
 
-                if (quantity > maxAllowed && maxAllowed > 0) {
-                    errors.push({ field: null, message: 'Extra "' + name + '" : quantité max autorisée = ' + maxAllowed + '.' });
+                if (scope === 'per_traveler' && travelerCount < 1) {
+                    errors.push({ field: null, message: 'Extra "' + name + '" : aucun voyageur dans le dossier.' });
                 }
             });
 

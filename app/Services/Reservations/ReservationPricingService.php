@@ -1493,6 +1493,11 @@ class ReservationPricingService
 
                     return $adultPrice;
                 }), 2);
+            } elseif ($scope === 'per_traveler') {
+                $lineTotal = round(collect($travelerTypes)->sum(function ($type) use ($adultPrice, $childPrice) {
+                    return $type === 'child' ? ($childPrice > 0 ? $childPrice : $adultPrice) : $adultPrice;
+                }), 2);
+                $quantity = max(1, count($travelerTypes));
             } else {
                 $lineTotal = round($quantity * max($adultPrice, 0), 2);
             }
