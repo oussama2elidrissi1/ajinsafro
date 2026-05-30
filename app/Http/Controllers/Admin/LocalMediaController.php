@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
 
 class LocalMediaController extends Controller
 {
@@ -19,16 +20,44 @@ class LocalMediaController extends Controller
      */
     public function upload(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'image' => ['required', 'file', 'image', 'max:8192'],
-            'context' => ['nullable', 'string', 'max:64'],
-        ]);
+        $file = $request->file('image')
+            ?? $request->file('file')
+            ?? $request->file('media')
+            ?? $request->file('upload');
+
+        if (!$file) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Image invalide. Formats acceptés : JPG, PNG, WEBP. Taille max : 5 Mo.',
+            ], 422);
+        }
+
+        $validator = Validator::make(
+            [
+                'image' => $file,
+                'context' => $request->input('context'),
+            ],
+            [
+                'image' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+                'context' => ['nullable', 'string', 'max:64'],
+            ]
+        );
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Image invalide. Formats acceptés : JPG, PNG, WEBP. Taille max : 5 Mo.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $validated = $validator->validated();
 
         $context = isset($validated['context']) ? trim((string) $validated['context']) : '';
         $safeContext = $context !== '' ? Str::slug($context) : 'generic';
 
-        $path = $request->file('image')->store('tour-media/' . $safeContext, 'public');
-        $url = Storage::disk('public')->url($path);
+        $path = $file->store('voyages/local-media/'.$safeContext, 'public');
+        $url = asset(Storage::disk('public')->url($path));
 
         return response()->json([
             'success' => true,
@@ -37,4 +66,3 @@ class LocalMediaController extends Controller
         ]);
     }
 }
-

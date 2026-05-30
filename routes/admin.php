@@ -46,6 +46,7 @@ use App\Http\Controllers\Admin\TailorMadeRequestController;
 use App\Http\Controllers\Admin\TourHotelController;
 use App\Http\Controllers\Admin\TourTransferController;
 use App\Http\Controllers\Admin\LaravelVoyageThemeController;
+use App\Http\Controllers\Admin\LocalMediaController;
 use App\Http\Controllers\Admin\TravelDayItemController;
 use App\Http\Controllers\Admin\TravelProgramDayController;
 use App\Http\Controllers\Admin\UserAccessController;
@@ -337,6 +338,9 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::post('wp-media/remove', [WpMediaController::class, 'remove'])->name('wp-media.remove');
         Route::get('wp-media/get/{id}', [WpMediaController::class, 'get'])->name('wp-media.get')->whereNumber('id');
         Route::get('wp-media/search', [WpMediaController::class, 'search'])->name('wp-media.search');
+
+        // Local media upload for V2 sections (no WordPress attachment involved).
+        Route::post('local-media/upload', [LocalMediaController::class, 'upload'])->name('local-media.upload');
 
         Route::get('circuits/voyages/{id}/program', [ProgramApiController::class, 'show'])->name('circuits.voyages.program.show')->whereNumber('id');
         Route::post('circuits/voyages/{id}/program', [ProgramApiController::class, 'save'])->name('circuits.voyages.program.save')->whereNumber('id');
