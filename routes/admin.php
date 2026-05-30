@@ -212,6 +212,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         })->name('reservations.create-classic');
         Route::get('reservations/hotels-rooms', [ReservationsController::class, 'hotelsRooms'])->name('reservations.hotels-rooms');
         Route::get('reservations/voyage-departures', [ReservationsController::class, 'voyageDepartures'])->name('reservations.voyage-departures');
+        Route::get('reservations/extras', [ReservationsController::class, 'extras'])->name('reservations.extras');
         Route::get('reservations/departure-hotels-rooms', [ReservationsController::class, 'departureHotelsRooms'])->name('reservations.departure-hotels-rooms');
         Route::post('reservations/pricing-preview', [ReservationsController::class, 'pricingPreview'])->name('reservations.pricing-preview');
         Route::get('reservations/receipt', [ReservationsController::class, 'showReceipt'])->name('reservations.receipt');

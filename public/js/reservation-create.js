@@ -7,6 +7,7 @@
     var roomingAllocations = [];
     var availableRoomTypes = [];
     var companionIdCounter = 0;
+    var extrasFallbackRequests = {};
     window.reservationState = window.reservationState || {
         currentStep: 1,
         selectedTourId: null,
@@ -349,6 +350,67 @@
         return snapshot;
     }
 
+    function loadExtrasFallback(contextKey) {
+        if (extrasFallbackRequests[contextKey]) return;
+        extrasFallbackRequests[contextKey] = true;
+
+        var params = new URLSearchParams();
+        var select = document.getElementById('select-tour-id');
+        var hiddenTourId = document.getElementById('tour_id_hidden');
+        var departureInput = document.getElementById('input-departure-id');
+        var travelDateInput = document.getElementById('input-travel-date-id');
+        var urlParams = new URLSearchParams(window.location.search);
+        var selectedTour = select && select.value ? select.value : (hiddenTourId && hiddenTourId.value ? hiddenTourId.value : '');
+        var originalTour = urlParams.get('tour_id') || selectedTour;
+        var departureId = departureInput && departureInput.value ? departureInput.value : (urlParams.get('departure_id') || '');
+        var travelDateId = travelDateInput && travelDateInput.value ? travelDateInput.value : (urlParams.get('travel_date_id') || '');
+
+        if (originalTour) params.set('tour_id', originalTour);
+        if (selectedTour && selectedTour !== originalTour) params.set('voyage_id', selectedTour);
+        if (departureId) params.set('departure_id', departureId);
+        if (travelDateId) params.set('travel_date_id', travelDateId);
+
+        fetch('/admin/reservations/extras?' + params.toString(), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
+                var extras = data && Array.isArray(data.extras) ? data.extras : [];
+                console.log('[Reservation Create] Extras fallback response', {
+                    request: Object.fromEntries(params.entries()),
+                    voyage_id: data ? data.voyage_id : null,
+                    wp_post_id: data ? data.wp_post_id : null,
+                    resolution_source: data ? data.resolution_source : null,
+                    extras_source: data ? data.extras_source : null,
+                    extras_source_voyage_id: data ? data.extras_source_voyage_id : null,
+                    extras_count: extras.length,
+                    extras: extras.map(function (extra) {
+                        return {
+                            id: extra.id,
+                            name: extra.name,
+                            price_adult: extra.price_adult,
+                            source_voyage_id: extra.source_voyage_id || null
+                        };
+                    })
+                });
+
+                if (!extras.length || !data || !data.voyage_id) return;
+
+                var key = String(data.voyage_id);
+                extrasMap[key] = extras;
+                if (data.wp_post_id) {
+                    wpToVoyageIdMap[String(data.wp_post_id)] = data.voyage_id;
+                }
+                if (select) select.value = key;
+                if (hiddenTourId) hiddenTourId.value = key;
+                if (window.reservationState) window.reservationState.selectedTourId = key;
+                renderExtras();
+            })
+            .catch(function (error) {
+                console.warn('[Reservation Create] Extras fallback failed', error);
+            });
+    }
+
     function renderExtras() {
         var select = document.getElementById('select-tour-id');
         var hiddenTourId = document.getElementById('tour_id_hidden');
@@ -359,6 +421,11 @@
         var preserved = captureExtrasSelections();
         var selectId = String(select.value || '');
         var extras = extrasMap[selectId] || [];
+        var requestedKey = [
+            selectId,
+            window.location.search,
+            window.reservationState && window.reservationState.selectedDepartureId ? window.reservationState.selectedDepartureId : ''
+        ].join('|');
 
         if (!extras.length) {
             var maybeWpId = String(window.reservationState && window.reservationState.selectedTourId ? window.reservationState.selectedTourId : '');
@@ -373,11 +440,22 @@
                 }
             }
         }
+
+        console.log('[Reservation Create] Extras render debug', {
+            select_id: selectId,
+            selected_tour_id: window.reservationState ? window.reservationState.selectedTourId : null,
+            selected_departure_id: window.reservationState ? window.reservationState.selectedDepartureId : null,
+            selected_travel_date_id: window.reservationState ? window.reservationState.selectedTravelDateId : null,
+            extras_count: extras.length,
+            extras_map_keys: Object.keys(extrasMap || {})
+        });
+
         var travelers = travelerRows();
         container.innerHTML = '';
 
         if (!extras.length) {
             emptyState.classList.remove('d-none');
+            loadExtrasFallback(requestedKey);
             syncFinancialSummary();
             return;
         }

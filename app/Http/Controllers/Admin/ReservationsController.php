@@ -972,6 +972,121 @@ class ReservationsController extends Controller
         return response()->json($payload);
     }
 
+    public function extras(Request $request): JsonResponse
+    {
+        $inputTourId = (int) $request->query('tour_id', 0);
+        $inputVoyageId = (int) $request->query('voyage_id', 0);
+        $departureId = (int) $request->query('departure_id', 0);
+        $travelDateId = (int) $request->query('travel_date_id', 0);
+
+        $voyage = null;
+        $resolutionSource = 'none';
+
+        if ($departureId > 0) {
+            $departure = Departure::query()->find($departureId);
+            if ($departure) {
+                $voyage = Voyage::query()
+                    ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
+                    ->find((int) $departure->voyage_id);
+                $resolutionSource = 'departure_id';
+            }
+        }
+
+        if (! $voyage && $travelDateId > 0) {
+            $travelDate = TravelDate::query()->find($travelDateId);
+            if ($travelDate && (int) ($travelDate->travel_id ?? 0) > 0) {
+                $voyage = Voyage::query()
+                    ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
+                    ->where('wp_post_id', (int) $travelDate->travel_id)
+                    ->where('status', 'actif')
+                    ->orderByDesc('id')
+                    ->first();
+                $resolutionSource = 'travel_date.wp_post_id';
+            }
+        }
+
+        if (! $voyage && $inputVoyageId > 0) {
+            $voyage = Voyage::query()
+                ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
+                ->find($inputVoyageId);
+            $resolutionSource = 'voyage_id';
+        }
+
+        if (! $voyage && $inputTourId > 0) {
+            $voyage = Voyage::query()
+                ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
+                ->where('wp_post_id', $inputTourId)
+                ->where('status', 'actif')
+                ->orderByDesc('id')
+                ->first();
+            $resolutionSource = 'tour_id_as_wp_post_id';
+        }
+
+        if (! $voyage && $inputTourId > 0) {
+            $voyage = Voyage::query()
+                ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
+                ->find($inputTourId);
+            $resolutionSource = 'tour_id_as_voyage_id';
+        }
+
+        if (! $voyage) {
+            Log::info('Reservation create extras debug', [
+                'route' => 'admin.reservations.extras',
+                'input_tour_id' => $inputTourId ?: null,
+                'input_voyage_id' => $inputVoyageId ?: null,
+                'input_departure_id' => $departureId ?: null,
+                'input_travel_date_id' => $travelDateId ?: null,
+                'resolved_voyage_id' => null,
+                'resolved_wp_post_id' => null,
+                'extras_source' => 'none',
+                'extras_count' => 0,
+                'extras' => [],
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'voyage_id' => null,
+                'wp_post_id' => null,
+                'extras_count' => 0,
+                'extras' => [],
+                'debug' => ['extras_count' => 0],
+            ]);
+        }
+
+        [$extrasByVoyage, $extrasDebugByVoyage] = $this->adminExtrasByVoyage(collect([$voyage]), []);
+        $voyageKey = (string) $voyage->id;
+        $extras = $extrasByVoyage[$voyageKey] ?? [];
+        $debug = $extrasDebugByVoyage[$voyageKey] ?? [];
+
+        Log::info('Reservation create extras debug', [
+            'route' => 'admin.reservations.extras',
+            'input_tour_id' => $inputTourId ?: null,
+            'input_voyage_id' => $inputVoyageId ?: null,
+            'input_departure_id' => $departureId ?: null,
+            'input_travel_date_id' => $travelDateId ?: null,
+            'resolved_voyage_id' => (int) $voyage->id,
+            'resolved_wp_post_id' => (int) ($voyage->wp_post_id ?? 0),
+            'resolution_source' => $resolutionSource,
+            'extras_source' => $debug['source'] ?? 'none',
+            'extras_source_voyage_id' => $debug['source_voyage_id'] ?? null,
+            'extras_count' => count($extras),
+            'extras' => $debug['extras'] ?? [],
+            'same_wp_candidates' => $this->adminExtrasCandidatesForWp((int) ($voyage->wp_post_id ?? 0)),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'voyage_id' => (int) $voyage->id,
+            'wp_post_id' => (int) ($voyage->wp_post_id ?? 0),
+            'resolution_source' => $resolutionSource,
+            'extras_source' => $debug['source'] ?? 'none',
+            'extras_source_voyage_id' => $debug['source_voyage_id'] ?? null,
+            'extras_count' => count($extras),
+            'extras' => $extras,
+            'debug' => $debug,
+        ]);
+    }
+
     /**
      * Liste des départs Laravel pour un voyage (sélection réservation).
      */
