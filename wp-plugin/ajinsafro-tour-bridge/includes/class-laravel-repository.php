@@ -485,6 +485,9 @@ class AJTB_Laravel_Repository
      */
     public function get_tour_transfers_grouped()
     {
+        $defaults = function_exists('ajtb_default_images') ? ajtb_default_images() : array();
+        $default_transfer = isset($defaults['default_transfer_image_url']) ? (string) $defaults['default_transfer_image_url'] : '';
+
         $t = $this->table('tour_transfers');
         if (!$this->table_exists($t)) {
             return ['by_day_direction' => []];
@@ -509,17 +512,21 @@ class AJTB_Laravel_Repository
         ), ARRAY_A);
         $by_day_direction = [];
         foreach ($rows ?: [] as $r) {
+            $image_url = '';
             if (isset($r['image_id']) && $r['image_id']) {
                 if (function_exists('ajtb_get_attachment_image_url')) {
-                    $r['image_url'] = ajtb_get_attachment_image_url((int) $r['image_id'], 'medium') ?: '';
+                    $image_url = ajtb_get_attachment_image_url((int) $r['image_id'], 'medium') ?: '';
                 } elseif (function_exists('wp_get_attachment_image_url')) {
-                    $r['image_url'] = wp_get_attachment_image_url((int) $r['image_id'], 'medium') ?: '';
-                } else {
-                    $r['image_url'] = '';
+                    $image_url = wp_get_attachment_image_url((int) $r['image_id'], 'medium') ?: '';
                 }
-            } else {
-                $r['image_url'] = '';
             }
+            if ($image_url === '' && !empty($r['image_path']) && function_exists('ajtb_laravel_storage_url')) {
+                $image_url = ajtb_laravel_storage_url((string) $r['image_path']);
+            }
+            if ($image_url === '' && $default_transfer !== '') {
+                $image_url = $default_transfer;
+            }
+            $r['image_url'] = $image_url;
             $dir = isset($r['direction']) ? trim(strtolower((string) $r['direction'])) : '';
             if ($dir !== 'arrival' && $dir !== 'departure') {
                 continue;
@@ -570,6 +577,9 @@ class AJTB_Laravel_Repository
      */
     public function get_tour_hotels_grouped()
     {
+        $defaults = function_exists('ajtb_default_images') ? ajtb_default_images() : array();
+        $default_hotel = isset($defaults['default_hotel_image_url']) ? (string) $defaults['default_hotel_image_url'] : '';
+
         $t = $this->table('tour_hotels');
         if (!$this->table_exists($t)) {
             return ['by_day' => [], 'all' => []];
@@ -584,17 +594,21 @@ class AJTB_Laravel_Repository
         $by_day = [];
         $all = [];
         foreach ($rows ?: [] as $row) {
+            $image_url = '';
             if (isset($row['image_id']) && $row['image_id']) {
                 if (function_exists('ajtb_get_attachment_image_url')) {
-                    $row['image_url'] = ajtb_get_attachment_image_url((int) $row['image_id'], 'medium') ?: '';
+                    $image_url = ajtb_get_attachment_image_url((int) $row['image_id'], 'medium') ?: '';
                 } elseif (function_exists('wp_get_attachment_image_url')) {
-                    $row['image_url'] = wp_get_attachment_image_url((int) $row['image_id'], 'medium') ?: '';
-                } else {
-                    $row['image_url'] = '';
+                    $image_url = wp_get_attachment_image_url((int) $row['image_id'], 'medium') ?: '';
                 }
-            } else {
-                $row['image_url'] = '';
             }
+            if ($image_url === '' && !empty($row['image_path']) && function_exists('ajtb_laravel_storage_url')) {
+                $image_url = ajtb_laravel_storage_url((string) $row['image_path']);
+            }
+            if ($image_url === '' && $default_hotel !== '') {
+                $image_url = $default_hotel;
+            }
+            $row['image_url'] = $image_url;
             $day = (isset($row['day_number']) && $row['day_number'] !== '' && $row['day_number'] !== null) ? (int) $row['day_number'] : 1;
             if ($day < 1) {
                 $day = 1;

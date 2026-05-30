@@ -25,6 +25,78 @@ function ajtb_laravel_api_url() {
 }
 
 /**
+ * Base URL of the Laravel (booking) site used to serve public storage files.
+ *
+ * Uses AJTB_LARAVEL_API_URL when set, otherwise defaults to booking.ajinsafro.net.
+ *
+ * @return string Base URL without trailing slash.
+ */
+function ajtb_laravel_base_url() {
+    $url = trim((string) ajtb_laravel_api_url());
+    if ($url === '') {
+        $url = 'https://booking.ajinsafro.net';
+    }
+    return rtrim($url, '/');
+}
+
+/**
+ * Build a public URL to a Laravel "public disk" stored file (served via /storage/...).
+ *
+ * Accepts already-absolute URLs and returns them unchanged.
+ *
+ * @param string $path Relative storage path (e.g. voyages/local-media/hotel/xxx.webp)
+ * @return string URL or empty string when path is empty.
+ */
+function ajtb_laravel_storage_url($path) {
+    $path = is_string($path) ? trim($path) : '';
+    if ($path === '') {
+        return '';
+    }
+
+    if (filter_var($path, FILTER_VALIDATE_URL)) {
+        return $path;
+    }
+
+    $value = str_replace('\\', '/', ltrim($path, '/'));
+
+    foreach (array('storage/app/public/', 'public/storage/', 'storage/', 'public/') as $prefix) {
+        if (strpos($value, $prefix) === 0) {
+            $value = substr($value, strlen($prefix));
+            break;
+        }
+    }
+
+    $value = ltrim($value, '/');
+    if ($value === '') {
+        return '';
+    }
+
+    return ajtb_laravel_base_url() . '/storage/' . $value;
+}
+
+/**
+ * Default images synchronized from Laravel settings.
+ *
+ * Stored in WP option "aj_default_images" as JSON:
+ * - default_hotel_image_url
+ * - default_transfer_image_url
+ * - default_activity_image_url
+ *
+ * @return array{default_hotel_image_url:string,default_transfer_image_url:string,default_activity_image_url:string}
+ */
+function ajtb_default_images() {
+    $raw = get_option('aj_default_images', '');
+    $decoded = is_string($raw) && $raw !== '' ? json_decode($raw, true) : null;
+    $decoded = is_array($decoded) ? $decoded : array();
+
+    return array(
+        'default_hotel_image_url' => !empty($decoded['default_hotel_image_url']) ? (string) $decoded['default_hotel_image_url'] : '',
+        'default_transfer_image_url' => !empty($decoded['default_transfer_image_url']) ? (string) $decoded['default_transfer_image_url'] : '',
+        'default_activity_image_url' => !empty($decoded['default_activity_image_url']) ? (string) $decoded['default_activity_image_url'] : '',
+    );
+}
+
+/**
  * Get full table name for aj_* tables. Prevents double prefix.
  *
  * @param string $suffix Table name suffix, e.g. 'aj_tour_activity_selections', 'aj_tour_days', 'aj_activities'
@@ -436,6 +508,12 @@ function ajtb_render_day_activities_html($tour_id, $day_id, $day_activities, $se
                 $act_price = (float) $act['base_price'];
             }
             $act_image_url = isset($act['image_url']) ? $act['image_url'] : null;
+            if (!$act_image_url && function_exists('ajtb_default_images')) {
+                $defaults = ajtb_default_images();
+                if (!empty($defaults['default_activity_image_url'])) {
+                    $act_image_url = (string) $defaults['default_activity_image_url'];
+                }
+            }
             $act_start_time = isset($act['start_time']) ? $act['start_time'] : null;
             $act_end_time = isset($act['end_time']) ? $act['end_time'] : null;
             

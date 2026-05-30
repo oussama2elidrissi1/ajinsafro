@@ -297,15 +297,15 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="card-title mb-0">Images par dÃ©faut</h5>
+                        <h5 class="card-title mb-0">Images par défaut</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3 row">
-                            <label for="default_hotel_image" class="col-md-3 col-form-label">Image par dÃ©faut HÃ´tel</label>
+                            <label for="default_hotel_image" class="col-md-3 col-form-label">Image par défaut Hôtel</label>
                             <div class="col-md-9">
                                 @if(!empty($settings['default_hotel_image_url']))
                                     <div class="mb-2">
-                                        <img src="{{ $settings['default_hotel_image_url'] }}" alt="Image par dÃ©faut HÃ´tel" class="img-thumbnail" style="max-height: 120px;">
+                                        <img src="{{ $settings['default_hotel_image_url'] }}" alt="Image par défaut Hôtel" class="img-thumbnail" style="max-height: 120px;">
                                         <div class="form-check mt-2">
                                             <input class="form-check-input" type="checkbox" name="remove_default_hotel_image" id="remove_default_hotel_image" value="1">
                                             <label class="form-check-label" for="remove_default_hotel_image">Supprimer l'image actuelle</label>
@@ -318,11 +318,11 @@
                         </div>
 
                         <div class="mb-3 row">
-                            <label for="default_transfer_image" class="col-md-3 col-form-label">Image par dÃ©faut Transfert</label>
+                            <label for="default_transfer_image" class="col-md-3 col-form-label">Image par défaut Transfert</label>
                             <div class="col-md-9">
                                 @if(!empty($settings['default_transfer_image_url']))
                                     <div class="mb-2">
-                                        <img src="{{ $settings['default_transfer_image_url'] }}" alt="Image par dÃ©faut Transfert" class="img-thumbnail" style="max-height: 120px;">
+                                        <img src="{{ $settings['default_transfer_image_url'] }}" alt="Image par défaut Transfert" class="img-thumbnail" style="max-height: 120px;">
                                         <div class="form-check mt-2">
                                             <input class="form-check-input" type="checkbox" name="remove_default_transfer_image" id="remove_default_transfer_image" value="1">
                                             <label class="form-check-label" for="remove_default_transfer_image">Supprimer l'image actuelle</label>
@@ -335,11 +335,11 @@
                         </div>
 
                         <div class="mb-3 row">
-                            <label for="default_activity_image" class="col-md-3 col-form-label">Image par dÃ©faut ActivitÃ©</label>
+                            <label for="default_activity_image" class="col-md-3 col-form-label">Image par défaut Activité</label>
                             <div class="col-md-9">
                                 @if(!empty($settings['default_activity_image_url']))
                                     <div class="mb-2">
-                                        <img src="{{ $settings['default_activity_image_url'] }}" alt="Image par dÃ©faut ActivitÃ©" class="img-thumbnail" style="max-height: 120px;">
+                                        <img src="{{ $settings['default_activity_image_url'] }}" alt="Image par défaut Activité" class="img-thumbnail" style="max-height: 120px;">
                                         <div class="form-check mt-2">
                                             <input class="form-check-input" type="checkbox" name="remove_default_activity_image" id="remove_default_activity_image" value="1">
                                             <label class="form-check-label" for="remove_default_activity_image">Supprimer l'image actuelle</label>
@@ -378,4 +378,3 @@
         })();
     </script>
 @endpush
-
