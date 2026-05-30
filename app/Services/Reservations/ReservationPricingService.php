@@ -1364,8 +1364,18 @@ class ReservationPricingService
         } elseif (is_array($configuredExtras)) {
             $extras = collect($configuredExtras)->keyBy(fn ($item) => (int) data_get($item, 'id'));
         } else {
+            $voyageIds = [(int) $voyage->id];
+            if ((int) ($voyage->wp_post_id ?? 0) > 0) {
+                $siblingVoyageIds = Voyage::query()
+                    ->where('wp_post_id', (int) $voyage->wp_post_id)
+                    ->pluck('id')
+                    ->map(fn ($id) => (int) $id)
+                    ->all();
+                $voyageIds = array_values(array_unique(array_merge($voyageIds, $siblingVoyageIds)));
+            }
+
             $extras = VoyageExtra::query()
-                ->where('voyage_id', $voyage->id)
+                ->whereIn('voyage_id', $voyageIds)
                 ->where('is_active', true)
                 ->get()
                 ->keyBy('id');
@@ -1476,7 +1486,13 @@ class ReservationPricingService
                     ]);
                 }
 
-                $lineTotal = round($quantity * count($travelerKeys) * max($adultPrice, $childPrice, 0), 2);
+                $lineTotal = round($quantity * collect($travelerKeys)->sum(function ($travelerKey) use ($travelerTypes, $adultPrice, $childPrice) {
+                    if (($travelerTypes[(string) $travelerKey] ?? 'adult') === 'child') {
+                        return $childPrice > 0 ? $childPrice : $adultPrice;
+                    }
+
+                    return $adultPrice;
+                }), 2);
             } else {
                 $lineTotal = round($quantity * max($adultPrice, 0), 2);
             }

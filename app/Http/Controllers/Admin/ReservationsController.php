@@ -331,6 +331,7 @@ class ReservationsController extends Controller
                 ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
                 ->where('wp_post_id', $requestedTourId)
                 ->where('status', 'actif')
+                ->orderByDesc('id')
                 ->first();
 
             if ($voyageByWpId
@@ -378,6 +379,7 @@ class ReservationsController extends Controller
                 if (! $voyageForTour || (int) $selectedTravelDate->travel_id !== (int) $voyageForTour->wp_post_id) {
                     $voyageFromTravelDate = Voyage::query()
                         ->where('wp_post_id', (int) $selectedTravelDate->travel_id)
+                        ->orderByDesc('id')
                         ->first();
 
                     if ($voyageFromTravelDate) {
@@ -484,34 +486,31 @@ class ReservationsController extends Controller
         }
 
         $optionalActivitiesByVoyage = $this->optionalActivityExtrasByVoyage($voyages);
-        $extrasByVoyage = $voyages
-            ->mapWithKeys(fn (Voyage $voyage) => [
-                (string) $voyage->id => $voyage->extras
-                    ->where('is_active', true)
-                    ->values()
-                    ->map(fn ($extra) => [
-                        'id' => (int) $extra->id,
-                        'type' => 'voyage_extra',
-                        'source_type' => 'voyage_extra',
-                        'source_id' => (int) $extra->id,
-                        'name' => (string) $extra->name,
-                        'description' => (string) ($extra->description ?? ''),
-                        'price_adult' => (float) ($extra->price_adult ?? 0),
-                        'price_child' => (float) ($extra->price_child ?? 0),
-                        'extra_type' => (string) ($extra->extra_type ?? ''),
-                        'icon' => (string) ($extra->icon ?? 'fa-plus-circle'),
-                    ])
-                    ->toBase()
-                    ->merge($optionalActivitiesByVoyage[(string) $voyage->id] ?? [])
-                    ->values()
-                    ->all(),
-            ])
-            ->all();
+        [$extrasByVoyage, $extrasDebugByVoyage] = $this->adminExtrasByVoyage($voyages, $optionalActivitiesByVoyage);
 
         $preselectedTourId = null;
         if ($requestedTourId > 0 && $voyages->contains('id', $requestedTourId)) {
             $preselectedTourId = $requestedTourId;
         }
+
+        $selectedExtrasDebug = $requestedTourId > 0 ? ($extrasDebugByVoyage[(string) $requestedTourId] ?? null) : null;
+        Log::info('Reservation create extras debug', [
+            'route' => 'admin.reservations.create',
+            'input_tour_id' => $tourIdParam,
+            'input_voyage_id' => $voyageIdParam,
+            'input_departure_id' => $requestedDepartureId,
+            'input_travel_date_id' => $travelDateId,
+            'resolved_voyage_id' => $requestedTourId > 0 ? $requestedTourId : null,
+            'resolved_wp_post_id' => $selectedExtrasDebug['wp_post_id'] ?? null,
+            'extras_source' => $selectedExtrasDebug['source'] ?? 'none',
+            'extras_source_voyage_id' => $selectedExtrasDebug['source_voyage_id'] ?? null,
+            'extras_count' => $selectedExtrasDebug['extras_count'] ?? 0,
+            'extras' => $selectedExtrasDebug['extras'] ?? [],
+            'same_wp_candidates' => ! empty($selectedExtrasDebug['wp_post_id'])
+                ? $this->adminExtrasCandidatesForWp((int) $selectedExtrasDebug['wp_post_id'])
+                : [],
+            'extras_map_keys' => array_keys($extrasByVoyage),
+        ]);
 
         $fastCreateMode = $preselectedTourId && $selectedDeparture?->id && $travelDateId > 0;
 
@@ -531,6 +530,139 @@ class ReservationsController extends Controller
             'selectedUnitPrice' => $selectedUnitPrice,
             'selectedUnitPriceDebug' => $selectedUnitPriceDebug,
         ]);
+    }
+
+    /**
+     * @param  Collection<int, Voyage>  $voyages
+     * @param  array<string, array<int, array<string, mixed>>>  $optionalActivitiesByVoyage
+     * @return array{0: array<string, array<int, array<string, mixed>>>, 1: array<string, array<string, mixed>>}
+     */
+    private function adminExtrasByVoyage(Collection $voyages, array $optionalActivitiesByVoyage): array
+    {
+        $extrasByVoyage = [];
+        $debugByVoyage = [];
+
+        foreach ($voyages as $voyage) {
+            $resolved = $this->resolveAdminVoyageExtras($voyage);
+            /** @var Collection<int, mixed> $extras */
+            $extras = $resolved['extras'];
+            $voyageKey = (string) $voyage->id;
+
+            $items = $extras
+                ->values()
+                ->map(fn ($extra) => [
+                    'id' => (int) $extra->id,
+                    'type' => 'voyage_extra',
+                    'source_type' => 'voyage_extra',
+                    'source_id' => (int) $extra->id,
+                    'source_voyage_id' => (int) ($resolved['source_voyage_id'] ?? $voyage->id),
+                    'name' => (string) $extra->name,
+                    'description' => (string) ($extra->description ?? ''),
+                    'price_adult' => (float) ($extra->price_adult ?? 0),
+                    'price_child' => (float) ($extra->price_child ?? 0),
+                    'extra_type' => (string) ($extra->extra_type ?? ''),
+                    'icon' => (string) ($extra->icon ?? 'fa-plus-circle'),
+                ])
+                ->toBase()
+                ->merge($optionalActivitiesByVoyage[$voyageKey] ?? [])
+                ->values()
+                ->all();
+
+            $extrasByVoyage[$voyageKey] = $items;
+            $debugByVoyage[$voyageKey] = [
+                'voyage_id' => (int) $voyage->id,
+                'wp_post_id' => (int) ($voyage->wp_post_id ?? 0),
+                'source' => $resolved['source'],
+                'source_voyage_id' => $resolved['source_voyage_id'],
+                'extras_count' => count($items),
+                'extras' => collect($items)->map(fn (array $item) => [
+                    'id' => $item['id'],
+                    'name' => $item['name'],
+                    'price_adult' => $item['price_adult'],
+                    'source_type' => $item['source_type'],
+                    'source_voyage_id' => $item['source_voyage_id'] ?? null,
+                ])->values()->all(),
+            ];
+        }
+
+        return [$extrasByVoyage, $debugByVoyage];
+    }
+
+    /**
+     * The public WordPress flow resolves extras through `voyages.wp_post_id` and keeps the latest matching row.
+     * Admin reservations can point to an older sibling row through `departure_id`, so reuse the sibling extras when needed.
+     *
+     * @return array{extras: Collection<int, mixed>, source: string, source_voyage_id: int|null}
+     */
+    private function resolveAdminVoyageExtras(Voyage $voyage): array
+    {
+        $directExtras = $voyage->relationLoaded('extras')
+            ? $voyage->extras->where('is_active', true)->values()
+            : $voyage->extras()->where('is_active', true)->orderBy('sort_order')->orderBy('id')->get();
+
+        if ($directExtras->isNotEmpty()) {
+            return [
+                'extras' => $directExtras,
+                'source' => 'direct_voyage_extras',
+                'source_voyage_id' => (int) $voyage->id,
+            ];
+        }
+
+        $wpPostId = (int) ($voyage->wp_post_id ?? 0);
+        if ($wpPostId <= 0) {
+            return [
+                'extras' => $directExtras,
+                'source' => 'none',
+                'source_voyage_id' => null,
+            ];
+        }
+
+        $fallbackVoyage = Voyage::query()
+            ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
+            ->where('wp_post_id', $wpPostId)
+            ->where('status', 'actif')
+            ->where('id', '!=', (int) $voyage->id)
+            ->whereHas('extras', fn ($q) => $q->where('is_active', true))
+            ->orderByDesc('id')
+            ->first();
+
+        if ($fallbackVoyage && $fallbackVoyage->extras->isNotEmpty()) {
+            return [
+                'extras' => $fallbackVoyage->extras->values(),
+                'source' => 'fallback_same_wp_post_id',
+                'source_voyage_id' => (int) $fallbackVoyage->id,
+            ];
+        }
+
+        return [
+            'extras' => $directExtras,
+            'source' => 'none',
+            'source_voyage_id' => null,
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function adminExtrasCandidatesForWp(int $wpPostId): array
+    {
+        if ($wpPostId <= 0) {
+            return [];
+        }
+
+        return Voyage::query()
+            ->withCount(['extras as active_extras_count' => fn ($q) => $q->where('is_active', true)])
+            ->where('wp_post_id', $wpPostId)
+            ->orderByDesc('id')
+            ->get(['id', 'name', 'wp_post_id', 'status'])
+            ->map(fn (Voyage $voyage) => [
+                'voyage_id' => (int) $voyage->id,
+                'wp_post_id' => (int) ($voyage->wp_post_id ?? 0),
+                'status' => (string) ($voyage->status ?? ''),
+                'active_extras_count' => (int) ($voyage->active_extras_count ?? 0),
+            ])
+            ->values()
+            ->all();
     }
 
     /**
@@ -633,6 +765,7 @@ class ReservationsController extends Controller
                 ->with(['extras' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('id')])
                 ->where('wp_post_id', $requestedTourId)
                 ->where('status', 'actif')
+                ->orderByDesc('id')
                 ->first();
 
             if ($voyageByWpId
@@ -680,6 +813,7 @@ class ReservationsController extends Controller
                 if (! $voyageForTour || (int) $selectedTravelDate->travel_id !== (int) $voyageForTour->wp_post_id) {
                     $voyageFromTravelDate = Voyage::query()
                         ->where('wp_post_id', (int) $selectedTravelDate->travel_id)
+                        ->orderByDesc('id')
                         ->first();
 
                     if ($voyageFromTravelDate) {
@@ -726,29 +860,7 @@ class ReservationsController extends Controller
         }
 
         $optionalActivitiesByVoyage = $this->optionalActivityExtrasByVoyage($voyages);
-        $extrasByVoyage = $voyages
-            ->mapWithKeys(fn (Voyage $voyage) => [
-                (string) $voyage->id => $voyage->extras
-                    ->where('is_active', true)
-                    ->values()
-                    ->map(fn ($extra) => [
-                        'id' => (int) $extra->id,
-                        'type' => 'voyage_extra',
-                        'source_type' => 'voyage_extra',
-                        'source_id' => (int) $extra->id,
-                        'name' => (string) $extra->name,
-                        'description' => (string) ($extra->description ?? ''),
-                        'price_adult' => (float) ($extra->price_adult ?? 0),
-                        'price_child' => (float) ($extra->price_child ?? 0),
-                        'extra_type' => (string) ($extra->extra_type ?? ''),
-                        'icon' => (string) ($extra->icon ?? 'fa-plus-circle'),
-                    ])
-                    ->toBase()
-                    ->merge($optionalActivitiesByVoyage[(string) $voyage->id] ?? [])
-                    ->values()
-                    ->all(),
-            ])
-            ->all();
+        [$extrasByVoyage, $extrasDebugByVoyage] = $this->adminExtrasByVoyage($voyages, $optionalActivitiesByVoyage);
 
         $preselectedTourId = null;
         $selectedUnitPrice = null;
@@ -777,6 +889,25 @@ class ReservationsController extends Controller
         if ($requestedTourId > 0 && $voyages->contains('id', $requestedTourId)) {
             $preselectedTourId = $requestedTourId;
         }
+
+        $selectedExtrasDebug = $requestedTourId > 0 ? ($extrasDebugByVoyage[(string) $requestedTourId] ?? null) : null;
+        Log::info('Reservation create extras debug', [
+            'route' => 'admin.reservations.create-v2',
+            'input_tour_id' => $tourIdParam,
+            'input_voyage_id' => $voyageIdParam,
+            'input_departure_id' => $requestedDepartureId,
+            'input_travel_date_id' => $travelDateId,
+            'resolved_voyage_id' => $requestedTourId > 0 ? $requestedTourId : null,
+            'resolved_wp_post_id' => $selectedExtrasDebug['wp_post_id'] ?? null,
+            'extras_source' => $selectedExtrasDebug['source'] ?? 'none',
+            'extras_source_voyage_id' => $selectedExtrasDebug['source_voyage_id'] ?? null,
+            'extras_count' => $selectedExtrasDebug['extras_count'] ?? 0,
+            'extras' => $selectedExtrasDebug['extras'] ?? [],
+            'same_wp_candidates' => ! empty($selectedExtrasDebug['wp_post_id'])
+                ? $this->adminExtrasCandidatesForWp((int) $selectedExtrasDebug['wp_post_id'])
+                : [],
+            'extras_map_keys' => array_keys($extrasByVoyage),
+        ]);
 
         return view('admin.reservations.create-v2', [
             'voyages' => $voyages,
