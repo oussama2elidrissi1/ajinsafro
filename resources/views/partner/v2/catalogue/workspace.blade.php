@@ -96,9 +96,9 @@
             {{-- Image header (comme admin vente/catalogue) --}}
             <div class="relative">
                 @if($imageUrl)
-                    <img src="{{ $imageUrl }}" alt="" class="w-full h-[150px] object-cover">
+                    <img src="{{ $imageUrl }}" alt="" class="w-full h-40 object-cover">
                 @else
-                    <div class="w-full h-[150px] bg-gradient-to-r from-[#e6f3fa] to-white"></div>
+                    <div class="w-full h-40 bg-gradient-to-r from-[#e6f3fa] to-white"></div>
                 @endif
                 <div class="absolute inset-0 bg-gradient-to-t from-black/35 via-black/0 to-black/0"></div>
                 <div class="absolute top-3 left-3 flex items-center gap-2">
