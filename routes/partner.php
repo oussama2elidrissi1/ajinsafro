@@ -29,6 +29,8 @@ Route::middleware(['auth', 'partner'])->group(function () {
 
         Route::get('reservations', [PartnerReservationsController::class, 'index'])->name('partner.reservations.index');
         Route::get('reservations/create', [PartnerReservationsController::class, 'create'])->name('partner.reservations.create');
+        Route::get('reservations/voyage-departures', [PartnerReservationsController::class, 'voyageDepartures'])->name('partner.reservations.voyage-departures');
+        Route::get('reservations/departure-hotels-rooms', [PartnerReservationsController::class, 'departureHotelsRooms'])->name('partner.reservations.departure-hotels-rooms');
         Route::post('reservations', [PartnerReservationsController::class, 'store'])->name('partner.reservations.store');
         Route::get('reservations/{reservation}', [PartnerReservationsController::class, 'show'])->name('partner.reservations.show');
         Route::get('reservations/{reservation}/edit', [PartnerReservationsController::class, 'edit'])->name('partner.reservations.edit');
@@ -36,6 +38,7 @@ Route::middleware(['auth', 'partner'])->group(function () {
         Route::delete('reservations/{reservation}', [PartnerReservationsController::class, 'destroy'])->name('partner.reservations.destroy');
 
         Route::get('clients', [PartnerClientsController::class, 'index'])->name('partner.clients.index');
+        Route::get('clients/search', [PartnerClientsController::class, 'search'])->name('partner.clients.search');
         Route::get('clients/create', [PartnerClientsController::class, 'create'])->name('partner.clients.create');
         Route::post('clients', [PartnerClientsController::class, 'store'])->name('partner.clients.store');
         Route::get('clients/{client}', [PartnerClientsController::class, 'show'])->name('partner.clients.show');
@@ -81,4 +84,3 @@ Route::post('logout', function (Request $request) {
     $request->session()->regenerateToken();
     return redirect()->away((string) config('app.public_url', 'https://ajinsafro.net'));
 })->middleware('auth')->name('partner.logout');
-

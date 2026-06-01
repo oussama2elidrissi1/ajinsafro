@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Partner;
 
 use App\Http\Controllers\Controller;
 use App\Models\Client;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -32,6 +33,31 @@ class ClientsController extends Controller
         }
         $clients = $query->orderByDesc('created_at')->paginate(15)->withQueryString();
         return view('partner.v2.clients.index', compact('clients'));
+    }
+
+    public function search(Request $request): JsonResponse
+    {
+        $partner = $this->getPartner($request);
+        $q = trim((string) $request->query('q', ''));
+        if (mb_strlen($q) < 2) {
+            return response()->json(['clients' => []]);
+        }
+
+        $clients = Client::query()
+            ->where('partner_id', $partner->id)
+            ->where(function ($sub) use ($q) {
+                $sub->where('client_code', 'like', '%' . $q . '%')
+                    ->orWhere('full_name', 'like', '%' . $q . '%')
+                    ->orWhere('first_name', 'like', '%' . $q . '%')
+                    ->orWhere('last_name', 'like', '%' . $q . '%')
+                    ->orWhere('email', 'like', '%' . $q . '%')
+                    ->orWhere('phone', 'like', '%' . $q . '%');
+            })
+            ->orderByDesc('id')
+            ->limit(20)
+            ->get(['id', 'client_code', 'full_name', 'email', 'phone']);
+
+        return response()->json(['clients' => $clients]);
     }
 
     public function create(): View

@@ -1,6 +1,12 @@
 (function () {
     'use strict';
 
+    var RESERVATION_ENDPOINTS = (window && window.RESERVATION_CREATE_ENDPOINTS) ? window.RESERVATION_CREATE_ENDPOINTS : {};
+    function endpointUrl(key, fallback) {
+        if (RESERVATION_ENDPOINTS && RESERVATION_ENDPOINTS[key]) return RESERVATION_ENDPOINTS[key];
+        return fallback;
+    }
+
     var currentStep = 1;
     var extrasMap = parseJsonScript('v2-extras-map', {});
     var roomingAllocations = [];
@@ -299,7 +305,8 @@
         if (!list || !block) return;
         list.innerHTML = '<p class="v2-placeholder">Chargement des départs…</p>';
         block.hidden = false;
-        var url = '/admin/reservations/voyage-departures?tour_id=' + encodeURIComponent(tourId);
+        var base = endpointUrl('voyageDepartures', '/admin/reservations/voyage-departures');
+        var url = base + (base.indexOf('?') === -1 ? '?' : '&') + 'tour_id=' + encodeURIComponent(tourId);
         fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function (r) { return r.json(); })
             .then(function (data) {
@@ -403,7 +410,10 @@
     function loadDepartureHotelsRooms(departureId) {
         var tourId = getSelectedTourId();
         if (!tourId || !departureId) return;
-        var url = '/admin/reservations/departure-hotels-rooms?tour_id=' + encodeURIComponent(tourId) + '&departure_id=' + encodeURIComponent(departureId);
+        var base = endpointUrl('departureHotelsRooms', '/admin/reservations/departure-hotels-rooms');
+        var url = base + (base.indexOf('?') === -1 ? '?' : '&')
+            + 'tour_id=' + encodeURIComponent(tourId)
+            + '&departure_id=' + encodeURIComponent(departureId);
         fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function (r) { return r.json(); })
             .then(function (data) {
@@ -436,7 +446,9 @@
         var results = document.getElementById('v2-client-search-results');
         if (!results) return;
         if (!query || query.length < 2) { results.hidden = true; return; }
-        fetch('/admin/customers/clients/search?q=' + encodeURIComponent(query), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        var base = endpointUrl('clientSearch', '/admin/customers/clients/search');
+        var url = base + (base.indexOf('?') === -1 ? '?' : '&') + 'q=' + encodeURIComponent(query);
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 var items = data.clients || data.data || [];
