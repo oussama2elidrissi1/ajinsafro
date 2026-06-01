@@ -55,61 +55,97 @@
 
         <div class="v2-layout">
             <main class="v2-main">
+                {{-- Stepper compact --}}
                 <div class="v2-stepper" role="tablist" aria-label="Étapes de création">
                     <button type="button" class="v2-stepper__step is-active" data-v2-step-nav="1">
-                        <span class="v2-stepper__index">1</span>
-                        <span class="v2-stepper__label">Circuit</span>
+                        <span class="v2-stepper__badge">1</span>
+                        <span class="v2-stepper__label">Tour + départ</span>
                     </button>
                     <button type="button" class="v2-stepper__step" data-v2-step-nav="2">
-                        <span class="v2-stepper__index">2</span>
-                        <span class="v2-stepper__label">Voyageurs</span>
+                        <span class="v2-stepper__badge">2</span>
+                        <span class="v2-stepper__label">Client & voyageurs</span>
                     </button>
                     <button type="button" class="v2-stepper__step" data-v2-step-nav="3">
-                        <span class="v2-stepper__index">3</span>
-                        <span class="v2-stepper__label">Chambres & extras</span>
+                        <span class="v2-stepper__badge">3</span>
+                        <span class="v2-stepper__label">Chambres + extras</span>
                     </button>
                     <button type="button" class="v2-stepper__step" data-v2-step-nav="4">
-                        <span class="v2-stepper__index">4</span>
-                        <span class="v2-stepper__label">Paiement</span>
+                        <span class="v2-stepper__badge">4</span>
+                        <span class="v2-stepper__label">Paiement & validation</span>
                     </button>
                 </div>
 
-                {{-- Étape 1 : Circuit --}}
+                {{-- Résumé compact du voyage sélectionné (visible dès qu’un voyage + départ sont choisis) --}}
+                <div id="v2-compact-trip-summary" class="v2-compact-summary" hidden>
+                    <div class="v2-compact-summary__body">
+                        <div class="v2-compact-summary__info">
+                            <strong id="v2-compact-trip-name">—</strong>
+                            <span id="v2-compact-dates">—</span>
+                            <span id="v2-compact-capacity">—</span>
+                            <span id="v2-compact-price">—</span>
+                        </div>
+                        <button type="button" class="v2-btn v2-btn--outline v2-btn--sm" id="v2-btn-change-trip">
+                            <i class="bx bx-edit"></i> Modifier voyage/départ
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Étape 1 : Prestation & départ --}}
                 <section class="v2-panel is-active" data-v2-step="1">
                     <div class="v2-card">
                         <div class="v2-card__head">
                             <div>
-                                <p class="v2-eyebrow">Étape 1 — Circuit</p>
-                                <h2 class="v2-card__title">Choisir un voyage et un départ</h2>
+                                <p class="v2-eyebrow">Étape 1 — Prestation & départ</p>
+                                <h2 class="v2-card__title">Choisissez le voyage et le départ</h2>
                             </div>
                         </div>
 
-                        <div class="v2-grid v2-grid--2">
-                            <div class="v2-field v2-field--full">
-                                <label class="v2-label" for="v2-tour-id">Voyage <span class="v2-required">*</span></label>
-                                <select name="tour_id" id="v2-tour-id" class="v2-input" required>
-                                    <option value="">Sélectionner un voyage…</option>
-                                    @foreach($voyages as $v)
-                                        @php($wpTitle = $v->wp_post_id && isset($wpTitles[$v->wp_post_id]) ? ($wpTitles[$v->wp_post_id]->post_title ?? null) : null)
-                                        <option value="{{ $v->id }}"
-                                            data-wp-post-id="{{ $v->wp_post_id }}"
-                                            {{ (int) old('tour_id', $preselectedTourId ?? 0) === (int) $v->id ? 'selected' : '' }}>
-                                            {{ $wpTitle ?: $v->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                        @if(isset($travelDateIncoherent) && $travelDateIncoherent)
+                            <div class="v2-alert v2-alert--warn">La date de départ fournie ne correspond pas au voyage sélectionné. Elle a été ignorée.</div>
+                        @endif
+
+                        <div class="v2-field v2-field--full">
+                            <label class="v2-label" for="v2-select-tour">Voyage / circuit <span class="v2-required">*</span></label>
+                            <div class="v2-search-select">
+                                <i class="bx bx-search"></i>
+                                <input type="text" id="v2-tour-search" class="v2-input v2-input--search" placeholder="Rechercher un voyage…" autocomplete="off">
                             </div>
+                            <select class="v2-input" required id="v2-select-tour" size="6">
+                                <option value="" disabled {{ !$preselectedTourId ? 'selected' : '' }}>Sélectionner un voyage…</option>
+                                @foreach($voyages as $voyage)
+                                    @php
+                                        $label = $voyage->wp_post_id && $wpTitles->has($voyage->wp_post_id)
+                                            ? ($wpTitles->get($voyage->wp_post_id)->post_title ?? $voyage->name ?? $voyage->slug)
+                                            : ($voyage->name ?? $voyage->slug ?? 'Voyage #' . $voyage->id);
+                                    @endphp
+                                    <option value="{{ $voyage->id }}" data-price-from="{{ (float) ($voyage->price_from ?? 0) }}" {{ $preselectedTourId === (int) $voyage->id ? 'selected' : '' }}>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <input type="hidden" name="tour_id" id="v2-tour-id-hidden" value="{{ old('tour_id', $preselectedTourId) }}">
                         </div>
 
-                        <div id="v2-departure-block" class="v2-departure-block" hidden>
-                            <h3 class="v2-subtitle">Départs disponibles</h3>
-                            <div id="v2-departure-list" class="v2-departure-list"></div>
-                            <input type="hidden" name="departure_id" id="v2-departure-id-hidden" value="{{ old('departure_id', $selectedDepartureId ?? '') }}">
-                            <input type="hidden" name="travel_date_id" id="v2-travel-date-id-hidden" value="{{ old('travel_date_id', $travelDateId ?? '') }}">
+                        <div class="v2-field v2-field--full" id="v2-departure-block" hidden>
+                            <label class="v2-label">Départ disponible <span class="v2-required">*</span></label>
+                            <div id="v2-departure-list" class="v2-departure-list">
+                                <p class="v2-placeholder">Sélectionnez d’abord un voyage pour voir les départs.</p>
+                            </div>
+                            <input type="hidden" name="departure_id" id="v2-departure-id-hidden" value="{{ old('departure_id', $selectedDepartureId) }}">
+                            <input type="hidden" name="travel_date_id" id="v2-travel-date-id-hidden" value="{{ old('travel_date_id', $travelDateId) }}">
                         </div>
 
-                        <div class="v2-departure-summary">
+                        {{-- Carte synthèse départ --}}
+                        <div id="v2-departure-summary" class="v2-departure-summary" hidden>
                             <div class="v2-departure-summary__grid">
+                                <div class="v2-departure-summary__item">
+                                    <span class="v2-departure-summary__label">Départ</span>
+                                    <strong class="v2-departure-summary__value" id="v2-summary-dates">—</strong>
+                                </div>
+                                <div class="v2-departure-summary__item">
+                                    <span class="v2-departure-summary__label">Places restantes</span>
+                                    <strong class="v2-departure-summary__value" id="v2-summary-capacity">—</strong>
+                                </div>
                                 <div class="v2-departure-summary__item">
                                     <span class="v2-departure-summary__label">Prix unitaire</span>
                                     <strong class="v2-departure-summary__value" id="v2-summary-unit-price">—</strong>
@@ -157,8 +193,7 @@
                             <div class="v2-field v2-field--full" style="position:relative;z-index:20;">
                                 <label class="v2-label" for="v2-client-search">Rechercher un client <span class="v2-required">*</span></label>
                                 <input type="hidden" name="client_external_id" id="v2-client-external-id" value="">
-                                <input type="search" id="v2-client-search" class="v2-input" placeholder="Nom, téléphone, email…"
-                                       autocomplete="off">
+                                <input type="search" id="v2-client-search" class="v2-input" placeholder="Nom, téléphone, email ou CIN…" autocomplete="off">
                                 <div id="v2-client-search-results" class="v2-search-results" hidden></div>
                                 <div id="v2-client-search-selected" class="v2-search-selected" hidden>
                                     <span id="v2-client-search-selected-label"></span>
@@ -188,12 +223,32 @@
                                     <input type="email" name="client_email" id="v2-client-email" class="v2-input" value="{{ old('client_email') }}" autocomplete="email">
                                 </div>
                                 <div class="v2-field">
-                                    <label class="v2-label" for="v2-client-gender">Sexe</label>
+                                    <label class="v2-label" for="v2-client-document-type">Type de document</label>
+                                    <select name="client_document_type" id="v2-client-document-type" class="v2-input">
+                                        <option value="">Sélectionner…</option>
+                                        <option value="cin" {{ old('client_document_type') === 'cin' ? 'selected' : '' }}>CIN</option>
+                                        <option value="passport" {{ old('client_document_type') === 'passport' ? 'selected' : '' }}>Passeport</option>
+                                    </select>
+                                </div>
+                                <div class="v2-field">
+                                    <label class="v2-label" for="v2-client-document-number">Numéro document</label>
+                                    <input type="text" name="client_document_number" id="v2-client-document-number" class="v2-input" value="{{ old('client_document_number') }}">
+                                </div>
+                                <div class="v2-field">
+                                    <label class="v2-label" for="v2-client-nationality">Nationalité</label>
+                                    <input type="text" name="client_nationality" id="v2-client-nationality" class="v2-input" value="{{ old('client_nationality') }}">
+                                </div>
+                                <div class="v2-field">
+                                    <label class="v2-label" for="v2-client-gender">Sexe <span class="required-star">*</span></label>
                                     <select name="client_gender" id="v2-client-gender" class="v2-input">
                                         <option value="">Sélectionner…</option>
                                         <option value="male" {{ old('client_gender') === 'male' ? 'selected' : '' }}>Homme</option>
                                         <option value="female" {{ old('client_gender') === 'female' ? 'selected' : '' }}>Femme</option>
                                     </select>
+                                </div>
+                                <div class="v2-field">
+                                    <label class="v2-label" for="v2-client-birth-date">Date naissance</label>
+                                    <input type="date" name="client_birth_date" id="v2-client-birth-date" class="v2-input" value="{{ old('client_birth_date') }}">
                                 </div>
                                 <div class="v2-field">
                                     <label class="v2-label" for="v2-client-traveler-type">Type voyageur</label>
@@ -208,15 +263,13 @@
 
                         <div class="v2-divider"></div>
 
-                        <div class="v2-card__subhead">
-                            <h3 class="v2-subtitle">Accompagnants</h3>
-                            <button type="button" class="v2-btn v2-btn--outline" id="v2-add-companion">
-                                <i class="bx bx-user-plus"></i> Ajouter
-                            </button>
+                        <div class="v2-toolbar">
+                            <h3 class="v2-mini-title">Accompagnants</h3>
+                            <button type="button" class="v2-btn v2-btn--ghost v2-btn--sm" id="v2-btn-add-companion"><i class="bx bx-plus"></i> Ajouter</button>
                         </div>
 
-                        <div id="v2-companions-container"></div>
-                        <p id="v2-no-companions" class="v2-placeholder">Aucun accompagnant ajouté.</p>
+                        <div id="v2-companions-container" class="v2-companions"></div>
+                        <p id="v2-no-companions" class="v2-empty">Aucun accompagnant pour le moment.</p>
                     </div>
 
                     <div class="v2-actions">
@@ -225,41 +278,67 @@
                     </div>
                 </section>
 
-                {{-- Étape 3 : Chambres & Extras --}}
+                {{-- Étape 3 : Hébergement & options --}}
                 <section class="v2-panel" data-v2-step="3" hidden>
                     <div class="v2-card">
                         <div class="v2-card__head">
                             <div>
-                                <p class="v2-eyebrow">Étape 3 — Chambres & extras</p>
-                                <h2 class="v2-card__title">Répartition et suppléments</h2>
+                                <p class="v2-eyebrow">Étape 3 — Hébergement & options</p>
+                                <h2 class="v2-card__title">Chambres, répartition & extras</h2>
                             </div>
-                            <div class="v2-badges">
-                                <span class="v2-badge" id="v2-badge-men">Hommes : 0</span>
-                                <span class="v2-badge" id="v2-badge-women">Femmes : 0</span>
-                                <span class="v2-badge" id="v2-badge-beds">Lits à couvrir : 0</span>
+                            <span class="v2-pill" id="v2-rooming-pill">Chambres en attente</span>
+                        </div>
+
+                        <div class="v2-rooming-layout">
+                            <div class="v2-rooming-col">
+                                <h3 class="v2-mini-title">Voyageurs à affecter</h3>
+                                <div id="v2-rooming-unassigned" class="v2-traveler-pool"></div>
+                            </div>
+                            <div class="v2-rooming-col">
+                                <h3 class="v2-mini-title">Chambres disponibles</h3>
+                                <div id="v2-rooming-available" class="v2-available-rooms">
+                                    <p class="v2-placeholder">Sélectionnez un départ à l’étape 1.</p>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="v2-rooming">
-                            <div class="v2-rooming__toolbar">
-                                <button type="button" class="v2-btn v2-btn--primary" id="v2-rooming-auto">Répartition auto</button>
-                                <button type="button" class="v2-btn v2-btn--outline" id="v2-rooming-add-room">+ Chambre</button>
-                                <button type="button" class="v2-btn v2-btn--ghost" id="v2-rooming-reset">Réinitialiser</button>
-                            </div>
-                            <div id="v2-rooming-container"></div>
-                            <div class="v2-alert v2-alert--info" id="v2-rooming-info" hidden></div>
+                        <div class="v2-rooming-actions">
+                            <button type="button" class="v2-btn v2-btn--primary v2-btn--sm" id="v2-btn-auto-rooming">Répartition auto</button>
+                            <button type="button" class="v2-btn v2-btn--ghost v2-btn--sm" id="v2-btn-add-room">Ajouter chambre</button>
+                            <button type="button" class="v2-btn v2-btn--secondary v2-btn--sm" id="v2-btn-reset-rooming">Réinitialiser</button>
                         </div>
-                    </div>
 
-                    <div class="v2-card">
-                        <div class="v2-card__head">
-                            <div>
-                                <p class="v2-eyebrow">Extras</p>
-                                <h2 class="v2-card__title">Suppléments disponibles</h2>
+                        <div id="v2-rooming-board" class="v2-rooming-board"></div>
+
+                        <div class="v2-divider"></div>
+
+                        <h3 class="v2-mini-title">Extras optionnels</h3>
+                        <div id="v2-extras-container" class="v2-extras-grid"></div>
+                        <div id="v2-extras-empty" class="v2-placeholder" hidden>
+                            <strong>Aucun extra configuré</strong>
+                            <p>Ce voyage ne contient pas encore d’extras actifs.</p>
+                        </div>
+
+                        <div class="v2-divider"></div>
+
+                        <div class="v2-pricing-preview">
+                            <div class="v2-pricing-preview__row">
+                                <span>Sous-total base</span>
+                                <strong id="v2-preview-base">0 DH</strong>
+                            </div>
+                            <div class="v2-pricing-preview__row">
+                                <span>Suppléments chambre</span>
+                                <strong id="v2-preview-room-supp">0 DH</strong>
+                            </div>
+                            <div class="v2-pricing-preview__row">
+                                <span>Extras</span>
+                                <strong id="v2-preview-extras">0 DH</strong>
+                            </div>
+                            <div class="v2-pricing-preview__row v2-pricing-preview__row--total">
+                                <span>Total avant remise</span>
+                                <strong id="v2-preview-subtotal">0 DH</strong>
                             </div>
                         </div>
-                        <div id="v2-extras-container"></div>
-                        <p class="v2-placeholder" id="v2-extras-empty">Aucun extra configuré.</p>
                     </div>
 
                     <div class="v2-actions">
@@ -268,33 +347,104 @@
                     </div>
                 </section>
 
-                {{-- Étape 4 : Paiement --}}
+                {{-- Étape 4 : Paiement & validation --}}
                 <section class="v2-panel" data-v2-step="4" hidden>
                     <div class="v2-card">
                         <div class="v2-card__head">
                             <div>
-                                <p class="v2-eyebrow">Étape 4 — Paiement</p>
-                                <h2 class="v2-card__title">Finaliser et confirmer</h2>
+                                <p class="v2-eyebrow">Étape 4 — Paiement & validation</p>
+                                <h2 class="v2-card__title">Finalisation du dossier</h2>
                             </div>
                         </div>
 
                         <div class="v2-grid v2-grid--2">
                             <div class="v2-field">
-                                <label class="v2-label" for="v2-payment-type">Type de paiement</label>
-                                <select name="payment_type" id="v2-payment-type" class="v2-input">
-                                    <option value="">Sélectionner…</option>
-                                    <option value="CASHPLUS" {{ old('payment_type') === 'CASHPLUS' ? 'selected' : '' }}>CashPlus</option>
-                                    <option value="VIREMENT" {{ old('payment_type') === 'VIREMENT' ? 'selected' : '' }}>Virement</option>
-                                    <option value="ESPECE" {{ old('payment_type') === 'ESPECE' ? 'selected' : '' }}>Espèce</option>
+                                <label class="v2-label" for="v2-discount-type-select">Type de remise</label>
+                                <select name="discount_type" id="v2-discount-type-select" class="v2-input">
+                                    <option value="">Aucune</option>
+                                    <option value="fixed" {{ old('discount_type') === 'fixed' ? 'selected' : '' }}>Montant fixe</option>
+                                    <option value="percentage" {{ old('discount_type') === 'percentage' ? 'selected' : '' }}>Pourcentage</option>
                                 </select>
                             </div>
                             <div class="v2-field">
-                                <label class="v2-label" for="v2-paid-amount">Montant payé</label>
-                                <input type="number" name="paid_amount" id="v2-paid-amount" class="v2-input" value="{{ old('paid_amount', 0) }}" min="0" step="0.01">
+                                <label class="v2-label" for="v2-discount-input">Valeur remise</label>
+                                <input type="number" name="discount_value" id="v2-discount-input" class="v2-input" value="{{ old('discount_value', 0) }}" min="0" step="0.01">
+                            </div>
+                        </div>
+
+                        <div class="v2-divider"></div>
+
+                        <div class="v2-grid v2-grid--2">
+                            <div class="v2-field">
+                                <label class="v2-label" for="v2-payment-date">Date paiement</label>
+                                <input type="date" name="payment_date" id="v2-payment-date" class="v2-input" value="{{ old('payment_date', now()->toDateString()) }}">
+                            </div>
+                            <div class="v2-field">
+                                <label class="v2-label" for="v2-payment-type">Mode de paiement</label>
+                                <select name="payment_type" id="v2-payment-type" class="v2-input">
+                                    <option value="">Sélectionner…</option>
+                                    <option value="Espèces" {{ old('payment_type') === 'Espèces' ? 'selected' : '' }}>Espèces</option>
+                                    <option value="Virement bancaire" {{ old('payment_type') === 'Virement bancaire' ? 'selected' : '' }}>Virement bancaire</option>
+                                    <option value="Carte bancaire" {{ old('payment_type') === 'Carte bancaire' ? 'selected' : '' }}>Carte bancaire</option>
+                                    <option value="Chèque" {{ old('payment_type') === 'Chèque' ? 'selected' : '' }}>Chèque</option>
+                                    <option value="TPE" {{ old('payment_type') === 'TPE' ? 'selected' : '' }}>TPE</option>
+                                    <option value="Autre" {{ old('payment_type') === 'Autre' ? 'selected' : '' }}>Autre</option>
+                                </select>
+                            </div>
+                            <div class="v2-field">
+                                <label class="v2-label" for="v2-payment-amount">Montant payé</label>
+                                <input type="number" name="payment_amount" id="v2-payment-amount" class="v2-input" value="{{ old('payment_amount', 0) }}" min="0" step="0.01">
+                            </div>
+                            <div class="v2-field">
+                                <label class="v2-label" for="v2-payment-reference">Référence</label>
+                                <input type="text" name="payment_reference" id="v2-payment-reference" class="v2-input" value="{{ old('payment_reference') }}" placeholder="Reçu, transaction…">
                             </div>
                             <div class="v2-field v2-field--full">
-                                <label class="v2-label" for="v2-notes">Notes</label>
-                                <textarea name="notes" id="v2-notes" class="v2-input v2-input--textarea" rows="3" placeholder="Informations complémentaires…">{{ old('notes') }}</textarea>
+                                <label class="v2-label" for="v2-payment-note">Note interne</label>
+                                <textarea name="payment_note" id="v2-payment-note" class="v2-input v2-input--textarea" rows="3" placeholder="Détail du règlement, échéance…">{{ old('payment_note') }}</textarea>
+                            </div>
+                            <div class="v2-field v2-field--full">
+                                <label class="v2-label" for="v2-payment-receipt">Justificatif</label>
+                                <input type="file" name="payment_receipt" id="v2-payment-receipt" class="v2-input v2-input--file" accept="image/*,.pdf">
+                            </div>
+                        </div>
+
+                        <div class="v2-divider"></div>
+
+                        <div class="v2-field v2-field--full">
+                            <label class="v2-label" for="v2-dossier-documents">Documents du dossier</label>
+                            <input type="file" name="dossier_documents[]" id="v2-dossier-documents" class="v2-input v2-input--file" accept="image/*,.pdf" multiple>
+                        </div>
+
+                        <div class="v2-toggle-row">
+                            <input type="hidden" name="visa_ok" value="0">
+                            <label class="v2-toggle">
+                                <input type="checkbox" name="visa_ok" id="v2-visa-ok" value="1" {{ old('visa_ok', true) ? 'checked' : '' }}>
+                                <span class="v2-toggle__slider"></span>
+                                <span>Visa OK, pas d'assistance nécessaire</span>
+                            </label>
+                        </div>
+
+                        <div id="v2-visa-block" class="v2-visa-block" {{ old('visa_ok', true) ? 'hidden' : '' }}>
+                            <div class="v2-grid v2-grid--2">
+                                <div class="v2-field">
+                                    <label class="v2-label" for="v2-visa-status">Statut visa</label>
+                                    <select name="visa_status" id="v2-visa-status" class="v2-input">
+                                        <option value="">Sélectionner…</option>
+                                        <option value="not_required" {{ old('visa_status') === 'not_required' ? 'selected' : '' }}>Non requis</option>
+                                        <option value="pending" {{ old('visa_status') === 'pending' ? 'selected' : '' }}>En attente</option>
+                                        <option value="approved" {{ old('visa_status') === 'approved' ? 'selected' : '' }}>Approuvé</option>
+                                        <option value="rejected" {{ old('visa_status') === 'rejected' ? 'selected' : '' }}>Refusé</option>
+                                    </select>
+                                </div>
+                                <div class="v2-field">
+                                    <label class="v2-label" for="v2-visa-document">Document visa</label>
+                                    <input type="file" name="visa_document" id="v2-visa-document" class="v2-input v2-input--file" accept="image/*,.pdf">
+                                </div>
+                                <div class="v2-field v2-field--full">
+                                    <label class="v2-label" for="v2-visa-notes">Notes visa</label>
+                                    <textarea name="visa_notes" id="v2-visa-notes" class="v2-input v2-input--textarea" rows="3" placeholder="Suivi visa, pièces manquantes…">{{ old('visa_notes') }}</textarea>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -393,4 +543,3 @@
     </script>
     <script src="{{ asset('js/reservation-create-v2.js') . '?v=' . @filemtime(public_path('js/reservation-create-v2.js')) }}"></script>
 @endpush
-
