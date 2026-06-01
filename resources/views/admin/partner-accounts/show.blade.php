@@ -108,6 +108,31 @@
                     @endif
                 </div>
             </div>
+
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Accès compte</h5>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted mb-2">Le mot de passe ne peut pas être affiché. Vous pouvez envoyer un lien de réinitialisation.</p>
+                    <form action="{{ route('admin.partner-accounts.password-reset', $partner) }}" method="post" class="mb-2">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-primary w-100"><i class="bx bx-key me-1"></i> Envoyer lien de réinitialisation</button>
+                    </form>
+
+                    @if($partner->isValidated())
+                        <form action="{{ route('admin.partner-accounts.suspend', $partner) }}" method="post" class="mb-2">
+                            @csrf
+                            <button type="submit" class="btn btn-outline-secondary w-100"><i class="bx bx-pause-circle me-1"></i> Désactiver le partenaire</button>
+                        </form>
+                    @elseif($partner->isSuspended())
+                        <form action="{{ route('admin.partner-accounts.activate', $partner) }}" method="post" class="mb-2">
+                            @csrf
+                            <button type="submit" class="btn btn-success w-100"><i class="bx bx-play-circle me-1"></i> Activer le partenaire</button>
+                        </form>
+                    @endif
+                </div>
+            </div>
             @if($partner->isPending())
                 <div class="card shadow-sm">
                     <div class="card-body">
@@ -147,8 +172,8 @@
                                 </div>
                             @endforeach
                         </div>
-                        <p class="small text-muted mt-2">Ne cochez rien pour laisser l?Taccès à tous les voyages. Cochez des voyages pour restreindre l?Taccès.</p>
-                        <button type="submit" class="btn btn-primary btn-sm">Enregistrer l?Taccès</button>
+                        <p class="small text-muted mt-2">Ne cochez rien pour laisser l'accès à tous les voyages. Cochez des voyages pour restreindre l'accès.</p>
+                        <button type="submit" class="btn btn-primary btn-sm">Enregistrer l'accès</button>
                     </form>
                 </div>
             </div>
@@ -162,5 +187,4 @@
         </div>
     </div>
 @endsection
-
 

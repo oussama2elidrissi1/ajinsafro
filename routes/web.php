@@ -342,6 +342,9 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])->p
     Route::post('partner-accounts/{partner}/validate', [PartnerAccountController::class, 'validatePartner'])->name('partner-accounts.validate');
     Route::post('partner-accounts/{partner}/reject', [PartnerAccountController::class, 'rejectPartner'])->name('partner-accounts.reject');
     Route::post('partner-accounts/{partner}/voyage-access', [PartnerAccountController::class, 'updateVoyageAccess'])->name('partner-accounts.voyage-access');
+    Route::post('partner-accounts/{partner}/suspend', [PartnerAccountController::class, 'suspendPartner'])->name('partner-accounts.suspend');
+    Route::post('partner-accounts/{partner}/activate', [PartnerAccountController::class, 'activatePartner'])->name('partner-accounts.activate');
+    Route::post('partner-accounts/{partner}/password-reset', [PartnerAccountController::class, 'sendPasswordReset'])->name('partner-accounts.password-reset');
     Route::get('partner-commission-rules', [PartnerCommissionRuleController::class, 'index'])->name('partner-commission-rules.index');
     Route::get('partner-commission-rules/create', [PartnerCommissionRuleController::class, 'create'])->name('partner-commission-rules.create');
     Route::post('partner-commission-rules', [PartnerCommissionRuleController::class, 'store'])->name('partner-commission-rules.store');

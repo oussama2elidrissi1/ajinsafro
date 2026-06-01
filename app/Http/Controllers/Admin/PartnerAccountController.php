@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Mail\PartnerAccountValidatedMail;
 use App\Models\Partner;
 use App\Models\Voyage;
+use App\Services\AdminWpTourCatalogQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
 use Illuminate\View\View;
 
 class PartnerAccountController extends Controller
@@ -36,7 +38,10 @@ class PartnerAccountController extends Controller
     public function show(Partner $partner): View
     {
         $partner->load(['user', 'validatedByUser', 'voyageAccess']);
-        $voyages = Voyage::orderBy('name')->get(['id', 'name']);
+        // Only show the same reservable voyages as the Circuits/Voyages admin module.
+        $voyages = AdminWpTourCatalogQuery::reservableVoyages()->map(function (Voyage $voyage) {
+            return $voyage->only(['id', 'name', 'wp_post_id', 'status']);
+        });
         return view('admin.partner-accounts.show', compact('partner', 'voyages'));
     }
 
@@ -85,5 +90,55 @@ class PartnerAccountController extends Controller
         ]);
         return redirect()->route('admin.partner-accounts.index')
             ->with('success', 'Demande partenaire refusée.');
+    }
+
+    public function suspendPartner(Partner $partner): RedirectResponse
+    {
+        if (! $partner->isValidated()) {
+            return redirect()->route('admin.partner-accounts.show', $partner)
+                ->with('error', 'Seuls les partenaires validés peuvent être désactivés.');
+        }
+
+        $partner->update([
+            'status' => Partner::STATUS_SUSPENDED,
+        ]);
+
+        return redirect()->route('admin.partner-accounts.show', $partner)
+            ->with('success', 'Partenaire désactivé.');
+    }
+
+    public function activatePartner(Partner $partner): RedirectResponse
+    {
+        if (! $partner->isSuspended()) {
+            return redirect()->route('admin.partner-accounts.show', $partner)
+                ->with('error', 'Ce partenaire n’est pas désactivé.');
+        }
+
+        $partner->update([
+            'status' => Partner::STATUS_VALIDATED,
+        ]);
+
+        return redirect()->route('admin.partner-accounts.show', $partner)
+            ->with('success', 'Partenaire activé.');
+    }
+
+    public function sendPasswordReset(Partner $partner): RedirectResponse
+    {
+        $partner->loadMissing('user');
+        $email = $partner->user?->email ?: $partner->email;
+        if (! $email) {
+            return redirect()->route('admin.partner-accounts.show', $partner)
+                ->with('error', 'Email partenaire introuvable.');
+        }
+
+        $status = Password::broker()->sendResetLink(['email' => $email]);
+
+        if ($status !== Password::RESET_LINK_SENT) {
+            return redirect()->route('admin.partner-accounts.show', $partner)
+                ->with('error', 'Impossible d’envoyer le lien de réinitialisation.');
+        }
+
+        return redirect()->route('admin.partner-accounts.show', $partner)
+            ->with('success', 'Lien de réinitialisation du mot de passe envoyé au partenaire.');
     }
 }

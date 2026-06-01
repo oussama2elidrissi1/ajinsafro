@@ -96,6 +96,17 @@
                                         </td>
                                         <td class="text-end">
                                             <a href="{{ route('admin.partner-accounts.show', $partner) }}" class="btn btn-sm btn-outline-primary" title="Voir"><i class="bx bx-show"></i></a>
+                                            @if($partner->isValidated())
+                                                <form action="{{ route('admin.partner-accounts.suspend', $partner) }}" method="post" class="d-inline">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary" title="Désactiver"><i class="bx bx-pause-circle"></i></button>
+                                                </form>
+                                            @elseif($partner->isSuspended())
+                                                <form action="{{ route('admin.partner-accounts.activate', $partner) }}" method="post" class="d-inline">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-success" title="Activer"><i class="bx bx-play-circle"></i></button>
+                                                </form>
+                                            @endif
                                             @if($partner->isPending())
                                                 <form action="{{ route('admin.partner-accounts.validate', $partner) }}" method="post" class="d-inline">
                                                     @csrf
@@ -122,5 +133,4 @@
         </div>
     </div>
 @endsection
-
 
