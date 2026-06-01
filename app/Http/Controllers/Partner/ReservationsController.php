@@ -107,7 +107,13 @@ class ReservationsController extends Controller
 
         $selectedTravelDate = null;
         if ($travelDateId > 0) {
-            $selectedTravelDate = TravelDate::query()->where('is_active', true)->find($travelDateId);
+            try {
+                if (Schema::hasTable('travel_dates')) {
+                    $selectedTravelDate = TravelDate::query()->where('is_active', true)->find($travelDateId);
+                }
+            } catch (\Throwable $e) {
+                // ignore if DB connection doesn't have travel_dates (some partner deployments)
+            }
         }
 
         return view('partner.v2.reservations.create-v2', [
@@ -146,10 +152,17 @@ class ReservationsController extends Controller
             ->orderBy('id')
             ->get();
 
-        $travelDates = TravelDate::query()
-            ->whereIn('id', $deps->pluck('wp_travel_date_id')->filter()->unique()->values()->all())
-            ->get()
-            ->keyBy('id');
+        $travelDates = collect();
+        try {
+            if (Schema::hasTable('travel_dates')) {
+                $travelDates = TravelDate::query()
+                    ->whereIn('id', $deps->pluck('wp_travel_date_id')->filter()->unique()->values()->all())
+                    ->get()
+                    ->keyBy('id');
+            }
+        } catch (\Throwable $e) {
+            $travelDates = collect();
+        }
 
         return response()->json([
             'departures' => $deps->map(function (Departure $d) use ($travelDates, $voyage) {
@@ -312,10 +325,11 @@ class ReservationsController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $partner = $this->getPartner($request);
-        $data = $request->validate([
+
+        $rules = [
             'tour_id' => ['required', 'exists:voyages,id'],
             'departure_id' => ['nullable', 'exists:departures,id'],
-            'travel_date_id' => ['nullable', 'exists:travel_dates,id'],
+            'travel_date_id' => ['nullable', 'integer'],
             'client_mode' => ['in:existing,new'],
             'client_external_id' => ['nullable', 'exists:clients,id'],
             'client_first_name' => ['required_without:client_external_id', 'nullable', 'string', 'max:100'],
@@ -330,7 +344,13 @@ class ReservationsController extends Controller
             'accommodation_mode' => ['nullable', 'in:rooms,places_only,blocked'],
             'base_price' => ['nullable', 'numeric', 'min:0'],
             'paid_amount' => ['nullable', 'numeric', 'min:0'],
-        ]);
+        ];
+
+        if (Schema::hasTable('travel_dates')) {
+            $rules['travel_date_id'][] = 'exists:travel_dates,id';
+        }
+
+        $data = $request->validate($rules);
 
         if (($data['client_mode'] ?? null) === 'existing' && empty($data['client_external_id'])) {
             throw ValidationException::withMessages([
