@@ -91,6 +91,12 @@
                     <div class="agent-empty-state__icon"><i class="bx bx-receipt" aria-hidden="true"></i></div>
                     <div class="agent-empty-state__title">Aucune réservation récente</div>
                     <div class="agent-empty-state__text">Les nouveaux dossiers apparaîtront ici dès qu'ils seront créés.</div>
+                    <div class="agent-empty-state__actions">
+                        <a href="{{ $catalogueVoyageUrl }}" class="btn agent-btn agent-btn-primary agent-empty-state__cta">
+                            <i class="bx bx-map-alt align-middle" aria-hidden="true"></i>
+                            <span>Voir le catalogue</span>
+                        </a>
+                    </div>
                 </div>
             @else
                 <div class="table-responsive">

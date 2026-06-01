@@ -24,24 +24,34 @@ body {
   background: transparent;
 }
 
+/* Keep footer at the bottom even when the dashboard is empty. */
+body.partner-v2 {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+body.partner-v2 > main {
+  flex: 1 1 auto;
+}
+
 .agent-dashboard-page {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   padding-bottom: 0.75rem;
-  max-width: 1440px;
-  margin: 0 auto;
+  width: 100%;
   position: relative;
 }
 
 /* Hide the partner-v2 geometric background pattern on this page (dashboard needs clarity). */
-.agent-dashboard-page::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background: #f3f7fb;
-  z-index: -1;
-  pointer-events: none;
+body.partner-v2 .agent-dashboard-page {
+  background: rgba(243, 247, 251, 0.92);
+  border-radius: 24px;
+  padding: 1rem;
+}
+body.partner-v2::before,
+body.partner-v2::after {
+  opacity: 0.025 !important;
 }
 
 .agent-dashboard-shell,
@@ -164,7 +174,7 @@ body {
 }
 
 .agent-dashboard-grid--content {
-  grid-template-columns: minmax(0, 2.2fr) minmax(340px, 0.95fr);
+  grid-template-columns: minmax(0, 2.1fr) minmax(420px, 1fr);
   align-items: start;
 }
 
@@ -320,7 +330,7 @@ body {
   display: grid;
   place-items: center;
   text-align: center;
-  padding: 2.25rem 1rem;
+  padding: 1.35rem 1rem;
   border-radius: 18px;
   border: 1px dashed var(--agent-border);
   background: var(--agent-surface-alt);
@@ -349,6 +359,19 @@ body {
   margin-top: 0.35rem;
   color: var(--agent-muted);
   max-width: 34rem;
+}
+
+.agent-empty-state__actions {
+  margin-top: 0.9rem;
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.agent-empty-state__cta {
+  min-height: 44px;
+  padding: 0.7rem 1rem;
 }
 
 .agent-today-metrics {
