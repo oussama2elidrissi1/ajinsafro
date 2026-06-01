@@ -194,7 +194,22 @@ class User extends Authenticatable
 
     public function isPartner(): bool
     {
-        return $this->hasRole('Partenaire');
+        // Primary signal: explicit role
+        if ($this->hasRole('Partenaire') || $this->hasRole('Partner')) {
+            return true;
+        }
+
+        // Secondary signals: user_type/base_role flags (legacy / imported accounts)
+        if ((string) ($this->user_type ?? '') === 'partner' || (string) ($this->base_role ?? '') === 'partner') {
+            return true;
+        }
+
+        // Fallback: presence of a Partner profile linked to this user.
+        if ($this->relationLoaded('partner')) {
+            return $this->partner !== null;
+        }
+
+        return Partner::query()->where('user_id', $this->id)->exists();
     }
 
     public function isClientPortal(): bool
