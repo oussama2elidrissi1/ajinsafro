@@ -25,7 +25,7 @@
         <div class="agent-dashboard-hero__content">
             <div>
                 <span class="agent-dashboard-badge">{{ $agencyLabel }}</span>
-                <h1 class="agent-dashboard-title">Welcome back, {{ $displayName }}</h1>
+                <h1 class="agent-dashboard-title">Bienvenue, {{ $displayName }}</h1>
                 <p class="agent-dashboard-subtitle">Votre activité du jour, vos réservations et les actions prioritaires au même endroit.</p>
             </div>
             <div class="agent-dashboard-actions">

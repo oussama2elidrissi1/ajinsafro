@@ -17,7 +17,7 @@
 }
 
 body {
-  background: linear-gradient(180deg, #eef5fb 0%, #f7fafc 100%);
+  background: #f3f7fb;
 }
 
 .page-content {
@@ -27,8 +27,10 @@ body {
 .agent-dashboard-page {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  padding-bottom: 1rem;
+  gap: 1rem;
+  padding-bottom: 0.75rem;
+  max-width: 1280px;
+  margin: 0 auto;
 }
 
 .agent-dashboard-shell,
@@ -43,9 +45,9 @@ body {
 .agent-dashboard-hero {
   position: relative;
   overflow: hidden;
-  padding: 1.75rem;
+  padding: 1.25rem 1.35rem;
   background:
-    radial-gradient(circle at top right, rgba(44, 127, 184, 0.16), transparent 32%),
+    radial-gradient(circle at top right, rgba(44, 127, 184, 0.12), transparent 34%),
     linear-gradient(135deg, #ffffff 0%, #f4f9fd 100%);
 }
 
@@ -73,7 +75,7 @@ body {
 }
 
 .agent-dashboard-title {
-  margin: 0.9rem 0 0.4rem;
+  margin: 0.75rem 0 0.35rem;
   color: var(--agent-text);
   font-size: clamp(1.8rem, 3vw, 2.4rem);
   font-weight: 700;
@@ -143,7 +145,7 @@ body {
 
 .agent-dashboard-grid {
   display: grid;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .agent-dashboard-grid--kpis {
@@ -151,17 +153,23 @@ body {
 }
 
 .agent-dashboard-grid--content {
-  grid-template-columns: minmax(0, 2fr) minmax(300px, 0.9fr);
+  grid-template-columns: minmax(0, 2.2fr) minmax(340px, 0.95fr);
   align-items: start;
 }
 
 .agent-kpi-card {
-  padding: 1.35rem;
+  padding: 1rem 1.05rem;
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 0.9rem;
+  row-gap: 0.15rem;
+  align-items: center;
 }
 
 .agent-kpi-icon {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -169,24 +177,26 @@ body {
   background: var(--agent-primary-soft);
   color: var(--agent-primary);
   font-size: 1.35rem;
+  grid-row: 1 / span 2;
 }
 
 .agent-kpi-label {
-  margin-top: 1rem;
+  margin-top: 0;
   color: var(--agent-muted);
   font-size: 0.9rem;
+  font-weight: 700;
 }
 
 .agent-kpi-value {
-  margin-top: 0.35rem;
+  margin-top: 0;
   color: var(--agent-text);
-  font-size: clamp(1.8rem, 3vw, 2.3rem);
+  font-size: clamp(1.55rem, 2.6vw, 2.05rem);
   font-weight: 700;
   line-height: 1.1;
 }
 
 .agent-panel {
-  padding: 1.5rem;
+  padding: 1.15rem 1.25rem;
 }
 
 .agent-panel-header {
@@ -194,7 +204,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.95rem;
 }
 
 .agent-panel-header--stacked {
@@ -217,13 +227,14 @@ body {
   display: flex;
   gap: 0.75rem;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .agent-select {
-  min-width: 210px;
+  min-width: 200px;
   border-radius: 14px;
   border-color: var(--agent-border);
-  padding: 0.8rem 0.95rem;
+  padding: 0.65rem 0.85rem;
 }
 
 .agent-table {
@@ -239,13 +250,13 @@ body {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  padding: 0.95rem 1rem;
+  padding: 0.8rem 0.9rem;
 }
 
 .agent-table tbody td {
   border-bottom: 1px solid #edf3f7;
   color: var(--agent-text);
-  padding: 1rem;
+  padding: 0.85rem 0.9rem;
 }
 
 .agent-table tbody tr:last-child td {
@@ -301,7 +312,7 @@ body {
 }
 
 .agent-today-metric {
-  padding: 1rem 1.05rem;
+  padding: 0.9rem 1rem;
   border-radius: 18px;
   border: 1px solid var(--agent-border);
   background: var(--agent-surface-alt);
@@ -317,7 +328,7 @@ body {
   display: block;
   margin-top: 0.35rem;
   color: var(--agent-text);
-  font-size: 1.6rem;
+  font-size: 1.45rem;
   line-height: 1.1;
 }
 
