@@ -75,7 +75,7 @@
 </div>
 @endsection
 
-@push('script')
+@push('scripts')
 <script>
 (function () {
     var modal = document.getElementById('partner-booking-modal');
