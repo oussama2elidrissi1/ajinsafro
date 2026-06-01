@@ -29,8 +29,19 @@ body {
   flex-direction: column;
   gap: 1rem;
   padding-bottom: 0.75rem;
-  max-width: 1280px;
+  max-width: 1440px;
   margin: 0 auto;
+  position: relative;
+}
+
+/* Hide the partner-v2 geometric background pattern on this page (dashboard needs clarity). */
+.agent-dashboard-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: #f3f7fb;
+  z-index: -1;
+  pointer-events: none;
 }
 
 .agent-dashboard-shell,
@@ -303,6 +314,41 @@ body {
 .agent-status-badge.is-neutral {
   background: #edf2f7;
   color: var(--agent-muted);
+}
+
+.agent-empty-state {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 2.25rem 1rem;
+  border-radius: 18px;
+  border: 1px dashed var(--agent-border);
+  background: var(--agent-surface-alt);
+}
+
+.agent-empty-state__icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  border: 1px solid var(--agent-border);
+  color: var(--agent-primary);
+  font-size: 1.55rem;
+  margin-bottom: 0.85rem;
+}
+
+.agent-empty-state__title {
+  font-weight: 800;
+  color: var(--agent-text);
+  font-size: 1.05rem;
+}
+
+.agent-empty-state__text {
+  margin-top: 0.35rem;
+  color: var(--agent-muted);
+  max-width: 34rem;
 }
 
 .agent-today-metrics {

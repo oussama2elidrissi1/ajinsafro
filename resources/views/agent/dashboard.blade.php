@@ -86,54 +86,58 @@
                 </form>
             </div>
 
-            <div class="table-responsive">
-                <table class="table agent-table mb-0">
-                    <thead>
-                        <tr>
-                            <th>Client</th>
-                            <th>Voyage</th>
-                            <th>Date</th>
-                            <th>Statut</th>
-                            <th class="text-end">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($recentReservations as $reservation)
-                            @php
-                                $clientName = trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? ''));
-                                $status = $reservation->status;
-                                $statusLabel = match ($status) {
-                                    Reservation::STATUS_VALIDEE => 'Confirmée',
-                                    Reservation::STATUS_EN_COURS => 'En attente',
-                                    Reservation::STATUS_ANNULEE => 'Annulée',
-                                    default => (string) $status,
-                                };
-                                $statusClass = match ($status) {
-                                    Reservation::STATUS_VALIDEE => 'is-confirmed',
-                                    Reservation::STATUS_EN_COURS => 'is-pending',
-                                    Reservation::STATUS_ANNULEE => 'is-cancelled',
-                                    default => 'is-neutral',
-                                };
-                                $detailUrl = Route::has('admin.reservations.show') ? route('admin.reservations.show', $reservation) : '#';
-                                $displayDate = optional($reservation->travelDate?->date)->format('d/m/Y') ?: optional($reservation->created_at)->format('d/m/Y');
-                            @endphp
+            @if(($recentReservations ?? collect())->count() === 0)
+                <div class="agent-empty-state">
+                    <div class="agent-empty-state__icon"><i class="bx bx-receipt" aria-hidden="true"></i></div>
+                    <div class="agent-empty-state__title">Aucune réservation récente</div>
+                    <div class="agent-empty-state__text">Les nouveaux dossiers apparaîtront ici dès qu'ils seront créés.</div>
+                </div>
+            @else
+                <div class="table-responsive">
+                    <table class="table agent-table mb-0">
+                        <thead>
                             <tr>
-                                <td data-label="Client">{{ $clientName !== '' ? $clientName : 'Client non renseigné' }}</td>
-                                <td data-label="Voyage">{{ $reservation->tour?->name ?: 'Voyage non renseigné' }}</td>
-                                <td data-label="Date">{{ $displayDate }}</td>
-                                <td data-label="Statut"><span class="agent-status-badge {{ $statusClass }}">{{ $statusLabel }}</span></td>
-                                <td data-label="Action" class="text-end">
-                                    <a href="{{ $detailUrl }}" class="agent-table-link">Voir</a>
-                                </td>
+                                <th>Client</th>
+                                <th>Voyage</th>
+                                <th>Date</th>
+                                <th>Statut</th>
+                                <th class="text-end">Action</th>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="text-center text-muted py-5">Aucune réservation récente à afficher.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                            @foreach($recentReservations as $reservation)
+                                @php
+                                    $clientName = trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? ''));
+                                    $status = $reservation->status;
+                                    $statusLabel = match ($status) {
+                                        Reservation::STATUS_VALIDEE => 'Confirmée',
+                                        Reservation::STATUS_EN_COURS => 'En attente',
+                                        Reservation::STATUS_ANNULEE => 'Annulée',
+                                        default => (string) $status,
+                                    };
+                                    $statusClass = match ($status) {
+                                        Reservation::STATUS_VALIDEE => 'is-confirmed',
+                                        Reservation::STATUS_EN_COURS => 'is-pending',
+                                        Reservation::STATUS_ANNULEE => 'is-cancelled',
+                                        default => 'is-neutral',
+                                    };
+                                    $detailUrl = Route::has('admin.reservations.show') ? route('admin.reservations.show', $reservation) : '#';
+                                    $displayDate = optional($reservation->travelDate?->date)->format('d/m/Y') ?: optional($reservation->created_at)->format('d/m/Y');
+                                @endphp
+                                <tr>
+                                    <td data-label="Client">{{ $clientName !== '' ? $clientName : 'Client non renseigné' }}</td>
+                                    <td data-label="Voyage">{{ $reservation->tour?->name ?: 'Voyage non renseigné' }}</td>
+                                    <td data-label="Date">{{ $displayDate }}</td>
+                                    <td data-label="Statut"><span class="agent-status-badge {{ $statusClass }}">{{ $statusLabel }}</span></td>
+                                    <td data-label="Action" class="text-end">
+                                        <a href="{{ $detailUrl }}" class="agent-table-link">Voir</a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
         </div>
 
         <aside class="agent-panel agent-panel--side">
