@@ -39,9 +39,7 @@ class PartnerAccountController extends Controller
     {
         $partner->load(['user', 'validatedByUser', 'voyageAccess']);
         // Only show the same reservable voyages as the Circuits/Voyages admin module.
-        $voyages = AdminWpTourCatalogQuery::reservableVoyages()->map(function (Voyage $voyage) {
-            return $voyage->only(['id', 'name', 'wp_post_id', 'status']);
-        });
+        $voyages = AdminWpTourCatalogQuery::reservableVoyages();
         return view('admin.partner-accounts.show', compact('partner', 'voyages'));
     }
 
