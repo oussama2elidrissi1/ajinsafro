@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Partner;
 use App\Http\Controllers\Controller;
 use App\Models\Voyage;
 use App\Models\Wp\WpPost;
+use App\Services\AdminWpTourCatalogQuery;
 use Illuminate\Support\Collection;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -20,9 +21,17 @@ class CatalogueController extends Controller
         $partner = $request->user()->partner;
         $voyageIds = $partner->voyageAccess()->pluck('voyages.id')->toArray();
 
-        $query = Voyage::query()->where(function ($q) {
-            $q->where('status', 'actif')->orWhere('status', 'publish');
-        });
+        // Must match what the back-office "Circuits / voyages" makes available for booking:
+        // active Laravel voyage linked to a published WP tour, with departures.
+        $publishedIds = AdminWpTourCatalogQuery::publishedWpTourIds();
+        $query = Voyage::query()
+            ->where('status', 'actif')
+            ->whereNotNull('wp_post_id')
+            ->where('wp_post_id', '>', 0)
+            ->whereHas('departures')
+            ->when($publishedIds !== [], fn ($q) => $q->whereIn('wp_post_id', $publishedIds))
+            ->when($publishedIds === [], fn ($q) => $q->whereRaw('1 = 0'))
+            ->whereRaw('LOWER(name) NOT LIKE ?', ['%test%']);
         if (! empty($voyageIds)) {
             $query->whereIn('id', $voyageIds);
         }
