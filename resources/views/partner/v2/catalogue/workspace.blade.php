@@ -18,7 +18,52 @@
         </div>
         <div class="flex items-center gap-2">
             <input id="partner-catalog-search" type="search" class="w-full sm:w-[320px] rounded-xl border border-gray-200 px-4 py-2 text-sm"
-                   placeholder="Rechercher (nom, destination)…" autocomplete="off">
+                   placeholder="Rechercher…" autocomplete="off">
+        </div>
+    </div>
+</div>
+
+{{-- Barre filtres (comme admin vente/catalogue) --}}
+<div class="bg-white rounded-2xl border border-gray-100 shadow-custom p-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-3 items-end">
+        <div>
+            <div class="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider mb-1">Type</div>
+            <select id="partner-filter-type" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm font-bold">
+                <option value="all">Tous</option>
+                <option value="package" selected>Circuit</option>
+            </select>
+        </div>
+        <div>
+            <div class="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider mb-1">Destination</div>
+            <select id="partner-filter-destination" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm font-bold">
+                <option value="">Toutes</option>
+                @foreach(($destinationOptions ?? []) as $d)
+                    <option value="{{ $d }}">{{ $d }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <div class="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider mb-1">Date départ du</div>
+            <input id="partner-filter-date-from" type="date" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm font-bold">
+        </div>
+        <div>
+            <div class="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider mb-1">Date départ au</div>
+            <input id="partner-filter-date-to" type="date" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm font-bold">
+        </div>
+        <div class="xl:col-span-1">
+            <div class="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider mb-1">Segment budget</div>
+            <div class="flex items-center gap-3">
+                <input id="partner-filter-budget" type="range" min="0" max="30000" step="500" value="30000" class="w-full">
+                <div class="text-xs font-black text-[#0e3a5a]" id="partner-filter-budget-label">MAX 30000</div>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 justify-end xl:col-span-1">
+            <button type="button" id="partner-filter-apply" class="bg-[#0083c4] hover:bg-[#0e3a5a] text-white px-4 py-2 rounded-xl text-sm font-black transition-colors">
+                <i class="fa-solid fa-filter mr-2"></i> Filtrer
+            </button>
+            <button type="button" id="partner-filter-reset" class="px-4 py-2 rounded-xl text-sm font-black border border-gray-200 hover:bg-white">
+                Réinitialiser
+            </button>
         </div>
     </div>
 </div>
@@ -43,6 +88,10 @@
             $firstPrice = (float) data_get($firstDeparture, 'unit_price', 0);
         @endphp
         <article class="ws-offer-card ws-offer-card--compact bg-white rounded-2xl shadow-custom border border-gray-100 overflow-hidden"
+                 data-type="{{ $row['type'] ?? 'package' }}"
+                 data-destination="{{ e((string) ($row['voyage_destination'] ?? '')) }}"
+                 data-price="{{ (float) ($row['price_value'] ?? 0) }}"
+                 data-next-date="{{ e((string) data_get($firstDeparture, 'date_iso', '')) }}"
                  data-search="{{ Str::lower(trim(($row['name'] ?? '').' '.($row['voyage_destination'] ?? ''))) }}">
             {{-- Image header (comme admin vente/catalogue) --}}
             <div class="relative">
@@ -204,6 +253,82 @@
             card.style.display = (q === '' || blob.indexOf(q) !== -1) ? '' : 'none';
         });
     });
+})();
+</script>
+<script>
+(function () {
+    var grid = document.getElementById('partner-catalog-grid');
+    if (!grid) return;
+
+    var typeEl = document.getElementById('partner-filter-type');
+    var destEl = document.getElementById('partner-filter-destination');
+    var fromEl = document.getElementById('partner-filter-date-from');
+    var toEl = document.getElementById('partner-filter-date-to');
+    var budgetEl = document.getElementById('partner-filter-budget');
+    var budgetLabel = document.getElementById('partner-filter-budget-label');
+    var applyBtn = document.getElementById('partner-filter-apply');
+    var resetBtn = document.getElementById('partner-filter-reset');
+
+    function norm(v) { return String(v || '').toLowerCase().trim(); }
+
+    function refreshBudgetLabel() {
+        if (!budgetEl || !budgetLabel) return;
+        budgetLabel.textContent = 'MAX ' + String(budgetEl.value || '0');
+    }
+
+    function asDate(value) {
+        if (!value) return null;
+        var d = new Date(value + 'T00:00:00');
+        return isNaN(d.getTime()) ? null : d;
+    }
+
+    function applyFilters() {
+        var typeVal = typeEl ? String(typeEl.value || 'all') : 'all';
+        var destVal = destEl ? String(destEl.value || '') : '';
+        var dateFrom = fromEl ? asDate(fromEl.value) : null;
+        var dateTo = toEl ? asDate(toEl.value) : null;
+        var maxBudget = budgetEl ? parseFloat(budgetEl.value || '0') : null;
+
+        grid.querySelectorAll('[data-type]').forEach(function (card) {
+            var show = true;
+            if (typeVal !== 'all') {
+                show = show && (String(card.getAttribute('data-type') || 'package') === typeVal);
+            }
+            if (destVal) {
+                show = show && (String(card.getAttribute('data-destination') || '') === destVal);
+            }
+            if (maxBudget !== null && maxBudget > 0) {
+                var price = parseFloat(card.getAttribute('data-price') || '0') || 0;
+                show = show && (price <= maxBudget);
+            }
+            var nextDateStr = String(card.getAttribute('data-next-date') || '');
+            if (dateFrom || dateTo) {
+                var next = nextDateStr ? new Date(nextDateStr + 'T00:00:00') : null;
+                if (!next || isNaN(next.getTime())) {
+                    show = false;
+                } else {
+                    if (dateFrom) show = show && (next.getTime() >= dateFrom.getTime());
+                    if (dateTo) show = show && (next.getTime() <= dateTo.getTime());
+                }
+            }
+            card.style.display = show ? '' : 'none';
+        });
+    }
+
+    function resetFilters() {
+        if (typeEl) typeEl.value = 'package';
+        if (destEl) destEl.value = '';
+        if (fromEl) fromEl.value = '';
+        if (toEl) toEl.value = '';
+        if (budgetEl) budgetEl.value = '30000';
+        refreshBudgetLabel();
+        applyFilters();
+    }
+
+    if (budgetEl) budgetEl.addEventListener('input', refreshBudgetLabel);
+    if (applyBtn) applyBtn.addEventListener('click', applyFilters);
+    if (resetBtn) resetBtn.addEventListener('click', resetFilters);
+    refreshBudgetLabel();
 })();
 </script>
 <script>

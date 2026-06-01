@@ -98,6 +98,7 @@ class CatalogueController extends Controller
                 'image_url' => $voyage->featured_image_url,
                 'price_label' => $voyage->catalog_public_price_display ?? '—',
                 'commission_label' => $voyage->catalog_commission_display ?? '—',
+                'price_value' => (float) preg_replace('/[^\d.]/', '', (string) ($voyage->catalog_public_price_display ?? '0')),
                 'modal_detail' => [
                     'departures' => $visible,
                 ],
@@ -106,9 +107,18 @@ class CatalogueController extends Controller
             ];
         })->values();
 
+        $destinationOptions = $workspaceRows
+            ->map(fn (array $row) => trim((string) ($row['voyage_destination'] ?? '')))
+            ->filter(fn (string $d) => $d !== '')
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
+
         return view('partner.v2.catalogue.workspace', [
             'voyages' => $voyages,
             'workspaceRows' => $workspaceRows,
+            'destinationOptions' => $destinationOptions,
         ]);
     }
 
