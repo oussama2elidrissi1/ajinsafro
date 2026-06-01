@@ -24,16 +24,18 @@ return [
             'permission' => 'reservations.view',
             'active_patterns' => ['admin.vente.catalogue', 'admin.reservations.*'],
             'children' => [
-                ['label' => 'Espace réservation', 'route' => 'admin.vente.catalogue', 'permission' => 'reservations.view', 'active_patterns' => ['admin.vente.catalogue', 'admin.reservations.workspace']],
-                ['label' => 'Liste des réservations', 'route' => 'admin.reservations.index', 'permission' => 'reservations.view', 'active_patterns' => ['admin.reservations.index', 'admin.reservations.toutes', 'admin.reservations.en-attente', 'admin.reservations.confirmees', 'admin.reservations.annulees']],
+                ['label' => 'Catalogue de produits', 'route' => 'admin.vente.catalogue', 'permission' => 'reservations.view', 'active_patterns' => ['admin.vente.catalogue', 'admin.reservations.workspace']],
+                ['label' => 'Réservations agents', 'route' => 'admin.reservation-dossiers.index', 'permission' => 'reservations.view', 'active_patterns' => ['admin.reservation-dossiers.*', 'admin.reservations.index']],
+                ['label' => 'Réservations partenaires', 'route' => 'admin.reservations.partners', 'permission' => 'reservations.view', 'active_patterns' => ['admin.reservations.partners']],
+                ['label' => 'Réservations en ligne', 'route' => 'admin.reservations.clients', 'permission' => 'reservations.view', 'active_patterns' => ['admin.reservations.clients']],
                 [
                     'label' => 'Demande à la carte',
                     'icon' => 'bx bx-edit-alt',
                     'permission' => 'reservations.view',
                     'active_patterns' => ['admin.reservations.custom-requests.*', 'admin.tailor-made-requests.*'],
                     'children' => [
-                        ['label' => 'Demande à la carte', 'route' => 'admin.reservations.custom-requests.index', 'permission' => 'reservations.view', 'active_patterns' => ['admin.reservations.custom-requests.*']],
-                        ['label' => 'Demande à la carte en ligne', 'route' => 'admin.tailor-made-requests.index', 'permission' => 'reservations.view', 'active_patterns' => ['admin.tailor-made-requests.*']],
+                        ['label' => 'Demandes à la carte', 'route' => 'admin.reservations.custom-requests.index', 'permission' => 'reservations.view', 'active_patterns' => ['admin.reservations.custom-requests.*']],
+                        ['label' => 'Demandes à la carte en ligne', 'route' => 'admin.tailor-made-requests.index', 'permission' => 'reservations.view', 'active_patterns' => ['admin.tailor-made-requests.*']],
                     ],
                 ],
             ],
@@ -455,4 +457,3 @@ return [
         'admin.group-deals.' => 'group-deals.offers.view',
     ],
 ];
-

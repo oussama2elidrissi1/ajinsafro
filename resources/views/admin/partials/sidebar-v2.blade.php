@@ -255,14 +255,14 @@
     ]));
 
     $reservationsChildren = array_values(array_filter([
-        $makeLeaf('reservations_agent', 'Reservation agent', 'admin.reservation-dossiers.index', 'bx bx-calendar-check', ['admin.reservation-dossiers.*', 'admin.reservations.index']),
-        $makeLeaf('reservations_workspace', 'Vente', \Illuminate\Support\Facades\Route::has('admin.vente.catalogue') ? 'admin.vente.catalogue' : 'admin.reservations.workspace', 'bx bx-briefcase-alt', ['admin.vente.catalogue', 'admin.reservations.workspace*']),
-        $makeGroup('custom_reservation_requests_group', 'Demande a la carte', array_values(array_filter([
-            $makeLeaf('custom_reservation_requests', 'Demande a la carte', 'admin.reservations.custom-requests.index', 'bx bx-message-square-detail', ['admin.reservations.custom-requests.*'], [], null, 'reservations.view'),
-            $makeLeaf('tailor_made_requests_online', 'Demande a la carte en ligne', 'admin.tailor-made-requests.index', 'bx bx-globe', ['admin.tailor-made-requests.*'], [], null, 'reservations.view'),
+        $makeLeaf('reservations_workspace', 'Catalogue de produits', \Illuminate\Support\Facades\Route::has('admin.vente.catalogue') ? 'admin.vente.catalogue' : 'admin.reservations.workspace', 'bx bx-briefcase-alt', ['admin.vente.catalogue', 'admin.reservations.workspace*']),
+        $makeLeaf('reservations_agent', 'Réservations agents', 'admin.reservation-dossiers.index', 'bx bx-calendar-check', ['admin.reservation-dossiers.*', 'admin.reservations.index']),
+        $makeLeaf('reservations_partners', 'Réservations partenaires', 'admin.reservations.partners', 'bx bx-store', ['admin.reservations.partners', 'admin.reservation-dossiers.*'], [], null, 'reservations.view'),
+        $makeLeaf('reservations_clients', 'Réservations en ligne', 'admin.reservations.clients', 'bx bx-user-check', ['admin.reservations.clients']),
+        $makeGroup('custom_reservation_requests_group', 'Demande à la carte', array_values(array_filter([
+            $makeLeaf('custom_reservation_requests', 'Demandes à la carte', 'admin.reservations.custom-requests.index', 'bx bx-message-square-detail', ['admin.reservations.custom-requests.*'], [], null, 'reservations.view'),
+            $makeLeaf('tailor_made_requests_online', 'Demandes à la carte en ligne', 'admin.tailor-made-requests.index', 'bx bx-globe', ['admin.tailor-made-requests.*'], [], null, 'reservations.view'),
         ])), 'bx bx-edit-alt'),
-        $makeLeaf('reservations_clients', 'Reservation en ligne', 'admin.reservations.clients', 'bx bx-user-check', ['admin.reservations.clients']),
-        $makeLeaf('reservations_partners', 'Reservation partenaire', 'admin.reservations.partners', 'bx bx-store', ['admin.reservations.partners', 'admin.reservation-dossiers.*'], [], null, 'reservations.view'),
         $makeLeaf('messagerie_index', 'Messagerie', 'admin.messagerie.index', 'bx bx-envelope', ['admin.messagerie.*'], [], $unreadCount > 0 ? $unreadCount : null, 'dashboard.view'),
     ]));
 
