@@ -1,0 +1,41 @@
+:root {
+  --agent-bg: #f3f7fb;
+  --agent-surface: #ffffff;
+  --agent-surface-alt: #f8fbff;
+  --agent-border: #dbe7f1;
+  --agent-text: #16324a;
+  --agent-muted: #6b8093;
+  --agent-primary: #2c7fb8;
+  --agent-primary-soft: #e8f3fb;
+  --agent-shadow: 0 14px 36px rgba(22, 50, 74, 0.08);
+}
+
+.partner-dashboard-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.partner-dashboard-topline__name {
+  font-weight: 700;
+  color: var(--agent-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.partner-dashboard-topline__count {
+  font-weight: 800;
+  color: var(--agent-primary);
+  flex-shrink: 0;
+}
+
+.partner-dashboard-actions {
+  margin-top: 12px;
+}
+
+.partner-dashboard-actions .agent-btn {
+  width: 100%;
+}
+
