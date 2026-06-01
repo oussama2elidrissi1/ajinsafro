@@ -3,6 +3,27 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/reservation-workspace.css') }}?v=partner-catalogue-v1">
+    <style>
+        .partner-catalogue-grid .ws-offer-card--compact {
+            display: flex;
+            flex-direction: column;
+        }
+        .partner-catalogue-card-media {
+            flex: 0 0 auto;
+            width: 100%;
+            height: 150px;
+            min-height: 150px;
+            overflow: hidden;
+            background: #e6f3fa;
+        }
+        .partner-catalogue-card-media img,
+        .partner-catalogue-card-media .partner-catalogue-card-placeholder {
+            display: block;
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -68,7 +89,7 @@
     </div>
 </div>
 
-<div class="ws-catalog-grid ws-catalog-grid--compact grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6" id="partner-catalog-grid">
+<div class="partner-catalogue-grid ws-catalog-grid ws-catalog-grid--compact grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6" id="partner-catalog-grid">
     @forelse($rows as $row)
         @php
             $departures = collect(data_get($row, 'modal_detail.departures', []))->values();
@@ -94,11 +115,11 @@
                  data-next-date="{{ e((string) data_get($firstDeparture, 'date_iso', '')) }}"
                  data-search="{{ Str::lower(trim(($row['name'] ?? '').' '.($row['voyage_destination'] ?? ''))) }}">
             {{-- Image header (comme admin vente/catalogue) --}}
-            <div class="relative">
+            <div class="partner-catalogue-card-media relative">
                 @if($imageUrl)
-                    <img src="{{ $imageUrl }}" alt="" class="w-full h-40 object-cover">
+                    <img src="{{ $imageUrl }}" alt="">
                 @else
-                    <div class="w-full h-40 bg-gradient-to-r from-[#e6f3fa] to-white"></div>
+                    <div class="partner-catalogue-card-placeholder bg-gradient-to-r from-[#e6f3fa] to-white"></div>
                 @endif
                 <div class="absolute inset-0 bg-gradient-to-t from-black/35 via-black/0 to-black/0"></div>
                 <div class="absolute top-3 left-3 flex items-center gap-2">

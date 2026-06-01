@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Partner;
 use App\Http\Controllers\Controller;
 use App\Models\Voyage;
 use App\Models\Wp\WpPost;
+use App\Models\Wp\WpPostMeta;
 use App\Services\AdminWpTourCatalogQuery;
 use App\Services\Reservations\ReservationPricingService;
+use App\Services\Wp\WpHeroImageService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Http\Request;
@@ -95,7 +97,7 @@ class CatalogueController extends Controller
                 'wp_post_id' => (int) ($voyage->wp_post_id ?? 0),
                 'name' => (string) $voyage->name,
                 'voyage_destination' => (string) ($voyage->destination ?? ''),
-                'image_url' => $voyage->featured_image_url,
+                'image_url' => $this->resolveCatalogImageUrl($voyage),
                 'price_label' => $voyage->catalog_public_price_display ?? '—',
                 'commission_label' => $voyage->catalog_commission_display ?? '—',
                 'price_value' => (float) preg_replace('/[^\d.]/', '', (string) ($voyage->catalog_public_price_display ?? '0')),
@@ -181,5 +183,69 @@ class CatalogueController extends Controller
 
             return $voyage;
         });
+    }
+
+    private function resolveCatalogImageUrl(Voyage $voyage): ?string
+    {
+        $wpTourId = (int) ($voyage->wp_post_id ?? 0);
+        if ($wpTourId > 0) {
+            $fromWp = $this->resolveWpTourFirstImageUrl($wpTourId);
+            if ($fromWp) {
+                return $fromWp;
+            }
+        }
+
+        if ($voyage->featured_image_url) {
+            return $voyage->featured_image_url;
+        }
+
+        $rawGalleryIds = trim((string) ($voyage->gallery_wp_ids ?? ''));
+        if ($rawGalleryIds !== '') {
+            foreach (explode(',', $rawGalleryIds) as $id) {
+                $attachmentId = (int) trim($id);
+                if ($attachmentId <= 0) {
+                    continue;
+                }
+                $url = WpHeroImageService::publicUrlForAttachmentId($attachmentId);
+                if ($url) {
+                    return $url;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function resolveWpTourFirstImageUrl(int $wpTourId): ?string
+    {
+        $metas = WpPostMeta::query()
+            ->where('post_id', $wpTourId)
+            ->whereIn('meta_key', ['_tour_hero_image_id', '_tour_hero_gallery_ids', '_thumbnail_id'])
+            ->pluck('meta_value', 'meta_key');
+
+        $attachmentIds = [];
+        if (! empty($metas['_tour_hero_image_id'])) {
+            $attachmentIds[] = (int) $metas['_tour_hero_image_id'];
+        }
+        if (! empty($metas['_tour_hero_gallery_ids'])) {
+            foreach (explode(',', (string) $metas['_tour_hero_gallery_ids']) as $id) {
+                $id = (int) trim($id);
+                if ($id > 0) {
+                    $attachmentIds[] = $id;
+                }
+            }
+        }
+        if (! empty($metas['_thumbnail_id'])) {
+            $attachmentIds[] = (int) $metas['_thumbnail_id'];
+        }
+
+        foreach (array_values(array_unique(array_filter($attachmentIds))) as $attachmentId) {
+            $url = WpHeroImageService::publicUrlForAttachmentId((int) $attachmentId);
+            if ($url) {
+                return $url;
+            }
+        }
+
+        return null;
     }
 }
