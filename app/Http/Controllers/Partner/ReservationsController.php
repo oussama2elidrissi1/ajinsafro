@@ -41,7 +41,12 @@ class ReservationsController extends Controller
 
     public function index(Request $request): View
     {
-        $query = $this->scopeReservations($request)->with(['offer:id,name', 'creator:id,name,email', 'branch:id,name', 'partner:id,name']);
+        $query = $this->scopeReservations($request)->with([
+            'offer:id,name',
+            'creator:id,name,email',
+            'branch:id,name',
+            'partner:id,nom_commercial,raison_sociale',
+        ]);
         if ($request->filled('status')) {
             $query->where('status', $request->query('status'));
         }
