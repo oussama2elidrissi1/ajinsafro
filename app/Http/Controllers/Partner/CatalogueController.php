@@ -6,12 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Models\Voyage;
 use App\Models\Wp\WpPost;
 use App\Services\AdminWpTourCatalogQuery;
+use App\Services\Reservations\ReservationPricingService;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class CatalogueController extends Controller
 {
+    public function __construct(
+        protected ReservationPricingService $reservationPricing,
+    ) {}
+
     /**
      * Voyages que le partenaire a le droit de vendre.
      * Si aucun accès restreint (partner_voyage_access vide) = tous les voyages actifs.
@@ -35,6 +41,9 @@ class CatalogueController extends Controller
         if (! empty($voyageIds)) {
             $query->whereIn('id', $voyageIds);
         }
+        $query->with(['departures' => function ($q) {
+            $q->orderBy('start_date')->orderBy('id');
+        }]);
         $query->orderBy('name');
         $voyages = $query->paginate(20)->withQueryString();
 
@@ -44,8 +53,62 @@ class CatalogueController extends Controller
         $formatted = $this->formatCataloguePricing($voyageCollection);
         $voyages->setCollection($formatted);
 
-        return view('partner.v2.catalogue.index', [
+        $voyagesCollection = $voyages->getCollection();
+
+        // Préparer une structure "workspace-like" : voyages + 3 prochains départs (stats + prix unitaire).
+        $today = Carbon::today();
+        $workspaceRows = $voyagesCollection->map(function (Voyage $voyage) use ($today) {
+            $departures = $voyage->departures
+                ->filter(fn ($d) => $d && $d->start_date)
+                ->sortBy(fn ($d) => $d->start_date)
+                ->values();
+
+            $futureDepartures = $departures
+                ->filter(fn ($d) => $d->start_date && $d->start_date->gte($today))
+                ->values();
+
+            $visible = $futureDepartures->take(3)->map(function ($d) use ($voyage) {
+                $resolved = $this->reservationPricing->resolveUnitPrice($voyage, $d, null);
+                return [
+                    'id' => (int) $d->id,
+                    'label' => ($d->start_date ? $d->start_date->format('d/m/Y') : '-')
+                        .($d->end_date ? ' -> '.$d->end_date->format('d/m/Y') : ''),
+                    'date_iso' => $d->start_date ? $d->start_date->format('Y-m-d') : null,
+                    'available_capacity' => (int) ($d->available_capacity ?? 0),
+                    'capacity' => (int) ($d->capacity ?? 0),
+                    'status' => (string) ($d->status ?? 'active'),
+                    'unit_price' => (float) ($resolved['unit_price'] ?? 0),
+                    'travel_date_id' => $d->wp_travel_date_id,
+                    'routes' => [
+                        'reserve' => route('partner.reservations.create', array_filter([
+                            'voyage_id' => (int) $voyage->id,
+                            'departure_id' => (int) $d->id,
+                            'travel_date_id' => $d->wp_travel_date_id ?: null,
+                        ], fn ($v) => $v !== null && $v !== '')),
+                    ],
+                ];
+            })->values()->all();
+
+            return [
+                'type' => 'package',
+                'voyage_id' => (int) $voyage->id,
+                'wp_post_id' => (int) ($voyage->wp_post_id ?? 0),
+                'name' => (string) $voyage->name,
+                'voyage_destination' => (string) ($voyage->destination ?? ''),
+                'image_url' => $voyage->featured_image_url,
+                'price_label' => $voyage->catalog_public_price_display ?? '—',
+                'commission_label' => $voyage->catalog_commission_display ?? '—',
+                'modal_detail' => [
+                    'departures' => $visible,
+                ],
+                'ws_has_future' => $futureDepartures->isNotEmpty(),
+                'ws_future_count' => $futureDepartures->count(),
+            ];
+        })->values();
+
+        return view('partner.v2.catalogue.workspace', [
             'voyages' => $voyages,
+            'workspaceRows' => $workspaceRows,
         ]);
     }
 
