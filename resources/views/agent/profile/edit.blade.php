@@ -20,7 +20,19 @@
         .aj-agent-alert { border-radius:14px; padding:12px 14px; margin-bottom:16px; }
         .aj-agent-alert-success { background:#dcfce7; color:#166534; border:1px solid #bbf7d0; }
         .aj-agent-alert-error { background:#fef2f2; color:#991b1b; border:1px solid #fecaca; }
+        .aj-agent-commission-section { margin-top:16px; }
+        .aj-agent-commission-kpis { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:14px; }
+        .aj-agent-commission-kpi { border:1px solid #e2e8f0; border-radius:14px; background:#fbfdff; padding:14px; }
+        .aj-agent-commission-kpi span { display:block; color:#64748b; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }
+        .aj-agent-commission-kpi strong { display:block; color:#0e3a5a; font-size:20px; font-weight:800; margin-top:6px; }
+        .aj-agent-commission-table { width:100%; border-collapse:collapse; }
+        .aj-agent-commission-table th { color:#64748b; font-size:11px; text-transform:uppercase; letter-spacing:.04em; text-align:left; padding:10px 8px; border-bottom:1px solid #e2e8f0; }
+        .aj-agent-commission-table td { color:#0f172a; font-size:13px; padding:11px 8px; border-bottom:1px solid #eef2f7; vertical-align:top; }
+        .aj-agent-commission-status { display:inline-flex; border-radius:999px; padding:4px 8px; background:#e6f3fa; color:#0083c4; font-size:11px; font-weight:700; }
+        .aj-agent-commission-empty { border:1px dashed #cbd5e1; border-radius:14px; padding:18px; text-align:center; color:#64748b; }
         @media(max-width:980px){.aj-agent-profile-grid,.aj-agent-form-grid{grid-template-columns:1fr}.aj-agent-profile{padding:0 12px 24px}}
+        @media(max-width:980px){.aj-agent-commission-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+        @media(max-width:560px){.aj-agent-commission-kpis{grid-template-columns:1fr}.aj-agent-commission-table{min-width:640px}.aj-agent-commission-table-wrap{overflow-x:auto}}
     </style>
 @endpush
 
@@ -113,5 +125,70 @@
             </form>
         </div>
     </div>
+
+    <section class="aj-agent-profile-card aj-agent-commission-section">
+        <div class="aj-agent-page-head" style="margin-bottom:14px;">
+            <div class="aj-agent-page-title">
+                <h1 style="font-size:22px;">Mes commissions</h1>
+                <p>Résumé des commissions liées à vos réservations.</p>
+            </div>
+        </div>
+
+        @php
+            $commissionSummary = $commissionSummary ?? ['total' => 0, 'month_total' => 0, 'payable_total' => 0, 'paid_total' => 0, 'count' => 0];
+            $recentCommissions = $recentCommissions ?? collect();
+            $formatMoney = fn ($value) => number_format((float) $value, 0, ',', ' ').' DH';
+        @endphp
+
+        <div class="aj-agent-commission-kpis">
+            <div class="aj-agent-commission-kpi">
+                <span>Total commissions</span>
+                <strong>{{ $formatMoney($commissionSummary['total'] ?? 0) }}</strong>
+            </div>
+            <div class="aj-agent-commission-kpi">
+                <span>Ce mois</span>
+                <strong>{{ $formatMoney($commissionSummary['month_total'] ?? 0) }}</strong>
+            </div>
+            <div class="aj-agent-commission-kpi">
+                <span>Payables</span>
+                <strong>{{ $formatMoney($commissionSummary['payable_total'] ?? 0) }}</strong>
+            </div>
+            <div class="aj-agent-commission-kpi">
+                <span>Payées</span>
+                <strong>{{ $formatMoney($commissionSummary['paid_total'] ?? 0) }}</strong>
+            </div>
+        </div>
+
+        @if($recentCommissions->count())
+            <div class="aj-agent-commission-table-wrap">
+                <table class="aj-agent-commission-table">
+                    <thead>
+                        <tr>
+                            <th>Voyage</th>
+                            <th>Client</th>
+                            <th>Date départ</th>
+                            <th>Statut</th>
+                            <th>Montant</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($recentCommissions as $commission)
+                            <tr>
+                                <td>{{ $commission->voyage?->name ?: 'Voyage non renseigné' }}</td>
+                                <td>{{ $commission->client_name ?: 'Client non renseigné' }}</td>
+                                <td>{{ $commission->departureDateLabel() ?: '—' }}</td>
+                                <td><span class="aj-agent-commission-status">{{ $commission->statusLabelFr() }}</span></td>
+                                <td><strong>{{ $formatMoney($commission->commission_total) }}</strong></td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div class="aj-agent-commission-empty">
+                Aucune commission enregistrée pour le moment.
+            </div>
+        @endif
+    </section>
 </div>
 @endsection

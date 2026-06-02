@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AgentCommissionEntry;
 use App\Services\BranchScopeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -25,9 +26,37 @@ class ProfileController extends Controller
             ];
         }
 
-        return view(request()->routeIs('agent.*') ? 'agent.profile.edit' : 'admin.profile.edit', [
+        $isAgentRoute = request()->routeIs('agent.*');
+        $commissionSummary = null;
+        $recentCommissions = collect();
+
+        if ($isAgentRoute && $user) {
+            $commissionQuery = AgentCommissionEntry::query()->where('agent_id', $user->id);
+            $commissionSummary = [
+                'total' => round((float) (clone $commissionQuery)
+                    ->whereNotIn('commission_status', [AgentCommissionEntry::STATUS_CANCELLED, AgentCommissionEntry::STATUS_REVERSED])
+                    ->sum('commission_total'), 2),
+                'month_total' => round((float) (clone $commissionQuery)
+                    ->whereBetween('calculated_at', [now()->startOfMonth(), now()->endOfMonth()])
+                    ->whereNotIn('commission_status', [AgentCommissionEntry::STATUS_CANCELLED, AgentCommissionEntry::STATUS_REVERSED])
+                    ->sum('commission_total'), 2),
+                'payable_total' => round((float) (clone $commissionQuery)->where('commission_status', AgentCommissionEntry::STATUS_PAYABLE)->sum('commission_total'), 2),
+                'paid_total' => round((float) (clone $commissionQuery)->where('commission_status', AgentCommissionEntry::STATUS_PAID)->sum('commission_total'), 2),
+                'count' => (int) (clone $commissionQuery)->count(),
+            ];
+            $recentCommissions = (clone $commissionQuery)
+                ->with(['voyage:id,name', 'reservation.departure:id,start_date', 'travelDate:id,date'])
+                ->latest('calculated_at')
+                ->latest('id')
+                ->limit(5)
+                ->get();
+        }
+
+        return view($isAgentRoute ? 'agent.profile.edit' : 'admin.profile.edit', [
             'user' => $user,
             'managerTeamPreview' => $managerTeamPreview,
+            'commissionSummary' => $commissionSummary,
+            'recentCommissions' => $recentCommissions,
         ]);
     }
 
