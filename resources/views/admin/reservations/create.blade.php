@@ -1,4 +1,4 @@
-@extends('layouts.admin-v6')
+@extends(request()->attributes->get('agent_reservation_mode', false) ? 'layouts.master-ajinsafro' : 'layouts.admin-v6')
 
 @section('title', 'Créer une réservation')
 @section('hidePageFooter', '1')
