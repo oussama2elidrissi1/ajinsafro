@@ -15,6 +15,10 @@
 
     $instagramUrl = (string) data_get($headerData, 'socials.instagram', '#');
     $user = request()->user();
+    $brandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');
+    $brandLogoUrl = \App\Models\Setting::brandLogoUrl('light')
+        ?: \App\Models\Setting::brandLogoUrl('dark')
+        ?: URL::asset('build/images/logo-light.png');
 
     $isAgentRoute = request()->routeIs('agent.*');
     $profileUrl = null;
@@ -42,7 +46,9 @@
         <div class="aj-topbar__left">
             @if($isAgentRoute)
                 <div class="aj-topbar__brand">
-                    <span class="aj-topbar__brand-badge">A</span>
+                    <span class="aj-topbar__brand-logo-wrap">
+                        <img src="{{ $brandLogoUrl }}" alt="{{ $brandName }}" class="aj-topbar__brand-logo">
+                    </span>
                     <span class="aj-topbar__brand-name">Ajinsafro Agent</span>
                 </div>
             @else

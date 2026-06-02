@@ -94,6 +94,26 @@ body.partner-v2.internal-v2-topbar-hidden {
   flex-shrink: 0;
 }
 
+.aj-topbar__brand-logo-wrap {
+  width: 112px;
+  height: 36px;
+  border-radius: 10px;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 8px;
+  flex-shrink: 0;
+  box-shadow: 0 6px 14px rgba(14, 58, 90, .12);
+}
+
+.aj-topbar__brand-logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 /* ---------- Sidebar improvements ---------- */
 .partner-v2 aside .sticky {
   border-radius: var(--aj-agent-radius) !important;
