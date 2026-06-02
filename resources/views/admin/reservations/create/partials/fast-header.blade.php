@@ -2,16 +2,17 @@
     $fastDeparture = $selectedDeparture ?? null;
     $fastTour = $preselectedTour ?? null;
     $fastUnitPrice = $selectedUnitPrice ?? null;
+    $agentReservationMode = (bool) request()->attributes->get('agent_reservation_mode', false);
 @endphp
 
 <header class="reservation-fast-header">
     <div class="reservation-fast-header__top">
         <nav class="reservation-create__breadcrumb" aria-label="Breadcrumb">
-            <a href="{{ route('admin.reservations.index') }}">Réservations</a>
+            <a href="{{ $agentReservationMode ? route('agent.reservations.index') : route('admin.reservations.index') }}">Réservations</a>
             <span>/</span>
             <span>Nouvelle rapide</span>
         </nav>
-        <a href="{{ route('admin.reservations.workspace') }}" class="reservation-create__back-link">Retour au workspace</a>
+        <a href="{{ $agentReservationMode ? route('agent.catalogue') : route('admin.reservations.workspace') }}" class="reservation-create__back-link">{{ $agentReservationMode ? 'Retour au catalogue' : 'Retour au workspace' }}</a>
     </div>
 
     <div class="reservation-fast-header__card">

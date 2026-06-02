@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
-use App\Models\Departure;
+use App\Http\Controllers\Admin\ReservationsController as AdminReservationsController;
 use App\Models\Reservation;
-use App\Models\Voyage;
 use App\Services\View\AgentPortalLayout;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -63,24 +62,19 @@ class ReservationController extends Controller
         $user = $request->user();
         abort_unless($user && AgentPortalLayout::shouldUse($user) && $user->can('reservations.create'), 403);
 
-        $voyage = Voyage::query()
-            ->where('status', 'actif')
-            ->when((int) $request->query('voyage_id') > 0, fn (Builder $query) => $query->whereKey((int) $request->query('voyage_id')))
-            ->first();
+        $request->attributes->set('agent_reservation_mode', true);
 
-        $departure = Departure::query()
-            ->with('voyage:id,name,destination,duration_text,price_from,currency')
-            ->when((int) $request->query('departure_id') > 0, fn (Builder $query) => $query->whereKey((int) $request->query('departure_id')))
-            ->when($voyage, fn (Builder $query) => $query->where('voyage_id', $voyage->id))
-            ->first();
+        return app(AdminReservationsController::class)->create($request);
+    }
 
-        abort_unless($voyage || $departure, 404);
+    public function store(Request $request)
+    {
+        $user = $request->user();
+        abort_unless($user && AgentPortalLayout::shouldUse($user) && $user->can('reservations.create'), 403);
 
-        return view('agent.reservations.create', [
-            'voyage' => $voyage ?: $departure?->voyage,
-            'departure' => $departure,
-            'travelDateId' => $request->query('travel_date_id'),
-        ]);
+        $request->attributes->set('agent_reservation_mode', true);
+
+        return app(AdminReservationsController::class)->store($request);
     }
 
     public function show(Request $request, Reservation $reservation): View

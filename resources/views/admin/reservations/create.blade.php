@@ -8,13 +8,14 @@
 @endpush
 
 @section('content')
+    @php($agentReservationMode = (bool) request()->attributes->get('agent_reservation_mode', false))
     <div class="reservation-create {{ ($fastCreateMode ?? false) ? 'reservation-create--fast' : '' }}" data-fast-create="{{ ($fastCreateMode ?? false) ? '1' : '0' }}">
         @if ($fastCreateMode ?? false)
             @include('admin.reservations.create.partials.fast-header')
         @else
             <header class="reservation-create__header">
                 <nav class="reservation-create__breadcrumb" aria-label="Breadcrumb">
-                    <a href="{{ route('admin.reservations.index') }}">Réservations</a>
+                    <a href="{{ $agentReservationMode ? route('agent.reservations.index') : route('admin.reservations.index') }}">Réservations</a>
                     <span>/</span>
                     <span>Nouvelle</span>
                 </nav>
@@ -23,7 +24,7 @@
                         <h1 class="reservation-create__title">Créer une réservation</h1>
                         <p class="reservation-create__subtitle">Tunnel dédié pour ouvrir un dossier de réservation sans confusion avec le workspace.</p>
                     </div>
-                    <a href="{{ route('admin.reservations.workspace') }}" class="reservation-create__back-link">Retour au workspace</a>
+                    <a href="{{ $agentReservationMode ? route('agent.catalogue') : route('admin.reservations.workspace') }}" class="reservation-create__back-link">{{ $agentReservationMode ? 'Retour au catalogue' : 'Retour au workspace' }}</a>
                 </div>
             </header>
         @endif
@@ -39,7 +40,7 @@
             </div>
         @endif
 
-        <form method="post" action="{{ route('admin.reservations.store') }}" enctype="multipart/form-data" id="reservation-create-form">
+        <form method="post" action="{{ $agentReservationMode ? route('agent.reservations.store') : route('admin.reservations.store') }}" enctype="multipart/form-data" id="reservation-create-form">
             @csrf
             <input type="hidden" name="extras_json" id="reservation-create-extras-json" value="[]">
             <input type="hidden" name="travelers_json" id="reservation-travelers-json" value="[]">

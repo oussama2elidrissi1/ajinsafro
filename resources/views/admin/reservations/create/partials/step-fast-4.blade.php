@@ -74,7 +74,7 @@
             <i class="bx bx-left-arrow-alt" aria-hidden="true"></i><span>Retour</span>
         </button>
         <div class="reservation-create__submit-group">
-            <a href="{{ route('admin.reservations.workspace') }}" class="reservation-create__button reservation-create__button--ghost">Annuler</a>
+            <a href="{{ request()->attributes->get('agent_reservation_mode', false) ? route('agent.catalogue') : route('admin.reservations.workspace') }}" class="reservation-create__button reservation-create__button--ghost">Annuler</a>
             <button type="submit" class="reservation-create__button reservation-create__button--primary">
                 <span>Confirmer la réservation</span><i class="bx bx-right-arrow-alt" aria-hidden="true"></i>
             </button>
