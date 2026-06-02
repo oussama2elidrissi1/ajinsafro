@@ -25,7 +25,7 @@ class ProfileController extends Controller
             ];
         }
 
-        return view('admin.profile.edit', [
+        return view(request()->routeIs('agent.*') ? 'agent.profile.edit' : 'admin.profile.edit', [
             'user' => $user,
             'managerTeamPreview' => $managerTeamPreview,
         ]);
@@ -63,7 +63,9 @@ class ProfileController extends Controller
 
         $user->save();
 
-        return redirect()->route('admin.profile.edit')->with('success', 'Profile updated successfully.');
+        return redirect()
+            ->route($request->routeIs('agent.*') ? 'agent.profile' : 'admin.profile.edit')
+            ->with('success', 'Profile updated successfully.');
     }
 
     /**
@@ -85,6 +87,8 @@ class ProfileController extends Controller
         $user->avatar = $path;
         $user->save();
 
-        return redirect()->route('admin.profile.edit')->with('success', 'Avatar updated successfully.');
+        return redirect()
+            ->route($request->routeIs('agent.*') ? 'agent.profile' : 'admin.profile.edit')
+            ->with('success', 'Avatar updated successfully.');
     }
 }

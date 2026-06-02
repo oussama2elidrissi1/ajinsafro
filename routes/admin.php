@@ -659,6 +659,8 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'not.client'])
         Route::post('reservations-a-la-carte', [AgentCustomReservationController::class, 'store'])->name('custom-reservations.store');
         Route::get('reservations-a-la-carte/{customRequest}', [AgentCustomReservationController::class, 'show'])->name('custom-reservations.show')->whereNumber('customRequest');
         Route::get('profile', [ProfileController::class, 'edit'])->name('profile');
+        Route::match(['put', 'patch'], 'profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::post('profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
         Route::prefix('messagerie')
             ->name('messagerie.')
             ->group(function () {
