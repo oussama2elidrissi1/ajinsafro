@@ -31,6 +31,7 @@
         .aj-agent-trip-kpi span { display:block; color:#64748b; font-size:11px; font-weight:700; }
         .aj-agent-trip-kpi strong { display:block; color:#0f172a; font-size:14px; margin-top:3px; }
         .aj-agent-trip-actions { margin-top:auto; display:flex; gap:8px; flex-wrap:wrap; }
+        .aj-agent-trip-actions .btn-view { width:100%; min-height:42px; }
         .aj-agent-empty { background:#fff; border:1px dashed #cbd5e1; border-radius:18px; padding:34px; text-align:center; color:#64748b; grid-column:1/-1; }
         .aj-agent-pagination { margin-top:18px; }
         @media (max-width: 1180px) { .aj-agent-filter-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .aj-agent-catalogue-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
@@ -85,14 +86,7 @@
                 $departure = $voyage->agent_catalogue_next_departure;
                 $remaining = $departure ? (int) ($departure->available_capacity ?? 0) : 0;
                 $capacity = $departure ? (int) (($departure->capacity ?? null) ?: ($departure->total_capacity ?? 0)) : 0;
-                $reserveUrl = $canCreateReservation && $departure && Route::has('admin.reservations.create')
-                    ? route('admin.reservations.create', array_filter([
-                        'tour_id' => (int) $voyage->id,
-                        'departure_id' => (int) $departure->id,
-                        'travel_date_id' => $departure->wp_travel_date_id ?: null,
-                    ]))
-                    : null;
-                $detailsUrl = Route::has('front.voyages.show') && $voyage->slug ? route('front.voyages.show', $voyage->slug) : null;
+                $modalCode = 'agent-voyage-'.$voyage->id;
             @endphp
             <article class="aj-agent-trip-card">
                 <div class="aj-agent-trip-media">
@@ -131,12 +125,16 @@
                     </div>
 
                     <div class="aj-agent-trip-actions">
-                        @if($reserveUrl)
-                            <a href="{{ $reserveUrl }}" class="aj-agent-primary-btn">Réserver</a>
-                        @endif
-                        @if($detailsUrl)
-                            <a href="{{ $detailsUrl }}" class="aj-agent-action-btn" target="_blank" rel="noopener">Voir détails</a>
-                        @endif
+                        <button type="button"
+                                class="aj-agent-action-btn btn-ws-open-detail btn-view"
+                                data-row-code="{{ $modalCode }}"
+                                @if($departure)
+                                    data-travel-date-id="{{ $departure->wp_travel_date_id ?: $departure->id }}"
+                                @endif
+                                title="Voir">
+                            <i class="fas fa-eye" aria-hidden="true"></i>
+                            <span>Voir</span>
+                        </button>
                     </div>
                 </div>
             </article>
@@ -152,4 +150,7 @@
         {{ $voyages->links() }}
     </div>
 </div>
+
+<script type="application/json" id="ws-modal-detail-json">{!! json_encode($agentCatalogueDetailMap ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
+@include('agent.partials.catalogue-detail-modal')
 @endsection

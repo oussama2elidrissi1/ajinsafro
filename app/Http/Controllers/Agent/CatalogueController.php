@@ -84,12 +84,14 @@ class CatalogueController extends Controller
             ->withQueryString();
 
         $voyages->setCollection($this->formatCatalogueRows($voyages->getCollection()));
+        $detailMap = $this->buildModalDetailMap($voyages->getCollection());
 
         return view('agent.catalogue', [
             'voyages' => $voyages,
             'filters' => $filters,
             'destinationOptions' => $destinationOptions,
             'canCreateReservation' => $user->can('reservations.create'),
+            'agentCatalogueDetailMap' => $detailMap,
         ]);
     }
 
@@ -137,6 +139,71 @@ class CatalogueController extends Controller
         }
 
         return (float) ($voyage->price_from ?? 0);
+    }
+
+    protected function buildModalDetailMap(Collection $voyages): array
+    {
+        return $voyages->mapWithKeys(function (Voyage $voyage): array {
+            $code = 'agent-voyage-'.$voyage->id;
+            $departures = $voyage->departures->values()->map(function ($departure) use ($voyage): array {
+                $capacity = (int) (($departure->capacity ?? null) ?: ($departure->total_capacity ?? 0));
+                $remaining = (int) ($departure->available_capacity ?? 0);
+                $fillPct = $capacity > 0 ? min(100, max(0, (int) round((($capacity - $remaining) / $capacity) * 100))) : 0;
+                $dateLabel = trim(($departure->start_date ? $departure->start_date->format('d/m/Y') : '—')
+                    .($departure->end_date ? ' - '.$departure->end_date->format('d/m/Y') : ''));
+
+                return [
+                    'travel_date_id' => (string) ($departure->wp_travel_date_id ?: $departure->id),
+                    'date_label' => $dateLabel,
+                    'capacity' => $capacity,
+                    'remaining' => $remaining,
+                    'fill_pct' => $fillPct,
+                    'is_past' => $departure->start_date ? $departure->start_date->isPast() : false,
+                    'status_key' => $remaining <= 0 ? 'full' : ($remaining <= 5 ? 'almost_full' : 'available'),
+                    'status_label' => $remaining <= 0 ? 'Complet' : 'Disponible',
+                    'pax' => [
+                        'validee' => 0,
+                        'en_cours' => 0,
+                        'annulee' => 0,
+                    ],
+                    'reservations' => [
+                        'total' => 0,
+                        'validee' => 0,
+                        'en_cours' => 0,
+                        'annulee' => 0,
+                    ],
+                    'routes' => [],
+                    'unit_price' => (float) ($voyage->agent_catalogue_price_value ?? 0),
+                ];
+            })->all();
+
+            return [
+                $code => [
+                    'kind' => 'package',
+                    'title' => (string) $voyage->name,
+                    'destination' => (string) ($voyage->destination ?? ''),
+                    'duration' => (string) ($voyage->duration_text ?? ''),
+                    'wp_post_id' => (int) ($voyage->wp_post_id ?? 0),
+                    'laravel_voyage_id' => (int) $voyage->id,
+                    'post_status_label' => 'Actif',
+                    'prices' => [
+                        'adult_label' => (string) ($voyage->agent_catalogue_price_label ?? 'Prix sur demande'),
+                        'currency' => (string) ($voyage->currency ?? 'MAD'),
+                    ],
+                    'travel_dates' => collect($departures)->map(fn (array $departure): array => [
+                        'date_label' => $departure['date_label'],
+                        'is_past' => $departure['is_past'],
+                    ])->all(),
+                    'departures' => $departures,
+                    'routes' => [],
+                    'stats' => [
+                        'validee' => 0,
+                        'en_cours' => 0,
+                        'annulee' => 0,
+                    ],
+                ],
+            ];
+        })->all();
     }
 
     private function resolveCatalogImageUrl(Voyage $voyage): ?string
