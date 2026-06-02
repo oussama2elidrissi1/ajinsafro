@@ -64,6 +64,8 @@
             .ws-md-btn{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;border-radius:12px;border:1px solid transparent;padding:.68rem .95rem;font-size:.83rem;font-weight:600;text-decoration:none;cursor:pointer;transition:background .15s ease,border-color .15s ease,color .15s ease}
             .ws-md-btn-secondary{background:#fff;border-color:#cbd5e1;color:#334155}
             .ws-md-btn-secondary:hover{background:#f8fafc;color:#0e3a5a}
+            .ws-md-btn-primary{background:#0083c4;border-color:#0083c4;color:#fff}
+            .ws-md-btn-primary:hover{background:#0e3a5a;border-color:#0e3a5a;color:#fff}
             body.ws-md-open{overflow:hidden}
             @media(max-width:980px){.ws-md-grid{grid-template-columns:1fr}.ws-md-date-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.ws-md-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
             @media(max-width:640px){#ws-voyage-detail-modal.ws-md-root{padding:.65rem}.ws-md-shell{width:95vw;max-height:94vh;border-radius:16px}.ws-md-header,.ws-md-body,.ws-md-footer{padding:1rem}.ws-md-date-list,.ws-md-summary,.ws-md-info-grid,.ws-md-rooms,.ws-md-progress-copy{grid-template-columns:1fr}.ws-md-footer{align-items:stretch;flex-direction:column}.ws-md-footer-actions,.ws-md-btn{width:100%}}
@@ -225,6 +227,17 @@
             return '<div class="ws-md-grid"><div>' + renderDateSelector(detail, selectedIndex) + '</div><div>' + renderDeparture(detail, departure) + '</div></div>';
         }
 
+        function renderFooter(departure) {
+            var reserveUrl = departure && departure.routes ? departure.routes.reserve : null;
+            var html = '<span class="ws-md-footer-note">' + (reserveUrl ? 'Créer une réservation Agent pour le départ sélectionné.' : 'Réservation directe non disponible pour ce départ.') + '</span>';
+            html += '<div class="ws-md-footer-actions">';
+            html += '<button type="button" class="ws-md-btn ws-md-btn-secondary" data-ws-md-close><i class="fas fa-times"></i>Fermer</button>';
+            if (reserveUrl) {
+                html += '<a class="ws-md-btn ws-md-btn-primary" href="' + esc(reserveUrl) + '"><i class="fas fa-calendar-check"></i>Réserver ce départ</a>';
+            }
+            return html + '</div>';
+        }
+
         function open(code, travelDateId) {
             var map = details();
             var detail = map[code];
@@ -242,7 +255,7 @@
             if (detail.laravel_voyage_id) bits.push('<span>Laravel #' + esc(detail.laravel_voyage_id) + '</span>');
             subEl.innerHTML = bits.join('');
             bodyEl.innerHTML = render(detail, currentDepartureIndex);
-            footerEl.innerHTML = '<span class="ws-md-footer-note"></span><div class="ws-md-footer-actions"><button type="button" class="ws-md-btn ws-md-btn-secondary" data-ws-md-close><i class="fas fa-times"></i>Fermer</button></div>';
+            footerEl.innerHTML = renderFooter(departures[currentDepartureIndex] || departures[0] || null);
             modalEl.classList.remove('hidden');
             modalEl.classList.add('ws-md-visible');
             modalEl.setAttribute('aria-hidden', 'false');
@@ -270,6 +283,8 @@
                 if (!currentDetail) return;
                 currentDepartureIndex = numberValue(target.getAttribute('data-ws-md-date-index'));
                 bodyEl.innerHTML = render(currentDetail, currentDepartureIndex);
+                var departures = Array.isArray(currentDetail.departures) ? currentDetail.departures : [];
+                footerEl.innerHTML = renderFooter(departures[currentDepartureIndex] || departures[0] || null);
                 return;
             }
             if (target.hasAttribute('data-ws-md-close') || target.hasAttribute('data-ws-md-backdrop')) {

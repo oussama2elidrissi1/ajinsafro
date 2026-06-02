@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Route;
 use Illuminate\View\View;
 
 class CatalogueController extends Controller
@@ -94,14 +95,15 @@ class CatalogueController extends Controller
             ->paginate(12)
             ->withQueryString();
 
+        $canCreateReservation = $user->can('reservations.create');
         $voyages->setCollection($this->formatCatalogueRows($voyages->getCollection()));
-        $detailMap = $this->buildModalDetailMap($voyages->getCollection());
+        $detailMap = $this->buildModalDetailMap($voyages->getCollection(), $canCreateReservation);
 
         return view('agent.catalogue', [
             'voyages' => $voyages,
             'filters' => $filters,
             'destinationOptions' => $destinationOptions,
-            'canCreateReservation' => $user->can('reservations.create'),
+            'canCreateReservation' => $canCreateReservation,
             'agentCatalogueDetailMap' => $detailMap,
         ]);
     }
@@ -152,11 +154,11 @@ class CatalogueController extends Controller
         return (float) ($voyage->price_from ?? 0);
     }
 
-    protected function buildModalDetailMap(Collection $voyages): array
+    protected function buildModalDetailMap(Collection $voyages, bool $canCreateReservation): array
     {
-        return $voyages->mapWithKeys(function (Voyage $voyage): array {
+        return $voyages->mapWithKeys(function (Voyage $voyage) use ($canCreateReservation): array {
             $code = 'agent-voyage-'.$voyage->id;
-            $departures = $voyage->departures->values()->map(function ($departure) use ($voyage): array {
+            $departures = $voyage->departures->values()->map(function ($departure) use ($voyage, $canCreateReservation): array {
                 $capacity = (int) (($departure->capacity ?? null) ?: ($departure->total_capacity ?? 0));
                 $remaining = (int) ($departure->available_capacity ?? 0);
                 $fillPct = $capacity > 0 ? min(100, max(0, (int) round((($capacity - $remaining) / $capacity) * 100))) : 0;
@@ -188,6 +190,15 @@ class CatalogueController extends Controller
                     ];
                 })->all();
 
+                $reserveRoute = null;
+                if ($canCreateReservation && Route::has('agent.reservations.create')) {
+                    $reserveRoute = route('agent.reservations.create', array_filter([
+                        'voyage_id' => $voyage->id,
+                        'departure_id' => $departure->id,
+                        'travel_date_id' => $departure->wp_travel_date_id ?: $departure->id,
+                    ]));
+                }
+
                 return [
                     'travel_date_id' => (string) ($departure->wp_travel_date_id ?: $departure->id),
                     'departure_id' => (int) $departure->id,
@@ -211,7 +222,9 @@ class CatalogueController extends Controller
                         'en_cours' => $pending->count(),
                         'annulee' => $cancelled->count(),
                     ],
-                    'routes' => [],
+                    'routes' => [
+                        'reserve' => $reserveRoute,
+                    ],
                     'unit_price' => (float) ($voyage->agent_catalogue_price_value ?? 0),
                     'unit_price_label' => (string) ($voyage->agent_catalogue_price_label ?? 'Prix sur demande'),
                     'rooms' => $rooms,

@@ -651,6 +651,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'not.client'])
         Route::get('dashboard', [AgentDashboardController::class, 'index'])->name('dashboard');
         Route::get('catalogue', [AgentCatalogueController::class, 'index'])->name('catalogue');
         Route::get('reservations', [AgentReservationController::class, 'index'])->name('reservations.index');
+        Route::get('reservations/create', [AgentReservationController::class, 'create'])->name('reservations.create');
         Route::get('reservations/{reservation}', [AgentReservationController::class, 'show'])->name('reservations.show')->whereNumber('reservation');
         Route::get('reservations-a-la-carte', [AgentCustomReservationController::class, 'index'])->name('custom-reservations.index');
         Route::get('reservations-a-la-carte/create', [AgentCustomReservationController::class, 'create'])->name('custom-reservations.create');
