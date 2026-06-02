@@ -61,7 +61,9 @@ use App\Http\Controllers\Client\ClientDashboardController;
 use App\Http\Controllers\Client\ClientProfileController;
 use App\Http\Controllers\Client\ClientReservationsController;
 use App\Http\Controllers\Agent\CatalogueController as AgentCatalogueController;
+use App\Http\Controllers\Agent\CustomReservationController as AgentCustomReservationController;
 use App\Http\Controllers\Agent\DashboardController as AgentDashboardController;
+use App\Http\Controllers\Agent\ReservationController as AgentReservationController;
 use App\Http\Controllers\Auth\LockScreenController;
 use App\Http\Controllers\Front\GroupDealsController as FrontGroupDealsController;
 use App\Http\Controllers\Front\VoyageController as FrontVoyageController;
@@ -648,6 +650,13 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'not.client'])
     ->group(function () {
         Route::get('dashboard', [AgentDashboardController::class, 'index'])->name('dashboard');
         Route::get('catalogue', [AgentCatalogueController::class, 'index'])->name('catalogue');
+        Route::get('reservations', [AgentReservationController::class, 'index'])->name('reservations.index');
+        Route::get('reservations/{reservation}', [AgentReservationController::class, 'show'])->name('reservations.show')->whereNumber('reservation');
+        Route::get('reservations-a-la-carte', [AgentCustomReservationController::class, 'index'])->name('custom-reservations.index');
+        Route::get('reservations-a-la-carte/create', [AgentCustomReservationController::class, 'create'])->name('custom-reservations.create');
+        Route::post('reservations-a-la-carte', [AgentCustomReservationController::class, 'store'])->name('custom-reservations.store');
+        Route::get('reservations-a-la-carte/{customRequest}', [AgentCustomReservationController::class, 'show'])->name('custom-reservations.show')->whereNumber('customRequest');
+        Route::get('profile', [ProfileController::class, 'edit'])->name('profile');
         Route::prefix('messagerie')
             ->name('messagerie.')
             ->group(function () {

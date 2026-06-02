@@ -7,9 +7,9 @@
     $navItems = collect([
         ['label' => 'Tableau de bord', 'icon' => 'bx bx-home-circle', 'route' => 'agent.dashboard', 'match' => ['agent.dashboard'], 'permission' => null],
         ['label' => 'Catalogue de voyage', 'icon' => 'bx bx-map-alt', 'route' => 'agent.catalogue', 'match' => ['agent.catalogue'], 'permission' => 'reservations.view'],
-        ['label' => 'Mes rÃ©servations', 'icon' => 'bx bx-calendar-check', 'route' => 'admin.reservation-dossiers.index', 'match' => ['admin.reservation-dossiers.'], 'permission' => 'reservations.view'],
-        ['label' => 'RÃ©servations Ã  la carte', 'icon' => 'bx bx-edit-alt', 'route' => 'admin.reservations.custom-requests.index', 'match' => ['admin.reservations.custom-requests.', 'admin.tailor-made-requests.'], 'permission' => 'reservations.view'],
-        ['label' => 'Mon profil', 'icon' => 'bx bx-user', 'route' => 'admin.profile.edit', 'match' => ['admin.profile.'], 'permission' => ['dashboard.view', 'reservations.view']],
+        ['label' => 'Mes reservations', 'icon' => 'bx bx-calendar-check', 'route' => 'agent.reservations.index', 'match' => ['agent.reservations.'], 'permission' => 'reservations.view'],
+        ['label' => 'Reservations a la carte', 'icon' => 'bx bx-edit-alt', 'route' => 'agent.custom-reservations.index', 'match' => ['agent.custom-reservations.'], 'permission' => 'reservations.view'],
+        ['label' => 'Mon profil', 'icon' => 'bx bx-user', 'route' => 'agent.profile', 'match' => ['agent.profile'], 'permission' => ['dashboard.view', 'reservations.view']],
         ['label' => 'Messagerie', 'icon' => 'bx bx-envelope', 'route' => 'agent.messagerie.index', 'match' => ['agent.messagerie.'], 'permission' => null],
     ])->filter(function ($item) use ($user) {
         if (empty($item['route']) || ! \Illuminate\Support\Facades\Route::has($item['route'])) {

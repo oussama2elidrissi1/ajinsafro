@@ -70,15 +70,15 @@ class AppServiceProvider extends ServiceProvider
                         ];
                     }
 
-                    if (\Illuminate\Support\Facades\Route::has('admin.reservation-dossiers.index')) {
+                    if (\Illuminate\Support\Facades\Route::has('agent.reservations.index')) {
                         $agentPortalMenu[] = [
                             'key' => 'agent_reservations',
                             'label' => 'Mes reservations',
                             'icon' => 'bx bx-calendar-check',
-                            'route' => 'admin.reservation-dossiers.index',
-                            'href' => route('admin.reservation-dossiers.index'),
+                            'route' => 'agent.reservations.index',
+                            'href' => route('agent.reservations.index'),
                             'children' => [],
-                            'active' => request()->routeIs('admin.reservation-dossiers.*') || request()->routeIs('admin.reservations.index'),
+                            'active' => request()->routeIs('agent.reservations.*'),
                             'open' => false,
                             'depth' => 0,
                             'has_direct_access' => true,
@@ -86,15 +86,15 @@ class AppServiceProvider extends ServiceProvider
                         ];
                     }
 
-                    if (\Illuminate\Support\Facades\Route::has('admin.reservations.custom-requests.index')) {
+                    if (\Illuminate\Support\Facades\Route::has('agent.custom-reservations.index')) {
                         $agentPortalMenu[] = [
                             'key' => 'agent_reservations_a_la_carte',
                             'label' => 'Reservations a la carte',
                             'icon' => 'bx bx-edit-alt',
-                            'route' => 'admin.reservations.custom-requests.index',
-                            'href' => route('admin.reservations.custom-requests.index'),
+                            'route' => 'agent.custom-reservations.index',
+                            'href' => route('agent.custom-reservations.index'),
                             'children' => [],
-                            'active' => request()->routeIs('admin.reservations.custom-requests.*') || request()->routeIs('admin.tailor-made-requests.*'),
+                            'active' => request()->routeIs('agent.custom-reservations.*'),
                             'open' => false,
                             'depth' => 0,
                             'has_direct_access' => true,

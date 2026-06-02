@@ -141,8 +141,8 @@
                             $badgeClass = $status === Reservation::STATUS_VALIDEE
                                 ? 'aj-agent-status-green'
                                 : ($status === Reservation::STATUS_ANNULEE ? 'aj-agent-status-red' : 'aj-agent-status-orange');
-                            $detailUrl = Route::has('admin.reservation-dossiers.show') && $reservation->reservation_dossier_id
-                                ? route('admin.reservation-dossiers.show', $reservation->reservation_dossier_id)
+                            $detailUrl = Route::has('agent.reservations.show')
+                                ? route('agent.reservations.show', $reservation)
                                 : '#';
                             $displayDate = optional($reservation->travelDate?->date)->format('d/m/Y') ?: optional($reservation->created_at)->format('d/m/Y');
                         @endphp

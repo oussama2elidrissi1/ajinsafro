@@ -7,7 +7,7 @@
     $brandLogo = \App\Models\Setting::brandLogoUrl('dark');
     $menuItems = $agentPortalAdminMenu ?? [];
     $dashboardActive = request()->routeIs('agent.dashboard');
-    $profileActive = request()->routeIs('admin.profile.*');
+    $profileActive = request()->routeIs('agent.profile');
 @endphp
 
 <aside class="w-full lg:w-72 shrink-0">
@@ -36,7 +36,7 @@
             <div class="agent-sidebar-divider"></div>
 
             @can('dashboard.view')
-                <a href="{{ route('admin.profile.edit') }}"
+                <a href="{{ route('agent.profile') }}"
                    data-partner-nav
                    class="agent-sidebar-link {{ $profileActive ? 'active' : '' }}">
                     <i class="bx bx-user agent-sidebar-icon"></i>
@@ -47,7 +47,7 @@
             <a href="{{ route('logout.get') }}"
                class="agent-sidebar-link agent-sidebar-logout">
                 <i class="bx bx-log-out agent-sidebar-icon"></i>
-                <span class="agent-sidebar-text">Se déconnecter</span>
+                <span class="agent-sidebar-text">Se deconnecter</span>
             </a>
         </nav>
     </div>

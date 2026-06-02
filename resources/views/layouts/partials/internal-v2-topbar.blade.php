@@ -16,9 +16,12 @@
     $instagramUrl = (string) data_get($headerData, 'socials.instagram', '#');
     $user = request()->user();
 
+    $isAgentRoute = request()->routeIs('agent.*');
     $profileUrl = null;
     if ($user) {
-        if (method_exists($user, 'isPartner') && $user->isPartner() && \Illuminate\Support\Facades\Route::has('partner.profile.show')) {
+        if ($isAgentRoute && \Illuminate\Support\Facades\Route::has('agent.profile')) {
+            $profileUrl = route('agent.profile');
+        } elseif (method_exists($user, 'isPartner') && $user->isPartner() && \Illuminate\Support\Facades\Route::has('partner.profile.show')) {
             $profileUrl = route('partner.profile.show');
         } elseif (\Illuminate\Support\Facades\Route::has('admin.profile.edit')) {
             $profileUrl = route('admin.profile.edit');
@@ -32,7 +35,6 @@
         && $user->isPartner()
         && \Illuminate\Support\Facades\Route::has('partner.logout');
 
-    $isAgentRoute = request()->routeIs('agent.*');
 @endphp
 
 <div class="aj-topbar aj-topbar--internal-v2 {{ $isAgentRoute ? 'aj-topbar--agent-mode' : '' }}" role="banner">
