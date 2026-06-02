@@ -114,55 +114,197 @@ body.partner-v2.internal-v2-topbar-hidden {
   border-color: #eef7ff !important;
 }
 
-.partner-v2 aside h3.font-bold {
+.partner-v2 aside h3.font-semibold {
   font-weight: 600 !important;
   font-size: 16px !important;
 }
 
-.partner-v2 aside p.font-bold {
+.partner-v2 aside p.font-semibold {
   font-weight: 600 !important;
   font-size: 11px !important;
 }
 
-.partner-v2 aside p.font-semibold {
-  font-weight: 400 !important;
-  font-size: 12px !important;
+/* ---------- Agent Sidebar Menu ---------- */
+.agent-sidebar-menu,
+.agent-sidebar-menu ul,
+.agent-sidebar-menu ol,
+.agent-sidebar-menu li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-.partner-v2 aside nav {
-  padding: 10px !important;
-  gap: 2px !important;
+.agent-sidebar-menu {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.partner-v2 aside nav a {
-  border-radius: 12px !important;
-  font-weight: 500 !important;
-  font-size: 14px !important;
-  padding: 11px 14px !important;
-  position: relative !important;
+.agent-sidebar-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 12px;
+  color: #475569;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.25;
+  transition: background .2s ease, color .2s ease;
+  border: none;
+  background: transparent;
 }
 
-.partner-v2 aside nav a.font-semibold {
-  font-weight: 600 !important;
-  background: #eff6ff !important;
-  color: var(--aj-agent-blue) !important;
+.agent-sidebar-link:hover {
+  background: #f1f5f9;
+  color: #0078bd;
 }
 
-.partner-v2 aside nav a.font-medium {
-  font-weight: 500 !important;
+.agent-sidebar-link.active {
+  background: #eaf4ff;
+  color: #0078bd;
+  font-weight: 600;
 }
 
-/* active indicator bar */
-.partner-v2 aside nav a.font-semibold::before {
+.agent-sidebar-link.active::before {
   content: "";
   position: absolute;
   left: 0;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 10px;
+  bottom: 10px;
   width: 3px;
-  height: 18px;
-  background: var(--aj-agent-blue);
-  border-radius: 0 4px 4px 0;
+  border-radius: 10px;
+  background: #0078bd;
+}
+
+.agent-sidebar-icon {
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.agent-sidebar-text {
+  flex: 1;
+  min-width: 0;
+  white-space: normal;
+  text-align: left;
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+
+.agent-sidebar-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 10px 0;
+  border: none;
+}
+
+.agent-sidebar-logout {
+  color: #ef4444;
+}
+
+.agent-sidebar-logout:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.agent-sidebar-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #0b57d0;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+/* Sidebar groups (details/summary) */
+.agent-sidebar-group {
+  border-radius: 12px;
+  border: 1px solid transparent;
+  transition: border-color .2s ease;
+}
+
+.agent-sidebar-group:hover {
+  border-color: #e2e8f0;
+}
+
+.agent-sidebar-group.is-open {
+  background: #f8fafc;
+}
+
+.agent-sidebar-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 11px 14px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 12px;
+}
+
+.agent-sidebar-summary::-webkit-details-marker {
+  display: none;
+}
+
+.agent-sidebar-summary:hover {
+  background: #f1f5f9;
+}
+
+.agent-sidebar-summary-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.agent-sidebar-chevron {
+  font-size: 14px;
+  color: #94a3b8;
+  transition: transform .2s ease;
+  flex-shrink: 0;
+}
+
+.agent-sidebar-group[open] .agent-sidebar-chevron {
+  transform: rotate(90deg);
+}
+
+.agent-sidebar-children {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px 2px 6px 2px;
+}
+
+.agent-sidebar-children .agent-sidebar-link {
+  padding-left: 20px;
+  font-size: 13px;
+}
+
+.agent-sidebar-children .agent-sidebar-summary {
+  font-size: 13px;
 }
 
 /* ---------- Dashboard container ---------- */

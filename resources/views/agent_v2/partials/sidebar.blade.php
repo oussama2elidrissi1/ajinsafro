@@ -21,32 +21,33 @@
             @endif
         </div>
 
-        <nav class="p-4 flex flex-col gap-1.5 max-h-[70vh] overflow-y-auto text-sm">
+        <nav class="agent-sidebar-menu">
             <a href="{{ route('agent.dashboard') }}"
                data-partner-nav
-               class="flex items-center gap-3 px-4 py-3 rounded-xl mb-1 {{ $dashboardActive ? 'bg-[#e6f3fa]/60 text-[#0083c4] font-semibold' : 'hover:bg-gray-50 text-gray-600 hover:text-[#0083c4] font-medium' }} transition-colors">
-                <span class="w-2.5 h-2.5 rounded-full shrink-0 {{ $dashboardActive ? 'bg-[#0083c4]' : 'bg-gray-200' }}"></span>
-                <span class="leading-snug">Dashboard</span>
+               class="agent-sidebar-link {{ $dashboardActive ? 'active' : '' }}">
+                <i class="bx bx-grid-alt agent-sidebar-icon"></i>
+                <span class="agent-sidebar-text">Dashboard</span>
             </a>
 
             @foreach($menuItems as $node)
                 @include('agent_v2.partials.sidebar-node', ['node' => $node, 'depth' => 0])
             @endforeach
 
-            <div class="h-px bg-gray-100 my-2"></div>
+            <div class="agent-sidebar-divider"></div>
+
             @can('dashboard.view')
                 <a href="{{ route('admin.profile.edit') }}"
                    data-partner-nav
-                   class="flex items-center gap-3 px-4 py-3 rounded-xl {{ $profileActive ? 'bg-[#e6f3fa]/60 text-[#0083c4] font-semibold' : 'hover:bg-gray-50 text-gray-600 hover:text-[#0083c4] font-medium' }} transition-colors">
-                    <span class="w-2.5 h-2.5 rounded-full {{ $profileActive ? 'bg-[#0083c4]' : 'bg-gray-200' }}"></span>
-                    Mon profil
+                   class="agent-sidebar-link {{ $profileActive ? 'active' : '' }}">
+                    <i class="bx bx-user agent-sidebar-icon"></i>
+                    <span class="agent-sidebar-text">Mon profil</span>
                 </a>
             @endcan
 
             <a href="{{ route('logout.get') }}"
-               class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 text-red-500 font-medium transition-colors">
-                <span class="w-2.5 h-2.5 rounded-full bg-red-200"></span>
-                Se déconnecter
+               class="agent-sidebar-link agent-sidebar-logout">
+                <i class="bx bx-log-out agent-sidebar-icon"></i>
+                <span class="agent-sidebar-text">Se déconnecter</span>
             </a>
         </nav>
     </div>
