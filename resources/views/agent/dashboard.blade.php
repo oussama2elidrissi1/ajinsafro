@@ -2,7 +2,9 @@
 
 @section('title', 'Tableau de bord')
 
-@push('css')
+@section('hidePageFooter', '1')
+
+@push('styles')
     <link href="{{ URL::asset('css/agent-dashboard.css') }}" rel="stylesheet" type="text/css" />
 @endpush
 
@@ -13,150 +15,167 @@
 
     $user = auth()->user();
     $displayName = $user?->name ?: 'Agent';
-    $agencyLabel = $user?->branch?->name ?: 'Ajinsafro Tanger';
+    $agencyLabel = $user?->branch?->name ?: 'Ajinsafro';
 
     $catalogueVoyageUrl = Route::has('admin.reservations.workspace')
         ? route('admin.reservations.workspace')
         : url('/admin/reservations/workspace');
 @endphp
 
-<div class="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-    <div>
-        <h1 class="text-2xl sm:text-3xl font-bold text-[#0e3a5a]">Tableau de bord</h1>
-        <p class="text-sm text-gray-500 mt-1">Bienvenue, {{ $displayName }} — {{ $agencyLabel }}.</p>
-    </div>
-    <div class="flex items-center gap-2">
-        <a href="{{ $catalogueVoyageUrl }}" class="btn btn-primary">
-            <i class="bx bx-map-alt align-middle" aria-hidden="true"></i>
+<div class="aj-agent-dashboard">
+    <div class="aj-agent-page-head">
+        <div class="aj-agent-page-title">
+            <h1>Tableau de bord</h1>
+            <p>Bienvenue, {{ $displayName }} — {{ $agencyLabel }}.</p>
+        </div>
+        <a href="{{ $catalogueVoyageUrl }}" class="aj-agent-primary-btn">
+            <i class="bx bx-map-alt" aria-hidden="true"></i>
             <span>Catalogue de voyage</span>
         </a>
     </div>
-</div>
 
-<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6">
-    <div class="bg-white p-5 lg:p-6 rounded-2xl shadow-custom border border-gray-100 flex items-center gap-4">
-        <div class="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
-            <i class="bx bx-briefcase-alt-2 text-[#0083c4] text-2xl"></i>
-        </div>
-        <div>
-            <p class="text-[10px] lg:text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Réservations</p>
-            <h4 class="text-2xl lg:text-3xl font-black text-[#0e3a5a] leading-none">{{ number_format((int) ($stats['reservations_total'] ?? 0), 0, ',', ' ') }}</h4>
-        </div>
-    </div>
-    <div class="bg-white p-5 lg:p-6 rounded-2xl shadow-custom border border-gray-100 flex items-center gap-4">
-        <div class="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center shrink-0">
-            <i class="bx bx-check-shield text-green-600 text-2xl"></i>
-        </div>
-        <div>
-            <p class="text-[10px] lg:text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Confirmées</p>
-            <h4 class="text-2xl lg:text-3xl font-black text-[#0e3a5a] leading-none">{{ number_format((int) ($stats['reservations_validees'] ?? 0), 0, ',', ' ') }}</h4>
-        </div>
-    </div>
-    <div class="bg-white p-5 lg:p-6 rounded-2xl shadow-custom border border-gray-100 flex items-center gap-4">
-        <div class="w-14 h-14 rounded-full bg-purple-50 flex items-center justify-center shrink-0">
-            <i class="bx bx-time-five text-purple-600 text-2xl"></i>
-        </div>
-        <div>
-            <p class="text-[10px] lg:text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">En attente</p>
-            <h4 class="text-2xl lg:text-3xl font-black text-[#0e3a5a] leading-none">{{ number_format((int) ($stats['reservations_en_cours'] ?? 0), 0, ',', ' ') }}</h4>
-        </div>
-    </div>
-    <div class="bg-white p-5 lg:p-6 rounded-2xl shadow-custom border border-gray-100 flex items-center gap-4">
-        <div class="w-14 h-14 rounded-full bg-orange-50 flex items-center justify-center shrink-0">
-            <i class="bx bx-wallet text-[#f37a1f] text-2xl"></i>
-        </div>
-        <div>
-            <p class="text-[10px] lg:text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Revenus</p>
-            <h4 class="text-2xl lg:text-3xl font-black text-[#0e3a5a] leading-none">{{ number_format((float) ($stats['revenue_generated'] ?? 0), 0, ',', ' ') }} DH</h4>
-        </div>
-    </div>
-</div>
-
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-    <div class="bg-white rounded-2xl shadow-custom border border-gray-100 flex flex-col overflow-hidden col-span-1">
-        <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-            <h3 class="font-bold text-[#0e3a5a]">Aujourd'hui</h3>
-        </div>
-        <div class="p-5 space-y-3">
-            <div class="flex items-center justify-between bg-gray-50 border border-gray-100 rounded-xl px-4 py-3">
-                <span class="text-sm font-semibold text-[#0e3a5a]">Réservations du jour</span>
-                <span class="text-[11px] font-bold text-[#0083c4]">{{ number_format((int) ($todayStats['reservations_today'] ?? 0), 0, ',', ' ') }}</span>
-            </div>
-            <div class="flex items-center justify-between bg-gray-50 border border-gray-100 rounded-xl px-4 py-3">
-                <span class="text-sm font-semibold text-[#0e3a5a]">En attente aujourd'hui</span>
-                <span class="text-[11px] font-bold text-[#0083c4]">{{ number_format((int) ($todayStats['pending_today'] ?? 0), 0, ',', ' ') }}</span>
-            </div>
-
-            @if(!empty($todayStats['notifications']))
-                <div class="pt-2 space-y-2">
-                    @foreach(($todayStats['notifications'] ?? []) as $notification)
-                        <div class="bg-white border border-gray-100 rounded-xl px-4 py-3 text-sm text-gray-600">{{ $notification }}</div>
-                    @endforeach
-                </div>
-            @endif
-        </div>
-    </div>
-
-    <div class="bg-white rounded-2xl shadow-custom border border-gray-100 flex flex-col overflow-hidden col-span-2">
-        <div class="p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-gray-50/50">
+    <section class="aj-agent-kpi-grid">
+        <div class="aj-agent-kpi-card aj-agent-kpi-blue">
+            <div class="aj-agent-kpi-icon"><i class="bx bx-briefcase-alt-2"></i></div>
             <div>
-                <h3 class="font-bold text-[#0e3a5a]">Mes dernières réservations</h3>
-                <p class="text-sm text-gray-500 mt-1">Une vue rapide sur les dossiers les plus récents.</p>
+                <span>Réservations</span>
+                <strong>{{ number_format((int) ($stats['reservations_total'] ?? 0), 0, ',', ' ') }}</strong>
             </div>
-            <form method="GET" action="{{ route('agent.dashboard') }}" class="flex items-center gap-2">
-                <select name="scope" id="scope" class="form-select" {{ $isManager ? '' : 'disabled' }}>
-                    <option value="mine" {{ ($scope ?? 'mine') === 'mine' ? 'selected' : '' }}>Mes réservations</option>
-                    @if($isManager)
-                        <option value="team" {{ ($scope ?? 'mine') === 'team' ? 'selected' : '' }}>Mon équipe</option>
-                    @endif
-                </select>
-                @unless($isManager)
-                    <input type="hidden" name="scope" value="mine">
-                @endunless
-                <button type="submit" class="btn btn-outline-primary">Filtrer</button>
-            </form>
         </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse whitespace-nowrap">
-                <thead>
-                <tr class="bg-gray-50 border-b border-gray-100 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                    <th class="py-4 px-6">Client</th>
-                    <th class="py-4 px-6">Voyage</th>
-                    <th class="py-4 px-6">Date</th>
-                    <th class="py-4 px-6">Statut</th>
-                    <th class="py-4 px-6 text-right">Actions</th>
-                </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 text-sm">
-                @forelse($recentReservations as $reservation)
-                    @php
-                        $clientName = trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? ''));
-                        $status = $reservation->status;
-                        $badge = $status === Reservation::STATUS_VALIDEE ? 'bg-green-50 text-green-700 border-green-200' : ($status === Reservation::STATUS_ANNULEE ? 'bg-red-50 text-red-700 border-red-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200');
-                        $detailUrl = Route::has('admin.reservations.show') ? route('admin.reservations.show', $reservation) : '#';
-                        $displayDate = optional($reservation->travelDate?->date)->format('d/m/Y') ?: optional($reservation->created_at)->format('d/m/Y');
-                    @endphp
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="py-4 px-6 font-semibold text-gray-800">{{ $clientName !== '' ? $clientName : 'Client non renseigné' }}</td>
-                        <td class="py-4 px-6 text-gray-600">{{ $reservation->tour?->name ?: 'Voyage non renseigné' }}</td>
-                        <td class="py-4 px-6 text-gray-500">{{ $displayDate }}</td>
-                        <td class="py-4 px-6">
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border {{ $badge }}">{{ $status }}</span>
-                        </td>
-                        <td class="py-4 px-6 text-right">
-                            <a href="{{ $detailUrl }}" class="text-[#0083c4] font-bold text-xs hover:underline">Ouvrir</a>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="5" class="py-10 px-6 text-center text-gray-500">
-                            Aucune réservation récente. <a href="{{ $catalogueVoyageUrl }}" class="text-[#0083c4] font-bold hover:underline">Voir le catalogue</a>
-                        </td>
-                    </tr>
-                @endforelse
-                </tbody>
-            </table>
+        <div class="aj-agent-kpi-card aj-agent-kpi-green">
+            <div class="aj-agent-kpi-icon"><i class="bx bx-check-shield"></i></div>
+            <div>
+                <span>Confirmées</span>
+                <strong>{{ number_format((int) ($stats['reservations_validees'] ?? 0), 0, ',', ' ') }}</strong>
+            </div>
         </div>
-    </div>
+        <div class="aj-agent-kpi-card aj-agent-kpi-purple">
+            <div class="aj-agent-kpi-icon"><i class="bx bx-time-five"></i></div>
+            <div>
+                <span>En attente</span>
+                <strong>{{ number_format((int) ($stats['reservations_en_cours'] ?? 0), 0, ',', ' ') }}</strong>
+            </div>
+        </div>
+        <div class="aj-agent-kpi-card aj-agent-kpi-orange">
+            <div class="aj-agent-kpi-icon"><i class="bx bx-wallet"></i></div>
+            <div>
+                <span>Revenus</span>
+                <strong>{{ number_format((float) ($stats['revenue_generated'] ?? 0), 0, ',', ' ') }} DH</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="aj-agent-content-grid">
+        <div class="aj-agent-panel">
+            <div class="aj-agent-panel-header">
+                <div>
+                    <h2>Aujourd’hui</h2>
+                    <p>Résumé rapide de l’activité.</p>
+                </div>
+            </div>
+            <div class="aj-agent-panel-body">
+                <div class="aj-agent-today-item">
+                    <span>Réservations du jour</span>
+                    <small>{{ number_format((int) ($todayStats['reservations_today'] ?? 0), 0, ',', ' ') }}</small>
+                </div>
+                <div class="aj-agent-today-item">
+                    <span>En attente aujourd’hui</span>
+                    <small>{{ number_format((int) ($todayStats['pending_today'] ?? 0), 0, ',', ' ') }}</small>
+                </div>
+
+                @if(!empty($todayStats['notifications']))
+                    @foreach(($todayStats['notifications'] ?? []) as $notification)
+                        <div class="aj-agent-alert-box">{{ $notification }}</div>
+                    @endforeach
+                @else
+                    <div class="aj-agent-alert-box">Aucune alerte prioritaire aujourd’hui.</div>
+                @endif
+
+                <div class="aj-agent-quick-actions">
+                    <a href="{{ $catalogueVoyageUrl }}" class="aj-agent-action-btn">
+                        <i class="bx bx-plus-circle"></i>
+                        <span>Créer une réservation</span>
+                    </a>
+                    <a href="{{ $catalogueVoyageUrl }}" class="aj-agent-action-btn">
+                        <i class="bx bx-map-alt"></i>
+                        <span>Voir les voyages disponibles</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="aj-agent-panel aj-agent-panel-wide">
+            <div class="aj-agent-panel-header">
+                <div>
+                    <h2>Mes dernières réservations</h2>
+                    <p>Vue rapide sur les dossiers les plus récents.</p>
+                </div>
+                <form method="GET" action="{{ route('agent.dashboard') }}" class="aj-agent-table-actions">
+                    <select name="scope" id="scope" class="aj-agent-select" {{ $isManager ? '' : 'disabled' }}>
+                        <option value="mine" {{ ($scope ?? 'mine') === 'mine' ? 'selected' : '' }}>Mes réservations</option>
+                        @if($isManager)
+                            <option value="team" {{ ($scope ?? 'mine') === 'team' ? 'selected' : '' }}>Mon équipe</option>
+                        @endif
+                    </select>
+                    @unless($isManager)
+                        <input type="hidden" name="scope" value="mine">
+                    @endunless
+                    <button type="submit" class="aj-agent-small-btn">Filtrer</button>
+                </form>
+            </div>
+
+            <div class="aj-agent-table-wrap">
+                <table class="aj-agent-table">
+                    <thead>
+                        <tr>
+                            <th>Client</th>
+                            <th>Voyage</th>
+                            <th>Date</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @forelse($recentReservations as $reservation)
+                        @php
+                            $clientName = trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? ''));
+                            $status = $reservation->status;
+                            $badgeClass = $status === Reservation::STATUS_VALIDEE
+                                ? 'aj-agent-status-green'
+                                : ($status === Reservation::STATUS_ANNULEE ? 'aj-agent-status-red' : 'aj-agent-status-orange');
+                            $detailUrl = Route::has('admin.reservations.show') ? route('admin.reservations.show', $reservation) : '#';
+                            $displayDate = optional($reservation->travelDate?->date)->format('d/m/Y') ?: optional($reservation->created_at)->format('d/m/Y');
+                        @endphp
+                        <tr>
+                            <td>{{ $clientName !== '' ? $clientName : 'Client non renseigné' }}</td>
+                            <td>{{ $reservation->tour?->name ?: 'Voyage non renseigné' }}</td>
+                            <td>{{ $displayDate }}</td>
+                            <td><span class="aj-agent-status {{ $badgeClass }}">{{ $status }}</span></td>
+                            <td class="aj-agent-td-actions">
+                                <a href="{{ $detailUrl }}" class="aj-agent-small-btn">Voir</a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5">
+                                <div class="aj-agent-empty-state">
+                                    <div class="aj-agent-empty-icon"><i class="bx bx-briefcase-alt-2"></i></div>
+                                    <h3>Aucune réservation récente</h3>
+                                    <p>Commencez par consulter le catalogue ou créer une nouvelle réservation.</p>
+                                    <a href="{{ $catalogueVoyageUrl }}" class="aj-agent-primary-btn">Voir le catalogue</a>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <footer class="aj-agent-footer">
+        <div>© Ajinsafro SARL AU</div>
+        <div>Licence N° 489117 | RC: 18989 | IF: 15254892</div>
+    </footer>
 </div>
 @endsection

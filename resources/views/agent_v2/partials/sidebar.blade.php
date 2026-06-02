@@ -14,10 +14,10 @@
     <div class="bg-white rounded-2xl shadow-custom overflow-hidden sticky top-28 border border-gray-100">
         <div class="p-6 text-center border-b border-gray-100 bg-[#e6f3fa]/30">
             <img src="{{ $user?->avatar_url }}" alt="Avatar" class="w-20 h-20 rounded-full object-cover border-4 border-white shadow-sm mx-auto mb-3">
-            <h3 class="font-bold text-[#0e3a5a] text-lg leading-tight">{{ $user?->name }}</h3>
-            <p class="text-[10px] font-bold text-[#f37a1f] uppercase tracking-wider mt-1">{{ $roleLabel }}</p>
+            <h3 class="font-semibold text-[#0e3a5a] text-lg leading-tight">{{ $user?->name }}</h3>
+            <p class="text-[10px] font-semibold text-[#f37a1f] uppercase tracking-wider mt-1">{{ $roleLabel }}</p>
             @if($branchLabel)
-                <p class="text-[10px] font-semibold text-gray-500 mt-1">{{ $branchLabel }}</p>
+                <p class="text-[10px] text-gray-500 mt-1">{{ $branchLabel }}</p>
             @endif
         </div>
 
