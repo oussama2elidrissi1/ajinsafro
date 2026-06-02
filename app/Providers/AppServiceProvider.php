@@ -51,19 +51,18 @@ class AppServiceProvider extends ServiceProvider
                 $menuService = app(AdminMenuService::class);
                 $adminMenu = $menuService->buildForUser($user);
 
-                // Agent portal: keep the navigation intentionally small to speed up reservation workflows.
-                // Requested order: Catalogue produit > Réservations > Réservations à la carte.
+                // Agent portal: keep the navigation intentionally small and scoped to the agent workspace.
                 $agentPortalMenu = [];
                 if ($user->can('reservations.view')) {
-                    if (\Illuminate\Support\Facades\Route::has('admin.vente.catalogue')) {
+                    if (\Illuminate\Support\Facades\Route::has('agent.catalogue')) {
                         $agentPortalMenu[] = [
-                            'key' => 'agent_catalogue_produits',
-                            'label' => 'Catalogue produits',
+                            'key' => 'agent_catalogue_voyages',
+                            'label' => 'Catalogue de voyage',
                             'icon' => 'bx bx-briefcase-alt',
-                            'route' => 'admin.vente.catalogue',
-                            'href' => route('admin.vente.catalogue'),
+                            'route' => 'agent.catalogue',
+                            'href' => route('agent.catalogue'),
                             'children' => [],
-                            'active' => request()->routeIs('admin.vente.catalogue') || request()->routeIs('admin.reservations.workspace*'),
+                            'active' => request()->routeIs('agent.catalogue'),
                             'open' => false,
                             'depth' => 0,
                             'has_direct_access' => true,
@@ -74,7 +73,7 @@ class AppServiceProvider extends ServiceProvider
                     if (\Illuminate\Support\Facades\Route::has('admin.reservation-dossiers.index')) {
                         $agentPortalMenu[] = [
                             'key' => 'agent_reservations',
-                            'label' => 'Réservations',
+                            'label' => 'Mes reservations',
                             'icon' => 'bx bx-calendar-check',
                             'route' => 'admin.reservation-dossiers.index',
                             'href' => route('admin.reservation-dossiers.index'),
@@ -90,7 +89,7 @@ class AppServiceProvider extends ServiceProvider
                     if (\Illuminate\Support\Facades\Route::has('admin.reservations.custom-requests.index')) {
                         $agentPortalMenu[] = [
                             'key' => 'agent_reservations_a_la_carte',
-                            'label' => 'Réservations à la carte',
+                            'label' => 'Reservations a la carte',
                             'icon' => 'bx bx-edit-alt',
                             'route' => 'admin.reservations.custom-requests.index',
                             'href' => route('admin.reservations.custom-requests.index'),

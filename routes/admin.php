@@ -60,6 +60,7 @@ use App\Http\Controllers\Admin\WpTourController;
 use App\Http\Controllers\Client\ClientDashboardController;
 use App\Http\Controllers\Client\ClientProfileController;
 use App\Http\Controllers\Client\ClientReservationsController;
+use App\Http\Controllers\Agent\CatalogueController as AgentCatalogueController;
 use App\Http\Controllers\Agent\DashboardController as AgentDashboardController;
 use App\Http\Controllers\Auth\LockScreenController;
 use App\Http\Controllers\Front\GroupDealsController as FrontGroupDealsController;
@@ -646,6 +647,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'not.client'])
     ->name('agent.')
     ->group(function () {
         Route::get('dashboard', [AgentDashboardController::class, 'index'])->name('dashboard');
+        Route::get('catalogue', [AgentCatalogueController::class, 'index'])->name('catalogue');
         Route::prefix('messagerie')
             ->name('messagerie.')
             ->group(function () {

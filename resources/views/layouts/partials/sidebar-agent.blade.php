@@ -5,12 +5,30 @@
     $roleLabel = $user?->isManager() ? 'Manager' : 'Agent';
 
     $navItems = collect([
-        ['label' => 'Dashboard', 'icon' => 'bx bx-home-circle', 'route' => 'agent.dashboard', 'match' => ['agent.dashboard']],
-        ['label' => 'Réservations', 'icon' => 'bx bx-calendar-check', 'route' => 'admin.reservations.index', 'match' => ['admin.reservations.']],
-        ['label' => 'Clients', 'icon' => 'bx bx-user', 'route' => 'admin.customers.clients.index', 'match' => ['admin.customers.clients.']],
-        ['label' => 'Voyages', 'icon' => 'bx bx-map-alt', 'route' => 'admin.circuits.voyages.index', 'match' => ['admin.circuits.voyages.']],
-        ['label' => 'Messagerie', 'icon' => 'bx bx-envelope', 'route' => 'agent.messagerie.index', 'match' => ['agent.messagerie.']],
-    ])->filter(fn ($item) => !empty($item['route']) && \Illuminate\Support\Facades\Route::has($item['route']));
+        ['label' => 'Tableau de bord', 'icon' => 'bx bx-home-circle', 'route' => 'agent.dashboard', 'match' => ['agent.dashboard'], 'permission' => null],
+        ['label' => 'Catalogue de voyage', 'icon' => 'bx bx-map-alt', 'route' => 'agent.catalogue', 'match' => ['agent.catalogue'], 'permission' => 'reservations.view'],
+        ['label' => 'Mes rÃ©servations', 'icon' => 'bx bx-calendar-check', 'route' => 'admin.reservation-dossiers.index', 'match' => ['admin.reservation-dossiers.'], 'permission' => 'reservations.view'],
+        ['label' => 'RÃ©servations Ã  la carte', 'icon' => 'bx bx-edit-alt', 'route' => 'admin.reservations.custom-requests.index', 'match' => ['admin.reservations.custom-requests.', 'admin.tailor-made-requests.'], 'permission' => 'reservations.view'],
+        ['label' => 'Mon profil', 'icon' => 'bx bx-user', 'route' => 'admin.profile.edit', 'match' => ['admin.profile.'], 'permission' => ['dashboard.view', 'reservations.view']],
+        ['label' => 'Messagerie', 'icon' => 'bx bx-envelope', 'route' => 'agent.messagerie.index', 'match' => ['agent.messagerie.'], 'permission' => null],
+    ])->filter(function ($item) use ($user) {
+        if (empty($item['route']) || ! \Illuminate\Support\Facades\Route::has($item['route'])) {
+            return false;
+        }
+
+        $permission = $item['permission'] ?? null;
+        if ($permission === null) {
+            return true;
+        }
+
+        foreach ((array) $permission as $permissionName) {
+            if ($user?->can($permissionName)) {
+                return true;
+            }
+        }
+
+        return false;
+    });
 @endphp
 
 <div class="vertical-menu">

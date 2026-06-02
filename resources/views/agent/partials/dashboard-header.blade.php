@@ -18,9 +18,9 @@
     $pending = (int) ($stats['reservations_en_cours'] ?? 0);
     $confirmed = (int) ($stats['reservations_validees'] ?? 0);
 
-    $catalogueVoyageUrl = Route::has('admin.reservations.workspace')
-        ? route('admin.reservations.workspace')
-        : url('/admin/reservations/workspace');
+    $catalogueVoyageUrl = Route::has('agent.catalogue')
+        ? route('agent.catalogue')
+        : url('/agent/catalogue');
 @endphp
 
 <div class="agent-dashboard-hero rounded-2xl border border-gray-100 bg-white shadow-custom p-5 sm:p-6 mb-6">
@@ -65,4 +65,3 @@
         </div>
     </div>
 </div>
-

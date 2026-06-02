@@ -46,6 +46,7 @@ class DashboardController extends Controller
                 'id',
                 'tour_id',
                 'travel_date_id',
+                'reservation_dossier_id',
                 'client_first_name',
                 'client_last_name',
                 'status',
