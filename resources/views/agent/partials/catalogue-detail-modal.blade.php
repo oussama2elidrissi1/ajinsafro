@@ -242,7 +242,7 @@
             if (detail.laravel_voyage_id) bits.push('<span>Laravel #' + esc(detail.laravel_voyage_id) + '</span>');
             subEl.innerHTML = bits.join('');
             bodyEl.innerHTML = render(detail, currentDepartureIndex);
-            footerEl.innerHTML = '<span class="ws-md-footer-note">Aucune route Agent de réservation directe n’est configurée pour ce départ.</span><div class="ws-md-footer-actions"><button type="button" class="ws-md-btn ws-md-btn-secondary" data-ws-md-close><i class="fas fa-times"></i>Fermer</button></div>';
+            footerEl.innerHTML = '<span class="ws-md-footer-note"></span><div class="ws-md-footer-actions"><button type="button" class="ws-md-btn ws-md-btn-secondary" data-ws-md-close><i class="fas fa-times"></i>Fermer</button></div>';
             modalEl.classList.remove('hidden');
             modalEl.classList.add('ws-md-visible');
             modalEl.setAttribute('aria-hidden', 'false');
