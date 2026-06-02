@@ -1424,10 +1424,17 @@ class ReservationsController extends Controller
 
             return $dossier->fresh();
         });
+            if ($request->attributes->get('agent_reservation_mode', false)) {
+                $reservationId = (int) ($dossier->main_reservation_id ?? 0);
+
+                return redirect()
+                    ->route('agent.reservations.show', $reservationId)
+                    ->with('success', 'Dossier de réservation créé avec succès.');
+            }
 
             return redirect()
                 ->route('admin.reservation-dossiers.show', $dossier)
-                ->with('success', 'Dossier de rÃ©servation crÃ©Ã© avec succÃ¨s.');
+                ->with('success', 'Dossier de réservation créé avec succès.');
         } catch (ValidationException $e) {
             if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                 $messages = $e->errors();
@@ -1609,10 +1616,17 @@ class ReservationsController extends Controller
             return response()
                 ->view('admin.reservations.embed-parent-refresh', ['url' => $back, 'message' => 'RÃ©servation mise Ã  jour.']);
         }
+            if ($request->attributes->get('agent_reservation_mode', false)) {
+                $reservationId = (int) ($dossier->main_reservation_id ?? 0);
 
-        return redirect()
-            ->route('admin.reservation-dossiers.show', $dossier)
-            ->with('success', 'RÃ©servation mise Ã  jour.');
+                return redirect()
+                    ->route('agent.reservations.show', $reservationId)
+                    ->with('success', 'Dossier de réservation créé avec succès.');
+            }
+
+            return redirect()
+                ->route('admin.reservation-dossiers.show', $dossier)
+                ->with('success', 'Dossier de réservation créé avec succès.');
     }
 
     /**
