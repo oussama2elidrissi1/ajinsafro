@@ -4,7 +4,35 @@
 @section('hidePageFooter', '1')
 
 @push('styles')
+    @if(request()->attributes->get('agent_reservation_mode', false))
+        <link href="{{ URL::asset('css/agent-dashboard.css') }}" rel="stylesheet" type="text/css" />
+    @endif
     <link rel="stylesheet" href="{{ asset('css/reservation-create.css') }}">
+    @if(request()->attributes->get('agent_reservation_mode', false))
+        <style>
+            .agent-portal-main .reservation-create {
+                width: 100%;
+                max-width: 1480px;
+                padding: 0 18px 28px;
+            }
+
+            .agent-portal-main .reservation-create__content-grid {
+                grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+            }
+
+            @media (max-width: 1180px) {
+                .agent-portal-main .reservation-create__content-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            @media (max-width: 720px) {
+                .agent-portal-main .reservation-create {
+                    padding: 0 12px 24px;
+                }
+            }
+        </style>
+    @endif
 @endpush
 
 @section('content')
