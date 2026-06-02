@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
+use App\Models\DepartureHotelRoom;
+use App\Models\Reservation;
 use App\Models\Voyage;
 use App\Models\Wp\WpPost;
 use App\Models\Wp\WpPostMeta;
@@ -78,7 +80,16 @@ class CatalogueController extends Controller
                         ->orWhere('price_from', '<=', $filters['budget_max']);
                 });
             })
-            ->with(['departures' => fn ($query) => $query->whereDate('start_date', '>=', $today)->orderBy('start_date')->orderBy('id')])
+            ->with([
+                'departures' => fn ($query) => $query
+                    ->whereDate('start_date', '>=', $today)
+                    ->with([
+                        'rooms',
+                        'reservations:id,departure_id,status,passengers_count',
+                    ])
+                    ->orderBy('start_date')
+                    ->orderBy('id'),
+            ])
             ->orderBy('name')
             ->paginate(12)
             ->withQueryString();
@@ -151,31 +162,68 @@ class CatalogueController extends Controller
                 $fillPct = $capacity > 0 ? min(100, max(0, (int) round((($capacity - $remaining) / $capacity) * 100))) : 0;
                 $dateLabel = trim(($departure->start_date ? $departure->start_date->format('d/m/Y') : '—')
                     .($departure->end_date ? ' - '.$departure->end_date->format('d/m/Y') : ''));
+                $reservations = $departure->reservations ?? collect();
+                $confirmedStatuses = [Reservation::STATUS_CONFIRMED, Reservation::STATUS_PAID, Reservation::STATUS_PARTIALLY_PAID, Reservation::STATUS_SHARED_ROOM_PAIRED];
+                $pendingStatuses = [Reservation::STATUS_PENDING, Reservation::STATUS_OPTION, Reservation::STATUS_SHARED_ROOM_PENDING, Reservation::STATUS_DRAFT];
+                $cancelledStatuses = [Reservation::STATUS_CANCELLED, Reservation::STATUS_EXPIRED, Reservation::STATUS_REFUNDED];
+                $confirmed = $reservations->whereIn('status', $confirmedStatuses);
+                $pending = $reservations->whereIn('status', $pendingStatuses);
+                $cancelled = $reservations->whereIn('status', $cancelledStatuses);
+                $sumPax = fn ($rows): int => (int) $rows->sum(fn ($reservation) => max(1, (int) ($reservation->passengers_count ?? 1)));
+                $rooms = ($departure->rooms ?? collect())->values()->map(function (DepartureHotelRoom $room): array {
+                    $availablePlaces = max(0, (int) ($room->available_places ?? 0));
+                    $availableRooms = max(0, (int) ($room->available_rooms ?? 0));
+                    $status = (string) ($room->status ?: DepartureHotelRoom::STATUS_AVAILABLE);
+
+                    return [
+                        'type' => (string) ($room->room_type ?: 'Chambre'),
+                        'capacity' => (int) ($room->capacity_total ?? 0),
+                        'total_rooms' => (int) ($room->total_rooms ?? 0),
+                        'available_rooms' => $availableRooms,
+                        'available_places' => $availablePlaces,
+                        'supplement' => (float) ($room->supplement ?? 0),
+                        'status_key' => $status,
+                        'status_label' => DepartureHotelRoom::statusLabel($status),
+                        'is_available' => $availableRooms > 0 && $availablePlaces > 0 && ! in_array($status, [DepartureHotelRoom::STATUS_FULL, DepartureHotelRoom::STATUS_CLOSED, DepartureHotelRoom::STATUS_INACTIVE], true),
+                    ];
+                })->all();
 
                 return [
                     'travel_date_id' => (string) ($departure->wp_travel_date_id ?: $departure->id),
+                    'departure_id' => (int) $departure->id,
+                    'start_date' => $departure->start_date ? $departure->start_date->format('Y-m-d') : null,
+                    'end_date' => $departure->end_date ? $departure->end_date->format('Y-m-d') : null,
                     'date_label' => $dateLabel,
                     'capacity' => $capacity,
                     'remaining' => $remaining,
                     'fill_pct' => $fillPct,
                     'is_past' => $departure->start_date ? $departure->start_date->isPast() : false,
                     'status_key' => $remaining <= 0 ? 'full' : ($remaining <= 5 ? 'almost_full' : 'available'),
-                    'status_label' => $remaining <= 0 ? 'Complet' : 'Disponible',
+                    'status_label' => $departure->status_label ?: ($remaining <= 0 ? 'Complet' : 'Disponible'),
                     'pax' => [
-                        'validee' => 0,
-                        'en_cours' => 0,
-                        'annulee' => 0,
+                        'validee' => $sumPax($confirmed),
+                        'en_cours' => $sumPax($pending),
+                        'annulee' => $sumPax($cancelled),
                     ],
                     'reservations' => [
-                        'total' => 0,
-                        'validee' => 0,
-                        'en_cours' => 0,
-                        'annulee' => 0,
+                        'total' => $reservations->count(),
+                        'validee' => $confirmed->count(),
+                        'en_cours' => $pending->count(),
+                        'annulee' => $cancelled->count(),
                     ],
                     'routes' => [],
                     'unit_price' => (float) ($voyage->agent_catalogue_price_value ?? 0),
+                    'unit_price_label' => (string) ($voyage->agent_catalogue_price_label ?? 'Prix sur demande'),
+                    'rooms' => $rooms,
                 ];
             })->all();
+            $stats = collect($departures)->reduce(function (array $carry, array $departure): array {
+                $carry['validee'] += (int) data_get($departure, 'pax.validee', 0);
+                $carry['en_cours'] += (int) data_get($departure, 'pax.en_cours', 0);
+                $carry['annulee'] += (int) data_get($departure, 'pax.annulee', 0);
+
+                return $carry;
+            }, ['validee' => 0, 'en_cours' => 0, 'annulee' => 0]);
 
             return [
                 $code => [
@@ -196,11 +244,7 @@ class CatalogueController extends Controller
                     ])->all(),
                     'departures' => $departures,
                     'routes' => [],
-                    'stats' => [
-                        'validee' => 0,
-                        'en_cours' => 0,
-                        'annulee' => 0,
-                    ],
+                    'stats' => $stats,
                 ],
             ];
         })->all();
