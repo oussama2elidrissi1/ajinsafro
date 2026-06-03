@@ -229,6 +229,7 @@ return [
             'permission' => 'partners.view',
             'children' => [
                 ['label' => 'Partenaires', 'route' => 'admin.partners.partenaires', 'permission' => 'partners.list.view'],
+                ['label' => 'Demandes wallet', 'route' => 'admin.partners.wallet-requests', 'permission' => 'partners.view'],
                 ['label' => 'Fournisseurs', 'route' => 'admin.partners.fournisseurs', 'permission' => 'partners.suppliers.view'],
                 ['label' => 'Contrats', 'route' => 'admin.partners.contrats', 'permission' => 'partners.contracts.view'],
             ],

@@ -31,12 +31,46 @@ class ReservationsController extends Controller
 
     private function getPartner(Request $request): \App\Models\Partner
     {
-        return $request->user()->partner;
+        return $request->user()->partner ?: $request->user()->ownedPartner;
     }
 
     private function scopeReservations(Request $request): \Illuminate\Database\Eloquent\Builder
     {
-        return Reservation::query()->where('partner_id', $this->getPartner($request)->id);
+        $query = Reservation::query()->where('partner_id', $this->getPartner($request)->id);
+        $user = $request->user();
+
+        if ($user->isPartnerAgent()) {
+            $query->where(function ($builder) use ($user): void {
+                $builder->where('partner_agent_id', $user->id)
+                    ->orWhere('agent_id', $user->id)
+                    ->orWhere('created_by', $user->id)
+                    ->orWhere('created_by_user_id', $user->id);
+            });
+        }
+
+        return $query;
+    }
+
+    private function abortUnlessReservationVisible(Request $request, Reservation $reservation): void
+    {
+        $partner = $this->getPartner($request);
+        if ((int) $reservation->partner_id !== (int) $partner->id) {
+            abort(403);
+        }
+
+        $user = $request->user();
+        if ($user->isPartnerAgent()) {
+            $ownsReservation = in_array($user->id, [
+                (int) $reservation->partner_agent_id,
+                (int) $reservation->agent_id,
+                (int) $reservation->created_by,
+                (int) $reservation->created_by_user_id,
+            ], true);
+
+            if (! $ownsReservation) {
+                abort(403);
+            }
+        }
     }
 
     public function index(Request $request): View
@@ -384,8 +418,11 @@ class ReservationsController extends Controller
         }
         $data['partner_id'] = $partner->id;
         $data['created_by'] = $request->user()->id;
+        $data['created_by_user_id'] = $request->user()->id;
         $data['updated_by'] = $request->user()->id;
         $data['agent_id'] = $request->user()->id;
+        $data['partner_agent_id'] = $request->user()->id;
+        $data['channel'] = 'partner';
         $data['client_mode'] = $data['client_mode'] ?? ($data['client_external_id'] ? 'existing' : 'new');
         if (!empty($data['client_external_id'])) {
             $client = Client::where('partner_id', $partner->id)->findOrFail($data['client_external_id']);
@@ -461,10 +498,7 @@ class ReservationsController extends Controller
 
     public function show(Request $request, Reservation $reservation): View|RedirectResponse
     {
-        $partner = $this->getPartner($request);
-        if ($reservation->partner_id !== $partner->id) {
-            abort(403);
-        }
+        $this->abortUnlessReservationVisible($request, $reservation);
         $reservation->load(['offer', 'partner', 'branch', 'creator']);
         return view('partner.reservations.show', compact('reservation'));
     }
@@ -472,9 +506,7 @@ class ReservationsController extends Controller
     public function edit(Request $request, Reservation $reservation): View|RedirectResponse
     {
         $partner = $this->getPartner($request);
-        if ($reservation->partner_id !== $partner->id) {
-            abort(403);
-        }
+        $this->abortUnlessReservationVisible($request, $reservation);
         $clients = Client::where('partner_id', $partner->id)->orderBy('full_name')->get(['id', 'client_code', 'full_name', 'email', 'phone']);
         $voyages = Voyage::orderBy('name')->get(['id', 'name']);
         $travelDates = TravelDate::where('is_active', true)->orderBy('date')->get();
@@ -485,9 +517,7 @@ class ReservationsController extends Controller
     public function update(Request $request, Reservation $reservation): RedirectResponse
     {
         $partner = $this->getPartner($request);
-        if ($reservation->partner_id !== $partner->id) {
-            abort(403);
-        }
+        $this->abortUnlessReservationVisible($request, $reservation);
         $data = $request->validate([
             'tour_id' => ['required', 'exists:voyages,id'],
             'travel_date_id' => ['nullable', 'exists:travel_dates,id'],
@@ -534,10 +564,7 @@ class ReservationsController extends Controller
 
     public function destroy(Request $request, Reservation $reservation): RedirectResponse
     {
-        $partner = $this->getPartner($request);
-        if ($reservation->partner_id !== $partner->id) {
-            abort(403);
-        }
+        $this->abortUnlessReservationVisible($request, $reservation);
         $this->reservationService->delete($reservation);
         return redirect()->route('partner.reservations.index')->with('success', 'Réservation supprimée.');
     }

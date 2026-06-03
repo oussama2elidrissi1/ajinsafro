@@ -49,7 +49,7 @@ class LoginRedirectService
 
         // Partner area (dedicated subdomain)
         if ($user->isPartner()) {
-            $partner = $user->partner;
+            $partner = $user->partner ?: $user->ownedPartner;
             if ($partner && method_exists($partner, 'canAccessPartnerArea') && $partner->canAccessPartnerArea()) {
                 return $partnerUrl . '/dashboard';
             }

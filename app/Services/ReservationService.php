@@ -431,6 +431,10 @@ class ReservationService
         if (array_key_exists('agent_id', $data)) {
             $reservation->agent_id = $data['agent_id'];
         }
+        if (array_key_exists('partner_agent_id', $data) && $this->reservationColumnExists('partner_agent_id')) {
+            $rawPartnerAgent = $data['partner_agent_id'];
+            $reservation->partner_agent_id = $rawPartnerAgent !== null && $rawPartnerAgent !== '' ? (int) $rawPartnerAgent : null;
+        }
         if (array_key_exists('assigned_to', $data)) {
             $reservation->assigned_to = $data['assigned_to'];
         } elseif (array_key_exists('agent_id', $data)) {

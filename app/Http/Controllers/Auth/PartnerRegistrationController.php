@@ -39,6 +39,7 @@ class PartnerRegistrationController extends Controller
             // Ensure Spatie role exists (some envs may not have seeded roles yet)
             app(PermissionRegistrar::class)->forgetCachedPermissions();
             Role::findOrCreate('Partenaire', 'web');
+            Role::findOrCreate('partner_admin', 'web');
 
             $user = User::create([
                 'name' => $data['nom_responsable'],
@@ -47,18 +48,26 @@ class PartnerRegistrationController extends Controller
                 'phone' => $data['telephone'],
                 'is_admin' => false,
                 'is_active' => true,
+                'user_type' => 'partner',
+                'base_role' => 'partner_admin',
             ]);
-            $user->assignRole('Partenaire');
+            $user->assignRole(['Partenaire', 'partner_admin']);
 
-            Partner::create([
+            $partner = Partner::create([
                 'user_id' => $user->id,
+                'created_by' => $user->id,
+                'name' => $data['raison_sociale'],
                 'raison_sociale' => $data['raison_sociale'],
                 'nom_commercial' => $data['nom_commercial'] ?? null,
                 'nom_responsable' => $data['nom_responsable'],
+                'responsable_name' => $data['nom_responsable'],
                 'email' => $data['email'],
                 'telephone' => $data['telephone'],
+                'phone' => $data['telephone'],
                 'adresse' => $data['adresse'] ?? null,
+                'address' => $data['adresse'] ?? null,
                 'ville' => $data['ville'] ?? null,
+                'city' => $data['ville'] ?? null,
                 'code_postal' => $data['code_postal'] ?? null,
                 'pays' => $data['pays'] ?? null,
                 'ice' => $data['ice'] ?? null,
@@ -67,6 +76,8 @@ class PartnerRegistrationController extends Controller
                 'document_path' => $documentPath,
                 'status' => Partner::STATUS_PENDING,
             ]);
+
+            $user->forceFill(['partner_id' => $partner->id])->save();
 
             DB::commit();
         } catch (\Throwable $e) {

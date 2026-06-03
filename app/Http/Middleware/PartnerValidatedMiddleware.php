@@ -15,7 +15,7 @@ class PartnerValidatedMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
-        $partner = $user->partner;
+        $partner = $user->partner ?: $user->ownedPartner;
 
         if (! $partner) {
             auth()->logout();

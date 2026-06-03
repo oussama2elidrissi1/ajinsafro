@@ -5,13 +5,18 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Mail\PartnerAccountValidatedMail;
 use App\Models\Partner;
+use App\Models\PartnerWalletTransaction;
+use App\Models\User;
 use App\Models\Voyage;
 use App\Services\AdminWpTourCatalogQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\View\View;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class PartnerAccountController extends Controller
 {
@@ -38,9 +43,12 @@ class PartnerAccountController extends Controller
     public function show(Partner $partner): View
     {
         $partner->load(['user', 'validatedByUser', 'voyageAccess']);
+        $agentsCount = $partner->agents()->whereHas('roles', fn ($query) => $query->where('name', 'partner_agent'))->count();
+        $reservationsCount = $partner->reservations()->count();
+        $walletPendingCount = $partner->walletTransactions()->where('status', PartnerWalletTransaction::STATUS_PENDING)->count();
         // Only show the same reservable voyages as the Circuits/Voyages admin module.
         $voyages = AdminWpTourCatalogQuery::reservableVoyages();
-        return view('admin.partner-accounts.show', compact('partner', 'voyages'));
+        return view('admin.partner-accounts.show', compact('partner', 'voyages', 'agentsCount', 'reservationsCount', 'walletPendingCount'));
     }
 
     public function updateVoyageAccess(Request $request, Partner $partner): RedirectResponse
@@ -63,8 +71,24 @@ class PartnerAccountController extends Controller
             'rejected_at' => null,
             'rejected_reason' => null,
         ]);
+        $partner->loadMissing('user');
+        if ($partner->user) {
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+            Role::findOrCreate('Partenaire', 'web');
+            Role::findOrCreate('partner_admin', 'web');
+            $partner->user->forceFill([
+                'partner_id' => $partner->id,
+                'user_type' => 'partner',
+                'base_role' => 'partner_admin',
+                'is_admin' => false,
+                'is_active' => true,
+            ])->save();
+            $partner->user->syncRoles(['Partenaire', 'partner_admin']);
+        }
         try {
-            Mail::to($partner->user->email)->send(new PartnerAccountValidatedMail($partner));
+            if ($partner->user?->email) {
+                Mail::to($partner->user->email)->send(new PartnerAccountValidatedMail($partner));
+            }
         } catch (\Throwable $e) {
             report($e);
         }
@@ -138,5 +162,104 @@ class PartnerAccountController extends Controller
 
         return redirect()->route('admin.partner-accounts.show', $partner)
             ->with('success', 'Lien de réinitialisation du mot de passe envoyé au partenaire.');
+    }
+
+    public function agents(Partner $partner): View
+    {
+        $agents = User::query()
+            ->where('partner_id', $partner->id)
+            ->whereHas('roles', fn ($query) => $query->where('name', 'partner_agent'))
+            ->with('roles')
+            ->orderBy('name')
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('admin.partner-accounts.agents', compact('partner', 'agents'));
+    }
+
+    public function reservations(Partner $partner): View
+    {
+        $reservations = $partner->reservations()
+            ->with(['offer:id,name', 'creator:id,name,email', 'createdBy:id,name,email', 'agent:id,name,email'])
+            ->orderByDesc('created_at')
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('admin.partner-accounts.reservations', compact('partner', 'reservations'));
+    }
+
+    public function wallet(Partner $partner): View
+    {
+        $transactions = $partner->walletTransactions()
+            ->with(['requester:id,name,email', 'validator:id,name,email', 'reservation:id,dossier_number'])
+            ->orderByDesc('created_at')
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('admin.partner-accounts.wallet', compact('partner', 'transactions'));
+    }
+
+    public function walletRequests(Request $request): View
+    {
+        $query = PartnerWalletTransaction::query()
+            ->where('type', PartnerWalletTransaction::TYPE_RECHARGE)
+            ->with(['partner:id,raison_sociale,nom_commercial,name', 'requester:id,name,email', 'validator:id,name,email']);
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->query('status'));
+        }
+
+        $transactions = $query->orderByDesc('created_at')->paginate(15)->withQueryString();
+
+        return view('admin.partner-accounts.wallet-requests', compact('transactions'));
+    }
+
+    public function approveWalletRequest(Request $request, PartnerWalletTransaction $transaction): RedirectResponse
+    {
+        if (! $transaction->isPending() || $transaction->type !== PartnerWalletTransaction::TYPE_RECHARGE) {
+            return back()->with('error', 'Cette demande ne peut pas etre validee.');
+        }
+
+        DB::transaction(function () use ($request, $transaction): void {
+            $transaction = PartnerWalletTransaction::query()->lockForUpdate()->findOrFail($transaction->id);
+            if (! $transaction->isPending()) {
+                return;
+            }
+
+            $partner = Partner::query()->lockForUpdate()->findOrFail($transaction->partner_id);
+            $before = (float) ($partner->wallet_balance ?? 0);
+            $after = $before + (float) $transaction->amount;
+
+            $partner->forceFill(['wallet_balance' => $after])->save();
+            $transaction->forceFill([
+                'status' => PartnerWalletTransaction::STATUS_APPROVED,
+                'validated_by' => $request->user()->id,
+                'validated_at' => now(),
+                'balance_before' => $before,
+                'balance_after' => $after,
+            ])->save();
+        });
+
+        return back()->with('success', 'Recharge wallet validee.');
+    }
+
+    public function rejectWalletRequest(Request $request, PartnerWalletTransaction $transaction): RedirectResponse
+    {
+        $data = $request->validate([
+            'admin_note' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        if (! $transaction->isPending() || $transaction->type !== PartnerWalletTransaction::TYPE_RECHARGE) {
+            return back()->with('error', 'Cette demande ne peut pas etre refusee.');
+        }
+
+        $transaction->forceFill([
+            'status' => PartnerWalletTransaction::STATUS_REJECTED,
+            'admin_note' => $data['admin_note'] ?? null,
+            'validated_by' => $request->user()->id,
+            'validated_at' => now(),
+        ])->save();
+
+        return back()->with('success', 'Recharge wallet refusee.');
     }
 }

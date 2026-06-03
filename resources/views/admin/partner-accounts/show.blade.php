@@ -150,6 +150,48 @@
         </div>
     </div>
 
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Agence partenaire</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="border rounded p-3 h-100">
+                                <div class="text-muted small">Agents</div>
+                                <div class="fs-4 fw-bold">{{ $agentsCount ?? 0 }}</div>
+                                <a href="{{ route('admin.partners.agents', $partner) }}" class="btn btn-sm btn-outline-primary mt-2">Voir agents</a>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-3 h-100">
+                                <div class="text-muted small">Reservations</div>
+                                <div class="fs-4 fw-bold">{{ $reservationsCount ?? 0 }}</div>
+                                <a href="{{ route('admin.partners.reservations', $partner) }}" class="btn btn-sm btn-outline-primary mt-2">Voir reservations</a>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-3 h-100">
+                                <div class="text-muted small">Solde wallet</div>
+                                <div class="fs-4 fw-bold">{{ number_format((float) ($partner->wallet_balance ?? 0), 2, ',', ' ') }} DH</div>
+                                <a href="{{ route('admin.partners.wallet', $partner) }}" class="btn btn-sm btn-outline-primary mt-2">Voir wallet</a>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-3 h-100">
+                                <div class="text-muted small">Recharges en attente</div>
+                                <div class="fs-4 fw-bold">{{ $walletPendingCount ?? 0 }}</div>
+                                <a href="{{ route('admin.partners.wallet-requests', ['status' => 'pending']) }}" class="btn btn-sm btn-outline-primary mt-2">Demandes wallet</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @if(isset($voyages) && $partner->isValidated())
     <div class="row mt-3">
         <div class="col-12">
@@ -187,4 +229,3 @@
         </div>
     </div>
 @endsection
-

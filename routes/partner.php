@@ -1,11 +1,14 @@
 <?php
 
 use App\Http\Controllers\Partner\CatalogueController as PartnerCatalogueController;
+use App\Http\Controllers\Partner\AgentsController as PartnerAgentsController;
 use App\Http\Controllers\Partner\ClientsController as PartnerClientsController;
 use App\Http\Controllers\Partner\CommissionsController as PartnerCommissionsController;
 use App\Http\Controllers\Partner\DashboardController as PartnerDashboardController;
 use App\Http\Controllers\Partner\DocumentsController as PartnerDocumentsController;
+use App\Http\Controllers\Partner\ProfileAgencyController as PartnerProfileAgencyController;
 use App\Http\Controllers\Partner\ReservationsController as PartnerReservationsController;
+use App\Http\Controllers\Partner\WalletController as PartnerWalletController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +32,7 @@ Route::middleware(['auth', 'partner'])->group(function () {
 
         Route::get('reservations', [PartnerReservationsController::class, 'index'])->name('partner.reservations.index');
         Route::get('reservations/create', [PartnerReservationsController::class, 'create'])->name('partner.reservations.create');
+        Route::get('reservations-a-la-carte', fn () => redirect()->route('partner.reservations.create', ['mode' => 'carte']))->name('partner.reservations-a-la-carte');
         Route::get('reservations/voyage-departures', [PartnerReservationsController::class, 'voyageDepartures'])->name('partner.reservations.voyage-departures');
         Route::get('reservations/departure-hotels-rooms', [PartnerReservationsController::class, 'departureHotelsRooms'])->name('partner.reservations.departure-hotels-rooms');
         Route::post('reservations', [PartnerReservationsController::class, 'store'])->name('partner.reservations.store');
@@ -50,6 +54,21 @@ Route::middleware(['auth', 'partner'])->group(function () {
         Route::get('commissions', [PartnerCommissionsController::class, 'index'])->name('partner.commissions.index');
         Route::get('documents', [PartnerDocumentsController::class, 'index'])->name('partner.documents.index');
 
+        Route::middleware('partner.admin')->group(function () {
+            Route::get('agents', [PartnerAgentsController::class, 'index'])->name('partner.agents.index');
+            Route::post('agents', [PartnerAgentsController::class, 'store'])->name('partner.agents.store');
+            Route::get('agents/{user}/edit', [PartnerAgentsController::class, 'edit'])->name('partner.agents.edit');
+            Route::put('agents/{user}', [PartnerAgentsController::class, 'update'])->name('partner.agents.update');
+            Route::post('agents/{user}/disable', [PartnerAgentsController::class, 'disable'])->name('partner.agents.disable');
+            Route::post('agents/{user}/reset-password', [PartnerAgentsController::class, 'resetPassword'])->name('partner.agents.reset-password');
+
+            Route::get('wallet', [PartnerWalletController::class, 'index'])->name('partner.wallet.index');
+            Route::post('wallet/recharge-request', [PartnerWalletController::class, 'rechargeRequest'])->name('partner.wallet.recharge-request');
+
+            Route::get('profile-agency', [PartnerProfileAgencyController::class, 'edit'])->name('partner.profile-agency.edit');
+            Route::put('profile-agency', [PartnerProfileAgencyController::class, 'update'])->name('partner.profile-agency.update');
+        });
+
         // Portail partenaire v2: messagerie interne + factures/devis
         Route::get('messages', [\App\Http\Controllers\Partner\MessagesController::class, 'index'])->name('partner.messages.index');
         Route::get('messages/channels', [\App\Http\Controllers\Partner\MessagesController::class, 'channels'])->name('partner.messages.channels');
@@ -60,7 +79,7 @@ Route::middleware(['auth', 'partner'])->group(function () {
         Route::get('invoices', [\App\Http\Controllers\Partner\InvoicesController::class, 'index'])->name('partner.invoices.index');
         Route::get('invoices/{reservation}/file', [\App\Http\Controllers\Partner\InvoicesController::class, 'file'])->name('partner.invoices.file');
 
-        Route::get('profile', fn () => view('partner.v2.profile.show', ['partner' => request()->user()->partner]))->name('partner.profile.show');
+        Route::get('profile', fn () => view('partner.v2.profile.show', ['partner' => request()->user()->partner ?: request()->user()->ownedPartner]))->name('partner.profile.show');
     });
 });
 

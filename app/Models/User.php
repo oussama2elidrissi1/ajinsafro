@@ -31,7 +31,9 @@ class User extends Authenticatable
         'phone',
         'address',
         'branch_id',
+        'partner_id',
         'manager_id',
+        'created_by',
         'job_title',
         'user_type',
         'is_admin',
@@ -94,7 +96,12 @@ class User extends Authenticatable
         return $this->hasMany(User::class, 'manager_id');
     }
 
-    public function partner(): HasOne
+    public function partner(): BelongsTo
+    {
+        return $this->belongsTo(Partner::class, 'partner_id');
+    }
+
+    public function ownedPartner(): HasOne
     {
         return $this->hasOne(Partner::class);
     }
@@ -194,6 +201,10 @@ class User extends Authenticatable
 
     public function isPartner(): bool
     {
+        if ($this->isPartnerAdmin() || $this->isPartnerAgent()) {
+            return true;
+        }
+
         // Primary signal: explicit role
         if ($this->hasRole('Partenaire') || $this->hasRole('Partner')) {
             return true;
@@ -206,10 +217,25 @@ class User extends Authenticatable
 
         // Fallback: presence of a Partner profile linked to this user.
         if ($this->relationLoaded('partner')) {
-            return $this->partner !== null;
+            return $this->partner !== null || ($this->relationLoaded('ownedPartner') && $this->ownedPartner !== null);
         }
 
-        return Partner::query()->where('user_id', $this->id)->exists();
+        return ! empty($this->partner_id) || Partner::query()->where('user_id', $this->id)->exists();
+    }
+
+    public function isPartnerAdmin(): bool
+    {
+        return $this->hasRole('partner_admin') || $this->hasRole('Partenaire') || (string) ($this->base_role ?? '') === 'partner_admin';
+    }
+
+    public function isPartnerAgent(): bool
+    {
+        return $this->hasRole('partner_agent') || (string) ($this->base_role ?? '') === 'partner_agent';
+    }
+
+    public function canManagePartnerAgency(): bool
+    {
+        return $this->isPartnerAdmin();
     }
 
     public function isClientPortal(): bool
@@ -231,6 +257,10 @@ class User extends Authenticatable
     public function canAccessAdmin(): bool
     {
         if ($this->isClientPortal()) {
+            return false;
+        }
+
+        if ($this->isPartner()) {
             return false;
         }
 

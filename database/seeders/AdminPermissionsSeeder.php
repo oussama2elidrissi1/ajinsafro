@@ -37,6 +37,8 @@ class AdminPermissionsSeeder extends Seeder
         $accountantRole = Role::findOrCreate('Comptable', 'web');
         $commercialReservationsOnlyRole = Role::findOrCreate(BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY, 'web');
         Role::findOrCreate('Partenaire', 'web');
+        Role::findOrCreate('partner_admin', 'web');
+        Role::findOrCreate('partner_agent', 'web');
 
         $adminRole->syncPermissions(Permission::query()->pluck('name')->all());
 

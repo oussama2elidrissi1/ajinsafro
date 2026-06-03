@@ -95,9 +95,11 @@
                                             <span class="{{ $badge }}">{{ $partner->status }}</span>
                                         </td>
                                         <td class="text-end">
-                                            <a href="{{ route('admin.partner-accounts.show', $partner) }}" class="btn btn-sm btn-outline-primary" title="Voir"><i class="bx bx-show"></i></a>
+                                            <a href="{{ route('admin.partners.show', $partner) }}" class="btn btn-sm btn-outline-primary" title="Voir"><i class="bx bx-show"></i></a>
+                                            <a href="{{ route('admin.partners.wallet', $partner) }}" class="btn btn-sm btn-outline-info" title="Wallet"><i class="bx bx-wallet"></i></a>
+                                            <a href="{{ route('admin.partners.agents', $partner) }}" class="btn btn-sm btn-outline-dark" title="Agents"><i class="bx bx-user"></i></a>
                                             @if($partner->isValidated())
-                                                <form action="{{ route('admin.partner-accounts.suspend', $partner) }}" method="post" class="d-inline">
+                                                <form action="{{ route('admin.partners.suspend', $partner) }}" method="post" class="d-inline">
                                                     @csrf
                                                     <button type="submit" class="btn btn-sm btn-outline-secondary" title="Désactiver"><i class="bx bx-pause-circle"></i></button>
                                                 </form>
@@ -108,7 +110,7 @@
                                                 </form>
                                             @endif
                                             @if($partner->isPending())
-                                                <form action="{{ route('admin.partner-accounts.validate', $partner) }}" method="post" class="d-inline">
+                                                <form action="{{ route('admin.partners.validate', $partner) }}" method="post" class="d-inline">
                                                     @csrf
                                                     <button type="submit" class="btn btn-sm btn-success" title="Valider"><i class="bx bx-check"></i></button>
                                                 </form>
@@ -133,4 +135,3 @@
         </div>
     </div>
 @endsection
-

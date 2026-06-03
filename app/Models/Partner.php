@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class Partner extends Model
 {
@@ -24,13 +25,18 @@ class Partner extends Model
 
     protected $fillable = [
         'user_id',
+        'name',
         'raison_sociale',
         'nom_commercial',
         'nom_responsable',
+        'responsable_name',
         'email',
         'telephone',
+        'phone',
         'adresse',
+        'address',
         'ville',
+        'city',
         'code_postal',
         'pays',
         'partner_type',
@@ -38,11 +44,14 @@ class Partner extends Model
         'if',
         'rc',
         'document_path',
+        'logo_path',
         'rib_iban',
         'rib_bic',
         'payment_mode',
         'contract_path',
         'status',
+        'wallet_balance',
+        'created_by',
         'validated_at',
         'validated_by',
         'rejected_at',
@@ -52,6 +61,7 @@ class Partner extends Model
     protected $casts = [
         'validated_at' => 'datetime',
         'rejected_at' => 'datetime',
+        'wallet_balance' => 'decimal:2',
     ];
 
     public function user(): BelongsTo
@@ -67,6 +77,21 @@ class Partner extends Model
     public function reservations(): HasMany
     {
         return $this->hasMany(Reservation::class, 'partner_id');
+    }
+
+    public function agents(): HasMany
+    {
+        return $this->hasMany(User::class, 'partner_id');
+    }
+
+    public function partnerAgents()
+    {
+        return $this->agents()->whereHas('roles', fn ($query) => $query->where('name', 'partner_agent'));
+    }
+
+    public function walletTransactions(): HasMany
+    {
+        return $this->hasMany(PartnerWalletTransaction::class, 'partner_id');
     }
 
     public function clients(): HasMany
@@ -127,7 +152,36 @@ class Partner extends Model
 
     public function getDisplayNameAttribute(): string
     {
-        return $this->nom_commercial ?: $this->raison_sociale;
+        return $this->nom_commercial ?: ($this->name ?: $this->raison_sociale);
+    }
+
+    public function getLogoUrlAttribute(): string
+    {
+        if ($this->logo_path) {
+            return Storage::disk('public')->url($this->logo_path);
+        }
+
+        return asset('build/images/logo-dark.png');
+    }
+
+    public function getResponsibleNameAttribute(): ?string
+    {
+        return $this->responsable_name ?: $this->nom_responsable;
+    }
+
+    public function getPhoneNumberAttribute(): ?string
+    {
+        return $this->phone ?: $this->telephone;
+    }
+
+    public function getAddressLineAttribute(): ?string
+    {
+        return $this->address ?: $this->adresse;
+    }
+
+    public function getCityNameAttribute(): ?string
+    {
+        return $this->city ?: $this->ville;
     }
 
     public static function partnerTypeLabels(): array

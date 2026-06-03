@@ -13,7 +13,7 @@ class ClientsController extends Controller
 {
     private function getPartner(Request $request): \App\Models\Partner
     {
-        return $request->user()->partner;
+        return $request->user()->partner ?: $request->user()->ownedPartner;
     }
 
     public function index(Request $request): View

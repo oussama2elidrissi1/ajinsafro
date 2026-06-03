@@ -89,6 +89,7 @@ class Reservation extends Model
         'branch_id',
         'sales_manager_id',
         'agent_id',
+        'partner_agent_id',
         'assigned_to',
         'assigned_at',
         'assignment_priority',
@@ -159,6 +160,7 @@ class Reservation extends Model
         'branch_id' => 'integer',
         'sales_manager_id' => 'integer',
         'agent_id' => 'integer',
+        'partner_agent_id' => 'integer',
         'assigned_to' => 'integer',
         'assigned_at' => 'datetime',
         'assignment_priority' => 'string',
@@ -365,6 +367,22 @@ class Reservation extends Model
     {
         if ($user->isSuperAdmin() || $user->isSiegeAdmin() || $user->is_admin) {
             return $query;
+        }
+
+        if ($user->isPartnerAdmin()) {
+            $partnerId = $user->partner_id ?: (int) $user->ownedPartner()->value('id');
+            return $query->where('partner_id', $partnerId ?: 0);
+        }
+
+        if ($user->isPartnerAgent()) {
+            $partnerId = $user->partner_id ?: (int) $user->ownedPartner()->value('id');
+            return $query->where('partner_id', $partnerId ?: 0)
+                ->where(function (Builder $builder) use ($user): void {
+                    $builder->where('partner_agent_id', $user->id)
+                        ->orWhere('agent_id', $user->id)
+                        ->orWhere('created_by', $user->id)
+                        ->orWhere('created_by_user_id', $user->id);
+                });
         }
 
         if ($user->isManager() || $user->isBranchAdmin()) {

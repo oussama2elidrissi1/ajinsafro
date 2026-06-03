@@ -480,6 +480,15 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('partners/partenaires', [PartnersController::class, 'page'])->name('partners.partenaires')->defaults('submenu', 'partenaires');
         Route::get('partners/fournisseurs', [PartnersController::class, 'page'])->name('partners.fournisseurs')->defaults('submenu', 'fournisseurs');
         Route::get('partners/contrats', [PartnersController::class, 'page'])->name('partners.contrats')->defaults('submenu', 'contrats');
+        Route::get('partners/wallet-requests', [PartnerAccountController::class, 'walletRequests'])->name('partners.wallet-requests');
+        Route::post('partners/wallet-requests/{transaction}/approve', [PartnerAccountController::class, 'approveWalletRequest'])->name('partners.wallet-requests.approve');
+        Route::post('partners/wallet-requests/{transaction}/reject', [PartnerAccountController::class, 'rejectWalletRequest'])->name('partners.wallet-requests.reject');
+        Route::get('partners/{partner}', [PartnerAccountController::class, 'show'])->name('partners.show');
+        Route::post('partners/{partner}/validate', [PartnerAccountController::class, 'validatePartner'])->name('partners.validate');
+        Route::post('partners/{partner}/suspend', [PartnerAccountController::class, 'suspendPartner'])->name('partners.suspend');
+        Route::get('partners/{partner}/agents', [PartnerAccountController::class, 'agents'])->name('partners.agents');
+        Route::get('partners/{partner}/reservations', [PartnerAccountController::class, 'reservations'])->name('partners.reservations');
+        Route::get('partners/{partner}/wallet', [PartnerAccountController::class, 'wallet'])->name('partners.wallet');
 
         Route::get('partner-accounts', [PartnerAccountController::class, 'index'])->name('partner-accounts.index');
         Route::get('partner-accounts/{partner}', [PartnerAccountController::class, 'show'])->name('partner-accounts.show');

@@ -78,6 +78,8 @@ class AjinsafroRolesSeeder extends Seeder
         $this->createRole(BranchScopeService::ROLE_MANAGER, $commercial);
         $this->createRole(BranchScopeService::ROLE_AGENT, $agent);
         $this->createRole(BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY, $commercialReservationsOnly);
+        $this->createRole('partner_admin', []);
+        $this->createRole('partner_agent', []);
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
