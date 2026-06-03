@@ -5,9 +5,13 @@
 <div class="mb-6 flex items-end justify-between gap-4">
     <div>
         <h1 class="text-2xl sm:text-3xl font-bold text-[#0e3a5a]">Mon profil</h1>
-        <p class="text-sm text-gray-500 mt-1">Informations du compte partenaire (lecture). Les modifications sensibles se font via le siège.</p>
+        <p class="text-sm text-gray-500 mt-1">Informations du compte partenaire et securite du compte.</p>
     </div>
 </div>
+
+@if(session('success'))
+    <div class="mb-4 bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm">{{ session('success') }}</div>
+@endif
 
 <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
     <div class="xl:col-span-1 space-y-6">
@@ -57,7 +61,34 @@
                 </div>
             </div>
         </div>
+
+        <div class="bg-white rounded-2xl shadow-custom border border-gray-100 overflow-hidden">
+            <div class="p-5 border-b border-gray-100 bg-gray-50/50">
+                <h3 class="font-bold text-[#0e3a5a]">Mot de passe</h3>
+            </div>
+            <form method="POST" action="{{ route('partner.profile.password.update') }}" class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                @csrf
+                @method('PUT')
+
+                <div class="md:col-span-2">
+                    <label class="text-xs font-bold text-gray-500 uppercase">Mot de passe actuel</label>
+                    <input type="password" name="current_password" class="mt-1 w-full rounded-xl border-gray-200" required>
+                    @error('current_password')<p class="text-xs text-red-600 mt-1">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase">Nouveau mot de passe</label>
+                    <input type="password" name="password" class="mt-1 w-full rounded-xl border-gray-200" required>
+                    @error('password')<p class="text-xs text-red-600 mt-1">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase">Confirmation</label>
+                    <input type="password" name="password_confirmation" class="mt-1 w-full rounded-xl border-gray-200" required>
+                </div>
+                <div class="md:col-span-2">
+                    <button class="bg-[#0083c4] hover:bg-[#0e3a5a] text-white rounded-xl px-5 py-3 text-sm font-bold transition-colors">Changer le mot de passe</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 @endsection
-

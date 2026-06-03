@@ -114,10 +114,10 @@
                     <h5 class="mb-0">Accès compte</h5>
                 </div>
                 <div class="card-body">
-                    <p class="small text-muted mb-2">Le mot de passe ne peut pas être affiché. Vous pouvez envoyer un lien de réinitialisation.</p>
+                    <p class="small text-muted mb-2">Generez un nouveau mot de passe temporaire et communiquez-le au partenaire.</p>
                     <form action="{{ route('admin.partner-accounts.password-reset', $partner) }}" method="post" class="mb-2">
                         @csrf
-                        <button type="submit" class="btn btn-outline-primary w-100"><i class="bx bx-key me-1"></i> Envoyer lien de réinitialisation</button>
+                        <button type="submit" class="btn btn-outline-primary w-100"><i class="bx bx-key me-1"></i> Generer nouveau mot de passe</button>
                     </form>
 
                     @if($partner->isValidated())
@@ -274,4 +274,37 @@
             <a href="{{ route('admin.partner-accounts.index') }}" class="btn btn-outline-secondary"><i class="bx bx-arrow-back me-1"></i> Retour à la liste</a>
         </div>
     </div>
+    @if(session('temporary_partner_password'))
+        <div class="modal fade" id="temporaryPasswordModal" tabindex="-1" aria-labelledby="temporaryPasswordModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="temporaryPasswordModalLabel">Nouveau mot de passe partenaire</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-2">Compte: <strong>{{ session('temporary_partner_user_name') }}</strong></p>
+                        <p class="text-muted small mb-3">{{ session('temporary_partner_user_email') }}</p>
+                        <label class="form-label">Mot de passe temporaire</label>
+                        <input type="text" class="form-control form-control-lg fw-bold" value="{{ session('temporary_partner_password') }}" readonly onclick="this.select()">
+                        <p class="small text-muted mt-3 mb-0">Ce mot de passe est affiche une seule fois dans cette session.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">J'ai note le mot de passe</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @push('scripts')
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    var modalElement = document.getElementById('temporaryPasswordModal');
+                    if (modalElement && window.bootstrap && window.bootstrap.Modal) {
+                        window.bootstrap.Modal.getOrCreateInstance(modalElement).show();
+                    }
+                });
+            </script>
+        @endpush
+    @endif
 @endsection

@@ -79,6 +79,7 @@ Route::middleware(['auth', 'partner'])->group(function () {
         Route::get('invoices', [\App\Http\Controllers\Partner\InvoicesController::class, 'index'])->name('partner.invoices.index');
         Route::get('invoices/{reservation}/file', [\App\Http\Controllers\Partner\InvoicesController::class, 'file'])->name('partner.invoices.file');
 
+        Route::put('profile/password', [PartnerProfileAgencyController::class, 'updatePassword'])->name('partner.profile.password.update');
         Route::get('profile', fn () => view('partner.v2.profile.show', ['partner' => request()->user()->partner ?: request()->user()->ownedPartner]))->name('partner.profile.show');
     });
 });

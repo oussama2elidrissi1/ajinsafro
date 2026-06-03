@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
@@ -267,21 +267,23 @@ class PartnerAccountController extends Controller
     public function sendPasswordReset(Partner $partner): RedirectResponse
     {
         $partner->loadMissing('user');
-        $email = $partner->user?->email ?: $partner->email;
-        if (! $email) {
+        $user = $partner->user ?: $this->partnerAdminUsers($partner)->first();
+        if (! $user) {
             return redirect()->route('admin.partner-accounts.show', $partner)
-                ->with('error', 'Email partenaire introuvable.');
+                ->with('error', 'Compte utilisateur partenaire introuvable.');
         }
 
-        $status = Password::broker()->sendResetLink(['email' => $email]);
-
-        if ($status !== Password::RESET_LINK_SENT) {
-            return redirect()->route('admin.partner-accounts.show', $partner)
-                ->with('error', 'Impossible d’envoyer le lien de réinitialisation.');
-        }
+        $temporaryPassword = 'Aj-' . Str::random(10) . random_int(10, 99);
+        $user->forceFill([
+            'password' => Hash::make($temporaryPassword),
+            'is_active' => true,
+        ])->save();
 
         return redirect()->route('admin.partner-accounts.show', $partner)
-            ->with('success', 'Lien de réinitialisation du mot de passe envoyé au partenaire.');
+            ->with('success', 'Mot de passe partenaire reinitialise.')
+            ->with('temporary_partner_password', $temporaryPassword)
+            ->with('temporary_partner_user_name', $user->name)
+            ->with('temporary_partner_user_email', $user->email);
     }
 
     public function agents(Partner $partner): View

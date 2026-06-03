@@ -7,6 +7,7 @@ use App\Models\Partner;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -70,5 +71,24 @@ class ProfileAgencyController extends Controller
         ])->save();
 
         return redirect()->route('partner.profile-agency.edit')->with('success', 'Profil agence mis a jour.');
+    }
+
+    public function updatePassword(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        $data = $request->validate([
+            'current_password' => ['required', 'string', 'max:200'],
+            'password' => ['required', 'string', 'min:8', 'max:200', 'confirmed'],
+        ]);
+
+        if (! Hash::check($data['current_password'], $user->getAuthPassword())) {
+            return back()->withErrors(['current_password' => 'Mot de passe actuel incorrect.']);
+        }
+
+        $user->forceFill([
+            'password' => Hash::make($data['password']),
+        ])->save();
+
+        return redirect()->route('partner.profile.show')->with('success', 'Mot de passe mis a jour.');
     }
 }
