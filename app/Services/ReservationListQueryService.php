@@ -177,6 +177,26 @@ final class ReservationListQueryService
                     ->orWhereHas('creator', fn (Builder $u) => $u->where('user_type', 'client'))
                     ->orWhereHas('createdBy', fn (Builder $u) => $u->where('user_type', 'client'));
             });
+        } elseif ($c === 'partner') {
+            $q->where(function (Builder $sub) {
+                $sub->whereNotNull('partner_id');
+
+                if ($this->reservationsHasChannelColumn()) {
+                    $sub->orWhere('channel', 'partner');
+                }
+            });
+        } elseif ($c === 'agent') {
+            $q->where(function (Builder $sub) {
+                $sub->whereNull('partner_id');
+
+                if ($this->reservationsHasChannelColumn()) {
+                    $sub->where(function (Builder $agentSub): void {
+                        $agentSub->whereNull('channel')
+                            ->orWhere('channel', '')
+                            ->orWhere('channel', 'agent');
+                    });
+                }
+            });
         }
 
         return $q;

@@ -24,6 +24,11 @@
     $stats = $stats ?? [];
     $filters = $filters ?? [];
     $currentStatus = $currentStatus ?? 'all';
+    $currentScope = $currentScope ?? 'all';
+    $partnerOptions = $partnerOptions ?? collect();
+    $agentOptions = $agentOptions ?? collect();
+    $scopeBaseQuery = request()->except(['status', 'scope', 'channel', 'partner_id', 'agent_id', 'page']);
+    $agentColumnLabel = $currentScope === 'partners' ? 'Partenaire / agent' : 'Agent Ajinsafro';
 
     $reservationBadge = function ($reservation) {
         if ($reservation->needsSharedRoomPairing()) {
@@ -190,6 +195,12 @@
 
     .reservation-dossiers-page .rd-filter-grid .full {
         grid-column: 1 / -1;
+    }
+
+    .reservation-dossiers-page .rd-filter-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
     }
 
     .reservation-dossiers-page .rd-card {
@@ -554,6 +565,11 @@
     <div class="rd-panel">
         <div class="rd-toolbar">
             <div class="rd-tabs">
+                <a href="{{ route('admin.reservation-dossiers.index', array_merge($scopeBaseQuery, ['scope' => 'all'])) }}" class="rd-tab {{ $currentScope === 'all' ? 'active' : '' }}">Toutes les reservations</a>
+                <a href="{{ route('admin.reservation-dossiers.index', array_merge($scopeBaseQuery, ['scope' => 'agents'])) }}" class="rd-tab {{ $currentScope === 'agents' ? 'active' : '' }}">Reservations agents Ajinsafro</a>
+                <a href="{{ route('admin.reservation-dossiers.index', array_merge($scopeBaseQuery, ['scope' => 'partners'])) }}" class="rd-tab {{ $currentScope === 'partners' ? 'active' : '' }}">Reservations partenaires</a>
+            </div>
+            <div class="rd-tabs">
                 <a href="{{ route('admin.reservation-dossiers.index', array_merge(request()->except('status'), ['status' => 'all'])) }}" class="rd-tab {{ $currentStatus === 'all' ? 'active' : '' }}">Tous</a>
                 <a href="{{ route('admin.reservation-dossiers.index', array_merge(request()->except('status'), ['status' => 'pending'])) }}" class="rd-tab {{ $currentStatus === 'pending' ? 'active' : '' }}">En attente</a>
                 <a href="{{ route('admin.reservation-dossiers.index', array_merge(request()->except('status'), ['status' => 'paid'])) }}" class="rd-tab {{ $currentStatus === 'paid' ? 'active' : '' }}">Payees</a>
@@ -564,9 +580,30 @@
                 @if($currentStatus !== 'all')
                     <input type="hidden" name="status" value="{{ $currentStatus }}">
                 @endif
+                @if($currentScope !== 'all')
+                    <input type="hidden" name="scope" value="{{ $currentScope }}">
+                @endif
                 <div class="full">
                     <label class="form-label">Recherche voyage / client / dossier</label>
                     <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" class="form-control" placeholder="Ex. Dakhla, Oussama, RES-2026-000038">
+                </div>
+                <div>
+                    <label class="form-label">Partenaire</label>
+                    <select name="partner_id" class="form-select">
+                        <option value="">Tous</option>
+                        @foreach($partnerOptions as $partner)
+                            <option value="{{ $partner->id }}" @selected((string) ($filters['partner_id'] ?? '') === (string) $partner->id)>{{ $partner->display_name ?? $partner->raison_sociale ?? $partner->nom_commercial ?? ('Partenaire #'.$partner->id) }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">{{ $currentScope === 'partners' ? 'Agent partenaire' : 'Agent Ajinsafro' }}</label>
+                    <select name="agent_id" class="form-select">
+                        <option value="">Tous</option>
+                        @foreach($agentOptions as $agent)
+                            <option value="{{ $agent->id }}" @selected((string) ($filters['agent_id'] ?? '') === (string) $agent->id)>{{ $agent->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div>
                     <label class="form-label">Voyage</label>
@@ -595,6 +632,10 @@
                         <option value="90d" @selected(($filters['period'] ?? '') === '90d')>90 derniers jours</option>
                         <option value="all" @selected(($filters['period'] ?? '') === 'all')>Toutes les periodes</option>
                     </select>
+                </div>
+                <div class="rd-filter-actions">
+                    <button type="submit" class="rd-btn rd-btn-primary"><i class="bx bx-filter-alt"></i><span>Filtrer</span></button>
+                    <a href="{{ route('admin.reservation-dossiers.index', ['scope' => $currentScope]) }}" class="rd-mini-btn"><i class="bx bx-reset"></i><span>Reinitialiser</span></a>
                 </div>
             </form>
         </div>
@@ -656,7 +697,7 @@
                                                 <th>Telephone</th>
                                                 <th>Depart</th>
                                                 <th>Reservation</th>
-                                                <th>Agent</th>
+                                                <th>{{ $agentColumnLabel }}</th>
                                                 <th>Statut</th>
                                                 <th>Paiement</th>
                                                 <th>Total</th>
@@ -670,7 +711,13 @@
                                                 @php
                                                     $resBadge = $reservationBadge($reservation);
                                                     $payBadge = $paymentBadge($reservation);
-                                                    $actor = $reservation->assignedTo ?? $reservation->agent ?? $reservation->creator ?? null;
+                                                    $isPartnerReservation = ! empty($reservation->partner_id) || (string) ($reservation->channel ?? '') === 'partner';
+                                                    $actor = $reservation->assignedTo ?? $reservation->agent ?? $reservation->creator ?? $reservation->createdBy ?? null;
+                                                    $partnerActor = $reservation->partnerAgent ?? $reservation->agent ?? $reservation->creator ?? $reservation->createdBy ?? null;
+                                                    $partnerName = $reservation->partner?->display_name
+                                                        ?? $reservation->partner?->nom_commercial
+                                                        ?? $reservation->partner?->raison_sociale
+                                                        ?? null;
                                                     $detailUrl = $reservation->reservation_dossier_id
                                                         ? route('admin.reservation-dossiers.show', $reservation->reservation_dossier_id)
                                                         : route('admin.reservations.show', $reservation);
@@ -682,7 +729,17 @@
                                                     <td>{{ $reservation->client?->phone ?: $reservation->client_phone ?: '?' }}</td>
                                                     <td>{{ $reservation->travelDate?->date?->format('d/m/Y') ?? $reservation->departure?->start_date?->format('d/m/Y') ?? '?' }}</td>
                                                     <td>{{ optional($reservation->created_at)->format('d/m/Y H:i') ?? '?' }}</td>
-                                                    <td>{{ $actor?->name ?? '?' }}</td>
+                                                    <td>
+                                                        @if($isPartnerReservation)
+                                                            <div class="fw-semibold text-dark">{{ $partnerName ?: 'Partenaire non renseigne' }}</div>
+                                                            <div class="small text-muted">{{ $partnerActor?->name ? 'Agent: '.$partnerActor->name : 'Agent partenaire non renseigne' }}</div>
+                                                        @else
+                                                            <div class="fw-semibold text-dark">{{ $actor?->name ?? 'Agent non renseigne' }}</div>
+                                                            @if($reservation->branch?->name)
+                                                                <div class="small text-muted">{{ $reservation->branch->name }}</div>
+                                                            @endif
+                                                        @endif
+                                                    </td>
                                                     <td><span class="rd-badge {{ $resBadge['class'] }}">{{ $resBadge['label'] }}</span></td>
                                                     <td><span class="rd-badge {{ $payBadge['class'] }}">{{ $payBadge['label'] }}</span></td>
                                                     <td>{{ number_format((float) $reservation->effective_total_amount, 2, ',', ' ') }} DH</td>
@@ -849,4 +906,3 @@
 })();
 </script>
 @endpush
-

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Departure;
+use App\Models\Partner;
 use App\Models\Reservation;
 use App\Models\ReservationDossier;
 use App\Models\TravelDate;
@@ -38,11 +39,13 @@ class ReservationDossierController extends Controller
         $quickStatus = trim((string) $request->query('status', 'all')) ?: 'all';
         $reservationStatus = trim((string) $request->query('reservation_status', ''));
         $paymentStatus = trim((string) $request->query('payment_status', ''));
+        $scope = trim((string) $request->query('scope', 'all')) ?: 'all';
         $channel = trim((string) $request->query('channel', ''));
         $search = trim((string) $request->query('search', ''));
         $period = trim((string) $request->query('period', '7d')) ?: '7d';
         $voyageId = (int) $request->query('voyage_id', 0);
         $agentId = (int) $request->query('agent_id', 0);
+        $partnerId = (int) $request->query('partner_id', 0);
         $branchId = (int) $request->query('branch_id', 0);
         $clientId = (int) $request->query('client_id', 0);
         $departureDate = trim((string) $request->query('departure_date', ''));
@@ -60,8 +63,11 @@ class ReservationDossierController extends Controller
             'departure',
             'assignedTo',
             'agent',
+            'partnerAgent',
             'creator',
+            'createdBy',
             'branch',
+            'partner',
             'reservationRooms',
             'passengers',
         ]);
@@ -97,6 +103,33 @@ class ReservationDossierController extends Controller
             $reservationQuery->whereHas('departure', fn ($departureQuery) => $departureQuery->whereDate('start_date', $departureDate));
         }
 
+        if ($scope === 'agents') {
+            $this->reservationListQuery->applyChannelFilter($reservationQuery, 'agent');
+            $reservationQuery
+                ->where(function ($query): void {
+                    $query->whereNotNull('assigned_to')
+                        ->orWhereNotNull('agent_id')
+                        ->orWhereNotNull('created_by')
+                        ->orWhereNotNull('created_by_user_id')
+                        ->orWhereNotNull('branch_id');
+                })
+                ->whereDoesntHave('creator', fn ($query) => $query->where('user_type', 'client'))
+                ->whereDoesntHave('createdBy', fn ($query) => $query->where('user_type', 'client'));
+
+            if (Schema::connection('mysql')->hasColumn('reservations', 'catalog_source_code')) {
+                $reservationQuery->where(function ($query): void {
+                    $query->whereNull('catalog_source_code')
+                        ->orWhereNotIn('catalog_source_code', ['wp_front_v1', 'front_kiosk']);
+                });
+            }
+        } elseif ($scope === 'partners') {
+            $this->reservationListQuery->applyChannelFilter($reservationQuery, 'partner');
+        }
+
+        if ($partnerId > 0) {
+            $reservationQuery->where('partner_id', $partnerId);
+        }
+
         if ($agentId > 0) {
             $reservationQuery->where(function ($query) use ($agentId) {
                 $query->where('assigned_to', $agentId)
@@ -117,7 +150,8 @@ class ReservationDossierController extends Controller
         if ($channel !== '') {
             $this->reservationListQuery->applyChannelFilter($reservationQuery, $channel);
 
-            if ($channel !== 'client' && Schema::connection('mysql')->hasColumn('reservations', 'channel')) {
+            if (! in_array($channel, ['client', 'partner', 'agent'], true)
+                && Schema::connection('mysql')->hasColumn('reservations', 'channel')) {
                 $reservationQuery->where('channel', $channel);
             }
         }
@@ -280,10 +314,35 @@ class ReservationDossierController extends Controller
             ]
         );
 
-        $agentOptionsQuery = User::query()->orderBy('name')->limit(200);
-        $this->branchScope->scopeUsers($agentOptionsQuery, $request->user());
-        if ($this->branchScope->isCommercialReservationsOnly($request->user())) {
-            $agentOptionsQuery->whereKey($request->user()->id);
+        $agentOptionsQuery = User::query()->orderBy('name')->limit(300);
+        if ($scope === 'partners') {
+            $agentOptionsQuery
+                ->where(function ($query) use ($partnerId): void {
+                    if ($partnerId > 0) {
+                        $query->where('partner_id', $partnerId)
+                            ->orWhereHas('ownedPartner', fn ($partnerQuery) => $partnerQuery->whereKey($partnerId));
+
+                        return;
+                    }
+
+                    $query->whereNotNull('partner_id')
+                        ->orWhereHas('ownedPartner');
+                })
+                ->where(function ($query): void {
+                    $query->whereNull('user_type')
+                        ->orWhere('user_type', '!=', 'client');
+                });
+        } else {
+            $this->branchScope->scopeUsers($agentOptionsQuery, $request->user());
+            if ($this->branchScope->isCommercialReservationsOnly($request->user())) {
+                $agentOptionsQuery->whereKey($request->user()->id);
+            }
+            $agentOptionsQuery
+                ->whereNull('partner_id')
+                ->where(function ($query): void {
+                    $query->whereNull('user_type')
+                        ->orWhere('user_type', '!=', 'client');
+                });
         }
 
         return view('admin.reservation-dossiers.index', [
@@ -292,10 +351,12 @@ class ReservationDossierController extends Controller
             'currentStatus' => $quickStatus,
             'filters' => [
                 'search' => $search,
+                'scope' => $scope,
                 'voyage_id' => $voyageId > 0 ? $voyageId : null,
                 'travel_date_id' => $travelDateId > 0 ? $travelDateId : null,
                 'departure_date' => $departureDate,
                 'agent_id' => $agentId > 0 ? $agentId : null,
+                'partner_id' => $partnerId > 0 ? $partnerId : null,
                 'branch_id' => $branchId > 0 ? $branchId : null,
                 'client_id' => $clientId > 0 ? $clientId : null,
                 'reservation_status' => $reservationStatus,
@@ -306,7 +367,9 @@ class ReservationDossierController extends Controller
             ],
             'voyageOptions' => AdminWpTourCatalogQuery::reservableVoyageOptions(),
             'agentOptions' => $agentOptionsQuery->get(['id', 'name']),
+            'partnerOptions' => Partner::query()->orderBy('raison_sociale')->get(['id', 'name', 'raison_sociale', 'nom_commercial']),
             'branchOptions' => $this->branchScope->branchesForSelect($request->user()),
+            'currentScope' => $scope,
         ]);
     }
 

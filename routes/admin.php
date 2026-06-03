@@ -155,6 +155,13 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('dashboard/v6', [DashboardController::class, 'v6'])->name('dashboard.v6');
 
         Route::get('reservations', [ReservationsController::class, 'index'])->name('reservations.index');
+        Route::get('reservations/agents', function (\Illuminate\Http\Request $request) {
+            $query = $request->query();
+            $query['scope'] = 'agents';
+            unset($query['channel']);
+
+            return redirect()->route('admin.reservation-dossiers.index', $query);
+        })->name('reservations.agents');
         Route::get('reservation-dossiers', [ReservationDossierController::class, 'index'])->name('reservation-dossiers.index');
         Route::get('reservation-dossiers/{reservationDossier}', [ReservationDossierController::class, 'show'])->name('reservation-dossiers.show');
         Route::delete('reservation-dossiers/{reservation}', [ReservationDossierController::class, 'destroy'])->name('reservation-dossiers.destroy');
@@ -165,8 +172,10 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         })->name('reservations.clients');
         Route::get('reservations/partners', function (\Illuminate\Http\Request $request) {
             $query = $request->query();
-            $query['channel'] = 'partner';
-            return redirect()->route('admin.reservations.index', $query);
+            $query['scope'] = 'partners';
+            unset($query['channel']);
+
+            return redirect()->route('admin.reservation-dossiers.index', $query);
         })->name('reservations.partners');
         Route::get('reservations/toutes', [ReservationsController::class, 'page'])->name('reservations.toutes')->defaults('submenu', 'toutes');
         Route::get('reservations/en-attente', [ReservationsController::class, 'page'])->name('reservations.en-attente')->defaults('submenu', 'en-attente');

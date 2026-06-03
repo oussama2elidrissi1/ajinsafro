@@ -261,6 +261,11 @@ class Reservation extends Model
         return $this->belongsTo(Partner::class);
     }
 
+    public function partnerAgent(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'partner_agent_id');
+    }
+
     public function partnerCommission(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(PartnerCommission::class, 'reservation_id');

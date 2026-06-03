@@ -15,6 +15,8 @@
     $filterSearch = $filterSearch ?? null;
     $filterStatus = $filterStatus ?? null;
     $filterChannel = $filterChannel ?? null;
+    $filterPartnerId = $filterPartnerId ?? null;
+    $partnerOptions = $partnerOptions ?? collect();
     $isClientChannel = $filterChannel === 'client';
     $highlightReservationId = $highlightReservationId ?? 0;
     $voyage = $voyage ?? null;
@@ -128,6 +130,15 @@
                             <option value="">Tous</option>
                             @foreach($voyageOptions as $v)
                                 <option value="{{ $v->id }}" @selected((string) $filterTourId === (string) $v->id)>{{ $v->resolved_name ?? $v->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="res-hub-field">
+                        <label class="form-label">Partenaire</label>
+                        <select name="partner_id" class="form-select">
+                            <option value="">Tous</option>
+                            @foreach($partnerOptions as $partner)
+                                <option value="{{ $partner->id }}" @selected((string) $filterPartnerId === (string) $partner->id)>{{ $partner->display_name ?? $partner->raison_sociale ?? $partner->nom_commercial ?? ('Partenaire #'.$partner->id) }}</option>
                             @endforeach
                         </select>
                     </div>
