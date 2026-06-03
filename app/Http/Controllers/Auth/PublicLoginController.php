@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -43,9 +44,17 @@ class PublicLoginController extends Controller
         $remember = ! empty($credentials['remember']);
 
         $attempted = false;
+        $laravelUser = $this->findLaravelUser($login);
+
+        if ($laravelUser && Hash::check((string) $credentials['password'], (string) $laravelUser->password)) {
+            $this->normalizePartnerUser($laravelUser);
+            Auth::login($laravelUser, $remember);
+            $request->setUserResolver(static fn () => $laravelUser);
+            $attempted = true;
+        }
 
         // Try email first when identifier looks like an email address.
-        if (filter_var($login, FILTER_VALIDATE_EMAIL)) {
+        if (! $attempted && filter_var($login, FILTER_VALIDATE_EMAIL)) {
             $attempted = Auth::attempt(['email' => $login, 'password' => $credentials['password']], $remember);
         }
 
@@ -59,7 +68,7 @@ class PublicLoginController extends Controller
             $attempted = Auth::attempt(['email' => $login, 'password' => $credentials['password']], $remember);
         }
 
-        if (! $attempted) {
+        if (! $attempted && ! $laravelUser) {
             $attempted = $this->attemptViaWordPressAccount(
                 $login,
                 (string) $credentials['password'],
@@ -84,6 +93,40 @@ class PublicLoginController extends Controller
             ->withHeaders([
                 'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             ]);
+    }
+
+    private function findLaravelUser(string $login): ?User
+    {
+        return User::query()
+            ->where('email', $login)
+            ->orWhere('name', $login)
+            ->first();
+    }
+
+    private function normalizePartnerUser(User $user): void
+    {
+        if (! $user->isPartner()) {
+            return;
+        }
+
+        $updates = [
+            'is_active' => true,
+        ];
+
+        if ($user->isPartnerAgent()) {
+            $updates['user_type'] = 'partner_agent';
+            $updates['base_role'] = 'partner_agent';
+        } else {
+            $updates['user_type'] = 'partner';
+            $updates['base_role'] = 'partner_admin';
+        }
+
+        $partner = $user->partner ?: $user->ownedPartner;
+        if ($partner && ! $user->partner_id) {
+            $updates['partner_id'] = $partner->id;
+        }
+
+        $user->forceFill($updates)->save();
     }
 
     private function attemptViaWordPressAccount(string $login, string $password, bool $remember, Request $request): bool
