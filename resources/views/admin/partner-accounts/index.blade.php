@@ -7,7 +7,6 @@
             <div class="page-title-box d-flex align-items-center justify-content-between">
                 <div>
                     <h4 class="page-title mb-0 font-size-18">Revendeurs</h4>
-                    <a href="{{ route('admin.partners.partenaires.create') }}" class="btn btn-primary btn-sm mt-2"><i class="bx bx-plus me-1"></i> Nouveau partenaire</a>
                 </div>
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
@@ -38,11 +37,12 @@
             <div class="card shadow-sm">
                 <div class="card-body">
                     <form method="GET" class="mb-3">
-                        <div class="row g-2 align-items-end">
-                            <div class="col-auto">
+                        <div class="d-flex flex-wrap align-items-end justify-content-between gap-2">
+                            <div class="d-flex flex-wrap align-items-end gap-2">
+                            <div>
                                 <input type="text" name="search" class="form-control form-control-sm" placeholder="Raison sociale, responsable, email..." value="{{ request('search') }}" style="min-width: 220px;">
                             </div>
-                            <div class="col-auto">
+                            <div>
                                 <select name="status" class="form-select form-select-sm" style="width: auto;">
                                     <option value="">Tous les statuts</option>
                                     <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>En attente</option>
@@ -51,8 +51,14 @@
                                     <option value="suspended" {{ request('status') === 'suspended' ? 'selected' : '' }}>Suspendu</option>
                                 </select>
                             </div>
-                            <div class="col-auto">
+                            <div>
                                 <button type="submit" class="btn btn-primary btn-sm"><i class="bx bx-search-alt"></i> Filtrer</button>
+                            </div>
+                            </div>
+                            <div>
+                                <a href="{{ route('admin.partners.partenaires.create') }}" class="btn btn-success btn-sm">
+                                    <i class="bx bx-plus me-1"></i> Ajouter un partenaire
+                                </a>
                             </div>
                         </div>
                     </form>
