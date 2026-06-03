@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             BranchesSeeder::class,
             AdminPermissionsSeeder::class,
             AjinsafroRolesSeeder::class,
+            PartnerDemoSeeder::class,
             BranchAccountsSeeder::class,
             NormalizeAjinsafroTestUsersSeeder::class,
             DubaiTravelSeeder::class,

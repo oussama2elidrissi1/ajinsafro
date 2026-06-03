@@ -19,7 +19,11 @@ class PartnersController extends Controller
         $submenu = $request->route()->parameter('submenu');
 
         if ($submenu === 'partenaires') {
-            $query = Partner::query()->with(['user:id,name,email', 'validatedByUser:id,name']);
+            $query = Partner::query()
+                ->with(['user:id,name,email', 'validatedByUser:id,name'])
+                ->withCount([
+                    'agents as partner_admins_count' => fn ($query) => $query->whereHas('roles', fn ($roles) => $roles->whereIn('name', ['Partenaire', 'partner_admin'])),
+                ]);
 
             if ($request->filled('status')) {
                 $query->where('status', $request->query('status'));

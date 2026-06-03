@@ -12,8 +12,10 @@ use App\Services\AdminWpTourCatalogQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -22,7 +24,11 @@ class PartnerAccountController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = Partner::query()->with(['user:id,name,email', 'validatedByUser:id,name']);
+        $query = Partner::query()
+            ->with(['user:id,name,email', 'validatedByUser:id,name'])
+            ->withCount([
+                'agents as partner_admins_count' => fn ($query) => $query->whereHas('roles', fn ($roles) => $roles->whereIn('name', ['Partenaire', 'partner_admin'])),
+            ]);
         if ($request->filled('status')) {
             $query->where('status', $request->query('status'));
         }
@@ -43,12 +49,126 @@ class PartnerAccountController extends Controller
     public function show(Partner $partner): View
     {
         $partner->load(['user', 'validatedByUser', 'voyageAccess']);
+        $partnerAdmins = $this->partnerAdminUsers($partner)->get();
         $agentsCount = $partner->agents()->whereHas('roles', fn ($query) => $query->where('name', 'partner_agent'))->count();
         $reservationsCount = $partner->reservations()->count();
         $walletPendingCount = $partner->walletTransactions()->where('status', PartnerWalletTransaction::STATUS_PENDING)->count();
         // Only show the same reservable voyages as the Circuits/Voyages admin module.
         $voyages = AdminWpTourCatalogQuery::reservableVoyages();
-        return view('admin.partner-accounts.show', compact('partner', 'voyages', 'agentsCount', 'reservationsCount', 'walletPendingCount'));
+        return view('admin.partner-accounts.show', compact('partner', 'voyages', 'partnerAdmins', 'agentsCount', 'reservationsCount', 'walletPendingCount'));
+    }
+
+    public function create(): View
+    {
+        return view('admin.partner-accounts.create');
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'raison_sociale' => ['required', 'string', 'max:190'],
+            'nom_responsable' => ['required', 'string', 'max:190'],
+            'email' => ['required', 'email', 'max:190', Rule::unique(Partner::class, 'email')],
+            'telephone' => ['required', 'string', 'max:50'],
+            'adresse' => ['nullable', 'string', 'max:500'],
+            'ville' => ['nullable', 'string', 'max:100'],
+            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'status' => ['nullable', Rule::in([Partner::STATUS_PENDING, Partner::STATUS_VALIDATED, Partner::STATUS_SUSPENDED])],
+            'admin_name' => ['required', 'string', 'max:190'],
+            'admin_email' => ['required', 'email', 'max:190', Rule::unique(User::class, 'email')],
+            'admin_phone' => ['nullable', 'string', 'max:50'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $partner = DB::transaction(function () use ($request, $data): Partner {
+            $this->ensurePartnerRoles();
+
+            $adminUser = User::create([
+                'name' => $data['admin_name'],
+                'email' => $data['admin_email'],
+                'phone' => $data['admin_phone'] ?? null,
+                'password' => Hash::make($data['password']),
+                'created_by' => $request->user()->id,
+                'user_type' => 'partner',
+                'base_role' => 'partner_admin',
+                'is_admin' => false,
+                'is_active' => true,
+            ]);
+            $adminUser->assignRole(['Partenaire', 'partner_admin']);
+
+            $logoPath = null;
+            if ($request->hasFile('logo')) {
+                $logoPath = $request->file('logo')->store('partner-logos', 'public');
+            }
+
+            $status = $data['status'] ?? Partner::STATUS_VALIDATED;
+            $partner = Partner::create([
+                'user_id' => $adminUser->id,
+                'created_by' => $request->user()->id,
+                'name' => $data['raison_sociale'],
+                'raison_sociale' => $data['raison_sociale'],
+                'nom_commercial' => $data['raison_sociale'],
+                'nom_responsable' => $data['nom_responsable'],
+                'responsable_name' => $data['nom_responsable'],
+                'email' => $data['email'],
+                'telephone' => $data['telephone'],
+                'phone' => $data['telephone'],
+                'adresse' => $data['adresse'] ?? null,
+                'address' => $data['adresse'] ?? null,
+                'ville' => $data['ville'] ?? null,
+                'city' => $data['ville'] ?? null,
+                'logo_path' => $logoPath,
+                'status' => $status,
+                'wallet_balance' => 0,
+                'validated_at' => $status === Partner::STATUS_VALIDATED ? now() : null,
+                'validated_by' => $status === Partner::STATUS_VALIDATED ? $request->user()->id : null,
+            ]);
+
+            $adminUser->forceFill(['partner_id' => $partner->id])->save();
+
+            return $partner;
+        });
+
+        return redirect()->route('admin.partners.show', $partner)->with('success', 'Partenaire et admin partenaire crees.');
+    }
+
+    public function createAdmin(Partner $partner): View
+    {
+        return view('admin.partner-accounts.admin-create', compact('partner'));
+    }
+
+    public function storeAdmin(Request $request, Partner $partner): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:190'],
+            'email' => ['required', 'email', 'max:190', Rule::unique(User::class, 'email')],
+            'phone' => ['nullable', 'string', 'max:50'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        DB::transaction(function () use ($request, $partner, $data): void {
+            $this->ensurePartnerRoles();
+
+            $adminUser = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'] ?? null,
+                'password' => Hash::make($data['password']),
+                'partner_id' => $partner->id,
+                'created_by' => $request->user()->id,
+                'user_type' => 'partner',
+                'base_role' => 'partner_admin',
+                'is_admin' => false,
+                'is_active' => true,
+            ]);
+            $adminUser->assignRole(['Partenaire', 'partner_admin']);
+
+            if (! $partner->user_id) {
+                $partner->forceFill(['user_id' => $adminUser->id])->save();
+            }
+        });
+
+        return redirect()->route('admin.partners.show', $partner)->with('success', 'Admin partenaire cree.');
     }
 
     public function updateVoyageAccess(Request $request, Partner $partner): RedirectResponse
@@ -261,5 +381,26 @@ class PartnerAccountController extends Controller
         ])->save();
 
         return back()->with('success', 'Recharge wallet refusee.');
+    }
+
+    private function ensurePartnerRoles(): void
+    {
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+        Role::findOrCreate('Partenaire', 'web');
+        Role::findOrCreate('partner_admin', 'web');
+        Role::findOrCreate('partner_agent', 'web');
+    }
+
+    private function partnerAdminUsers(Partner $partner)
+    {
+        return User::query()
+            ->where(function ($query) use ($partner) {
+                $query->where('partner_id', $partner->id);
+                if ($partner->user_id) {
+                    $query->orWhere('id', $partner->user_id);
+                }
+            })
+            ->whereHas('roles', fn ($query) => $query->whereIn('name', ['Partenaire', 'partner_admin']))
+            ->orderBy('name');
     }
 }

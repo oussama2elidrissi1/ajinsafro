@@ -153,6 +153,52 @@
     <div class="row mt-3">
         <div class="col-12">
             <div class="card shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Compte admin partenaire</h5>
+                    <a href="{{ route('admin.partners.admin.create', $partner) }}" class="btn btn-primary btn-sm">
+                        <i class="bx bx-plus me-1"></i> Creer admin partenaire
+                    </a>
+                </div>
+                <div class="card-body">
+                    @if(($partnerAdmins ?? collect())->isEmpty())
+                        <div class="alert alert-warning mb-0">
+                            Aucun admin partenaire n'est rattache a cette agence.
+                            <a href="{{ route('admin.partners.admin.create', $partner) }}" class="alert-link">Creer un admin partenaire</a>.
+                        </div>
+                    @else
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Email</th>
+                                        <th>Telephone</th>
+                                        <th>Statut</th>
+                                        <th>Creation</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($partnerAdmins as $adminUser)
+                                        <tr>
+                                            <td>{{ $adminUser->name }}</td>
+                                            <td>{{ $adminUser->email }}</td>
+                                            <td>{{ $adminUser->phone ?? '-' }}</td>
+                                            <td><span class="badge {{ $adminUser->is_active ? 'bg-success' : 'bg-secondary' }}">{{ $adminUser->is_active ? 'Actif' : 'Desactive' }}</span></td>
+                                            <td>{{ $adminUser->created_at?->format('d/m/Y H:i') }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card shadow-sm">
                 <div class="card-header bg-light">
                     <h5 class="mb-0">Agence partenaire</h5>
                 </div>

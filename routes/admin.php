@@ -478,6 +478,8 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
 
         Route::get('partners', [PartnersController::class, 'index'])->name('partners.index');
         Route::get('partners/partenaires', [PartnersController::class, 'page'])->name('partners.partenaires')->defaults('submenu', 'partenaires');
+        Route::get('partners/partenaires/create', [PartnerAccountController::class, 'create'])->name('partners.partenaires.create');
+        Route::post('partners/partenaires', [PartnerAccountController::class, 'store'])->name('partners.partenaires.store');
         Route::get('partners/fournisseurs', [PartnersController::class, 'page'])->name('partners.fournisseurs')->defaults('submenu', 'fournisseurs');
         Route::get('partners/contrats', [PartnersController::class, 'page'])->name('partners.contrats')->defaults('submenu', 'contrats');
         Route::get('partners/wallet-requests', [PartnerAccountController::class, 'walletRequests'])->name('partners.wallet-requests');
@@ -486,6 +488,8 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('partners/{partner}', [PartnerAccountController::class, 'show'])->name('partners.show');
         Route::post('partners/{partner}/validate', [PartnerAccountController::class, 'validatePartner'])->name('partners.validate');
         Route::post('partners/{partner}/suspend', [PartnerAccountController::class, 'suspendPartner'])->name('partners.suspend');
+        Route::get('partners/{partner}/admin/create', [PartnerAccountController::class, 'createAdmin'])->name('partners.admin.create');
+        Route::post('partners/{partner}/admin', [PartnerAccountController::class, 'storeAdmin'])->name('partners.admin.store');
         Route::get('partners/{partner}/agents', [PartnerAccountController::class, 'agents'])->name('partners.agents');
         Route::get('partners/{partner}/reservations', [PartnerAccountController::class, 'reservations'])->name('partners.reservations');
         Route::get('partners/{partner}/wallet', [PartnerAccountController::class, 'wallet'])->name('partners.wallet');

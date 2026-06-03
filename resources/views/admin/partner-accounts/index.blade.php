@@ -5,7 +5,10 @@
     <div class="row mb-3">
         <div class="col-12">
             <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="page-title mb-0 font-size-18">Revendeurs</h4>
+                <div>
+                    <h4 class="page-title mb-0 font-size-18">Revendeurs</h4>
+                    <a href="{{ route('admin.partners.partenaires.create') }}" class="btn btn-primary btn-sm mt-2"><i class="bx bx-plus me-1"></i> Nouveau partenaire</a>
+                </div>
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
@@ -63,6 +66,7 @@
                                     <th>Responsable</th>
                                     <th>Email</th>
                                     <th>Téléphone</th>
+                                    <th>Admin partenaire</th>
                                     <th>Date d'inscription</th>
                                     <th>Statut</th>
                                     <th class="text-end">Actions</th>
@@ -81,6 +85,13 @@
                                         <td>{{ $partner->nom_responsable }}</td>
                                         <td>{{ $partner->email }}</td>
                                         <td>{{ $partner->telephone ?? '?' }}</td>
+                                        <td>
+                                            @if(($partner->partner_admins_count ?? 0) > 0)
+                                                <span class="badge bg-success">Oui</span>
+                                            @else
+                                                <span class="badge bg-warning text-dark">Manquant</span>
+                                            @endif
+                                        </td>
                                         <td>{{ $partner->created_at?->format('d/m/Y H:i') }}</td>
                                         <td>
                                             @php
@@ -121,7 +132,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center text-muted py-4">Aucun compte partenaire.</td>
+                                        <td colspan="9" class="text-center text-muted py-4">Aucun compte partenaire.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
