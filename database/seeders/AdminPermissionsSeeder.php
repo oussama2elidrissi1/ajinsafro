@@ -51,6 +51,7 @@ class AdminPermissionsSeeder extends Seeder
         $agentPermissions = array_values(array_filter($permissions, function (string $permission): bool {
             return str_starts_with($permission, 'dashboard.')
                 || str_starts_with($permission, 'reservations.')
+                || str_starts_with($permission, 'custom_requests.')
                 || str_starts_with($permission, 'customers.')
                 || str_starts_with($permission, 'circuits.')
                 || str_starts_with($permission, 'accommodations.')
@@ -86,6 +87,12 @@ class AdminPermissionsSeeder extends Seeder
                 'reservations.edit',
                 'reservations.update',
                 'reservations.destroy',
+                'custom_requests.view',
+                'custom_requests.create',
+                'custom_requests.edit',
+                'custom_requests.confirm',
+                'custom_requests.cancel',
+                'custom_requests.documents',
             ], true);
         })));
 

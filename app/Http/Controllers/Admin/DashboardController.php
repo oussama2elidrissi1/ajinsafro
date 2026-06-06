@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Client;
+use App\Models\CustomRequest;
+use App\Models\CustomRequestQuote;
 use App\Models\Departure;
 use App\Models\GroupDeal;
 use App\Models\GroupDealParticipant;
@@ -258,6 +260,53 @@ class DashboardController extends Controller
 
         return view('admin.dashboard.v6.index', [
             'dashboardV5' => $dashboardV5,
+            'customRequestWidgets' => $this->customRequestWidgets($request),
         ]);
+    }
+
+    private function customRequestWidgets(Request $request): array
+    {
+        if (! Schema::hasTable('custom_requests')) {
+            return [];
+        }
+
+        $user = $request->user();
+        if (! $user || ! $user->can('custom_requests.view')) {
+            return [];
+        }
+
+        $base = CustomRequest::query()->visibleTo($user);
+
+        if ($user->can('custom_requests.view_all')) {
+            $total = (clone $base)->count();
+            $confirmed = (clone $base)->where('status', CustomRequest::STATUS_CONFIRMED)->count();
+
+            return [
+                ['label' => 'Total demandes à la carte', 'value' => $total],
+                ['label' => 'Nouvelles demandes', 'value' => (clone $base)->where('status', CustomRequest::STATUS_NEW)->count()],
+                ['label' => 'Confirmées', 'value' => $confirmed],
+                ['label' => 'Annulées', 'value' => (clone $base)->where('status', CustomRequest::STATUS_CANCELLED)->count()],
+                ['label' => 'Taux confirmation', 'value' => $total > 0 ? round(($confirmed / $total) * 100).'%' : '0%'],
+                ['label' => 'Devis générés', 'value' => Schema::hasTable('custom_request_quotes') ? CustomRequestQuote::query()->count() : 0],
+            ];
+        }
+
+        if ($user->can('custom_requests.quote')) {
+            return [
+                ['label' => 'Nouvelles demandes', 'value' => (clone $base)->where('status', CustomRequest::STATUS_NEW)->count()],
+                ['label' => 'Demandes urgentes', 'value' => (clone $base)->whereIn('priority', ['urgent', 'very_urgent'])->count()],
+                ['label' => 'En traitement', 'value' => (clone $base)->where('status', CustomRequest::STATUS_PROCESSING)->count()],
+                ['label' => 'Modifications demandées', 'value' => (clone $base)->where('status', CustomRequest::STATUS_MODIFICATION_REQUESTED)->count()],
+                ['label' => 'Devis envoyés aujourd’hui', 'value' => Schema::hasTable('custom_request_quotes') ? CustomRequestQuote::query()->whereDate('sent_at', today())->count() : 0],
+            ];
+        }
+
+        return [
+            ['label' => 'Mes demandes en cours', 'value' => (clone $base)->whereNotIn('status', [CustomRequest::STATUS_CONFIRMED, CustomRequest::STATUS_CANCELLED, CustomRequest::STATUS_REFUSED])->count()],
+            ['label' => 'Devis reçus', 'value' => (clone $base)->where('status', CustomRequest::STATUS_QUOTE_SENT)->count()],
+            ['label' => 'En attente client', 'value' => (clone $base)->where('status', CustomRequest::STATUS_WAITING_CUSTOMER)->count()],
+            ['label' => 'Confirmées', 'value' => (clone $base)->where('status', CustomRequest::STATUS_CONFIRMED)->count()],
+            ['label' => 'Modifications demandées', 'value' => (clone $base)->where('status', CustomRequest::STATUS_MODIFICATION_REQUESTED)->count()],
+        ];
     }
 }

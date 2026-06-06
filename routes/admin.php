@@ -14,6 +14,10 @@ use App\Http\Controllers\Admin\CircuitsController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\CustomersController;
 use App\Http\Controllers\Admin\CustomReservationRequestController;
+use App\Http\Controllers\Admin\CustomRequestCommentController;
+use App\Http\Controllers\Admin\CustomRequestController;
+use App\Http\Controllers\Admin\CustomRequestDocumentController;
+use App\Http\Controllers\Admin\CustomRequestQuoteController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DepartureController;
 use App\Http\Controllers\Admin\AgentCommissionPortalController;
@@ -222,6 +226,31 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('demande-a-la-carte/{tailorMadeRequest}', [TailorMadeRequestController::class, 'show'])->name('tailor-made-requests.show')->whereNumber('tailorMadeRequest');
         Route::patch('demande-a-la-carte/{tailorMadeRequest}/status', [TailorMadeRequestController::class, 'updateStatus'])->name('tailor-made-requests.status')->whereNumber('tailorMadeRequest');
         Route::delete('demande-a-la-carte/{tailorMadeRequest}', [TailorMadeRequestController::class, 'destroy'])->name('tailor-made-requests.destroy')->whereNumber('tailorMadeRequest');
+
+        Route::prefix('custom-requests')->name('custom-requests.')->group(function () {
+            Route::get('/', [CustomRequestController::class, 'index'])->name('index');
+            Route::get('create', [CustomRequestController::class, 'create'])->name('create');
+            Route::post('/', [CustomRequestController::class, 'store'])->name('store');
+            Route::get('{customRequest}', [CustomRequestController::class, 'show'])->name('show')->whereNumber('customRequest');
+            Route::get('{customRequest}/edit', [CustomRequestController::class, 'edit'])->name('edit')->whereNumber('customRequest');
+            Route::put('{customRequest}', [CustomRequestController::class, 'update'])->name('update')->whereNumber('customRequest');
+            Route::delete('{customRequest}', [CustomRequestController::class, 'destroy'])->name('destroy')->whereNumber('customRequest');
+            Route::post('{customRequest}/submit', [CustomRequestController::class, 'submit'])->name('submit')->whereNumber('customRequest');
+            Route::post('{customRequest}/assign', [CustomRequestController::class, 'assign'])->name('assign')->whereNumber('customRequest');
+            Route::post('{customRequest}/take', [CustomRequestController::class, 'take'])->name('take')->whereNumber('customRequest');
+            Route::get('{customRequest}/quote', [CustomRequestQuoteController::class, 'quote'])->name('quote')->whereNumber('customRequest');
+            Route::post('{customRequest}/quote', [CustomRequestQuoteController::class, 'store'])->name('quote.store')->whereNumber('customRequest');
+            Route::put('{customRequest}/quote/{quote}', [CustomRequestQuoteController::class, 'update'])->name('quote.update')->whereNumber(['customRequest', 'quote']);
+            Route::post('{customRequest}/quote/{quote}/prepare', [CustomRequestQuoteController::class, 'prepare'])->name('quote.prepare')->whereNumber(['customRequest', 'quote']);
+            Route::post('{customRequest}/quote/{quote}/send', [CustomRequestQuoteController::class, 'send'])->name('quote.send')->whereNumber(['customRequest', 'quote']);
+            Route::get('{customRequest}/quote/{quote}/download', [CustomRequestQuoteController::class, 'download'])->name('quote.download')->whereNumber(['customRequest', 'quote']);
+            Route::post('{customRequest}/request-modification', [CustomRequestController::class, 'requestModification'])->name('request-modification')->whereNumber('customRequest');
+            Route::post('{customRequest}/confirm', [CustomRequestController::class, 'confirm'])->name('confirm')->whereNumber('customRequest');
+            Route::post('{customRequest}/cancel', [CustomRequestController::class, 'cancel'])->name('cancel')->whereNumber('customRequest');
+            Route::post('{customRequest}/documents', [CustomRequestDocumentController::class, 'store'])->name('documents.store')->whereNumber('customRequest');
+            Route::delete('{customRequest}/documents/{document}', [CustomRequestDocumentController::class, 'destroy'])->name('documents.destroy')->whereNumber(['customRequest', 'document']);
+            Route::post('{customRequest}/comments', [CustomRequestCommentController::class, 'store'])->name('comments.store')->whereNumber('customRequest');
+        });
         Route::get('reservations/create', [ReservationsController::class, 'create'])->name('reservations.create');
         Route::get('reservations/create-v2', [ReservationsController::class, 'createV2'])->name('reservations.create-v2');
         Route::get('reservations/create-classic', function () {

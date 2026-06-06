@@ -331,6 +331,34 @@ html[data-sidebar="collapsed"] .dashboard-grid.bottom {
 .dashboard-v6 .status-donut-small { width: 132px !important; height: 132px !important; margin: 10px auto !important; }
 .dashboard-v6 .status-donut-small::after { width: 80px !important; height: 80px !important; }
 
+.dac-dashboard-widgets {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 14px 0;
+}
+.dac-dashboard-widget {
+  background: #fff;
+  border: 1px solid #dde7f0;
+  border-radius: 8px;
+  padding: 12px;
+}
+.dac-dashboard-widget span {
+  display: block;
+  color: #66758a;
+  font-size: 11px;
+  font-weight: 600;
+}
+.dac-dashboard-widget strong {
+  display: block;
+  margin-top: 4px;
+  color: #10233f;
+  font-size: 20px;
+  font-weight: 600;
+}
+@media (max-width: 1180px) { .dac-dashboard-widgets { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .dac-dashboard-widgets { grid-template-columns: 1fr; margin: 10px; } }
+
 @media (max-width: 1366px) {
   .dashboard-v6 .content { padding: 10px 10px 14px !important; gap: 9px !important; }
   .dashboard-v6 .kpi-grid { gap: 10px !important; }
@@ -340,6 +368,16 @@ html[data-sidebar="collapsed"] .dashboard-grid.bottom {
 @endpush
 
 @section('content')
+@if(!empty($customRequestWidgets))
+    <div class="dac-dashboard-widgets">
+        @foreach($customRequestWidgets as $widget)
+            <a href="{{ route('admin.custom-requests.index') }}" class="dac-dashboard-widget text-decoration-none">
+                <span>{{ $widget['label'] }}</span>
+                <strong>{{ $widget['value'] }}</strong>
+            </a>
+        @endforeach
+    </div>
+@endif
 {!! $v6Body !!}
 @endsection
 
@@ -352,4 +390,3 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
-
