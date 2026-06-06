@@ -71,15 +71,18 @@ class CustomRequest extends Model
     {
         $year = now()->format('Y');
         $prefix = 'DAC-'.$year.'-';
-        $last = self::withTrashed()
+        $numbers = self::withTrashed()
             ->where('request_number', 'like', $prefix.'%')
-            ->orderByDesc('id')
-            ->value('request_number');
+            ->pluck('request_number')
+            ->map(function ($number) use ($prefix): int {
+                if (! is_string($number) || ! preg_match('/^'.preg_quote($prefix, '/').'(\d+)$/', $number, $matches)) {
+                    return 0;
+                }
 
-        $next = 1;
-        if (is_string($last) && preg_match('/-(\d+)$/', $last, $matches)) {
-            $next = ((int) $matches[1]) + 1;
-        }
+                return (int) $matches[1];
+            });
+
+        $next = ((int) $numbers->max()) + 1;
 
         return $prefix.str_pad((string) $next, 4, '0', STR_PAD_LEFT);
     }
