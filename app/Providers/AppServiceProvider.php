@@ -86,7 +86,9 @@ class AppServiceProvider extends ServiceProvider
                         ];
                     }
 
-                    if (\Illuminate\Support\Facades\Route::has('agent.custom-reservations.index')) {
+                }
+
+                if ($user->can('custom_requests.view') && \Illuminate\Support\Facades\Route::has('agent.custom-reservations.index')) {
                         $agentPortalMenu[] = [
                             'key' => 'agent_reservations_a_la_carte',
                             'label' => 'Reservations a la carte',
@@ -100,7 +102,6 @@ class AppServiceProvider extends ServiceProvider
                             'has_direct_access' => true,
                             'is_clickable' => true,
                         ];
-                    }
                 }
             }
 
