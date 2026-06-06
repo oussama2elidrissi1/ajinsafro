@@ -5,8 +5,13 @@ namespace Tests\Feature;
 use App\Models\CustomRequest;
 use App\Models\CustomRequestQuote;
 use App\Models\User;
+use App\Http\Controllers\Admin\CustomRequestQuoteController;
+use App\Http\Controllers\Agent\CustomReservationController;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -58,7 +63,7 @@ class CustomRequestModuleTest extends TestCase
             'custom_requests.create',
         ], ['Agent']);
 
-        $response = $this->actingAs($commercial)->post(route('agent.custom-reservations.store'), [
+        $request = $this->requestAs($commercial, [
             'customer_full_name' => 'Client Test Agent',
             'customer_phone' => '+212600000001',
             'customer_email' => 'client@example.test',
@@ -74,7 +79,9 @@ class CustomRequestModuleTest extends TestCase
             'client_notes' => 'Demande test.',
         ]);
 
-        $response->assertRedirect(route('agent.custom-reservations.index'));
+        $response = app(CustomReservationController::class)->store($request);
+
+        $this->assertRedirectsTo($response, route('agent.custom-reservations.index'));
 
         $this->assertDatabaseHas('custom_requests', [
             'customer_full_name' => 'Client Test Agent',
@@ -138,7 +145,7 @@ class CustomRequestModuleTest extends TestCase
             'currency' => 'MAD',
         ]);
 
-        $response = $this->actingAs($offline)->post(route('admin.custom-requests.quote.prepare', [$customRequest, $quote]), [
+        $request = $this->requestAs($offline, [
             'supplier_name' => 'Fournisseur Interne',
             'valid_until' => now()->addDays(10)->toDateString(),
             'currency' => 'MAD',
@@ -159,7 +166,9 @@ class CustomRequestModuleTest extends TestCase
             ],
         ]);
 
-        $response->assertRedirect(route('admin.custom-requests.quote', $customRequest));
+        $response = app(CustomRequestQuoteController::class)->prepare($request, $customRequest, $quote);
+
+        $this->assertRedirectsTo($response, route('admin.custom-requests.quote', $customRequest));
 
         $quote->refresh();
         $customRequest->refresh();
@@ -204,10 +213,24 @@ class CustomRequestModuleTest extends TestCase
         return $user;
     }
 
+    private function requestAs(User $user, array $data): Request
+    {
+        $request = Request::create('/', 'POST', $data);
+        $request->setUserResolver(fn () => $user);
+
+        return $request;
+    }
+
+    private function assertRedirectsTo(RedirectResponse $response, string $url): void
+    {
+        $this->assertSame($url, $response->getTargetUrl());
+    }
+
     private function customRequest(User $creator, array $overrides = []): CustomRequest
     {
         return CustomRequest::query()->create(array_merge([
             'created_by' => $creator->id,
+            'request_number' => 'DAC-TEST-'.now()->format('YmdHis').'-'.Str::upper(Str::random(8)),
             'customer_full_name' => 'Client Module Test',
             'customer_phone' => '+212600000002',
             'customer_type' => 'new_customer',

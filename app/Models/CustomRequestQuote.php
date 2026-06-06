@@ -133,7 +133,7 @@ class CustomRequestQuote extends Model
 
     public function items(): HasMany
     {
-        return $this->hasMany(CustomRequestQuoteItem::class)->orderBy('sort_order')->orderBy('id');
+        return $this->hasMany(CustomRequestQuoteItem::class, 'custom_request_quote_id')->orderBy('sort_order')->orderBy('id');
     }
 
     public function generatedDocument(): HasOne
