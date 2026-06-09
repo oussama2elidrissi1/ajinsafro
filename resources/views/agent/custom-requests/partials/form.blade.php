@@ -30,28 +30,38 @@
                 </div>
 
                 <div class="aj-agent-dac-field aj-agent-dac-field-wide" data-existing-client-wrap @if($field('customer_type', $customRequest->customer_type) !== 'existing_customer') hidden @endif>
-                    <label>Client existant</label>
-                    <select name="existing_client_id" data-existing-client-select>
-                        <option value="">Choisir un client de votre portefeuille</option>
-                        @foreach($existingClients as $client)
-                            <option
-                                value="{{ $client['id'] }}"
-                                data-client-full-name="{{ $client['full_name'] }}"
-                                data-client-phone="{{ $client['phone'] }}"
-                                data-client-email="{{ $client['email'] }}"
-                                data-client-city="{{ $client['city'] }}"
-                                data-client-country="{{ $client['country'] }}"
-                                data-client-identity="{{ $client['identity'] }}"
-                                @selected((string) $field('existing_client_id', $customRequest->client_id) === (string) $client['id'])
-                            >
-                                {{ $client['client_code'] }} - {{ $client['full_name'] }}
-                                @if($client['phone'])
-                                    · {{ $client['phone'] }}
-                                @endif
-                            </option>
-                        @endforeach
-                    </select>
-                    <small>La liste est limitée aux clients qui vous sont rattachés.</small>
+                    <label>Rechercher un client existant</label>
+                    <input
+                        type="search"
+                        placeholder="Nom, téléphone, email, code client..."
+                        data-client-search-input
+                        autocomplete="off"
+                    >
+                    <input type="hidden" name="existing_client_id" value="{{ $field('existing_client_id', $customRequest->client_id) }}" data-existing-client-id>
+                    <div class="aj-client-search-panel" data-client-search-panel hidden>
+                        <div
+                            class="aj-client-search-selected"
+                            data-client-search-selected
+                            @if($selectedExistingClient)
+                                data-client-id="{{ $selectedExistingClient->id }}"
+                                data-client-label="{{ $selectedExistingClient->client_code }} - {{ $selectedExistingClient->full_name }}"
+                                data-client-full-name="{{ $selectedExistingClient->full_name }}"
+                                data-client-phone="{{ $selectedExistingClient->phone }}"
+                                data-client-email="{{ $selectedExistingClient->email }}"
+                                data-client-city="{{ $selectedExistingClient->city }}"
+                                data-client-country="{{ $selectedExistingClient->country_of_residence }}"
+                                data-client-identity="{{ $selectedExistingClient->national_id_number ?: $selectedExistingClient->passport_number }}"
+                            @endif
+                            @if(! $selectedExistingClient) hidden @endif
+                        >
+                            @if($selectedExistingClient)
+                                Client sélectionné : <strong>{{ $selectedExistingClient->client_code }} - {{ $selectedExistingClient->full_name }}</strong>
+                                <button type="button" class="aj-client-search-clear" data-client-search-clear>Changer</button>
+                            @endif
+                        </div>
+                        <div class="aj-client-search-results" data-client-search-results></div>
+                    </div>
+                    <small>La recherche est limitée aux clients qui vous sont rattachés.</small>
                     @error('existing_client_id')<small>{{ $message }}</small>@enderror
                 </div>
 

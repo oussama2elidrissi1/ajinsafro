@@ -164,7 +164,7 @@ class CustomRequestModuleTest extends TestCase
         $response->assertDontSee('/admin/custom-requests', false);
     }
 
-    public function test_agent_existing_client_selector_is_limited_to_own_clients_and_persists_client_link(): void
+    public function test_agent_existing_client_search_is_limited_to_own_clients_and_persists_client_link(): void
     {
         $commercial = $this->userWithPermissions([
             'dashboard.view',
@@ -183,9 +183,16 @@ class CustomRequestModuleTest extends TestCase
 
         $page = $this->actingAs($commercial)->get(route('agent.custom-reservations.create'));
         $page->assertOk();
-        $page->assertSee('Client Agent Propre');
-        $page->assertSee('La liste est limitée aux clients qui vous sont rattachés.', false);
+        $page->assertSee('Rechercher un client existant');
+        $page->assertSee('La recherche est limitée aux clients qui vous sont rattachés.', false);
+        $page->assertDontSee('Client Agent Propre');
         $page->assertDontSee('Client Autre Agent');
+
+        $searchResponse = $this->actingAs($commercial)->get(route('agent.custom-reservations.clients.search', ['q' => '0600000001']));
+        $searchResponse->assertOk();
+        $searchResponse->assertJsonPath('count', 1);
+        $searchResponse->assertJsonPath('items.0.id', $ownClient->id);
+        $searchResponse->assertJsonMissing(['id' => $otherClient->id]);
 
         $request = $this->requestAs($commercial, [
             'customer_type' => 'existing_customer',

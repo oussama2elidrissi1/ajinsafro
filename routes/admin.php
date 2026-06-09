@@ -707,6 +707,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'not.client'])
         Route::get('reservations/{reservation}', [AgentReservationController::class, 'show'])->name('reservations.show')->whereNumber('reservation');
         Route::get('reservations-a-la-carte', [AgentCustomReservationController::class, 'index'])->name('custom-reservations.index');
         Route::get('reservations-a-la-carte/create', [AgentCustomReservationController::class, 'create'])->name('custom-reservations.create');
+        Route::get('reservations-a-la-carte/clients/search', [AgentCustomReservationController::class, 'searchClients'])->name('custom-reservations.clients.search');
         Route::post('reservations-a-la-carte', [AgentCustomReservationController::class, 'store'])->name('custom-reservations.store');
         Route::get('reservations-a-la-carte/{customRequest}', [AgentCustomReservationController::class, 'show'])->name('custom-reservations.show')->whereNumber('customRequest');
         Route::get('reservations-a-la-carte/{customRequest}/quote/{quote}/download', [AgentCustomReservationController::class, 'downloadQuote'])->name('custom-reservations.quote.download')->whereNumber(['customRequest', 'quote']);

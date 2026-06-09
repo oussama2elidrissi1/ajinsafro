@@ -74,6 +74,14 @@ class CustomReservationController extends Controller
         $user = $request->user();
         abort_unless($user && AgentPortalLayout::shouldUse($user) && $user->can('custom_requests.create'), 403);
 
+        $selectedClient = null;
+        $selectedClientId = (int) old('existing_client_id', 0);
+        if ($selectedClientId > 0) {
+            $selectedClient = Client::query()
+                ->ownedByAgent($user)
+                ->find($selectedClientId);
+        }
+
         return view('agent.custom-requests.create', $this->sharedViewData() + [
             'customRequest' => new CustomRequest([
                 'customer_type' => 'new_customer',
@@ -87,8 +95,73 @@ class CustomReservationController extends Controller
                 'payment_status' => 'unpaid',
                 'paid_amount' => 0,
             ]),
-            'existingClients' => $this->existingClientsForAgent($user),
+            'selectedExistingClient' => $selectedClient,
+            'clientSearchUrl' => route('agent.custom-reservations.clients.search'),
             'formAction' => route('agent.custom-reservations.store'),
+        ]);
+    }
+
+    public function searchClients(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user = $request->user();
+        abort_unless($user && AgentPortalLayout::shouldUse($user) && $user->can('custom_requests.create'), 403);
+
+        $q = trim((string) $request->query('q', ''));
+        if (mb_strlen($q) < 2) {
+            return response()->json([
+                'q' => $q,
+                'count' => 0,
+                'items' => [],
+            ]);
+        }
+
+        $normalized = preg_replace('/[\s\-\.\\/\\\\]+/', '', $q) ?: '';
+        $hasNormalized = mb_strlen($normalized) >= 2;
+
+        $query = Client::query()
+            ->ownedByAgent($user)
+            ->where(function (Builder $builder) use ($q, $normalized, $hasNormalized): void {
+                $builder->where('client_code', 'like', '%'.$q.'%')
+                    ->orWhere('full_name', 'like', '%'.$q.'%')
+                    ->orWhere('first_name', 'like', '%'.$q.'%')
+                    ->orWhere('last_name', 'like', '%'.$q.'%')
+                    ->orWhere('email', 'like', '%'.$q.'%')
+                    ->orWhere('phone', 'like', '%'.$q.'%')
+                    ->orWhere('whatsapp_number', 'like', '%'.$q.'%')
+                    ->orWhere('national_id_number', 'like', '%'.$q.'%')
+                    ->orWhere('passport_number', 'like', '%'.$q.'%');
+
+                if ($hasNormalized) {
+                    $builder->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '.', ''), '/', ''), '\\\\', '') LIKE ?", ['%'.$normalized.'%'])
+                        ->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(whatsapp_number, ' ', ''), '-', ''), '.', ''), '/', ''), '\\\\', '') LIKE ?", ['%'.$normalized.'%'])
+                        ->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(national_id_number, ' ', ''), '-', ''), '.', ''), '/', ''), '\\\\', '') LIKE ?", ['%'.$normalized.'%'])
+                        ->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(passport_number, ' ', ''), '-', ''), '.', ''), '/', ''), '\\\\', '') LIKE ?", ['%'.$normalized.'%']);
+                }
+            });
+
+        $items = $query
+            ->orderBy('full_name')
+            ->limit(10)
+            ->get(['id', 'client_code', 'full_name', 'first_name', 'last_name', 'phone', 'email', 'city', 'country_of_residence', 'national_id_number', 'passport_number'])
+            ->map(static function (Client $client): array {
+                return [
+                    'id' => $client->id,
+                    'client_code' => $client->client_code,
+                    'full_name' => $client->full_name ?: trim(($client->first_name ?? '').' '.($client->last_name ?? '')),
+                    'phone' => $client->phone,
+                    'email' => $client->email,
+                    'city' => $client->city,
+                    'country' => $client->country_of_residence,
+                    'identity' => $client->national_id_number ?: $client->passport_number,
+                    'label' => trim($client->client_code.' - '.($client->full_name ?: trim(($client->first_name ?? '').' '.($client->last_name ?? '')))),
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'q' => $q,
+            'count' => $items->count(),
+            'items' => $items,
         ]);
     }
 
@@ -332,28 +405,4 @@ class CustomReservationController extends Controller
         ];
     }
 
-    /**
-     * @return array<int, array{id:int, client_code:string, full_name:string, phone:?string, email:?string, city:?string, country:?string, identity:?string}>
-     */
-    private function existingClientsForAgent(User $user): array
-    {
-        return Client::query()
-            ->ownedByAgent($user)
-            ->orderBy('full_name')
-            ->orderBy('id')
-            ->get(['id', 'client_code', 'full_name', 'first_name', 'last_name', 'phone', 'email', 'city', 'country_of_residence', 'national_id_number', 'passport_number'])
-            ->map(static function (Client $client): array {
-                return [
-                    'id' => $client->id,
-                    'client_code' => $client->client_code,
-                    'full_name' => $client->full_name ?: trim(($client->first_name ?? '').' '.($client->last_name ?? '')),
-                    'phone' => $client->phone,
-                    'email' => $client->email,
-                    'city' => $client->city,
-                    'country' => $client->country_of_residence,
-                    'identity' => $client->national_id_number ?: $client->passport_number,
-                ];
-            })
-            ->all();
-    }
 }

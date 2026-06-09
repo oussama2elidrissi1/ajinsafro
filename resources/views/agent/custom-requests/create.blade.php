@@ -342,6 +342,65 @@
             margin-top: 6px;
             font-weight: 700;
         }
+        .aj-client-search-panel {
+            margin-top: 10px;
+            border: 1px solid #dbe5ef;
+            border-radius: 12px;
+            background: #fff;
+            padding: 10px;
+        }
+        .aj-client-search-selected {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 10px 12px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            background: #fff7ed;
+            color: #9a3412;
+            font-size: 12px;
+            font-weight: 800;
+        }
+        .aj-client-search-clear {
+            border: 0;
+            background: transparent;
+            color: #ea580c;
+            font: inherit;
+            font-weight: 900;
+            cursor: pointer;
+        }
+        .aj-client-search-results {
+            display: grid;
+            gap: 8px;
+        }
+        .aj-client-search-result {
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            color: #0f172a;
+            border-radius: 10px;
+            padding: 10px 12px;
+            text-align: left;
+            cursor: pointer;
+            width: 100%;
+        }
+        .aj-client-search-result:hover,
+        .aj-client-search-result.is-active {
+            border-color: var(--dac-blue);
+            background: #eff6ff;
+        }
+        .aj-client-search-result strong {
+            display: block;
+            font-size: 12px;
+            font-weight: 900;
+            margin-bottom: 4px;
+        }
+        .aj-client-search-result small {
+            color: #64748b;
+            margin: 0;
+            font-weight: 700;
+        }
         .aj-dac-client-type {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -566,7 +625,13 @@
         const submitButtons = Array.from(root.querySelectorAll('[data-dac-submit]'));
         const clientTypeInputs = Array.from(root.querySelectorAll('input[name="customer_type"]'));
         const existingClientWrap = root.querySelector('[data-existing-client-wrap]');
-        const existingClientSelect = root.querySelector('[data-existing-client-select]');
+        const existingClientId = root.querySelector('[data-existing-client-id]');
+        const existingClientSearchInput = root.querySelector('[data-client-search-input]');
+        const existingClientPanel = root.querySelector('[data-client-search-panel]');
+        const existingClientResults = root.querySelector('[data-client-search-results]');
+        const existingClientSelected = root.querySelector('[data-client-search-selected]');
+        const existingClientClear = root.querySelector('[data-client-search-clear]');
+        const clientSearchUrl = @json($clientSearchUrl ?? '');
         const serviceInputs = Array.from(root.querySelectorAll('input[name="services[]"]'));
         const serviceConfigs = Array.from(root.querySelectorAll('[data-service-config]'));
         const summaries = {
@@ -582,6 +647,12 @@
 
         const plural = function (count, one, many) {
             return count > 1 ? many : one;
+        };
+
+        const escapeHtml = function (value) {
+            return String(value ?? '').replace(/[&<>"']/g, function (char) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char];
+            });
         };
 
         const updateServiceConfigs = function () {
@@ -628,17 +699,105 @@
             field.value = value || '';
         };
 
-        const applyExistingClient = function () {
-            if (!existingClientSelect) return;
-            const option = existingClientSelect.selectedOptions?.[0];
-            if (!option || !option.value) return;
+        const setSelectedClient = function (client) {
+            if (!client || !existingClientId) return;
+            existingClientId.value = client.id || '';
+            if (existingClientSelected) {
+                existingClientSelected.hidden = false;
+                existingClientSelected.dataset.clientId = client.id || '';
+                existingClientSelected.dataset.clientLabel = client.label || client.full_name || '';
+                existingClientSelected.dataset.clientFullName = client.full_name || '';
+                existingClientSelected.dataset.clientPhone = client.phone || '';
+                existingClientSelected.dataset.clientEmail = client.email || '';
+                existingClientSelected.dataset.clientCity = client.city || '';
+                existingClientSelected.dataset.clientCountry = client.country || '';
+                existingClientSelected.dataset.clientIdentity = client.identity || '';
+                existingClientSelected.innerHTML = 'Client sélectionné : <strong>' + escapeHtml(client.label || client.full_name || '') + '</strong><button type="button" class="aj-client-search-clear" data-client-search-clear>Changer</button>';
+            }
+            setClientField('customer_full_name', client.full_name || '');
+            setClientField('customer_phone', client.phone || '');
+            setClientField('customer_email', client.email || '');
+            setClientField('customer_city', client.city || '');
+            setClientField('customer_country', client.country || '');
+            setClientField('customer_identity', client.identity || '');
+            if (existingClientSearchInput) {
+                existingClientSearchInput.value = client.label || '';
+            }
+            if (existingClientResults) {
+                existingClientResults.innerHTML = '';
+            }
+        };
 
-            setClientField('customer_full_name', option.dataset.clientFullName || '');
-            setClientField('customer_phone', option.dataset.clientPhone || '');
-            setClientField('customer_email', option.dataset.clientEmail || '');
-            setClientField('customer_city', option.dataset.clientCity || '');
-            setClientField('customer_country', option.dataset.clientCountry || '');
-            setClientField('customer_identity', option.dataset.clientIdentity || '');
+        const clearSelectedClient = function () {
+            if (existingClientId) existingClientId.value = '';
+            if (existingClientSelected) existingClientSelected.hidden = true;
+            if (existingClientSearchInput) existingClientSearchInput.value = '';
+            if (existingClientResults) existingClientResults.innerHTML = '';
+            setClientField('customer_full_name', '');
+            setClientField('customer_phone', '');
+            setClientField('customer_email', '');
+            setClientField('customer_city', '');
+            setClientField('customer_country', '');
+            setClientField('customer_identity', '');
+        };
+
+        const renderClientResults = function (items) {
+            if (!existingClientResults) return;
+            if (!items.length) {
+                existingClientResults.innerHTML = '<div style="color:#64748b;font-size:12px;font-weight:700;">Aucun client trouvé.</div>';
+                return;
+            }
+            existingClientResults.innerHTML = items.map(function (client) {
+                const meta = [client.phone, client.email, client.city].filter(Boolean).join(' · ');
+                return '<button type="button" class="aj-client-search-result" data-client-id="' + (client.id || '') + '" data-client-label="' + (client.label || '') + '" data-client-full-name="' + (client.full_name || '') + '" data-client-phone="' + (client.phone || '') + '" data-client-email="' + (client.email || '') + '" data-client-city="' + (client.city || '') + '" data-client-country="' + (client.country || '') + '" data-client-identity="' + (client.identity || '') + '">'
+                    + '<strong>' + escapeHtml(client.label || '') + '</strong>'
+                    + '<small>' + escapeHtml(meta) + '</small>'
+                    + '</button>';
+            }).join('');
+        };
+
+        const runClientSearch = function (term) {
+            if (!existingClientPanel) return;
+            const query = (term || '').trim();
+            if (query.length < 2) {
+                if (existingClientResults) existingClientResults.innerHTML = '';
+                return;
+            }
+
+            existingClientPanel.hidden = false;
+            if (existingClientResults) {
+                existingClientResults.innerHTML = '<div style="color:#64748b;font-size:12px;font-weight:700;">Recherche en cours...</div>';
+            }
+
+            fetch(clientSearchUrl + '?q=' + encodeURIComponent(query), {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin',
+            })
+                .then(function (response) { return response.ok ? response.json() : Promise.reject(response); })
+                .then(function (payload) {
+                    renderClientResults(payload.items || []);
+                })
+                .catch(function () {
+                    if (existingClientResults) {
+                        existingClientResults.innerHTML = '<div style="color:#dc2626;font-size:12px;font-weight:700;">Recherche indisponible.</div>';
+                    }
+                });
+        };
+
+        const populateFromSelected = function () {
+            if (!existingClientSelected || !existingClientSelected.dataset.clientId) {
+                return;
+            }
+
+            setClientField('customer_full_name', existingClientSelected.dataset.clientFullName || '');
+            setClientField('customer_phone', existingClientSelected.dataset.clientPhone || '');
+            setClientField('customer_email', existingClientSelected.dataset.clientEmail || '');
+            setClientField('customer_city', existingClientSelected.dataset.clientCity || '');
+            setClientField('customer_country', existingClientSelected.dataset.clientCountry || '');
+            setClientField('customer_identity', existingClientSelected.dataset.clientIdentity || '');
+            if (existingClientSearchInput) {
+                existingClientSearchInput.value = existingClientSelected.dataset.clientLabel || '';
+            }
         };
 
         const updateClientMode = function () {
@@ -647,7 +806,10 @@
                 existingClientWrap.hidden = mode !== 'existing_customer';
             }
             if (mode === 'existing_customer') {
-                applyExistingClient();
+                populateFromSelected();
+                if (existingClientPanel) {
+                    existingClientPanel.hidden = false;
+                }
             }
         };
 
@@ -751,7 +913,27 @@
         clientTypeInputs.forEach(function (input) {
             input.addEventListener('change', updateClientMode);
         });
-        existingClientSelect?.addEventListener('change', applyExistingClient);
+        existingClientSearchInput?.addEventListener('input', function () {
+            runClientSearch(existingClientSearchInput.value);
+        });
+        root.addEventListener('click', function (event) {
+            const resultButton = event.target.closest('.aj-client-search-result');
+            if (resultButton) {
+                setSelectedClient({
+                    id: resultButton.dataset.clientId || '',
+                    label: resultButton.dataset.clientLabel || '',
+                    full_name: resultButton.dataset.clientFullName || '',
+                    phone: resultButton.dataset.clientPhone || '',
+                    email: resultButton.dataset.clientEmail || '',
+                    city: resultButton.dataset.clientCity || '',
+                    country: resultButton.dataset.clientCountry || '',
+                    identity: resultButton.dataset.clientIdentity || '',
+                });
+            }
+            if (event.target.closest('[data-client-search-clear]')) {
+                clearSelectedClient();
+            }
+        });
         root.querySelectorAll('textarea.aj-dac-textarea-large').forEach(function (textarea) {
             autoGrow(textarea);
             textarea.addEventListener('input', function () {
@@ -767,6 +949,7 @@
             programTextarea.focus();
             programTextarea.dispatchEvent(new Event('input', { bubbles: true }));
         });
+        populateFromSelected();
         updateClientMode();
         renderStep();
     });
