@@ -260,7 +260,7 @@
         .aj-agent-dac-section-head h2 {
             margin: 0;
             color: var(--dac-text);
-            font-size: 16px;
+            font-size: 13px;
             font-weight: 900;
             letter-spacing: .02em;
             text-transform: uppercase;
@@ -268,8 +268,8 @@
         .aj-agent-dac-section-head span {
             display: block;
             color: var(--dac-muted);
-            margin-top: 6px;
-            font-size: 13px;
+            margin-top: 4px;
+            font-size: 11px;
             font-weight: 700;
         }
         .aj-agent-dac-grid {
@@ -287,11 +287,11 @@
         .aj-agent-dac-field label {
             display: block;
             color: #64748b;
-            font-size: 12px;
+            font-size: 10px;
             font-weight: 900;
             letter-spacing: .04em;
             text-transform: uppercase;
-            margin-bottom: 8px;
+            margin-bottom: 7px;
         }
         .aj-agent-dac-field label span {
             color: #dc2626;
@@ -305,21 +305,14 @@
             background: #f8fafc;
             color: #0f172a;
             border-radius: 10px;
-            padding: 13px 14px;
-            font-size: 15px;
+            padding: 11px 12px;
+            font-size: 13px;
             font-weight: 700;
             outline: none;
         }
         .aj-agent-dac-field textarea {
-            min-height: 150px;
-            line-height: 1.55;
+            min-height: 108px;
             resize: vertical;
-        }
-        .aj-agent-dac-field input::placeholder,
-        .aj-agent-dac-field textarea::placeholder {
-            color: #64748b;
-            opacity: .86;
-            font-size: 14px;
         }
         .aj-agent-dac-field input:focus,
         .aj-agent-dac-field select:focus,
