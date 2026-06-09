@@ -247,7 +247,7 @@
                     <div class="aj-dac-service-config-title"><i class="bx bx-compass"></i> Détails services complémentaires</div>
                     <div class="aj-agent-dac-field aj-agent-dac-field-wide">
                         <label>Services à préciser dans le programme</label>
-                        <textarea readonly class="aj-dac-textarea-large">Complétez l’onglet “Détails de programme” pour décrire les journées, activités, excursions, assistance, visa, assurance ou autres services attendus.</textarea>
+                        <textarea readonly rows="6" class="aj-dac-textarea-large">Complétez l’onglet “Détails de programme” pour décrire les journées, activités, excursions, assistance, visa, assurance ou autres services attendus.</textarea>
                     </div>
                 </div>
             </div>
@@ -291,11 +291,11 @@
                 </div>
                 <div class="aj-agent-dac-field aj-agent-dac-field-wide">
                     <label>Programme détaillé souhaité</label>
-                    <textarea name="requested_services_details" class="aj-dac-textarea-large" placeholder="Ex: Jour 1 arrivée et transfert hôtel, Jour 2 visite guidée, Jour 3 excursion, temps libre, préférences repas, contraintes horaires...">{{ $field('requested_services_details', $customRequest->requested_services_details) }}</textarea>
+                    <textarea name="requested_services_details" rows="7" class="aj-dac-textarea-large" placeholder="Ex: Jour 1 arrivée et transfert hôtel, Jour 2 visite guidée, Jour 3 excursion, temps libre, préférences repas, contraintes horaires...">{{ $field('requested_services_details', $customRequest->requested_services_details) }}</textarea>
                 </div>
                 <div class="aj-agent-dac-field aj-agent-dac-field-wide">
                     <label>Contraintes / préférences à respecter</label>
-                    <textarea class="aj-dac-textarea-large" placeholder="Ex: éviter les longues marches, prévoir guide francophone, horaires adaptés aux enfants, proximité hôtel, exigences Omra, accessibilité..."></textarea>
+                    <textarea rows="7" class="aj-dac-textarea-large" placeholder="Ex: éviter les longues marches, prévoir guide francophone, horaires adaptés aux enfants, proximité hôtel, exigences Omra, accessibilité..."></textarea>
                 </div>
             </div>
         </section>

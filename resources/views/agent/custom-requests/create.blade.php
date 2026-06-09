@@ -312,13 +312,22 @@
         }
         .aj-agent-dac-field textarea {
             min-height: 108px;
+            display: block;
+            box-sizing: border-box;
+            width: 100%;
+            line-height: 1.55;
             resize: vertical;
         }
         .aj-agent-dac-textarea-large {
-            min-height: 190px !important;
+            min-height: 220px !important;
+            display: block !important;
+            box-sizing: border-box !important;
+            width: 100% !important;
             font-size: 15px !important;
-            line-height: 1.6 !important;
+            line-height: 1.7 !important;
             padding: 14px 16px !important;
+            resize: vertical !important;
+            overflow: auto !important;
         }
         .aj-agent-dac-field input:focus,
         .aj-agent-dac-field select:focus,
@@ -604,6 +613,12 @@
             updateServiceConfigs();
         };
 
+        const autoGrow = function (textarea) {
+            if (!textarea) return;
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.max(textarea.scrollHeight, 220) + 'px';
+        };
+
         const renderStep = function () {
             panels.forEach(function (panel) {
                 panel.classList.toggle('is-active', Number(panel.getAttribute('data-dac-step-panel')) === currentStep);
@@ -637,6 +652,12 @@
         });
         root.addEventListener('input', updateSummary);
         root.addEventListener('change', updateSummary);
+        root.querySelectorAll('textarea.aj-dac-textarea-large').forEach(function (textarea) {
+            autoGrow(textarea);
+            textarea.addEventListener('input', function () {
+                autoGrow(textarea);
+            });
+        });
         renderStep();
     });
 </script>
