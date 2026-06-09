@@ -84,7 +84,20 @@ class ReservationController extends Controller
         abort_unless($this->agentOwnsReservation($reservation, (int) $user->id), 403);
 
         return view('agent.reservations.show', [
-            'reservation' => $reservation->load(['tour', 'travelDate', 'departure', 'dossier']),
+            'reservation' => $reservation->load([
+                'tour',
+                'travelDate',
+                'departure',
+                'dossier',
+                'client',
+                'passengers',
+                'payments',
+                'branch',
+                'partner',
+                'creator',
+                'createdBy',
+                'agent',
+            ]),
         ]);
     }
 
