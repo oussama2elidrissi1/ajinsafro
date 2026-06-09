@@ -28,7 +28,7 @@ class CustomRequest extends Model
     public const STATUS_REFUSED = 'refused';
 
     protected $fillable = [
-        'request_number', 'created_by', 'assigned_to', 'customer_full_name', 'customer_phone',
+        'request_number', 'created_by', 'assigned_to', 'client_id', 'customer_full_name', 'customer_phone',
         'customer_email', 'customer_city', 'customer_country', 'customer_identity', 'customer_type',
         'customer_notes', 'desired_destination', 'departure_city', 'desired_departure_date',
         'desired_return_date', 'desired_duration', 'travel_type', 'travelers_count', 'adults_count',
@@ -214,6 +214,11 @@ class CustomRequest extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
     }
 
     public function assignedAgent(): BelongsTo

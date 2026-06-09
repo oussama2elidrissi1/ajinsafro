@@ -19,6 +19,9 @@
     <section class="aj-agent-content-grid">
         <div class="aj-agent-panel aj-agent-panel-wide">
             <div class="aj-agent-panel-body">
+                @if($customRequest->client)
+                    <div class="aj-agent-today-item"><span>Client lié</span><small>{{ $customRequest->client->client_code }} · {{ $customRequest->client->full_name }}</small></div>
+                @endif
                 <div class="aj-agent-today-item"><span>Client</span><small>{{ $customRequest->customer_full_name }}</small></div>
                 <div class="aj-agent-today-item"><span>Téléphone</span><small>{{ $customRequest->customer_phone }}</small></div>
                 <div class="aj-agent-today-item"><span>Destination</span><small>{{ $customRequest->desired_destination }}</small></div>

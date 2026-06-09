@@ -29,32 +29,58 @@
                     </div>
                 </div>
 
+                <div class="aj-agent-dac-field aj-agent-dac-field-wide" data-existing-client-wrap @if($field('customer_type', $customRequest->customer_type) !== 'existing_customer') hidden @endif>
+                    <label>Client existant</label>
+                    <select name="existing_client_id" data-existing-client-select>
+                        <option value="">Choisir un client de votre portefeuille</option>
+                        @foreach($existingClients as $client)
+                            <option
+                                value="{{ $client['id'] }}"
+                                data-client-full-name="{{ $client['full_name'] }}"
+                                data-client-phone="{{ $client['phone'] }}"
+                                data-client-email="{{ $client['email'] }}"
+                                data-client-city="{{ $client['city'] }}"
+                                data-client-country="{{ $client['country'] }}"
+                                data-client-identity="{{ $client['identity'] }}"
+                                @selected((string) $field('existing_client_id', $customRequest->client_id) === (string) $client['id'])
+                            >
+                                {{ $client['client_code'] }} - {{ $client['full_name'] }}
+                                @if($client['phone'])
+                                    · {{ $client['phone'] }}
+                                @endif
+                            </option>
+                        @endforeach
+                    </select>
+                    <small>La liste est limitée aux clients qui vous sont rattachés.</small>
+                    @error('existing_client_id')<small>{{ $message }}</small>@enderror
+                </div>
+
                 <div class="aj-agent-dac-field">
                     <label>Nom complet du client <span>*</span></label>
-                    <input name="customer_full_name" value="{{ $field('customer_full_name', $customRequest->customer_full_name) }}" required placeholder="Ex: Mohammed El Alami">
+                    <input name="customer_full_name" value="{{ $field('customer_full_name', $customRequest->customer_full_name) }}" required placeholder="Ex: Mohammed El Alami" data-client-input="customer_full_name">
                     @error('customer_full_name')<small>{{ $message }}</small>@enderror
                 </div>
                 <div class="aj-agent-dac-field">
                     <label>Téléphone <span>*</span></label>
-                    <input name="customer_phone" value="{{ $field('customer_phone', $customRequest->customer_phone) }}" required placeholder="06 00 00 00 00">
+                    <input name="customer_phone" value="{{ $field('customer_phone', $customRequest->customer_phone) }}" required placeholder="06 00 00 00 00" data-client-input="customer_phone">
                     @error('customer_phone')<small>{{ $message }}</small>@enderror
                 </div>
                 <div class="aj-agent-dac-field">
                     <label>Email</label>
-                    <input type="email" name="customer_email" value="{{ $field('customer_email', $customRequest->customer_email) }}" placeholder="contact@email.com">
+                    <input type="email" name="customer_email" value="{{ $field('customer_email', $customRequest->customer_email) }}" placeholder="contact@email.com" data-client-input="customer_email">
                     @error('customer_email')<small>{{ $message }}</small>@enderror
                 </div>
                 <div class="aj-agent-dac-field">
                     <label>Ville</label>
-                    <input name="customer_city" value="{{ $field('customer_city', $customRequest->customer_city) }}">
+                    <input name="customer_city" value="{{ $field('customer_city', $customRequest->customer_city) }}" data-client-input="customer_city">
                 </div>
                 <div class="aj-agent-dac-field">
                     <label>Pays</label>
-                    <input name="customer_country" value="{{ $field('customer_country', $customRequest->customer_country) }}">
+                    <input name="customer_country" value="{{ $field('customer_country', $customRequest->customer_country) }}" data-client-input="customer_country">
                 </div>
                 <div class="aj-agent-dac-field">
                     <label>CIN / Passeport</label>
-                    <input name="customer_identity" value="{{ $field('customer_identity', $customRequest->customer_identity) }}">
+                    <input name="customer_identity" value="{{ $field('customer_identity', $customRequest->customer_identity) }}" data-client-input="customer_identity">
                 </div>
                 <div class="aj-agent-dac-field aj-agent-dac-field-wide">
                     <label>Remarques client</label>

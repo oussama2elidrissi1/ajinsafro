@@ -186,6 +186,16 @@ class Client extends Model
         return $this->belongsTo(Client::class, 'merged_into_client_id');
     }
 
+    public function scopeOwnedByAgent(Builder $query, User|int $agent): Builder
+    {
+        $agentId = $agent instanceof User ? (int) $agent->id : (int) $agent;
+
+        return $query->where(function (Builder $builder) use ($agentId): void {
+            $builder->where('created_by', $agentId)
+                ->orWhere('assigned_to', $agentId);
+        });
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', 'active');

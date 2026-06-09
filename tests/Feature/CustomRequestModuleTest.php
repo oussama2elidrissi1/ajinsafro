@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\CustomRequest;
 use App\Models\CustomRequestQuote;
+use App\Models\Client;
 use App\Models\User;
 use App\Http\Controllers\Admin\CustomRequestQuoteController;
 use App\Http\Controllers\Agent\CustomReservationController;
@@ -163,6 +164,70 @@ class CustomRequestModuleTest extends TestCase
         $response->assertDontSee('/admin/custom-requests', false);
     }
 
+    public function test_agent_existing_client_selector_is_limited_to_own_clients_and_persists_client_link(): void
+    {
+        $commercial = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.create',
+        ], ['Agent']);
+
+        $otherAgent = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.create',
+        ], ['Agent Offline']);
+
+        $ownClient = $this->clientForAgent($commercial, 'Client Agent Propre', '0600000001');
+        $otherClient = $this->clientForAgent($otherAgent, 'Client Autre Agent', '0600000002');
+
+        $page = $this->actingAs($commercial)->get(route('agent.custom-reservations.create'));
+        $page->assertOk();
+        $page->assertSee('Client Agent Propre');
+        $page->assertSee('La liste est limitée aux clients qui vous sont rattachés.', false);
+        $page->assertDontSee('Client Autre Agent');
+
+        $request = $this->requestAs($commercial, [
+            'customer_type' => 'existing_customer',
+            'existing_client_id' => $ownClient->id,
+            'customer_full_name' => '',
+            'customer_phone' => '',
+            'customer_email' => '',
+            'customer_city' => '',
+            'customer_country' => '',
+            'customer_identity' => '',
+            'desired_destination' => 'Istanbul',
+            'departure_city' => 'Casablanca',
+            'desired_departure_date' => now()->addDays(20)->toDateString(),
+            'travel_type' => 'organized_trip',
+            'travelers_count' => 1,
+            'adults_count' => 1,
+            'children_count' => 0,
+            'babies_count' => 0,
+            'currency' => 'MAD',
+            'payment_status' => 'unpaid',
+            'priority' => 'normal',
+            'services' => [],
+        ]);
+
+        $response = app(CustomReservationController::class)->store($request);
+
+        $customRequest = CustomRequest::query()->where('client_id', $ownClient->id)->latest('id')->firstOrFail();
+        $this->assertRedirectsTo($response, route('agent.custom-reservations.show', $customRequest));
+        $this->assertSame($ownClient->id, (int) $customRequest->client_id);
+        $this->assertSame($ownClient->full_name, $customRequest->customer_full_name);
+        $this->assertSame($ownClient->phone, $customRequest->customer_phone);
+        $this->assertSame($ownClient->email, $customRequest->customer_email);
+        $this->assertDatabaseHas('custom_requests', [
+            'id' => $customRequest->id,
+            'client_id' => $ownClient->id,
+            'created_by' => $commercial->id,
+        ]);
+        $this->assertDatabaseMissing('custom_requests', [
+            'client_id' => $otherClient->id,
+        ]);
+    }
+
     public function test_offline_agent_sees_new_and_assigned_requests_only(): void
     {
         $offline = $this->userWithPermissions([
@@ -315,5 +380,24 @@ class CustomRequestModuleTest extends TestCase
             'status' => CustomRequest::STATUS_NEW,
             'priority' => 'normal',
         ], $overrides));
+    }
+
+    private function clientForAgent(User $agent, string $fullName, string $phone): Client
+    {
+        [$firstName, $lastName] = array_pad(explode(' ', $fullName, 2), 2, '');
+
+        return Client::query()->create([
+            'created_by' => $agent->id,
+            'assigned_to' => $agent->id,
+            'client_type' => 'individual',
+            'status' => 'active',
+            'source' => 'admin',
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'full_name' => $fullName,
+            'phone' => $phone,
+            'email' => strtolower(str_replace(' ', '.', $fullName)).'@example.test',
+            'city' => 'Casablanca',
+        ]);
     }
 }

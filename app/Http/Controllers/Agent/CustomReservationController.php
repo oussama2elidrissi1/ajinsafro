@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
+use App\Models\Client;
 use App\Models\CustomRequest;
 use App\Models\CustomRequestQuote;
+use App\Models\User;
 use App\Services\CustomRequestNotificationService;
 use App\Services\View\AgentPortalLayout;
 use Illuminate\Database\Eloquent\Builder;
@@ -85,6 +87,7 @@ class CustomReservationController extends Controller
                 'payment_status' => 'unpaid',
                 'paid_amount' => 0,
             ]),
+            'existingClients' => $this->existingClientsForAgent($user),
             'formAction' => route('agent.custom-reservations.store'),
         ]);
     }
@@ -100,6 +103,7 @@ class CustomReservationController extends Controller
         $data['status'] = $request->input('submit_action') === 'draft'
             ? CustomRequest::STATUS_DRAFT
             : CustomRequest::STATUS_NEW;
+        $data = $this->hydrateExistingClient($user, $data);
 
         $customRequest = DB::transaction(function () use ($request, $user, $data): CustomRequest {
             $customRequest = CustomRequest::query()->create($data);
@@ -133,7 +137,7 @@ class CustomReservationController extends Controller
         abort_unless($this->agentOwnsRequest($customRequest, (int) $user->id), 403);
 
         return view('agent.custom-reservations.show', [
-            'customRequest' => $customRequest->load(['latestQuote.generatedDocument', 'documents', 'comments.user:id,name', 'statusLogs.user:id,name']),
+            'customRequest' => $customRequest->load(['client:id,client_code,full_name,phone,email', 'latestQuote.generatedDocument', 'documents', 'comments.user:id,name', 'statusLogs.user:id,name']),
             'travelTypeOptions' => CustomRequest::travelTypeOptions(),
         ]);
     }
@@ -166,13 +170,23 @@ class CustomReservationController extends Controller
     private function validatedPayload(Request $request): array
     {
         $data = $request->validate([
-            'customer_full_name' => ['required', 'string', 'max:255'],
-            'customer_phone' => ['required', 'string', 'max:50'],
+            'customer_full_name' => ['required_unless:customer_type,existing_customer', 'nullable', 'string', 'max:255'],
+            'customer_phone' => ['required_unless:customer_type,existing_customer', 'nullable', 'string', 'max:50'],
             'customer_email' => ['nullable', 'email', 'max:255'],
             'customer_city' => ['nullable', 'string', 'max:255'],
             'customer_country' => ['nullable', 'string', 'max:255'],
             'customer_identity' => ['nullable', 'string', 'max:255'],
             'customer_type' => ['required', Rule::in(['new_customer', 'existing_customer'])],
+            'existing_client_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('clients', 'id')->where(function ($query) use ($request) {
+                    $query->where(function ($builder) use ($request): void {
+                        $builder->where('created_by', $request->user()->id)
+                            ->orWhere('assigned_to', $request->user()->id);
+                    });
+                }),
+            ],
             'customer_notes' => ['nullable', 'string'],
             'desired_destination' => ['required', 'string', 'max:255'],
             'departure_city' => ['required', 'string', 'max:255'],
@@ -229,6 +243,46 @@ class CustomReservationController extends Controller
         return Arr::except($data, ['documents']);
     }
 
+    private function hydrateExistingClient(User $user, array $data): array
+    {
+        $data['client_id'] = null;
+
+        if (($data['customer_type'] ?? null) !== 'existing_customer') {
+            $data['existing_client_id'] = null;
+
+            return $data;
+        }
+
+        $clientId = (int) ($data['existing_client_id'] ?? 0);
+        if ($clientId <= 0) {
+            return back()
+                ->withErrors(['existing_client_id' => 'Sélectionnez un client existant.'])
+                ->withInput()
+                ->throwResponse();
+        }
+
+        $client = Client::query()
+            ->ownedByAgent($user)
+            ->find($clientId);
+
+        if (! $client) {
+            return back()
+                ->withErrors(['existing_client_id' => 'Le client sélectionné n’appartient pas à votre portefeuille.'])
+                ->withInput()
+                ->throwResponse();
+        }
+
+        $data['client_id'] = $client->id;
+        $data['customer_full_name'] = $client->full_name ?: trim(($client->first_name ?? '').' '.($client->last_name ?? ''));
+        $data['customer_phone'] = $client->phone ?: ($data['customer_phone'] ?? '');
+        $data['customer_email'] = $client->email;
+        $data['customer_city'] = $client->city;
+        $data['customer_country'] = $client->country_of_residence;
+        $data['customer_identity'] = $client->national_id_number ?: $client->passport_number;
+
+        return $data;
+    }
+
     private function syncServices(CustomRequest $customRequest, array $serviceKeys): void
     {
         $allowed = CustomRequest::serviceOptions();
@@ -276,5 +330,30 @@ class CustomReservationController extends Controller
             'travelTypeOptions' => CustomRequest::travelTypeOptions(),
             'serviceOptions' => CustomRequest::serviceOptions(),
         ];
+    }
+
+    /**
+     * @return array<int, array{id:int, client_code:string, full_name:string, phone:?string, email:?string, city:?string, country:?string, identity:?string}>
+     */
+    private function existingClientsForAgent(User $user): array
+    {
+        return Client::query()
+            ->ownedByAgent($user)
+            ->orderBy('full_name')
+            ->orderBy('id')
+            ->get(['id', 'client_code', 'full_name', 'first_name', 'last_name', 'phone', 'email', 'city', 'country_of_residence', 'national_id_number', 'passport_number'])
+            ->map(static function (Client $client): array {
+                return [
+                    'id' => $client->id,
+                    'client_code' => $client->client_code,
+                    'full_name' => $client->full_name ?: trim(($client->first_name ?? '').' '.($client->last_name ?? '')),
+                    'phone' => $client->phone,
+                    'email' => $client->email,
+                    'city' => $client->city,
+                    'country' => $client->country_of_residence,
+                    'identity' => $client->national_id_number ?: $client->passport_number,
+                ];
+            })
+            ->all();
     }
 }

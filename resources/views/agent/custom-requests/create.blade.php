@@ -564,6 +564,9 @@
         const prevButton = root.querySelector('[data-dac-prev]');
         const nextButton = root.querySelector('[data-dac-next]');
         const submitButtons = Array.from(root.querySelectorAll('[data-dac-submit]'));
+        const clientTypeInputs = Array.from(root.querySelectorAll('input[name="customer_type"]'));
+        const existingClientWrap = root.querySelector('[data-existing-client-wrap]');
+        const existingClientSelect = root.querySelector('[data-existing-client-select]');
         const serviceInputs = Array.from(root.querySelectorAll('input[name="services[]"]'));
         const serviceConfigs = Array.from(root.querySelectorAll('[data-service-config]'));
         const summaries = {
@@ -617,6 +620,35 @@
             if (!textarea) return;
             textarea.style.height = 'auto';
             textarea.style.height = Math.max(textarea.scrollHeight, 220) + 'px';
+        };
+
+        const setClientField = function (name, value) {
+            const field = root.querySelector('[data-client-input="' + name + '"]');
+            if (!field) return;
+            field.value = value || '';
+        };
+
+        const applyExistingClient = function () {
+            if (!existingClientSelect) return;
+            const option = existingClientSelect.selectedOptions?.[0];
+            if (!option || !option.value) return;
+
+            setClientField('customer_full_name', option.dataset.clientFullName || '');
+            setClientField('customer_phone', option.dataset.clientPhone || '');
+            setClientField('customer_email', option.dataset.clientEmail || '');
+            setClientField('customer_city', option.dataset.clientCity || '');
+            setClientField('customer_country', option.dataset.clientCountry || '');
+            setClientField('customer_identity', option.dataset.clientIdentity || '');
+        };
+
+        const updateClientMode = function () {
+            const mode = clientTypeInputs.find(function (input) { return input.checked; })?.value || 'new_customer';
+            if (existingClientWrap) {
+                existingClientWrap.hidden = mode !== 'existing_customer';
+            }
+            if (mode === 'existing_customer') {
+                applyExistingClient();
+            }
         };
 
         const buildGeneratedProgram = function () {
@@ -716,6 +748,10 @@
         });
         root.addEventListener('input', updateSummary);
         root.addEventListener('change', updateSummary);
+        clientTypeInputs.forEach(function (input) {
+            input.addEventListener('change', updateClientMode);
+        });
+        existingClientSelect?.addEventListener('change', applyExistingClient);
         root.querySelectorAll('textarea.aj-dac-textarea-large').forEach(function (textarea) {
             autoGrow(textarea);
             textarea.addEventListener('input', function () {
@@ -731,6 +767,7 @@
             programTextarea.focus();
             programTextarea.dispatchEvent(new Event('input', { bubbles: true }));
         });
+        updateClientMode();
         renderStep();
     });
 </script>
