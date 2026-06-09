@@ -7,29 +7,93 @@
     @if(request()->attributes->get('agent_reservation_mode', false))
         <link href="{{ URL::asset('css/agent-dashboard.css') }}" rel="stylesheet" type="text/css" />
     @endif
-    <link rel="stylesheet" href="{{ asset('css/reservation-create.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/reservation-create.css') . '?v=' . @filemtime(public_path('css/reservation-create.css')) }}">
     @if(request()->attributes->get('agent_reservation_mode', false))
         <style>
             .agent-portal-main .reservation-create {
-                width: 100%;
-                max-width: 1480px;
-                padding: 0 18px 28px;
+                width: 100% !important;
+                max-width: 1480px !important;
+                padding: 0 18px 28px !important;
             }
 
             .agent-portal-main .reservation-create__content-grid {
-                grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
-                gap: 28px;
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr) !important;
+                gap: 28px !important;
+                align-items: start !important;
+                max-width: 1180px !important;
             }
 
             .agent-portal-main .reservation-create__main,
             .agent-portal-main .reservation-create__summary,
             .agent-portal-main .reservation-create__summary-card {
-                min-width: 0;
+                min-width: 0 !important;
+            }
+
+            .agent-portal-main .reservation-create__summary {
+                order: -1 !important;
+                grid-column: 1 !important;
+                width: 100% !important;
+                max-width: none !important;
+            }
+
+            .agent-portal-main .reservation-fast-summary {
+                display: grid !important;
+                grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+                gap: 0 !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                padding: 16px 18px !important;
+            }
+
+            .agent-portal-main .reservation-fast-summary__item {
+                display: grid !important;
+                grid-template-columns: 1fr !important;
+                gap: 4px !important;
+                padding: 10px 14px !important;
+                border-bottom: 0 !important;
+                border-left: 1px solid #edf2f7 !important;
+            }
+
+            .agent-portal-main .reservation-fast-summary__item:first-of-type {
+                border-left: 0 !important;
+                grid-column: span 2 !important;
+            }
+
+            .agent-portal-main .reservation-fast-summary__item strong {
+                font-size: .9rem !important;
+                line-height: 1.35 !important;
+                overflow-wrap: anywhere !important;
+                word-break: normal !important;
+                text-align: left !important;
+            }
+
+            .agent-portal-main .reservation-fast-summary__item--total,
+            .agent-portal-main .reservation-fast-summary__item--remaining {
+                border-top: 0 !important;
+                margin-top: 0 !important;
             }
 
             @media (max-width: 1180px) {
                 .agent-portal-main .reservation-create__content-grid {
-                    grid-template-columns: 1fr;
+                    grid-template-columns: 1fr !important;
+                }
+
+                .agent-portal-main .reservation-create__summary {
+                    grid-column: 1 !important;
+                    max-width: none !important;
+                }
+
+                .agent-portal-main .reservation-fast-summary {
+                    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                }
+
+                .agent-portal-main .reservation-fast-summary__item:nth-of-type(odd) {
+                    border-left: 0 !important;
+                }
+
+                .agent-portal-main .reservation-fast-summary__item:first-of-type {
+                    grid-column: 1 / -1 !important;
                 }
             }
 
@@ -42,6 +106,15 @@
                 .agent-portal-main .reservation-fast-header__top {
                     flex-direction: column;
                     align-items: stretch;
+                }
+
+                .agent-portal-main .reservation-fast-summary {
+                    grid-template-columns: 1fr !important;
+                }
+
+                .agent-portal-main .reservation-fast-summary__item {
+                    border-left: 0 !important;
+                    border-bottom: 1px solid #edf2f7 !important;
                 }
             }
         </style>
