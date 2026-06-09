@@ -619,6 +619,70 @@
             textarea.style.height = Math.max(textarea.scrollHeight, 220) + 'px';
         };
 
+        const buildGeneratedProgram = function () {
+            const destination = (getInput('desired_destination')?.value || '').trim();
+            const departureCity = (getInput('departure_city')?.value || '').trim();
+            const travelTypeSelect = getInput('travel_type');
+            const travelType = travelTypeSelect?.selectedOptions?.[0]?.textContent?.trim() || '';
+            const departureDate = getInput('desired_departure_date')?.value || '';
+            const returnDate = getInput('desired_return_date')?.value || '';
+            const duration = (getInput('desired_duration')?.value || '').trim();
+            const rhythmSelect = root.querySelector('[data-program-rhythm]');
+            const styleSelect = root.querySelector('[data-program-style]');
+            const rhythm = rhythmSelect?.selectedOptions?.[0]?.textContent?.trim() || 'Souple';
+            const style = styleSelect?.selectedOptions?.[0]?.textContent?.trim() || 'Classique';
+            const serviceLabels = serviceInputs.filter(function (input) { return input.checked; }).map(function (input) {
+                const label = input.parentElement?.textContent?.trim() || input.value;
+                return label;
+            });
+            const travelers = [
+                parseInt(getInput('adults_count')?.value || '0', 10) || 0,
+                parseInt(getInput('children_count')?.value || '0', 10) || 0,
+                parseInt(getInput('babies_count')?.value || '0', 10) || 0,
+            ];
+            const travelersText = travelers[0] > 0 ? travelers[0] + ' adulte(s)' : '';
+            const childrenText = travelers[1] > 0 ? ', ' + travelers[1] + ' enfant(s)' : '';
+            const babiesText = travelers[2] > 0 ? ', ' + travelers[2] + ' bébé(s)' : '';
+            const serviceText = serviceLabels.length ? serviceLabels.join(', ').toLowerCase() : 'les prestations demandées';
+            const programType = root.querySelector('[data-program-type]')?.selectedOptions?.[0]?.textContent?.trim() || '';
+            const lines = [];
+
+            lines.push('Programme de voyage personnalisé');
+            if (programType) {
+                lines.push('Type de programme : ' + programType);
+            }
+            if (destination) {
+                lines.push('Destination : ' + destination);
+            }
+            if (departureCity) {
+                lines.push('Départ : ' + departureCity);
+            }
+            if (travelType) {
+                lines.push('Type de voyage : ' + travelType);
+            }
+            if (departureDate || returnDate || duration) {
+                const period = [
+                    departureDate ? 'départ le ' + departureDate : '',
+                    returnDate ? 'retour le ' + returnDate : '',
+                    duration ? 'durée ' + duration : '',
+                ].filter(Boolean).join(' | ');
+                if (period) lines.push(period);
+            }
+            if (travelers[0] || travelers[1] || travelers[2]) {
+                lines.push('Voyageurs : ' + travelersText + childrenText + babiesText);
+            }
+            lines.push('Rythme souhaité : ' + rhythm.toLowerCase());
+            lines.push('Style d’expérience : ' + style.toLowerCase());
+            lines.push('Services à intégrer : ' + serviceText + '.');
+            lines.push('Déroulé suggéré :');
+            lines.push('Jour 1 : arrivée, accueil et installation.');
+            lines.push('Jour 2 : découverte principale et prestations sélectionnées.');
+            lines.push('Jour 3 : activité / excursion / temps libre selon le rythme souhaité.');
+            lines.push('Adapter le programme aux contraintes client, au budget et aux disponibilités locales.');
+
+            return lines.join('\n');
+        };
+
         const renderStep = function () {
             panels.forEach(function (panel) {
                 panel.classList.toggle('is-active', Number(panel.getAttribute('data-dac-step-panel')) === currentStep);
@@ -657,6 +721,15 @@
             textarea.addEventListener('input', function () {
                 autoGrow(textarea);
             });
+        });
+        const generateButton = root.querySelector('[data-generate-program]');
+        const programTextarea = root.querySelector('textarea[name="requested_services_details"]');
+        generateButton?.addEventListener('click', function () {
+            if (!programTextarea) return;
+            programTextarea.value = buildGeneratedProgram();
+            autoGrow(programTextarea);
+            programTextarea.focus();
+            programTextarea.dispatchEvent(new Event('input', { bubbles: true }));
         });
         renderStep();
     });

@@ -263,7 +263,7 @@
             <div class="aj-agent-dac-grid">
                 <div class="aj-agent-dac-field">
                     <label>Type de programme</label>
-                    <select>
+                    <select data-program-type>
                         <option>Programme libre à construire</option>
                         <option>Programme jour par jour souhaité</option>
                         <option>Programme mixte avec temps libre</option>
@@ -271,7 +271,7 @@
                 </div>
                 <div class="aj-agent-dac-field">
                     <label>Rythme souhaité</label>
-                    <select>
+                    <select data-program-rhythm>
                         <option>Non précisé</option>
                         <option>Souple</option>
                         <option>Équilibré</option>
@@ -280,7 +280,7 @@
                 </div>
                 <div class="aj-agent-dac-field">
                     <label>Style d’expérience</label>
-                    <select>
+                    <select data-program-style>
                         <option>Non précisé</option>
                         <option>Famille</option>
                         <option>Culturel</option>
@@ -290,7 +290,12 @@
                     </select>
                 </div>
                 <div class="aj-agent-dac-field aj-agent-dac-field-wide">
-                    <label>Programme détaillé souhaité</label>
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px;">
+                        <label style="margin:0;">Programme détaillé souhaité</label>
+                        <button type="button" class="aj-dac-btn" data-generate-program>
+                            <i class="bx bx-magic-wand"></i> Générer le programme avec IA
+                        </button>
+                    </div>
                     <textarea name="requested_services_details" rows="7" class="aj-dac-textarea-large" placeholder="Ex: Jour 1 arrivée et transfert hôtel, Jour 2 visite guidée, Jour 3 excursion, temps libre, préférences repas, contraintes horaires...">{{ $field('requested_services_details', $customRequest->requested_services_details) }}</textarea>
                 </div>
                 <div class="aj-agent-dac-field aj-agent-dac-field-wide">
