@@ -17,7 +17,14 @@
             }
 
             .agent-portal-main .reservation-create__content-grid {
-                grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+                grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
+                gap: 28px;
+            }
+
+            .agent-portal-main .reservation-create__main,
+            .agent-portal-main .reservation-create__summary,
+            .agent-portal-main .reservation-create__summary-card {
+                min-width: 0;
             }
 
             @media (max-width: 1180px) {
@@ -29,6 +36,12 @@
             @media (max-width: 720px) {
                 .agent-portal-main .reservation-create {
                     padding: 0 12px 24px;
+                }
+
+                .agent-portal-main .reservation-fast-header__card,
+                .agent-portal-main .reservation-fast-header__top {
+                    flex-direction: column;
+                    align-items: stretch;
                 }
             }
         </style>
