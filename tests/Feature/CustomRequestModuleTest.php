@@ -67,32 +67,96 @@ class CustomRequestModuleTest extends TestCase
             'customer_full_name' => 'Client Test Agent',
             'customer_phone' => '+212600000001',
             'customer_email' => 'client@example.test',
+            'customer_city' => 'Casablanca',
+            'customer_country' => 'Maroc',
+            'customer_identity' => 'BK123456',
+            'customer_type' => 'new_customer',
+            'customer_notes' => 'Demande test.',
             'desired_destination' => 'Istanbul',
             'departure_city' => 'Casablanca',
             'desired_departure_date' => now()->addDays(20)->toDateString(),
             'desired_return_date' => now()->addDays(27)->toDateString(),
+            'desired_duration' => '7 nuits',
             'travel_type' => 'organized_trip',
             'travelers_count' => 2,
             'adults_count' => 2,
             'children_count' => 0,
             'babies_count' => 0,
-            'client_notes' => 'Demande test.',
+            'approximate_budget' => 12000,
+            'currency' => 'MAD',
+            'desired_level' => 'comfort',
+            'desired_hotel' => 'Hotel test',
+            'hotel_category' => '4_stars',
+            'meal_plan' => 'breakfast',
+            'rooms_count' => 1,
+            'room_type' => 'double',
+            'flight_included' => 'yes',
+            'preferred_airline' => 'RAM',
+            'departure_airport' => 'CMN',
+            'arrival_airport' => 'IST',
+            'baggage_included' => 'to_confirm',
+            'airport_transfer_included' => 'yes',
+            'local_transport' => 'private_car',
+            'requested_services_details' => 'Vol, hotel et transferts.',
+            'estimated_price' => 13000,
+            'requested_deposit' => 3000,
+            'paid_amount' => 0,
+            'payment_method' => 'cash',
+            'payment_status' => 'unpaid',
+            'priority' => 'normal',
+            'services' => ['flight_ticket', 'hotel', 'transfers'],
         ]);
 
         $response = app(CustomReservationController::class)->store($request);
 
-        $this->assertRedirectsTo($response, route('agent.custom-reservations.index'));
+        $customRequest = CustomRequest::query()->where('customer_full_name', 'Client Test Agent')->latest('id')->firstOrFail();
+
+        $this->assertRedirectsTo($response, route('agent.custom-reservations.show', $customRequest));
 
         $this->assertDatabaseHas('custom_requests', [
             'customer_full_name' => 'Client Test Agent',
             'created_by' => $commercial->id,
             'status' => CustomRequest::STATUS_NEW,
+            'customer_city' => 'Casablanca',
+            'desired_hotel' => 'Hotel test',
+        ]);
+
+        $this->assertDatabaseHas('custom_request_services', [
+            'custom_request_id' => $customRequest->id,
+            'service_key' => 'hotel',
         ]);
 
         $this->assertDatabaseHas('notifications', [
             'user_id' => $offline->id,
             'type' => 'custom_request_new',
         ]);
+    }
+
+    public function test_agent_create_page_renders_complete_custom_request_form(): void
+    {
+        $commercial = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.create',
+        ], ['Agent']);
+
+        $response = $this->actingAs($commercial)->get(route('agent.custom-reservations.create'));
+
+        $response->assertOk();
+        $response->assertSee('Informations client');
+        $response->assertSee('Informations voyage demandé');
+        $response->assertSee('Hébergement');
+        $response->assertSee('Transport');
+        $response->assertSee('Services demandés');
+        $response->assertSee('Paiement / estimation');
+        $response->assertSee('Suivi');
+        $response->assertSee('Nom complet du client <span>*</span>', false);
+        $response->assertSee('Téléphone <span>*</span>', false);
+        $response->assertSee('Destination souhaitée <span>*</span>', false);
+        $response->assertSee('Adultes <span>*</span>', false);
+        $response->assertDontSee('Email <span>*</span>', false);
+        $response->assertSee('/agent/reservations-a-la-carte', false);
+        $response->assertDontSee('/admin/custom-requests', false);
     }
 
     public function test_offline_agent_sees_new_and_assigned_requests_only(): void

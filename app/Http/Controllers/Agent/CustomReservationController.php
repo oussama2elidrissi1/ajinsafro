@@ -4,12 +4,18 @@ namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
 use App\Models\CustomRequest;
+use App\Models\CustomRequestQuote;
 use App\Services\CustomRequestNotificationService;
 use App\Services\View\AgentPortalLayout;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CustomReservationController extends Controller
 {
@@ -66,8 +72,20 @@ class CustomReservationController extends Controller
         $user = $request->user();
         abort_unless($user && AgentPortalLayout::shouldUse($user) && $user->can('custom_requests.create'), 403);
 
-        return view('agent.custom-reservations.create', [
-            'travelTypeOptions' => CustomRequest::travelTypeOptions(),
+        return view('agent.custom-requests.create', $this->sharedViewData() + [
+            'customRequest' => new CustomRequest([
+                'customer_type' => 'new_customer',
+                'travelers_count' => 1,
+                'adults_count' => 1,
+                'children_count' => 0,
+                'babies_count' => 0,
+                'currency' => 'MAD',
+                'status' => CustomRequest::STATUS_DRAFT,
+                'priority' => 'normal',
+                'payment_status' => 'unpaid',
+                'paid_amount' => 0,
+            ]),
+            'formAction' => route('agent.custom-reservations.store'),
         ]);
     }
 
@@ -76,63 +94,36 @@ class CustomReservationController extends Controller
         $user = $request->user();
         abort_unless($user && AgentPortalLayout::shouldUse($user) && $user->can('custom_requests.create'), 403);
 
-        $data = $request->validate([
-            'customer_full_name' => ['required', 'string', 'max:255'],
-            'customer_phone' => ['required', 'string', 'max:50'],
-            'customer_email' => ['nullable', 'email', 'max:255'],
-            'desired_destination' => ['required', 'string', 'max:255'],
-            'departure_city' => ['required', 'string', 'max:255'],
-            'desired_departure_date' => ['required', 'date'],
-            'desired_return_date' => ['nullable', 'date', 'after_or_equal:desired_departure_date'],
-            'travel_type' => ['required', 'in:'.implode(',', array_keys(CustomRequest::travelTypeOptions()))],
-            'travelers_count' => ['required', 'integer', 'min:1', 'max:50'],
-            'adults_count' => ['required', 'integer', 'min:1', 'max:50'],
-            'children_count' => ['nullable', 'integer', 'min:0', 'max:50'],
-            'babies_count' => ['nullable', 'integer', 'min:0', 'max:50'],
-            'client_notes' => ['nullable', 'string', 'max:3000'],
-        ]);
+        $data = $this->validatedPayload($request);
+        $data['created_by'] = $user->id;
+        $data['assigned_to'] = null;
+        $data['status'] = $request->input('submit_action') === 'draft'
+            ? CustomRequest::STATUS_DRAFT
+            : CustomRequest::STATUS_NEW;
 
-        $childrenCount = (int) ($data['children_count'] ?? 0);
-        $babiesCount = (int) ($data['babies_count'] ?? 0);
-        if ((int) $data['travelers_count'] < ((int) $data['adults_count'] + $childrenCount + $babiesCount)) {
-            return back()->withErrors(['travelers_count' => 'Le nombre total de voyageurs doit être cohérent.'])->withInput();
+        $customRequest = DB::transaction(function () use ($request, $user, $data): CustomRequest {
+            $customRequest = CustomRequest::query()->create($data);
+            $this->syncServices($customRequest, (array) $request->input('services', []));
+            $this->storeUploadedDocuments($request, $customRequest);
+            $customRequest->statusLogs()->create([
+                'user_id' => $user->id,
+                'old_status' => null,
+                'new_status' => $customRequest->status,
+                'note' => $customRequest->status === CustomRequest::STATUS_NEW
+                    ? 'Demande créée et soumise depuis l’espace agent.'
+                    : 'Brouillon créé depuis l’espace agent.',
+            ]);
+
+            return $customRequest;
+        });
+
+        if ($customRequest->status === CustomRequest::STATUS_NEW) {
+            $this->notifications->notifyNewRequest($customRequest);
         }
 
-        $customRequest = CustomRequest::query()->create([
-            'created_by' => $user->id,
-            'customer_full_name' => $data['customer_full_name'],
-            'customer_phone' => $data['customer_phone'],
-            'customer_email' => $data['customer_email'] ?? null,
-            'customer_type' => 'new_customer',
-            'customer_notes' => $data['client_notes'] ?? null,
-            'desired_destination' => $data['desired_destination'],
-            'departure_city' => $data['departure_city'],
-            'desired_departure_date' => $data['desired_departure_date'],
-            'desired_return_date' => $data['desired_return_date'] ?? null,
-            'travel_type' => $data['travel_type'],
-            'travelers_count' => $data['travelers_count'],
-            'adults_count' => $data['adults_count'],
-            'children_count' => $childrenCount,
-            'babies_count' => $babiesCount,
-            'status' => CustomRequest::STATUS_NEW,
-            'priority' => 'normal',
-            'payment_status' => 'unpaid',
-            'currency' => 'MAD',
-            'paid_amount' => 0,
-        ]);
-
-        $customRequest->statusLogs()->create([
-            'user_id' => $user->id,
-            'old_status' => null,
-            'new_status' => CustomRequest::STATUS_NEW,
-            'note' => 'Demande créée depuis l’espace agent.',
-        ]);
-
-        $this->notifications->notifyNewRequest($customRequest);
-
         return redirect()
-            ->route('agent.custom-reservations.index')
-            ->with('success', 'Demande à la carte créée.');
+            ->route('agent.custom-reservations.show', $customRequest)
+            ->with('success', $customRequest->status === CustomRequest::STATUS_NEW ? 'Demande à la carte créée.' : 'Brouillon enregistré.');
     }
 
     public function show(Request $request, CustomRequest $customRequest): View
@@ -147,6 +138,17 @@ class CustomReservationController extends Controller
         ]);
     }
 
+    public function downloadQuote(Request $request, CustomRequest $customRequest, CustomRequestQuote $quote): StreamedResponse
+    {
+        $user = $request->user();
+        abort_unless($user && AgentPortalLayout::shouldUse($user) && $user->can('custom_requests.view'), 403);
+        abort_unless($this->agentOwnsRequest($customRequest, (int) $user->id), 403);
+        abort_unless((int) $quote->custom_request_id === (int) $customRequest->id, 404);
+        abort_unless($quote->pdf_path && Storage::disk('public')->exists($quote->pdf_path), 404);
+
+        return Storage::disk('public')->download($quote->pdf_path, basename($quote->pdf_path));
+    }
+
     private function scopeOwnedByAgent(Builder $query, int $userId): Builder
     {
         return $query->where('created_by', $userId)
@@ -159,5 +161,120 @@ class CustomReservationController extends Controller
             (int) ($customRequest->created_by ?? 0),
             (int) ($customRequest->assigned_to ?? 0),
         ]), true);
+    }
+
+    private function validatedPayload(Request $request): array
+    {
+        $data = $request->validate([
+            'customer_full_name' => ['required', 'string', 'max:255'],
+            'customer_phone' => ['required', 'string', 'max:50'],
+            'customer_email' => ['nullable', 'email', 'max:255'],
+            'customer_city' => ['nullable', 'string', 'max:255'],
+            'customer_country' => ['nullable', 'string', 'max:255'],
+            'customer_identity' => ['nullable', 'string', 'max:255'],
+            'customer_type' => ['required', Rule::in(['new_customer', 'existing_customer'])],
+            'customer_notes' => ['nullable', 'string'],
+            'desired_destination' => ['required', 'string', 'max:255'],
+            'departure_city' => ['required', 'string', 'max:255'],
+            'desired_departure_date' => ['required', 'date'],
+            'desired_return_date' => ['nullable', 'date', 'after_or_equal:desired_departure_date'],
+            'desired_duration' => ['nullable', 'string', 'max:255'],
+            'travel_type' => ['required', Rule::in(array_keys(CustomRequest::travelTypeOptions()))],
+            'travelers_count' => ['required', 'integer', 'min:1'],
+            'adults_count' => ['required', 'integer', 'min:1'],
+            'children_count' => ['nullable', 'integer', 'min:0'],
+            'babies_count' => ['nullable', 'integer', 'min:0'],
+            'approximate_budget' => ['nullable', 'numeric', 'min:0'],
+            'currency' => ['required', Rule::in(['MAD', 'EUR', 'USD'])],
+            'desired_level' => ['nullable', Rule::in(['economy', 'standard', 'comfort', 'premium', 'luxury'])],
+            'desired_hotel' => ['nullable', 'string', 'max:255'],
+            'hotel_category' => ['nullable', Rule::in(['3_stars', '4_stars', '5_stars', 'riad', 'apartment', 'villa', 'unspecified'])],
+            'meal_plan' => ['nullable', Rule::in(['room_only', 'breakfast', 'half_board', 'full_board', 'all_inclusive'])],
+            'rooms_count' => ['nullable', 'integer', 'min:1'],
+            'room_type' => ['nullable', Rule::in(['single', 'double', 'triple', 'quadruple', 'family'])],
+            'separate_room_needed' => ['nullable', 'boolean'],
+            'accommodation_notes' => ['nullable', 'string'],
+            'flight_included' => ['nullable', Rule::in(['yes', 'no', 'to_confirm'])],
+            'preferred_airline' => ['nullable', 'string', 'max:255'],
+            'departure_airport' => ['nullable', 'string', 'max:255'],
+            'arrival_airport' => ['nullable', 'string', 'max:255'],
+            'baggage_included' => ['nullable', Rule::in(['yes', 'no', 'to_confirm'])],
+            'airport_transfer_included' => ['nullable', Rule::in(['yes', 'no'])],
+            'local_transport' => ['nullable', Rule::in(['none', 'bus', 'minibus', 'private_car', 'private_driver'])],
+            'transport_notes' => ['nullable', 'string'],
+            'requested_services_details' => ['nullable', 'string'],
+            'estimated_price' => ['nullable', 'numeric', 'min:0'],
+            'requested_deposit' => ['nullable', 'numeric', 'min:0'],
+            'paid_amount' => ['nullable', 'numeric', 'min:0'],
+            'payment_method' => ['nullable', Rule::in(['cash', 'transfer', 'card', 'cheque', 'other'])],
+            'payment_status' => ['required', Rule::in(array_keys(CustomRequest::paymentStatusOptions()))],
+            'priority' => ['required', Rule::in(array_keys(CustomRequest::priorityOptions()))],
+            'response_deadline' => ['nullable', 'date'],
+            'internal_notes' => ['nullable', 'string'],
+            'documents.*' => ['nullable', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,doc,docx'],
+        ]);
+
+        $data['children_count'] = (int) ($data['children_count'] ?? 0);
+        $data['babies_count'] = (int) ($data['babies_count'] ?? 0);
+        $data['paid_amount'] = (float) ($data['paid_amount'] ?? 0);
+        $data['separate_room_needed'] = $request->boolean('separate_room_needed');
+
+        if ((int) $data['travelers_count'] < ((int) $data['adults_count'] + $data['children_count'] + $data['babies_count'])) {
+            return back()
+                ->withErrors(['travelers_count' => 'Le nombre total de voyageurs doit être cohérent avec adultes, enfants et bébés.'])
+                ->withInput()
+                ->throwResponse();
+        }
+
+        return Arr::except($data, ['documents']);
+    }
+
+    private function syncServices(CustomRequest $customRequest, array $serviceKeys): void
+    {
+        $allowed = CustomRequest::serviceOptions();
+        $customRequest->services()->delete();
+
+        foreach (array_values(array_unique($serviceKeys)) as $key) {
+            if (! isset($allowed[$key])) {
+                continue;
+            }
+
+            $customRequest->services()->create([
+                'service_key' => $key,
+                'service_label' => $allowed[$key],
+            ]);
+        }
+    }
+
+    private function storeUploadedDocuments(Request $request, CustomRequest $customRequest): void
+    {
+        foreach ((array) $request->file('documents', []) as $file) {
+            if (! $file) {
+                continue;
+            }
+
+            $path = $file->store('custom-requests/'.$customRequest->id.'/documents', 'public');
+            $customRequest->documents()->create([
+                'uploaded_by' => $request->user()?->id,
+                'document_type' => 'other',
+                'title' => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
+                'file_path' => $path,
+                'original_name' => $file->getClientOriginalName(),
+                'mime_type' => $file->getMimeType(),
+                'size' => $file->getSize(),
+                'is_auto_generated' => false,
+            ]);
+        }
+    }
+
+    private function sharedViewData(): array
+    {
+        return [
+            'statusOptions' => CustomRequest::statusOptions(),
+            'priorityOptions' => CustomRequest::priorityOptions(),
+            'paymentStatusOptions' => CustomRequest::paymentStatusOptions(),
+            'travelTypeOptions' => CustomRequest::travelTypeOptions(),
+            'serviceOptions' => CustomRequest::serviceOptions(),
+        ];
     }
 }

@@ -34,7 +34,7 @@
                         - {{ number_format((float) $customRequest->latestQuote->total_sale, 2, ',', ' ') }} {{ $customRequest->latestQuote->currency }}
                         @if($customRequest->latestQuote->pdf_path)
                             <div style="margin-top:10px;">
-                                <a class="aj-agent-primary-btn" href="{{ route('admin.custom-requests.quote.download', [$customRequest, $customRequest->latestQuote]) }}">Télécharger le devis PDF</a>
+                                <a class="aj-agent-primary-btn" href="{{ route('agent.custom-reservations.quote.download', [$customRequest, $customRequest->latestQuote]) }}">Télécharger le devis PDF</a>
                             </div>
                         @endif
                     </div>
