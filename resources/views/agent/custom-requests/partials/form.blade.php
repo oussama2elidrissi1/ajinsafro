@@ -246,8 +246,8 @@
                 <div class="aj-dac-service-config" data-service-config="visa,travel_insurance,tourist_guide,excursions,activities,catering,group_assistance,other">
                     <div class="aj-dac-service-config-title"><i class="bx bx-compass"></i> Détails services complémentaires</div>
                     <div class="aj-agent-dac-field aj-agent-dac-field-wide">
-                        <label>Détails des services demandés</label>
-                        <textarea name="requested_services_details">{{ $field('requested_services_details', $customRequest->requested_services_details) }}</textarea>
+                        <label>Services à préciser dans le programme</label>
+                        <textarea readonly>Complétez l’onglet “Détails de programme” pour décrire les journées, activités, excursions, assistance, visa, assurance ou autres services attendus.</textarea>
                     </div>
                 </div>
             </div>
@@ -255,6 +255,53 @@
     </div>
 
     <div class="aj-dac-step-panel" data-dac-step-panel="3">
+        <section class="aj-agent-dac-section">
+            <div class="aj-agent-dac-section-head">
+                <h2>Détails de programme</h2>
+                <span>Décrivez le déroulé souhaité, le rythme du voyage et les prestations à intégrer au programme.</span>
+            </div>
+            <div class="aj-agent-dac-grid">
+                <div class="aj-agent-dac-field">
+                    <label>Type de programme</label>
+                    <select>
+                        <option>Programme libre à construire</option>
+                        <option>Programme jour par jour souhaité</option>
+                        <option>Programme mixte avec temps libre</option>
+                    </select>
+                </div>
+                <div class="aj-agent-dac-field">
+                    <label>Rythme souhaité</label>
+                    <select>
+                        <option>Non précisé</option>
+                        <option>Souple</option>
+                        <option>Équilibré</option>
+                        <option>Intensif</option>
+                    </select>
+                </div>
+                <div class="aj-agent-dac-field">
+                    <label>Style d’expérience</label>
+                    <select>
+                        <option>Non précisé</option>
+                        <option>Famille</option>
+                        <option>Culturel</option>
+                        <option>Détente</option>
+                        <option>Aventure</option>
+                        <option>Premium</option>
+                    </select>
+                </div>
+                <div class="aj-agent-dac-field aj-agent-dac-field-wide">
+                    <label>Programme détaillé souhaité</label>
+                    <textarea name="requested_services_details" placeholder="Ex: Jour 1 arrivée et transfert hôtel, Jour 2 visite guidée, Jour 3 excursion, temps libre, préférences repas, contraintes horaires...">{{ $field('requested_services_details', $customRequest->requested_services_details) }}</textarea>
+                </div>
+                <div class="aj-agent-dac-field aj-agent-dac-field-wide">
+                    <label>Contraintes / préférences à respecter</label>
+                    <textarea placeholder="Ex: éviter les longues marches, prévoir guide francophone, horaires adaptés aux enfants, proximité hôtel, exigences Omra, accessibilité..."></textarea>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="aj-dac-step-panel" data-dac-step-panel="4">
         <section class="aj-agent-dac-section">
             <div class="aj-agent-dac-section-head">
                 <h2>Paiement / estimation</h2>

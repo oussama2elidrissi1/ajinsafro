@@ -148,6 +148,8 @@ class CustomRequestModuleTest extends TestCase
         $response->assertSee('Informations générales');
         $response->assertSee('Voyage demandé');
         $response->assertSee('Offre commerciale');
+        $response->assertSee('Détails de programme');
+        $response->assertSee('Programme détaillé souhaité');
         $response->assertSee('Configuration hébergement');
         $response->assertSee('Configuration transport et transferts');
         $response->assertSee('Paiement / estimation');

@@ -526,7 +526,9 @@
         <div class="aj-dac-step-line"></div>
         <button type="button" class="aj-dac-step-pill" data-dac-step-button="2"><span>2</span> Offre commerciale</button>
         <div class="aj-dac-step-line"></div>
-        <button type="button" class="aj-dac-step-pill" data-dac-step-button="3"><span>3</span> Paiement et suivi</button>
+        <button type="button" class="aj-dac-step-pill" data-dac-step-button="3"><span>3</span> Détails de programme</button>
+        <div class="aj-dac-step-line"></div>
+        <button type="button" class="aj-dac-step-pill" data-dac-step-button="4"><span>4</span> Paiement et suivi</button>
     </div>
 
     <div class="aj-dac-card">
