@@ -314,6 +314,12 @@
             min-height: 108px;
             resize: vertical;
         }
+        .aj-agent-dac-textarea-large {
+            min-height: 190px !important;
+            font-size: 15px !important;
+            line-height: 1.6 !important;
+            padding: 14px 16px !important;
+        }
         .aj-agent-dac-field input:focus,
         .aj-agent-dac-field select:focus,
         .aj-agent-dac-field textarea:focus {
