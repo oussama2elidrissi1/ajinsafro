@@ -106,6 +106,7 @@ class CustomRequestModuleTest extends TestCase
             'payment_status' => 'unpaid',
             'priority' => 'normal',
             'services' => ['flight_ticket', 'hotel', 'transfers'],
+            'submit_action' => 'submit',
         ]);
 
         $response = app(CustomReservationController::class)->store($request);
@@ -125,6 +126,19 @@ class CustomRequestModuleTest extends TestCase
         $this->assertDatabaseHas('custom_request_services', [
             'custom_request_id' => $customRequest->id,
             'service_key' => 'hotel',
+        ]);
+
+        $customRequest->refresh();
+        $this->assertNotNull($customRequest->latestQuote);
+        $this->assertTrue((bool) $customRequest->latestQuote->summary_mode);
+        $this->assertSame('0.00', (string) $customRequest->latestQuote->total_sale);
+        $this->assertNotNull($customRequest->latestQuote->pdf_path);
+        Storage::disk('public')->assertExists($customRequest->latestQuote->pdf_path);
+        $this->assertDatabaseHas('custom_request_documents', [
+            'custom_request_id' => $customRequest->id,
+            'quote_id' => $customRequest->latestQuote->id,
+            'document_type' => 'quote',
+            'is_auto_generated' => true,
         ]);
 
         $this->assertDatabaseHas('notifications', [

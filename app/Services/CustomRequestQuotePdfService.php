@@ -10,7 +10,7 @@ class CustomRequestQuotePdfService
 {
     public function generate(CustomRequestQuote $quote): string
     {
-        $quote->loadMissing(['customRequest.creator', 'items']);
+        $quote->loadMissing(['customRequest.creator', 'customRequest.services', 'items']);
 
         $directory = 'custom-requests/'.$quote->custom_request_id.'/quotes';
         $fileName = 'devis-'.$quote->quote_number.'-v'.$quote->version.'.pdf';
@@ -30,6 +30,8 @@ class CustomRequestQuotePdfService
             'quote' => $quote,
             'customRequest' => $quote->customRequest,
             'items' => $quote->items,
+            'showAmounts' => ! (bool) $quote->summary_mode,
+            'summaryMode' => (bool) $quote->summary_mode,
         ];
     }
 }

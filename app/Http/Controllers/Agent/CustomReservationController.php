@@ -194,6 +194,10 @@ class CustomReservationController extends Controller
             return $customRequest;
         });
 
+        if ($request->input('submit_action') === 'submit') {
+            $this->generateSummaryQuote($customRequest, $user);
+        }
+
         if ($customRequest->status === CustomRequest::STATUS_NEW) {
             $this->notifications->notifyNewRequest($customRequest);
         }
@@ -403,6 +407,33 @@ class CustomReservationController extends Controller
             'travelTypeOptions' => CustomRequest::travelTypeOptions(),
             'serviceOptions' => CustomRequest::serviceOptions(),
         ];
+    }
+
+    private function generateSummaryQuote(CustomRequest $customRequest, User $user): void
+    {
+        $quote = $customRequest->quotes()->create([
+            'created_by' => $user->id,
+            'version' => 1,
+            'currency' => $customRequest->currency ?: 'MAD',
+            'summary_mode' => true,
+            'paid_amount' => 0,
+        ]);
+
+        $path = $quote->generatePdf();
+        $quote->markAsPrepared();
+
+        $customRequest->documents()->updateOrCreate(
+            ['quote_id' => $quote->id, 'document_type' => 'quote'],
+            [
+                'uploaded_by' => $user->id,
+                'title' => 'Devis '.$quote->quote_number.' v'.$quote->version,
+                'file_path' => $path,
+                'original_name' => basename($path),
+                'mime_type' => 'application/pdf',
+                'size' => Storage::disk('public')->size($path),
+                'is_auto_generated' => true,
+            ]
+        );
     }
 
 }

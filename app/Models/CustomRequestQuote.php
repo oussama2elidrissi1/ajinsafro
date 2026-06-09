@@ -22,11 +22,12 @@ class CustomRequestQuote extends Model
         'custom_request_id', 'quote_number', 'version', 'created_by', 'status', 'currency',
         'supplier_name', 'valid_until', 'total_purchase', 'total_margin', 'total_sale',
         'requested_deposit', 'paid_amount', 'remaining_amount', 'customer_conditions',
-        'internal_notes', 'pdf_path', 'prepared_at', 'sent_at',
+        'internal_notes', 'pdf_path', 'summary_mode', 'prepared_at', 'sent_at',
     ];
 
     protected $casts = [
         'valid_until' => 'date',
+        'summary_mode' => 'boolean',
         'prepared_at' => 'datetime',
         'sent_at' => 'datetime',
         'total_purchase' => 'decimal:2',

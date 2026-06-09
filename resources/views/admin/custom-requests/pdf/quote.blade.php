@@ -35,6 +35,7 @@
         .totals td { border:0; border-bottom:1px solid #e4ebf3; padding:6px 0; }
         .total-main td { font-size:15px; font-weight:700; color:#1f6feb; }
         .conditions { background:#f8fafc; border:1px solid #d9e5f2; padding:12px; }
+        .summary-box { background:#f8fafc; border:1px solid #d9e5f2; padding:12px; margin-top:8px; }
         .footer { position:fixed; bottom:-12px; left:0; right:0; text-align:center; color:#66758a; font-size:10px; border-top:1px solid #d9e5f2; padding-top:8px; }
         .page:after { content: counter(page); }
     </style>
@@ -83,35 +84,56 @@
 
     <div class="block">
         <h3>Prestations</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th style="width:18%">Service</th>
-                    <th>Description</th>
-                    <th style="width:10%" class="text-right">Qté</th>
-                    <th style="width:16%" class="text-right">Prix unitaire</th>
-                    <th style="width:16%" class="text-right">Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($items as $item)
+        @if($showAmounts && $items->isNotEmpty())
+            <table>
+                <thead>
                     <tr>
-                        <td>{{ $serviceLabels[$item->service_type] ?? $item->service_type }}</td>
-                        <td>{!! nl2br(e($item->description)) !!}</td>
-                        <td class="text-right">{{ $item->quantity }}</td>
-                        <td class="text-right">{{ number_format((float) $item->unit_sale_price, 2, ',', ' ') }} {{ $quote->currency }}</td>
-                        <td class="text-right">{{ number_format((float) $item->total_sale, 2, ',', ' ') }} {{ $quote->currency }}</td>
+                        <th style="width:18%">Service</th>
+                        <th>Description</th>
+                        <th style="width:10%" class="text-right">Qté</th>
+                        <th style="width:16%" class="text-right">Prix unitaire</th>
+                        <th style="width:16%" class="text-right">Total</th>
                     </tr>
-                @endforeach
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach($items as $item)
+                        <tr>
+                            <td>{{ $serviceLabels[$item->service_type] ?? $item->service_type }}</td>
+                            <td>{!! nl2br(e($item->description)) !!}</td>
+                            <td class="text-right">{{ $item->quantity }}</td>
+                            <td class="text-right">{{ number_format((float) $item->unit_sale_price, 2, ',', ' ') }} {{ $quote->currency }}</td>
+                            <td class="text-right">{{ number_format((float) $item->total_sale, 2, ',', ' ') }} {{ $quote->currency }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
 
-        <table class="totals">
-            <tr class="total-main"><td>Total devis</td><td class="text-right">{{ number_format((float) $quote->total_sale, 2, ',', ' ') }} {{ $quote->currency }}</td></tr>
-            <tr><td>Acompte demandé</td><td class="text-right">{{ $quote->requested_deposit ? number_format((float) $quote->requested_deposit, 2, ',', ' ').' '.$quote->currency : '-' }}</td></tr>
-            <tr><td>Montant payé</td><td class="text-right">{{ number_format((float) $quote->paid_amount, 2, ',', ' ') }} {{ $quote->currency }}</td></tr>
-            <tr><td>Reste à payer</td><td class="text-right">{{ number_format((float) $quote->remaining_amount, 2, ',', ' ') }} {{ $quote->currency }}</td></tr>
-        </table>
+            <table class="totals">
+                <tr class="total-main"><td>Total devis</td><td class="text-right">{{ number_format((float) $quote->total_sale, 2, ',', ' ') }} {{ $quote->currency }}</td></tr>
+                <tr><td>Acompte demandé</td><td class="text-right">{{ $quote->requested_deposit ? number_format((float) $quote->requested_deposit, 2, ',', ' ').' '.$quote->currency : '-' }}</td></tr>
+                <tr><td>Montant payé</td><td class="text-right">{{ number_format((float) $quote->paid_amount, 2, ',', ' ') }} {{ $quote->currency }}</td></tr>
+                <tr><td>Reste à payer</td><td class="text-right">{{ number_format((float) $quote->remaining_amount, 2, ',', ' ') }} {{ $quote->currency }}</td></tr>
+            </table>
+        @else
+            <div class="summary-box">
+                <strong>Devis de synthèse sans tarification</strong>
+                <div class="muted" style="margin-top:6px;">
+                    Ce devis reprend uniquement les informations saisies dans la demande. Les tarifs seront ajoutés plus tard par le service cotation.
+                </div>
+                <div style="margin-top:10px;">
+                    <strong>Services demandés :</strong><br>
+                    {{ $customRequest->services->pluck('service_label')->filter()->implode(', ') ?: 'Non précisé' }}
+                </div>
+                <div style="margin-top:10px;">
+                    <strong>Détails programme :</strong><br>
+                    {!! nl2br(e($customRequest->requested_services_details ?: 'Aucun détail saisi.')) !!}
+                </div>
+                <div style="margin-top:10px;">
+                    <strong>Contraintes / remarques :</strong><br>
+                    {!! nl2br(e($customRequest->customer_notes ?: 'Aucune contrainte saisie.')) !!}
+                </div>
+            </div>
+        @endif
     </div>
 
     <div class="block conditions">
