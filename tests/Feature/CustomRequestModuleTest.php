@@ -143,11 +143,13 @@ class CustomRequestModuleTest extends TestCase
         $response = $this->actingAs($commercial)->get(route('agent.custom-reservations.create'));
 
         $response->assertOk();
-        $response->assertSee('Informations client');
-        $response->assertSee('Informations voyage demandé');
-        $response->assertSee('Hébergement');
-        $response->assertSee('Transport');
-        $response->assertSee('Services demandés');
+        $response->assertSee('Créer une demande à la carte');
+        $response->assertSee('Parcours');
+        $response->assertSee('Informations générales');
+        $response->assertSee('Voyage demandé');
+        $response->assertSee('Offre commerciale');
+        $response->assertSee('Configuration hébergement');
+        $response->assertSee('Configuration transport et transferts');
         $response->assertSee('Paiement / estimation');
         $response->assertSee('Suivi');
         $response->assertSee('Nom complet du client <span>*</span>', false);
