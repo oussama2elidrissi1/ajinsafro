@@ -37,7 +37,7 @@ class CustomReservationController extends Controller
 
         $query = CustomRequest::query()
             ->with(['latestQuote', 'assignedAgent:id,name'])
-            ->where(fn (Builder $builder) => $this->scopeOwnedByAgent($builder, (int) $user->id));
+            ->visibleTo($user);
 
         if ($filters['client'] !== '') {
             $like = '%'.$filters['client'].'%';
@@ -211,7 +211,7 @@ class CustomReservationController extends Controller
     {
         $user = $request->user();
         abort_unless($user && AgentPortalLayout::shouldUse($user) && $user->can('custom_requests.view'), 403);
-        abort_unless($this->agentOwnsRequest($customRequest, (int) $user->id), 403);
+        abort_unless($this->agentCanAccessRequest($customRequest, $user), 403);
 
         return view('agent.custom-reservations.show', [
             'customRequest' => $customRequest->load(['client:id,client_code,full_name,phone,email', 'latestQuote.generatedDocument', 'documents', 'comments.user:id,name', 'statusLogs.user:id,name']),
@@ -223,7 +223,7 @@ class CustomReservationController extends Controller
     {
         $user = $request->user();
         abort_unless($user && AgentPortalLayout::shouldUse($user) && $user->can('custom_requests.view'), 403);
-        abort_unless($this->agentOwnsRequest($customRequest, (int) $user->id), 403);
+        abort_unless($this->agentCanAccessRequest($customRequest, $user), 403);
         abort_unless((int) $quote->custom_request_id === (int) $customRequest->id, 404);
         abort_unless($quote->pdf_path && Storage::disk('public')->exists($quote->pdf_path), 404);
 
@@ -234,6 +234,23 @@ class CustomReservationController extends Controller
     {
         return $query->where('created_by', $userId)
             ->orWhere('assigned_to', $userId);
+    }
+
+    private function agentCanAccessRequest(CustomRequest $customRequest, User $user): bool
+    {
+        if ((int) ($customRequest->created_by ?? 0) === (int) $user->id) {
+            return true;
+        }
+
+        if ((int) ($customRequest->assigned_to ?? 0) === (int) $user->id) {
+            return true;
+        }
+
+        if ($customRequest->canBeQuotedBy($user)) {
+            return true;
+        }
+
+        return false;
     }
 
     private function agentOwnsRequest(CustomRequest $customRequest, int $userId): bool
