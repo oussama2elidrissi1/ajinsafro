@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\BranchScopeService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -18,6 +19,8 @@ class TangerAgentsSeeder extends Seeder
     public function run(): void
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        Permission::findOrCreate('custom_requests.create', 'web');
 
         $branch = Branch::query()
             ->where('code', 'TNG')
@@ -31,6 +34,7 @@ class TangerAgentsSeeder extends Seeder
         }
 
         $role = Role::findOrCreate(BranchScopeService::ROLE_AGENT, 'web');
+        $role->givePermissionTo('custom_requests.create');
         $managerId = User::query()->where('email', 'chef.TNG@ajinsafro.com')->value('id')
             ?: $branch->manager_user_id;
 

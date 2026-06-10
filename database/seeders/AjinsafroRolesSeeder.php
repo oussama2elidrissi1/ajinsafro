@@ -55,7 +55,7 @@ class AjinsafroRolesSeeder extends Seeder
                 || str_starts_with($p, 'circuits.') || str_starts_with($p, 'group-deals.')
                 || str_starts_with($p, 'products-services.') || str_starts_with($p, 'operations.') || str_starts_with($p, 'visa.')
                 || str_starts_with($p, 'messagerie.')
-                || in_array($p, ['agencies.view', 'points_of_sale.view', 'agency_accounts.view', 'commissions.view-own'], true);
+                || in_array($p, ['agencies.view', 'points_of_sale.view', 'agency_accounts.view', 'commissions.view-own', 'custom_requests.create'], true);
         }));
         $agent = array_values(array_diff($agent, self::RESTRICTED_RESERVATION_PERMISSIONS));
 

@@ -202,9 +202,19 @@ class CustomReservationController extends Controller
             $this->notifications->notifyNewRequest($customRequest);
         }
 
+        $successMessage = $customRequest->status === CustomRequest::STATUS_NEW
+            ? 'Demande à la carte créée.'
+            : 'Brouillon enregistré.';
+
+        if ($user->can('custom_requests.view')) {
+            return redirect()
+                ->route('agent.custom-reservations.show', $customRequest)
+                ->with('success', $successMessage);
+        }
+
         return redirect()
-            ->route('agent.custom-reservations.show', $customRequest)
-            ->with('success', $customRequest->status === CustomRequest::STATUS_NEW ? 'Demande à la carte créée.' : 'Brouillon enregistré.');
+            ->route('agent.custom-reservations.create')
+            ->with('success', $successMessage.' Réf. '.$customRequest->request_number);
     }
 
     public function show(Request $request, CustomRequest $customRequest): View
