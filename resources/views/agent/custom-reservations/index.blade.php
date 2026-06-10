@@ -39,19 +39,19 @@
             <h1>Réservations à la carte</h1>
             <p>Demandes personnalisées créées par vous ou avec un devis reçu.</p>
         </div>
-        @can('custom_requests.create')
+        @if($canCreateRequest ?? false)
             <a href="{{ route('agent.custom-reservations.create') }}" class="aj-agent-primary-btn">
                 <i class="bx bx-plus-circle"></i>
                 <span>Nouvelle demande à la carte</span>
             </a>
-        @endcan
+        @endif
     </div>
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    @can('custom_requests.create')
+    @if($canCreateRequest ?? false)
         <section class="aj-agent-cta-card">
             <div class="aj-agent-cta-copy">
                 <strong>Creer une nouvelle demande a la carte</strong>
@@ -62,7 +62,7 @@
                 <span>Creer une demande</span>
             </a>
         </section>
-    @endcan
+    @endif
 
     <form method="GET" action="{{ route('agent.custom-reservations.index') }}" class="aj-agent-filter-card">
         <div class="aj-agent-filter-grid">
@@ -118,9 +118,9 @@
         <div class="aj-agent-empty">
             <h2>Aucune demande à la carte</h2>
             <p>Les demandes personnalisées créées par votre compte apparaîtront ici.</p>
-            @can('custom_requests.create')
+            @if($canCreateRequest ?? false)
                 <a href="{{ route('agent.custom-reservations.create') }}" class="aj-agent-primary-btn">Créer une demande</a>
-            @endcan
+            @endif
         </div>
     @endif
 </div>

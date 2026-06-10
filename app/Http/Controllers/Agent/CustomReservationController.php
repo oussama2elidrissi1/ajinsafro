@@ -66,6 +66,7 @@ class CustomReservationController extends Controller
             'filters' => $filters,
             'statusOptions' => CustomRequest::statusOptions(),
             'travelTypeOptions' => CustomRequest::travelTypeOptions(),
+            'canCreateRequest' => $user->can('custom_requests.create'),
         ]);
     }
 
