@@ -46,7 +46,7 @@
         .aj-agent-hero-kicker {
             margin: 0 0 8px;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 700;
             letter-spacing: .08em;
             text-transform: uppercase;
             color: rgba(255, 255, 255, .74);
@@ -55,7 +55,7 @@
             margin: 0;
             font-size: 34px;
             line-height: 1.05;
-            font-weight: 900;
+            font-weight: 800;
             color: #fff;
         }
         .aj-agent-hero-copy p {
@@ -97,7 +97,7 @@
             display: block;
             color: #123d60;
             font-size: 24px;
-            font-weight: 900;
+            font-weight: 800;
             line-height: 1.1;
         }
         .aj-agent-filter-title span {
@@ -117,7 +117,7 @@
             margin-bottom: 7px;
             color: #64748b;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: .04em;
         }
@@ -166,7 +166,7 @@
             margin: 0;
             color: #123d60;
             font-size: 28px;
-            font-weight: 900;
+            font-weight: 800;
             line-height: 1.05;
         }
         .aj-agent-request-ref {
@@ -174,7 +174,7 @@
             margin-top: 6px;
             color: #7c8ea4;
             font-size: 12px;
-            font-weight: 700;
+            font-weight: 600;
         }
         .aj-agent-status-stack {
             display: flex;
@@ -188,7 +188,7 @@
             border-radius: 999px;
             padding: 7px 11px;
             font-size: 12px;
-            font-weight: 800;
+            font-weight: 700;
             line-height: 1;
             white-space: nowrap;
         }
@@ -212,7 +212,7 @@
             display: block;
             color: #71849c;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: .04em;
         }
@@ -221,7 +221,7 @@
             margin-top: 8px;
             color: #172334;
             font-size: 16px;
-            font-weight: 800;
+            font-weight: 700;
             line-height: 1.35;
         }
         .aj-agent-request-actions {
@@ -244,7 +244,7 @@
             margin: 0;
             color: #123d60;
             font-size: 24px;
-            font-weight: 900;
+            font-weight: 800;
         }
         .aj-agent-empty p {
             margin: 8px auto 0;
