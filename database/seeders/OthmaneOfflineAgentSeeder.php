@@ -20,7 +20,6 @@ class OthmaneOfflineAgentSeeder extends Seeder
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         $permissions = [
-            'dashboard.view',
             'custom_requests.view',
             'custom_requests.quote',
             'custom_requests.documents',

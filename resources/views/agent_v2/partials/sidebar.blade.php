@@ -22,12 +22,14 @@
         </div>
 
         <nav class="agent-sidebar-menu">
-            <a href="{{ route('agent.dashboard') }}"
-               data-partner-nav
-               class="agent-sidebar-link {{ $dashboardActive ? 'active' : '' }}">
-                <i class="bx bx-grid-alt agent-sidebar-icon"></i>
-                <span class="agent-sidebar-text">Dashboard</span>
-            </a>
+            @can('dashboard.view')
+                <a href="{{ route('agent.dashboard') }}"
+                   data-partner-nav
+                   class="agent-sidebar-link {{ $dashboardActive ? 'active' : '' }}">
+                    <i class="bx bx-grid-alt agent-sidebar-icon"></i>
+                    <span class="agent-sidebar-text">Dashboard</span>
+                </a>
+            @endcan
 
             @foreach($menuItems as $node)
                 @include('agent_v2.partials.sidebar-node', ['node' => $node, 'depth' => 0])
@@ -35,14 +37,14 @@
 
             <div class="agent-sidebar-divider"></div>
 
-            @can('dashboard.view')
+            @if($user?->can('dashboard.view') || $user?->can('custom_requests.view'))
                 <a href="{{ route('agent.profile') }}"
                    data-partner-nav
                    class="agent-sidebar-link {{ $profileActive ? 'active' : '' }}">
                     <i class="bx bx-user agent-sidebar-icon"></i>
                     <span class="agent-sidebar-text">Mon profil</span>
                 </a>
-            @endcan
+            @endif
 
             <a href="{{ route('logout.get') }}"
                class="agent-sidebar-link agent-sidebar-logout">

@@ -19,6 +19,7 @@ class DashboardController extends Controller
     public function index(Request $request): View
     {
         $user = $request->user();
+        abort_unless($user && $user->can('dashboard.view'), 403);
         $isManager = $user->isManager();
 
         $scope = $this->normalizeScope($request->query('scope'), $isManager);

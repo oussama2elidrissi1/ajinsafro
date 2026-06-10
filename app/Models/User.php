@@ -282,6 +282,7 @@ class User extends Authenticatable
             'Chef Commercial',
             'Manager',
             'Agent',
+            'Agent Offline',
         ]) || $this->can('dashboard.view');
     }
 }
