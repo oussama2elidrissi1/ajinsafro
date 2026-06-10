@@ -4,35 +4,54 @@
 @section('page_title', 'Cotation demande à la carte')
 
 @push('styles')
+@if(($quoteLayout ?? '') === 'layouts.master-ajinsafro')
+    <link href="{{ URL::asset('css/agent-dashboard.css') }}" rel="stylesheet" type="text/css" />
+@endif
 <style>
+    .partner-v2 .aj-topbar__brand-logo-wrap { width:96px !important; height:30px !important; max-width:96px !important; padding:4px 7px !important; overflow:hidden !important; }
+    .partner-v2 .aj-topbar__brand-logo { display:block !important; width:auto !important; height:auto !important; max-width:100% !important; max-height:22px !important; object-fit:contain !important; }
+    .partner-v2 .aj-topbar__brand { display:flex !important; align-items:center !important; gap:10px !important; min-width:0 !important; }
+    .partner-v2 .aj-topbar__brand-name { color:#fff !important; font-size:16px !important; font-weight:700 !important; white-space:nowrap !important; }
+    .partner-v2 .agent-portal-main { padding:0 18px 32px !important; }
+    .partner-v2 .agent-portal-main > .quote-page { max-width:1680px; margin:0 auto; }
+    .partner-v2 aside.w-full { width:18rem !important; max-width:18rem !important; flex:0 0 18rem !important; }
+    .partner-v2 aside .sticky { top:72px !important; }
+    .partner-v2 .agent-sidebar-menu { display:grid !important; gap:6px !important; padding:12px !important; }
+    .partner-v2 .agent-sidebar-link { display:flex !important; align-items:center !important; gap:10px !important; min-height:42px !important; padding:10px 13px !important; border-radius:12px !important; color:#40516a !important; text-decoration:none !important; }
+    .partner-v2 .agent-sidebar-link.active { background:#e6f3fa !important; color:#0083c4 !important; }
+    .partner-v2 .agent-sidebar-logout { color:#ef4444 !important; }
     .quote-page { display:grid; gap:14px; }
-    .quote-head,.quote-card { background:#fff; border:1px solid #dde7f0; border-radius:8px; padding:16px; }
+    .quote-head,.quote-card { background:#fff; border:1px solid #dde7f0; border-radius:12px; padding:16px; box-shadow:0 8px 20px rgba(15,23,42,.04); }
     .quote-head { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; }
     .quote-head h2 { margin:0; font-size:20px; font-weight:600; color:#10233f; }
     .quote-meta { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
-    .quote-layout { display:grid; grid-template-columns:minmax(0,1.8fr) minmax(320px,.8fr); gap:14px; align-items:start; }
+    .quote-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(260px,300px); gap:14px; align-items:start; }
     .quote-card h3 { margin:0 0 12px; font-size:15px; font-weight:600; color:#10233f; }
     .quote-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
     .quote-field label { display:block; font-size:12px; color:#536276; font-weight:600; margin-bottom:5px; }
-    .quote-field input,.quote-field select,.quote-field textarea { width:100%; border:1px solid #d8e2ec; border-radius:6px; padding:8px 9px; }
-    .quote-field textarea { min-height:92px; resize:vertical; }
+    .quote-field input,.quote-field select,.quote-field textarea { width:100%; min-height:38px; border:1px solid #d8e2ec; border-radius:8px; padding:8px 9px; background:#fff; }
+    .quote-field textarea { min-height:74px; resize:vertical; }
     .quote-field.full { grid-column:1 / -1; }
-    .quote-btn { border:0; border-radius:6px; padding:8px 11px; display:inline-flex; align-items:center; gap:6px; font-weight:600; text-decoration:none; }
+    .quote-btn { border:0; border-radius:8px; padding:8px 11px; display:inline-flex; align-items:center; justify-content:center; gap:6px; font-weight:600; text-decoration:none; line-height:1.2; }
     .quote-btn-primary { background:#1f6feb; color:#fff; }
     .quote-btn-soft { background:#eef3f8; color:#20324d; border:1px solid #d8e2ec; }
     .quote-btn-danger { background:#dc3545; color:#fff; }
     .quote-table-wrap { overflow:auto; border:1px solid #e7edf3; border-radius:8px; }
-    .quote-table { width:100%; min-width:980px; border-collapse:collapse; }
+    .quote-table { width:100%; min-width:930px; border-collapse:collapse; }
     .quote-table th { background:#f7fafc; color:#536276; font-size:12px; font-weight:600; padding:9px; }
     .quote-table td { padding:8px; border-top:1px solid #edf2f7; vertical-align:top; }
-    .quote-table input,.quote-table select,.quote-table textarea { width:100%; border:1px solid #d8e2ec; border-radius:6px; padding:7px; }
+    .quote-table input,.quote-table select,.quote-table textarea { width:100%; min-height:36px; border:1px solid #d8e2ec; border-radius:8px; padding:7px; }
+    .quote-table textarea { min-height:50px; }
     .quote-summary { display:grid; gap:8px; }
     .quote-summary-row { display:flex; justify-content:space-between; gap:12px; border-bottom:1px solid #edf2f7; padding-bottom:8px; color:#20324d; }
     .quote-summary-row strong { font-weight:600; }
     .quote-history { display:grid; gap:8px; max-height:360px; overflow:auto; }
     .quote-log { border-left:3px solid #d8e2ec; padding-left:10px; color:#20324d; }
+    .partner-v2 .quote-page .badge { display:inline-flex; align-items:center; border-radius:999px; padding:5px 9px; font-size:11px; line-height:1; }
+    @media(max-width:1400px){ .quote-layout{grid-template-columns:1fr}.quote-grid{grid-template-columns:repeat(2,1fr)} }
     @media(max-width:1200px){ .quote-layout{grid-template-columns:1fr}.quote-grid{grid-template-columns:repeat(2,1fr)} }
-    @media(max-width:720px){ .quote-head{display:grid}.quote-grid{grid-template-columns:1fr} }
+    @media(max-width:1024px){ .partner-v2 aside.w-full{width:100% !important;max-width:100% !important;flex:0 0 auto !important}.partner-v2 .agent-portal-main{padding:0 12px 28px !important} }
+    @media(max-width:720px){ .quote-head{display:grid}.quote-grid{grid-template-columns:1fr}.quote-card{padding:14px}.quote-table{min-width:820px} }
 </style>
 @endpush
 
