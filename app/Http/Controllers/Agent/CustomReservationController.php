@@ -26,7 +26,7 @@ class CustomReservationController extends Controller
     public function index(Request $request): View
     {
         $user = $request->user();
-        abort_unless($user && AgentPortalLayout::shouldUse($user) && $user->can('custom_requests.view'), 403);
+        abort_unless($user && $user->can('custom_requests.view'), 403);
 
         $filters = [
             'client' => trim((string) $request->query('client', '')),
@@ -72,7 +72,7 @@ class CustomReservationController extends Controller
     public function create(Request $request): View
     {
         $user = $request->user();
-        abort_unless($user && AgentPortalLayout::shouldUse($user) && $user->can('custom_requests.create'), 403);
+        abort_unless($user && $user->can('custom_requests.create'), 403);
 
         $selectedClient = null;
         $selectedClientId = (int) old('existing_client_id', 0);
@@ -104,7 +104,7 @@ class CustomReservationController extends Controller
     public function searchClients(Request $request): \Illuminate\Http\JsonResponse
     {
         $user = $request->user();
-        abort_unless($user && AgentPortalLayout::shouldUse($user) && $user->can('custom_requests.create'), 403);
+        abort_unless($user && $user->can('custom_requests.create'), 403);
 
         $q = trim((string) $request->query('q', ''));
         if (mb_strlen($q) < 2) {
@@ -168,7 +168,7 @@ class CustomReservationController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $user = $request->user();
-        abort_unless($user && AgentPortalLayout::shouldUse($user) && $user->can('custom_requests.create'), 403);
+        abort_unless($user && $user->can('custom_requests.create'), 403);
 
         $data = $this->validatedPayload($request);
         $data['created_by'] = $user->id;
@@ -210,7 +210,7 @@ class CustomReservationController extends Controller
     public function show(Request $request, CustomRequest $customRequest): View
     {
         $user = $request->user();
-        abort_unless($user && AgentPortalLayout::shouldUse($user) && $user->can('custom_requests.view'), 403);
+        abort_unless($user && $user->can('custom_requests.view'), 403);
         abort_unless($this->agentCanAccessRequest($customRequest, $user), 403);
 
         return view('agent.custom-reservations.show', [
@@ -235,7 +235,7 @@ class CustomReservationController extends Controller
     public function downloadQuote(Request $request, CustomRequest $customRequest, CustomRequestQuote $quote): StreamedResponse
     {
         $user = $request->user();
-        abort_unless($user && AgentPortalLayout::shouldUse($user) && $user->can('custom_requests.view'), 403);
+        abort_unless($user && $user->can('custom_requests.view'), 403);
         abort_unless($this->agentCanAccessRequest($customRequest, $user), 403);
         abort_unless((int) $quote->custom_request_id === (int) $customRequest->id, 404);
         abort_unless($quote->pdf_path && Storage::disk('public')->exists($quote->pdf_path), 404);
