@@ -10,6 +10,8 @@
         .aj-agent-custom-head h1 { margin:0; color:#0e3a5a; font-weight:800; font-size:28px; }
         .aj-agent-custom-head p { margin:6px 0 0; color:#64748b; font-size:14px; }
         .aj-agent-filter-card { background:#fff; border:1px solid #e2e8f0; border-radius:18px; box-shadow:0 6px 16px rgba(15,23,42,.05); padding:16px; margin-bottom:18px; }
+        .aj-agent-filter-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
+        .aj-agent-filter-head strong { color:#0e3a5a; font-size:15px; font-weight:800; }
         .aj-agent-cta-card { display:flex; align-items:center; justify-content:space-between; gap:18px; background:linear-gradient(135deg,#0e3a5a 0%,#0f5f8f 100%); border:1px solid rgba(14,58,90,.15); border-radius:20px; box-shadow:0 12px 26px rgba(14,58,90,.14); padding:20px 22px; margin-bottom:18px; color:#fff; }
         .aj-agent-cta-copy strong { display:block; font-size:18px; font-weight:800; letter-spacing:.01em; }
         .aj-agent-cta-copy p { margin:6px 0 0; max-width:720px; color:rgba(255,255,255,.82); font-size:13px; line-height:1.55; }
@@ -28,7 +30,7 @@
         .aj-agent-empty { background:#fff; border:1px dashed #cbd5e1; border-radius:18px; padding:36px; text-align:center; color:#64748b; }
         .aj-agent-badge { display:inline-flex; align-items:center; border-radius:999px; padding:5px 9px; background:#e8f4fd; color:#0570b8; font-size:12px; font-weight:800; }
         @media (max-width: 1000px) { .aj-agent-cta-card { flex-direction:column; align-items:flex-start; } .aj-agent-filter-grid { grid-template-columns:1fr 1fr; } .aj-agent-request-grid { grid-template-columns:1fr; } }
-        @media (max-width: 640px) { .aj-agent-custom-page { padding:0 12px 24px; } .aj-agent-custom-head { flex-direction:column; } .aj-agent-filter-grid, .aj-agent-request-meta { grid-template-columns:1fr; } .aj-agent-cta-card .aj-agent-primary-btn { width:100%; justify-content:center; } }
+        @media (max-width: 640px) { .aj-agent-custom-page { padding:0 12px 24px; } .aj-agent-custom-head, .aj-agent-filter-head { flex-direction:column; align-items:stretch; } .aj-agent-filter-grid, .aj-agent-request-meta { grid-template-columns:1fr; } .aj-agent-cta-card .aj-agent-primary-btn, .aj-agent-filter-head .aj-agent-primary-btn { width:100%; justify-content:center; } }
     </style>
 @endpush
 
@@ -65,6 +67,15 @@
     @endif
 
     <form method="GET" action="{{ route('agent.custom-reservations.index') }}" class="aj-agent-filter-card">
+        <div class="aj-agent-filter-head">
+            <strong>Liste des demandes</strong>
+            @if($canCreateRequest ?? false)
+                <a href="{{ route('agent.custom-reservations.create') }}" class="aj-agent-primary-btn">
+                    <i class="bx bx-plus-circle"></i>
+                    <span>Creer une reservation a la carte</span>
+                </a>
+            @endif
+        </div>
         <div class="aj-agent-filter-grid">
             <div class="aj-agent-field">
                 <label for="client">Client</label>

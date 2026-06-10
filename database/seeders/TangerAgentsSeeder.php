@@ -28,6 +28,7 @@ class TangerAgentsSeeder extends Seeder
             ->orWhere('name', 'Ajinsafro Tanger')
             ->orWhere('city', 'Tanger')
             ->first();
+
         if (! $branch) {
             $this->command?->warn('Agence Tanger (TNG) introuvable. Lancez BranchesSeeder avant TangerAgentsSeeder.');
 
@@ -37,6 +38,7 @@ class TangerAgentsSeeder extends Seeder
         $role = Role::findOrCreate(BranchScopeService::ROLE_AGENT, 'web');
         $role->givePermissionTo('custom_requests.view');
         $role->givePermissionTo('custom_requests.create');
+
         $managerId = User::query()->where('email', 'chef.TNG@ajinsafro.com')->value('id')
             ?: $branch->manager_user_id;
 
@@ -47,7 +49,7 @@ class TangerAgentsSeeder extends Seeder
                 'job_title' => 'Agent',
                 'first_name' => 'Oumaima',
                 'last_name' => 'Ajinsafro',
-                'position' => 'Agent réservation',
+                'position' => 'Agent reservation',
             ],
             [
                 'name' => 'Ilham Ajinsafro',
@@ -55,7 +57,23 @@ class TangerAgentsSeeder extends Seeder
                 'job_title' => 'Agent',
                 'first_name' => 'Ilham',
                 'last_name' => 'Ajinsafro',
-                'position' => 'Agent réservation',
+                'position' => 'Agent reservation',
+            ],
+            [
+                'name' => 'Sara Ajinsafro',
+                'email' => 'Collaboration@ajinsafro.ma',
+                'job_title' => 'Agent',
+                'first_name' => 'Sara',
+                'last_name' => 'Ajinsafro',
+                'position' => 'Agent reservation',
+            ],
+            [
+                'name' => 'Abdelaziz Ajinsafro',
+                'email' => 'Partnership@ajinsafro.ma',
+                'job_title' => 'Agent',
+                'first_name' => 'Abdelaziz',
+                'last_name' => 'Ajinsafro',
+                'position' => 'Agent reservation',
             ],
         ];
 

@@ -27,6 +27,7 @@ class CustomReservationController extends Controller
     {
         $user = $request->user();
         abort_unless($user && $user->can('custom_requests.view'), 403);
+        $canCreateRequest = $this->canCreateCustomRequest($user);
 
         $filters = [
             'client' => trim((string) $request->query('client', '')),
@@ -66,14 +67,14 @@ class CustomReservationController extends Controller
             'filters' => $filters,
             'statusOptions' => CustomRequest::statusOptions(),
             'travelTypeOptions' => CustomRequest::travelTypeOptions(),
-            'canCreateRequest' => $user->can('custom_requests.create'),
+            'canCreateRequest' => $canCreateRequest,
         ]);
     }
 
     public function create(Request $request): View
     {
         $user = $request->user();
-        abort_unless($user && $user->can('custom_requests.create'), 403);
+        abort_unless($user && $this->canCreateCustomRequest($user), 403);
 
         $selectedClient = null;
         $selectedClientId = (int) old('existing_client_id', 0);
@@ -105,7 +106,7 @@ class CustomReservationController extends Controller
     public function searchClients(Request $request): \Illuminate\Http\JsonResponse
     {
         $user = $request->user();
-        abort_unless($user && $user->can('custom_requests.create'), 403);
+        abort_unless($user && $this->canCreateCustomRequest($user), 403);
 
         $q = trim((string) $request->query('q', ''));
         if (mb_strlen($q) < 2) {
@@ -169,7 +170,7 @@ class CustomReservationController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $user = $request->user();
-        abort_unless($user && $user->can('custom_requests.create'), 403);
+        abort_unless($user && $this->canCreateCustomRequest($user), 403);
 
         $data = $this->validatedPayload($request);
         $data['created_by'] = $user->id;
@@ -252,6 +253,15 @@ class CustomReservationController extends Controller
         abort_unless($quote->pdf_path && Storage::disk('public')->exists($quote->pdf_path), 404);
 
         return Storage::disk('public')->download($quote->pdf_path, basename($quote->pdf_path));
+    }
+
+    private function canCreateCustomRequest(User $user): bool
+    {
+        if ($user->can('custom_requests.create')) {
+            return true;
+        }
+
+        return $user->hasRole('Agent Offline') || (string) $user->base_role === 'Agent Offline';
     }
 
     private function scopeOwnedByAgent(Builder $query, int $userId): Builder
