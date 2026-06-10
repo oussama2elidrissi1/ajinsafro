@@ -132,13 +132,13 @@
         <div class="dac-agent-actions">
             <a href="{{ route('agent.custom-reservations.index') }}" class="aj-agent-action-btn">Retour</a>
             @if($isOfflineAgent && !$customRequest->assigned_to)
-                <form method="POST" action="{{ route('admin.custom-requests.take', $customRequest) }}">
+                <form method="POST" action="{{ route('agent.custom-reservations.take', $customRequest) }}">
                     @csrf
                     <button type="submit" class="aj-agent-action-btn">Prendre en charge</button>
                 </form>
             @endif
             @if($isOfflineAgent && ($customRequest->assigned_to === null || (int) $customRequest->assigned_to === (int) $user?->id))
-                <a href="{{ route('admin.custom-requests.quote', $customRequest) }}" class="aj-agent-primary-btn">
+                <a href="{{ route('agent.custom-reservations.quote', $customRequest) }}" class="aj-agent-primary-btn">
                     <i class="bx bx-calculator"></i>
                     <span>Ouvrir la cotation</span>
                 </a>
@@ -234,7 +234,7 @@
                         <div class="dac-agent-quote-actions">
                             <a href="{{ route('agent.custom-reservations.quote.download', [$customRequest, $latestQuote]) }}" class="aj-agent-action-btn">Télécharger le PDF</a>
                             @if($isOfflineAgent && ($customRequest->assigned_to === null || (int) $customRequest->assigned_to === (int) $user?->id))
-                                <a href="{{ route('admin.custom-requests.quote', $customRequest) }}" class="aj-agent-action-btn">Modifier la cotation</a>
+                                <a href="{{ route('agent.custom-reservations.quote', $customRequest) }}" class="aj-agent-action-btn">Modifier la cotation</a>
                             @endif
                         </div>
                     @endif

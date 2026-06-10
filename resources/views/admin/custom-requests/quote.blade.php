@@ -1,4 +1,4 @@
-@extends('layouts.admin-v6')
+@extends($quoteLayout ?? 'layouts.admin-v6')
 
 @section('title', 'Cotation '.$customRequest->request_number)
 @section('page_title', 'Cotation demande à la carte')
@@ -49,16 +49,16 @@
             </div>
         </div>
         <div class="d-flex gap-2 flex-wrap justify-content-end">
-            <a href="{{ route('admin.custom-requests.show', $customRequest) }}" class="quote-btn quote-btn-soft"><i class="bx bx-arrow-back"></i> Retour</a>
+            <a href="{{ route($quoteRoutes['show'] ?? 'admin.custom-requests.show', $customRequest) }}" class="quote-btn quote-btn-soft"><i class="bx bx-arrow-back"></i> Retour</a>
             @if(!$customRequest->assigned_to)
-                <form method="POST" action="{{ route('admin.custom-requests.take', $customRequest) }}">@csrf<button class="quote-btn quote-btn-soft">Prendre en charge</button></form>
+                <form method="POST" action="{{ route($quoteRoutes['take'] ?? 'admin.custom-requests.take', $customRequest) }}">@csrf<button class="quote-btn quote-btn-soft">Prendre en charge</button></form>
             @endif
         </div>
     </div>
 
     @if(session('success')) <div class="alert alert-success mb-0">{{ session('success') }}</div> @endif
 
-    <form method="POST" action="{{ route('admin.custom-requests.quote.store', $customRequest) }}" id="quoteForm" class="quote-layout">
+    <form method="POST" action="{{ route($quoteRoutes['store'] ?? 'admin.custom-requests.quote.store', $customRequest) }}" id="quoteForm" class="quote-layout">
         @csrf
         <div class="quote-page">
             <section class="quote-card">
@@ -130,10 +130,10 @@
                 <h3>Documents</h3>
                 <div class="d-flex gap-2 flex-wrap">
                     @if($quote->pdf_path)
-                        <a href="{{ route('admin.custom-requests.quote.download', [$customRequest, $quote]) }}" class="quote-btn quote-btn-soft"><i class="bx bx-download"></i> Télécharger devis</a>
+                        <a href="{{ route($quoteRoutes['download'] ?? 'admin.custom-requests.quote.download', [$customRequest, $quote]) }}" class="quote-btn quote-btn-soft"><i class="bx bx-download"></i> Télécharger devis</a>
                     @endif
                     <button type="submit" class="quote-btn quote-btn-soft"><i class="bx bx-save"></i> Sauvegarder brouillon cotation</button>
-                    <button type="submit" formaction="{{ route('admin.custom-requests.quote.prepare', [$customRequest, $quote]) }}" class="quote-btn quote-btn-primary"><i class="bx bx-file"></i> Générer devis automatique</button>
+                    <button type="submit" formaction="{{ route($quoteRoutes['prepare'] ?? 'admin.custom-requests.quote.prepare', [$customRequest, $quote]) }}" class="quote-btn quote-btn-primary"><i class="bx bx-file"></i> Générer devis automatique</button>
                 </div>
             </section>
         </div>
@@ -150,7 +150,7 @@
                     <div class="quote-summary-row"><span>Reste à payer</span><strong id="remaining">0.00</strong></div>
                 </div>
                 @if($quote->pdf_path)
-                    <button type="submit" formaction="{{ route('admin.custom-requests.quote.send', [$customRequest, $quote]) }}" class="quote-btn quote-btn-primary w-100 justify-content-center mt-3">Envoyer devis à l’agent</button>
+                    <button type="submit" formaction="{{ route($quoteRoutes['send'] ?? 'admin.custom-requests.quote.send', [$customRequest, $quote]) }}" class="quote-btn quote-btn-primary w-100 justify-content-center mt-3">Envoyer devis à l’agent</button>
                 @endif
             </section>
 
@@ -182,7 +182,7 @@
     @can('custom_requests.documents')
         <section class="quote-card">
             <h3>Upload fichiers fournisseur / documents complémentaires</h3>
-            <form method="POST" action="{{ route('admin.custom-requests.documents.store', $customRequest) }}" enctype="multipart/form-data" class="row g-2">
+            <form method="POST" action="{{ route($quoteRoutes['documents_store'] ?? 'admin.custom-requests.documents.store', $customRequest) }}" enctype="multipart/form-data" class="row g-2">
                 @csrf
                 <div class="col-md-3"><select name="document_type" class="form-select"><option value="supplier_file">Fichier fournisseur</option><option value="other">Autre</option></select></div>
                 <div class="col-md-4"><input name="title" class="form-control" placeholder="Titre"></div>

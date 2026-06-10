@@ -29,6 +29,8 @@ class CustomRequestQuoteController extends Controller
             'quote' => $quote->load('items', 'generatedDocument'),
             'serviceTypeOptions' => CustomRequestQuote::itemServiceOptions(),
             'quoteStatusOptions' => CustomRequestQuote::statusOptions(),
+            'quoteLayout' => $this->isAgentRoute($request) ? 'layouts.master-ajinsafro' : 'layouts.admin-v6',
+            'quoteRoutes' => $this->quoteRoutes($request),
         ]);
     }
 
@@ -38,7 +40,7 @@ class CustomRequestQuoteController extends Controller
         $quote = $this->currentEditableQuote($customRequest, $request);
         $this->saveQuotePayload($request, $quote);
 
-        return redirect()->route('admin.custom-requests.quote', $customRequest)->with('success', 'Brouillon cotation enregistré.');
+        return redirect()->route($this->quoteRoute($request), $customRequest)->with('success', 'Brouillon cotation enregistré.');
     }
 
     public function update(Request $request, CustomRequest $customRequest, CustomRequestQuote $quote): RedirectResponse
@@ -47,7 +49,7 @@ class CustomRequestQuoteController extends Controller
         abort_unless((int) $quote->custom_request_id === (int) $customRequest->id, 404);
         $this->saveQuotePayload($request, $quote);
 
-        return redirect()->route('admin.custom-requests.quote', $customRequest)->with('success', 'Cotation mise à jour.');
+        return redirect()->route($this->quoteRoute($request), $customRequest)->with('success', 'Cotation mise à jour.');
     }
 
     public function prepare(Request $request, CustomRequest $customRequest, CustomRequestQuote $quote): RedirectResponse
@@ -89,7 +91,7 @@ class CustomRequestQuoteController extends Controller
             $customRequest->changeStatus(CustomRequest::STATUS_QUOTE_PREPARED, $request->user()->id, 'Devis généré automatiquement.');
         });
 
-        return redirect()->route('admin.custom-requests.quote', $customRequest)->with('success', 'Devis généré automatiquement.');
+        return redirect()->route($this->quoteRoute($request), $customRequest)->with('success', 'Devis généré automatiquement.');
     }
 
     public function send(Request $request, CustomRequest $customRequest, CustomRequestQuote $quote): RedirectResponse
@@ -216,5 +218,42 @@ class CustomRequestQuoteController extends Controller
     {
         abort_unless($request->user()?->can('custom_requests.quote'), 403);
         abort_unless($customRequest->canBeQuotedBy($request->user()), 403);
+    }
+
+    private function isAgentRoute(Request $request): bool
+    {
+        return $request->routeIs('agent.custom-reservations.*');
+    }
+
+    private function quoteRoute(Request $request): string
+    {
+        return $this->isAgentRoute($request)
+            ? 'agent.custom-reservations.quote'
+            : 'admin.custom-requests.quote';
+    }
+
+    private function quoteRoutes(Request $request): array
+    {
+        if ($this->isAgentRoute($request)) {
+            return [
+                'show' => 'agent.custom-reservations.show',
+                'take' => 'agent.custom-reservations.take',
+                'store' => 'agent.custom-reservations.quote.store',
+                'prepare' => 'agent.custom-reservations.quote.prepare',
+                'send' => 'agent.custom-reservations.quote.send',
+                'download' => 'agent.custom-reservations.quote.download',
+                'documents_store' => 'agent.custom-reservations.documents.store',
+            ];
+        }
+
+        return [
+            'show' => 'admin.custom-requests.show',
+            'take' => 'admin.custom-requests.take',
+            'store' => 'admin.custom-requests.quote.store',
+            'prepare' => 'admin.custom-requests.quote.prepare',
+            'send' => 'admin.custom-requests.quote.send',
+            'download' => 'admin.custom-requests.quote.download',
+            'documents_store' => 'admin.custom-requests.documents.store',
+        ];
     }
 }

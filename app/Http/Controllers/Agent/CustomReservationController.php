@@ -219,6 +219,20 @@ class CustomReservationController extends Controller
             ->with('success', $successMessage.' Réf. '.$customRequest->request_number);
     }
 
+    public function take(Request $request, CustomRequest $customRequest): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user && $user->can('custom_requests.quote'), 403);
+        abort_unless($customRequest->canBeQuotedBy($user), 403);
+
+        $customRequest->forceFill(['assigned_to' => $user->id])->save();
+        $customRequest->changeStatus(CustomRequest::STATUS_PROCESSING, $user->id, 'Prise en charge par agent offline.');
+
+        return redirect()
+            ->route('agent.custom-reservations.quote', $customRequest)
+            ->with('success', 'Demande prise en charge.');
+    }
+
     public function show(Request $request, CustomRequest $customRequest): View
     {
         $user = $request->user();

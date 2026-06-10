@@ -709,6 +709,13 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'not.client'])
         Route::get('reservations-a-la-carte/create', [AgentCustomReservationController::class, 'create'])->name('custom-reservations.create');
         Route::get('reservations-a-la-carte/clients/search', [AgentCustomReservationController::class, 'searchClients'])->name('custom-reservations.clients.search');
         Route::post('reservations-a-la-carte', [AgentCustomReservationController::class, 'store'])->name('custom-reservations.store');
+        Route::post('reservations-a-la-carte/{customRequest}/take', [AgentCustomReservationController::class, 'take'])->name('custom-reservations.take')->whereNumber('customRequest');
+        Route::get('reservations-a-la-carte/{customRequest}/quote', [CustomRequestQuoteController::class, 'quote'])->name('custom-reservations.quote')->whereNumber('customRequest');
+        Route::post('reservations-a-la-carte/{customRequest}/quote', [CustomRequestQuoteController::class, 'store'])->name('custom-reservations.quote.store')->whereNumber('customRequest');
+        Route::put('reservations-a-la-carte/{customRequest}/quote/{quote}', [CustomRequestQuoteController::class, 'update'])->name('custom-reservations.quote.update')->whereNumber(['customRequest', 'quote']);
+        Route::post('reservations-a-la-carte/{customRequest}/quote/{quote}/prepare', [CustomRequestQuoteController::class, 'prepare'])->name('custom-reservations.quote.prepare')->whereNumber(['customRequest', 'quote']);
+        Route::post('reservations-a-la-carte/{customRequest}/quote/{quote}/send', [CustomRequestQuoteController::class, 'send'])->name('custom-reservations.quote.send')->whereNumber(['customRequest', 'quote']);
+        Route::post('reservations-a-la-carte/{customRequest}/documents', [CustomRequestDocumentController::class, 'store'])->name('custom-reservations.documents.store')->whereNumber('customRequest');
         Route::get('reservations-a-la-carte/{customRequest}', [AgentCustomReservationController::class, 'show'])->name('custom-reservations.show')->whereNumber('customRequest');
         Route::get('reservations-a-la-carte/{customRequest}/quote/{quote}/download', [AgentCustomReservationController::class, 'downloadQuote'])->name('custom-reservations.quote.download')->whereNumber(['customRequest', 'quote']);
         Route::get('profile', [ProfileController::class, 'edit'])->name('profile');
