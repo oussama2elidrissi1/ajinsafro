@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             EconomicOfferSeeder::class,
             OumaymaReservationsOnlySeeder::class,
             CustomRequestDemoSeeder::class,
+            OthmaneOfflineAgentSeeder::class,
         ]);
     }
 }
