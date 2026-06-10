@@ -214,8 +214,21 @@ class CustomReservationController extends Controller
         abort_unless($this->agentCanAccessRequest($customRequest, $user), 403);
 
         return view('agent.custom-reservations.show', [
-            'customRequest' => $customRequest->load(['client:id,client_code,full_name,phone,email', 'latestQuote.generatedDocument', 'documents', 'comments.user:id,name', 'statusLogs.user:id,name']),
+            'customRequest' => $customRequest->load([
+                'creator:id,name,email',
+                'assignedAgent:id,name,email',
+                'client:id,client_code,full_name,phone,email',
+                'services',
+                'documents',
+                'quotes.items',
+                'latestQuote.generatedDocument',
+                'latestQuote.items',
+                'comments.user:id,name',
+                'statusLogs.user:id,name',
+            ]),
             'travelTypeOptions' => CustomRequest::travelTypeOptions(),
+            'statusOptions' => CustomRequest::statusOptions(),
+            'quoteStatusOptions' => CustomRequestQuote::statusOptions(),
         ]);
     }
 

@@ -271,6 +271,8 @@ class CustomRequestController extends Controller
             $customRequest->changeStatus(CustomRequest::STATUS_CONFIRMED, $request->user()->id, 'Client confirmé.');
         });
 
+        $this->notifications->notifyConfirmed($customRequest->fresh(['assignedAgent']));
+
         return back()->with('success', 'Demande confirmée.');
     }
 
@@ -280,7 +282,13 @@ class CustomRequestController extends Controller
         abort_unless($request->user()?->can('custom_requests.cancel'), 403);
 
         $data = $request->validate(['note' => ['nullable', 'string', 'max:1000']]);
-        $customRequest->changeStatus(CustomRequest::STATUS_CANCELLED, $request->user()->id, $data['note'] ?? 'Demande annulée.');
+
+        DB::transaction(function () use ($request, $customRequest, $data): void {
+            $customRequest->latestQuote?->update(['status' => CustomRequestQuote::STATUS_REFUSED]);
+            $customRequest->changeStatus(CustomRequest::STATUS_CANCELLED, $request->user()->id, $data['note'] ?? 'Demande annulée.');
+        });
+
+        $this->notifications->notifyCancelled($customRequest->fresh(['assignedAgent']));
 
         return back()->with('success', 'Demande annulée.');
     }

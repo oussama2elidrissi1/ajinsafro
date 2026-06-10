@@ -44,6 +44,32 @@ class CustomRequestNotificationService
         }
     }
 
+    public function notifyConfirmed(CustomRequest $customRequest): void
+    {
+        if ($customRequest->assignedAgent) {
+            $this->notifyUser(
+                $customRequest->assignedAgent,
+                'custom_request_confirmed',
+                'Demande confirmée',
+                'La demande '.$customRequest->request_number.' a été confirmée par l’agent commercial.',
+                route('admin.custom-requests.show', $customRequest)
+            );
+        }
+    }
+
+    public function notifyCancelled(CustomRequest $customRequest): void
+    {
+        if ($customRequest->assignedAgent) {
+            $this->notifyUser(
+                $customRequest->assignedAgent,
+                'custom_request_cancelled',
+                'Demande annulée',
+                'La demande '.$customRequest->request_number.' a été annulée par l’agent commercial.',
+                route('admin.custom-requests.show', $customRequest)
+            );
+        }
+    }
+
     public function notifyMissingInfo(CustomRequest $customRequest): void
     {
         if ($customRequest->creator) {
