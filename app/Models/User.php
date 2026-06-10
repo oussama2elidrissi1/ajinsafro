@@ -81,8 +81,8 @@ class User extends Authenticatable
     private function defaultAvatarPath(): string
     {
         return $this->usesFemaleDefaultAvatar()
-            ? 'build/images/users/avatar-4.jpg'
-            : 'build/images/users/avatar-2.jpg';
+            ? 'build/images/users/default-female.svg'
+            : 'build/images/users/default-male.svg';
     }
 
     private function usesFemaleDefaultAvatar(): bool
