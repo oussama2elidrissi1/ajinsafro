@@ -16,7 +16,6 @@
     $user = auth()->user();
     $displayName = $user?->name ?: 'Agent';
     $agencyLabel = $user?->branch?->name ?: 'Ajinsafro';
-
     $catalogueVoyageUrl = route('agent.catalogue');
 @endphp
 
@@ -24,7 +23,7 @@
     <div class="aj-agent-page-head">
         <div class="aj-agent-page-title">
             <h1>Tableau de bord</h1>
-            <p>Bienvenue, {{ $displayName }} — {{ $agencyLabel }}.</p>
+            <p>Bienvenue, {{ $displayName }} - {{ $agencyLabel }}.</p>
         </div>
         <a href="{{ $catalogueVoyageUrl }}" class="aj-agent-primary-btn">
             <i class="bx bx-map-alt" aria-hidden="true"></i>
@@ -36,14 +35,14 @@
         <div class="aj-agent-kpi-card aj-agent-kpi-blue">
             <div class="aj-agent-kpi-icon"><i class="bx bx-briefcase-alt-2"></i></div>
             <div>
-                <span>Réservations</span>
+                <span>Reservations</span>
                 <strong>{{ number_format((int) ($stats['reservations_total'] ?? 0), 0, ',', ' ') }}</strong>
             </div>
         </div>
         <div class="aj-agent-kpi-card aj-agent-kpi-green">
             <div class="aj-agent-kpi-icon"><i class="bx bx-check-shield"></i></div>
             <div>
-                <span>Confirmées</span>
+                <span>Confirmees</span>
                 <strong>{{ number_format((int) ($stats['reservations_validees'] ?? 0), 0, ',', ' ') }}</strong>
             </div>
         </div>
@@ -64,20 +63,23 @@
     </section>
 
     <section class="aj-agent-content-grid">
-        <div class="aj-agent-panel">
+        <div class="aj-agent-panel aj-agent-panel-summary">
             <div class="aj-agent-panel-header">
                 <div>
-                    <h2>Aujourd’hui</h2>
-                    <p>Résumé rapide de l’activité.</p>
+                    <h2>Aujourd'hui</h2>
+                    <p>Resume rapide de l'activite.</p>
                 </div>
             </div>
             <div class="aj-agent-panel-body">
+                <div class="aj-agent-section-kicker">Suivi operationnel</div>
+
                 <div class="aj-agent-today-item">
-                    <span>Réservations du jour</span>
+                    <span>Reservations du jour</span>
                     <small>{{ number_format((int) ($todayStats['reservations_today'] ?? 0), 0, ',', ' ') }}</small>
                 </div>
+
                 <div class="aj-agent-today-item">
-                    <span>En attente aujourd’hui</span>
+                    <span>En attente aujourd'hui</span>
                     <small>{{ number_format((int) ($todayStats['pending_today'] ?? 0), 0, ',', ' ') }}</small>
                 </div>
 
@@ -86,13 +88,13 @@
                         <div class="aj-agent-alert-box">{{ $notification }}</div>
                     @endforeach
                 @else
-                    <div class="aj-agent-alert-box">Aucune alerte prioritaire aujourd’hui.</div>
+                    <div class="aj-agent-alert-box">Aucune alerte prioritaire aujourd'hui.</div>
                 @endif
 
                 <div class="aj-agent-quick-actions">
                     <a href="{{ $catalogueVoyageUrl }}" class="aj-agent-action-btn">
                         <i class="bx bx-plus-circle"></i>
-                        <span>Créer une réservation</span>
+                        <span>Creer une reservation</span>
                     </a>
                     <a href="{{ $catalogueVoyageUrl }}" class="aj-agent-action-btn">
                         <i class="bx bx-map-alt"></i>
@@ -103,34 +105,41 @@
         </div>
 
         <div class="aj-agent-panel aj-agent-panel-wide">
-            <div class="aj-agent-panel-header">
+            <div class="aj-agent-panel-header aj-agent-table-header">
                 <div>
-                    <h2>Mes dernières réservations</h2>
-                    <p>Vue rapide sur les dossiers les plus récents.</p>
+                    <h2>Mes dernieres reservations</h2>
+                    <p>Vue operationnelle sur les dossiers les plus recents.</p>
                 </div>
                 <form method="GET" action="{{ route('agent.dashboard') }}" class="aj-agent-table-actions">
                     <select name="scope" id="scope" class="aj-agent-select" {{ $isManager ? '' : 'disabled' }}>
-                        <option value="mine" {{ ($scope ?? 'mine') === 'mine' ? 'selected' : '' }}>Mes réservations</option>
+                        <option value="mine" {{ ($scope ?? 'mine') === 'mine' ? 'selected' : '' }}>Mes reservations</option>
                         @if($isManager)
-                            <option value="team" {{ ($scope ?? 'mine') === 'team' ? 'selected' : '' }}>Mon équipe</option>
+                            <option value="team" {{ ($scope ?? 'mine') === 'team' ? 'selected' : '' }}>Mon equipe</option>
                         @endif
                     </select>
                     @unless($isManager)
                         <input type="hidden" name="scope" value="mine">
                     @endunless
-                    <button type="submit" class="aj-agent-small-btn">Filtrer</button>
+                    <button type="submit" class="aj-agent-small-btn aj-agent-small-btn-primary">Filtrer</button>
                 </form>
             </div>
 
             <div class="aj-agent-table-wrap">
-                <table class="aj-agent-table">
+                <table class="aj-agent-table aj-agent-table-pro">
+                    <colgroup>
+                        <col style="width: 24%;">
+                        <col style="width: 44%;">
+                        <col style="width: 12%;">
+                        <col style="width: 12%;">
+                        <col style="width: 8%;">
+                    </colgroup>
                     <thead>
                         <tr>
                             <th>Client</th>
                             <th>Voyage</th>
                             <th>Date</th>
                             <th>Statut</th>
-                            <th>Actions</th>
+                            <th class="aj-agent-th-actions">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -147,10 +156,22 @@
                             $displayDate = optional($reservation->travelDate?->date)->format('d/m/Y') ?: optional($reservation->created_at)->format('d/m/Y');
                         @endphp
                         <tr>
-                            <td>{{ $clientName !== '' ? $clientName : 'Client non renseigné' }}</td>
-                            <td>{{ $reservation->tour?->name ?: 'Voyage non renseigné' }}</td>
-                            <td>{{ $displayDate }}</td>
-                            <td><span class="aj-agent-status {{ $badgeClass }}">{{ $status }}</span></td>
+                            <td>
+                                <div class="aj-agent-cell-main">{{ $clientName !== '' ? $clientName : 'Client non renseigne' }}</div>
+                                <div class="aj-agent-cell-sub">Dossier #{{ $reservation->id }}</div>
+                            </td>
+                            <td>
+                                <div class="aj-agent-cell-main aj-agent-cell-title">{{ $reservation->tour?->name ?: 'Voyage non renseigne' }}</div>
+                                <div class="aj-agent-cell-sub">
+                                    {{ $reservation->travelers_count ? $reservation->travelers_count.' voyageur(s)' : 'Dossier en cours' }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="aj-agent-cell-date">{{ $displayDate }}</div>
+                            </td>
+                            <td>
+                                <span class="aj-agent-status {{ $badgeClass }}">{{ $status }}</span>
+                            </td>
                             <td class="aj-agent-td-actions">
                                 <a href="{{ $detailUrl }}" class="aj-agent-small-btn">Voir</a>
                             </td>
@@ -160,8 +181,8 @@
                             <td colspan="5">
                                 <div class="aj-agent-empty-state">
                                     <div class="aj-agent-empty-icon"><i class="bx bx-briefcase-alt-2"></i></div>
-                                    <h3>Aucune réservation récente</h3>
-                                    <p>Commencez par consulter le catalogue ou créer une nouvelle réservation.</p>
+                                    <h3>Aucune reservation recente</h3>
+                                    <p>Commencez par consulter le catalogue ou creer une nouvelle reservation.</p>
                                     <a href="{{ $catalogueVoyageUrl }}" class="aj-agent-primary-btn">Voir le catalogue</a>
                                 </div>
                             </td>
