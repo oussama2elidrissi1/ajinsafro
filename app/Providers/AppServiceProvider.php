@@ -102,20 +102,6 @@ class AppServiceProvider extends ServiceProvider
                         'has_direct_access' => true,
                         'is_clickable' => true,
                     ];
-                } elseif ($user->can('custom_requests.create') && \Illuminate\Support\Facades\Route::has('agent.custom-reservations.create')) {
-                    $agentPortalMenu[] = [
-                        'key' => 'agent_reservations_a_la_carte_create',
-                        'label' => 'Reservations a la carte',
-                        'icon' => 'bx bx-edit-alt',
-                        'route' => 'agent.custom-reservations.create',
-                        'href' => route('agent.custom-reservations.create'),
-                        'children' => [],
-                        'active' => request()->routeIs('agent.custom-reservations.create'),
-                        'open' => false,
-                        'depth' => 0,
-                        'has_direct_access' => true,
-                        'is_clickable' => true,
-                    ];
                 }
             }
 

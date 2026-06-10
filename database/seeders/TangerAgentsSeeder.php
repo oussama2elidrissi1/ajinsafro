@@ -20,6 +20,7 @@ class TangerAgentsSeeder extends Seeder
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
+        Permission::findOrCreate('custom_requests.view', 'web');
         Permission::findOrCreate('custom_requests.create', 'web');
 
         $branch = Branch::query()
@@ -34,6 +35,7 @@ class TangerAgentsSeeder extends Seeder
         }
 
         $role = Role::findOrCreate(BranchScopeService::ROLE_AGENT, 'web');
+        $role->givePermissionTo('custom_requests.view');
         $role->givePermissionTo('custom_requests.create');
         $managerId = User::query()->where('email', 'chef.TNG@ajinsafro.com')->value('id')
             ?: $branch->manager_user_id;
