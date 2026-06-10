@@ -49,6 +49,7 @@ final class AgentPortalLayout
             'Manager',
             BranchScopeService::ROLE_AGENT,
             'Agent',
+            'Agent Offline',
         ]);
     }
 }
