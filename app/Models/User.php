@@ -75,7 +75,47 @@ class User extends Authenticatable
             return asset('storage/' . $this->avatar);
         }
 
-        return asset('build/images/users/avatar-2.jpg');
+        return asset($this->defaultAvatarPath());
+    }
+
+    private function defaultAvatarPath(): string
+    {
+        return $this->usesFemaleDefaultAvatar()
+            ? 'build/images/users/avatar-4.jpg'
+            : 'build/images/users/avatar-2.jpg';
+    }
+
+    private function usesFemaleDefaultAvatar(): bool
+    {
+        $gender = strtolower(trim((string) ($this->gender ?? $this->sexe ?? $this->sex ?? '')));
+
+        if (in_array($gender, ['female', 'femme', 'f'], true)) {
+            return true;
+        }
+
+        if (in_array($gender, ['male', 'homme', 'm'], true)) {
+            return false;
+        }
+
+        $firstName = strtolower(trim((string) strtok((string) $this->name, ' ')));
+
+        return in_array($firstName, [
+            'aicha',
+            'asmaa',
+            'fatima',
+            'hajar',
+            'ilham',
+            'imane',
+            'khadija',
+            'meryem',
+            'nadia',
+            'oumaima',
+            'oumima',
+            'salma',
+            'sara',
+            'soukaina',
+            'zineb',
+        ], true);
     }
 
     public function branch(): BelongsTo
