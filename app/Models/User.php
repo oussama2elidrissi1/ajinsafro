@@ -75,14 +75,16 @@ class User extends Authenticatable
             return asset('storage/' . $this->avatar);
         }
 
-        return asset($this->defaultAvatarPath());
+        return $this->defaultAvatarDataUri();
     }
 
-    private function defaultAvatarPath(): string
+    private function defaultAvatarDataUri(): string
     {
-        return $this->usesFemaleDefaultAvatar()
-            ? 'build/images/users/default-female.svg'
-            : 'build/images/users/default-male.svg';
+        $svg = $this->usesFemaleDefaultAvatar()
+            ? '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240"><rect width="240" height="240" rx="120" fill="#fff0f5"/><path d="M72 107c0-39 21-64 48-64s48 25 48 64c0 33 17 47 28 58-18 10-45 14-76 14s-58-4-76-14c11-11 28-25 28-58z" fill="#d83f87"/><circle cx="120" cy="93" r="36" fill="#f06aa6"/><path d="M51 207c8-41 35-65 69-65s61 24 69 65" fill="#d83f87"/><circle cx="120" cy="120" r="112" fill="none" stroke="#ffffff" stroke-width="10"/></svg>'
+            : '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240"><rect width="240" height="240" rx="120" fill="#e8f4fb"/><circle cx="120" cy="91" r="42" fill="#0b6fae"/><path d="M50 204c7-43 35-68 70-68s63 25 70 68" fill="#0b6fae"/><circle cx="120" cy="120" r="112" fill="none" stroke="#ffffff" stroke-width="10"/></svg>';
+
+        return 'data:image/svg+xml;base64,' . base64_encode($svg);
     }
 
     private function usesFemaleDefaultAvatar(): bool
