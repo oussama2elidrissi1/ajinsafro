@@ -176,7 +176,7 @@
             <div class="aj-agent-panel-header">
                 <div>
                     <h2>Aujourd'hui</h2>
-                    <p>{{ $isManager ? 'Activite de votre agence.' : 'Resume rapide de l'activite.' }}</p>
+                    <p>{{ $isManager ? 'Activite de votre agence.' : "Resume rapide de l'activite." }}</p>
                 </div>
             </div>
             <div class="aj-agent-panel-body">
