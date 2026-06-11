@@ -44,12 +44,13 @@
         </div>
     </div>
 
+    @php($agentReservationMode = (bool) request()->attributes->get('agent_reservation_mode', false))
     @include('admin.reservations.partials._hotel_rooms', [
         'tourHotelsWithRooms' => collect(),
         'reservation' => null,
-        'hotelsRoomsUrl' => route('admin.reservations.hotels-rooms'),
-        'voyageDeparturesUrl' => route('admin.reservations.voyage-departures'),
-        'departureHotelsRoomsUrl' => route('admin.reservations.departure-hotels-rooms'),
+        'hotelsRoomsUrl' => $agentReservationMode ? route('agent.reservations.hotels-rooms') : route('admin.reservations.hotels-rooms'),
+        'voyageDeparturesUrl' => $agentReservationMode ? route('agent.reservations.voyage-departures') : route('admin.reservations.voyage-departures'),
+        'departureHotelsRoomsUrl' => $agentReservationMode ? route('agent.reservations.departure-hotels-rooms') : route('admin.reservations.departure-hotels-rooms'),
         'selectedTravelDate' => $selectedTravelDate ?? null,
         'selectedDepartureId' => $selectedDepartureId ?? null,
         'selectedUnitPrice' => $selectedUnitPrice ?? null,
@@ -68,4 +69,3 @@
         </button>
     </div>
 </section>
-

@@ -379,6 +379,15 @@
 
         <script type="application/json" id="reservation-create-extras-map">{!! json_encode($extrasByVoyage ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) !!}</script>
         <script type="application/json" id="reservation-create-wp-voyage-map">{!! json_encode(($voyages ?? collect())->filter(fn ($v) => (int) ($v->wp_post_id ?? 0) > 0)->mapWithKeys(fn ($v) => [(string) $v->wp_post_id => (int) $v->id])->all(), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) !!}</script>
+        <script>
+            window.RESERVATION_CREATE_ENDPOINTS = {
+                clientQuickStore: @json($agentReservationMode ? route('agent.customers.clients.quick-store') : route('admin.customers.clients.quick-store')),
+                clientSearch: @json($agentReservationMode ? route('agent.customers.clients.search') : route('admin.customers.clients.search')),
+                extras: @json($agentReservationMode ? route('agent.reservations.extras') : route('admin.reservations.extras')),
+                voyageDepartures: @json($agentReservationMode ? route('agent.reservations.voyage-departures') : route('admin.reservations.voyage-departures')),
+                departureHotelsRooms: @json($agentReservationMode ? route('agent.reservations.departure-hotels-rooms') : route('admin.reservations.departure-hotels-rooms'))
+            };
+        </script>
     </div>
 @endsection
 

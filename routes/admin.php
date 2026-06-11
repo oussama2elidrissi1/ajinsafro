@@ -720,6 +720,12 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'not.client'])
         Route::get('catalogue', [AgentCatalogueController::class, 'index'])->name('catalogue');
         Route::get('reservations', [AgentReservationController::class, 'index'])->name('reservations.index');
         Route::get('reservations/create', [AgentReservationController::class, 'create'])->name('reservations.create');
+        Route::get('reservations/hotels-rooms', [ReservationsController::class, 'hotelsRooms'])->name('reservations.hotels-rooms');
+        Route::get('reservations/voyage-departures', [ReservationsController::class, 'voyageDepartures'])->name('reservations.voyage-departures');
+        Route::get('reservations/extras', [ReservationsController::class, 'extras'])->name('reservations.extras');
+        Route::get('reservations/departure-hotels-rooms', [ReservationsController::class, 'departureHotelsRooms'])->name('reservations.departure-hotels-rooms');
+        Route::get('customers/clients/search', [ClientController::class, 'search'])->name('customers.clients.search');
+        Route::post('customers/clients/quick-store', [ClientController::class, 'quickStore'])->name('customers.clients.quick-store');
         Route::post('reservations', [AgentReservationController::class, 'store'])->name('reservations.store');
         Route::get('reservations/{reservation}', [AgentReservationController::class, 'show'])->name('reservations.show')->whereNumber('reservation');
         Route::get('reservations-a-la-carte', [AgentCustomReservationController::class, 'index'])->name('custom-reservations.index');

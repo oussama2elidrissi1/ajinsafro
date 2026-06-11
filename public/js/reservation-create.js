@@ -371,7 +371,9 @@
         if (departureId) params.set('departure_id', departureId);
         if (travelDateId) params.set('travel_date_id', travelDateId);
 
-        fetch('/admin/reservations/extras?' + params.toString(), {
+        var endpoints = window.RESERVATION_CREATE_ENDPOINTS || {};
+        var extrasBase = endpoints.extras || '/admin/reservations/extras';
+        fetch(extrasBase + (extrasBase.indexOf('?') === -1 ? '?' : '&') + params.toString(), {
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
             .then(function (response) { return response.json(); })
@@ -1341,7 +1343,9 @@
             return;
         }
 
-        var url = '/admin/customers/clients/search?q=' + encodeURIComponent(query);
+        var endpoints = window.RESERVATION_CREATE_ENDPOINTS || {};
+        var base = endpoints.clientSearch || '/admin/customers/clients/search';
+        var url = base + (base.indexOf('?') === -1 ? '?' : '&') + 'q=' + encodeURIComponent(query);
         fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function (r) {
                 if (!r.ok) {
@@ -1472,7 +1476,8 @@
             return;
         }
 
-        var url = '/admin/customers/clients/quick-store';
+        var endpoints = window.RESERVATION_CREATE_ENDPOINTS || {};
+        var url = endpoints.clientQuickStore || '/admin/customers/clients/quick-store';
         fetch(url, {
             method: 'POST',
             headers: {
