@@ -278,7 +278,7 @@
                             <td>
                                 <div class="aj-agent-cell-main aj-agent-cell-title">{{ $reservation->tour?->name ?: 'Voyage non renseigne' }}</div>
                                 <div class="aj-agent-cell-sub">
-                                    {{ $reservation->travelers_count ? $reservation->travelers_count.' voyageur(s)' : 'Dossier en cours' }}
+                                    {{ $reservation->passengers_count ? $reservation->passengers_count.' voyageur(s)' : 'Dossier en cours' }}
                                     @if((float) ($reservation->total_amount ?? 0) > 0)
                                         - {{ number_format((float) $reservation->total_amount, 0, ',', ' ') }} DH
                                     @endif

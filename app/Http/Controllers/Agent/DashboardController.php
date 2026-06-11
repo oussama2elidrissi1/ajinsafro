@@ -49,6 +49,7 @@ class DashboardController extends Controller
                 'creator:id,name,email',
                 'createdBy:id,name,email',
             ])
+            ->withCount('passengers')
             ->latest()
             ->limit(6)
             ->get([
@@ -63,7 +64,6 @@ class DashboardController extends Controller
                 'client_first_name',
                 'client_last_name',
                 'status',
-                'travelers_count',
                 'total_amount',
                 'paid_amount',
                 'created_at',
