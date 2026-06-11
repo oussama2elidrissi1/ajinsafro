@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             OumaymaReservationsOnlySeeder::class,
             CustomRequestDemoSeeder::class,
             OthmaneOfflineAgentSeeder::class,
+            TangerAgencyManagerSeeder::class,
             TangerAgentsSeeder::class,
         ]);
     }

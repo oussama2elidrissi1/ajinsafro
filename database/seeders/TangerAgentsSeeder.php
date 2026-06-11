@@ -39,7 +39,8 @@ class TangerAgentsSeeder extends Seeder
         $role->givePermissionTo('custom_requests.view');
         $role->givePermissionTo('custom_requests.create');
 
-        $managerId = User::query()->where('email', 'chef.TNG@ajinsafro.com')->value('id')
+        $managerId = User::query()->where('email', TangerAgencyManagerSeeder::EMAIL)->value('id')
+            ?: User::query()->where('email', 'chef.TNG@ajinsafro.com')->value('id')
             ?: $branch->manager_user_id;
 
         $accounts = [
