@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
+use App\Models\CustomRequest;
 use App\Models\Reservation;
+use App\Models\User;
 use App\Services\BranchScopeService;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
@@ -23,6 +25,9 @@ class DashboardController extends Controller
         $isManager = $user->isManager();
 
         $scope = $this->normalizeScope($request->query('scope'), $isManager);
+        $directReports = $isManager
+            ? $this->branchScope->portalDirectReports($user)
+            : collect();
 
         $reservationsQuery = Reservation::query();
         $this->branchScope->scopeReservations($reservationsQuery, $user);
@@ -40,6 +45,9 @@ class DashboardController extends Controller
             ->with([
                 'tour:id,name',
                 'travelDate:id,date',
+                'agent:id,name,email',
+                'creator:id,name,email',
+                'createdBy:id,name,email',
             ])
             ->latest()
             ->limit(6)
@@ -47,21 +55,54 @@ class DashboardController extends Controller
                 'id',
                 'tour_id',
                 'travel_date_id',
+                'agent_id',
+                'created_by',
+                'created_by_user_id',
+                'dossier_number',
                 'reservation_dossier_id',
                 'client_first_name',
                 'client_last_name',
                 'status',
+                'travelers_count',
+                'total_amount',
+                'paid_amount',
                 'created_at',
             ]);
 
         $todayStats = $this->buildTodayStats(clone $reservationsQuery);
+        $managerStats = $isManager
+            ? $this->buildManagerStats($user, $directReports)
+            : null;
+        $customRequestStats = $this->buildCustomRequestStats($user);
+        $recentCustomRequests = CustomRequest::query()
+            ->with(['creator:id,name,email', 'assignedAgent:id,name,email'])
+            ->visibleTo($user)
+            ->latest()
+            ->limit(5)
+            ->get([
+                'id',
+                'request_number',
+                'customer_full_name',
+                'desired_destination',
+                'desired_departure_date',
+                'travelers_count',
+                'status',
+                'priority',
+                'created_by',
+                'assigned_to',
+                'created_at',
+            ]);
 
         return view('agent.dashboard', [
             'stats' => $stats,
             'todayStats' => $todayStats,
             'recentReservations' => $recentReservations,
+            'customRequestStats' => $customRequestStats,
+            'recentCustomRequests' => $recentCustomRequests,
             'scope' => $scope,
             'isManager' => $isManager,
+            'directReports' => $directReports,
+            'managerStats' => $managerStats,
         ]);
     }
 
@@ -74,7 +115,61 @@ class DashboardController extends Controller
             'reservations_total' => (clone $reservationsQuery)->count(),
             'reservations_validees' => (clone $reservationsQuery)->where('status', Reservation::STATUS_VALIDEE)->count(),
             'reservations_en_cours' => (clone $reservationsQuery)->where('status', Reservation::STATUS_EN_COURS)->count(),
-            'revenue_generated' => (float) (clone $reservationsQuery)->sum('paid_amount'),
+            'revenue_generated' => (float) (clone $reservationsQuery)->sum('total_amount'),
+        ];
+    }
+
+    private function buildManagerStats(User $user, $directReports): array
+    {
+        $personalQuery = Reservation::query();
+        $this->branchScope->scopeReservations($personalQuery, $user);
+        $this->applyPortalReservationOwnership($personalQuery, [$user->id]);
+
+        $teamOnlyIds = $directReports->pluck('id')->map(fn ($id) => (int) $id)->filter()->values()->all();
+        $teamOnlyQuery = Reservation::query();
+        $this->branchScope->scopeReservations($teamOnlyQuery, $user);
+        $this->applyPortalReservationOwnership($teamOnlyQuery, $teamOnlyIds);
+
+        $agentRows = $directReports->map(function (User $agent) use ($user): array {
+            $query = Reservation::query();
+            $this->branchScope->scopeReservations($query, $user);
+            $this->applyPortalReservationOwnership($query, [(int) $agent->id]);
+
+            return [
+                'user' => $agent,
+                'reservations_total' => (clone $query)->count(),
+                'reservations_en_cours' => (clone $query)->where('status', Reservation::STATUS_EN_COURS)->count(),
+                'reservations_validees' => (clone $query)->where('status', Reservation::STATUS_VALIDEE)->count(),
+                'revenue_generated' => (float) (clone $query)->sum('total_amount'),
+            ];
+        });
+
+        return [
+            'personal' => $this->buildDashboardStats($personalQuery),
+            'team_only' => $this->buildDashboardStats($teamOnlyQuery),
+            'agents' => $agentRows,
+        ];
+    }
+
+    private function buildCustomRequestStats(User $user): array
+    {
+        $query = CustomRequest::query()->visibleTo($user);
+
+        return [
+            'total' => (clone $query)->count(),
+            'new' => (clone $query)->where('status', CustomRequest::STATUS_NEW)->count(),
+            'processing' => (clone $query)->whereIn('status', [
+                CustomRequest::STATUS_ASSIGNED,
+                CustomRequest::STATUS_PROCESSING,
+                CustomRequest::STATUS_MISSING_INFO,
+                CustomRequest::STATUS_MODIFICATION_REQUESTED,
+            ])->count(),
+            'quoted' => (clone $query)->whereIn('status', [
+                CustomRequest::STATUS_QUOTE_PREPARED,
+                CustomRequest::STATUS_QUOTE_SENT,
+                CustomRequest::STATUS_WAITING_CUSTOMER,
+            ])->count(),
+            'confirmed' => (clone $query)->where('status', CustomRequest::STATUS_CONFIRMED)->count(),
         ];
     }
 
@@ -145,8 +240,8 @@ class DashboardController extends Controller
      */
     private function normalizeScope(mixed $value, bool $isManager): string
     {
-        if ($isManager && $value === 'team') {
-            return 'team';
+        if ($isManager) {
+            return $value === 'mine' ? 'mine' : 'team';
         }
 
         return 'mine';

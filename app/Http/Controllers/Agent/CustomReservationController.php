@@ -286,6 +286,22 @@ class CustomReservationController extends Controller
 
     private function agentCanAccessRequest(CustomRequest $customRequest, User $user): bool
     {
+        if ($user->isManager()) {
+            $teamIds = User::query()
+                ->where('manager_id', $user->id)
+                ->when($user->branch_id, fn (Builder $query) => $query->where('branch_id', $user->branch_id))
+                ->pluck('id')
+                ->push($user->id)
+                ->map(fn ($id) => (int) $id)
+                ->filter(fn ($id) => $id > 0)
+                ->unique()
+                ->values()
+                ->all();
+
+            return in_array((int) ($customRequest->created_by ?? 0), $teamIds, true)
+                || in_array((int) ($customRequest->assigned_to ?? 0), $teamIds, true);
+        }
+
         if ((int) ($customRequest->created_by ?? 0) === (int) $user->id) {
             return true;
         }

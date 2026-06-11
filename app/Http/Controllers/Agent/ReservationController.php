@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Agent;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Admin\ReservationsController as AdminReservationsController;
 use App\Models\Reservation;
+use App\Services\BranchScopeService;
 use App\Services\View\AgentPortalLayout;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -12,6 +13,10 @@ use Illuminate\View\View;
 
 class ReservationController extends Controller
 {
+    public function __construct(
+        protected BranchScopeService $branchScope
+    ) {}
+
     public function index(Request $request): View
     {
         $user = $request->user();
@@ -24,8 +29,10 @@ class ReservationController extends Controller
         ];
 
         $query = Reservation::query()
-            ->with(['tour:id,name', 'travelDate:id,date', 'departure:id,start_date'])
-            ->where(fn (Builder $builder) => $this->scopeOwnedByAgent($builder, (int) $user->id));
+            ->with(['tour:id,name', 'travelDate:id,date', 'departure:id,start_date']);
+
+        $this->branchScope->scopeReservations($query, $user);
+        $this->branchScope->constrainReservationQueryForPortalUser($query, $user);
 
         if ($filters['search'] !== '') {
             $like = '%'.$filters['search'].'%';
@@ -81,7 +88,7 @@ class ReservationController extends Controller
     {
         $user = $request->user();
         abort_unless($user && AgentPortalLayout::shouldUse($user) && $user->can('reservations.view'), 403);
-        abort_unless($this->agentOwnsReservation($reservation, (int) $user->id), 403);
+        abort_unless($this->branchScope->userCanAccessReservation($user, $reservation), 403);
 
         return view('agent.reservations.show', [
             'reservation' => $reservation->load([
@@ -99,24 +106,6 @@ class ReservationController extends Controller
                 'agent',
             ]),
         ]);
-    }
-
-    private function scopeOwnedByAgent(Builder $query, int $userId): Builder
-    {
-        return $query->where('agent_id', $userId)
-            ->orWhere('assigned_to', $userId)
-            ->orWhere('created_by', $userId)
-            ->orWhere('created_by_user_id', $userId);
-    }
-
-    private function agentOwnsReservation(Reservation $reservation, int $userId): bool
-    {
-        return in_array($userId, array_filter([
-            (int) ($reservation->agent_id ?? 0),
-            (int) ($reservation->assigned_to ?? 0),
-            (int) ($reservation->created_by ?? 0),
-            (int) ($reservation->created_by_user_id ?? 0),
-        ]), true);
     }
 
     private function statusOptions(): array

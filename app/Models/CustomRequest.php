@@ -144,6 +144,24 @@ class CustomRequest extends Model
             return $query;
         }
 
+        if ($user->isManager()) {
+            $teamIds = User::query()
+                ->where('manager_id', $user->id)
+                ->when($user->branch_id, fn (Builder $builder) => $builder->where('branch_id', $user->branch_id))
+                ->pluck('id')
+                ->push($user->id)
+                ->map(fn ($id) => (int) $id)
+                ->filter(fn ($id) => $id > 0)
+                ->unique()
+                ->values()
+                ->all();
+
+            return $query->where(function (Builder $builder) use ($teamIds): void {
+                $builder->whereIn('created_by', $teamIds)
+                    ->orWhereIn('assigned_to', $teamIds);
+            });
+        }
+
         if ($user->can('custom_requests.quote')) {
             return $query->where(function (Builder $builder) use ($user): void {
                 $builder->whereIn('status', [self::STATUS_NEW])
