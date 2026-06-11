@@ -459,7 +459,7 @@
         fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function (r) { return r.json(); })
             .then(function (data) {
-                var items = data.clients || data.data || [];
+                var items = data.clients || data.items || data.data || [];
                 if (!items.length) { results.hidden = true; return; }
                 var html = '';
                 items.forEach(function (c) {

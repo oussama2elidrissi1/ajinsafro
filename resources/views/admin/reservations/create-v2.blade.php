@@ -8,16 +8,21 @@
 @endpush
 
 @section('content')
+@php
+    $agentReservationMode = (bool) request()->attributes->get('agent_reservation_mode', false);
+    $reservationStoreRoute = $agentReservationMode ? route('agent.reservations.store') : route('admin.reservations.store');
+    $reservationBackRoute = $agentReservationMode ? route('agent.catalogue') : route('admin.reservations.workspace');
+@endphp
 <div class="reservation-create-v2">
     <header class="v2-header">
         <div class="v2-header__top">
             <nav class="v2-breadcrumb" aria-label="Breadcrumb">
-                <a href="{{ route('admin.reservations.workspace') }}">Workspace</a>
+                <a href="{{ $reservationBackRoute }}">{{ $agentReservationMode ? 'Catalogue' : 'Workspace' }}</a>
                 <i class="bx bx-chevron-right"></i>
                 <span>Nouvelle réservation</span>
             </nav>
             <div class="v2-header__actions">
-                <a href="{{ route('admin.reservations.workspace') }}" class="v2-btn v2-btn--ghost">
+                <a href="{{ $reservationBackRoute }}" class="v2-btn v2-btn--ghost">
                     <i class="bx bx-arrow-back"></i> Retour
                 </a>
                 <button type="button" class="v2-btn v2-btn--outline" id="v2-btn-draft">
@@ -42,7 +47,7 @@
         </div>
     @endif
 
-    <form method="post" action="{{ route('admin.reservations.store') }}" enctype="multipart/form-data" id="v2-reservation-form">
+    <form method="post" action="{{ $reservationStoreRoute }}" enctype="multipart/form-data" id="v2-reservation-form">
         @csrf
         <input type="hidden" name="extras_json" id="v2-extras-json" value="[]">
         <input type="hidden" name="travelers_json" id="v2-travelers-json" value="[]">
@@ -530,6 +535,13 @@
 
     <script type="application/json" id="v2-extras-map">{!! json_encode($extrasByVoyage ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) !!}</script>
     <script type="application/json" id="v2-wp-voyage-map">{!! json_encode(($voyages ?? collect())->filter(fn ($v) => (int) ($v->wp_post_id ?? 0) > 0)->mapWithKeys(fn ($v) => [(string) $v->wp_post_id => (int) $v->id])->all(), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) !!}</script>
+    <script>
+        window.RESERVATION_CREATE_ENDPOINTS = {
+            voyageDepartures: @json(route('admin.reservations.voyage-departures')),
+            departureHotelsRooms: @json(route('admin.reservations.departure-hotels-rooms')),
+            clientSearch: @json(route('admin.customers.clients.search'))
+        };
+    </script>
 </div>
 @endsection
 

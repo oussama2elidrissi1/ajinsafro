@@ -1200,9 +1200,9 @@ class ReservationsController extends Controller
         $data = $request->validate($this->reservationValidationRules());
         $data['passengers'] = $this->mergeMainTravelerIntoPassengers($request, $data);
         $this->validateDepartureMatchesTour($data);
-        if (empty($data['client_external_id']) || (int) ($data['client_external_id'] ?? 0) <= 0) {
+        if (($data['client_mode'] ?? 'new') === 'existing' && (empty($data['client_external_id']) || (int) ($data['client_external_id'] ?? 0) <= 0)) {
             throw ValidationException::withMessages([
-                'client_external_id' => ['Le client est requis. Crez un client ou slectionnez-en un existant.'],
+                'client_external_id' => ['Veuillez selectionner un client existant.'],
             ]);
         }
         $data['room_allocations_payload'] = $this->extractRoomAllocationsPayloadFromRequest($request);
