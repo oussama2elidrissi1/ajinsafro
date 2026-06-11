@@ -120,6 +120,11 @@ class Departure extends Model
         return $this->hasMany(Reservation::class);
     }
 
+    public function charges(): HasMany
+    {
+        return $this->hasMany(DepartureCharge::class);
+    }
+
     public function confirmedParticipantsCount(): int
     {
         return $this->groupDealParticipants()->where('status', GroupDealParticipant::STATUS_CONFIRMED)->count();

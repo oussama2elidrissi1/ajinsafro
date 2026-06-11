@@ -310,6 +310,7 @@
         $makeLeaf('finance_factures', 'Facture', 'admin.finance.factures', 'bx bx-receipt', ['admin.finance.factures'], [], null, 'finance.view'),
         $makeLeaf('finance_paiements', 'Paeiment', 'admin.finance.paiements', 'bx bx-credit-card', ['admin.finance.paiements'], [], null, 'finance.view'),
         $makeLeaf('finance_depenses', 'Depennse', 'admin.finance.depenses', 'bx bx-money-withdraw', ['admin.finance.depenses'], [], null, 'finance.view'),
+        $makeLeaf('finance_departures', 'Finances departs', 'admin.finance.departures.index', 'bx bx-calculator', ['admin.finance.departures.*'], [], null, 'departures_finance.view'),
         $makeLeaf('finance_commissions', 'Comission', 'admin.finance.commissions', 'bx bx-pie-chart-alt-2', ['admin.finance.commissions'], [], null, 'finance.view'),
     ]));
 
@@ -319,6 +320,7 @@
         $makeLeaf('admin_roles', 'Roles & permissions', 'admin.settings.roles-permissions', 'bx bx-shield-quarter', ['admin.settings.roles-permissions*'], [], null, 'settings.roles.manage'),
         $makeLeaf('admin_general', 'Parametres generaux', 'admin.settings.parametres-generaux', 'bx bx-slider-alt', ['admin.settings.parametres-generaux*'], [], null, 'settings.general.manage'),
         $makeLeaf('admin_referentials', 'Referentiels metier', 'admin.settings.referentiels-metier', 'bx bx-list-ul', ['admin.settings.referentiels-metier*'], [], null, 'settings.general.manage'),
+        $makeLeaf('admin_charge_types', 'Types de charges', 'admin.settings.charge-types.index', 'bx bx-purchase-tag-alt', ['admin.settings.charge-types*'], [], null, 'charge_types.manage'),
         $makeLeaf('admin_home_page', 'Home page', 'admin.settings.home-page.edit', 'bx bx-home-heart', ['admin.settings.home-page.*'], [], null, 'settings.general.manage'),
         $makeLeaf('admin_security', 'Securite', 'admin.settings.securite', 'bx bx-lock-alt', ['admin.settings.securite*'], [], null, 'settings.security.manage'),
     ]));

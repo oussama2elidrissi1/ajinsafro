@@ -23,6 +23,8 @@ use App\Http\Controllers\Admin\DepartureController;
 use App\Http\Controllers\Admin\AgentCommissionPortalController;
 use App\Http\Controllers\Admin\FinanceController;
 use App\Http\Controllers\Admin\Finance\AgentCommissionController as FinanceAgentCommissionController;
+use App\Http\Controllers\Admin\Finance\ChargeTypeController as FinanceChargeTypeController;
+use App\Http\Controllers\Admin\Finance\DepartureFinanceController;
 use App\Http\Controllers\Admin\GroupDeals\GroupDealController;
 use App\Http\Controllers\Admin\GroupDeals\OfferController as GroupDealOfferController;
 use App\Http\Controllers\Admin\HajjOmraBookingRequestController;
@@ -502,6 +504,17 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('finance/factures', [FinanceController::class, 'page'])->name('finance.factures')->defaults('submenu', 'factures');
         Route::get('finance/paiements', [FinanceController::class, 'page'])->name('finance.paiements')->defaults('submenu', 'paiements');
         Route::get('finance/depenses', [FinanceController::class, 'page'])->name('finance.depenses')->defaults('submenu', 'depenses');
+        Route::get('finance/departs', [DepartureFinanceController::class, 'index'])->name('finance.departures.index');
+        Route::get('finance/departs/{departure}', [DepartureFinanceController::class, 'show'])->name('finance.departures.show')->whereNumber('departure');
+        Route::get('finance/departs/{departure}/charges/create', [DepartureFinanceController::class, 'create'])->name('finance.departures.charges.create')->whereNumber('departure');
+        Route::post('finance/departs/{departure}/charges', [DepartureFinanceController::class, 'store'])->name('finance.departures.charges.store')->whereNumber('departure');
+        Route::get('finance/departs/{departure}/charges/{charge}/edit', [DepartureFinanceController::class, 'edit'])->name('finance.departures.charges.edit')->whereNumber(['departure', 'charge']);
+        Route::put('finance/departs/{departure}/charges/{charge}', [DepartureFinanceController::class, 'update'])->name('finance.departures.charges.update')->whereNumber(['departure', 'charge']);
+        Route::delete('finance/departs/{departure}/charges/{charge}', [DepartureFinanceController::class, 'destroy'])->name('finance.departures.charges.destroy')->whereNumber(['departure', 'charge']);
+        Route::get('finance/departs/{departure}/charges/{charge}/attachment', [DepartureFinanceController::class, 'attachment'])->name('finance.departures.charges.attachment')->whereNumber(['departure', 'charge']);
+        Route::get('finance/departs/{departure}/pdf', [DepartureFinanceController::class, 'pdf'])->name('finance.departures.pdf')->whereNumber('departure');
+        Route::get('finance/departs/{departure}/print', [DepartureFinanceController::class, 'print'])->name('finance.departures.print')->whereNumber('departure');
+        Route::get('finance/departs/{departure}/excel', [DepartureFinanceController::class, 'exportExcel'])->name('finance.departures.excel')->whereNumber('departure');
         Route::get('finance/commissions', [FinanceAgentCommissionController::class, 'index'])->name('finance.commissions');
         Route::get('finance/commissions/export/excel', [FinanceAgentCommissionController::class, 'exportExcel'])->name('finance.commissions.export.excel');
         Route::get('finance/commissions/export/pdf', [FinanceAgentCommissionController::class, 'exportPdf'])->name('finance.commissions.export.pdf');
@@ -581,6 +594,10 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::post('settings/referentiels-metier/{groupKey}', [BusinessReferenceController::class, 'store'])->name('settings.referentiels-metier.store');
         Route::match(['put', 'patch'], 'settings/referentiels-metier/{groupKey}/{item}', [BusinessReferenceController::class, 'update'])->name('settings.referentiels-metier.update');
         Route::delete('settings/referentiels-metier/{groupKey}/{item}', [BusinessReferenceController::class, 'destroy'])->name('settings.referentiels-metier.destroy');
+        Route::get('settings/types-charges', [FinanceChargeTypeController::class, 'index'])->name('settings.charge-types.index');
+        Route::post('settings/types-charges', [FinanceChargeTypeController::class, 'store'])->name('settings.charge-types.store');
+        Route::put('settings/types-charges/{chargeType}', [FinanceChargeTypeController::class, 'update'])->name('settings.charge-types.update')->whereNumber('chargeType');
+        Route::delete('settings/types-charges/{chargeType}', [FinanceChargeTypeController::class, 'destroy'])->name('settings.charge-types.destroy')->whereNumber('chargeType');
 
         Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::match(['put', 'patch'], 'profile', [ProfileController::class, 'update'])->name('profile.update');
