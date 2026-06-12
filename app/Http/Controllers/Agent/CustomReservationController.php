@@ -62,12 +62,15 @@ class CustomReservationController extends Controller
             $query->whereDate('desired_departure_date', $filters['date']);
         }
 
+        $dashboard = $this->buildDashboardData($user);
+
         return view('agent.custom-reservations.index', [
             'requests' => $query->latest()->paginate(15)->withQueryString(),
             'filters' => $filters,
             'statusOptions' => CustomRequest::statusOptions(),
             'travelTypeOptions' => CustomRequest::travelTypeOptions(),
             'canCreateRequest' => $canCreateRequest,
+            'dashboard' => $dashboard,
         ]);
     }
 
@@ -276,6 +279,70 @@ class CustomReservationController extends Controller
         }
 
         return $user->hasRole('Agent Offline') || (string) $user->base_role === 'Agent Offline';
+    }
+
+    private function buildDashboardData(User $user): array
+    {
+        $baseQuery = CustomRequest::query()->visibleTo($user);
+        $statusCounts = (clone $baseQuery)
+            ->select('status', DB::raw('count(*) as total'))
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->map(fn ($value) => (int) $value)
+            ->all();
+
+        $inProgressStatuses = [
+            CustomRequest::STATUS_ASSIGNED,
+            CustomRequest::STATUS_PROCESSING,
+            CustomRequest::STATUS_MISSING_INFO,
+            CustomRequest::STATUS_MODIFICATION_REQUESTED,
+            CustomRequest::STATUS_QUOTE_PREPARED,
+            CustomRequest::STATUS_WAITING_CUSTOMER,
+        ];
+
+        $actionRequests = (clone $baseQuery)
+            ->with(['latestQuote', 'assignedAgent:id,name'])
+            ->where(function (Builder $query) use ($user): void {
+                $query->whereIn('status', [
+                    CustomRequest::STATUS_NEW,
+                    CustomRequest::STATUS_PROCESSING,
+                    CustomRequest::STATUS_MODIFICATION_REQUESTED,
+                    CustomRequest::STATUS_MISSING_INFO,
+                ])
+                    ->orWhere('priority', 'urgent')
+                    ->orWhere('priority', 'very_urgent')
+                    ->orWhere('assigned_to', $user->id);
+            })
+            ->orderByRaw("CASE WHEN priority = 'very_urgent' THEN 0 WHEN priority = 'urgent' THEN 1 ELSE 2 END")
+            ->latest()
+            ->limit(5)
+            ->get();
+
+        return [
+            'total' => (clone $baseQuery)->count(),
+            'new' => $statusCounts[CustomRequest::STATUS_NEW] ?? 0,
+            'in_progress' => array_sum(array_map(fn (string $status) => $statusCounts[$status] ?? 0, $inProgressStatuses)),
+            'quote_sent' => $statusCounts[CustomRequest::STATUS_QUOTE_SENT] ?? 0,
+            'confirmed' => $statusCounts[CustomRequest::STATUS_CONFIRMED] ?? 0,
+            'urgent' => (clone $baseQuery)->whereIn('priority', ['urgent', 'very_urgent'])->count(),
+            'assigned_to_me' => (clone $baseQuery)->where('assigned_to', $user->id)->count(),
+            'created_by_me' => (clone $baseQuery)->where('created_by', $user->id)->count(),
+            'today' => (clone $baseQuery)->whereDate('created_at', today())->count(),
+            'upcoming_departures' => (clone $baseQuery)
+                ->whereNotNull('desired_departure_date')
+                ->whereDate('desired_departure_date', '>=', today())
+                ->whereDate('desired_departure_date', '<=', today()->addDays(7))
+                ->count(),
+            'action_requests' => $actionRequests,
+            'status_counts' => $statusCounts,
+            'account' => [
+                'name' => $user->name,
+                'role' => $user->getRoleNames()->first() ?: ($user->job_title ?: 'Agent'),
+                'branch' => $user->branch?->name,
+                'can_quote' => $user->can('custom_requests.quote'),
+                'can_create' => $this->canCreateCustomRequest($user),
+            ],
+        ];
     }
 
     private function scopeOwnedByAgent(Builder $query, int $userId): Builder
