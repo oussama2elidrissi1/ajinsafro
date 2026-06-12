@@ -35,6 +35,12 @@ class AdminMiddleware
             abort(403, 'Acces admin non autorise pour ce compte.');
         }
 
+        if ($this->isAgentArea($request) && $user->canAccessAdmin()) {
+            $adminUrl = rtrim((string) config('app.admin_url', config('app.url')), '/');
+
+            return redirect()->away($adminUrl . '/admin/dashboard/vue-globale');
+        }
+
         if ($this->isAgentArea($request) && ! $this->canAccessAgentArea($user)) {
             abort(403, 'Acces agent non autorise pour ce compte.');
         }
@@ -59,7 +65,7 @@ class AdminMiddleware
     private function canAccessAgentArea($user): bool
     {
         if ($user->canAccessAdmin()) {
-            return true;
+            return false;
         }
 
         if ($user->isClientPortal() || $user->isPartner()) {

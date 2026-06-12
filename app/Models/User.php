@@ -306,6 +306,14 @@ class User extends Authenticatable
             return false;
         }
 
+        if ($this->hasRole(['Admin', 'Super Admin'])) {
+            return true;
+        }
+
+        if ((string) ($this->access_mode ?? '') === 'custom') {
+            return true;
+        }
+
         return $this->can(\App\Support\AdminMenuPermissionRegistry::ADMIN_ACCESS_PERMISSION);
     }
 }

@@ -39,14 +39,6 @@ class LoginRedirectService
             return $adminUrl . '/client/dashboard';
         }
 
-        // Manager uses the same portal entrypoint as agent/commercial.
-        if ($user->hasRole([
-            BranchScopeService::ROLE_MANAGER,
-            'Manager',
-        ])) {
-            return $adminUrl . '/agent/dashboard';
-        }
-
         // Partner area (dedicated subdomain)
         if ($user->isPartner()) {
             $partner = $user->partner ?: $user->ownedPartner;
@@ -61,6 +53,18 @@ class LoginRedirectService
             BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY,
         ])) {
             return $adminUrl . '/admin/reservations/workspace';
+        }
+
+        if ($this->shouldUseAdminInterface($user)) {
+            return $adminUrl . '/admin/dashboard/vue-globale';
+        }
+
+        // Manager uses the same portal entrypoint as agent/commercial unless it is configured for admin.
+        if ($user->hasRole([
+            BranchScopeService::ROLE_MANAGER,
+            'Manager',
+        ])) {
+            return $adminUrl . '/agent/dashboard';
         }
 
         // Explicit mapping for admin roles.
@@ -103,5 +107,18 @@ class LoginRedirectService
 
         // Fallback for users without back-office roles (e.g. WP-only synced accounts).
         return rtrim((string) config('app.public_url', 'https://ajinsafro.net'), '/');
+    }
+
+    private function shouldUseAdminInterface(User $user): bool
+    {
+        if ((string) ($user->access_mode ?? '') === 'custom') {
+            return true;
+        }
+
+        if ($user->hasRole(['Admin', 'Super Admin'])) {
+            return true;
+        }
+
+        return $user->canAccessAdmin();
     }
 }
