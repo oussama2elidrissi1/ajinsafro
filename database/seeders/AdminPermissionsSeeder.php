@@ -81,6 +81,7 @@ class AdminPermissionsSeeder extends Seeder
 
         $commercialReservationsOnlyRole->syncPermissions(array_values(array_filter($permissions, static function (string $permission): bool {
             return in_array($permission, [
+                AdminMenuPermissionRegistry::ADMIN_ACCESS_PERMISSION,
                 'reservations.view',
                 'reservations.create',
                 'reservations.store',

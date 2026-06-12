@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\BranchScopeService;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,56 +16,73 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->user()) {
+        $user = $request->user();
+
+        if (! $user) {
             $adminUrl = rtrim((string) config('app.admin_url', config('app.url')), '/');
+
             return redirect()->away($adminUrl . '/login');
         }
 
-        if (! $request->user()->canAccessAdmin()) {
-            $adminUrl = rtrim((string) config('app.admin_url', config('app.url')), '/');
-            return redirect()->away($adminUrl . '/admin/dashboard')->with('error', 'Access denied.');
-        }
-
-        if ($request->is('admin/*') && $this->isAgentPortalOnly($request->user())) {
-            $adminUrl = rtrim((string) config('app.admin_url', config('app.url')), '/');
-            return redirect()->away($adminUrl . '/agent/reservations-a-la-carte')->with('error', 'Acces admin non autorise pour ce compte.');
-        }
-
-        if (isset($request->user()->is_active) && ! $request->user()->is_active) {
+        if (isset($user->is_active) && ! $user->is_active) {
             auth()->logout();
             $adminUrl = rtrim((string) config('app.admin_url', config('app.url')), '/');
+
             return redirect()->away($adminUrl . '/login')->with('error', 'Your account is disabled.');
+        }
+
+        if ($this->isAdminArea($request) && ! $user->canAccessAdmin()) {
+            abort(403, 'Acces admin non autorise pour ce compte.');
+        }
+
+        if ($this->isAgentArea($request) && ! $this->canAccessAgentArea($user)) {
+            abort(403, 'Acces agent non autorise pour ce compte.');
+        }
+
+        if (! $this->isAdminArea($request) && ! $this->isAgentArea($request) && ! $this->canAccessAgentArea($user)) {
+            abort(403, 'Acces non autorise pour ce compte.');
         }
 
         return $next($request);
     }
 
-    private function isAgentPortalOnly($user): bool
+    private function isAdminArea(Request $request): bool
     {
-        if ($user->is_admin) {
-            return false;
+        return $request->is('admin') || $request->is('admin/*') || $request->routeIs('admin.*');
+    }
+
+    private function isAgentArea(Request $request): bool
+    {
+        return $request->is('agent') || $request->is('agent/*') || $request->routeIs('agent.*');
+    }
+
+    private function canAccessAgentArea($user): bool
+    {
+        if ($user->canAccessAdmin()) {
+            return true;
         }
 
-        $adminRoles = [
-            \App\Services\BranchScopeService::ROLE_SUPER_ADMIN,
-            \App\Services\BranchScopeService::ROLE_SIEGE_ADMIN,
-            \App\Services\BranchScopeService::ROLE_BRANCH_ADMIN,
-            \App\Services\BranchScopeService::ROLE_CHEF_COMMERCIAL,
-            \App\Services\BranchScopeService::ROLE_MANAGER,
-            'Super Admin',
-            'Admin SiÃ¨ge',
-            'Chef Commercial',
-            'Manager',
-        ];
-
-        if ($user->hasRole($adminRoles)) {
+        if ($user->isClientPortal() || $user->isPartner()) {
             return false;
         }
 
         return $user->hasRole([
-            \App\Services\BranchScopeService::ROLE_AGENT,
+            BranchScopeService::ROLE_SUPER_ADMIN,
+            BranchScopeService::ROLE_SIEGE_ADMIN,
+            BranchScopeService::ROLE_BRANCH_ADMIN,
+            BranchScopeService::ROLE_CHEF_COMMERCIAL,
+            BranchScopeService::ROLE_MANAGER,
+            BranchScopeService::ROLE_COMMERCIAL,
+            BranchScopeService::ROLE_AGENT,
+            BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY,
+            'Super Admin',
+            'Admin Siege',
+            'Admin Siège',
+            'Chef Commercial',
+            'Manager',
+            'Commercial',
             'Agent',
             'Agent Offline',
-        ]);
+        ]) || $user->can('reservations.view') || $user->can('custom_requests.view');
     }
 }

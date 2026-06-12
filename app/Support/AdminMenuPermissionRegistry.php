@@ -6,10 +6,24 @@ use Spatie\Permission\Models\Permission;
 
 class AdminMenuPermissionRegistry
 {
+    public const ADMIN_ACCESS_PERMISSION = 'admin.access';
+
+    private const SYSTEM_PERMISSIONS = [
+        [
+            'name' => self::ADMIN_ACCESS_PERMISSION,
+            'label' => 'Acces interface admin',
+        ],
+    ];
+
     public static function rolePermissionSections(?array $availablePermissions = null): array
     {
         $available = static::normalizeAvailablePermissions($availablePermissions);
         $sections = [];
+
+        $systemSection = static::systemPermissionSection($available);
+        if ($systemSection !== null) {
+            $sections[] = $systemSection;
+        }
 
         foreach (config('admin_menu.items', []) as $section) {
             $sectionNode = static::buildSectionNode($section, $available);
@@ -26,6 +40,11 @@ class AdminMenuPermissionRegistry
     {
         $available = static::normalizeAvailablePermissions($availablePermissions);
         $groups = [];
+
+        $systemGroup = static::flatSystemPermissionGroup($available);
+        if ($systemGroup !== null) {
+            $groups[] = $systemGroup;
+        }
 
         foreach (config('admin_menu.items', []) as $section) {
             $permissions = [];
@@ -68,6 +87,7 @@ class AdminMenuPermissionRegistry
         $names = array_merge($names, static::flattenPermissionValues(config('admin_menu.route_permissions', [])));
         $names = array_merge($names, static::flattenPermissionValues(config('admin_menu.route_prefix_permissions', [])));
         $names = array_merge($names, [
+            self::ADMIN_ACCESS_PERMISSION,
             'agency_commissions.view',
             'commissions.view-own',
             'commissions.view-team',
@@ -134,6 +154,44 @@ class AdminMenuPermissionRegistry
         }
 
         return array_keys($selected);
+    }
+
+    private static function systemPermissionSection(array $available): ?array
+    {
+        $permissions = static::availableSystemPermissions($available);
+
+        if ($permissions === []) {
+            return null;
+        }
+
+        return [
+            'key' => 'system_access',
+            'label' => 'Acces systeme',
+            'permissions' => $permissions,
+            'modules' => [],
+        ];
+    }
+
+    private static function flatSystemPermissionGroup(array $available): ?array
+    {
+        $permissions = static::availableSystemPermissions($available);
+
+        if ($permissions === []) {
+            return null;
+        }
+
+        return [
+            'key' => 'system_access',
+            'label' => 'Acces systeme',
+            'permissions' => $permissions,
+        ];
+    }
+
+    private static function availableSystemPermissions(array $available): array
+    {
+        return array_values(array_filter(self::SYSTEM_PERMISSIONS, static function (array $permission) use ($available): bool {
+            return isset($available[$permission['name']]);
+        }));
     }
 
     private static function buildSectionNode(array $section, array $available): ?array

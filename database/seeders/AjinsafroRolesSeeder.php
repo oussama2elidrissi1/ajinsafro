@@ -40,14 +40,15 @@ class AjinsafroRolesSeeder extends Seeder
                 || str_starts_with($p, 'agency_commissions.')
                 || str_starts_with($p, 'settings.view')
                 || str_starts_with($p, 'settings.branches.') || str_starts_with($p, 'settings.users.')
-                || str_starts_with($p, 'settings.general.');
+                || str_starts_with($p, 'settings.general.')
+                || $p === AdminMenuPermissionRegistry::ADMIN_ACCESS_PERMISSION;
         }));
         $branchScoped = array_values(array_diff($branchScoped, self::RESTRICTED_RESERVATION_PERMISSIONS));
         $commercial = array_values(array_filter($allPermissions, function (string $p): bool {
             return str_starts_with($p, 'dashboard.') || str_starts_with($p, 'reservations.') || str_starts_with($p, 'customers.')
                 || str_starts_with($p, 'circuits.') || str_starts_with($p, 'group-deals.')
                 || str_starts_with($p, 'products-services.') || str_starts_with($p, 'messagerie.')
-                || in_array($p, ['agencies.view', 'points_of_sale.view', 'agency_employees.view', 'pos_employees.view', 'agency_accounts.view', 'assignments.view', 'commissions.view-team'], true);
+                || in_array($p, [AdminMenuPermissionRegistry::ADMIN_ACCESS_PERMISSION, 'agencies.view', 'points_of_sale.view', 'agency_employees.view', 'pos_employees.view', 'agency_accounts.view', 'assignments.view', 'commissions.view-team'], true);
         }));
         $commercial = array_values(array_diff($commercial, self::RESTRICTED_RESERVATION_PERMISSIONS));
         $agent = array_values(array_filter($allPermissions, function (string $p): bool {
@@ -61,6 +62,7 @@ class AjinsafroRolesSeeder extends Seeder
 
         $commercialReservationsOnly = array_values(array_filter($allPermissions, static function (string $permission): bool {
             return in_array($permission, [
+                AdminMenuPermissionRegistry::ADMIN_ACCESS_PERMISSION,
                 'reservations.view',
                 'reservations.create',
                 'reservations.store',

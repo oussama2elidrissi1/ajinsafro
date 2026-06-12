@@ -56,7 +56,7 @@ class UserAccessController extends Controller
         $user->email = $data['email'];
         $user->phone = $data['phone'] ?? null;
         $user->address = $data['address'] ?? null;
-        $user->is_admin = (bool) ($data['is_admin'] ?? true);
+        $user->is_admin = (bool) ($data['is_admin'] ?? false);
         $user->is_active = (bool) ($data['is_active'] ?? true);
         $user->access_mode = $data['access_mode'];
         $user->base_role = $data['access_mode'] === 'role' ? ($data['role_name'] ?? null) : null;
@@ -89,7 +89,7 @@ class UserAccessController extends Controller
         $user->email = $data['email'];
         $user->phone = $data['phone'] ?? null;
         $user->address = $data['address'] ?? null;
-        $user->is_admin = (bool) ($data['is_admin'] ?? true);
+        $user->is_admin = (bool) ($data['is_admin'] ?? false);
         $user->is_active = (bool) ($data['is_active'] ?? true);
         $user->access_mode = $data['access_mode'];
         $user->base_role = $data['access_mode'] === 'role' ? ($data['role_name'] ?? null) : null;

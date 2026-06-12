@@ -115,8 +115,8 @@
                                     </div>
                                     <div class="col-md-3">
                                         <div class="form-check mt-4">
-                                            <input class="form-check-input" type="checkbox" name="is_admin" value="1" id="is_admin" {{ old('is_admin', $userModel->is_admin ?? true) ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="is_admin">Admin</label>
+                                            <input class="form-check-input" type="checkbox" name="is_admin" value="1" id="is_admin" {{ old('is_admin', $userModel->is_admin ?? false) ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="is_admin">Acces global agences</label>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
@@ -153,6 +153,7 @@
 
                             <div class="tab-pane" id="tab-access" role="tabpanel">
                                 <div class="alert alert-info py-2 small mb-3" id="permissions-mode-alert">
+                                    La permission <strong>Acces interface admin</strong> controle l'entree dans /admin.
                                     En mode <strong>Hériter d'un rôle</strong>, les permissions suivent uniquement le rôle sélectionné.
                                     Passez en <strong>Permissions personnalisées</strong> pour définir une sélection manuelle.
                                 </div>
@@ -254,8 +255,8 @@
                     modeAlert.classList.toggle('alert-info', isRoleMode);
                     modeAlert.classList.toggle('alert-success', !isRoleMode);
                     modeAlert.innerHTML = isRoleMode
-                        ? 'En mode <strong>Héritage rôle</strong>, les permissions ci-dessous sont en lecture seule et suivent le rôle sélectionné.'
-                        : 'En mode <strong>Permissions personnalisées</strong>, les cases cochées sont exactement celles enregistrées pour cet utilisateur.';
+                        ? 'La permission <strong>Acces interface admin</strong> controle l entree dans /admin. En mode <strong>Héritage rôle</strong>, les permissions ci-dessous sont en lecture seule et suivent le rôle sélectionné.'
+                        : 'La permission <strong>Acces interface admin</strong> controle l entree dans /admin. En mode <strong>Permissions personnalisées</strong>, les cases cochées sont exactement celles enregistrées pour cet utilisateur.';
                 }
 
                 const disabled = isRoleMode;
@@ -365,5 +366,3 @@
         })();
     </script>
 @endpush
-
-

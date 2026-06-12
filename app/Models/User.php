@@ -306,25 +306,6 @@ class User extends Authenticatable
             return false;
         }
 
-        if ($this->is_admin) {
-            return true;
-        }
-
-        return $this->hasRole([
-            \App\Services\BranchScopeService::ROLE_SUPER_ADMIN,
-            \App\Services\BranchScopeService::ROLE_SIEGE_ADMIN,
-            \App\Services\BranchScopeService::ROLE_BRANCH_ADMIN,
-            \App\Services\BranchScopeService::ROLE_CHEF_COMMERCIAL,
-            \App\Services\BranchScopeService::ROLE_MANAGER,
-            \App\Services\BranchScopeService::ROLE_COMMERCIAL,
-            \App\Services\BranchScopeService::ROLE_AGENT,
-            \App\Services\BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY,
-            'Super Admin',
-            'Admin Siège',
-            'Chef Commercial',
-            'Manager',
-            'Agent',
-            'Agent Offline',
-        ]) || $this->can('dashboard.view');
+        return $this->can(\App\Support\AdminMenuPermissionRegistry::ADMIN_ACCESS_PERMISSION);
     }
 }
