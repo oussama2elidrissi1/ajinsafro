@@ -27,6 +27,7 @@ class CustomRequestQuoteController extends Controller
         $this->authorizeQuote($request, $customRequest);
 
         $quote = $this->currentEditableQuote($customRequest, $request);
+        $this->quotationService->ensureProgramDays($quote);
 
         return view('admin.custom-requests.quote', [
             'customRequest' => $customRequest->load(['creator:id,name', 'assignedAgent:id,name', 'services', 'documents', 'comments.user:id,name', 'statusLogs.user:id,name']),
@@ -43,6 +44,7 @@ class CustomRequestQuoteController extends Controller
         $this->authorizeQuote($request, $customRequest);
         $quote = $this->currentEditableQuote($customRequest, $request);
         $this->saveQuotePayload($request, $quote);
+        $this->quotationService->ensureProgramDays($quote);
 
         return redirect()->route($this->quoteRoute($request), $customRequest)->with('success', 'Brouillon de cotation enregistré.');
     }
@@ -153,6 +155,7 @@ class CustomRequestQuoteController extends Controller
             'items.*.data_json' => ['nullable', 'array'],
 
             'days' => ['nullable', 'array'],
+            'days.*.id' => ['nullable', 'integer'],
             'days.*.day_number' => ['required_with:days', 'integer', 'min:1'],
             'days.*.date' => ['nullable', 'date'],
             'days.*.title' => ['nullable', 'string', 'max:255'],

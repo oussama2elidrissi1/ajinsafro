@@ -4,11 +4,48 @@ namespace App\Services;
 
 use App\Models\CustomRequestQuote;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
 class CustomRequestQuotationService
 {
+    public function ensureProgramDays(CustomRequestQuote $quote): void
+    {
+        $quote->loadMissing('customRequest');
+        $customRequest = $quote->customRequest;
+
+        if (! $customRequest || ! $customRequest->desired_departure_date) {
+            return;
+        }
+
+        $nights = $this->resolveNights($customRequest);
+        if ($nights < 1) {
+            return;
+        }
+
+        DB::transaction(function () use ($quote, $customRequest, $nights): void {
+            $startDate = Carbon::parse($customRequest->desired_departure_date);
+            $existing = $quote->days()->get()->keyBy('day_number');
+
+            for ($dayNumber = 1; $dayNumber <= $nights; $dayNumber++) {
+                if ($existing->has($dayNumber)) {
+                    continue;
+                }
+
+                $quote->days()->create([
+                    'day_number' => $dayNumber,
+                    'date' => $startDate->copy()->addDays($dayNumber - 1)->toDateString(),
+                    'title' => 'Jour '.$dayNumber,
+                    'city' => $customRequest->desired_destination,
+                    'client_description' => null,
+                    'internal_notes' => null,
+                    'sort_order' => $dayNumber - 1,
+                ]);
+            }
+        });
+    }
+
     public function save(CustomRequestQuote $quote, array $data, User $user): void
     {
         DB::transaction(function () use ($quote, $data, $user): void {
@@ -41,11 +78,18 @@ class CustomRequestQuotationService
     private function syncProgram(CustomRequestQuote $quote, array $days): void
     {
         $quote->items()->delete();
-        $quote->days()->delete();
 
         foreach (array_values($days) as $dayIndex => $dayData) {
-            $day = $quote->days()->create([
-                'day_number' => (int) ($dayData['day_number'] ?? ($dayIndex + 1)),
+            $dayNumber = (int) ($dayData['day_number'] ?? ($dayIndex + 1));
+            $day = null;
+
+            if (! empty($dayData['id'])) {
+                $day = $quote->days()->whereKey($dayData['id'])->first();
+            }
+
+            $day ??= $quote->days()->firstOrNew(['day_number' => $dayNumber]);
+            $day->fill([
+                'day_number' => $dayNumber,
                 'date' => $dayData['date'] ?? null,
                 'title' => $dayData['title'] ?? null,
                 'city' => $dayData['city'] ?? null,
@@ -53,6 +97,7 @@ class CustomRequestQuotationService
                 'internal_notes' => $dayData['internal_notes'] ?? null,
                 'sort_order' => (int) ($dayData['sort_order'] ?? $dayIndex),
             ]);
+            $day->save();
 
             foreach (array_values($dayData['services'] ?? []) as $serviceIndex => $serviceData) {
                 $payload = $this->servicePayload($serviceData, $serviceIndex);
@@ -111,6 +156,44 @@ class CustomRequestQuotationService
         $description = trim((string) ($item['description'] ?? ''));
 
         return $description !== '' ? mb_substr($description, 0, 80) : null;
+    }
+
+    private function resolveNights($customRequest): int
+    {
+        if ($customRequest->desired_departure_date && $customRequest->desired_return_date) {
+            $days = Carbon::parse($customRequest->desired_departure_date)
+                ->diffInDays(Carbon::parse($customRequest->desired_return_date), false);
+
+            if ($days > 0) {
+                return (int) $days;
+            }
+        }
+
+        $duration = $this->extractFirstPositiveInteger((string) ($customRequest->desired_duration ?? ''));
+        if ($duration > 0) {
+            return $duration;
+        }
+
+        $text = implode(' ', array_filter([
+            $customRequest->requested_services_details ?? null,
+            $customRequest->customer_notes ?? null,
+            $customRequest->internal_notes ?? null,
+        ]));
+
+        return $this->extractFirstPositiveInteger($text);
+    }
+
+    private function extractFirstPositiveInteger(string $text): int
+    {
+        if (preg_match('/(\d+)\s*(?:nuits?|jours?)/iu', $text, $matches) === 1) {
+            return max(0, (int) $matches[1]);
+        }
+
+        if (preg_match('/^\s*(\d+)\s*$/', $text, $matches) === 1) {
+            return max(0, (int) $matches[1]);
+        }
+
+        return 0;
     }
 
     private function number(mixed $value): float

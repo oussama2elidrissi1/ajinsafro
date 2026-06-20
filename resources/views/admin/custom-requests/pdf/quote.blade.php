@@ -118,6 +118,11 @@
         @empty
             <div class="conditions">Aucun programme détaillé n’a été saisi.</div>
         @endforelse
+        @if($customRequest->desired_return_date)
+            <div class="day">
+                <div class="day-title">Retour — {{ $customRequest->desired_return_date->format('d/m/Y') }}</div>
+            </div>
+        @endif
     </div>
 
     @if($showAmounts && $items->isNotEmpty())

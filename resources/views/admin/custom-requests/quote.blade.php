@@ -39,6 +39,7 @@
             $programDays = $quote->days->map(function ($day) {
                 return [
                     'day_number' => $day->day_number,
+                    'id' => $day->id,
                     'date' => optional($day->date)->toDateString(),
                     'title' => $day->title,
                     'city' => $day->city,
@@ -66,6 +67,8 @@
             ]];
         }
     }
+
+    $returnDate = optional($customRequest->desired_return_date)->toDateString();
 @endphp
 
 @extends($quoteLayout ?? 'layouts.admin-v6')
@@ -106,6 +109,13 @@
     .quote-day { border:1px solid #d9e5f2; border-radius:10px; padding:14px; background:#fbfdff; display:grid; gap:12px; }
     .quote-day-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .quote-day-title { font-weight:800; color:#10233f; }
+    .quote-day-date { color:#5b6b82; font-weight:700; margin-left:6px; }
+    .quote-day-toggle { width:34px; height:34px; padding:0; }
+    .quote-day-body { display:grid; gap:12px; }
+    .quote-day.is-collapsed .quote-day-body { display:none; }
+    .quote-day.is-collapsed .quote-day-toggle i { transform:rotate(-90deg); }
+    .quote-program-toolbar { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+    .quote-return-note { border:1px dashed #b8cbe0; background:#f7fbff; border-radius:10px; padding:10px 12px; color:#20324d; font-weight:700; }
     .quote-service { border:1px solid #dbe7f3; border-radius:10px; background:#fff; padding:12px; display:grid; gap:11px; }
     .quote-service-head { display:grid; grid-template-columns:180px minmax(180px,1fr) 110px auto; gap:10px; align-items:end; }
     .quote-extra-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
@@ -162,21 +172,37 @@
             </section>
 
             <section class="quote-card">
-                <div class="d-flex justify-content-between gap-2 align-items-center mb-2">
-                    <h3 class="mb-0">Programme du voyage</h3>
-                    <button type="button" class="quote-btn quote-btn-soft" id="addQuoteDay"><i class="bx bx-plus"></i> Ajouter un jour</button>
+                <div class="quote-program-toolbar">
+                    <div>
+                        <h3 class="mb-0">Programme du voyage</h3>
+                        <div class="text-muted small">{{ count($programDays) }} jour(s) généré(s) selon la durée de la demande.</div>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button type="submit" name="sync_program_days" value="1" class="quote-btn quote-btn-primary"><i class="bx bx-refresh"></i> Synchroniser les jours avec la durée</button>
+                        <button type="button" class="quote-btn quote-btn-soft" data-open-days>Tout ouvrir</button>
+                        <button type="button" class="quote-btn quote-btn-soft" data-close-days>Tout fermer</button>
+                        <button type="button" class="quote-btn quote-btn-soft" id="addQuoteDay"><i class="bx bx-plus"></i> Ajouter un jour extra</button>
+                    </div>
                 </div>
                 <div id="quoteDays" class="quote-stack">
                     @foreach($programDays as $dayIndex => $day)
-                        <article class="quote-day" data-day>
+                        <article class="quote-day {{ $loop->first ? '' : 'is-collapsed' }}" data-day>
                             <div class="quote-day-head">
-                                <div class="quote-day-title">Jour <span data-day-label>{{ $day['day_number'] ?? $loop->iteration }}</span></div>
+                                <div class="quote-day-title">
+                                    Jour <span data-day-label>{{ $day['day_number'] ?? $loop->iteration }}</span>
+                                    @if(!empty($day['date']))
+                                        <span class="quote-day-date">{{ \Illuminate\Support\Carbon::parse($day['date'])->format('d/m/Y') }}</span>
+                                    @endif
+                                </div>
                                 <div class="d-flex gap-2 flex-wrap">
                                     <button type="button" class="quote-btn quote-btn-soft" data-add-service><i class="bx bx-plus"></i> Ajouter un service</button>
+                                    <button type="button" class="quote-btn quote-btn-soft quote-day-toggle" data-toggle-day aria-label="Ouvrir ou fermer"><i class="bx bx-chevron-down"></i></button>
                                     <button type="button" class="quote-btn quote-btn-danger" data-remove-day><i class="bx bx-trash"></i></button>
                                 </div>
                             </div>
+                            <div class="quote-day-body">
                             <div class="quote-grid">
+                                <input type="hidden" name="days[{{ $dayIndex }}][id]" value="{{ $day['id'] ?? '' }}" data-day-id>
                                 <div class="quote-field"><label>Numéro du jour</label><input type="number" min="1" name="days[{{ $dayIndex }}][day_number]" data-day-number value="{{ $day['day_number'] ?? $loop->iteration }}"></div>
                                 <div class="quote-field"><label>Date du jour</label><input type="date" name="days[{{ $dayIndex }}][date]" value="{{ $day['date'] ?? '' }}"></div>
                                 <div class="quote-field"><label>Titre du jour</label><input name="days[{{ $dayIndex }}][title]" value="{{ $day['title'] ?? '' }}"></div>
@@ -216,9 +242,13 @@
                                     </div>
                                 @endforeach
                             </div>
+                            </div>
                         </article>
                     @endforeach
                 </div>
+                @if($returnDate)
+                    <div class="quote-return-note mt-3">Retour — {{ \Illuminate\Support\Carbon::parse($returnDate)->format('d/m/Y') }}</div>
+                @endif
             </section>
 
             <section class="quote-card">
@@ -401,8 +431,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const day = document.createElement('article');
         day.className = 'quote-day';
         day.setAttribute('data-day', '');
-        day.innerHTML = `<div class="quote-day-head"><div class="quote-day-title">Jour <span data-day-label>${dayIndex + 1}</span></div><div class="d-flex gap-2 flex-wrap"><button type="button" class="quote-btn quote-btn-soft" data-add-service><i class="bx bx-plus"></i> Ajouter un service</button><button type="button" class="quote-btn quote-btn-danger" data-remove-day><i class="bx bx-trash"></i></button></div></div>
+        day.innerHTML = `<div class="quote-day-head"><div class="quote-day-title">Jour <span data-day-label>${dayIndex + 1}</span></div><div class="d-flex gap-2 flex-wrap"><button type="button" class="quote-btn quote-btn-soft" data-add-service><i class="bx bx-plus"></i> Ajouter un service</button><button type="button" class="quote-btn quote-btn-soft quote-day-toggle" data-toggle-day aria-label="Ouvrir ou fermer"><i class="bx bx-chevron-down"></i></button><button type="button" class="quote-btn quote-btn-danger" data-remove-day><i class="bx bx-trash"></i></button></div></div><div class="quote-day-body">
             <div class="quote-grid">
+                <input type="hidden" name="days[${dayIndex}][id]" value="" data-day-id>
                 <div class="quote-field"><label>Numéro du jour</label><input type="number" min="1" name="days[${dayIndex}][day_number]" data-day-number value="${dayIndex + 1}"></div>
                 <div class="quote-field"><label>Date du jour</label><input type="date" name="days[${dayIndex}][date]"></div>
                 <div class="quote-field"><label>Titre du jour</label><input name="days[${dayIndex}][title]"></div>
@@ -410,7 +441,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="quote-field full"><label>Description client</label><textarea name="days[${dayIndex}][client_description]"></textarea></div>
                 <div class="quote-field full"><label>Notes internes</label><textarea name="days[${dayIndex}][internal_notes]"></textarea></div>
                 <input type="hidden" name="days[${dayIndex}][sort_order]" value="${dayIndex}" data-day-sort>
-            </div><div class="quote-stack" data-services>${serviceHtml(dayIndex, 0)}</div>`;
+            </div><div class="quote-stack" data-services>${serviceHtml(dayIndex, 0)}</div></div>`;
         daysContainer.appendChild(day);
         renderExtra(day.querySelector('[data-service]'));
         recalc();
@@ -420,9 +451,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const addService = event.target.closest('[data-add-service]');
         const removeService = event.target.closest('[data-remove-service]');
         const removeDay = event.target.closest('[data-remove-day]');
+        const toggleDay = event.target.closest('[data-toggle-day]');
 
         if (addService) {
             const day = addService.closest('[data-day]');
+            day.classList.remove('is-collapsed');
             const dayIndex = [...document.querySelectorAll('[data-day]')].indexOf(day);
             const services = day.querySelector('[data-services]');
             const serviceIndex = services.querySelectorAll('[data-service]').length;
@@ -442,6 +475,18 @@ document.addEventListener('DOMContentLoaded', function () {
             reindex();
             recalc();
         }
+
+        if (toggleDay) {
+            toggleDay.closest('[data-day]').classList.toggle('is-collapsed');
+        }
+    });
+
+    document.querySelector('[data-open-days]')?.addEventListener('click', function () {
+        document.querySelectorAll('[data-day]').forEach(day => day.classList.remove('is-collapsed'));
+    });
+
+    document.querySelector('[data-close-days]')?.addEventListener('click', function () {
+        document.querySelectorAll('[data-day]').forEach(day => day.classList.add('is-collapsed'));
     });
 
     document.addEventListener('change', function (event) {

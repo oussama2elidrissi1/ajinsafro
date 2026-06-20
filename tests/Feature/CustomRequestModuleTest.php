@@ -9,6 +9,7 @@ use App\Models\ClientNotification;
 use App\Models\User;
 use App\Http\Controllers\Admin\CustomRequestQuoteController;
 use App\Http\Controllers\Agent\CustomReservationController;
+use App\Services\CustomRequestQuotationService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -558,6 +559,54 @@ class CustomRequestModuleTest extends TestCase
             'margin_type' => 'percent',
         ]);
         Storage::disk('public')->assertExists($quote->pdf_path);
+    }
+
+    public function test_quote_program_days_are_generated_from_trip_duration_without_duplicates(): void
+    {
+        $offline = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.quote',
+        ], ['Agent Offline']);
+
+        $commercial = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.create',
+        ], ['Agent']);
+
+        $customRequest = $this->customRequest($commercial, [
+            'assigned_to' => $offline->id,
+            'status' => CustomRequest::STATUS_PROCESSING,
+            'desired_departure_date' => '2026-06-21',
+            'desired_return_date' => '2026-07-05',
+            'desired_duration' => '14 nuits',
+            'desired_destination' => 'Paris',
+        ]);
+
+        $quote = $customRequest->quotes()->create([
+            'created_by' => $offline->id,
+            'offline_agent_id' => $offline->id,
+            'currency' => 'MAD',
+        ]);
+
+        $service = app(CustomRequestQuotationService::class);
+        $service->ensureProgramDays($quote);
+        $service->ensureProgramDays($quote);
+
+        $this->assertSame(14, $quote->days()->count());
+        $this->assertDatabaseHas('custom_request_quote_days', [
+            'custom_request_quote_id' => $quote->id,
+            'day_number' => 1,
+            'date' => '2026-06-21',
+            'city' => 'Paris',
+        ]);
+        $this->assertDatabaseHas('custom_request_quote_days', [
+            'custom_request_quote_id' => $quote->id,
+            'day_number' => 14,
+            'date' => '2026-07-04',
+            'city' => 'Paris',
+        ]);
     }
 
     private function userWithPermissions(array $permissions, array $roles): User
