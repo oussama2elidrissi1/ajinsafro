@@ -21,6 +21,17 @@
         $serviceLabels !== '' ? 'Services à intégrer : '.$serviceLabels : null,
         $customRequest->requested_services_details,
     ])));
+    $yesNoLabels = ['yes' => 'Oui', 'no' => 'Non', 'confirmed' => 'À confirmer'];
+    $levelLabels = ['economy' => 'Économique', 'standard' => 'Standard', 'comfort' => 'Confort', 'premium' => 'Premium', 'luxury' => 'Luxe'];
+    $hotelCategoryLabels = ['3_stars' => '3 étoiles', '4_stars' => '4 étoiles', '5_stars' => '5 étoiles', 'riad' => 'Riad', 'apartment' => 'Appartement', 'villa' => 'Villa', 'unspecified' => 'Indifférent'];
+    $mealPlanLabels = ['room_only' => 'Sans repas', 'breakfast' => 'Petit déjeuner', 'half_board' => 'Demi-pension', 'full_board' => 'Pension complète', 'all_inclusive' => 'All inclusive'];
+    $roomTypeLabels = ['single' => 'Single', 'double' => 'Double', 'triple' => 'Triple', 'quadruple' => 'Quadruple', 'family' => 'Familiale'];
+    $localTransportLabels = ['none' => 'Aucun', 'bus' => 'Bus', 'minibus' => 'Minibus', 'private_car' => 'Voiture privée', 'private_driver' => 'Chauffeur privé'];
+    $paymentMethodLabels = ['cash' => 'Espèces', 'transfer' => 'Virement', 'card' => 'Carte', 'cheque' => 'Chèque', 'other' => 'Autre'];
+    $paymentStatusOptions = \App\Models\CustomRequest::paymentStatusOptions();
+    $formatMoney = fn ($amount, $currency = null) => $amount !== null && $amount !== ''
+        ? number_format((float) $amount, 2, ',', ' ').' '.($currency ?: $customRequest->currency ?: 'MAD')
+        : '-';
 @endphp
 
 @push('styles')
@@ -100,14 +111,64 @@
         .dac-agent-empty { color:#718198; font-size:13px; }
         .dac-agent-program-line { color:#0f172a; font-size:13px; }
         .dac-agent-quote-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+        .dac-agent-section-title {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            margin:16px 0 10px;
+            padding-top:14px;
+            border-top:1px solid #e8eef5;
+            color:#0c3656;
+            font-size:14px;
+            font-weight:600;
+        }
+        .dac-agent-section-title:first-of-type {
+            margin-top:0;
+            padding-top:0;
+            border-top:0;
+        }
+        .dac-agent-info-grid.is-three {
+            grid-template-columns:repeat(3,minmax(0,1fr));
+        }
+        .dac-agent-info.is-wide {
+            grid-column:1 / -1;
+        }
+        .dac-agent-info p {
+            margin:0;
+            color:#0f172a;
+            font-size:13px;
+            line-height:1.5;
+            white-space:pre-line;
+        }
+        .dac-agent-service-list {
+            display:flex;
+            flex-wrap:wrap;
+            gap:8px;
+        }
+        .dac-agent-service-pill {
+            display:inline-flex;
+            align-items:center;
+            min-height:30px;
+            padding:6px 10px;
+            border:1px solid #bae6fd;
+            border-radius:999px;
+            background:#e0f2fe;
+            color:#075985;
+            font-size:12px;
+            font-weight:500;
+        }
+        .dac-agent-summary-request-card { display:none; }
         @media (max-width: 1120px) {
             .dac-agent-layout { grid-template-columns:1fr; }
+            .dac-agent-info-grid.is-three { grid-template-columns:repeat(2,minmax(0,1fr)); }
         }
         @media (max-width: 700px) {
             .dac-agent-page { padding:0 12px 24px; }
             .dac-agent-header { padding:16px; display:grid; }
             .dac-agent-card, .dac-agent-side-card { padding:14px; }
             .dac-agent-info-grid { grid-template-columns:1fr; }
+            .dac-agent-info-grid.is-three { grid-template-columns:1fr; }
             .dac-agent-title { font-size:26px; }
             .dac-agent-card h2, .dac-agent-side-card h2 { font-size:20px; }
             .dac-agent-card h3, .dac-agent-side-card h3 { font-size:18px; }
@@ -159,6 +220,110 @@
     <div class="dac-agent-layout">
         <div class="dac-agent-stack">
             <section class="dac-agent-card">
+                <h3>Détails complets de la demande</h3>
+
+                <div class="dac-agent-section-title">Client</div>
+                <div class="dac-agent-info-grid is-three">
+                    <div class="dac-agent-info"><span>Nom complet</span><strong>{{ $customRequest->customer_full_name ?: '-' }}</strong></div>
+                    <div class="dac-agent-info"><span>Téléphone</span><strong>{{ $customRequest->customer_phone ?: '-' }}</strong></div>
+                    <div class="dac-agent-info"><span>Email</span><strong>{{ $customRequest->customer_email ?: '-' }}</strong></div>
+                    <div class="dac-agent-info"><span>Ville / pays</span><strong>{{ ($customRequest->customer_city ?: '-') }} / {{ ($customRequest->customer_country ?: '-') }}</strong></div>
+                    <div class="dac-agent-info"><span>CIN / passeport</span><strong>{{ $customRequest->customer_identity ?: '-' }}</strong></div>
+                    <div class="dac-agent-info"><span>Type client</span><strong>{{ $customRequest->customer_type === 'existing_customer' ? 'Client existant' : 'Nouveau client' }}</strong></div>
+                    @if($customRequest->client)
+                        <div class="dac-agent-info"><span>Client lié</span><strong>{{ $customRequest->client->client_code }} - {{ $customRequest->client->full_name }}</strong></div>
+                    @endif
+                </div>
+
+                <div class="dac-agent-section-title">Voyage demandé</div>
+                <div class="dac-agent-info-grid is-three">
+                    <div class="dac-agent-info"><span>Destination souhaitée</span><strong>{{ $customRequest->desired_destination ?: '-' }}</strong></div>
+                    <div class="dac-agent-info"><span>Ville de départ</span><strong>{{ $customRequest->departure_city ?: '-' }}</strong></div>
+                    <div class="dac-agent-info"><span>Type de voyage</span><strong>{{ $travelTypeOptions[$customRequest->travel_type] ?? ($customRequest->travel_type ?: '-') }}</strong></div>
+                    <div class="dac-agent-info"><span>Date de départ</span><strong>{{ $customRequest->desired_departure_date ? $customRequest->desired_departure_date->format('d/m/Y') : '-' }}</strong></div>
+                    <div class="dac-agent-info"><span>Date de retour</span><strong>{{ $customRequest->desired_return_date ? $customRequest->desired_return_date->format('d/m/Y') : '-' }}</strong></div>
+                    <div class="dac-agent-info"><span>Durée souhaitée</span><strong>{{ $customRequest->desired_duration ?: '-' }}</strong></div>
+                    <div class="dac-agent-info"><span>Niveau souhaité</span><strong>{{ $levelLabels[$customRequest->desired_level] ?? ($customRequest->desired_level ?: '-') }}</strong></div>
+                    <div class="dac-agent-info"><span>Budget approximatif</span><strong>{{ $formatMoney($customRequest->approximate_budget) }}</strong></div>
+                    <div class="dac-agent-info"><span>Devise</span><strong>{{ $customRequest->currency ?: 'MAD' }}</strong></div>
+                </div>
+
+                <div class="dac-agent-section-title">Voyageurs</div>
+                <div class="dac-agent-info-grid is-three">
+                    <div class="dac-agent-info"><span>Total voyageurs</span><strong>{{ $customRequest->travelers_count ?: 0 }} voyageur(s)</strong></div>
+                    <div class="dac-agent-info"><span>Adultes</span><strong>{{ $customRequest->adults_count ?: $customRequest->travelers_count ?: 0 }}</strong></div>
+                    <div class="dac-agent-info"><span>Enfants</span><strong>{{ $customRequest->children_count ?: 0 }}</strong></div>
+                    <div class="dac-agent-info"><span>Bébés</span><strong>{{ $customRequest->babies_count ?: 0 }}</strong></div>
+                </div>
+
+                <div class="dac-agent-section-title">Services demandés</div>
+                <div class="dac-agent-info is-wide">
+                    @if($customRequest->services->count())
+                        <div class="dac-agent-service-list">
+                            @foreach($customRequest->services as $service)
+                                <span class="dac-agent-service-pill">{{ $service->service_label }}</span>
+                            @endforeach
+                        </div>
+                    @else
+                        <strong>Aucun service sélectionné</strong>
+                    @endif
+                </div>
+
+                <div class="dac-agent-section-title">Vol</div>
+                <div class="dac-agent-info-grid is-three">
+                    <div class="dac-agent-info"><span>Vol inclus</span><strong>{{ $yesNoLabels[$customRequest->flight_included] ?? ($customRequest->flight_included ?: '-') }}</strong></div>
+                    <div class="dac-agent-info"><span>Compagnie préférée</span><strong>{{ $customRequest->preferred_airline ?: '-' }}</strong></div>
+                    <div class="dac-agent-info"><span>Aéroport de départ</span><strong>{{ $customRequest->departure_airport ?: '-' }}</strong></div>
+                    <div class="dac-agent-info"><span>Aéroport d'arrivée</span><strong>{{ $customRequest->arrival_airport ?: '-' }}</strong></div>
+                    <div class="dac-agent-info"><span>Bagages inclus</span><strong>{{ $yesNoLabels[$customRequest->baggage_included] ?? ($customRequest->baggage_included ?: '-') }}</strong></div>
+                </div>
+
+                <div class="dac-agent-section-title">Hébergement</div>
+                <div class="dac-agent-info-grid is-three">
+                    <div class="dac-agent-info"><span>Hôtel souhaité</span><strong>{{ $customRequest->desired_hotel ?: '-' }}</strong></div>
+                    <div class="dac-agent-info"><span>Catégorie hôtel</span><strong>{{ $hotelCategoryLabels[$customRequest->hotel_category] ?? ($customRequest->hotel_category ?: '-') }}</strong></div>
+                    <div class="dac-agent-info"><span>Pension</span><strong>{{ $mealPlanLabels[$customRequest->meal_plan] ?? ($customRequest->meal_plan ?: '-') }}</strong></div>
+                    <div class="dac-agent-info"><span>Nombre de chambres</span><strong>{{ $customRequest->rooms_count ?: '-' }}</strong></div>
+                    <div class="dac-agent-info"><span>Type de chambre</span><strong>{{ $roomTypeLabels[$customRequest->room_type] ?? ($customRequest->room_type ?: '-') }}</strong></div>
+                    <div class="dac-agent-info"><span>Chambre séparée</span><strong>{{ $customRequest->separate_room_needed ? 'Oui' : 'Non' }}</strong></div>
+                    <div class="dac-agent-info is-wide"><span>Remarques hébergement</span><p>{{ $customRequest->accommodation_notes ?: '-' }}</p></div>
+                </div>
+
+                <div class="dac-agent-section-title">Transport et transferts</div>
+                <div class="dac-agent-info-grid is-three">
+                    <div class="dac-agent-info"><span>Transfert aéroport inclus</span><strong>{{ $yesNoLabels[$customRequest->airport_transfer_included] ?? ($customRequest->airport_transfer_included ?: '-') }}</strong></div>
+                    <div class="dac-agent-info"><span>Transport sur place</span><strong>{{ $localTransportLabels[$customRequest->local_transport] ?? ($customRequest->local_transport ?: '-') }}</strong></div>
+                    <div class="dac-agent-info is-wide"><span>Remarques transport</span><p>{{ $customRequest->transport_notes ?: '-' }}</p></div>
+                </div>
+
+                <div class="dac-agent-section-title">Programme et notes</div>
+                <div class="dac-agent-info-grid">
+                    <div class="dac-agent-info is-wide"><span>Programme détaillé souhaité</span><p>{{ $customRequest->requested_services_details ?: 'Aucun détail complémentaire saisi.' }}</p></div>
+                    <div class="dac-agent-info is-wide"><span>Notes client</span><p>{{ $customRequest->customer_notes ?: '-' }}</p></div>
+                    @if($canQuoteRequest || $isOfflineAgent)
+                        <div class="dac-agent-info is-wide"><span>Notes internes</span><p>{{ $customRequest->internal_notes ?: '-' }}</p></div>
+                    @endif
+                </div>
+
+                <div class="dac-agent-section-title">Paiement / estimation initiale</div>
+                <div class="dac-agent-info-grid is-three">
+                    <div class="dac-agent-info"><span>Prix estimé</span><strong>{{ $formatMoney($customRequest->estimated_price) }}</strong></div>
+                    <div class="dac-agent-info"><span>Acompte demandé</span><strong>{{ $formatMoney($customRequest->requested_deposit) }}</strong></div>
+                    <div class="dac-agent-info"><span>Montant payé</span><strong>{{ $formatMoney($customRequest->paid_amount) }}</strong></div>
+                    <div class="dac-agent-info"><span>Reste à payer</span><strong>{{ $formatMoney($customRequest->remaining_amount) }}</strong></div>
+                    <div class="dac-agent-info"><span>Mode de paiement</span><strong>{{ $paymentMethodLabels[$customRequest->payment_method] ?? ($customRequest->payment_method ?: '-') }}</strong></div>
+                    <div class="dac-agent-info"><span>Statut paiement</span><strong>{{ $paymentStatusOptions[$customRequest->payment_status] ?? ($customRequest->payment_status ?: '-') }}</strong></div>
+                </div>
+
+                <div class="dac-agent-section-title">Gestion</div>
+                <div class="dac-agent-info-grid is-three">
+                    <div class="dac-agent-info"><span>Agent créateur</span><strong>{{ $customRequest->creator?->name ?: '-' }}</strong></div>
+                    <div class="dac-agent-info"><span>Agent offline</span><strong>{{ $customRequest->assignedAgent?->name ?: 'En attente de prise en charge' }}</strong></div>
+                    <div class="dac-agent-info"><span>Date limite de réponse</span><strong>{{ $customRequest->response_deadline?->format('d/m/Y') ?: '-' }}</strong></div>
+                </div>
+            </section>
+
+            <section class="dac-agent-card dac-agent-summary-request-card">
                 <h3>Informations de la demande</h3>
                 <div class="dac-agent-info-grid">
                     <div class="dac-agent-info">
