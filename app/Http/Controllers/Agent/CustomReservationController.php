@@ -268,6 +268,39 @@ class CustomReservationController extends Controller
         return Storage::disk('public')->download($quote->pdf_path, basename($quote->pdf_path));
     }
 
+    public function requestModification(Request $request, CustomRequest $customRequest): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user && $user->can('custom_requests.view'), 403);
+        abort_unless($this->agentCanAccessRequest($customRequest, $user), 403);
+        abort_unless((int) ($customRequest->created_by ?? 0) === (int) $user->id || $user->can('custom_requests.view_all'), 403);
+
+        $quote = $customRequest->latestQuote()->first();
+        abort_unless($quote, 422, 'Aucun devis a modifier.');
+        abort_unless(in_array($customRequest->status, [
+            CustomRequest::STATUS_QUOTE_PREPARED,
+            CustomRequest::STATUS_QUOTE_SENT,
+            CustomRequest::STATUS_WAITING_CUSTOMER,
+            CustomRequest::STATUS_MODIFICATION_REQUESTED,
+        ], true), 422, 'Ce devis ne peut pas encore etre modifie.');
+
+        $data = $request->validate(['message' => ['required', 'string', 'max:4000']]);
+
+        DB::transaction(function () use ($request, $customRequest, $quote, $data): void {
+            $customRequest->comments()->create([
+                'user_id' => $request->user()->id,
+                'comment_type' => 'modification_request',
+                'message' => $data['message'],
+            ]);
+            $quote->update(['status' => CustomRequestQuote::STATUS_MODIFICATION_REQUESTED]);
+            $customRequest->changeStatus(CustomRequest::STATUS_MODIFICATION_REQUESTED, $request->user()->id, $data['message']);
+        });
+
+        $this->notifications->notifyModificationRequested($customRequest->fresh(['assignedAgent']), $quote);
+
+        return back()->with('success', 'Modification demandee a l agent offline.');
+    }
+
     private function canCreateCustomRequest(User $user): bool
     {
         if ($user->can('custom_requests.create')) {
@@ -349,6 +382,10 @@ class CustomReservationController extends Controller
 
     private function agentCanAccessRequest(CustomRequest $customRequest, User $user): bool
     {
+        if ($user->can('custom_requests.view_all') || $user->can('custom_requests.assign')) {
+            return true;
+        }
+
         if ($user->isManager()) {
             $teamIds = User::query()
                 ->where('manager_id', $user->id)

@@ -295,6 +295,64 @@ class CustomRequestModuleTest extends TestCase
         $this->assertTrue($customRequest->canBeQuotedBy($offline));
     }
 
+    public function test_creator_agent_can_download_quote_and_request_modification_after_offline_processing(): void
+    {
+        $commercial = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.create',
+        ], ['Agent']);
+
+        $offline = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.quote',
+        ], ['Agent Offline']);
+
+        $customRequest = $this->customRequest($commercial, [
+            'assigned_to' => $offline->id,
+            'status' => CustomRequest::STATUS_QUOTE_SENT,
+        ]);
+
+        Storage::disk('public')->put('custom-requests/test/devis.pdf', 'PDF test');
+        $quote = $customRequest->quotes()->create([
+            'created_by' => $offline->id,
+            'currency' => 'MAD',
+            'status' => CustomRequestQuote::STATUS_SENT,
+            'pdf_path' => 'custom-requests/test/devis.pdf',
+        ]);
+
+        $download = app(CustomReservationController::class)->downloadQuote(
+            $this->requestAs($commercial, []),
+            $customRequest,
+            $quote
+        );
+
+        $this->assertSame(200, $download->getStatusCode());
+
+        $request = $this->requestAs($commercial, [
+            'message' => 'Merci de revoir le prix de l hotel.',
+        ]);
+
+        app(CustomReservationController::class)->requestModification($request, $customRequest);
+
+        $quote->refresh();
+        $customRequest->refresh();
+
+        $this->assertSame(CustomRequestQuote::STATUS_MODIFICATION_REQUESTED, $quote->status);
+        $this->assertSame(CustomRequest::STATUS_MODIFICATION_REQUESTED, $customRequest->status);
+        $this->assertDatabaseHas('custom_request_comments', [
+            'custom_request_id' => $customRequest->id,
+            'user_id' => $commercial->id,
+            'comment_type' => 'modification_request',
+            'message' => 'Merci de revoir le prix de l hotel.',
+        ]);
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $offline->id,
+            'type' => 'custom_request_modification_requested',
+        ]);
+    }
+
     public function test_quote_prepare_calculates_totals_and_generates_client_pdf(): void
     {
         $offline = $this->userWithPermissions([

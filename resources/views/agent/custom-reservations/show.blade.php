@@ -265,7 +265,7 @@
             @if(!$isOfflineAgent && $latestQuote && $canRespondToQuote)
                 <section class="dac-agent-card">
                     <h3>Demander une modification</h3>
-                    <form method="POST" action="{{ route('admin.custom-requests.request-modification', $customRequest) }}" class="aj-agent-form">
+                    <form method="POST" action="{{ route('agent.custom-reservations.request-modification', $customRequest) }}" class="aj-agent-form">
                         @csrf
                         <textarea name="message" placeholder="Précisez les changements demandés..." required></textarea>
                         <div class="dac-agent-quote-actions">
