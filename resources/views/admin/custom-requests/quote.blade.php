@@ -101,6 +101,13 @@
             'data_json' => [],
         ]];
     }
+
+    $daySelectOptions = collect($programDays)->values()->map(function ($day, $index) {
+        return [
+            'id' => $index,
+            'label' => 'Jour '.($day['day_number'] ?? ($index + 1)).(!empty($day['date']) ? ' - '.\Illuminate\Support\Carbon::parse($day['date'])->format('d/m/Y') : ''),
+        ];
+    })->all();
 @endphp
 
 @extends($quoteLayout ?? 'layouts.admin-v6')
@@ -433,10 +440,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     const serviceOptions = @json($serviceTypeOptions);
     const serviceFields = @json($serviceFields);
-    const dayOptions = @json(collect($programDays)->values()->map(fn ($day, $index) => [
-        'id' => $index,
-        'label' => 'Jour '.($day['day_number'] ?? ($index + 1)).(!empty($day['date']) ? ' - '.\Illuminate\Support\Carbon::parse($day['date'])->format('d/m/Y') : ''),
-    ])->all());
+    const dayOptions = @json($daySelectOptions);
     const daysContainer = document.getElementById('quoteDays');
     const servicesContainer = document.getElementById('quoteServices');
 
