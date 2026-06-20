@@ -392,7 +392,7 @@ class CustomRequestModuleTest extends TestCase
         $response->assertOk();
         $response->assertSee('Client Urgent Filtre');
         $response->assertDontSee('Client Normal Filtre');
-        $response->assertSee('Priorite');
+        $response->assertSee('Priorité');
     }
 
     public function test_quote_prepare_calculates_totals_and_generates_client_pdf(): void

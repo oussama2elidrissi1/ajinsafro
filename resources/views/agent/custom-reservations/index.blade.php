@@ -1,6 +1,6 @@
 @extends('layouts.master-ajinsafro')
 
-@section('title', 'Reservations a la carte')
+@section('title', 'Réservations à la carte')
 
 @push('styles')
     <link href="{{ URL::asset('css/agent-dashboard.css') }}" rel="stylesheet" type="text/css" />
@@ -46,7 +46,7 @@
         .aj-agent-hero-kicker {
             margin: 0 0 8px;
             font-size: 11px;
-            font-weight: 700;
+            font-weight: 500;
             letter-spacing: .08em;
             text-transform: uppercase;
             color: rgba(255, 255, 255, .74);
@@ -55,7 +55,7 @@
             margin: 0;
             font-size: 34px;
             line-height: 1.05;
-            font-weight: 800;
+            font-weight: 600;
             color: #fff;
         }
         .aj-agent-hero-copy p {
@@ -114,7 +114,7 @@
             display: block;
             color: #71849c;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 600;
             letter-spacing: .05em;
             text-transform: uppercase;
         }
@@ -123,7 +123,7 @@
             margin-top: 4px;
             color: #0f172a;
             font-size: 26px;
-            font-weight: 850;
+            font-weight: 600;
             line-height: 1;
         }
         .aj-agent-kpi-note {
@@ -150,12 +150,12 @@
             margin: 0;
             color: #123d60;
             font-size: 20px;
-            font-weight: 850;
+            font-weight: 600;
         }
         .aj-agent-card-title span {
             color: #71849c;
             font-size: 12px;
-            font-weight: 700;
+            font-weight: 500;
         }
         .aj-agent-account-line,
         .aj-agent-action-line {
@@ -172,7 +172,7 @@
         .aj-agent-action-line span {
             color: #6b7d93;
             font-size: 12px;
-            font-weight: 700;
+            font-weight: 500;
         }
         .aj-agent-account-line strong,
         .aj-agent-action-line strong {
@@ -198,7 +198,7 @@
             margin: 0;
             color: #10253b;
             font-size: 14px;
-            font-weight: 850;
+            font-weight: 600;
         }
         .aj-agent-action-row p {
             margin: 4px 0 0;
@@ -222,7 +222,7 @@
             background: #fbfdff;
             color: #425871;
             font-size: 12px;
-            font-weight: 750;
+            font-weight: 500;
         }
         .aj-agent-quick-filter.is-active {
             border-color: #0b85cf;
@@ -244,7 +244,7 @@
             display: block;
             color: #123d60;
             font-size: 24px;
-            font-weight: 800;
+            font-weight: 600;
             line-height: 1.1;
         }
         .aj-agent-filter-title span {
@@ -264,7 +264,7 @@
             margin-bottom: 7px;
             color: #64748b;
             font-size: 11px;
-            font-weight: 700;
+            font-weight: 500;
             text-transform: uppercase;
             letter-spacing: .04em;
         }
@@ -313,7 +313,7 @@
             margin: 0;
             color: #123d60;
             font-size: 18px;
-            font-weight: 800;
+            font-weight: 600;
             line-height: 1.25;
         }
         .aj-agent-request-ref {
@@ -335,7 +335,7 @@
             border-radius: 999px;
             padding: 7px 11px;
             font-size: 12px;
-            font-weight: 700;
+            font-weight: 500;
             line-height: 1;
             white-space: nowrap;
         }
@@ -362,14 +362,14 @@
         .aj-agent-status-card span {
             color: #64748b;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 600;
             letter-spacing: .04em;
             text-transform: uppercase;
         }
         .aj-agent-status-card strong {
             color: #0f172a;
             font-size: 26px;
-            font-weight: 850;
+            font-weight: 600;
             line-height: 1;
         }
         .aj-agent-status-card small {
@@ -402,7 +402,7 @@
             display: block;
             color: #71849c;
             font-size: 11px;
-            font-weight: 700;
+            font-weight: 500;
             text-transform: uppercase;
             letter-spacing: .04em;
         }
@@ -411,7 +411,7 @@
             margin-top: 8px;
             color: #172334;
             font-size: 16px;
-            font-weight: 700;
+            font-weight: 500;
             line-height: 1.35;
         }
         .aj-agent-request-actions {
@@ -442,7 +442,7 @@
             margin: 0;
             color: #123d60;
             font-size: 24px;
-            font-weight: 800;
+            font-weight: 600;
         }
         .aj-agent-empty p {
             margin: 8px auto 0;
@@ -517,7 +517,7 @@
             min-height: 38px;
             border-radius: 8px;
             font-size: 13px;
-            font-weight: 700;
+            font-weight: 500;
             line-height: 1;
         }
         .aj-agent-custom-page .aj-agent-primary-btn {
@@ -585,7 +585,7 @@
         .aj-agent-card-title h2 {
             color: #0f3351;
             font-size: 16px;
-            font-weight: 800;
+            font-weight: 600;
         }
         .aj-agent-card-title span {
             font-size: 11px;
@@ -673,12 +673,12 @@
             margin: 0;
             color: #0f3351;
             font-size: 17px;
-            font-weight: 800;
+            font-weight: 600;
         }
         .aj-agent-table-head span {
             color: #64748b;
             font-size: 12px;
-            font-weight: 700;
+            font-weight: 500;
             white-space: nowrap;
         }
         .aj-agent-dossiers-table-wrap {
@@ -696,7 +696,7 @@
             border-bottom: 1px solid #e2e8f0;
             color: #64748b;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 600;
             letter-spacing: .04em;
             text-align: left;
             text-transform: uppercase;
@@ -719,7 +719,7 @@
             display: block;
             color: #0f172a;
             font-size: 14px;
-            font-weight: 800;
+            font-weight: 600;
             line-height: 1.25;
         }
         .aj-agent-client-sub {
@@ -732,7 +732,7 @@
         .aj-agent-table-strong {
             display: block;
             color: #172334;
-            font-weight: 800;
+            font-weight: 600;
         }
         .aj-agent-table-muted {
             display: block;
@@ -860,6 +860,253 @@
                 flex-direction: column;
             }
         }
+
+        /* Nouvelle peau visuelle inspirée de la proposition fournie, sans changer la logique Blade. */
+        .partner-v2.internal-v2-topbar-hidden .agent-portal-main {
+            background: #f8fafc;
+        }
+        .aj-agent-custom-page {
+            --agent-primary: #0284c7;
+            --agent-primary-dark: #075985;
+            --agent-primary-soft: #e0f2fe;
+            --agent-success: #16a34a;
+            --agent-success-soft: #dcfce7;
+            --agent-warning: #f97316;
+            --agent-warning-soft: #ffedd5;
+            --agent-purple: #7c3aed;
+            --agent-purple-soft: #ede9fe;
+            --agent-danger: #ef4444;
+            --agent-danger-soft: #fee2e2;
+            --agent-card: #ffffff;
+            --agent-text: #0f172a;
+            --agent-muted: #64748b;
+            --agent-light: #94a3b8;
+            --agent-border: #e6edf5;
+            --agent-border-soft: #eef2f7;
+            max-width: 1500px;
+            padding: 28px;
+            color: var(--agent-text);
+            font-size: 14px;
+            font-weight: 400;
+        }
+        .aj-agent-custom-page * {
+            letter-spacing: 0;
+        }
+        .aj-agent-custom-page .aj-agent-panel {
+            background: var(--agent-card);
+            border: 1px solid var(--agent-border);
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, .05);
+        }
+        .aj-agent-page-hero {
+            min-height: auto;
+            margin-bottom: 20px;
+            padding: 24px 28px;
+            border-color: var(--agent-border);
+            border-radius: 20px;
+            background: #fff;
+            color: var(--agent-text);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, .05);
+        }
+        .aj-agent-hero-kicker {
+            color: var(--agent-primary);
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: .04em;
+        }
+        .aj-agent-hero-copy h1 {
+            color: var(--agent-text);
+            font-size: 26px;
+            line-height: 1.2;
+            font-weight: 600;
+        }
+        .aj-agent-hero-copy p {
+            color: var(--agent-muted);
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 1.55;
+        }
+        .aj-agent-custom-page .aj-agent-primary-btn,
+        .aj-agent-custom-page .aj-agent-action-btn {
+            min-height: 38px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            gap: 7px;
+        }
+        .aj-agent-custom-page .aj-agent-primary-btn {
+            background: var(--agent-primary);
+            box-shadow: 0 8px 18px rgba(2, 132, 199, .22);
+        }
+        .aj-agent-custom-page .aj-agent-primary-btn:hover {
+            background: var(--agent-primary-dark);
+        }
+        .aj-agent-custom-page .aj-agent-action-btn {
+            background: #fff;
+            color: #334155;
+            border-color: var(--agent-border);
+        }
+        .aj-agent-dashboard-grid {
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .aj-agent-kpi-card {
+            min-height: 92px;
+            grid-template-columns: 38px minmax(0, 1fr);
+            gap: 14px;
+            align-items: flex-start;
+            padding: 18px;
+            border-radius: 16px;
+        }
+        .aj-agent-kpi-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: var(--agent-primary-soft);
+            color: var(--agent-primary);
+        }
+        .aj-agent-kpi-card.is-orange .aj-agent-kpi-icon { background: var(--agent-warning-soft); color: var(--agent-warning); }
+        .aj-agent-kpi-card.is-violet .aj-agent-kpi-icon { background: var(--agent-purple-soft); color: var(--agent-purple); }
+        .aj-agent-kpi-card.is-green .aj-agent-kpi-icon { background: var(--agent-success-soft); color: var(--agent-success); }
+        .aj-agent-kpi-label,
+        .aj-agent-status-card span,
+        .aj-agent-field label,
+        .aj-agent-dossiers-table th {
+            color: var(--agent-muted);
+            font-weight: 500;
+            letter-spacing: .02em;
+        }
+        .aj-agent-kpi-value,
+        .aj-agent-status-card strong {
+            color: var(--agent-text);
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .aj-agent-kpi-note,
+        .aj-agent-status-card small {
+            color: var(--agent-light);
+            font-size: 12px;
+            font-weight: 400;
+        }
+        .aj-agent-status-board,
+        .aj-agent-workspace-grid,
+        .aj-agent-filter-panel {
+            margin-bottom: 20px;
+        }
+        .aj-agent-status-card {
+            padding: 18px;
+            border-left-width: 3px;
+            border-radius: 16px;
+        }
+        .aj-agent-workspace-grid {
+            grid-template-columns: minmax(300px, .8fr) minmax(0, 1.4fr);
+            gap: 16px;
+        }
+        .aj-agent-workspace-card,
+        .aj-agent-filter-panel {
+            padding: 20px;
+        }
+        .aj-agent-card-title,
+        .aj-agent-table-head {
+            border-bottom-color: var(--agent-border-soft);
+        }
+        .aj-agent-card-title h2,
+        .aj-agent-filter-title strong,
+        .aj-agent-table-head h2,
+        .aj-agent-empty h2 {
+            color: #123d60;
+            font-weight: 600;
+        }
+        .aj-agent-card-title h2,
+        .aj-agent-table-head h2 {
+            font-size: 17px;
+        }
+        .aj-agent-card-title span,
+        .aj-agent-table-head span {
+            color: var(--agent-muted);
+            font-weight: 400;
+        }
+        .aj-agent-account-line span,
+        .aj-agent-action-line span {
+            color: var(--agent-muted);
+            font-weight: 500;
+        }
+        .aj-agent-account-line strong,
+        .aj-agent-action-line strong,
+        .aj-agent-action-row h3,
+        .aj-agent-client-main,
+        .aj-agent-table-strong {
+            color: var(--agent-text);
+            font-weight: 500;
+        }
+        .aj-agent-action-row {
+            border-color: var(--agent-border);
+            border-radius: 12px;
+            background: #fbfdff;
+        }
+        .aj-agent-filter-grid {
+            grid-template-columns: minmax(190px, 2fr) minmax(180px, 1.4fr) minmax(140px, 1fr) minmax(140px, 1fr) minmax(140px, 1fr) auto auto;
+        }
+        .aj-agent-field input,
+        .aj-agent-field select {
+            min-height: 40px;
+            border-color: #dbe5f0;
+            border-radius: 10px;
+            background: #fff;
+            font-weight: 400;
+        }
+        .aj-agent-quick-filter,
+        .aj-agent-pill {
+            border-radius: 999px;
+            font-weight: 500;
+        }
+        .aj-agent-quick-filter {
+            background: #fff;
+        }
+        .aj-agent-table-head {
+            padding: 18px 20px;
+            background: #fff;
+        }
+        .aj-agent-dossiers-table {
+            min-width: 1050px;
+        }
+        .aj-agent-dossiers-table th {
+            padding: 12px 14px;
+            background: #f8fafc;
+            font-size: 12px;
+        }
+        .aj-agent-dossiers-table td {
+            padding: 14px;
+            color: #334155;
+            font-weight: 400;
+        }
+        .aj-agent-client-sub,
+        .aj-agent-table-muted,
+        .aj-agent-action-row p,
+        .aj-agent-filter-title span {
+            color: var(--agent-muted);
+            font-weight: 400;
+        }
+        .aj-agent-pill-blue { background: var(--agent-primary-soft); color: var(--agent-primary-dark); border-color: #bae6fd; }
+        .aj-agent-pill-slate { background: #f1f5f9; color: #475569; border-color: #d8e1eb; }
+        .aj-agent-pill-green { background: var(--agent-success-soft); color: #15803d; border-color: #bbf7d0; }
+        .aj-agent-pill-orange { background: var(--agent-warning-soft); color: #c2410c; border-color: #fed7aa; }
+        .aj-agent-pill-red { background: var(--agent-danger-soft); color: #b91c1c; border-color: #fecaca; }
+        @media (max-width: 1180px) {
+            .aj-agent-workspace-grid,
+            .aj-agent-filter-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        @media (max-width: 640px) {
+            .aj-agent-custom-page {
+                padding: 18px;
+            }
+            .aj-agent-page-hero {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
     </style>
 @endpush
 
@@ -878,28 +1125,28 @@
         [
             'label' => 'En attente',
             'count' => $statusGroups['pending'] ?? 0,
-            'note' => 'Brouillon, nouvelle ou assignee',
+            'note' => 'Brouillon, nouvelle ou assignée',
             'class' => 'is-orange',
             'url' => route('agent.custom-reservations.index', ['status' => \App\Models\CustomRequest::STATUS_NEW]),
         ],
         [
             'label' => 'En traitement',
             'count' => $statusGroups['processing'] ?? 0,
-            'note' => 'Pris en charge ou devis en preparation',
+            'note' => 'Pris en charge ou devis en préparation',
             'class' => 'is-violet',
             'url' => route('agent.custom-reservations.index', ['status' => \App\Models\CustomRequest::STATUS_PROCESSING]),
         ],
         [
-            'label' => 'Devis envoyes',
+            'label' => 'Devis envoyés',
             'count' => $statusGroups['quote_sent'] ?? 0,
             'note' => 'En attente du retour agent/client',
             'class' => '',
             'url' => route('agent.custom-reservations.index', ['status' => \App\Models\CustomRequest::STATUS_QUOTE_SENT]),
         ],
         [
-            'label' => 'Confirmees',
+            'label' => 'Confirmées',
             'count' => $statusGroups['confirmed'] ?? 0,
-            'note' => 'Dossiers valides',
+            'note' => 'Dossiers validés',
             'class' => 'is-green',
             'url' => route('agent.custom-reservations.index', ['status' => \App\Models\CustomRequest::STATUS_CONFIRMED]),
         ],
@@ -908,15 +1155,15 @@
 <div class="aj-agent-custom-page">
     <section class="aj-agent-page-hero">
         <div class="aj-agent-hero-copy">
-            <p class="aj-agent-hero-kicker">Agent / demandes personnalisees</p>
-            <h1>Reservations a la carte</h1>
-            <p>Pilotez les demandes personnalisees, suivez les dossiers urgents, reprenez les cotations en attente et creez une nouvelle reservation depuis le meme espace.</p>
+            <p class="aj-agent-hero-kicker">Agent / demandes personnalisées</p>
+            <h1>Réservations à la carte</h1>
+            <p>Suivez les demandes clients, préparez les cotations et envoyez les devis depuis le même espace.</p>
         </div>
         @if($canCreateRequest ?? false)
             <div class="aj-agent-hero-actions">
                 <a href="{{ route('agent.custom-reservations.create') }}" class="aj-agent-primary-btn">
                     <i class="bx bx-plus-circle"></i>
-                    <span>Creer une reservation</span>
+                    <span>Créer une réservation</span>
                 </a>
             </div>
         @endif
@@ -926,13 +1173,13 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <section class="aj-agent-dashboard-grid" aria-label="Dashboard reservations a la carte">
+    <section class="aj-agent-dashboard-grid" aria-label="Dashboard réservations à la carte">
         <article class="aj-agent-panel aj-agent-kpi-card">
             <span class="aj-agent-kpi-icon"><i class="bx bx-folder-open"></i></span>
             <div>
                 <span class="aj-agent-kpi-label">Demandes visibles</span>
                 <strong class="aj-agent-kpi-value">{{ $dashboard['total'] ?? 0 }}</strong>
-                <span class="aj-agent-kpi-note">{{ $dashboard['today'] ?? 0 }} creee(s) aujourd'hui</span>
+                <span class="aj-agent-kpi-note">{{ $dashboard['today'] ?? 0 }} créée(s) aujourd'hui</span>
             </div>
         </article>
         <article class="aj-agent-panel aj-agent-kpi-card is-orange">
@@ -948,20 +1195,20 @@
             <div>
                 <span class="aj-agent-kpi-label">En traitement</span>
                 <strong class="aj-agent-kpi-value">{{ $dashboard['in_progress'] ?? 0 }}</strong>
-                <span class="aj-agent-kpi-note">{{ $dashboard['assigned_to_me'] ?? 0 }} assignee(s) a moi</span>
+                <span class="aj-agent-kpi-note">{{ $dashboard['assigned_to_me'] ?? 0 }} assignée(s) à moi</span>
             </div>
         </article>
         <article class="aj-agent-panel aj-agent-kpi-card is-green">
             <span class="aj-agent-kpi-icon"><i class="bx bx-check-shield"></i></span>
             <div>
-                <span class="aj-agent-kpi-label">Confirmees</span>
+                <span class="aj-agent-kpi-label">Confirmées</span>
                 <strong class="aj-agent-kpi-value">{{ $dashboard['confirmed'] ?? 0 }}</strong>
-                <span class="aj-agent-kpi-note">{{ $dashboard['quote_sent'] ?? 0 }} devis envoye(s)</span>
+                <span class="aj-agent-kpi-note">{{ $dashboard['quote_sent'] ?? 0 }} devis envoyé(s)</span>
             </div>
         </article>
     </section>
 
-    <section class="aj-agent-status-board" aria-label="Statuts des demandes a la carte">
+    <section class="aj-agent-status-board" aria-label="Statuts des demandes à la carte">
         @foreach($statusOverview as $overview)
             <a href="{{ $overview['url'] }}" class="aj-agent-panel aj-agent-status-card {{ $overview['class'] }}">
                 <span>{{ $overview['label'] }}</span>
@@ -982,16 +1229,16 @@
                 <strong>{{ $account['name'] ?? auth()->user()?->name }}</strong>
             </div>
             <div class="aj-agent-account-line">
-                <span>Role</span>
+                <span>Rôle</span>
                 <strong>{{ $account['role'] ?? '-' }}</strong>
             </div>
             <div class="aj-agent-account-line">
                 <span>Agence</span>
-                <strong>{{ $account['branch'] ?? 'Non rattache' }}</strong>
+                <strong>{{ $account['branch'] ?? 'Non rattaché' }}</strong>
             </div>
             <div class="aj-agent-account-line">
                 <span>Droits</span>
-                <strong>{{ ! empty($account['can_quote']) ? 'Cotation autorisee' : 'Consultation / creation' }}</strong>
+                <strong>{{ ! empty($account['can_quote']) ? 'Cotation autorisée' : 'Consultation / création' }}</strong>
             </div>
             <div class="aj-agent-request-footer-actions is-left">
                 <a href="{{ route('agent.profile') }}" class="aj-agent-action-btn"><i class="bx bx-user"></i> Profil</a>
@@ -1004,7 +1251,7 @@
         <article class="aj-agent-panel aj-agent-workspace-card">
             <div class="aj-agent-card-title">
                 <h2>Actions prioritaires</h2>
-                <span>{{ $dashboard['upcoming_departures'] ?? 0 }} depart(s) sous 7 jours</span>
+                <span>{{ $dashboard['upcoming_departures'] ?? 0 }} départ(s) sous 7 jours</span>
             </div>
             @if($actionRequests->count())
                 <div class="aj-agent-action-list">
@@ -1036,17 +1283,17 @@
         <div class="aj-agent-filter-head">
             <div class="aj-agent-filter-title">
                 <strong>Recherche et dossiers</strong>
-                <span>Affinez la recherche par client, destination, statut ou date de depart souhaitee.</span>
+                <span>Affinez la recherche par client, destination, statut ou date de départ souhaitée.</span>
             </div>
         </div>
         <div class="aj-agent-filter-grid">
             <div class="aj-agent-field">
                 <label for="client">Client</label>
-                <input id="client" type="text" name="client" value="{{ $filters['client'] ?? '' }}" placeholder="Nom, telephone, reference...">
+                <input id="client" type="text" name="client" value="{{ $filters['client'] ?? '' }}" placeholder="Nom, téléphone, référence...">
             </div>
             <div class="aj-agent-field">
                 <label for="destination">Destination</label>
-                <input id="destination" type="text" name="destination" value="{{ $filters['destination'] ?? '' }}" placeholder="Destination souhaitee">
+                <input id="destination" type="text" name="destination" value="{{ $filters['destination'] ?? '' }}" placeholder="Destination souhaitée">
             </div>
             <div class="aj-agent-field">
                 <label for="status">Statut</label>
@@ -1058,7 +1305,7 @@
                 </select>
             </div>
             <div class="aj-agent-field">
-                <label for="priority">Priorite</label>
+                <label for="priority">Priorité</label>
                 <select id="priority" name="priority">
                     <option value="">Toutes</option>
                     @foreach($priorityOptions as $value => $label)
@@ -1071,7 +1318,7 @@
                 <input id="date" type="date" name="date" value="{{ $filters['date'] ?? '' }}">
             </div>
             <button type="submit" class="aj-agent-primary-btn"><i class="bx bx-filter-alt"></i> Filtrer</button>
-            <a href="{{ route('agent.custom-reservations.index') }}" class="aj-agent-action-btn"><i class="bx bx-reset"></i> Reinitialiser</a>
+            <a href="{{ route('agent.custom-reservations.index') }}" class="aj-agent-action-btn"><i class="bx bx-reset"></i> Réinitialiser</a>
         </div>
         <div class="aj-agent-quick-filters">
             <a class="aj-agent-quick-filter {{ $currentStatus === '' && $currentPriority === '' ? 'is-active' : '' }}" href="{{ route('agent.custom-reservations.index') }}">
@@ -1099,8 +1346,8 @@
     @if($requests->count())
         <section class="aj-agent-panel aj-agent-table-panel">
             <div class="aj-agent-table-head">
-                <h2>Dossiers a la carte</h2>
-                <span>{{ $requests->total() }} dossier(s) trouve(s)</span>
+                <h2>Dossiers à la carte</h2>
+                <span>{{ $requests->total() }} dossier(s) trouvé(s)</span>
             </div>
             <div class="aj-agent-dossiers-table-wrap">
                 <table class="aj-agent-dossiers-table">
@@ -1162,7 +1409,7 @@
                                         @if($requestRow->latestQuote?->pdf_path)
                                             <a href="{{ route('agent.custom-reservations.quote.download', [$requestRow, $requestRow->latestQuote]) }}" class="aj-agent-action-btn"><i class="bx bx-file"></i> PDF</a>
                                         @endif
-                                        <a href="{{ route('agent.custom-reservations.show', $requestRow) }}" class="aj-agent-action-btn"><i class="bx bx-show"></i> Detail</a>
+                                        <a href="{{ route('agent.custom-reservations.show', $requestRow) }}" class="aj-agent-action-btn"><i class="bx bx-show"></i> Détail</a>
                                     </div>
                                 </td>
                             </tr>
@@ -1175,10 +1422,10 @@
         <div class="aj-agent-pagination">{{ $requests->links() }}</div>
     @else
         <div class="aj-agent-panel aj-agent-empty">
-            <h2>Aucune demande a la carte</h2>
-            <p>Les demandes personnalisees creees par votre compte apparaitront ici des qu'un dossier sera enregistre.</p>
+            <h2>Aucune demande à la carte</h2>
+            <p>Les demandes personnalisées créées par votre compte apparaîtront ici dès qu'un dossier sera enregistré.</p>
             @if($canCreateRequest ?? false)
-                <a href="{{ route('agent.custom-reservations.create') }}" class="aj-agent-primary-btn">Creer une demande</a>
+                <a href="{{ route('agent.custom-reservations.create') }}" class="aj-agent-primary-btn">Créer une demande</a>
             @endif
         </div>
     @endif

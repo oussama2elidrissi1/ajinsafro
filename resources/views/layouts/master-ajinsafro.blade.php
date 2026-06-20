@@ -58,7 +58,7 @@
     </main>
 
     @if(trim($__env->yieldContent('hidePageFooter')) !== '1' && !request()->routeIs('admin.reservations.workspace'))
-        @include('partner_v2.partials.footer')
+        @include('agent_v2.partials.footer')
     @endif
 
     @include('layouts.vendor-scripts')
