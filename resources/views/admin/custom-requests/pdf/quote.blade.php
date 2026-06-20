@@ -15,9 +15,9 @@
     <meta charset="utf-8">
     <title>{{ $quote->quote_number }}</title>
     <style>
-        @page { margin: 18px 30px 58px; }
+        @page { margin: 14px 30px 58px; }
         body { font-family: DejaVu Sans, Arial, sans-serif; color:#16233a; font-size:12px; line-height:1.45; }
-        .invoice-header-image { display:block; width:100%; height:auto; margin:0 0 14px; }
+        .invoice-header-image { display:block; width:100%; height:auto; margin:0 0 18px; }
         .header { display:table; width:100%; border-bottom:2px solid #008bd2; padding-bottom:14px; margin-bottom:16px; }
         .brand,.quote-meta { display:table-cell; vertical-align:top; width:50%; }
         .brand img { max-height:52px; max-width:160px; margin-bottom:8px; }
@@ -25,8 +25,10 @@
         .muted { color:#66758a; }
         .quote-meta { text-align:right; }
         .quote-meta h2 { margin:0 0 8px; font-size:22px; color:#008bd2; }
-        .quote-strip { text-align:right; border-bottom:2px solid #008bd2; padding-bottom:10px; margin-bottom:16px; }
-        .quote-strip h2 { margin:0 0 6px; font-size:22px; color:#008bd2; }
+        .quote-strip { display:table; width:100%; border-bottom:2px solid #008bd2; padding-bottom:12px; margin:0 0 16px; }
+        .quote-strip-title,.quote-strip-meta { display:table-cell; vertical-align:top; width:50%; }
+        .quote-strip-title h2 { margin:0; font-size:22px; color:#008bd2; }
+        .quote-strip-meta { text-align:right; }
         .block { margin-bottom:16px; }
         .grid { display:table; width:100%; }
         .col { display:table-cell; width:50%; vertical-align:top; padding-right:12px; }
@@ -55,11 +57,13 @@
     @if($headerImage)
         <img src="{{ $headerImage }}" class="invoice-header-image" alt="En-tête facture">
         <div class="quote-strip">
-            <h2>DEVIS</h2>
-            <div><strong>N° devis :</strong> {{ $quote->quote_number }}</div>
-            <div><strong>Version :</strong> {{ $quote->version }}</div>
-            <div><strong>Date :</strong> {{ optional($quote->prepared_at ?? $quote->updated_at)->format('d/m/Y') }}</div>
-            <div><strong>Valable jusqu’au :</strong> {{ $quote->valid_until?->format('d/m/Y') ?: '-' }}</div>
+            <div class="quote-strip-title"><h2>DEVIS</h2></div>
+            <div class="quote-strip-meta">
+                <div><strong>N° devis :</strong> {{ $quote->quote_number }}</div>
+                <div><strong>Version :</strong> {{ $quote->version }}</div>
+                <div><strong>Date :</strong> {{ optional($quote->prepared_at ?? $quote->updated_at)->format('d/m/Y') }}</div>
+                <div><strong>Valable jusqu’au :</strong> {{ $quote->valid_until?->format('d/m/Y') ?: '-' }}</div>
+            </div>
         </div>
     @elseif(!$hasConfiguredHeader)
         <div class="header">
@@ -80,11 +84,13 @@
         </div>
     @else
         <div class="quote-strip">
-            <h2>DEVIS</h2>
-            <div><strong>N° devis :</strong> {{ $quote->quote_number }}</div>
-            <div><strong>Version :</strong> {{ $quote->version }}</div>
-            <div><strong>Date :</strong> {{ optional($quote->prepared_at ?? $quote->updated_at)->format('d/m/Y') }}</div>
-            <div><strong>Valable jusqu’au :</strong> {{ $quote->valid_until?->format('d/m/Y') ?: '-' }}</div>
+            <div class="quote-strip-title"><h2>DEVIS</h2></div>
+            <div class="quote-strip-meta">
+                <div><strong>N° devis :</strong> {{ $quote->quote_number }}</div>
+                <div><strong>Version :</strong> {{ $quote->version }}</div>
+                <div><strong>Date :</strong> {{ optional($quote->prepared_at ?? $quote->updated_at)->format('d/m/Y') }}</div>
+                <div><strong>Valable jusqu’au :</strong> {{ $quote->valid_until?->format('d/m/Y') ?: '-' }}</div>
+            </div>
         </div>
     @endif
 
