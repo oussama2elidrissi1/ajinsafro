@@ -40,19 +40,26 @@ class CustomRequestQuotePdfService
 
     private function invoiceSettings(): array
     {
-        $headerPath = Setting::normalizePublicDiskPath(Setting::getValue('invoice_header_image'));
-        $footerPath = Setting::normalizePublicDiskPath(Setting::getValue('invoice_footer_image'));
+        $headerPath = Setting::getValue('invoice_header_image');
+        $footerPath = Setting::getValue('invoice_footer_image');
         $brandLogoPath = Setting::resolvedBrandLogoPath();
+        $headerSources = $this->publicDiskImageSources($headerPath);
+        $footerSources = $this->publicDiskImageSources($footerPath);
+        $logoSources = $this->publicDiskImageSources($brandLogoPath);
 
         return [
             'brand_name' => Setting::getValue('brand_name', 'Ajinsafro.ma'),
-            'logo_url' => $this->publicDiskImageSource($brandLogoPath) ?: Setting::brandLogoUrl('dark'),
+            'logo_url' => $logoSources['data'] ?: $logoSources['file'] ?: Setting::brandLogoUrl('dark'),
             'phone' => Setting::getValue('topbar_phone', ''),
             'email' => Setting::getValue('topbar_email', ''),
-            'header_image_url' => Setting::storageUrl($headerPath),
-            'footer_image_url' => Setting::storageUrl($footerPath),
-            'header_image_src' => $this->publicDiskImageSource($headerPath),
-            'footer_image_src' => $this->publicDiskImageSource($footerPath),
+            'header_image_path' => $headerPath,
+            'footer_image_path' => $footerPath,
+            'header_image_url' => Setting::storageUrl(Setting::normalizePublicDiskPath($headerPath)),
+            'footer_image_url' => Setting::storageUrl(Setting::normalizePublicDiskPath($footerPath)),
+            'header_image_src' => $headerSources['data'] ?: $headerSources['file'],
+            'footer_image_src' => $footerSources['data'] ?: $footerSources['file'],
+            'header_image_file' => $headerSources['file'],
+            'footer_image_file' => $footerSources['file'],
             'legal_information' => Setting::getValue('invoice_legal_information', Setting::getValue('company_legal_information', '')),
             'company_address' => Setting::getValue('company_address', ''),
             'company_ice' => Setting::getValue('company_ice', ''),
@@ -62,6 +69,19 @@ class CustomRequestQuotePdfService
         ];
     }
 
+    private function publicDiskImageSources(?string $path): array
+    {
+        $absolutePath = $this->resolveImageAbsolutePath($path);
+        if (! $absolutePath || ! is_file($absolutePath)) {
+            return ['data' => null, 'file' => null];
+        }
+
+        $data = $this->imageDataUri($absolutePath);
+        $file = 'file:///'.str_replace('\\', '/', $absolutePath);
+
+        return ['data' => $data, 'file' => $file];
+    }
+
     private function publicDiskImageSource(?string $path): ?string
     {
         $absolutePath = $this->resolveImageAbsolutePath($path);
@@ -69,6 +89,11 @@ class CustomRequestQuotePdfService
             return null;
         }
 
+        return $this->imageDataUri($absolutePath);
+    }
+
+    private function imageDataUri(string $absolutePath): ?string
+    {
         $contents = @file_get_contents($absolutePath);
         if ($contents === false) {
             return null;

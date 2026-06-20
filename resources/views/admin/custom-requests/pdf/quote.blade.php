@@ -2,8 +2,10 @@
     $settings = $invoiceSettings ?? [];
     $brandName = $settings['brand_name'] ?? 'Ajinsafro.ma';
     $logo = $settings['logo_url'] ?? \App\Models\Setting::brandLogoUrl('dark');
-    $headerImage = $settings['header_image_src'] ?? null;
-    $footerImage = $settings['footer_image_src'] ?? null;
+    $headerImage = $settings['header_image_src'] ?? $settings['header_image_file'] ?? $settings['header_image_url'] ?? null;
+    $footerImage = $settings['footer_image_src'] ?? $settings['footer_image_file'] ?? $settings['footer_image_url'] ?? null;
+    $hasConfiguredHeader = !empty($settings['header_image_path']);
+    $hasConfiguredFooter = !empty($settings['footer_image_path']);
     $serviceLabels = \App\Models\CustomRequestQuote::itemServiceOptions();
     $money = fn ($value) => number_format((float) $value, 2, ',', ' ').' '.$quote->currency;
 @endphp
@@ -59,7 +61,7 @@
             <div><strong>Date :</strong> {{ optional($quote->prepared_at ?? $quote->updated_at)->format('d/m/Y') }}</div>
             <div><strong>Valable jusqu’au :</strong> {{ $quote->valid_until?->format('d/m/Y') ?: '-' }}</div>
         </div>
-    @else
+    @elseif(!$hasConfiguredHeader)
         <div class="header">
             <div class="brand">
                 <img src="{{ $logo }}" alt="{{ $brandName }}">
@@ -75,6 +77,14 @@
                 <div><strong>Date :</strong> {{ optional($quote->prepared_at ?? $quote->updated_at)->format('d/m/Y') }}</div>
                 <div><strong>Valable jusqu’au :</strong> {{ $quote->valid_until?->format('d/m/Y') ?: '-' }}</div>
             </div>
+        </div>
+    @else
+        <div class="quote-strip">
+            <h2>DEVIS</h2>
+            <div><strong>N° devis :</strong> {{ $quote->quote_number }}</div>
+            <div><strong>Version :</strong> {{ $quote->version }}</div>
+            <div><strong>Date :</strong> {{ optional($quote->prepared_at ?? $quote->updated_at)->format('d/m/Y') }}</div>
+            <div><strong>Valable jusqu’au :</strong> {{ $quote->valid_until?->format('d/m/Y') ?: '-' }}</div>
         </div>
     @endif
 
@@ -188,7 +198,7 @@
     <div class="footer">
         @if($footerImage)
             <img src="{{ $footerImage }}" alt="Pied de page facture">
-        @else
+        @elseif(!$hasConfiguredFooter)
             {{ $brandName }} - Merci pour votre confiance - Page <span class="page"></span>
         @endif
     </div>
