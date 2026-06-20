@@ -134,6 +134,9 @@
                             @if($quote->pdf_path)
                                 <a href="{{ route('admin.custom-requests.quote.download', [$customRequest, $quote]) }}" class="dac-btn dac-btn-soft">PDF</a>
                             @endif
+                            @if($quote->price_pdf_path)
+                                <a href="{{ route('admin.custom-requests.quote.price.download', [$customRequest, $quote]) }}" class="dac-btn dac-btn-soft">Fiche prix</a>
+                            @endif
                         </td>
                     </tr>
                 @empty

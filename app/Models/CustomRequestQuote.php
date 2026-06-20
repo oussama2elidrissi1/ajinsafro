@@ -39,9 +39,11 @@ class CustomRequestQuote extends Model
         'customer_conditions',
         'internal_notes',
         'pdf_path',
+        'price_pdf_path',
         'summary_mode',
         'prepared_at',
         'sent_at',
+        'price_sent_at',
         'validated_at',
     ];
 
@@ -51,6 +53,7 @@ class CustomRequestQuote extends Model
         'summary_mode' => 'boolean',
         'prepared_at' => 'datetime',
         'sent_at' => 'datetime',
+        'price_sent_at' => 'datetime',
         'validated_at' => 'datetime',
         'total_purchase' => 'decimal:2',
         'total_margin' => 'decimal:2',
@@ -104,9 +107,19 @@ class CustomRequestQuote extends Model
     public function generatePdf(): string
     {
         $path = app(CustomRequestQuotePdfService::class)->generate(
-            $this->fresh(['customRequest', 'days.services', 'items'])
+            $this->fresh(['customRequest', 'days.services', 'items.day'])
         );
         $this->forceFill(['pdf_path' => $path])->save();
+
+        return $path;
+    }
+
+    public function generatePricePdf(): string
+    {
+        $path = app(CustomRequestQuotePdfService::class)->generatePriceSheet(
+            $this->fresh(['customRequest', 'days.services', 'items.day'])
+        );
+        $this->forceFill(['price_pdf_path' => $path])->save();
 
         return $path;
     }

@@ -41,6 +41,19 @@ class CustomRequestNotificationService
         }
     }
 
+    public function notifyPriceSheetSent(CustomRequest $customRequest): void
+    {
+        if ($customRequest->creator) {
+            $this->notifyUser(
+                $customRequest->creator,
+                'custom_request_price_sheet_sent',
+                'Fiche prix envoyée',
+                'La fiche prix interne de la demande '.$customRequest->request_number.' est disponible.',
+                $this->customRequestLinkFor($customRequest->creator, $customRequest)
+            );
+        }
+    }
+
     public function notifyModificationRequested(CustomRequest $customRequest, CustomRequestQuote $quote): void
     {
         if ($customRequest->assignedAgent) {

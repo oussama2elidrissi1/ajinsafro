@@ -234,6 +234,9 @@
                     @if($latestQuote->pdf_path)
                         <div class="dac-agent-quote-actions">
                             <a href="{{ route('agent.custom-reservations.quote.download', [$customRequest, $latestQuote]) }}" class="aj-agent-action-btn">Télécharger le PDF</a>
+                            @if($latestQuote->price_pdf_path && ($canQuoteRequest || $latestQuote->price_sent_at))
+                                <a href="{{ route('agent.custom-reservations.quote.price.download', [$customRequest, $latestQuote]) }}" class="aj-agent-action-btn">Télécharger la fiche prix</a>
+                            @endif
                             @if($canQuoteRequest)
                                 <a href="{{ route('agent.custom-reservations.quote', $customRequest) }}" class="aj-agent-action-btn">Modifier la cotation</a>
                             @endif

@@ -152,41 +152,6 @@
         @endif
     </div>
 
-    @if($showAmounts && $items->isNotEmpty())
-        <div class="block">
-            <h3>Tableau des prix</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width:16%">Service</th>
-                        <th>Description</th>
-                        <th style="width:9%" class="text-right">Qté</th>
-                        <th style="width:15%" class="text-right">Prix unitaire</th>
-                        <th style="width:15%" class="text-right">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($items as $item)
-                        <tr>
-                            <td>{{ $serviceLabels[$item->service_type] ?? $item->service_type }}</td>
-                            <td>{{ $item->title ?: $item->description }}</td>
-                            <td class="text-right">{{ $item->quantity }}</td>
-                            <td class="text-right">{{ $money($item->unit_sale_price) }}</td>
-                            <td class="text-right">{{ $money($item->total_sale) }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-
-            <table class="totals">
-                <tr class="total-main"><td>Total devis</td><td class="text-right">{{ $money($quote->total_sale) }}</td></tr>
-                <tr><td>Acompte demandé</td><td class="text-right">{{ $quote->requested_deposit ? $money($quote->requested_deposit) : '-' }}</td></tr>
-                <tr><td>Montant payé</td><td class="text-right">{{ $money($quote->paid_amount) }}</td></tr>
-                <tr><td>Reste à payer</td><td class="text-right">{{ $money($quote->remaining_amount) }}</td></tr>
-            </table>
-        </div>
-    @endif
-
     <div class="block conditions">
         <h3>Conditions client</h3>
         <div>{!! nl2br(e($quote->customer_conditions ?: ($settings['default_conditions'] ?: 'Ce devis est valable jusqu’à la date indiquée, sous réserve de disponibilité.'))) !!}</div>

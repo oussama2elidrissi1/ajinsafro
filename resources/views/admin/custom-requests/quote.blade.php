@@ -263,10 +263,13 @@
                 <h3>Documents</h3>
                 <div class="d-flex gap-2 flex-wrap">
                     @if($quote->pdf_path)
-                        <a href="{{ route($quoteRoutes['download'] ?? 'admin.custom-requests.quote.download', [$customRequest, $quote]) }}" class="quote-btn quote-btn-soft"><i class="bx bx-download"></i> Télécharger le devis</a>
+                        <a href="{{ route($quoteRoutes['download'] ?? 'admin.custom-requests.quote.download', [$customRequest, $quote]) }}" class="quote-btn quote-btn-soft"><i class="bx bx-download"></i> Télécharger le devis programme</a>
+                    @endif
+                    @if($quote->price_pdf_path)
+                        <a href="{{ route($quoteRoutes['download_price'] ?? 'admin.custom-requests.quote.price.download', [$customRequest, $quote]) }}" class="quote-btn quote-btn-soft"><i class="bx bx-lock"></i> Télécharger la fiche prix interne</a>
                     @endif
                     <button type="submit" class="quote-btn quote-btn-soft"><i class="bx bx-save"></i> Sauvegarder le brouillon</button>
-                    <button type="submit" formaction="{{ route($quoteRoutes['prepare'] ?? 'admin.custom-requests.quote.prepare', [$customRequest, $quote]) }}" class="quote-btn quote-btn-primary"><i class="bx bx-file"></i> Générer un devis automatique</button>
+                    <button type="submit" formaction="{{ route($quoteRoutes['prepare'] ?? 'admin.custom-requests.quote.prepare', [$customRequest, $quote]) }}" class="quote-btn quote-btn-primary"><i class="bx bx-file"></i> Générer devis + fiche prix</button>
                 </div>
             </section>
         </div>
@@ -284,9 +287,13 @@
                 </div>
                 <div class="d-grid gap-2 mt-3">
                     <button type="submit" class="quote-btn quote-btn-soft">Sauvegarder le brouillon</button>
-                    <button type="submit" formaction="{{ route($quoteRoutes['prepare'] ?? 'admin.custom-requests.quote.prepare', [$customRequest, $quote]) }}" class="quote-btn quote-btn-primary">Générer le PDF</button>
+                    <button type="submit" formaction="{{ route($quoteRoutes['prepare'] ?? 'admin.custom-requests.quote.prepare', [$customRequest, $quote]) }}" class="quote-btn quote-btn-primary">Générer devis + fiche prix</button>
                     @if($quote->pdf_path)
-                        <button type="submit" formaction="{{ route($quoteRoutes['send'] ?? 'admin.custom-requests.quote.send', [$customRequest, $quote]) }}" class="quote-btn quote-btn-primary">Envoyer à l’agent créateur</button>
+                        <button type="submit" formaction="{{ route($quoteRoutes['send'] ?? 'admin.custom-requests.quote.send', [$customRequest, $quote]) }}" class="quote-btn quote-btn-primary">Envoyer le devis programme</button>
+                    @endif
+                    @if($quote->price_pdf_path)
+                        <a href="{{ route($quoteRoutes['download_price'] ?? 'admin.custom-requests.quote.price.download', [$customRequest, $quote]) }}" class="quote-btn quote-btn-soft">Fiche prix interne</a>
+                        <button type="submit" formaction="{{ route($quoteRoutes['send_price'] ?? 'admin.custom-requests.quote.price.send', [$customRequest, $quote]) }}" class="quote-btn quote-btn-soft">Envoyer aussi la fiche prix</button>
                     @endif
                 </div>
             </section>

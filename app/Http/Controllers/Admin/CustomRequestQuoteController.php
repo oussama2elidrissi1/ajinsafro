@@ -72,6 +72,7 @@ class CustomRequestQuoteController extends Controller
         DB::transaction(function () use ($request, $customRequest, $quote): void {
             $quote->calculateTotals();
             $path = $quote->generatePdf();
+            $pricePath = $quote->generatePricePdf();
             $quote->markAsPrepared();
 
             $customRequest->documents()->updateOrCreate(
@@ -83,6 +84,18 @@ class CustomRequestQuoteController extends Controller
                     'original_name' => basename($path),
                     'mime_type' => 'application/pdf',
                     'size' => Storage::disk('public')->size($path),
+                    'is_auto_generated' => true,
+                ]
+            );
+
+            $customRequest->documents()->updateOrCreate(
+                ['quote_id' => $quote->id, 'document_type' => 'supplier_file', 'title' => 'Fiche prix interne '.$quote->quote_number.' v'.$quote->version],
+                [
+                    'uploaded_by' => $request->user()->id,
+                    'file_path' => $pricePath,
+                    'original_name' => basename($pricePath),
+                    'mime_type' => 'application/pdf',
+                    'size' => Storage::disk('public')->size($pricePath),
                     'is_auto_generated' => true,
                 ]
             );
@@ -117,6 +130,22 @@ class CustomRequestQuoteController extends Controller
         return back()->with('success', 'Devis envoyé à l’agent créateur.');
     }
 
+    public function sendPriceSheet(Request $request, CustomRequest $customRequest, CustomRequestQuote $quote): RedirectResponse
+    {
+        $this->authorizeQuote($request, $customRequest);
+        abort_unless((int) $quote->custom_request_id === (int) $customRequest->id, 404);
+
+        if (! $quote->price_pdf_path || ! Storage::disk('public')->exists($quote->price_pdf_path)) {
+            $quote->generatePricePdf();
+            $quote->refresh();
+        }
+
+        $quote->forceFill(['price_sent_at' => now()])->save();
+        $this->notifications->notifyPriceSheetSent($customRequest->fresh(['creator']));
+
+        return back()->with('success', 'Fiche prix envoyée à l’agent créateur.');
+    }
+
     public function download(Request $request, CustomRequest $customRequest, CustomRequestQuote $quote): StreamedResponse
     {
         abort_unless($request->user()?->can('custom_requests.documents') || $request->user()?->can('custom_requests.view'), 403);
@@ -124,6 +153,23 @@ class CustomRequestQuoteController extends Controller
         abort_unless($quote->pdf_path && Storage::disk('public')->exists($quote->pdf_path), 404);
 
         return Storage::disk('public')->download($quote->pdf_path, basename($quote->pdf_path));
+    }
+
+    public function downloadPriceSheet(Request $request, CustomRequest $customRequest, CustomRequestQuote $quote): StreamedResponse
+    {
+        abort_unless((int) $quote->custom_request_id === (int) $customRequest->id, 404);
+        $user = $request->user();
+        $canDownloadInternalPrice = $customRequest->canBeQuotedBy($user)
+            || $user?->can('custom_requests.view_all')
+            || ($quote->price_sent_at && (int) $customRequest->created_by === (int) $user?->id);
+        abort_unless($canDownloadInternalPrice, 403);
+
+        if (! $quote->price_pdf_path || ! Storage::disk('public')->exists($quote->price_pdf_path)) {
+            $quote->generatePricePdf();
+            $quote->refresh();
+        }
+
+        return Storage::disk('public')->download($quote->price_pdf_path, basename($quote->price_pdf_path));
     }
 
     private function saveQuotePayload(Request $request, CustomRequestQuote $quote): void
@@ -244,6 +290,8 @@ class CustomRequestQuoteController extends Controller
                 'prepare' => 'agent.custom-reservations.quote.prepare',
                 'send' => 'agent.custom-reservations.quote.send',
                 'download' => 'agent.custom-reservations.quote.download',
+                'download_price' => 'agent.custom-reservations.quote.price.download',
+                'send_price' => 'agent.custom-reservations.quote.price.send',
                 'documents_store' => 'agent.custom-reservations.documents.store',
             ];
         }
@@ -255,6 +303,8 @@ class CustomRequestQuoteController extends Controller
             'prepare' => 'admin.custom-requests.quote.prepare',
             'send' => 'admin.custom-requests.quote.send',
             'download' => 'admin.custom-requests.quote.download',
+            'download_price' => 'admin.custom-requests.quote.price.download',
+            'send_price' => 'admin.custom-requests.quote.price.send',
             'documents_store' => 'admin.custom-requests.documents.store',
         ];
     }

@@ -455,7 +455,11 @@ class CustomRequestModuleTest extends TestCase
         $this->assertSame(CustomRequestQuote::STATUS_PREPARED, $quote->status);
         $this->assertSame(CustomRequest::STATUS_QUOTE_PREPARED, $customRequest->status);
         $this->assertNotNull($quote->pdf_path);
+        $this->assertNotNull($quote->price_pdf_path);
         Storage::disk('public')->assertExists($quote->pdf_path);
+        Storage::disk('public')->assertExists($quote->price_pdf_path);
+        $this->assertFalse(app(\App\Services\CustomRequestQuotePdfService::class)->getPdfViewData($quote)['showAmounts']);
+        $this->assertTrue(app(\App\Services\CustomRequestQuotePdfService::class)->getPriceSheetViewData($quote)['showAmounts']);
         $this->assertDatabaseHas('custom_request_documents', [
             'quote_id' => $quote->id,
             'document_type' => 'quote',
