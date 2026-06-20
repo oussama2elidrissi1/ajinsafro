@@ -69,6 +69,38 @@
     }
 
     $returnDate = optional($customRequest->desired_return_date)->toDateString();
+    $quoteServices = old('items');
+    if ($quoteServices === null) {
+        $quoteServices = collect($programDays)
+            ->flatMap(function ($day, $dayIndex) {
+                return collect($day['services'] ?? [])->map(function ($service) use ($day, $dayIndex) {
+                    $service['custom_request_quote_day_id'] = $day['id'] ?? null;
+                    $service['day_index'] = $dayIndex;
+
+                    return $service;
+                });
+            })
+            ->values()
+            ->all();
+    }
+
+    if (empty($quoteServices)) {
+        $quoteServices = [[
+            'custom_request_quote_day_id' => $programDays[0]['id'] ?? null,
+            'day_index' => 0,
+            'service_type' => 'hotel',
+            'title' => '',
+            'description' => '',
+            'supplier_name' => '',
+            'quantity' => 1,
+            'unit_purchase_price' => 0,
+            'margin_type' => 'amount',
+            'margin_value' => 0,
+            'unit_sale_price' => 0,
+            'is_optional' => false,
+            'data_json' => [],
+        ]];
+    }
 @endphp
 
 @extends($quoteLayout ?? 'layouts.admin-v6')
@@ -118,6 +150,9 @@
     .quote-return-note { border:1px dashed #b8cbe0; background:#f7fbff; border-radius:10px; padding:10px 12px; color:#20324d; font-weight:700; }
     .quote-service { border:1px solid #dbe7f3; border-radius:10px; background:#fff; padding:12px; display:grid; gap:11px; }
     .quote-service-head { display:grid; grid-template-columns:180px minmax(180px,1fr) 110px auto; gap:10px; align-items:end; }
+    .quote-service-head-assigned { grid-template-columns:180px 180px minmax(180px,1fr) 110px auto; }
+    .quote-day [data-services],
+    .quote-day [data-add-service] { display:none !important; }
     .quote-extra-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
     .quote-money-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:10px; }
     .quote-summary { display:grid; gap:8px; }
@@ -168,6 +203,59 @@
                     <div class="quote-field"><label>Date limite de réponse</label><input type="date" name="response_deadline" value="{{ old('response_deadline', optional($quote->response_deadline)->toDateString()) }}"></div>
                     <div class="quote-field"><label>Acompte demandé</label><input type="number" step="0.01" min="0" name="requested_deposit" data-deposit value="{{ old('requested_deposit', $quote->requested_deposit) }}"></div>
                     <div class="quote-field"><label>Montant payé</label><input type="number" step="0.01" min="0" name="paid_amount" data-paid value="{{ old('paid_amount', $quote->paid_amount ?? 0) }}"></div>
+                </div>
+            </section>
+
+            <section class="quote-card">
+                <div class="quote-program-toolbar">
+                    <div>
+                        <h3 class="mb-0">Services du devis</h3>
+                        <div class="text-muted small">Ajoutez les services puis affectez chaque service au jour concerné.</div>
+                    </div>
+                    <button type="button" class="quote-btn quote-btn-soft" id="addQuoteService"><i class="bx bx-plus"></i> Ajouter un service</button>
+                </div>
+                <div id="quoteServices" class="quote-stack">
+                    @foreach($quoteServices as $serviceIndex => $service)
+                        @php
+                            $serviceType = $service['service_type'] ?? 'hotel';
+                            $dataJson = is_array($service['data_json'] ?? null) ? $service['data_json'] : [];
+                            $selectedDayId = $service['custom_request_quote_day_id'] ?? $service['quotation_day_id'] ?? $service['day_id'] ?? null;
+                            $selectedDayIndex = $service['day_index'] ?? 0;
+                        @endphp
+                        <div class="quote-service" data-service>
+                            <div class="quote-service-head quote-service-head-assigned">
+                                <div class="quote-field">
+                                    <label>Jour affecté</label>
+                                    <select name="items[{{ $serviceIndex }}][day_index]" data-service-day>
+                                        @foreach($programDays as $dayOptionIndex => $dayOption)
+                                            <option value="{{ $dayOptionIndex }}" @selected((string) $selectedDayId === (string) ($dayOption['id'] ?? '') || (!$selectedDayId && (int) $selectedDayIndex === (int) $dayOptionIndex))>
+                                                Jour {{ $dayOption['day_number'] ?? $loop->iteration }}{{ !empty($dayOption['date']) ? ' - '.\Illuminate\Support\Carbon::parse($dayOption['date'])->format('d/m/Y') : '' }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="quote-field"><label>Type de service</label><select name="items[{{ $serviceIndex }}][service_type]" data-service-type>@foreach($serviceTypeOptions as $key=>$label)<option value="{{ $key }}" @selected($serviceType === $key)>{{ $label }}</option>@endforeach</select></div>
+                                <div class="quote-field"><label>Titre</label><input name="items[{{ $serviceIndex }}][title]" value="{{ $service['title'] ?? '' }}"></div>
+                                <div class="quote-field"><label>Optionnel</label><select name="items[{{ $serviceIndex }}][is_optional]"><option value="0" @selected(empty($service['is_optional']))>Inclus</option><option value="1" @selected(!empty($service['is_optional']))>Optionnel</option></select></div>
+                                <button type="button" class="quote-btn quote-btn-danger" data-remove-service><i class="bx bx-trash"></i></button>
+                            </div>
+                            <div class="quote-field"><label>Description pour le devis</label><textarea name="items[{{ $serviceIndex }}][description]">{{ $service['description'] ?? '' }}</textarea></div>
+                            <div class="quote-extra-grid" data-extra-container>
+                                @foreach(($serviceFields[$serviceType] ?? $serviceFields['other']) as $fieldKey => $fieldLabel)
+                                    <div class="quote-field"><label>{{ $fieldLabel }}</label><input name="items[{{ $serviceIndex }}][data_json][{{ $fieldKey }}]" value="{{ $dataJson[$fieldKey] ?? '' }}"></div>
+                                @endforeach
+                            </div>
+                            <div class="quote-money-grid">
+                                <div class="quote-field"><label>Fournisseur</label><input name="items[{{ $serviceIndex }}][supplier_name]" value="{{ $service['supplier_name'] ?? '' }}"></div>
+                                <div class="quote-field"><label>Quantité</label><input type="number" min="1" name="items[{{ $serviceIndex }}][quantity]" data-qty value="{{ $service['quantity'] ?? 1 }}"></div>
+                                <div class="quote-field"><label>Prix achat</label><input type="number" step="0.01" min="0" name="items[{{ $serviceIndex }}][unit_purchase_price]" data-purchase value="{{ $service['unit_purchase_price'] ?? 0 }}"></div>
+                                <div class="quote-field"><label>Type marge</label><select name="items[{{ $serviceIndex }}][margin_type]" data-margin-type><option value="amount" @selected(($service['margin_type'] ?? 'amount') === 'amount')>Montant</option><option value="percent" @selected(($service['margin_type'] ?? 'amount') === 'percent')>%</option></select></div>
+                                <div class="quote-field"><label>Marge</label><input type="number" step="0.01" min="0" name="items[{{ $serviceIndex }}][margin_value]" data-margin value="{{ $service['margin_value'] ?? $service['unit_margin'] ?? 0 }}"></div>
+                                <div class="quote-field"><label>Prix vente U.</label><input type="number" step="0.01" min="0" name="items[{{ $serviceIndex }}][unit_sale_price]" data-sale readonly value="{{ $service['unit_sale_price'] ?? 0 }}"></div>
+                                <div class="quote-field"><label>Total vente</label><input data-line-total readonly value="0.00"></div>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
             </section>
 
@@ -345,7 +433,12 @@
 document.addEventListener('DOMContentLoaded', function () {
     const serviceOptions = @json($serviceTypeOptions);
     const serviceFields = @json($serviceFields);
+    const dayOptions = @json(collect($programDays)->values()->map(fn ($day, $index) => [
+        'id' => $index,
+        'label' => 'Jour '.($day['day_number'] ?? ($index + 1)).(!empty($day['date']) ? ' - '.\Illuminate\Support\Carbon::parse($day['date'])->format('d/m/Y') : ''),
+    ])->all());
     const daysContainer = document.getElementById('quoteDays');
+    const servicesContainer = document.getElementById('quoteServices');
 
     function money(value) {
         return (Number(value || 0)).toFixed(2);
@@ -358,46 +451,48 @@ document.addEventListener('DOMContentLoaded', function () {
     function renderExtra(service) {
         const type = service.querySelector('[data-service-type]')?.value || 'other';
         const container = service.querySelector('[data-extra-container]');
-        const dayIndex = [...document.querySelectorAll('[data-day]')].indexOf(service.closest('[data-day]'));
-        const serviceIndex = [...service.closest('[data-services]').querySelectorAll('[data-service]')].indexOf(service);
+        const serviceIndex = [...servicesContainer.querySelectorAll('[data-service]')].indexOf(service);
         const fields = serviceFields[type] || serviceFields.other;
-        container.innerHTML = Object.entries(fields).map(([key, label]) => input(label, `days[${dayIndex}][services][${serviceIndex}][data_json][${key}]`)).join('');
+        container.innerHTML = Object.entries(fields).map(([key, label]) => input(label, `items[${serviceIndex}][data_json][${key}]`)).join('');
     }
 
-    function serviceHtml(dayIndex, serviceIndex) {
+    function serviceHtml(serviceIndex) {
         const options = Object.entries(serviceOptions).map(([key, label]) => `<option value="${key}">${label}</option>`).join('');
+        const days = dayOptions.map(day => `<option value="${day.id}">${day.label}</option>`).join('');
         return `<div class="quote-service" data-service>
-            <div class="quote-service-head">
-                <div class="quote-field"><label>Type de service</label><select name="days[${dayIndex}][services][${serviceIndex}][service_type]" data-service-type>${options}</select></div>
-                <div class="quote-field"><label>Titre</label><input name="days[${dayIndex}][services][${serviceIndex}][title]"></div>
-                <div class="quote-field"><label>Optionnel</label><select name="days[${dayIndex}][services][${serviceIndex}][is_optional]"><option value="0">Inclus</option><option value="1">Optionnel</option></select></div>
+            <div class="quote-service-head quote-service-head-assigned">
+                <div class="quote-field"><label>Jour affecté</label><select name="items[${serviceIndex}][day_index]" data-service-day>${days}</select></div>
+                <div class="quote-field"><label>Type de service</label><select name="items[${serviceIndex}][service_type]" data-service-type>${options}</select></div>
+                <div class="quote-field"><label>Titre</label><input name="items[${serviceIndex}][title]"></div>
+                <div class="quote-field"><label>Optionnel</label><select name="items[${serviceIndex}][is_optional]"><option value="0">Inclus</option><option value="1">Optionnel</option></select></div>
                 <button type="button" class="quote-btn quote-btn-danger" data-remove-service><i class="bx bx-trash"></i></button>
             </div>
-            <div class="quote-field"><label>Description pour le devis</label><textarea name="days[${dayIndex}][services][${serviceIndex}][description]"></textarea></div>
+            <div class="quote-field"><label>Description pour le devis</label><textarea name="items[${serviceIndex}][description]"></textarea></div>
             <div class="quote-extra-grid" data-extra-container></div>
             <div class="quote-money-grid">
-                <div class="quote-field"><label>Fournisseur</label><input name="days[${dayIndex}][services][${serviceIndex}][supplier_name]"></div>
-                <div class="quote-field"><label>Quantité</label><input type="number" min="1" name="days[${dayIndex}][services][${serviceIndex}][quantity]" data-qty value="1"></div>
-                <div class="quote-field"><label>Prix achat</label><input type="number" step="0.01" min="0" name="days[${dayIndex}][services][${serviceIndex}][unit_purchase_price]" data-purchase value="0"></div>
-                <div class="quote-field"><label>Type marge</label><select name="days[${dayIndex}][services][${serviceIndex}][margin_type]" data-margin-type><option value="amount">Montant</option><option value="percent">%</option></select></div>
-                <div class="quote-field"><label>Marge</label><input type="number" step="0.01" min="0" name="days[${dayIndex}][services][${serviceIndex}][margin_value]" data-margin value="0"></div>
-                <div class="quote-field"><label>Prix vente U.</label><input type="number" step="0.01" min="0" name="days[${dayIndex}][services][${serviceIndex}][unit_sale_price]" data-sale readonly value="0"></div>
+                <div class="quote-field"><label>Fournisseur</label><input name="items[${serviceIndex}][supplier_name]"></div>
+                <div class="quote-field"><label>Quantité</label><input type="number" min="1" name="items[${serviceIndex}][quantity]" data-qty value="1"></div>
+                <div class="quote-field"><label>Prix achat</label><input type="number" step="0.01" min="0" name="items[${serviceIndex}][unit_purchase_price]" data-purchase value="0"></div>
+                <div class="quote-field"><label>Type marge</label><select name="items[${serviceIndex}][margin_type]" data-margin-type><option value="amount">Montant</option><option value="percent">%</option></select></div>
+                <div class="quote-field"><label>Marge</label><input type="number" step="0.01" min="0" name="items[${serviceIndex}][margin_value]" data-margin value="0"></div>
+                <div class="quote-field"><label>Prix vente U.</label><input type="number" step="0.01" min="0" name="items[${serviceIndex}][unit_sale_price]" data-sale readonly value="0"></div>
                 <div class="quote-field"><label>Total vente</label><input data-line-total readonly value="0.00"></div>
             </div>
         </div>`;
     }
 
     function reindex() {
+        servicesContainer.querySelectorAll('[data-service]').forEach(function (service, serviceIndex) {
+            service.querySelectorAll('[name]').forEach(function (field) {
+                field.name = field.name.replace(/items\[\d+\]/, `items[${serviceIndex}]`);
+            });
+        });
+
         document.querySelectorAll('[data-day]').forEach(function (day, dayIndex) {
             day.querySelector('[data-day-label]').textContent = dayIndex + 1;
             day.querySelector('[data-day-sort]').value = dayIndex;
             day.querySelectorAll('[name]').forEach(function (field) {
                 field.name = field.name.replace(/days\[\d+\]/, `days[${dayIndex}]`);
-            });
-            day.querySelectorAll('[data-service]').forEach(function (service, serviceIndex) {
-                service.querySelectorAll('[name]').forEach(function (field) {
-                    field.name = field.name.replace(/services\[\d+\]/, `services[${serviceIndex}]`);
-                });
             });
         });
     }
@@ -407,7 +502,7 @@ document.addEventListener('DOMContentLoaded', function () {
         let marginTotal = 0;
         let saleTotal = 0;
 
-        document.querySelectorAll('[data-service]').forEach(function (service) {
+        servicesContainer.querySelectorAll('[data-service]').forEach(function (service) {
             const qty = Number(service.querySelector('[data-qty]')?.value || 1);
             const purchase = Number(service.querySelector('[data-purchase]')?.value || 0);
             const marginValue = Number(service.querySelector('[data-margin]')?.value || 0);
@@ -433,45 +528,44 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('remaining').textContent = money(Math.max(0, saleTotal - paid));
     }
 
+    document.getElementById('addQuoteService')?.addEventListener('click', function () {
+        const serviceIndex = servicesContainer.querySelectorAll('[data-service]').length;
+        servicesContainer.insertAdjacentHTML('beforeend', serviceHtml(serviceIndex));
+        renderExtra(servicesContainer.lastElementChild);
+        recalc();
+    });
+
     document.getElementById('addQuoteDay')?.addEventListener('click', function () {
         const dayIndex = document.querySelectorAll('[data-day]').length;
         const day = document.createElement('article');
         day.className = 'quote-day';
         day.setAttribute('data-day', '');
-        day.innerHTML = `<div class="quote-day-head"><div class="quote-day-title">Jour <span data-day-label>${dayIndex + 1}</span></div><div class="d-flex gap-2 flex-wrap"><button type="button" class="quote-btn quote-btn-soft" data-add-service><i class="bx bx-plus"></i> Ajouter un service</button><button type="button" class="quote-btn quote-btn-soft quote-day-toggle" data-toggle-day aria-label="Ouvrir ou fermer"><i class="bx bx-chevron-down"></i></button><button type="button" class="quote-btn quote-btn-danger" data-remove-day><i class="bx bx-trash"></i></button></div></div><div class="quote-day-body">
+        day.innerHTML = `<div class="quote-day-head"><div class="quote-day-title">Jour <span data-day-label>${dayIndex + 1}</span></div><div class="d-flex gap-2 flex-wrap"><button type="button" class="quote-btn quote-btn-soft quote-day-toggle" data-toggle-day aria-label="Ouvrir ou fermer"><i class="bx bx-chevron-down"></i></button><button type="button" class="quote-btn quote-btn-danger" data-remove-day><i class="bx bx-trash"></i></button></div></div><div class="quote-day-body">
             <div class="quote-grid">
                 <input type="hidden" name="days[${dayIndex}][id]" value="" data-day-id>
-                <div class="quote-field"><label>Numéro du jour</label><input type="number" min="1" name="days[${dayIndex}][day_number]" data-day-number value="${dayIndex + 1}"></div>
+                <div class="quote-field"><label>Num?ro du jour</label><input type="number" min="1" name="days[${dayIndex}][day_number]" data-day-number value="${dayIndex + 1}"></div>
                 <div class="quote-field"><label>Date du jour</label><input type="date" name="days[${dayIndex}][date]"></div>
                 <div class="quote-field"><label>Titre du jour</label><input name="days[${dayIndex}][title]"></div>
                 <div class="quote-field"><label>Ville / destination</label><input name="days[${dayIndex}][city]"></div>
                 <div class="quote-field full"><label>Description client</label><textarea name="days[${dayIndex}][client_description]"></textarea></div>
                 <div class="quote-field full"><label>Notes internes</label><textarea name="days[${dayIndex}][internal_notes]"></textarea></div>
                 <input type="hidden" name="days[${dayIndex}][sort_order]" value="${dayIndex}" data-day-sort>
-            </div><div class="quote-stack" data-services>${serviceHtml(dayIndex, 0)}</div></div>`;
+            </div></div>`;
         daysContainer.appendChild(day);
-        renderExtra(day.querySelector('[data-service]'));
+        dayOptions.push({ id: dayIndex, label: `Jour ${dayIndex + 1}` });
+        servicesContainer.querySelectorAll('[data-service-day]').forEach(function (select) {
+            select.insertAdjacentHTML('beforeend', `<option value="${dayIndex}">Jour ${dayIndex + 1}</option>`);
+        });
+        reindex();
         recalc();
     });
 
     document.addEventListener('click', function (event) {
-        const addService = event.target.closest('[data-add-service]');
         const removeService = event.target.closest('[data-remove-service]');
         const removeDay = event.target.closest('[data-remove-day]');
         const toggleDay = event.target.closest('[data-toggle-day]');
 
-        if (addService) {
-            const day = addService.closest('[data-day]');
-            day.classList.remove('is-collapsed');
-            const dayIndex = [...document.querySelectorAll('[data-day]')].indexOf(day);
-            const services = day.querySelector('[data-services]');
-            const serviceIndex = services.querySelectorAll('[data-service]').length;
-            services.insertAdjacentHTML('beforeend', serviceHtml(dayIndex, serviceIndex));
-            renderExtra(services.lastElementChild);
-            recalc();
-        }
-
-        if (removeService && document.querySelectorAll('[data-service]').length > 1) {
+        if (removeService && servicesContainer.querySelectorAll('[data-service]').length > 1) {
             removeService.closest('[data-service]').remove();
             reindex();
             recalc();
@@ -508,7 +602,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (event.target.closest('#quoteForm')) recalc();
     });
 
-    document.querySelectorAll('[data-service]').forEach(function (service) {
+    servicesContainer.querySelectorAll('[data-service]').forEach(function (service) {
         if (! service.querySelector('[data-extra-container]').children.length) {
             renderExtra(service);
         }

@@ -62,9 +62,11 @@ class CustomRequestQuotationService
             ]);
 
             if (array_key_exists('days', $data)) {
-                $this->syncProgram($quote, $data['days'] ?? []);
-            } elseif (array_key_exists('items', $data)) {
-                $this->syncLegacyItems($quote, $data['items'] ?? []);
+                $this->syncProgram($quote, $data['days'] ?? [], ! array_key_exists('items', $data));
+            }
+
+            if (array_key_exists('items', $data)) {
+                $this->syncAssignedItems($quote, $data['items'] ?? []);
             }
 
             $quote->calculateTotals();
@@ -75,9 +77,11 @@ class CustomRequestQuotationService
         });
     }
 
-    private function syncProgram(CustomRequestQuote $quote, array $days): void
+    private function syncProgram(CustomRequestQuote $quote, array $days, bool $syncNestedServices = true): void
     {
-        $quote->items()->delete();
+        if ($syncNestedServices) {
+            $quote->items()->delete();
+        }
 
         foreach (array_values($days) as $dayIndex => $dayData) {
             $dayNumber = (int) ($dayData['day_number'] ?? ($dayIndex + 1));
@@ -99,11 +103,35 @@ class CustomRequestQuotationService
             ]);
             $day->save();
 
-            foreach (array_values($dayData['services'] ?? []) as $serviceIndex => $serviceData) {
-                $payload = $this->servicePayload($serviceData, $serviceIndex);
-                $payload['custom_request_quote_day_id'] = $day->id;
-                $quote->items()->create($payload);
+            if ($syncNestedServices) {
+                foreach (array_values($dayData['services'] ?? []) as $serviceIndex => $serviceData) {
+                    $payload = $this->servicePayload($serviceData, $serviceIndex);
+                    $payload['custom_request_quote_day_id'] = $day->id;
+                    $quote->items()->create($payload);
+                }
             }
+        }
+    }
+
+    private function syncAssignedItems(CustomRequestQuote $quote, array $items): void
+    {
+        $quote->items()->delete();
+        $days = $quote->days()->orderBy('sort_order')->orderBy('day_number')->get()->values();
+        $validDayIds = $days->pluck('id')->map(fn ($id) => (int) $id)->all();
+
+        foreach (array_values($items) as $index => $item) {
+            $payload = $this->servicePayload($item, $index);
+            $dayId = (int) ($item['custom_request_quote_day_id'] ?? $item['quotation_day_id'] ?? $item['day_id'] ?? 0);
+
+            if ($dayId <= 0 && isset($item['day_index'])) {
+                $dayId = (int) ($days->get((int) $item['day_index'])?->id ?? 0);
+            }
+
+            if ($dayId > 0 && in_array($dayId, $validDayIds, true)) {
+                $payload['custom_request_quote_day_id'] = $dayId;
+            }
+
+            $quote->items()->create($payload);
         }
     }
 
