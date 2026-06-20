@@ -13,9 +13,9 @@
     <meta charset="utf-8">
     <title>{{ $quote->quote_number }}</title>
     <style>
-        @page { margin: 22px 30px 58px; }
+        @page { margin: 18px 30px 58px; }
         body { font-family: DejaVu Sans, Arial, sans-serif; color:#16233a; font-size:12px; line-height:1.45; }
-        .invoice-header-image { width:100%; max-height:120px; object-fit:contain; margin-bottom:12px; }
+        .invoice-header-image { display:block; width:100%; height:auto; margin:0 0 14px; }
         .header { display:table; width:100%; border-bottom:2px solid #008bd2; padding-bottom:14px; margin-bottom:16px; }
         .brand,.quote-meta { display:table-cell; vertical-align:top; width:50%; }
         .brand img { max-height:52px; max-width:160px; margin-bottom:8px; }
@@ -45,7 +45,7 @@
         .total-main td { font-size:15px; font-weight:700; color:#008bd2; }
         .conditions { background:#f8fafc; border:1px solid #d9e5f2; padding:12px; }
         .footer { position:fixed; bottom:-44px; left:0; right:0; text-align:center; color:#66758a; font-size:10px; border-top:1px solid #d9e5f2; padding-top:7px; }
-        .footer img { width:100%; max-height:52px; object-fit:contain; }
+        .footer img { display:block; width:100%; height:auto; max-height:58px; object-fit:contain; }
         .page:after { content: counter(page); }
     </style>
 </head>

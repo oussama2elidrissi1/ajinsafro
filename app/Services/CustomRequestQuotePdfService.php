@@ -64,12 +64,11 @@ class CustomRequestQuotePdfService
 
     private function publicDiskImageSource(?string $path): ?string
     {
-        $normalized = Setting::normalizePublicDiskPath($path);
-        if (! $normalized || ! Storage::disk('public')->exists($normalized)) {
+        $absolutePath = $this->resolveImageAbsolutePath($path);
+        if (! $absolutePath || ! is_file($absolutePath)) {
             return null;
         }
 
-        $absolutePath = Storage::disk('public')->path($normalized);
         $contents = @file_get_contents($absolutePath);
         if ($contents === false) {
             return null;
@@ -78,6 +77,57 @@ class CustomRequestQuotePdfService
         $mimeType = @mime_content_type($absolutePath) ?: $this->mimeTypeFromExtension($absolutePath);
 
         return 'data:'.$mimeType.';base64,'.base64_encode($contents);
+    }
+
+    private function resolveImageAbsolutePath(?string $path): ?string
+    {
+        if (! is_string($path) || trim($path) === '') {
+            return null;
+        }
+
+        $value = trim($path);
+
+        if (filter_var($value, FILTER_VALIDATE_URL)) {
+            $urlPath = parse_url($value, PHP_URL_PATH);
+            $value = is_string($urlPath) ? $urlPath : $value;
+        }
+
+        $value = str_replace('\\', '/', $value);
+        $value = ltrim($value, '/');
+
+        foreach ([
+            'admin/storage/',
+            'booking/storage/',
+            'storage/app/public/',
+            'public/storage/',
+            'storage/',
+            'public/',
+        ] as $prefix) {
+            if (str_starts_with($value, $prefix)) {
+                $value = substr($value, strlen($prefix));
+                break;
+            }
+        }
+
+        $normalized = Setting::normalizePublicDiskPath($value);
+        if ($normalized && Storage::disk('public')->exists($normalized)) {
+            return Storage::disk('public')->path($normalized);
+        }
+
+        $candidatePaths = [
+            storage_path('app/public/'.$value),
+            public_path('storage/'.$value),
+            public_path($value),
+            base_path($value),
+        ];
+
+        foreach ($candidatePaths as $candidatePath) {
+            if (is_file($candidatePath)) {
+                return $candidatePath;
+            }
+        }
+
+        return null;
     }
 
     private function mimeTypeFromExtension(string $path): string
