@@ -33,6 +33,7 @@ class CustomReservationController extends Controller
             'client' => trim((string) $request->query('client', '')),
             'destination' => trim((string) $request->query('destination', '')),
             'status' => trim((string) $request->query('status', '')),
+            'priority' => trim((string) $request->query('priority', '')),
             'date' => trim((string) $request->query('date', '')),
         ];
 
@@ -58,6 +59,10 @@ class CustomReservationController extends Controller
             $query->where('status', $filters['status']);
         }
 
+        if ($filters['priority'] !== '') {
+            $query->where('priority', $filters['priority']);
+        }
+
         if ($filters['date'] !== '') {
             $query->whereDate('desired_departure_date', $filters['date']);
         }
@@ -68,6 +73,7 @@ class CustomReservationController extends Controller
             'requests' => $query->latest()->paginate(15)->withQueryString(),
             'filters' => $filters,
             'statusOptions' => CustomRequest::statusOptions(),
+            'priorityOptions' => CustomRequest::priorityOptions(),
             'travelTypeOptions' => CustomRequest::travelTypeOptions(),
             'canCreateRequest' => $canCreateRequest,
             'dashboard' => $dashboard,
@@ -319,6 +325,12 @@ class CustomReservationController extends Controller
             ->pluck('total', 'status')
             ->map(fn ($value) => (int) $value)
             ->all();
+        $priorityCounts = (clone $baseQuery)
+            ->select('priority', DB::raw('count(*) as total'))
+            ->groupBy('priority')
+            ->pluck('total', 'priority')
+            ->map(fn ($value) => (int) $value)
+            ->all();
 
         $inProgressStatuses = [
             CustomRequest::STATUS_ASSIGNED,
@@ -327,6 +339,18 @@ class CustomReservationController extends Controller
             CustomRequest::STATUS_MODIFICATION_REQUESTED,
             CustomRequest::STATUS_QUOTE_PREPARED,
             CustomRequest::STATUS_WAITING_CUSTOMER,
+        ];
+        $pendingStatuses = [
+            CustomRequest::STATUS_DRAFT,
+            CustomRequest::STATUS_NEW,
+            CustomRequest::STATUS_ASSIGNED,
+        ];
+        $confirmedStatuses = [
+            CustomRequest::STATUS_CONFIRMED,
+        ];
+        $closedStatuses = [
+            CustomRequest::STATUS_CANCELLED,
+            CustomRequest::STATUS_REFUSED,
         ];
 
         $actionRequests = (clone $baseQuery)
@@ -364,6 +388,14 @@ class CustomReservationController extends Controller
                 ->count(),
             'action_requests' => $actionRequests,
             'status_counts' => $statusCounts,
+            'priority_counts' => $priorityCounts,
+            'status_groups' => [
+                'pending' => array_sum(array_map(fn (string $status) => $statusCounts[$status] ?? 0, $pendingStatuses)),
+                'processing' => array_sum(array_map(fn (string $status) => $statusCounts[$status] ?? 0, $inProgressStatuses)),
+                'quote_sent' => $statusCounts[CustomRequest::STATUS_QUOTE_SENT] ?? 0,
+                'confirmed' => array_sum(array_map(fn (string $status) => $statusCounts[$status] ?? 0, $confirmedStatuses)),
+                'closed' => array_sum(array_map(fn (string $status) => $statusCounts[$status] ?? 0, $closedStatuses)),
+            ],
             'account' => [
                 'name' => $user->name,
                 'role' => $user->getRoleNames()->first() ?: ($user->job_title ?: 'Agent'),

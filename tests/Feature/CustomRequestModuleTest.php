@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\CustomRequest;
 use App\Models\CustomRequestQuote;
 use App\Models\Client;
+use App\Models\ClientNotification;
 use App\Models\User;
 use App\Http\Controllers\Admin\CustomRequestQuoteController;
 use App\Http\Controllers\Agent\CustomReservationController;
@@ -351,6 +352,57 @@ class CustomRequestModuleTest extends TestCase
             'user_id' => $offline->id,
             'type' => 'custom_request_modification_requested',
         ]);
+    }
+
+    public function test_agent_can_mark_notification_as_read_from_modal_action(): void
+    {
+        $commercial = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.create',
+        ], ['Agent']);
+
+        $notification = ClientNotification::query()->create([
+            'user_id' => $commercial->id,
+            'type' => 'custom_request_quote_sent',
+            'title' => 'Devis envoye',
+            'message' => 'Le devis DAC-TEST est pret.',
+            'link' => route('agent.custom-reservations.index'),
+            'is_read' => false,
+        ]);
+
+        $response = $this->actingAs($commercial)->post(route('agent.notifications.read', $notification));
+
+        $response->assertRedirect(route('agent.custom-reservations.index'));
+        $this->assertTrue($notification->fresh()->is_read);
+    }
+
+    public function test_agent_index_can_filter_custom_requests_by_priority(): void
+    {
+        $commercial = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.create',
+        ], ['Agent']);
+
+        $this->customRequest($commercial, [
+            'customer_full_name' => 'Client Urgent Filtre',
+            'priority' => 'urgent',
+            'status' => CustomRequest::STATUS_QUOTE_SENT,
+        ]);
+
+        $this->customRequest($commercial, [
+            'customer_full_name' => 'Client Normal Filtre',
+            'priority' => 'normal',
+            'status' => CustomRequest::STATUS_CONFIRMED,
+        ]);
+
+        $response = $this->actingAs($commercial)->get(route('agent.custom-reservations.index', ['priority' => 'urgent']));
+
+        $response->assertOk();
+        $response->assertSee('Client Urgent Filtre');
+        $response->assertDontSee('Client Normal Filtre');
+        $response->assertSee('Priorite');
     }
 
     public function test_quote_prepare_calculates_totals_and_generates_client_pdf(): void

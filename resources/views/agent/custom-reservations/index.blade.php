@@ -255,7 +255,7 @@
         }
         .aj-agent-filter-grid {
             display: grid;
-            grid-template-columns: minmax(190px, 1.25fr) minmax(180px, 1.15fr) minmax(160px, .85fr) minmax(160px, .85fr) auto auto;
+            grid-template-columns: minmax(190px, 1.25fr) minmax(180px, 1.15fr) minmax(150px, .8fr) minmax(150px, .8fr) minmax(150px, .8fr) auto auto;
             gap: 12px;
             align-items: end;
         }
@@ -342,6 +342,49 @@
         .aj-agent-pill-blue { background: #e7f2fe; color: #0b75bd; }
         .aj-agent-pill-slate { background: #eef3f8; color: #51657c; }
         .aj-agent-pill-green { background: #ddf7e8; color: #0f8a4b; }
+        .aj-agent-pill-orange { background: #fff3df; color: #b45309; }
+        .aj-agent-pill-red { background: #fee2e2; color: #b91c1c; }
+        .aj-agent-status-board {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+        .aj-agent-status-card {
+            display: grid;
+            gap: 10px;
+            padding: 16px;
+            border-left: 4px solid #0b85cf;
+        }
+        .aj-agent-status-card.is-orange { border-left-color: #d97706; }
+        .aj-agent-status-card.is-violet { border-left-color: #7048e8; }
+        .aj-agent-status-card.is-green { border-left-color: #16a34a; }
+        .aj-agent-status-card span {
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+        .aj-agent-status-card strong {
+            color: #0f172a;
+            font-size: 26px;
+            font-weight: 850;
+            line-height: 1;
+        }
+        .aj-agent-status-card small {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .aj-agent-priority-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #edf3f9;
+        }
         .aj-agent-request-meta {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -582,7 +625,7 @@
             font-size: 12px;
         }
         .aj-agent-filter-grid {
-            grid-template-columns: minmax(220px, 1.2fr) minmax(190px, 1fr) minmax(150px, .75fr) minmax(150px, .75fr) auto auto;
+            grid-template-columns: minmax(220px, 1.2fr) minmax(190px, 1fr) minmax(145px, .75fr) minmax(145px, .75fr) minmax(145px, .75fr) auto auto;
             gap: 10px;
         }
         .aj-agent-field label {
@@ -723,10 +766,27 @@
         .aj-agent-pill-green {
             border-color: #bdebd1;
         }
+        .aj-agent-pill-orange {
+            border-color: #f7d39b;
+        }
+        .aj-agent-pill-red {
+            border-color: #fecaca;
+        }
+        .aj-agent-status-board {
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .aj-agent-status-card {
+            border-radius: 8px;
+            box-shadow: none;
+        }
         .aj-agent-empty {
             border-radius: 8px;
         }
         @media (max-width: 1180px) {
+            .aj-agent-status-board {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
             .aj-agent-filter-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
@@ -744,6 +804,7 @@
             }
             .aj-agent-filter-grid,
             .aj-agent-dashboard-grid,
+            .aj-agent-status-board,
             .aj-agent-request-meta {
                 grid-template-columns: 1fr;
             }
@@ -776,6 +837,7 @@
                 font-size: 23px;
             }
             .aj-agent-dashboard-grid,
+            .aj-agent-status-board,
             .aj-agent-workspace-grid,
             .aj-agent-filter-grid {
                 grid-template-columns: 1fr;
@@ -807,8 +869,41 @@
     $account = $dashboard['account'] ?? [];
     $actionRequests = $dashboard['action_requests'] ?? collect();
     $currentStatus = $filters['status'] ?? '';
+    $currentPriority = $filters['priority'] ?? '';
     $statusCounts = $dashboard['status_counts'] ?? [];
+    $priorityCounts = $dashboard['priority_counts'] ?? [];
+    $statusGroups = $dashboard['status_groups'] ?? [];
     $quoteUser = auth()->user();
+    $statusOverview = [
+        [
+            'label' => 'En attente',
+            'count' => $statusGroups['pending'] ?? 0,
+            'note' => 'Brouillon, nouvelle ou assignee',
+            'class' => 'is-orange',
+            'url' => route('agent.custom-reservations.index', ['status' => \App\Models\CustomRequest::STATUS_NEW]),
+        ],
+        [
+            'label' => 'En traitement',
+            'count' => $statusGroups['processing'] ?? 0,
+            'note' => 'Pris en charge ou devis en preparation',
+            'class' => 'is-violet',
+            'url' => route('agent.custom-reservations.index', ['status' => \App\Models\CustomRequest::STATUS_PROCESSING]),
+        ],
+        [
+            'label' => 'Devis envoyes',
+            'count' => $statusGroups['quote_sent'] ?? 0,
+            'note' => 'En attente du retour agent/client',
+            'class' => '',
+            'url' => route('agent.custom-reservations.index', ['status' => \App\Models\CustomRequest::STATUS_QUOTE_SENT]),
+        ],
+        [
+            'label' => 'Confirmees',
+            'count' => $statusGroups['confirmed'] ?? 0,
+            'note' => 'Dossiers valides',
+            'class' => 'is-green',
+            'url' => route('agent.custom-reservations.index', ['status' => \App\Models\CustomRequest::STATUS_CONFIRMED]),
+        ],
+    ];
 @endphp
 <div class="aj-agent-custom-page">
     <section class="aj-agent-page-hero">
@@ -864,6 +959,16 @@
                 <span class="aj-agent-kpi-note">{{ $dashboard['quote_sent'] ?? 0 }} devis envoye(s)</span>
             </div>
         </article>
+    </section>
+
+    <section class="aj-agent-status-board" aria-label="Statuts des demandes a la carte">
+        @foreach($statusOverview as $overview)
+            <a href="{{ $overview['url'] }}" class="aj-agent-panel aj-agent-status-card {{ $overview['class'] }}">
+                <span>{{ $overview['label'] }}</span>
+                <strong>{{ $overview['count'] }}</strong>
+                <small>{{ $overview['note'] }}</small>
+            </a>
+        @endforeach
     </section>
 
     <section class="aj-agent-workspace-grid">
@@ -953,6 +1058,15 @@
                 </select>
             </div>
             <div class="aj-agent-field">
+                <label for="priority">Priorite</label>
+                <select id="priority" name="priority">
+                    <option value="">Toutes</option>
+                    @foreach($priorityOptions as $value => $label)
+                        <option value="{{ $value }}" @selected(($filters['priority'] ?? '') === $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="aj-agent-field">
                 <label for="date">Date</label>
                 <input id="date" type="date" name="date" value="{{ $filters['date'] ?? '' }}">
             </div>
@@ -960,13 +1074,22 @@
             <a href="{{ route('agent.custom-reservations.index') }}" class="aj-agent-action-btn"><i class="bx bx-reset"></i> Reinitialiser</a>
         </div>
         <div class="aj-agent-quick-filters">
-            <a class="aj-agent-quick-filter {{ $currentStatus === '' ? 'is-active' : '' }}" href="{{ route('agent.custom-reservations.index') }}">
+            <a class="aj-agent-quick-filter {{ $currentStatus === '' && $currentPriority === '' ? 'is-active' : '' }}" href="{{ route('agent.custom-reservations.index') }}">
                 Tous <strong>{{ $dashboard['total'] ?? 0 }}</strong>
             </a>
             @foreach($statusOptions as $value => $label)
                 @if(($statusCounts[$value] ?? 0) > 0)
                     <a class="aj-agent-quick-filter {{ $currentStatus === $value ? 'is-active' : '' }}" href="{{ route('agent.custom-reservations.index', ['status' => $value]) }}">
                         {{ $label }} <strong>{{ $statusCounts[$value] }}</strong>
+                    </a>
+                @endif
+            @endforeach
+        </div>
+        <div class="aj-agent-priority-filters">
+            @foreach($priorityOptions as $value => $label)
+                @if(($priorityCounts[$value] ?? 0) > 0)
+                    <a class="aj-agent-quick-filter {{ $currentPriority === $value ? 'is-active' : '' }}" href="{{ route('agent.custom-reservations.index', ['priority' => $value]) }}">
+                        {{ $label }} <strong>{{ $priorityCounts[$value] }}</strong>
                     </a>
                 @endif
             @endforeach
@@ -994,6 +1117,19 @@
                     </thead>
                     <tbody>
                         @foreach($requests as $requestRow)
+                            @php
+                                $priorityPillClass = match ($requestRow->priority) {
+                                    'very_urgent' => 'aj-agent-pill-red',
+                                    'urgent' => 'aj-agent-pill-orange',
+                                    default => 'aj-agent-pill-slate',
+                                };
+                                $statusPillClass = match ($requestRow->status) {
+                                    \App\Models\CustomRequest::STATUS_CONFIRMED => 'aj-agent-pill-green',
+                                    \App\Models\CustomRequest::STATUS_CANCELLED, \App\Models\CustomRequest::STATUS_REFUSED => 'aj-agent-pill-slate',
+                                    \App\Models\CustomRequest::STATUS_MODIFICATION_REQUESTED, \App\Models\CustomRequest::STATUS_MISSING_INFO => 'aj-agent-pill-orange',
+                                    default => 'aj-agent-pill-blue',
+                                };
+                            @endphp
                             <tr>
                                 <td>
                                     <span class="aj-agent-client-main">{{ $requestRow->customer_full_name }}</span>
@@ -1008,8 +1144,8 @@
                                 </td>
                                 <td>
                                     <div class="aj-agent-status-stack">
-                                        <span class="aj-agent-pill aj-agent-pill-blue">{{ $requestRow->statusLabel() }}</span>
-                                        <span class="aj-agent-pill aj-agent-pill-slate">{{ $requestRow->priorityLabel() }}</span>
+                                        <span class="aj-agent-pill {{ $statusPillClass }}">{{ $requestRow->statusLabel() }}</span>
+                                        <span class="aj-agent-pill {{ $priorityPillClass }}">{{ $requestRow->priorityLabel() }}</span>
                                     </div>
                                 </td>
                                 <td>

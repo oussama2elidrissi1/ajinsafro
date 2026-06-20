@@ -39,7 +39,128 @@
         && $user->isPartner()
         && \Illuminate\Support\Facades\Route::has('partner.logout');
 
+    $agentNotifications = collect();
+    $agentNotificationsUnread = 0;
+    if ($user && $isAgentRoute) {
+        $agentNotifications = \App\Models\ClientNotification::query()
+            ->where('user_id', $user->id)
+            ->latest()
+            ->limit(8)
+            ->get();
+        $agentNotificationsUnread = \App\Models\ClientNotification::query()
+            ->where('user_id', $user->id)
+            ->where('is_read', false)
+            ->count();
+    }
 @endphp
+
+@if($user && $isAgentRoute)
+    <style>
+        .aj-agent-notification-trigger {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border: 1px solid rgba(255, 255, 255, .22);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .12);
+            color: #fff;
+            font-size: 18px;
+        }
+        .aj-agent-notification-trigger:hover {
+            background: rgba(255, 255, 255, .2);
+            color: #fff;
+        }
+        .aj-agent-notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            border: 2px solid #087bb7;
+            border-radius: 999px;
+            background: #ff5a1f;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 800;
+            line-height: 1;
+        }
+        .aj-agent-notification-modal .modal-content {
+            border: 1px solid #d8e3ef;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(15, 23, 42, .18);
+        }
+        .aj-agent-notification-list {
+            display: grid;
+            gap: 10px;
+        }
+        .aj-agent-notification-item {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 12px;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid #e1eaf4;
+            border-radius: 8px;
+            background: #fff;
+        }
+        .aj-agent-notification-item.is-unread {
+            border-color: #a7d8fb;
+            background: #f2f9ff;
+        }
+        .aj-agent-notification-item h3 {
+            margin: 0;
+            color: #10253b;
+            font-size: 14px;
+            font-weight: 800;
+        }
+        .aj-agent-notification-item p {
+            margin: 4px 0 0;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+        .aj-agent-notification-date {
+            display: block;
+            margin-top: 5px;
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .aj-agent-notification-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 34px;
+            padding: 8px 12px;
+            border: 1px solid #cfdce9;
+            border-radius: 8px;
+            background: #fff;
+            color: #334155;
+            font-size: 12px;
+            font-weight: 800;
+        }
+        .aj-agent-notification-action.is-primary {
+            border-color: #0086c9;
+            background: #0086c9;
+            color: #fff;
+        }
+        @media (max-width: 640px) {
+            .aj-agent-notification-item {
+                grid-template-columns: 1fr;
+            }
+            .aj-agent-notification-action {
+                width: 100%;
+            }
+        }
+    </style>
+@endif
 
 <div class="aj-topbar aj-topbar--internal-v2 {{ $isAgentRoute ? 'aj-topbar--agent-mode' : '' }}" role="banner">
     <div class="aj-container aj-topbar__inner">
@@ -69,6 +190,15 @@
         <div class="aj-topbar__right">
             <div class="aj-topbar__auth">
                 @if($user)
+                    @if($isAgentRoute)
+                        <button type="button" class="aj-agent-notification-trigger" data-bs-toggle="modal" data-bs-target="#agentNotificationsModal" aria-label="Notifications">
+                            <i class="bx bx-bell"></i>
+                            @if($agentNotificationsUnread > 0)
+                                <span class="aj-agent-notification-badge">{{ $agentNotificationsUnread > 99 ? '99+' : $agentNotificationsUnread }}</span>
+                            @endif
+                        </button>
+                    @endif
+
                     @if($profileUrl)
                         <a href="{{ $profileUrl }}" class="aj-topbar__auth-link">Profil</a>
                     @endif
@@ -89,3 +219,59 @@
         </div>
     </div>
 </div>
+
+@if($user && $isAgentRoute)
+    <div class="modal fade aj-agent-notification-modal" id="agentNotificationsModal" tabindex="-1" aria-labelledby="agentNotificationsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title" id="agentNotificationsModalLabel">Notifications</h5>
+                        <small class="text-muted">{{ $agentNotificationsUnread }} non lue(s)</small>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        @if($agentNotificationsUnread > 0 && \Illuminate\Support\Facades\Route::has('agent.notifications.read-all'))
+                            <form method="POST" action="{{ route('agent.notifications.read-all') }}">
+                                @csrf
+                                <button type="submit" class="aj-agent-notification-action">Tout marquer lu</button>
+                            </form>
+                        @endif
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    @if($agentNotifications->count())
+                        <div class="aj-agent-notification-list">
+                            @foreach($agentNotifications as $notification)
+                                <div class="aj-agent-notification-item {{ $notification->is_read ? '' : 'is-unread' }}">
+                                    <div>
+                                        <h3>{{ $notification->title }}</h3>
+                                        <p>{{ \Illuminate\Support\Str::limit($notification->message, 150) }}</p>
+                                        <span class="aj-agent-notification-date">{{ $notification->created_at?->diffForHumans() }}</span>
+                                    </div>
+                                    <div>
+                                        @if(! $notification->is_read && \Illuminate\Support\Facades\Route::has('agent.notifications.read'))
+                                            <form method="POST" action="{{ route('agent.notifications.read', $notification) }}">
+                                                @csrf
+                                                <button type="submit" class="aj-agent-notification-action is-primary">
+                                                    {{ $notification->link ? 'Ouvrir' : 'Marquer lu' }}
+                                                </button>
+                                            </form>
+                                        @elseif($notification->link)
+                                            <a href="{{ $notification->link }}" class="aj-agent-notification-action">Ouvrir</a>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center py-4">
+                            <strong>Aucune notification</strong>
+                            <p class="text-muted mb-0">Les nouvelles demandes, devis et modifications apparaitront ici.</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+@endif

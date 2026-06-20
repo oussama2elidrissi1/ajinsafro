@@ -69,6 +69,7 @@ use App\Http\Controllers\Client\ClientReservationsController;
 use App\Http\Controllers\Agent\CatalogueController as AgentCatalogueController;
 use App\Http\Controllers\Agent\CustomReservationController as AgentCustomReservationController;
 use App\Http\Controllers\Agent\DashboardController as AgentDashboardController;
+use App\Http\Controllers\Agent\NotificationController as AgentNotificationController;
 use App\Http\Controllers\Agent\ReservationController as AgentReservationController;
 use App\Http\Controllers\Auth\LockScreenController;
 use App\Http\Controllers\Front\GroupDealsController as FrontGroupDealsController;
@@ -724,6 +725,8 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'not.client'])
         Route::get('reservations/voyage-departures', [ReservationsController::class, 'voyageDepartures'])->name('reservations.voyage-departures');
         Route::get('reservations/extras', [ReservationsController::class, 'extras'])->name('reservations.extras');
         Route::get('reservations/departure-hotels-rooms', [ReservationsController::class, 'departureHotelsRooms'])->name('reservations.departure-hotels-rooms');
+        Route::post('notifications/read-all', [AgentNotificationController::class, 'markAllRead'])->name('notifications.read-all');
+        Route::post('notifications/{notification}/read', [AgentNotificationController::class, 'markRead'])->name('notifications.read')->whereNumber('notification');
         Route::get('customers/clients/search', [ClientController::class, 'search'])->name('customers.clients.search');
         Route::post('customers/clients/quick-store', [ClientController::class, 'quickStore'])->name('customers.clients.quick-store');
         Route::post('reservations', [AgentReservationController::class, 'store'])->name('reservations.store');
