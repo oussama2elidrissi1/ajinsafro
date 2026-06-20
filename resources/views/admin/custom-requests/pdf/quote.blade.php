@@ -2,6 +2,8 @@
     $settings = $invoiceSettings ?? [];
     $brandName = $settings['brand_name'] ?? 'Ajinsafro.ma';
     $logo = $settings['logo_url'] ?? \App\Models\Setting::brandLogoUrl('dark');
+    $headerImage = $settings['header_image_src'] ?? null;
+    $footerImage = $settings['footer_image_src'] ?? null;
     $serviceLabels = \App\Models\CustomRequestQuote::itemServiceOptions();
     $money = fn ($value) => number_format((float) $value, 2, ',', ' ').' '.$quote->currency;
 @endphp
@@ -11,9 +13,9 @@
     <meta charset="utf-8">
     <title>{{ $quote->quote_number }}</title>
     <style>
-        @page { margin: 26px 30px 46px; }
+        @page { margin: 22px 30px 58px; }
         body { font-family: DejaVu Sans, Arial, sans-serif; color:#16233a; font-size:12px; line-height:1.45; }
-        .invoice-image { width:100%; max-height:95px; object-fit:contain; margin-bottom:12px; }
+        .invoice-header-image { width:100%; max-height:120px; object-fit:contain; margin-bottom:12px; }
         .header { display:table; width:100%; border-bottom:2px solid #008bd2; padding-bottom:14px; margin-bottom:16px; }
         .brand,.quote-meta { display:table-cell; vertical-align:top; width:50%; }
         .brand img { max-height:52px; max-width:160px; margin-bottom:8px; }
@@ -21,6 +23,8 @@
         .muted { color:#66758a; }
         .quote-meta { text-align:right; }
         .quote-meta h2 { margin:0 0 8px; font-size:22px; color:#008bd2; }
+        .quote-strip { text-align:right; border-bottom:2px solid #008bd2; padding-bottom:10px; margin-bottom:16px; }
+        .quote-strip h2 { margin:0 0 6px; font-size:22px; color:#008bd2; }
         .block { margin-bottom:16px; }
         .grid { display:table; width:100%; }
         .col { display:table-cell; width:50%; vertical-align:top; padding-right:12px; }
@@ -40,32 +44,39 @@
         .totals td { border:0; border-bottom:1px solid #e4ebf3; padding:6px 0; }
         .total-main td { font-size:15px; font-weight:700; color:#008bd2; }
         .conditions { background:#f8fafc; border:1px solid #d9e5f2; padding:12px; }
-        .footer { position:fixed; bottom:-30px; left:0; right:0; text-align:center; color:#66758a; font-size:10px; border-top:1px solid #d9e5f2; padding-top:7px; }
-        .footer img { max-height:44px; max-width:100%; object-fit:contain; }
+        .footer { position:fixed; bottom:-44px; left:0; right:0; text-align:center; color:#66758a; font-size:10px; border-top:1px solid #d9e5f2; padding-top:7px; }
+        .footer img { width:100%; max-height:52px; object-fit:contain; }
         .page:after { content: counter(page); }
     </style>
 </head>
 <body>
-    @if(!empty($settings['header_image_url']))
-        <img src="{{ $settings['header_image_url'] }}" class="invoice-image" alt="En-tête facture">
-    @endif
-
-    <div class="header">
-        <div class="brand">
-            <img src="{{ $logo }}" alt="{{ $brandName }}">
-            <h1>{{ $brandName }}</h1>
-            @if(!empty($settings['phone'])) <div class="muted">{{ $settings['phone'] }}</div> @endif
-            @if(!empty($settings['email'])) <div class="muted">{{ $settings['email'] }}</div> @endif
-            @if(!empty($settings['company_address'])) <div class="muted">{{ $settings['company_address'] }}</div> @endif
-        </div>
-        <div class="quote-meta">
+    @if($headerImage)
+        <img src="{{ $headerImage }}" class="invoice-header-image" alt="En-tête facture">
+        <div class="quote-strip">
             <h2>DEVIS</h2>
             <div><strong>N° devis :</strong> {{ $quote->quote_number }}</div>
             <div><strong>Version :</strong> {{ $quote->version }}</div>
             <div><strong>Date :</strong> {{ optional($quote->prepared_at ?? $quote->updated_at)->format('d/m/Y') }}</div>
             <div><strong>Valable jusqu’au :</strong> {{ $quote->valid_until?->format('d/m/Y') ?: '-' }}</div>
         </div>
-    </div>
+    @else
+        <div class="header">
+            <div class="brand">
+                <img src="{{ $logo }}" alt="{{ $brandName }}">
+                <h1>{{ $brandName }}</h1>
+                @if(!empty($settings['phone'])) <div class="muted">{{ $settings['phone'] }}</div> @endif
+                @if(!empty($settings['email'])) <div class="muted">{{ $settings['email'] }}</div> @endif
+                @if(!empty($settings['company_address'])) <div class="muted">{{ $settings['company_address'] }}</div> @endif
+            </div>
+            <div class="quote-meta">
+                <h2>DEVIS</h2>
+                <div><strong>N° devis :</strong> {{ $quote->quote_number }}</div>
+                <div><strong>Version :</strong> {{ $quote->version }}</div>
+                <div><strong>Date :</strong> {{ optional($quote->prepared_at ?? $quote->updated_at)->format('d/m/Y') }}</div>
+                <div><strong>Valable jusqu’au :</strong> {{ $quote->valid_until?->format('d/m/Y') ?: '-' }}</div>
+            </div>
+        </div>
+    @endif
 
     <div class="grid block">
         <div class="col">
@@ -175,8 +186,8 @@
     @endif
 
     <div class="footer">
-        @if(!empty($settings['footer_image_url']))
-            <img src="{{ $settings['footer_image_url'] }}" alt="Pied de page facture">
+        @if($footerImage)
+            <img src="{{ $footerImage }}" alt="Pied de page facture">
         @else
             {{ $brandName }} - Merci pour votre confiance - Page <span class="page"></span>
         @endif

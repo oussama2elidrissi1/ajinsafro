@@ -4,12 +4,14 @@ namespace Tests\Feature;
 
 use App\Models\CustomRequest;
 use App\Models\CustomRequestQuote;
+use App\Models\Setting;
 use App\Models\Client;
 use App\Models\ClientNotification;
 use App\Models\User;
 use App\Http\Controllers\Admin\CustomRequestQuoteController;
 use App\Http\Controllers\Agent\CustomReservationController;
 use App\Services\CustomRequestQuotationService;
+use App\Services\CustomRequestQuotePdfService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -607,6 +609,42 @@ class CustomRequestModuleTest extends TestCase
             'date' => '2026-07-04',
             'city' => 'Paris',
         ]);
+    }
+
+    public function test_quote_pdf_uses_invoice_header_and_footer_images_from_settings(): void
+    {
+        Storage::disk('public')->put('settings/invoices/header.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII='));
+        Storage::disk('public')->put('settings/invoices/footer.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII='));
+        Setting::setValue('invoice_header_image', 'settings/invoices/header.png');
+        Setting::setValue('invoice_footer_image', 'settings/invoices/footer.png');
+
+        $offline = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.quote',
+        ], ['Agent Offline']);
+
+        $commercial = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.create',
+        ], ['Agent']);
+
+        $customRequest = $this->customRequest($commercial, [
+            'assigned_to' => $offline->id,
+            'status' => CustomRequest::STATUS_PROCESSING,
+        ]);
+
+        $quote = $customRequest->quotes()->create([
+            'created_by' => $offline->id,
+            'offline_agent_id' => $offline->id,
+            'currency' => 'MAD',
+        ]);
+
+        $data = app(CustomRequestQuotePdfService::class)->getPdfViewData($quote->load('customRequest', 'items', 'days'));
+
+        $this->assertStringStartsWith('data:image/', $data['invoiceSettings']['header_image_src']);
+        $this->assertStringStartsWith('data:image/', $data['invoiceSettings']['footer_image_src']);
     }
 
     private function userWithPermissions(array $permissions, array $roles): User

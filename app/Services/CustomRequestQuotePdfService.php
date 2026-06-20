@@ -40,13 +40,19 @@ class CustomRequestQuotePdfService
 
     private function invoiceSettings(): array
     {
+        $headerPath = Setting::normalizePublicDiskPath(Setting::getValue('invoice_header_image'));
+        $footerPath = Setting::normalizePublicDiskPath(Setting::getValue('invoice_footer_image'));
+        $brandLogoPath = Setting::resolvedBrandLogoPath();
+
         return [
             'brand_name' => Setting::getValue('brand_name', 'Ajinsafro.ma'),
-            'logo_url' => Setting::brandLogoUrl('dark'),
+            'logo_url' => $this->publicDiskImageSource($brandLogoPath) ?: Setting::brandLogoUrl('dark'),
             'phone' => Setting::getValue('topbar_phone', ''),
             'email' => Setting::getValue('topbar_email', ''),
-            'header_image_url' => Setting::storageUrl(Setting::getValue('invoice_header_image')),
-            'footer_image_url' => Setting::storageUrl(Setting::getValue('invoice_footer_image')),
+            'header_image_url' => Setting::storageUrl($headerPath),
+            'footer_image_url' => Setting::storageUrl($footerPath),
+            'header_image_src' => $this->publicDiskImageSource($headerPath),
+            'footer_image_src' => $this->publicDiskImageSource($footerPath),
             'legal_information' => Setting::getValue('invoice_legal_information', Setting::getValue('company_legal_information', '')),
             'company_address' => Setting::getValue('company_address', ''),
             'company_ice' => Setting::getValue('company_ice', ''),
@@ -54,5 +60,34 @@ class CustomRequestQuotePdfService
             'company_rc' => Setting::getValue('company_rc', ''),
             'default_conditions' => Setting::getValue('invoice_conditions', Setting::getValue('quote_conditions', '')),
         ];
+    }
+
+    private function publicDiskImageSource(?string $path): ?string
+    {
+        $normalized = Setting::normalizePublicDiskPath($path);
+        if (! $normalized || ! Storage::disk('public')->exists($normalized)) {
+            return null;
+        }
+
+        $absolutePath = Storage::disk('public')->path($normalized);
+        $contents = @file_get_contents($absolutePath);
+        if ($contents === false) {
+            return null;
+        }
+
+        $mimeType = @mime_content_type($absolutePath) ?: $this->mimeTypeFromExtension($absolutePath);
+
+        return 'data:'.$mimeType.';base64,'.base64_encode($contents);
+    }
+
+    private function mimeTypeFromExtension(string $path): string
+    {
+        return match (strtolower(pathinfo($path, PATHINFO_EXTENSION))) {
+            'jpg', 'jpeg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'svg' => 'image/svg+xml',
+            'webp' => 'image/webp',
+            default => 'image/png',
+        };
     }
 }
