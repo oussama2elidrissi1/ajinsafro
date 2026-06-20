@@ -231,6 +231,23 @@ class User extends Authenticatable
         return $this->hasRole(\App\Services\BranchScopeService::ROLE_AGENT) || $this->hasRole('Agent');
     }
 
+    public function isAgentOffline(): bool
+    {
+        $baseRole = strtolower(trim((string) ($this->base_role ?? '')));
+        $jobTitle = strtolower(trim((string) ($this->job_title ?? '')));
+        $userType = strtolower(trim((string) ($this->user_type ?? '')));
+
+        return $this->hasRole('Agent Offline')
+            || $baseRole === 'agent offline'
+            || $userType === 'agent_offline'
+            || str_contains($jobTitle, 'offline');
+    }
+
+    public function canQuoteCustomRequests(): bool
+    {
+        return $this->can('custom_requests.quote') && $this->isAgentOffline();
+    }
+
     public function isCommercialReservationsOnly(): bool
     {
         return $this->hasRole(\App\Services\BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY);

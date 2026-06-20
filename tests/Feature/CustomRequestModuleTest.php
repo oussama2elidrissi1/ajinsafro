@@ -129,14 +129,9 @@ class CustomRequestModuleTest extends TestCase
         ]);
 
         $customRequest->refresh();
-        $this->assertNotNull($customRequest->latestQuote);
-        $this->assertTrue((bool) $customRequest->latestQuote->summary_mode);
-        $this->assertSame('0.00', (string) $customRequest->latestQuote->total_sale);
-        $this->assertNotNull($customRequest->latestQuote->pdf_path);
-        Storage::disk('public')->assertExists($customRequest->latestQuote->pdf_path);
-        $this->assertDatabaseHas('custom_request_documents', [
+        $this->assertNull($customRequest->latestQuote);
+        $this->assertDatabaseMissing('custom_request_documents', [
             'custom_request_id' => $customRequest->id,
-            'quote_id' => $customRequest->latestQuote->id,
             'document_type' => 'quote',
             'is_auto_generated' => true,
         ]);
@@ -272,6 +267,32 @@ class CustomRequestModuleTest extends TestCase
         $this->assertContains($available->id, $visibleIds);
         $this->assertContains($assigned->id, $visibleIds);
         $this->assertNotContains($otherDraft->id, $visibleIds);
+    }
+
+    public function test_regular_agent_with_quote_permission_cannot_quote_custom_request(): void
+    {
+        $regularAgent = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.create',
+            'custom_requests.quote',
+        ], ['Agent']);
+
+        $offline = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.quote',
+        ], ['Agent Offline']);
+
+        $customRequest = $this->customRequest($regularAgent, [
+            'status' => CustomRequest::STATUS_NEW,
+        ]);
+
+        $this->assertTrue($regularAgent->can('custom_requests.quote'));
+        $this->assertFalse($regularAgent->canQuoteCustomRequests());
+        $this->assertFalse($customRequest->canBeQuotedBy($regularAgent));
+        $this->assertTrue($offline->canQuoteCustomRequests());
+        $this->assertTrue($customRequest->canBeQuotedBy($offline));
     }
 
     public function test_quote_prepare_calculates_totals_and_generates_client_pdf(): void

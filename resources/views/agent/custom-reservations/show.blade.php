@@ -5,7 +5,8 @@
 @php
     $latestQuote = $customRequest->latestQuote;
     $user = auth()->user();
-    $isOfflineAgent = $user?->can('custom_requests.quote');
+    $isOfflineAgent = $user?->canQuoteCustomRequests() ?? false;
+    $canQuoteRequest = $user ? $customRequest->canBeQuotedBy($user) : false;
     $canRespondToQuote = $latestQuote && in_array($customRequest->status, ['quote_prepared', 'quote_sent', 'waiting_customer', 'modification_requested'], true);
     $serviceLabels = $customRequest->services->pluck('service_label')->filter()->implode(', ');
     $programSummary = trim(implode(' ', array_filter([
@@ -131,13 +132,13 @@
         </div>
         <div class="dac-agent-actions">
             <a href="{{ route('agent.custom-reservations.index') }}" class="aj-agent-action-btn">Retour</a>
-            @if($isOfflineAgent && !$customRequest->assigned_to)
+            @if($canQuoteRequest && !$customRequest->assigned_to)
                 <form method="POST" action="{{ route('agent.custom-reservations.take', $customRequest) }}">
                     @csrf
                     <button type="submit" class="aj-agent-action-btn">Prendre en charge</button>
                 </form>
             @endif
-            @if($isOfflineAgent && ($customRequest->assigned_to === null || (int) $customRequest->assigned_to === (int) $user?->id))
+            @if($canQuoteRequest)
                 <a href="{{ route('agent.custom-reservations.quote', $customRequest) }}" class="aj-agent-primary-btn">
                     <i class="bx bx-calculator"></i>
                     <span>Ouvrir la cotation</span>
@@ -233,7 +234,7 @@
                     @if($latestQuote->pdf_path)
                         <div class="dac-agent-quote-actions">
                             <a href="{{ route('agent.custom-reservations.quote.download', [$customRequest, $latestQuote]) }}" class="aj-agent-action-btn">Télécharger le PDF</a>
-                            @if($isOfflineAgent && ($customRequest->assigned_to === null || (int) $customRequest->assigned_to === (int) $user?->id))
+                            @if($canQuoteRequest)
                                 <a href="{{ route('agent.custom-reservations.quote', $customRequest) }}" class="aj-agent-action-btn">Modifier la cotation</a>
                             @endif
                         </div>

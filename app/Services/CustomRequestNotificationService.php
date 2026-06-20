@@ -19,9 +19,12 @@ class CustomRequestNotificationService
             })
             ->get();
 
-        $users->unique('id')->each(function (User $user) use ($customRequest): void {
-            $this->notifyUser($user, 'custom_request_new', 'Nouvelle demande à la carte', 'Nouvelle demande à la carte à traiter : '.$customRequest->request_number, $this->customRequestLinkFor($user, $customRequest));
-        });
+        $users
+            ->unique('id')
+            ->filter(fn (User $user): bool => $user->canQuoteCustomRequests() || $user->can('custom_requests.view_all'))
+            ->each(function (User $user) use ($customRequest): void {
+                $this->notifyUser($user, 'custom_request_new', 'Nouvelle demande à la carte', 'Nouvelle demande à la carte à traiter : '.$customRequest->request_number, $this->customRequestLinkFor($user, $customRequest));
+            });
     }
 
     public function notifyAssigned(CustomRequest $customRequest): void
@@ -110,6 +113,6 @@ class CustomRequestNotificationService
 
     private function usesAgentPortal(User $user): bool
     {
-        return ! $user->is_admin && $user->hasRole(['Agent', 'Agent Offline']);
+        return ! $user->is_admin && ($user->hasRole('Agent') || $user->isAgentOffline());
     }
 }

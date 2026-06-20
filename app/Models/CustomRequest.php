@@ -130,7 +130,8 @@ class CustomRequest extends Model
 
     public function canBeQuotedBy(User $user): bool
     {
-        return $user->can('custom_requests.quote')
+        return $user->canQuoteCustomRequests()
+            && (int) ($this->created_by ?? 0) !== (int) $user->id
             && (
                 $user->can('custom_requests.view_all')
                 || $this->assigned_to === null
@@ -162,7 +163,7 @@ class CustomRequest extends Model
             });
         }
 
-        if ($user->can('custom_requests.quote')) {
+        if ($user->canQuoteCustomRequests()) {
             return $query->where(function (Builder $builder) use ($user): void {
                 $builder->whereIn('status', [self::STATUS_NEW])
                     ->orWhere('assigned_to', $user->id);
