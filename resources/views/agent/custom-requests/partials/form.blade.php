@@ -137,7 +137,7 @@
                 </div>
                 <div class="aj-agent-dac-field">
                     <label>Durée souhaitée</label>
-                    <input name="desired_duration" value="{{ $field('desired_duration', $customRequest->desired_duration) }}" placeholder="Ex: 7 nuits">
+                    <input name="desired_duration" value="{{ $field('desired_duration', $customRequest->desired_duration) }}" placeholder="Calculée automatiquement" readonly>
                 </div>
                 <div class="aj-agent-dac-field">
                     <label>Nombre total de voyageurs <span>*</span></label>
@@ -145,9 +145,9 @@
                     @error('travelers_count')<small>{{ $message }}</small>@enderror
                 </div>
                 <div class="aj-agent-dac-field">
-                    <label>Adultes <span>*</span></label>
-                    <input type="number" min="1" name="adults_count" value="{{ $field('adults_count', $customRequest->adults_count) }}" required>
-                    @error('adults_count')<small>{{ $message }}</small>@enderror
+                    <label>Adultes</label>
+                    <input type="number" min="1" value="{{ $field('adults_count', $customRequest->adults_count ?? $customRequest->travelers_count) }}" readonly tabindex="-1">
+                    <small>Synchronis&eacute; avec le total des voyageurs</small>
                 </div>
                 <div class="aj-agent-dac-field">
                     <label>Enfants</label>

@@ -1,6 +1,6 @@
-@extends('layouts.master-ajinsafro')
+﻿@extends('layouts.master-ajinsafro')
 
-@section('title', 'Nouvelle demande à la carte')
+@section('title', 'Nouvelle demande Ã  la carte')
 
 @push('styles')
     <link href="{{ URL::asset('css/agent-dashboard.css') }}" rel="stylesheet" type="text/css" />
@@ -573,9 +573,9 @@
     <div class="aj-dac-hero">
         <div class="aj-dac-hero-main">
             <div>
-                <div class="aj-dac-kicker"><i class="bx bx-layout"></i> Agent / Demandes à la carte / Création</div>
-                <h1>Créer une demande à la carte</h1>
-                <p>Renseignez la fiche client, choisissez les services à chiffrer et transmettez une demande complète au service cotation.</p>
+                <div class="aj-dac-kicker"><i class="bx bx-layout"></i> Agent / Demandes Ã  la carte / CrÃ©ation</div>
+                <h1>CrÃ©er une demande Ã  la carte</h1>
+                <p>Renseignez la fiche client, choisissez les services Ã  chiffrer et transmettez une demande complÃ¨te au service cotation.</p>
             </div>
             <div class="aj-dac-hero-actions">
                 <span class="aj-dac-status">Brouillon</span>
@@ -584,23 +584,23 @@
         </div>
         <div class="aj-dac-summary-grid">
             <div class="aj-dac-summary-card"><span>Passagers</span><strong data-dac-summary="pax">1 adulte</strong></div>
-            <div class="aj-dac-summary-card"><span>Services</span><strong data-dac-summary="services">0 sélectionné</strong></div>
-            <div class="aj-dac-summary-card"><span>Destination</span><strong data-dac-summary="destination">À définir</strong></div>
+            <div class="aj-dac-summary-card"><span>Services</span><strong data-dac-summary="services">0 sÃ©lectionnÃ©</strong></div>
+            <div class="aj-dac-summary-card"><span>Destination</span><strong data-dac-summary="destination">Ã€ dÃ©finir</strong></div>
             <div class="aj-dac-summary-card"><span>Statut</span><strong data-dac-summary="status">En cours</strong></div>
         </div>
     </div>
 
     @if($errors->any())
-        <div class="aj-dac-alert">Vérifiez les champs du formulaire. Les champs marqués d'une étoile rouge sont obligatoires; l'email reste facultatif.</div>
+        <div class="aj-dac-alert">VÃ©rifiez les champs du formulaire. Les champs marquÃ©s d'une Ã©toile rouge sont obligatoires; l'email reste facultatif.</div>
     @endif
 
-    <div class="aj-dac-stepper" aria-label="Parcours de création">
+    <div class="aj-dac-stepper" aria-label="Parcours de crÃ©ation">
         <span class="aj-dac-stepper-label">Parcours</span>
-        <button type="button" class="aj-dac-step-pill is-active" data-dac-step-button="1"><span>1</span> Informations générales</button>
+        <button type="button" class="aj-dac-step-pill is-active" data-dac-step-button="1"><span>1</span> Informations gÃ©nÃ©rales</button>
         <div class="aj-dac-step-line"></div>
         <button type="button" class="aj-dac-step-pill" data-dac-step-button="2"><span>2</span> Offre commerciale</button>
         <div class="aj-dac-step-line"></div>
-        <button type="button" class="aj-dac-step-pill" data-dac-step-button="3"><span>3</span> Détails de programme</button>
+        <button type="button" class="aj-dac-step-pill" data-dac-step-button="3"><span>3</span> DÃ©tails de programme</button>
         <div class="aj-dac-step-line"></div>
         <button type="button" class="aj-dac-step-pill" data-dac-step-button="4"><span>4</span> Paiement et suivi</button>
     </div>
@@ -664,24 +664,40 @@
         };
 
         const updateSummary = function () {
-            const adults = parseInt(getInput('adults_count')?.value || '0', 10) || 0;
+            const travelers = parseInt(getInput('travelers_count')?.value || '0', 10) || 0;
             const children = parseInt(getInput('children_count')?.value || '0', 10) || 0;
             const babies = parseInt(getInput('babies_count')?.value || '0', 10) || 0;
-            const travelers = parseInt(getInput('travelers_count')?.value || String(adults + children + babies), 10) || Math.max(1, adults + children + babies);
             const serviceCount = serviceInputs.filter(function (input) { return input.checked; }).length;
             const destination = (getInput('desired_destination')?.value || '').trim();
+            const departureDate = (getInput('desired_departure_date')?.value || '').trim();
+            const returnDate = (getInput('desired_return_date')?.value || '').trim();
+            const durationInput = getInput('desired_duration');
             const statusSelect = getInput('payment_status');
             const paymentLabel = statusSelect?.selectedOptions?.[0]?.textContent || 'En cours';
 
+            let durationText = '';
+            if (departureDate && returnDate) {
+                const start = new Date(departureDate + 'T00:00:00');
+                const end = new Date(returnDate + 'T00:00:00');
+                if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime()) && end >= start) {
+                    const diffDays = Math.max(1, Math.round((end - start) / 86400000));
+                    durationText = diffDays + ' ' + plural(diffDays, 'nuit', 'nuits');
+                }
+            }
+
+            if (durationInput) {
+                durationInput.value = durationText;
+            }
+
             if (summaries.pax) {
                 const details = [];
-                if (adults > 0) details.push(adults + ' ' + plural(adults, 'adulte', 'adultes'));
+                if (travelers > 0) details.push(travelers + ' ' + plural(travelers, 'voyageur', 'voyageurs'));
                 if (children > 0) details.push(children + ' ' + plural(children, 'enfant', 'enfants'));
-                if (babies > 0) details.push(babies + ' ' + plural(babies, 'bébé', 'bébés'));
+                if (babies > 0) details.push(babies + ' ' + plural(babies, 'bÃ©bÃ©', 'bÃ©bÃ©s'));
                 summaries.pax.textContent = details.length ? details.join(', ') : travelers + ' voyageur';
             }
-            if (summaries.services) summaries.services.textContent = serviceCount + ' ' + plural(serviceCount, 'sélectionné', 'sélectionnés');
-            if (summaries.destination) summaries.destination.textContent = destination || 'À définir';
+            if (summaries.services) summaries.services.textContent = serviceCount + ' ' + plural(serviceCount, 'sÃ©lectionnÃ©', 'sÃ©lectionnÃ©s');
+            if (summaries.destination) summaries.destination.textContent = destination || 'Ã€ dÃ©finir';
             if (summaries.status) summaries.status.textContent = paymentLabel;
 
             updateServiceConfigs();
@@ -712,7 +728,7 @@
                 existingClientSelected.dataset.clientCity = client.city || '';
                 existingClientSelected.dataset.clientCountry = client.country || '';
                 existingClientSelected.dataset.clientIdentity = client.identity || '';
-                existingClientSelected.innerHTML = 'Client sélectionné : <strong>' + escapeHtml(client.label || client.full_name || '') + '</strong><button type="button" class="aj-client-search-clear" data-client-search-clear>Changer</button>';
+                existingClientSelected.innerHTML = 'Client sÃ©lectionnÃ© : <strong>' + escapeHtml(client.label || client.full_name || '') + '</strong><button type="button" class="aj-client-search-clear" data-client-search-clear>Changer</button>';
             }
             setClientField('customer_full_name', client.full_name || '');
             setClientField('customer_phone', client.phone || '');
@@ -744,11 +760,11 @@
         const renderClientResults = function (items) {
             if (!existingClientResults) return;
             if (!items.length) {
-                existingClientResults.innerHTML = '<div style="color:#64748b;font-size:12px;font-weight:700;">Aucun client trouvé.</div>';
+                existingClientResults.innerHTML = '<div style="color:#64748b;font-size:12px;font-weight:700;">Aucun client trouvÃ©.</div>';
                 return;
             }
             existingClientResults.innerHTML = items.map(function (client) {
-                const meta = [client.phone, client.email, client.city].filter(Boolean).join(' · ');
+                const meta = [client.phone, client.email, client.city].filter(Boolean).join(' Â· ');
                 return '<button type="button" class="aj-client-search-result" data-client-id="' + (client.id || '') + '" data-client-label="' + (client.label || '') + '" data-client-full-name="' + (client.full_name || '') + '" data-client-phone="' + (client.phone || '') + '" data-client-email="' + (client.email || '') + '" data-client-city="' + (client.city || '') + '" data-client-country="' + (client.country || '') + '" data-client-identity="' + (client.identity || '') + '">'
                     + '<strong>' + escapeHtml(client.label || '') + '</strong>'
                     + '<small>' + escapeHtml(meta) + '</small>'
@@ -818,8 +834,8 @@
             const departureCity = (getInput('departure_city')?.value || '').trim();
             const travelTypeSelect = getInput('travel_type');
             const travelType = travelTypeSelect?.selectedOptions?.[0]?.textContent?.trim() || '';
-            const departureDate = getInput('desired_departure_date')?.value || '';
-            const returnDate = getInput('desired_return_date')?.value || '';
+            const departureDate = (getInput('desired_departure_date')?.value || '').trim();
+            const returnDate = (getInput('desired_return_date')?.value || '').trim();
             const duration = (getInput('desired_duration')?.value || '').trim();
             const rhythmSelect = root.querySelector('[data-program-rhythm]');
             const styleSelect = root.querySelector('[data-program-style]');
@@ -829,19 +845,14 @@
                 const label = input.parentElement?.textContent?.trim() || input.value;
                 return label;
             });
-            const travelers = [
-                parseInt(getInput('adults_count')?.value || '0', 10) || 0,
-                parseInt(getInput('children_count')?.value || '0', 10) || 0,
-                parseInt(getInput('babies_count')?.value || '0', 10) || 0,
-            ];
-            const travelersText = travelers[0] > 0 ? travelers[0] + ' adulte(s)' : '';
-            const childrenText = travelers[1] > 0 ? ', ' + travelers[1] + ' enfant(s)' : '';
-            const babiesText = travelers[2] > 0 ? ', ' + travelers[2] + ' bébé(s)' : '';
-            const serviceText = serviceLabels.length ? serviceLabels.join(', ').toLowerCase() : 'les prestations demandées';
+            const travelers = parseInt(getInput('travelers_count')?.value || '0', 10) || 0;
+            const children = parseInt(getInput('children_count')?.value || '0', 10) || 0;
+            const babies = parseInt(getInput('babies_count')?.value || '0', 10) || 0;
+            const serviceText = serviceLabels.length ? serviceLabels.join(', ').toLowerCase() : 'les prestations demandÃ©es';
             const programType = root.querySelector('[data-program-type]')?.selectedOptions?.[0]?.textContent?.trim() || '';
             const lines = [];
 
-            lines.push('Programme de voyage personnalisé');
+            lines.push('Programme de voyage personnalisÃ©');
             if (programType) {
                 lines.push('Type de programme : ' + programType);
             }
@@ -849,30 +860,34 @@
                 lines.push('Destination : ' + destination);
             }
             if (departureCity) {
-                lines.push('Départ : ' + departureCity);
+                lines.push('DÃ©part : ' + departureCity);
             }
             if (travelType) {
                 lines.push('Type de voyage : ' + travelType);
             }
             if (departureDate || returnDate || duration) {
                 const period = [
-                    departureDate ? 'départ le ' + departureDate : '',
+                    departureDate ? 'dÃ©part le ' + departureDate : '',
                     returnDate ? 'retour le ' + returnDate : '',
-                    duration ? 'durée ' + duration : '',
+                    duration ? 'durÃ©e ' + duration : '',
                 ].filter(Boolean).join(' | ');
                 if (period) lines.push(period);
             }
-            if (travelers[0] || travelers[1] || travelers[2]) {
-                lines.push('Voyageurs : ' + travelersText + childrenText + babiesText);
+            if (travelers || children || babies) {
+                const travelerParts = [];
+                if (travelers) travelerParts.push(travelers + ' voyageur(s)');
+                if (children) travelerParts.push(children + ' enfant(s)');
+                if (babies) travelerParts.push(babies + ' bebe(s)');
+                lines.push('Voyageurs : ' + travelerParts.join(', '));
             }
-            lines.push('Rythme souhaité : ' + rhythm.toLowerCase());
-            lines.push('Style d’expérience : ' + style.toLowerCase());
-            lines.push('Services à intégrer : ' + serviceText + '.');
-            lines.push('Déroulé suggéré :');
-            lines.push('Jour 1 : arrivée, accueil et installation.');
-            lines.push('Jour 2 : découverte principale et prestations sélectionnées.');
-            lines.push('Jour 3 : activité / excursion / temps libre selon le rythme souhaité.');
-            lines.push('Adapter le programme aux contraintes client, au budget et aux disponibilités locales.');
+            lines.push('Rythme souhaitÃ© : ' + rhythm.toLowerCase());
+            lines.push('Style dâ€™expÃ©rience : ' + style.toLowerCase());
+            lines.push('Services Ã  intÃ©grer : ' + serviceText + '.');
+            lines.push('DÃ©roulÃ© suggÃ©rÃ© :');
+            lines.push('Jour 1 : arrivÃ©e, accueil et installation.');
+            lines.push('Jour 2 : dÃ©couverte principale et prestations sÃ©lectionnÃ©es.');
+            lines.push('Jour 3 : activitÃ© / excursion / temps libre selon le rythme souhaitÃ©.');
+            lines.push('Adapter le programme aux contraintes client, au budget et aux disponibilitÃ©s locales.');
 
             return lines.join('\n');
         };

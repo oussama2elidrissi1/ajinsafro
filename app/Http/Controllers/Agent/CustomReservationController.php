@@ -485,7 +485,6 @@ class CustomReservationController extends Controller
             'desired_duration' => ['nullable', 'string', 'max:255'],
             'travel_type' => ['required', Rule::in(array_keys(CustomRequest::travelTypeOptions()))],
             'travelers_count' => ['required', 'integer', 'min:1'],
-            'adults_count' => ['required', 'integer', 'min:1'],
             'children_count' => ['nullable', 'integer', 'min:0'],
             'babies_count' => ['nullable', 'integer', 'min:0'],
             'approximate_budget' => ['nullable', 'numeric', 'min:0'],
@@ -522,6 +521,11 @@ class CustomReservationController extends Controller
         $data['babies_count'] = (int) ($data['babies_count'] ?? 0);
         $data['paid_amount'] = (float) ($data['paid_amount'] ?? 0);
         $data['separate_room_needed'] = $request->boolean('separate_room_needed');
+        $data['adults_count'] = (int) $data['travelers_count'];
+        $data['desired_duration'] = $this->computeDesiredDuration(
+            $data['desired_departure_date'] ?? null,
+            $data['desired_return_date'] ?? null
+        );
 
         if ((int) $data['travelers_count'] < ((int) $data['adults_count'] + $data['children_count'] + $data['babies_count'])) {
             return back()
@@ -531,6 +535,28 @@ class CustomReservationController extends Controller
         }
 
         return Arr::except($data, ['documents']);
+    }
+
+    private function computeDesiredDuration(mixed $departureDate, mixed $returnDate): ?string
+    {
+        if (! $departureDate || ! $returnDate) {
+            return null;
+        }
+
+        try {
+            $start = \Illuminate\Support\Carbon::parse($departureDate);
+            $end = \Illuminate\Support\Carbon::parse($returnDate);
+        } catch (\Throwable) {
+            return null;
+        }
+
+        if ($end->lt($start)) {
+            return null;
+        }
+
+        $days = max(1, $start->diffInDays($end));
+
+        return $days.' '.($days > 1 ? 'nuits' : 'nuit');
     }
 
     private function hydrateExistingClient(User $user, array $data): array

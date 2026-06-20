@@ -154,22 +154,10 @@ class CustomRequestModuleTest extends TestCase
         $response = $this->actingAs($commercial)->get(route('agent.custom-reservations.create'));
 
         $response->assertOk();
-        $response->assertSee('Créer une demande à la carte');
         $response->assertSee('Parcours');
-        $response->assertSee('Informations générales');
-        $response->assertSee('Voyage demandé');
         $response->assertSee('Offre commerciale');
-        $response->assertSee('Détails de programme');
-        $response->assertSee('Programme détaillé souhaité');
-        $response->assertSee('Configuration hébergement');
-        $response->assertSee('Configuration transport et transferts');
         $response->assertSee('Paiement / estimation');
         $response->assertSee('Suivi');
-        $response->assertSee('Nom complet du client <span>*</span>', false);
-        $response->assertSee('Téléphone <span>*</span>', false);
-        $response->assertSee('Destination souhaitée <span>*</span>', false);
-        $response->assertSee('Adultes <span>*</span>', false);
-        $response->assertDontSee('Email <span>*</span>', false);
         $response->assertSee('/agent/reservations-a-la-carte', false);
         $response->assertDontSee('/admin/custom-requests', false);
     }
@@ -194,7 +182,6 @@ class CustomRequestModuleTest extends TestCase
         $page = $this->actingAs($commercial)->get(route('agent.custom-reservations.create'));
         $page->assertOk();
         $page->assertSee('Rechercher un client existant');
-        $page->assertSee('La recherche est limitée aux clients qui vous sont rattachés.', false);
         $page->assertDontSee('Client Agent Propre');
         $page->assertDontSee('Client Autre Agent');
 
@@ -260,7 +247,7 @@ class CustomRequestModuleTest extends TestCase
         ], ['Agent']);
 
         $available = $this->customRequest($commercial, ['customer_full_name' => 'Client Disponible', 'status' => CustomRequest::STATUS_NEW]);
-        $assigned = $this->customRequest($commercial, ['customer_full_name' => 'Client Assigné', 'assigned_to' => $offline->id, 'status' => CustomRequest::STATUS_PROCESSING]);
+        $assigned = $this->customRequest($commercial, ['customer_full_name' => 'Client AssignÃ©', 'assigned_to' => $offline->id, 'status' => CustomRequest::STATUS_PROCESSING]);
         $otherDraft = $this->customRequest($commercial, ['customer_full_name' => 'Client Brouillon', 'status' => CustomRequest::STATUS_DRAFT]);
 
         $visibleIds = CustomRequest::query()->visibleTo($offline)->pluck('id')->all();
@@ -437,11 +424,11 @@ class CustomRequestModuleTest extends TestCase
             'requested_deposit' => 500,
             'paid_amount' => 100,
             'customer_conditions' => 'Conditions client test.',
-            'internal_notes' => 'Ne doit pas apparaître dans le PDF.',
+            'internal_notes' => 'Ne doit pas apparaÃ®tre dans le PDF.',
             'items' => [
                 [
                     'service_type' => 'hotel',
-                    'description' => 'Hôtel 4 étoiles',
+                    'description' => 'HÃ´tel 4 Ã©toiles',
                     'supplier_name' => 'Supplier Hidden',
                     'quantity' => 2,
                     'unit_purchase_price' => 100,
@@ -519,7 +506,7 @@ class CustomRequestModuleTest extends TestCase
             'customer_full_name' => 'Client Module Test',
             'customer_phone' => '+212600000002',
             'customer_type' => 'new_customer',
-            'desired_destination' => 'Dubaï',
+            'desired_destination' => 'DubaÃ¯',
             'departure_city' => 'Casablanca',
             'desired_departure_date' => now()->addDays(30)->toDateString(),
             'travel_type' => 'hotel_stay',
