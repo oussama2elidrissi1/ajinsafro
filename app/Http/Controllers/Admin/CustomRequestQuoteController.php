@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CustomRequest;
 use App\Models\CustomRequestQuote;
 use App\Services\CustomRequestNotificationService;
+use App\Services\CustomRequestQuotationService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,7 +17,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CustomRequestQuoteController extends Controller
 {
-    public function __construct(private readonly CustomRequestNotificationService $notifications) {}
+    public function __construct(
+        private readonly CustomRequestNotificationService $notifications,
+        private readonly CustomRequestQuotationService $quotationService
+    ) {}
 
     public function quote(Request $request, CustomRequest $customRequest): View
     {
@@ -26,7 +30,7 @@ class CustomRequestQuoteController extends Controller
 
         return view('admin.custom-requests.quote', [
             'customRequest' => $customRequest->load(['creator:id,name', 'assignedAgent:id,name', 'services', 'documents', 'comments.user:id,name', 'statusLogs.user:id,name']),
-            'quote' => $quote->load('items', 'generatedDocument'),
+            'quote' => $quote->load('items', 'days.services', 'generatedDocument', 'offlineAgent:id,name'),
             'serviceTypeOptions' => CustomRequestQuote::itemServiceOptions(),
             'quoteStatusOptions' => CustomRequestQuote::statusOptions(),
             'quoteLayout' => $this->isAgentRoute($request) ? 'layouts.master-ajinsafro' : 'layouts.admin-v6',
@@ -40,7 +44,7 @@ class CustomRequestQuoteController extends Controller
         $quote = $this->currentEditableQuote($customRequest, $request);
         $this->saveQuotePayload($request, $quote);
 
-        return redirect()->route($this->quoteRoute($request), $customRequest)->with('success', 'Brouillon cotation enregistré.');
+        return redirect()->route($this->quoteRoute($request), $customRequest)->with('success', 'Brouillon de cotation enregistré.');
     }
 
     public function update(Request $request, CustomRequest $customRequest, CustomRequestQuote $quote): RedirectResponse
@@ -57,11 +61,11 @@ class CustomRequestQuoteController extends Controller
         $this->authorizeQuote($request, $customRequest);
         abort_unless((int) $quote->custom_request_id === (int) $customRequest->id, 404);
 
-        if ($request->has('items')) {
+        if ($request->has('items') || $request->has('days')) {
             $this->saveQuotePayload($request, $quote);
         }
 
-        abort_if($quote->items()->count() === 0, 422, 'Au moins une ligne est nécessaire pour générer le devis.');
+        abort_if($quote->items()->count() === 0, 422, 'Au moins un service est nécessaire pour générer le devis.');
 
         DB::transaction(function () use ($request, $customRequest, $quote): void {
             $quote->calculateTotals();
@@ -88,6 +92,7 @@ class CustomRequestQuoteController extends Controller
                 'remaining_amount' => $quote->remaining_amount,
                 'currency' => $quote->currency,
             ])->save();
+
             $customRequest->changeStatus(CustomRequest::STATUS_QUOTE_PREPARED, $request->user()->id, 'Devis généré automatiquement.');
         });
 
@@ -102,12 +107,12 @@ class CustomRequestQuoteController extends Controller
 
         DB::transaction(function () use ($request, $customRequest, $quote): void {
             $quote->markAsSent();
-            $customRequest->changeStatus(CustomRequest::STATUS_QUOTE_SENT, $request->user()->id, 'Devis envoyé à l’agent commercial.');
+            $customRequest->changeStatus(CustomRequest::STATUS_QUOTE_SENT, $request->user()->id, 'Devis envoyé à l’agent créateur.');
         });
 
         $this->notifications->notifyQuoteSent($customRequest->fresh(['creator']));
 
-        return back()->with('success', 'Devis envoyé à l’agent commercial.');
+        return back()->with('success', 'Devis envoyé à l’agent créateur.');
     }
 
     public function download(Request $request, CustomRequest $customRequest, CustomRequestQuote $quote): StreamedResponse
@@ -121,65 +126,56 @@ class CustomRequestQuoteController extends Controller
 
     private function saveQuotePayload(Request $request, CustomRequestQuote $quote): void
     {
+        $serviceTypes = array_keys(CustomRequestQuote::itemServiceOptions());
+
         $data = $request->validate([
             'supplier_name' => ['nullable', 'string', 'max:255'],
             'valid_until' => ['nullable', 'date'],
+            'response_deadline' => ['nullable', 'date'],
             'currency' => ['required', Rule::in(['MAD', 'EUR', 'USD'])],
             'requested_deposit' => ['nullable', 'numeric', 'min:0'],
             'paid_amount' => ['nullable', 'numeric', 'min:0'],
             'customer_conditions' => ['nullable', 'string'],
             'internal_notes' => ['nullable', 'string'],
+
             'items' => ['nullable', 'array'],
-            'items.*.service_type' => ['required_with:items', Rule::in(array_keys(CustomRequestQuote::itemServiceOptions()))],
+            'items.*.service_type' => ['required_with:items', Rule::in($serviceTypes)],
+            'items.*.title' => ['nullable', 'string', 'max:255'],
             'items.*.description' => ['required_with:items', 'string'],
             'items.*.supplier_name' => ['nullable', 'string', 'max:255'],
             'items.*.quantity' => ['required_with:items', 'integer', 'min:1'],
             'items.*.unit_purchase_price' => ['nullable', 'numeric', 'min:0'],
+            'items.*.margin_type' => ['nullable', Rule::in(['amount', 'percent'])],
+            'items.*.margin_value' => ['nullable', 'numeric', 'min:0'],
             'items.*.unit_margin' => ['nullable', 'numeric', 'min:0'],
-            'items.*.unit_sale_price' => ['required_with:items', 'numeric', 'min:0'],
+            'items.*.unit_sale_price' => ['nullable', 'numeric', 'min:0'],
+            'items.*.is_optional' => ['nullable', 'boolean'],
+            'items.*.data_json' => ['nullable', 'array'],
+
+            'days' => ['nullable', 'array'],
+            'days.*.day_number' => ['required_with:days', 'integer', 'min:1'],
+            'days.*.date' => ['nullable', 'date'],
+            'days.*.title' => ['nullable', 'string', 'max:255'],
+            'days.*.city' => ['nullable', 'string', 'max:255'],
+            'days.*.client_description' => ['nullable', 'string'],
+            'days.*.internal_notes' => ['nullable', 'string'],
+            'days.*.sort_order' => ['nullable', 'integer', 'min:0'],
+            'days.*.services' => ['nullable', 'array'],
+            'days.*.services.*.service_type' => ['required_with:days.*.services', Rule::in($serviceTypes)],
+            'days.*.services.*.title' => ['nullable', 'string', 'max:255'],
+            'days.*.services.*.description' => ['nullable', 'string'],
+            'days.*.services.*.supplier_name' => ['nullable', 'string', 'max:255'],
+            'days.*.services.*.quantity' => ['required_with:days.*.services', 'integer', 'min:1'],
+            'days.*.services.*.unit_purchase_price' => ['nullable', 'numeric', 'min:0'],
+            'days.*.services.*.margin_type' => ['nullable', Rule::in(['amount', 'percent'])],
+            'days.*.services.*.margin_value' => ['nullable', 'numeric', 'min:0'],
+            'days.*.services.*.unit_margin' => ['nullable', 'numeric', 'min:0'],
+            'days.*.services.*.unit_sale_price' => ['nullable', 'numeric', 'min:0'],
+            'days.*.services.*.is_optional' => ['nullable', 'boolean'],
+            'days.*.services.*.data_json' => ['nullable', 'array'],
         ]);
 
-        DB::transaction(function () use ($quote, $data): void {
-            $quote->update([
-                'supplier_name' => $data['supplier_name'] ?? null,
-                'valid_until' => $data['valid_until'] ?? null,
-                'currency' => $data['currency'],
-                'requested_deposit' => $data['requested_deposit'] ?? null,
-                'paid_amount' => $data['paid_amount'] ?? 0,
-                'customer_conditions' => $data['customer_conditions'] ?? null,
-                'internal_notes' => $data['internal_notes'] ?? null,
-            ]);
-
-            if (array_key_exists('items', $data)) {
-                $quote->items()->delete();
-                foreach (array_values($data['items'] ?? []) as $index => $item) {
-                    $quantity = (int) ($item['quantity'] ?? 1);
-                    $purchase = (float) ($item['unit_purchase_price'] ?? 0);
-                    $margin = (float) ($item['unit_margin'] ?? 0);
-                    $sale = (float) ($item['unit_sale_price'] ?? 0);
-
-                    $quote->items()->create([
-                        'service_type' => $item['service_type'],
-                        'description' => $item['description'],
-                        'supplier_name' => $item['supplier_name'] ?? null,
-                        'quantity' => $quantity,
-                        'unit_purchase_price' => $purchase,
-                        'unit_margin' => $margin,
-                        'unit_sale_price' => $sale,
-                        'total_purchase' => $quantity * $purchase,
-                        'total_margin' => $quantity * $margin,
-                        'total_sale' => $quantity * $sale,
-                        'sort_order' => $index,
-                    ]);
-                }
-            }
-
-            $quote->calculateTotals();
-
-            if ((float) $quote->paid_amount > (float) $quote->total_sale) {
-                abort(422, 'Le montant payé ne peut pas dépasser le total vente.');
-            }
-        });
+        $this->quotationService->save($quote, $data, $request->user());
     }
 
     private function currentEditableQuote(CustomRequest $customRequest, Request $request): CustomRequestQuote
@@ -189,6 +185,7 @@ class CustomRequestQuoteController extends Controller
         if (! $latest) {
             return $customRequest->quotes()->create([
                 'created_by' => $request->user()->id,
+                'offline_agent_id' => $customRequest->assigned_to ?: $request->user()->id,
                 'version' => 1,
                 'currency' => $customRequest->currency ?: 'MAD',
                 'requested_deposit' => $customRequest->requested_deposit,
@@ -200,10 +197,12 @@ class CustomRequestQuoteController extends Controller
             && $customRequest->status === CustomRequest::STATUS_MODIFICATION_REQUESTED) {
             return $customRequest->quotes()->create([
                 'created_by' => $request->user()->id,
+                'offline_agent_id' => $customRequest->assigned_to ?: $request->user()->id,
                 'version' => ((int) $latest->version) + 1,
                 'currency' => $latest->currency,
                 'supplier_name' => $latest->supplier_name,
                 'valid_until' => $latest->valid_until,
+                'response_deadline' => $latest->response_deadline,
                 'requested_deposit' => $latest->requested_deposit,
                 'paid_amount' => $latest->paid_amount,
                 'customer_conditions' => $latest->customer_conditions,

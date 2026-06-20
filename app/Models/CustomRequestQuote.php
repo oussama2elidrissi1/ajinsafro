@@ -17,19 +17,41 @@ class CustomRequestQuote extends Model
     public const STATUS_MODIFICATION_REQUESTED = 'modification_requested';
     public const STATUS_ACCEPTED = 'accepted';
     public const STATUS_REFUSED = 'refused';
+    public const STATUS_CONFIRMED = 'confirmed';
 
     protected $fillable = [
-        'custom_request_id', 'quote_number', 'version', 'created_by', 'status', 'currency',
-        'supplier_name', 'valid_until', 'total_purchase', 'total_margin', 'total_sale',
-        'requested_deposit', 'paid_amount', 'remaining_amount', 'customer_conditions',
-        'internal_notes', 'pdf_path', 'summary_mode', 'prepared_at', 'sent_at',
+        'custom_request_id',
+        'quote_number',
+        'version',
+        'created_by',
+        'offline_agent_id',
+        'status',
+        'currency',
+        'supplier_name',
+        'valid_until',
+        'response_deadline',
+        'total_purchase',
+        'total_margin',
+        'total_sale',
+        'requested_deposit',
+        'paid_amount',
+        'remaining_amount',
+        'customer_conditions',
+        'internal_notes',
+        'pdf_path',
+        'summary_mode',
+        'prepared_at',
+        'sent_at',
+        'validated_at',
     ];
 
     protected $casts = [
         'valid_until' => 'date',
+        'response_deadline' => 'date',
         'summary_mode' => 'boolean',
         'prepared_at' => 'datetime',
         'sent_at' => 'datetime',
+        'validated_at' => 'datetime',
         'total_purchase' => 'decimal:2',
         'total_margin' => 'decimal:2',
         'total_sale' => 'decimal:2',
@@ -81,7 +103,9 @@ class CustomRequestQuote extends Model
 
     public function generatePdf(): string
     {
-        $path = app(CustomRequestQuotePdfService::class)->generate($this->fresh(['customRequest', 'items']));
+        $path = app(CustomRequestQuotePdfService::class)->generate(
+            $this->fresh(['customRequest', 'days.services', 'items'])
+        );
         $this->forceFill(['pdf_path' => $path])->save();
 
         return $path;
@@ -101,19 +125,29 @@ class CustomRequestQuote extends Model
     {
         return [
             self::STATUS_DRAFT => 'Brouillon',
-            self::STATUS_PREPARED => 'Préparé',
-            self::STATUS_SENT => 'Envoyé',
-            self::STATUS_MODIFICATION_REQUESTED => 'Modification demandée',
-            self::STATUS_ACCEPTED => 'Accepté',
-            self::STATUS_REFUSED => 'Refusé',
+            self::STATUS_PREPARED => 'Devis généré',
+            self::STATUS_SENT => 'Envoyée à l’agent',
+            self::STATUS_MODIFICATION_REQUESTED => 'À modifier',
+            self::STATUS_ACCEPTED => 'Validée par l’agent',
+            self::STATUS_REFUSED => 'Refusée',
+            self::STATUS_CONFIRMED => 'Confirmée client',
         ];
     }
 
     public static function itemServiceOptions(): array
     {
         return [
-            'hotel' => 'Hôtel', 'flight' => 'Vol', 'transfer' => 'Transfert', 'visa' => 'Visa',
-            'insurance' => 'Assurance', 'activity' => 'Activité', 'transport' => 'Transport', 'other' => 'Autre',
+            'flight' => 'Vol',
+            'hotel' => 'Hôtel',
+            'transfer' => 'Transfert',
+            'activity' => 'Activité',
+            'excursion' => 'Excursion',
+            'guide' => 'Guide',
+            'visa' => 'Visa',
+            'catering' => 'Restauration',
+            'insurance' => 'Assurance',
+            'transport' => 'Transport',
+            'other' => 'Autre service',
         ];
     }
 
@@ -132,9 +166,23 @@ class CustomRequestQuote extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function offlineAgent(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'offline_agent_id');
+    }
+
+    public function days(): HasMany
+    {
+        return $this->hasMany(CustomRequestQuoteDay::class, 'custom_request_quote_id')
+            ->orderBy('sort_order')
+            ->orderBy('day_number');
+    }
+
     public function items(): HasMany
     {
-        return $this->hasMany(CustomRequestQuoteItem::class, 'custom_request_quote_id')->orderBy('sort_order')->orderBy('id');
+        return $this->hasMany(CustomRequestQuoteItem::class, 'custom_request_quote_id')
+            ->orderBy('sort_order')
+            ->orderBy('id');
     }
 
     public function generatedDocument(): HasOne

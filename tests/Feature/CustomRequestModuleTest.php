@@ -460,6 +460,106 @@ class CustomRequestModuleTest extends TestCase
         ]);
     }
 
+    public function test_quote_prepare_accepts_program_days_and_day_services(): void
+    {
+        $offline = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.quote',
+            'custom_requests.documents',
+        ], ['Agent Offline']);
+
+        $commercial = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.create',
+        ], ['Agent']);
+
+        $customRequest = $this->customRequest($commercial, [
+            'assigned_to' => $offline->id,
+            'status' => CustomRequest::STATUS_PROCESSING,
+        ]);
+
+        $quote = $customRequest->quotes()->create([
+            'created_by' => $offline->id,
+            'currency' => 'MAD',
+        ]);
+
+        $request = $this->requestAs($offline, [
+            'supplier_name' => 'Fournisseur Programme',
+            'valid_until' => now()->addDays(12)->toDateString(),
+            'response_deadline' => now()->addDays(5)->toDateString(),
+            'currency' => 'MAD',
+            'requested_deposit' => 300,
+            'paid_amount' => 100,
+            'customer_conditions' => 'Conditions du devis.',
+            'days' => [
+                [
+                    'day_number' => 1,
+                    'date' => now()->addDays(30)->toDateString(),
+                    'title' => 'Arrivée à Paris',
+                    'city' => 'Paris',
+                    'client_description' => 'Arrivée, transfert et installation.',
+                    'services' => [
+                        [
+                            'service_type' => 'flight',
+                            'title' => 'Vol Casablanca Paris',
+                            'description' => 'Vol direct avec bagage inclus.',
+                            'supplier_name' => 'Royal Air Maroc',
+                            'quantity' => 2,
+                            'unit_purchase_price' => 100,
+                            'margin_type' => 'percent',
+                            'margin_value' => 20,
+                            'data_json' => [
+                                'airline' => 'Royal Air Maroc',
+                                'flight_number' => 'AT760',
+                                'from' => 'Casablanca',
+                                'to' => 'Paris',
+                            ],
+                        ],
+                        [
+                            'service_type' => 'hotel',
+                            'title' => 'Hôtel Exemple',
+                            'description' => 'Chambre double avec petit déjeuner.',
+                            'supplier_name' => 'Hotel Supplier',
+                            'quantity' => 1,
+                            'unit_purchase_price' => 500,
+                            'margin_type' => 'amount',
+                            'margin_value' => 100,
+                            'data_json' => [
+                                'hotel_name' => 'Hôtel Exemple',
+                                'nights' => '3',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $response = app(CustomRequestQuoteController::class)->prepare($request, $customRequest, $quote);
+
+        $this->assertRedirectsTo($response, route('admin.custom-requests.quote', $customRequest));
+
+        $quote->refresh();
+
+        $this->assertSame('840.00', $quote->total_sale);
+        $this->assertSame('700.00', $quote->total_purchase);
+        $this->assertSame('140.00', $quote->total_margin);
+        $this->assertSame('740.00', $quote->remaining_amount);
+        $this->assertDatabaseHas('custom_request_quote_days', [
+            'custom_request_quote_id' => $quote->id,
+            'day_number' => 1,
+            'title' => 'Arrivée à Paris',
+        ]);
+        $this->assertDatabaseHas('custom_request_quote_items', [
+            'custom_request_quote_id' => $quote->id,
+            'service_type' => 'flight',
+            'title' => 'Vol Casablanca Paris',
+            'margin_type' => 'percent',
+        ]);
+        Storage::disk('public')->assertExists($quote->pdf_path);
+    }
+
     private function userWithPermissions(array $permissions, array $roles): User
     {
         foreach ($permissions as $permission) {
