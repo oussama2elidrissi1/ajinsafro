@@ -587,6 +587,16 @@ get_header();
                                         $included_parts[] = count($meals) . ' Repas';
                                     }
                                     $included_label = !empty($included_parts) ? ('Inclus : ' . implode(' - ', $included_parts)) : 'Inclus : Détails du programme';
+                                    $day_description = trim((string) ($day['description'] ?? ''));
+                                    $day_notes_raw = trim((string) ($day['notes'] ?? ''));
+                                    $day_notes_html = $day_notes_raw !== ''
+                                        ? trim((string) wp_specialchars_decode($day_notes_raw, ENT_QUOTES))
+                                        : '';
+                                    $day_rich_html = $day_notes_html !== ''
+                                        ? $day_notes_html
+                                        : ($day_description !== '' ? nl2br(esc_html($translate_ui($day_description))) : '');
+                                    $day_notes_text = trim(wp_strip_all_tags($day_notes_html));
+                                    $day_description_text = trim(wp_strip_all_tags($day_description));
                                     ?>
 
                                     <article class="ajtb-v1-day-card" id="ajtb-v1-day-<?php echo esc_attr((string) $day_num); ?>" data-program-day-card>
@@ -599,8 +609,10 @@ get_header();
                                                 </div>
                                             </header>
                                             <div class="ajtb-v1-day-content">
-                                                <p class="ajtb-v1-day-desc" data-ajtb-expandable-text><?php echo esc_html($translate_ui((string) ($day['description'] ?? ''))); ?></p>
-                                                <button type="button" class="ajtb-v1-expand-toggle" data-ajtb-expand-toggle hidden>Voir plus</button>
+                                                <?php if ($day_rich_html !== ''): ?>
+                                                    <div class="ajtb-v1-day-desc" data-ajtb-expandable-text><?php echo wp_kses_post($day_rich_html); ?></div>
+                                                    <button type="button" class="ajtb-v1-expand-toggle" data-ajtb-expand-toggle hidden>Voir plus</button>
+                                                <?php endif; ?>
 
                                                 <?php
                                                 $flight_cards = array_merge($flights_out, $flights_in);
@@ -827,8 +839,8 @@ get_header();
                                                     <p class="ajtb-v1-meal program-item" data-program-type="meal">Repas - <?php echo esc_html((string) $meal); ?></p>
                                                 <?php endforeach; ?>
 
-                                                <?php if (!empty($day['notes']) && trim((string) $day['notes']) !== trim((string) ($day['description'] ?? ''))): ?>
-                                                    <p class="ajtb-v1-note"><?php echo esc_html($translate_ui((string) $day['notes'])); ?></p>
+                                                <?php if ($day_notes_html !== '' && $day_notes_text !== '' && $day_notes_text !== $day_description_text && $day_notes_html !== $day_rich_html): ?>
+                                                    <div class="ajtb-v1-note"><?php echo wp_kses_post($day_notes_html); ?></div>
                                                 <?php endif; ?>
                                             </div>
                                         </div>
@@ -1029,4 +1041,3 @@ get_header();
 </div>
 
 <?php get_footer(); ?>
-
