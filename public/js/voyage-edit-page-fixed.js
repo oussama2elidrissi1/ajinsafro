@@ -2984,7 +2984,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     '<div class="field-resume ve-rich-field"><label class="form-label">R?sum??</label>' +
                     '<textarea class="form-control programme-plain-editor" name="programme_days[' + index + '][description]" rows="3" placeholder="R?sum?? du jour"></textarea></div>' +
                     '<div class="field-description programme-day-detail ve-rich-field"><label class="form-label">Description d?taill?e</label>' +
-                    '<textarea class="form-control programme-plain-editor" name="programme_days[' + index + '][content_html]" rows="5" placeholder="Programme d?taill? du jour"></textarea></div>' +
+                    '<textarea class="form-control rich-editor programme-detail-editor" name="programme_days[' + index + '][content_html]" rows="8" placeholder="Programme détaillé du jour"></textarea></div>' +
                     '<div class="field-notes programme-day-notes ve-rich-field"><label class="form-label">Notes</label>' +
                     '<textarea class="form-control programme-plain-editor" name="programme_days[' + index + '][notes]" rows="4" placeholder="Notes du jour"></textarea></div>' +
                     '</div>' +

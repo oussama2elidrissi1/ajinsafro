@@ -57,7 +57,7 @@
                 </div>
                 <div class="field-description programme-day-detail ve-rich-field">
                     <label class="form-label">Description détaillée</label>
-                    <textarea class="form-control programme-plain-editor" name="programme_days[{{ $dayIndex }}][content_html]" rows="5" placeholder="Programme détaillé du jour">{{ old('programme_days.'.$dayIndex.'.content_html', $day->content_html ?? '') }}</textarea>
+                    <textarea class="form-control rich-editor programme-detail-editor" name="programme_days[{{ $dayIndex }}][content_html]" rows="8" placeholder="Programme détaillé du jour">{{ old('programme_days.'.$dayIndex.'.content_html', $day->content_html ?? '') }}</textarea>
                 </div>
                 <div class="field-notes programme-day-notes ve-rich-field">
                     <label class="form-label">Notes</label>
@@ -116,4 +116,3 @@
         </div>
     </div>
 </div>
-

@@ -3063,7 +3063,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     '<div class="field-resume ve-rich-field"><label class="form-label">Résumé</label>' +
                     '<textarea class="form-control programme-plain-editor" name="programme_days[' + index + '][description]" rows="3" placeholder="Résumé du jour"></textarea></div>' +
                     '<div class="field-description programme-day-detail ve-rich-field"><label class="form-label">Description détaillée</label>' +
-                    '<textarea class="form-control programme-plain-editor" name="programme_days[' + index + '][content_html]" rows="5" placeholder="Programme détaillé du jour"></textarea></div>' +
+                    '<textarea class="form-control rich-editor programme-detail-editor" name="programme_days[' + index + '][content_html]" rows="8" placeholder="Programme détaillé du jour"></textarea></div>' +
                     '<div class="field-notes programme-day-notes ve-rich-field"><label class="form-label">Notes</label>' +
                     '<textarea class="form-control programme-plain-editor" name="programme_days[' + index + '][notes]" rows="4" placeholder="Notes du jour"></textarea></div>' +
                     '</div>' +
