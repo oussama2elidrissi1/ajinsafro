@@ -45,7 +45,7 @@
     <div class="dac-toolbar">
         <div>
             <h2>Demandes à la carte</h2>
-            <div class="dac-muted">Workflow commercial, cotation offline et devis PDF automatique.</div>
+            <div class="dac-muted">Workflow commercial, quotation offline et devis PDF automatique.</div>
         </div>
         @can('custom_requests.create')
             <a href="{{ route('admin.custom-requests.create') }}" class="dac-btn dac-btn-primary"><i class="bx bx-plus"></i> Nouvelle demande</a>
@@ -99,7 +99,7 @@
                             <div class="d-flex gap-1 justify-content-end">
                                 <a href="{{ route('admin.custom-requests.show', $row) }}" class="dac-btn dac-btn-soft">Voir</a>
                                 @if($row->canBeQuotedBy(auth()->user()))
-                                    <a href="{{ route('admin.custom-requests.quote', $row) }}" class="dac-btn dac-btn-primary">Cotation</a>
+                                    <a href="{{ route('admin.custom-requests.quote', $row) }}" class="dac-btn dac-btn-primary">Quotation</a>
                                 @endif
                             </div>
                         </td>

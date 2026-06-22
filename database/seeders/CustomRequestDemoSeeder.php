@@ -54,7 +54,7 @@ class CustomRequestDemoSeeder extends Seeder
                 'is_active' => true,
                 'access_mode' => 'role',
                 'base_role' => 'Agent Offline',
-                'job_title' => 'Agent offline / cotation',
+                'job_title' => 'Agent offline / quotation',
             ]
         );
         $offline->syncRoles([$offlineRole]);

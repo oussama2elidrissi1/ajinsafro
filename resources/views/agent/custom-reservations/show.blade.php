@@ -202,7 +202,7 @@
             @if($canQuoteRequest)
                 <a href="{{ route('agent.custom-reservations.quote', $customRequest) }}" class="aj-agent-primary-btn">
                     <i class="bx bx-calculator"></i>
-                    <span>Ouvrir la cotation</span>
+                    <span>Ouvrir la quotation</span>
                 </a>
             @elseif($latestQuote && $latestQuote->pdf_path)
                 <a href="{{ route('agent.custom-reservations.quote.download', [$customRequest, $latestQuote]) }}" class="aj-agent-primary-btn">
@@ -403,7 +403,7 @@
                                 <a href="{{ route('agent.custom-reservations.quote.price.download', [$customRequest, $latestQuote]) }}" class="aj-agent-action-btn">Télécharger la fiche prix</a>
                             @endif
                             @if($canQuoteRequest)
-                                <a href="{{ route('agent.custom-reservations.quote', $customRequest) }}" class="aj-agent-action-btn">Modifier la cotation</a>
+                                <a href="{{ route('agent.custom-reservations.quote', $customRequest) }}" class="aj-agent-action-btn">Modifier la quotation</a>
                             @endif
                         </div>
                     @endif

@@ -46,7 +46,7 @@ class CustomRequestQuoteController extends Controller
         $this->saveQuotePayload($request, $quote);
         $this->quotationService->ensureProgramDays($quote);
 
-        return redirect()->route($this->quoteRoute($request), $customRequest)->with('success', 'Brouillon de cotation enregistré.');
+        return redirect()->route($this->quoteRoute($request), $customRequest)->with('success', 'Brouillon de quotation enregistré.');
     }
 
     public function update(Request $request, CustomRequest $customRequest, CustomRequestQuote $quote): RedirectResponse
@@ -55,7 +55,7 @@ class CustomRequestQuoteController extends Controller
         abort_unless((int) $quote->custom_request_id === (int) $customRequest->id, 404);
         $this->saveQuotePayload($request, $quote);
 
-        return redirect()->route($this->quoteRoute($request), $customRequest)->with('success', 'Cotation mise à jour.');
+        return redirect()->route($this->quoteRoute($request), $customRequest)->with('success', 'Quotation mise à jour.');
     }
 
     public function prepare(Request $request, CustomRequest $customRequest, CustomRequestQuote $quote): RedirectResponse

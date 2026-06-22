@@ -1157,7 +1157,7 @@
         <div class="aj-agent-hero-copy">
             <p class="aj-agent-hero-kicker">Agent / demandes personnalisées</p>
             <h1>Réservations à la carte</h1>
-            <p>Suivez les demandes clients, préparez les cotations et envoyez les devis depuis le même espace.</p>
+            <p>Suivez les demandes clients, préparez les quotations et envoyez les devis depuis le même espace.</p>
         </div>
         @if($canCreateRequest ?? false)
             <div class="aj-agent-hero-actions">
@@ -1238,7 +1238,7 @@
             </div>
             <div class="aj-agent-account-line">
                 <span>Droits</span>
-                <strong>{{ ! empty($account['can_quote']) ? 'Cotation autorisée' : 'Consultation / création' }}</strong>
+                <strong>{{ ! empty($account['can_quote']) ? 'Quotation autorisée' : 'Consultation / création' }}</strong>
             </div>
             <div class="aj-agent-request-footer-actions is-left">
                 <a href="{{ route('agent.profile') }}" class="aj-agent-action-btn"><i class="bx bx-user"></i> Profil</a>

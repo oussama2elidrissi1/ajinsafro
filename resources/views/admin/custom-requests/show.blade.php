@@ -52,7 +52,7 @@
                 <a href="{{ route('admin.custom-requests.edit', $customRequest) }}" class="dac-btn dac-btn-soft"><i class="bx bx-edit"></i> Modifier</a>
             @endif
             @if($customRequest->canBeQuotedBy(auth()->user()))
-                <a href="{{ route('admin.custom-requests.quote', $customRequest) }}" class="dac-btn dac-btn-primary"><i class="bx bx-calculator"></i> Cotation</a>
+                <a href="{{ route('admin.custom-requests.quote', $customRequest) }}" class="dac-btn dac-btn-primary"><i class="bx bx-calculator"></i> Quotation</a>
             @endif
         </div>
     </div>

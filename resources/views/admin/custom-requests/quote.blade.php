@@ -112,8 +112,8 @@
 
 @extends($quoteLayout ?? 'layouts.admin-v6')
 
-@section('title', 'Cotation '.$customRequest->request_number)
-@section('page_title', 'Cotation demande à la carte')
+@section('title', 'Quotation '.$customRequest->request_number)
+@section('page_title', 'Quotation demande à la carte')
 
 @push('styles')
 @if(($quoteLayout ?? '') === 'layouts.master-ajinsafro')
@@ -177,7 +177,7 @@
 <div class="quote-page">
     <div class="quote-head">
         <div>
-            <h2>Cotation demande à la carte</h2>
+            <h2>Quotation demande à la carte</h2>
             <div class="text-muted">{{ $customRequest->request_number }} - {{ $customRequest->customer_full_name }}</div>
             <div class="quote-meta">
                 <span class="badge bg-primary">{{ $customRequest->statusLabel() }}</span>
@@ -200,11 +200,11 @@
         @csrf
         <div class="quote-stack">
             <section class="quote-card">
-                <h3>Informations de cotation</h3>
+                <h3>Informations de quotation</h3>
                 <div class="quote-grid">
                     <div class="quote-field"><label>Agent responsable</label><input value="{{ $quote->offlineAgent?->name ?: $customRequest->assignedAgent?->name ?: auth()->user()->name }}" readonly></div>
                     <div class="quote-field"><label>Fournisseur principal</label><input name="supplier_name" value="{{ old('supplier_name', $quote->supplier_name) }}"></div>
-                    <div class="quote-field"><label>Statut de la cotation</label><input value="{{ $quote->statusLabel() }}" readonly></div>
+                    <div class="quote-field"><label>Statut de la quotation</label><input value="{{ $quote->statusLabel() }}" readonly></div>
                     <div class="quote-field"><label>Devise</label><select name="currency">@foreach(['MAD','EUR','USD'] as $currency)<option value="{{ $currency }}" @selected(old('currency', $quote->currency) === $currency)>{{ $currency }}</option>@endforeach</select></div>
                     <div class="quote-field"><label>Validité du devis</label><input type="date" name="valid_until" value="{{ old('valid_until', optional($quote->valid_until)->toDateString()) }}"></div>
                     <div class="quote-field"><label>Date limite de réponse</label><input type="date" name="response_deadline" value="{{ old('response_deadline', optional($quote->response_deadline)->toDateString()) }}"></div>

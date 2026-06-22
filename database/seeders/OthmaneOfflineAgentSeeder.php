@@ -64,7 +64,7 @@ class OthmaneOfflineAgentSeeder extends Seeder
         $user->is_active = true;
         $user->access_mode = 'role';
         $user->base_role = self::ROLE_NAME;
-        $user->job_title = 'Agent offline / cotation';
+        $user->job_title = 'Agent offline / quotation';
         $user->save();
 
         $user->syncRoles([$role]);

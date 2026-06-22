@@ -47,7 +47,7 @@
             <div><strong>Dates :</strong> {{ $customRequest->desired_departure_date?->format('d/m/Y') ?: '-' }} - {{ $customRequest->desired_return_date?->format('d/m/Y') ?: '-' }}</div>
         </div>
         <div class="col">
-            <h2>Cotation</h2>
+            <h2>Quotation</h2>
             <div><strong>Agent offline :</strong> {{ $quote->offlineAgent?->name ?: '-' }}</div>
             <div><strong>Fournisseur principal :</strong> {{ $quote->supplier_name ?: '-' }}</div>
             <div><strong>Devise :</strong> {{ $quote->currency }}</div>

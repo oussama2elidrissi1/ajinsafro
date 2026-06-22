@@ -575,7 +575,7 @@
             <div>
                 <div class="aj-dac-kicker"><i class="bx bx-layout"></i> Agent / Demandes Ã  la carte / CrÃ©ation</div>
                 <h1>CrÃ©er une demande Ã  la carte</h1>
-                <p>Renseignez la fiche client, choisissez les services Ã  chiffrer et transmettez une demande complÃ¨te au service cotation.</p>
+                <p>Renseignez la fiche client, choisissez les services Ã  chiffrer et transmettez une demande complÃ¨te au service quotation.</p>
             </div>
             <div class="aj-dac-hero-actions">
                 <span class="aj-dac-status">Brouillon</span>

@@ -135,7 +135,7 @@
                 <div>
                     <span class="aj-agent-manager-kicker">Demandes personnalisees</span>
                     <h2>Reservations a la carte</h2>
-                    <p>Dossiers transmis par les agents et suivis par le service cotation.</p>
+                    <p>Dossiers transmis par les agents et suivis par le service quotation.</p>
                 </div>
                 <div class="aj-agent-custom-metrics">
                     <div><strong>{{ number_format((int) ($customRequestStats['total'] ?? 0), 0, ',', ' ') }}</strong><span>Total</span></div>
