@@ -3694,15 +3694,17 @@ class VoyageController extends Controller
             }
             $dayNumber = $i + 1;
             $submittedDayNumbers[] = $dayNumber;
-            $dayTitle = isset($dayRow['day_title']) ? trim((string) $dayRow['day_title']) : null;
-            $plainDescription = isset($dayRow['description']) ? trim((string) $dayRow['description']) : null;
-            $notes = isset($dayRow['notes']) ? trim((string) $dayRow['notes']) : null;
+            $dayTitle = isset($dayRow['day_title']) ? trim((string) $dayRow['day_title']) : '';
+            $plainDescription = isset($dayRow['description']) ? trim((string) $dayRow['description']) : '';
+            $notes = isset($dayRow['notes']) ? trim((string) $dayRow['notes']) : '';
+            $contentHtml = isset($dayRow['content_html']) ? trim((string) $dayRow['content_html']) : '';
+            $wpProgramNotes = $contentHtml !== '' ? $contentHtml : $notes;
             $this->programService->updateDay($dayId, [
                 'mode' => $dayRow['mode'] ?? 'program',
                 'day_title' => $dayTitle !== '' ? $dayTitle : null,
-                'notes' => $notes !== '' ? $notes : null,
+                'notes' => $wpProgramNotes !== '' ? $wpProgramNotes : null,
                 'title' => $dayTitle !== '' ? $dayTitle : ($dayRow['title'] ?? null),
-                'description' => $plainDescription !== '' ? $plainDescription : null,
+                'description' => $plainDescription !== '' ? $plainDescription : ($contentHtml !== '' ? trim(strip_tags($contentHtml)) : null),
             ]);
 
             $this->syncTravelProgramDayContent($tourId, $dayNumber, is_array($dayRow) ? $dayRow : []);
@@ -3768,6 +3770,36 @@ class VoyageController extends Controller
             }
             $this->programService->removeDayActivity($da->id);
         }
+
+        $this->syncLegacyWpToursProgramMeta($tourId);
+    }
+
+    protected function syncLegacyWpToursProgramMeta(int $tourId): void
+    {
+        $voyage = Voyage::query()
+            ->where('wp_post_id', $tourId)
+            ->with(['programDays' => fn ($query) => $query->orderBy('day_number'), 'programDays.dayItems'])
+            ->first();
+
+        if (!$voyage || $voyage->programDays->isEmpty()) {
+            return;
+        }
+
+        $items = $voyage->programDays->map(function (TravelProgramDay $day): array {
+            $contentHtml = trim((string) ($day->content_html ?? ''));
+            $plainDescription = trim((string) ($day->description ?? ''));
+
+            return [
+                'title' => $day->title ?: ('Jour ' . $day->day_number),
+                'content' => $contentHtml !== '' ? $contentHtml : $plainDescription,
+                'desc' => $contentHtml !== '' ? $contentHtml : $plainDescription,
+                'description' => $plainDescription,
+            ];
+        })->values()->all();
+
+        WpPost::tours()
+            ->findOrFail($tourId)
+            ->setMeta('tours_program', serialize($items));
     }
 
     /**

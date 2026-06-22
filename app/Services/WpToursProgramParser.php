@@ -142,9 +142,13 @@ class WpToursProgramParser
         $programArray = [];
 
         foreach ($programDays as $day) {
+            $contentHtml = trim((string) ($day->content_html ?? ''));
+            $plainDescription = trim((string) ($day->description ?? ''));
+
             $dayData = [
                 'title' => $day->title ?: "Jour {$day->day_number}",
-                'content' => $day->description ?? '',
+                'content' => $contentHtml !== '' ? $contentHtml : $plainDescription,
+                'description' => $plainDescription,
             ];
 
             // Add items if any
