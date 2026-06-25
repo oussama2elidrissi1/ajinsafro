@@ -17,6 +17,14 @@
         };
     };
     $serviceLabels = $serviceOptions ?? [];
+    $currentUser = auth()->user();
+    $canTakeRequests = $currentUser
+        && (
+            $currentUser->canQuoteCustomRequests()
+            || $currentUser->can('custom_requests.view_all')
+            || $currentUser->can('reservations.update')
+            || $currentUser->isManager()
+        );
 @endphp
 
 @push('styles')
@@ -119,6 +127,14 @@
                             <td>
                                 <div class="crq-actions">
                                     <a href="{{ route('admin.reservations.custom-requests.show', $requestRow) }}" class="crq-btn crq-btn-soft">Voir</a>
+                                    @if($canTakeRequests && (int) ($requestRow->assigned_to ?? 0) !== (int) ($currentUser?->id ?? 0))
+                                        <form method="POST" action="{{ route('admin.reservations.custom-requests.take', $requestRow) }}">
+                                            @csrf
+                                            <button class="crq-btn crq-btn-primary" type="submit">{{ $requestRow->assigned_to ? 'Reprendre' : 'Prendre en charge' }}</button>
+                                        </form>
+                                    @elseif((int) ($requestRow->assigned_to ?? 0) === (int) ($currentUser?->id ?? 0))
+                                        <span class="crq-badge crq-badge-blue">Pris en charge</span>
+                                    @endif
                                     <a href="{{ route('admin.reservations.custom-requests.edit', $requestRow) }}" class="crq-btn crq-btn-soft">Modifier</a>
                                     <form method="POST" action="{{ route('admin.reservations.custom-requests.status', $requestRow) }}" class="crq-status-form">
                                         @csrf @method('PATCH')

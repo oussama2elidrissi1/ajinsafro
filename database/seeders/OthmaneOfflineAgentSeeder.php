@@ -22,6 +22,7 @@ class OthmaneOfflineAgentSeeder extends Seeder
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         $permissions = [
+            'reservations.view',
             'custom_requests.view',
             'custom_requests.view_all',
             'custom_requests.create',

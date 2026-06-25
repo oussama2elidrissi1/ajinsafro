@@ -201,6 +201,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('reservations/custom-requests/{customRequest}', [CustomReservationRequestController::class, 'show'])->name('reservations.custom-requests.show')->whereNumber('customRequest');
         Route::get('reservations/custom-requests/{customRequest}/edit', [CustomReservationRequestController::class, 'edit'])->name('reservations.custom-requests.edit')->whereNumber('customRequest');
         Route::put('reservations/custom-requests/{customRequest}', [CustomReservationRequestController::class, 'update'])->name('reservations.custom-requests.update')->whereNumber('customRequest');
+        Route::post('reservations/custom-requests/{customRequest}/take', [CustomReservationRequestController::class, 'take'])->name('reservations.custom-requests.take')->whereNumber('customRequest');
         Route::patch('reservations/custom-requests/{customRequest}/status', [CustomReservationRequestController::class, 'updateStatus'])->name('reservations.custom-requests.status')->whereNumber('customRequest');
         Route::post('reservations/custom-requests/{customRequest}/convert-to-reservation', [CustomReservationRequestController::class, 'convertToReservation'])->name('reservations.custom-requests.convert-to-reservation')->whereNumber('customRequest');
 

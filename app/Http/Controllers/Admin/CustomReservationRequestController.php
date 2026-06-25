@@ -166,6 +166,26 @@ class CustomReservationRequestController extends Controller
         return back()->with('success', 'Statut mis a jour.');
     }
 
+    public function take(Request $request, CustomReservationRequest $customRequest): RedirectResponse
+    {
+        $this->authorizeVisible($request, $customRequest);
+        abort_unless($this->canTakeRequest($request->user()), 403);
+
+        $status = in_array($customRequest->status, [
+            CustomReservationRequest::STATUS_DRAFT,
+            CustomReservationRequest::STATUS_NEW,
+        ], true)
+            ? CustomReservationRequest::STATUS_IN_REVIEW
+            : $customRequest->status;
+
+        $customRequest->forceFill([
+            'assigned_to' => $request->user()->id,
+            'status' => $status,
+        ])->save();
+
+        return back()->with('success', 'Demande prise en charge par '.$request->user()->name.'.');
+    }
+
     public function convertToReservation(Request $request, CustomReservationRequest $customRequest): RedirectResponse
     {
         $this->authorizeVisible($request, $customRequest);
@@ -274,5 +294,16 @@ class CustomReservationRequestController extends Controller
     {
         abort_unless($request->user()?->can('reservations.view'), 403);
         abort_unless(CustomReservationRequest::query()->visibleTo($request->user())->whereKey($customRequest->getKey())->exists(), 403);
+    }
+
+    private function canTakeRequest(?User $user): bool
+    {
+        return $user !== null
+            && (
+                $user->canQuoteCustomRequests()
+                || $user->can('custom_requests.view_all')
+                || $user->can('reservations.update')
+                || $user->isManager()
+            );
     }
 }

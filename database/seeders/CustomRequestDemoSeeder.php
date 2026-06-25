@@ -20,6 +20,7 @@ class CustomRequestDemoSeeder extends Seeder
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         $offlinePermissions = [
+            'reservations.view',
             'custom_requests.view',
             'custom_requests.view_all',
             'custom_requests.quote',

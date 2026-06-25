@@ -175,7 +175,14 @@ class CustomReservationRequest extends Model
 
     public function scopeVisibleTo(Builder $query, User $user): Builder
     {
-        if ($user->isSuperAdmin() || $user->isSiegeAdmin() || $user->isBranchAdmin() || $user->isManager() || $user->isChefCommercial()) {
+        if ($user->isSuperAdmin()
+            || $user->isSiegeAdmin()
+            || $user->isBranchAdmin()
+            || $user->isManager()
+            || $user->isChefCommercial()
+            || $user->canQuoteCustomRequests()
+            || $user->can('custom_requests.view_all')
+        ) {
             return $query;
         }
 

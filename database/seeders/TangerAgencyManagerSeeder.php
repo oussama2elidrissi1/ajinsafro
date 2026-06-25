@@ -23,6 +23,7 @@ class TangerAgencyManagerSeeder extends Seeder
 
         $managerPermissions = ['custom_requests.view', 'custom_requests.create'];
         $offlinePermissions = [
+            'reservations.view',
             'custom_requests.view',
             'custom_requests.view_all',
             'custom_requests.create',

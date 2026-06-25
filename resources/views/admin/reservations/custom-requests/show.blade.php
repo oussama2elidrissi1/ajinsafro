@@ -8,6 +8,14 @@
     $statusClass = match ($customRequest->status) {
         'new' => 'info', 'in_review' => 'primary', 'quoted' => 'warning', 'accepted', 'converted' => 'success', 'cancelled' => 'danger', default => 'secondary',
     };
+    $currentUser = auth()->user();
+    $canTakeRequests = $currentUser
+        && (
+            $currentUser->canQuoteCustomRequests()
+            || $currentUser->can('custom_requests.view_all')
+            || $currentUser->can('reservations.update')
+            || $currentUser->isManager()
+        );
 @endphp
 
 @push('styles')
@@ -50,6 +58,14 @@
         </div>
         <div class="crq-actions">
             <a href="{{ route('admin.reservations.custom-requests.index') }}" class="crq-btn crq-btn-soft"><i class="bx bx-arrow-back"></i> Retour</a>
+            @if($canTakeRequests && (int) ($customRequest->assigned_to ?? 0) !== (int) ($currentUser?->id ?? 0))
+                <form method="POST" action="{{ route('admin.reservations.custom-requests.take', $customRequest) }}">
+                    @csrf
+                    <button class="crq-btn crq-btn-primary" type="submit"><i class="bx bx-user-check"></i> {{ $customRequest->assigned_to ? 'Reprendre' : 'Prendre en charge' }}</button>
+                </form>
+            @elseif((int) ($customRequest->assigned_to ?? 0) === (int) ($currentUser?->id ?? 0))
+                <span class="crq-btn crq-btn-soft"><i class="bx bx-check-circle"></i> Pris en charge</span>
+            @endif
             <a href="{{ route('admin.reservations.custom-requests.edit', $customRequest) }}" class="crq-btn crq-btn-soft"><i class="bx bx-edit"></i> Modifier</a>
             <form method="POST" action="{{ route('admin.reservations.custom-requests.convert-to-reservation', $customRequest) }}">@csrf<button class="crq-btn crq-btn-primary" type="submit"><i class="bx bx-transfer"></i> Convertir en réservation</button></form>
         </div>
