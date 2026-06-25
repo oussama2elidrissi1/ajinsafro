@@ -2,7 +2,9 @@
     $user = auth()->user();
     $currentRoute = \Illuminate\Support\Facades\Route::currentRouteName();
     $branchLabel = $user?->branch?->name;
-    $roleLabel = $user?->isManager() ? 'Manager' : 'Agent';
+    $roleLabel = $user?->canQuoteCustomRequests()
+        ? 'Agent Offline'
+        : ($user?->isManager() ? 'Manager' : 'Agent');
 
     $navItems = collect([
         ['label' => 'Tableau de bord', 'icon' => 'bx bx-home-circle', 'route' => 'agent.dashboard', 'match' => ['agent.dashboard'], 'permission' => 'dashboard.view'],

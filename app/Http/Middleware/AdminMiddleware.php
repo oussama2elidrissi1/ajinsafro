@@ -35,7 +35,7 @@ class AdminMiddleware
             abort(403, 'Acces admin non autorise pour ce compte.');
         }
 
-        if ($this->isAgentArea($request) && $user->canAccessAdmin()) {
+        if ($this->isAgentArea($request) && $user->canAccessAdmin() && ! $this->shouldUseAgentOfflineWorkspace($user)) {
             $adminUrl = rtrim((string) config('app.admin_url', config('app.url')), '/');
 
             return redirect()->away($adminUrl . '/admin/dashboard/vue-globale');
@@ -64,7 +64,7 @@ class AdminMiddleware
 
     private function canAccessAgentArea($user): bool
     {
-        if ($user->canAccessAdmin()) {
+        if ($user->canAccessAdmin() && ! $this->shouldUseAgentOfflineWorkspace($user)) {
             return false;
         }
 
@@ -90,5 +90,10 @@ class AdminMiddleware
             'Agent',
             'Agent Offline',
         ]) || $user->can('reservations.view') || $user->can('custom_requests.view');
+    }
+
+    private function shouldUseAgentOfflineWorkspace($user): bool
+    {
+        return method_exists($user, 'canQuoteCustomRequests') && $user->canQuoteCustomRequests();
     }
 }

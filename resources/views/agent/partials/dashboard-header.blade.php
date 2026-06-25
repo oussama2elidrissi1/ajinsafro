@@ -11,7 +11,9 @@
 
     $displayName = $user?->name ?: 'Agent';
     $agencyName = $user?->branch?->name ?: ($user?->partner?->name ?: null);
-    $roleLabel = $isManager ? 'Manager' : ($user?->isAgent() ? 'Agent' : ($user?->job_title ?: 'Agent'));
+    $roleLabel = $user?->canQuoteCustomRequests()
+        ? 'Agent Offline'
+        : ($isManager ? 'Manager' : ($user?->isAgent() ? 'Agent' : ($user?->job_title ?: 'Agent')));
     $today = Carbon::now()->locale('fr')->isoFormat('dddd D MMMM YYYY');
 
     $total = (int) ($stats['reservations_total'] ?? 0);

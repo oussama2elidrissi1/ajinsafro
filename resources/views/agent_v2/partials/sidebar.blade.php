@@ -1,6 +1,8 @@
 @php
     $user = auth()->user();
-    $roleLabel = $user?->getRoleNames()->first() ?? ($user?->is_admin ? 'admin' : 'utilisateur');
+    $roleLabel = $user?->canQuoteCustomRequests()
+        ? 'Agent Offline'
+        : ($user?->getRoleNames()->first() ?? ($user?->is_admin ? 'admin' : 'utilisateur'));
     $roleLabel = \Illuminate\Support\Str::title(\Illuminate\Support\Str::replace('_', ' ', (string) $roleLabel));
     $branchLabel = $user?->branch?->name;
     $brandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');

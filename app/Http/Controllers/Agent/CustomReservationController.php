@@ -398,7 +398,9 @@ class CustomReservationController extends Controller
             ],
             'account' => [
                 'name' => $user->name,
-                'role' => $user->getRoleNames()->first() ?: ($user->job_title ?: 'Agent'),
+                'role' => $user->canQuoteCustomRequests()
+                    ? 'Agent Offline'
+                    : ($user->getRoleNames()->first() ?: ($user->job_title ?: 'Agent')),
                 'branch' => $user->branch?->name,
                 'can_quote' => $user->canQuoteCustomRequests(),
                 'can_create' => $this->canCreateCustomRequest($user),

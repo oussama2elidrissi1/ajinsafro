@@ -55,6 +55,11 @@ class LoginRedirectService
             return $adminUrl . '/admin/reservations/workspace';
         }
 
+        // Offline quoting users should land directly in the same workspace as Othmane.
+        if ($user->canQuoteCustomRequests()) {
+            return $adminUrl . '/agent/reservations-a-la-carte';
+        }
+
         if ($this->shouldUseAdminInterface($user)) {
             return $adminUrl . '/admin/dashboard/vue-globale';
         }
@@ -96,13 +101,6 @@ class LoginRedirectService
             'Agent',
         ])) {
             return $adminUrl . '/agent/dashboard';
-        }
-
-        // Offline quoting users should land directly in the custom requests workspace.
-        if ($user->hasRole([
-            'Agent Offline',
-        ])) {
-            return $adminUrl . '/agent/reservations-a-la-carte';
         }
 
         // Fallback for users without back-office roles (e.g. WP-only synced accounts).
