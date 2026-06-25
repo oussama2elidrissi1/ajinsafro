@@ -51,7 +51,13 @@
             @if($customRequest->canBeEditedBy(auth()->user()))
                 <a href="{{ route('admin.custom-requests.edit', $customRequest) }}" class="dac-btn dac-btn-soft"><i class="bx bx-edit"></i> Modifier</a>
             @endif
-            @if($customRequest->canBeQuotedBy(auth()->user()))
+            @if($customRequest->canBeQuotedBy(auth()->user()) && (int) ($customRequest->assigned_to ?? 0) !== (int) auth()->id())
+                <form method="POST" action="{{ route('admin.custom-requests.take', $customRequest) }}">
+                    @csrf
+                    <button type="submit" class="dac-btn dac-btn-primary"><i class="bx bx-user-check"></i> Prendre en charge</button>
+                </form>
+            @endif
+            @if($customRequest->canBeQuotedBy(auth()->user()) && (int) ($customRequest->assigned_to ?? 0) === (int) auth()->id())
                 <a href="{{ route('admin.custom-requests.quote', $customRequest) }}" class="dac-btn dac-btn-primary"><i class="bx bx-calculator"></i> Quotation</a>
             @endif
         </div>

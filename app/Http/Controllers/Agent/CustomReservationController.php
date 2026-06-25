@@ -231,7 +231,7 @@ class CustomReservationController extends Controller
         abort_unless($customRequest->canBeQuotedBy($user), 403);
 
         $customRequest->forceFill(['assigned_to' => $user->id])->save();
-        $customRequest->changeStatus(CustomRequest::STATUS_PROCESSING, $user->id, 'Prise en charge par agent offline.');
+        $customRequest->changeStatus(CustomRequest::STATUS_PROCESSING, $user->id, 'Prise en charge par '.$user->name.'.');
 
         return redirect()
             ->route('agent.custom-reservations.quote', $customRequest)

@@ -21,6 +21,7 @@ class CustomRequestDemoSeeder extends Seeder
 
         $offlinePermissions = [
             'custom_requests.view',
+            'custom_requests.view_all',
             'custom_requests.quote',
             'custom_requests.documents',
         ];

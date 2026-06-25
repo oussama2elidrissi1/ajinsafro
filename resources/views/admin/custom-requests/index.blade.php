@@ -99,7 +99,14 @@
                             <div class="d-flex gap-1 justify-content-end">
                                 <a href="{{ route('admin.custom-requests.show', $row) }}" class="dac-btn dac-btn-soft">Voir</a>
                                 @if($row->canBeQuotedBy(auth()->user()))
-                                    <a href="{{ route('admin.custom-requests.quote', $row) }}" class="dac-btn dac-btn-primary">Quotation</a>
+                                    @if((int) ($row->assigned_to ?? 0) === (int) auth()->id())
+                                        <a href="{{ route('admin.custom-requests.quote', $row) }}" class="dac-btn dac-btn-primary">Quotation</a>
+                                    @else
+                                        <form method="POST" action="{{ route('admin.custom-requests.take', $row) }}">
+                                            @csrf
+                                            <button type="submit" class="dac-btn dac-btn-primary">Prendre en charge</button>
+                                        </form>
+                                    @endif
                                 @endif
                             </div>
                         </td>

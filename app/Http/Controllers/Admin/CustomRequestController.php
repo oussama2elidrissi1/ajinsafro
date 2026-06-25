@@ -232,7 +232,7 @@ class CustomRequestController extends Controller
         abort_unless($request->user()?->can('custom_requests.quote'), 403);
 
         $customRequest->forceFill(['assigned_to' => $request->user()->id])->save();
-        $customRequest->changeStatus(CustomRequest::STATUS_PROCESSING, $request->user()->id, 'Prise en charge par agent offline.');
+        $customRequest->changeStatus(CustomRequest::STATUS_PROCESSING, $request->user()->id, 'Prise en charge par '.$request->user()->name.'.');
 
         return redirect()->route('admin.custom-requests.quote', $customRequest)->with('success', 'Demande prise en charge.');
     }

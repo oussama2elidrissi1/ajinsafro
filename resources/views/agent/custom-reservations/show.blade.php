@@ -193,13 +193,13 @@
         </div>
         <div class="dac-agent-actions">
             <a href="{{ route('agent.custom-reservations.index') }}" class="aj-agent-action-btn">Retour</a>
-            @if($canQuoteRequest && !$customRequest->assigned_to)
+            @if($canQuoteRequest && (int) ($customRequest->assigned_to ?? 0) !== (int) ($user?->id ?? 0))
                 <form method="POST" action="{{ route('agent.custom-reservations.take', $customRequest) }}">
                     @csrf
                     <button type="submit" class="aj-agent-action-btn">Prendre en charge</button>
                 </form>
             @endif
-            @if($canQuoteRequest)
+            @if($canQuoteRequest && (int) ($customRequest->assigned_to ?? 0) === (int) ($user?->id ?? 0))
                 <a href="{{ route('agent.custom-reservations.quote', $customRequest) }}" class="aj-agent-primary-btn">
                     <i class="bx bx-calculator"></i>
                     <span>Ouvrir la quotation</span>

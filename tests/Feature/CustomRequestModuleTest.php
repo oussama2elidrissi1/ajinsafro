@@ -260,6 +260,61 @@ class CustomRequestModuleTest extends TestCase
         $this->assertNotContains($otherDraft->id, $visibleIds);
     }
 
+    public function test_offline_agent_with_view_all_sees_and_takes_any_custom_request(): void
+    {
+        $offline = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.view_all',
+            'custom_requests.quote',
+        ], ['Agent Offline']);
+
+        $otherOffline = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.quote',
+        ], ['Agent Offline']);
+
+        $commercial = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.create',
+        ], ['Agent']);
+
+        $newRequest = $this->customRequest($commercial, [
+            'customer_full_name' => 'Client Global Nouvelle',
+            'status' => CustomRequest::STATUS_NEW,
+        ]);
+        $assignedToOther = $this->customRequest($commercial, [
+            'customer_full_name' => 'Client Global Assigne',
+            'assigned_to' => $otherOffline->id,
+            'status' => CustomRequest::STATUS_PROCESSING,
+        ]);
+        $draft = $this->customRequest($commercial, [
+            'customer_full_name' => 'Client Global Brouillon',
+            'status' => CustomRequest::STATUS_DRAFT,
+        ]);
+
+        $visibleIds = CustomRequest::query()->visibleTo($offline)->pluck('id')->all();
+
+        $this->assertContains($newRequest->id, $visibleIds);
+        $this->assertContains($assignedToOther->id, $visibleIds);
+        $this->assertContains($draft->id, $visibleIds);
+        $this->assertTrue($assignedToOther->canBeQuotedBy($offline));
+
+        app(CustomReservationController::class)->take($this->requestAs($offline, []), $assignedToOther);
+
+        $assignedToOther->refresh();
+        $this->assertSame($offline->id, (int) $assignedToOther->assigned_to);
+        $this->assertSame(CustomRequest::STATUS_PROCESSING, $assignedToOther->status);
+        $this->assertDatabaseHas('custom_request_status_logs', [
+            'custom_request_id' => $assignedToOther->id,
+            'user_id' => $offline->id,
+            'new_status' => CustomRequest::STATUS_PROCESSING,
+            'note' => 'Prise en charge par '.$offline->name.'.',
+        ]);
+    }
+
     public function test_regular_agent_with_quote_permission_cannot_quote_custom_request(): void
     {
         $regularAgent = $this->userWithPermissions([

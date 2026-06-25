@@ -23,6 +23,7 @@ class OthmaneOfflineAgentSeeder extends Seeder
 
         $permissions = [
             'custom_requests.view',
+            'custom_requests.view_all',
             'custom_requests.create',
             'custom_requests.quote',
             'custom_requests.documents',

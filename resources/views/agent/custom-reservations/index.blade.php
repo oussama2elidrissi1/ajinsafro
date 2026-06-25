@@ -1263,7 +1263,14 @@
                             </div>
                             <div class="aj-agent-request-footer-actions">
                                 @if($quoteUser && $actionRequest->canBeQuotedBy($quoteUser))
-                                    <a href="{{ route('agent.custom-reservations.quote', $actionRequest) }}" class="aj-agent-primary-btn"><i class="bx bx-check-circle"></i> Traiter</a>
+                                    @if((int) ($actionRequest->assigned_to ?? 0) === (int) $quoteUser->id)
+                                        <a href="{{ route('agent.custom-reservations.quote', $actionRequest) }}" class="aj-agent-primary-btn"><i class="bx bx-check-circle"></i> Traiter</a>
+                                    @else
+                                        <form method="POST" action="{{ route('agent.custom-reservations.take', $actionRequest) }}">
+                                            @csrf
+                                            <button type="submit" class="aj-agent-primary-btn"><i class="bx bx-user-check"></i> Prendre en charge</button>
+                                        </form>
+                                    @endif
                                 @endif
                                 <a href="{{ route('agent.custom-reservations.show', $actionRequest) }}" class="aj-agent-action-btn"><i class="bx bx-show"></i> Ouvrir</a>
                             </div>
@@ -1404,7 +1411,14 @@
                                 <td class="aj-agent-table-actions-cell">
                                     <div class="aj-agent-table-actions">
                                         @if($quoteUser && $requestRow->canBeQuotedBy($quoteUser))
-                                            <a href="{{ route('agent.custom-reservations.quote', $requestRow) }}" class="aj-agent-primary-btn"><i class="bx bx-check-circle"></i> Traiter</a>
+                                            @if((int) ($requestRow->assigned_to ?? 0) === (int) $quoteUser->id)
+                                                <a href="{{ route('agent.custom-reservations.quote', $requestRow) }}" class="aj-agent-primary-btn"><i class="bx bx-check-circle"></i> Traiter</a>
+                                            @else
+                                                <form method="POST" action="{{ route('agent.custom-reservations.take', $requestRow) }}">
+                                                    @csrf
+                                                    <button type="submit" class="aj-agent-primary-btn"><i class="bx bx-user-check"></i> Prendre en charge</button>
+                                                </form>
+                                            @endif
                                         @endif
                                         @if($requestRow->latestQuote?->pdf_path)
                                             <a href="{{ route('agent.custom-reservations.quote.download', [$requestRow, $requestRow->latestQuote]) }}" class="aj-agent-action-btn"><i class="bx bx-file"></i> PDF</a>
