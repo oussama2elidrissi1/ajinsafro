@@ -15,14 +15,10 @@ use Illuminate\Support\Facades\Redirect;
 
 class CustomReservationRequestController extends Controller
 {
-    public function index(Request $request): View|RedirectResponse
+    public function index(Request $request): View
     {
         $user = $request->user();
         abort_unless($user?->can('reservations.view'), 403);
-
-        if ($user->canQuoteCustomRequests()) {
-            return redirect()->route('agent.custom-reservations.index');
-        }
 
         $query = CustomReservationRequest::query()
             ->with(['assignedTo:id,name', 'createdBy:id,name'])

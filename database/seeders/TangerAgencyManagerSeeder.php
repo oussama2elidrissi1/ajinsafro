@@ -6,6 +6,7 @@ use App\Models\AgencyEmployee;
 use App\Models\Branch;
 use App\Models\User;
 use App\Services\BranchScopeService;
+use App\Support\AdminMenuPermissionRegistry;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
@@ -21,7 +22,11 @@ class TangerAgencyManagerSeeder extends Seeder
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        $managerPermissions = ['custom_requests.view', 'custom_requests.create'];
+        $managerPermissions = [
+            AdminMenuPermissionRegistry::ADMIN_ACCESS_PERMISSION,
+            'custom_requests.view',
+            'custom_requests.create',
+        ];
         $offlinePermissions = [
             'reservations.view',
             'custom_requests.view',
