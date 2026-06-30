@@ -342,6 +342,22 @@
             margin-top: 6px;
             font-weight: 700;
         }
+        .aj-agent-dac-field .aj-agent-dac-hint {
+            color: #64748b;
+        }
+        .aj-dac-step-panel[data-dac-step-panel="4"] .aj-agent-dac-section:not([hidden]) .aj-agent-dac-section-head span {
+            display: none;
+        }
+        .aj-dac-step-panel[data-dac-step-panel="4"] .aj-agent-dac-section:not([hidden]) .aj-agent-dac-section-head h2::after {
+            content: "Priorite, echeance et notes utiles au service quotation.";
+            display: block;
+            color: var(--dac-muted);
+            margin-top: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0;
+            text-transform: none;
+        }
         .aj-client-search-panel {
             margin-top: 10px;
             border: 1px solid #dbe5ef;
@@ -586,7 +602,7 @@
             <div class="aj-dac-summary-card"><span>Passagers</span><strong data-dac-summary="pax">1 adulte</strong></div>
             <div class="aj-dac-summary-card"><span>Services</span><strong data-dac-summary="services">0 sÃ©lectionnÃ©</strong></div>
             <div class="aj-dac-summary-card"><span>Destination</span><strong data-dac-summary="destination">Ã€ dÃ©finir</strong></div>
-            <div class="aj-dac-summary-card"><span>Statut</span><strong data-dac-summary="status">En cours</strong></div>
+            <div class="aj-dac-summary-card"><span>Statut</span><strong data-dac-summary="status">Demande de devis</strong></div>
         </div>
     </div>
 
@@ -602,7 +618,7 @@
         <div class="aj-dac-step-line"></div>
         <button type="button" class="aj-dac-step-pill" data-dac-step-button="3"><span>3</span> DÃ©tails de programme</button>
         <div class="aj-dac-step-line"></div>
-        <button type="button" class="aj-dac-step-pill" data-dac-step-button="4"><span>4</span> Paiement et suivi</button>
+        <button type="button" class="aj-dac-step-pill" data-dac-step-button="4"><span>4</span> Validation et suivi</button>
     </div>
 
     <div class="aj-dac-card">
@@ -672,8 +688,6 @@
             const departureDate = (getInput('desired_departure_date')?.value || '').trim();
             const returnDate = (getInput('desired_return_date')?.value || '').trim();
             const durationInput = getInput('desired_duration');
-            const statusSelect = getInput('payment_status');
-            const paymentLabel = statusSelect?.selectedOptions?.[0]?.textContent || 'En cours';
 
             let durationText = '';
             if (departureDate && returnDate) {
@@ -698,9 +712,29 @@
             }
             if (summaries.services) summaries.services.textContent = serviceCount + ' ' + plural(serviceCount, 'sÃ©lectionnÃ©', 'sÃ©lectionnÃ©s');
             if (summaries.destination) summaries.destination.textContent = destination || 'Ã€ dÃ©finir';
-            if (summaries.status) summaries.status.textContent = paymentLabel;
+            if (summaries.status) summaries.status.textContent = 'Demande de devis';
 
             updateServiceConfigs();
+        };
+
+        const syncTravelerComposition = function () {
+            const travelersInput = getInput('travelers_count');
+            const childrenInput = getInput('children_count');
+            const babiesInput = getInput('babies_count');
+            const adultsInput = root.querySelector('[data-adults-count]');
+            if (!travelersInput || !childrenInput || !babiesInput || !adultsInput) return;
+
+            let travelers = Math.max(1, parseInt(travelersInput.value || '1', 10) || 1);
+            const children = Math.max(0, parseInt(childrenInput.value || '0', 10) || 0);
+            const babies = Math.max(0, parseInt(babiesInput.value || '0', 10) || 0);
+            const minimumTotal = children + babies + 1;
+
+            if (travelers < minimumTotal) {
+                travelers = minimumTotal;
+                travelersInput.value = travelers;
+            }
+
+            adultsInput.value = travelers - children - babies;
         };
 
         const autoGrow = function (textarea) {
@@ -923,8 +957,14 @@
             currentStep = Math.min(panels.length, currentStep + 1);
             renderStep();
         });
-        root.addEventListener('input', updateSummary);
-        root.addEventListener('change', updateSummary);
+        root.addEventListener('input', function () {
+            syncTravelerComposition();
+            updateSummary();
+        });
+        root.addEventListener('change', function () {
+            syncTravelerComposition();
+            updateSummary();
+        });
         clientTypeInputs.forEach(function (input) {
             input.addEventListener('change', updateClientMode);
         });
@@ -966,6 +1006,7 @@
         });
         populateFromSelected();
         updateClientMode();
+        syncTravelerComposition();
         renderStep();
     });
 </script>

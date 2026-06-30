@@ -12,7 +12,6 @@ use App\Services\View\AgentPortalLayout;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -192,7 +191,6 @@ class CustomReservationController extends Controller
         $customRequest = DB::transaction(function () use ($request, $user, $data): CustomRequest {
             $customRequest = CustomRequest::query()->create($data);
             $this->syncServices($customRequest, (array) $request->input('services', []));
-            $this->storeUploadedDocuments($request, $customRequest);
             $customRequest->statusLogs()->create([
                 'user_id' => $user->id,
                 'old_status' => null,
@@ -508,22 +506,25 @@ class CustomReservationController extends Controller
             'local_transport' => ['nullable', Rule::in(['none', 'bus', 'minibus', 'private_car', 'private_driver'])],
             'transport_notes' => ['nullable', 'string'],
             'requested_services_details' => ['nullable', 'string'],
-            'estimated_price' => ['nullable', 'numeric', 'min:0'],
-            'requested_deposit' => ['nullable', 'numeric', 'min:0'],
-            'paid_amount' => ['nullable', 'numeric', 'min:0'],
-            'payment_method' => ['nullable', Rule::in(['cash', 'transfer', 'card', 'cheque', 'other'])],
-            'payment_status' => ['required', Rule::in(array_keys(CustomRequest::paymentStatusOptions()))],
             'priority' => ['required', Rule::in(array_keys(CustomRequest::priorityOptions()))],
             'response_deadline' => ['nullable', 'date'],
             'internal_notes' => ['nullable', 'string'],
-            'documents.*' => ['nullable', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,doc,docx'],
         ]);
 
         $data['children_count'] = (int) ($data['children_count'] ?? 0);
         $data['babies_count'] = (int) ($data['babies_count'] ?? 0);
-        $data['paid_amount'] = (float) ($data['paid_amount'] ?? 0);
         $data['separate_room_needed'] = $request->boolean('separate_room_needed');
-        $data['adults_count'] = (int) $data['travelers_count'];
+        $travelersCount = (int) $data['travelers_count'];
+        $minorsCount = $data['children_count'] + $data['babies_count'];
+
+        if ($minorsCount >= $travelersCount) {
+            return back()
+                ->withErrors(['travelers_count' => 'Le total voyageurs doit inclure au moins un adulte en plus des enfants et bébés.'])
+                ->withInput()
+                ->throwResponse();
+        }
+
+        $data['adults_count'] = $travelersCount - $minorsCount;
         $data['desired_duration'] = $this->computeDesiredDuration(
             $data['desired_departure_date'] ?? null,
             $data['desired_return_date'] ?? null
@@ -536,7 +537,14 @@ class CustomReservationController extends Controller
                 ->throwResponse();
         }
 
-        return Arr::except($data, ['documents']);
+        $data['estimated_price'] = null;
+        $data['requested_deposit'] = null;
+        $data['paid_amount'] = 0;
+        $data['remaining_amount'] = 0;
+        $data['payment_method'] = null;
+        $data['payment_status'] = 'unpaid';
+
+        return $data;
     }
 
     private function computeDesiredDuration(mixed $departureDate, mixed $returnDate): ?string

@@ -83,10 +83,10 @@ class CustomRequestModuleTest extends TestCase
             'desired_return_date' => now()->addDays(27)->toDateString(),
             'desired_duration' => '7 nuits',
             'travel_type' => 'organized_trip',
-            'travelers_count' => 2,
-            'adults_count' => 2,
-            'children_count' => 0,
-            'babies_count' => 0,
+            'travelers_count' => 5,
+            'adults_count' => 99,
+            'children_count' => 2,
+            'babies_count' => 1,
             'approximate_budget' => 12000,
             'currency' => 'MAD',
             'desired_level' => 'comfort',
@@ -133,6 +133,14 @@ class CustomRequestModuleTest extends TestCase
         ]);
 
         $customRequest->refresh();
+        $this->assertSame(2, (int) $customRequest->adults_count);
+        $this->assertSame(2, (int) $customRequest->children_count);
+        $this->assertSame(1, (int) $customRequest->babies_count);
+        $this->assertNull($customRequest->estimated_price);
+        $this->assertNull($customRequest->requested_deposit);
+        $this->assertSame(0.0, (float) $customRequest->paid_amount);
+        $this->assertNull($customRequest->payment_method);
+        $this->assertSame('unpaid', $customRequest->payment_status);
         $this->assertNull($customRequest->latestQuote);
         $this->assertDatabaseMissing('custom_request_documents', [
             'custom_request_id' => $customRequest->id,
@@ -159,8 +167,11 @@ class CustomRequestModuleTest extends TestCase
         $response->assertOk();
         $response->assertSee('Parcours');
         $response->assertSee('Offre commerciale');
-        $response->assertSee('Paiement / estimation');
-        $response->assertSee('Suivi');
+        $response->assertSee('Validation et suivi');
+        $response->assertDontSee('Paiement / estimation');
+        $response->assertDontSee('Acompte demand');
+        $response->assertDontSee('name="paid_amount"', false);
+        $response->assertDontSee('name="documents[]"', false);
         $response->assertSee('/agent/reservations-a-la-carte', false);
         $response->assertDontSee('/admin/custom-requests', false);
     }

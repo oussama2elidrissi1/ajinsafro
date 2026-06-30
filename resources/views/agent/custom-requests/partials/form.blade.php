@@ -146,8 +146,8 @@
                 </div>
                 <div class="aj-agent-dac-field">
                     <label>Adultes</label>
-                    <input type="number" min="1" value="{{ $field('adults_count', $customRequest->adults_count ?? $customRequest->travelers_count) }}" readonly tabindex="-1">
-                    <small>Synchronis&eacute; avec le total des voyageurs</small>
+                    <input type="number" min="1" name="adults_count" value="{{ $field('adults_count', $customRequest->adults_count ?? $customRequest->travelers_count) }}" readonly tabindex="-1" data-adults-count>
+                    <small class="aj-agent-dac-hint">Calcul&eacute; automatiquement : total - enfants - b&eacute;b&eacute;s.</small>
                 </div>
                 <div class="aj-agent-dac-field">
                     <label>Enfants</label>
@@ -343,7 +343,8 @@
     </div>
 
     <div class="aj-dac-step-panel" data-dac-step-panel="4">
-        <section class="aj-agent-dac-section">
+        @if($showInitialPaymentSection ?? false)
+        <section class="aj-agent-dac-section" hidden>
             <div class="aj-agent-dac-section-head">
                 <h2>Paiement / estimation</h2>
                 <span>Montants indicatifs transmis avec la demande.</span>
@@ -363,10 +364,11 @@
                 </div>
             </div>
         </section>
+        @endif
 
         <section class="aj-agent-dac-section">
             <div class="aj-agent-dac-section-head">
-                <h2>Suivi</h2>
+                <h2>Validation et suivi</h2>
                 <span>Priorité, échéance, documents et notes internes.</span>
             </div>
             <div class="aj-agent-dac-grid">
@@ -381,7 +383,6 @@
                     <select name="priority">@foreach($priorityOptions as $key => $label)<option value="{{ $key }}" @selected($field('priority', $customRequest->priority) === $key)>{{ $label }}</option>@endforeach</select>
                 </div>
                 <div class="aj-agent-dac-field"><label>Date limite de réponse</label><input type="date" name="response_deadline" value="{{ $field('response_deadline', optional($customRequest->response_deadline)->toDateString()) }}"></div>
-                <div class="aj-agent-dac-field"><label>Documents</label><input type="file" name="documents[]" multiple></div>
                 <div class="aj-agent-dac-field aj-agent-dac-field-wide"><label>Notes internes</label><textarea name="internal_notes">{{ $field('internal_notes', $customRequest->internal_notes) }}</textarea></div>
             </div>
         </section>

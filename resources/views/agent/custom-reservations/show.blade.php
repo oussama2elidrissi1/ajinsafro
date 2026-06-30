@@ -305,7 +305,8 @@
                     @endif
                 </div>
 
-                <div class="dac-agent-section-title">Paiement / estimation initiale</div>
+                @if($latestQuote && $customRequest->status === \App\Models\CustomRequest::STATUS_CONFIRMED)
+                <div class="dac-agent-section-title">Paiement</div>
                 <div class="dac-agent-info-grid is-three">
                     <div class="dac-agent-info"><span>Prix estimé</span><strong>{{ $formatMoney($customRequest->estimated_price) }}</strong></div>
                     <div class="dac-agent-info"><span>Acompte demandé</span><strong>{{ $formatMoney($customRequest->requested_deposit) }}</strong></div>
@@ -314,6 +315,8 @@
                     <div class="dac-agent-info"><span>Mode de paiement</span><strong>{{ $paymentMethodLabels[$customRequest->payment_method] ?? ($customRequest->payment_method ?: '-') }}</strong></div>
                     <div class="dac-agent-info"><span>Statut paiement</span><strong>{{ $paymentStatusOptions[$customRequest->payment_status] ?? ($customRequest->payment_status ?: '-') }}</strong></div>
                 </div>
+
+                @endif
 
                 <div class="dac-agent-section-title">Gestion</div>
                 <div class="dac-agent-info-grid is-three">
