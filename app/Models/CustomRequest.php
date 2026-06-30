@@ -130,13 +130,15 @@ class CustomRequest extends Model
 
     public function canBeQuotedBy(User $user): bool
     {
-        return $user->canQuoteCustomRequests()
-            && (int) ($this->created_by ?? 0) !== (int) $user->id
-            && (
-                $user->can('custom_requests.view_all')
-                || $this->assigned_to === null
-                || (int) $this->assigned_to === (int) $user->id
-            );
+        if (! $user->canQuoteCustomRequests()) {
+            return false;
+        }
+
+        if ($this->assigned_to !== null) {
+            return (int) $this->assigned_to === (int) $user->id;
+        }
+
+        return true;
     }
 
     public function scopeVisibleTo(Builder $query, User $user): Builder

@@ -271,7 +271,7 @@ class CustomRequestModuleTest extends TestCase
         $this->assertNotContains($otherDraft->id, $visibleIds);
     }
 
-    public function test_offline_agent_with_view_all_sees_and_takes_any_custom_request(): void
+    public function test_offline_agent_with_view_all_sees_all_but_only_takes_unassigned_custom_request(): void
     {
         $offline = $this->userWithPermissions([
             'dashboard.view',
@@ -311,15 +311,49 @@ class CustomRequestModuleTest extends TestCase
         $this->assertContains($newRequest->id, $visibleIds);
         $this->assertContains($assignedToOther->id, $visibleIds);
         $this->assertContains($draft->id, $visibleIds);
-        $this->assertTrue($assignedToOther->canBeQuotedBy($offline));
+        $this->assertFalse($assignedToOther->canBeQuotedBy($offline));
+        $this->assertTrue($newRequest->canBeQuotedBy($offline));
 
-        app(CustomReservationController::class)->take($this->requestAs($offline, []), $assignedToOther);
+        app(CustomReservationController::class)->take($this->requestAs($offline, []), $newRequest);
 
-        $assignedToOther->refresh();
-        $this->assertSame($offline->id, (int) $assignedToOther->assigned_to);
-        $this->assertSame(CustomRequest::STATUS_PROCESSING, $assignedToOther->status);
+        $newRequest->refresh();
+        $this->assertSame($offline->id, (int) $newRequest->assigned_to);
+        $this->assertSame(CustomRequest::STATUS_PROCESSING, $newRequest->status);
         $this->assertDatabaseHas('custom_request_status_logs', [
-            'custom_request_id' => $assignedToOther->id,
+            'custom_request_id' => $newRequest->id,
+            'user_id' => $offline->id,
+            'new_status' => CustomRequest::STATUS_PROCESSING,
+            'note' => 'Prise en charge par '.$offline->name.'.',
+        ]);
+    }
+
+    public function test_offline_agent_can_process_own_unassigned_custom_request(): void
+    {
+        $offline = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.create',
+            'custom_requests.quote',
+        ], ['Agent Offline']);
+
+        $customRequest = $this->customRequest($offline, [
+            'customer_full_name' => 'Client Offline Createur',
+            'assigned_to' => null,
+            'status' => CustomRequest::STATUS_NEW,
+        ]);
+
+        $visibleIds = CustomRequest::query()->visibleTo($offline)->pluck('id')->all();
+
+        $this->assertContains($customRequest->id, $visibleIds);
+        $this->assertTrue($customRequest->canBeQuotedBy($offline));
+
+        app(CustomReservationController::class)->take($this->requestAs($offline, []), $customRequest);
+
+        $customRequest->refresh();
+        $this->assertSame($offline->id, (int) $customRequest->assigned_to);
+        $this->assertSame(CustomRequest::STATUS_PROCESSING, $customRequest->status);
+        $this->assertDatabaseHas('custom_request_status_logs', [
+            'custom_request_id' => $customRequest->id,
             'user_id' => $offline->id,
             'new_status' => CustomRequest::STATUS_PROCESSING,
             'note' => 'Prise en charge par '.$offline->name.'.',
@@ -839,7 +873,7 @@ class CustomRequestModuleTest extends TestCase
         $roleModels = [];
         foreach ($roles as $roleName) {
             $role = Role::findOrCreate($roleName, 'web');
-            $role->givePermissionTo($permissions);
+            $role->syncPermissions([]);
             $roleModels[] = $role;
         }
 
@@ -851,6 +885,8 @@ class CustomRequestModuleTest extends TestCase
         ]);
 
         $user->syncRoles($roleModels);
+        $user->givePermissionTo($permissions);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         return $user;
     }

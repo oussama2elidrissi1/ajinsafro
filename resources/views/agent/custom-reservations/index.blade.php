@@ -1268,7 +1268,10 @@
                                     @else
                                         <form method="POST" action="{{ route('agent.custom-reservations.take', $actionRequest) }}">
                                             @csrf
-                                            <button type="submit" class="aj-agent-primary-btn"><i class="bx bx-user-check"></i> Prendre en charge</button>
+                                            <button type="submit" class="aj-agent-primary-btn">
+                                                <i class="bx bx-user-check"></i>
+                                                {{ (int) ($actionRequest->created_by ?? 0) === (int) $quoteUser->id ? 'Traiter' : 'Prendre en charge' }}
+                                            </button>
                                         </form>
                                     @endif
                                 @endif
@@ -1416,7 +1419,10 @@
                                             @else
                                                 <form method="POST" action="{{ route('agent.custom-reservations.take', $requestRow) }}">
                                                     @csrf
-                                                    <button type="submit" class="aj-agent-primary-btn"><i class="bx bx-user-check"></i> Prendre en charge</button>
+                                                    <button type="submit" class="aj-agent-primary-btn">
+                                                        <i class="bx bx-user-check"></i>
+                                                        {{ (int) ($requestRow->created_by ?? 0) === (int) $quoteUser->id ? 'Traiter' : 'Prendre en charge' }}
+                                                    </button>
                                                 </form>
                                             @endif
                                         @endif
