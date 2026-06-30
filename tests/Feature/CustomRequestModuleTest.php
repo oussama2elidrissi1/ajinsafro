@@ -445,6 +445,84 @@ class CustomRequestModuleTest extends TestCase
         ]);
     }
 
+    public function test_agent_show_uses_agent_quote_document_links_and_agent_confirm_route(): void
+    {
+        $commercial = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.create',
+            'custom_requests.confirm',
+            'custom_requests.cancel',
+        ], ['Agent']);
+
+        $offline = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.quote',
+        ], ['Agent Offline']);
+
+        Storage::disk('public')->put('custom-requests/test/devis-client.pdf', 'PDF devis');
+        Storage::disk('public')->put('custom-requests/test/fiche-prix.pdf', 'PDF fiche prix');
+
+        $customRequest = $this->customRequest($commercial, [
+            'assigned_to' => $offline->id,
+            'status' => CustomRequest::STATUS_QUOTE_SENT,
+        ]);
+
+        $quote = $customRequest->quotes()->create([
+            'created_by' => $offline->id,
+            'offline_agent_id' => $offline->id,
+            'currency' => 'MAD',
+            'status' => CustomRequestQuote::STATUS_SENT,
+            'pdf_path' => 'custom-requests/test/devis-client.pdf',
+            'price_pdf_path' => 'custom-requests/test/fiche-prix.pdf',
+            'price_sent_at' => now(),
+        ]);
+
+        $customRequest->documents()->create([
+            'uploaded_by' => $offline->id,
+            'quote_id' => $quote->id,
+            'document_type' => 'quote',
+            'title' => 'Devis '.$quote->quote_number.' v'.$quote->version,
+            'file_path' => $quote->pdf_path,
+            'original_name' => 'devis-client.pdf',
+            'mime_type' => 'application/pdf',
+            'size' => 9,
+            'is_auto_generated' => true,
+        ]);
+        $customRequest->documents()->create([
+            'uploaded_by' => $offline->id,
+            'quote_id' => $quote->id,
+            'document_type' => 'supplier_file',
+            'title' => 'Fiche prix interne '.$quote->quote_number.' v'.$quote->version,
+            'file_path' => $quote->price_pdf_path,
+            'original_name' => 'fiche-prix.pdf',
+            'mime_type' => 'application/pdf',
+            'size' => 14,
+            'is_auto_generated' => true,
+        ]);
+
+        $page = $this->actingAs($commercial)->get(route('agent.custom-reservations.show', $customRequest));
+
+        $page->assertOk();
+        $page->assertDontSee('/admin/custom-requests', false);
+        $page->assertSee(route('agent.custom-reservations.confirm', $customRequest), false);
+        $page->assertSee(route('agent.custom-reservations.quote.download', [$customRequest, $quote]), false);
+        $page->assertSee(route('agent.custom-reservations.quote.price.download', [$customRequest, $quote]), false);
+
+        $response = $this->actingAs($commercial)->post(route('agent.custom-reservations.confirm', $customRequest));
+        $response->assertRedirect();
+
+        $customRequest->refresh();
+        $quote->refresh();
+        $this->assertSame(CustomRequest::STATUS_CONFIRMED, $customRequest->status);
+        $this->assertSame(CustomRequestQuote::STATUS_ACCEPTED, $quote->status);
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $offline->id,
+            'type' => 'custom_request_confirmed',
+        ]);
+    }
+
     public function test_agent_can_mark_notification_as_read_from_modal_action(): void
     {
         $commercial = $this->userWithPermissions([

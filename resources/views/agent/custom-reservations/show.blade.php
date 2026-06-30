@@ -414,13 +414,13 @@
                     @if(!$isOfflineAgent && $canRespondToQuote)
                         <div class="dac-agent-quote-actions">
                             @can('custom_requests.confirm')
-                                <form method="POST" action="{{ route('admin.custom-requests.confirm', $customRequest) }}">
+                                <form method="POST" action="{{ route('agent.custom-reservations.confirm', $customRequest) }}">
                                     @csrf
                                     <button type="submit" class="aj-agent-primary-btn">Confirmer</button>
                                 </form>
                             @endcan
                             @can('custom_requests.cancel')
-                                <form method="POST" action="{{ route('admin.custom-requests.cancel', $customRequest) }}">
+                                <form method="POST" action="{{ route('agent.custom-reservations.cancel', $customRequest) }}">
                                     @csrf
                                     <input type="hidden" name="note" value="Demande annulée depuis l’espace agent commercial.">
                                     <button type="submit" class="aj-agent-action-btn">Annuler</button>
@@ -456,7 +456,9 @@
                                 {{ $document->document_type }}{{ $document->is_auto_generated ? ' • généré automatiquement' : '' }}
                             </div>
                             <div class="dac-agent-doc-actions">
-                                @if($document->quote_id && $latestQuote && (int) $document->quote_id === (int) $latestQuote->id && $latestQuote->pdf_path)
+                                @if($document->document_type === 'supplier_file' && $document->quote_id && $latestQuote && (int) $document->quote_id === (int) $latestQuote->id && $latestQuote->price_pdf_path && ($canQuoteRequest || $latestQuote->price_sent_at))
+                                    <a href="{{ route('agent.custom-reservations.quote.price.download', [$customRequest, $latestQuote]) }}" class="aj-agent-action-btn">Télécharger</a>
+                                @elseif($document->document_type === 'quote' && $document->quote_id && $latestQuote && (int) $document->quote_id === (int) $latestQuote->id && $latestQuote->pdf_path)
                                     <a href="{{ route('agent.custom-reservations.quote.download', [$customRequest, $latestQuote]) }}" class="aj-agent-action-btn">Télécharger</a>
                                 @else
                                     <a href="{{ $document->url() }}" target="_blank" class="aj-agent-action-btn">Ouvrir</a>

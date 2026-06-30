@@ -305,6 +305,53 @@ class CustomReservationController extends Controller
         return back()->with('success', 'Modification demandee a l agent offline.');
     }
 
+    public function confirm(Request $request, CustomRequest $customRequest): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user && $user->can('custom_requests.view'), 403);
+        abort_unless($this->agentCanAccessRequest($customRequest, $user), 403);
+        abort_unless((int) ($customRequest->created_by ?? 0) === (int) $user->id || $user->can('custom_requests.view_all'), 403);
+        abort_unless($user->can('custom_requests.confirm'), 403);
+
+        $quote = $customRequest->latestQuote()->first();
+        abort_unless($quote, 422, 'Aucun devis a confirmer.');
+        abort_unless(in_array($customRequest->status, [
+            CustomRequest::STATUS_QUOTE_PREPARED,
+            CustomRequest::STATUS_QUOTE_SENT,
+            CustomRequest::STATUS_WAITING_CUSTOMER,
+            CustomRequest::STATUS_MODIFICATION_REQUESTED,
+        ], true), 422, 'Ce devis ne peut pas encore etre confirme.');
+
+        DB::transaction(function () use ($request, $customRequest, $quote): void {
+            $quote->update(['status' => CustomRequestQuote::STATUS_ACCEPTED]);
+            $customRequest->changeStatus(CustomRequest::STATUS_CONFIRMED, $request->user()->id, 'Client confirme depuis l espace agent.');
+        });
+
+        $this->notifications->notifyConfirmed($customRequest->fresh(['assignedAgent']));
+
+        return back()->with('success', 'Demande confirmee.');
+    }
+
+    public function cancel(Request $request, CustomRequest $customRequest): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user && $user->can('custom_requests.view'), 403);
+        abort_unless($this->agentCanAccessRequest($customRequest, $user), 403);
+        abort_unless((int) ($customRequest->created_by ?? 0) === (int) $user->id || $user->can('custom_requests.view_all'), 403);
+        abort_unless($user->can('custom_requests.cancel'), 403);
+
+        $data = $request->validate(['note' => ['nullable', 'string', 'max:1000']]);
+
+        DB::transaction(function () use ($request, $customRequest, $data): void {
+            $customRequest->latestQuote?->update(['status' => CustomRequestQuote::STATUS_REFUSED]);
+            $customRequest->changeStatus(CustomRequest::STATUS_CANCELLED, $request->user()->id, $data['note'] ?? 'Demande annulee depuis l espace agent.');
+        });
+
+        $this->notifications->notifyCancelled($customRequest->fresh(['assignedAgent']));
+
+        return back()->with('success', 'Demande annulee.');
+    }
+
     private function canCreateCustomRequest(User $user): bool
     {
         if ($user->can('custom_requests.create')) {
