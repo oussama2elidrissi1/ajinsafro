@@ -27,6 +27,8 @@ class CustomReservationController extends Controller
         $user = $request->user();
         abort_unless($user && $user->can('custom_requests.view'), 403);
         $canCreateRequest = $this->canCreateCustomRequest($user);
+        $sortOptions = $this->requestSortOptions();
+        $assignmentOptions = $this->requestAssignmentOptions();
 
         $filters = [
             'client' => trim((string) $request->query('client', '')),
@@ -34,7 +36,11 @@ class CustomReservationController extends Controller
             'status' => trim((string) $request->query('status', '')),
             'priority' => trim((string) $request->query('priority', '')),
             'date' => trim((string) $request->query('date', '')),
+            'assignment' => trim((string) $request->query('assignment', '')),
+            'sort' => trim((string) $request->query('sort', 'priority')),
         ];
+        $filters['assignment'] = array_key_exists($filters['assignment'], $assignmentOptions) ? $filters['assignment'] : '';
+        $filters['sort'] = array_key_exists($filters['sort'], $sortOptions) ? $filters['sort'] : 'priority';
 
         $query = CustomRequest::query()
             ->with(['latestQuote', 'assignedAgent:id,name'])
@@ -66,13 +72,24 @@ class CustomReservationController extends Controller
             $query->whereDate('desired_departure_date', $filters['date']);
         }
 
+        match ($filters['assignment']) {
+            'mine' => $query->where('assigned_to', $user->id),
+            'unassigned' => $query->whereNull('assigned_to'),
+            'created_by_me' => $query->where('created_by', $user->id),
+            default => null,
+        };
+
+        $this->applyRequestOrdering($query, $filters['sort'], $user);
+
         $dashboard = $this->buildDashboardData($user);
 
         return view('agent.custom-reservations.index', [
-            'requests' => $query->latest()->paginate(15)->withQueryString(),
+            'requests' => $query->paginate(15)->withQueryString(),
             'filters' => $filters,
             'statusOptions' => CustomRequest::statusOptions(),
             'priorityOptions' => CustomRequest::priorityOptions(),
+            'sortOptions' => $sortOptions,
+            'assignmentOptions' => $assignmentOptions,
             'travelTypeOptions' => CustomRequest::travelTypeOptions(),
             'canCreateRequest' => $canCreateRequest,
             'dashboard' => $dashboard,
@@ -703,6 +720,64 @@ class CustomReservationController extends Controller
             'travelTypeOptions' => CustomRequest::travelTypeOptions(),
             'serviceOptions' => CustomRequest::serviceOptions(),
         ];
+    }
+
+    private function requestSortOptions(): array
+    {
+        return [
+            'priority' => 'Priorité et action',
+            'departure_asc' => 'Départ le plus proche',
+            'newest' => 'Plus récentes',
+            'quote_desc' => 'Dernier devis élevé',
+        ];
+    }
+
+    private function requestAssignmentOptions(): array
+    {
+        return [
+            '' => 'Tous les dossiers',
+            'mine' => 'Assignés à moi',
+            'unassigned' => 'En attente',
+            'created_by_me' => 'Créés par moi',
+        ];
+    }
+
+    private function applyRequestOrdering(Builder $query, string $sort, User $user): void
+    {
+        if ($sort === 'departure_asc') {
+            $query
+                ->orderByRaw('CASE WHEN desired_departure_date IS NULL THEN 1 ELSE 0 END')
+                ->orderBy('desired_departure_date')
+                ->latest('id');
+
+            return;
+        }
+
+        if ($sort === 'newest') {
+            $query->latest('created_at')->latest('id');
+
+            return;
+        }
+
+        if ($sort === 'quote_desc') {
+            $query
+                ->orderByDesc(CustomRequestQuote::query()
+                    ->select('total_sale')
+                    ->whereColumn('custom_request_id', 'custom_requests.id')
+                    ->latest('id')
+                    ->limit(1))
+                ->latest('id');
+
+            return;
+        }
+
+        $query
+            ->orderByRaw("CASE WHEN priority = 'very_urgent' THEN 0 WHEN priority = 'urgent' THEN 1 ELSE 2 END")
+            ->orderByRaw('CASE WHEN assigned_to = ? THEN 0 WHEN assigned_to IS NULL THEN 1 ELSE 2 END', [$user->id])
+            ->orderByRaw("CASE status WHEN 'modification_requested' THEN 0 WHEN 'missing_info' THEN 1 WHEN 'new' THEN 2 WHEN 'assigned' THEN 3 WHEN 'processing' THEN 4 WHEN 'quote_prepared' THEN 5 WHEN 'quote_sent' THEN 6 WHEN 'confirmed' THEN 7 ELSE 8 END")
+            ->orderByRaw('CASE WHEN desired_departure_date IS NULL THEN 1 ELSE 0 END')
+            ->orderBy('desired_departure_date')
+            ->latest('id');
     }
 
 }

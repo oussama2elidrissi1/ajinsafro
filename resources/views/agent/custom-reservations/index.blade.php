@@ -1087,6 +1087,75 @@
             color: var(--agent-muted);
             font-weight: 400;
         }
+        .aj-agent-filter-head {
+            align-items: flex-start;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--agent-border-soft);
+            margin-bottom: 16px;
+        }
+        .aj-agent-filter-count {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            min-height: 30px;
+            padding: 6px 10px;
+            border: 1px solid #dbeafe;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: var(--agent-primary-dark);
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .aj-agent-filter-grid {
+            grid-template-columns: minmax(190px, 1.45fr) minmax(170px, 1.15fr) minmax(135px, .9fr) minmax(150px, 1fr) minmax(130px, .85fr) minmax(140px, .9fr) minmax(170px, 1fr) auto;
+            align-items: end;
+        }
+        .aj-agent-filter-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            min-width: 220px;
+        }
+        .aj-agent-filter-actions .aj-agent-primary-btn,
+        .aj-agent-filter-actions .aj-agent-action-btn {
+            white-space: nowrap;
+        }
+        .aj-agent-priority-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed var(--agent-border);
+        }
+        .aj-agent-dossiers-table {
+            min-width: 1220px;
+        }
+        .aj-agent-dossiers-table tbody tr.is-actionable {
+            background: #fbfdff;
+        }
+        .aj-agent-dossiers-table tbody tr.is-actionable td:first-child {
+            box-shadow: inset 3px 0 0 var(--agent-primary);
+        }
+        .aj-agent-dossiers-table th:first-child,
+        .aj-agent-dossiers-table td:first-child {
+            padding-left: 18px;
+        }
+        .aj-agent-table-actions {
+            min-width: 210px;
+        }
+        .aj-agent-table-actions form {
+            margin: 0;
+        }
+        .aj-agent-table-actions .aj-agent-primary-btn,
+        .aj-agent-table-actions .aj-agent-action-btn {
+            min-height: 34px;
+            padding: 7px 10px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
         .aj-agent-pill-blue { background: var(--agent-primary-soft); color: var(--agent-primary-dark); border-color: #bae6fd; }
         .aj-agent-pill-slate { background: #f1f5f9; color: #475569; border-color: #d8e1eb; }
         .aj-agent-pill-green { background: var(--agent-success-soft); color: #15803d; border-color: #bbf7d0; }
@@ -1117,10 +1186,24 @@
     $actionRequests = $dashboard['action_requests'] ?? collect();
     $currentStatus = $filters['status'] ?? '';
     $currentPriority = $filters['priority'] ?? '';
+    $currentAssignment = $filters['assignment'] ?? '';
+    $currentSort = $filters['sort'] ?? 'priority';
+    $sortOptions = $sortOptions ?? ['priority' => 'Priorité et action'];
+    $assignmentOptions = $assignmentOptions ?? ['' => 'Tous les dossiers'];
     $statusCounts = $dashboard['status_counts'] ?? [];
     $priorityCounts = $dashboard['priority_counts'] ?? [];
     $statusGroups = $dashboard['status_groups'] ?? [];
     $quoteUser = auth()->user();
+    $filterUrl = static function (array $overrides = []) use ($filters): string {
+        $params = array_merge($filters, $overrides);
+        $params = array_filter($params, static fn ($value): bool => $value !== '' && $value !== null);
+
+        return route('agent.custom-reservations.index', $params);
+    };
+    $activeFilterCount = collect($filters)
+        ->except('sort')
+        ->filter(static fn ($value): bool => $value !== '' && $value !== null)
+        ->count();
     $statusOverview = [
         [
             'label' => 'En attente',
@@ -1293,8 +1376,9 @@
         <div class="aj-agent-filter-head">
             <div class="aj-agent-filter-title">
                 <strong>Recherche et dossiers</strong>
-                <span>Affinez la recherche par client, destination, statut ou date de départ souhaitée.</span>
+                <span>Affinez par client, destination, responsabilité, statut et ordre d'affichage.</span>
             </div>
+            <span class="aj-agent-filter-count">{{ $activeFilterCount }} filtre(s) actif(s)</span>
         </div>
         <div class="aj-agent-filter-grid">
             <div class="aj-agent-field">
@@ -1324,19 +1408,37 @@
                 </select>
             </div>
             <div class="aj-agent-field">
-                <label for="date">Date</label>
+                <label for="assignment">Responsabilité</label>
+                <select id="assignment" name="assignment">
+                    @foreach($assignmentOptions as $value => $label)
+                        <option value="{{ $value }}" @selected($currentAssignment === $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="aj-agent-field">
+                <label for="date">Date départ</label>
                 <input id="date" type="date" name="date" value="{{ $filters['date'] ?? '' }}">
             </div>
-            <button type="submit" class="aj-agent-primary-btn"><i class="bx bx-filter-alt"></i> Filtrer</button>
-            <a href="{{ route('agent.custom-reservations.index') }}" class="aj-agent-action-btn"><i class="bx bx-reset"></i> Réinitialiser</a>
+            <div class="aj-agent-field">
+                <label for="sort">Ordre</label>
+                <select id="sort" name="sort">
+                    @foreach($sortOptions as $value => $label)
+                        <option value="{{ $value }}" @selected($currentSort === $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="aj-agent-filter-actions">
+                <button type="submit" class="aj-agent-primary-btn"><i class="bx bx-filter-alt"></i> Filtrer</button>
+                <a href="{{ route('agent.custom-reservations.index') }}" class="aj-agent-action-btn"><i class="bx bx-reset"></i> Réinitialiser</a>
+            </div>
         </div>
         <div class="aj-agent-quick-filters">
-            <a class="aj-agent-quick-filter {{ $currentStatus === '' && $currentPriority === '' ? 'is-active' : '' }}" href="{{ route('agent.custom-reservations.index') }}">
+            <a class="aj-agent-quick-filter {{ $currentStatus === '' && $currentPriority === '' ? 'is-active' : '' }}" href="{{ $filterUrl(['status' => '', 'priority' => '']) }}">
                 Tous <strong>{{ $dashboard['total'] ?? 0 }}</strong>
             </a>
             @foreach($statusOptions as $value => $label)
                 @if(($statusCounts[$value] ?? 0) > 0)
-                    <a class="aj-agent-quick-filter {{ $currentStatus === $value ? 'is-active' : '' }}" href="{{ route('agent.custom-reservations.index', ['status' => $value]) }}">
+                    <a class="aj-agent-quick-filter {{ $currentStatus === $value ? 'is-active' : '' }}" href="{{ $filterUrl(['status' => $value]) }}">
                         {{ $label }} <strong>{{ $statusCounts[$value] }}</strong>
                     </a>
                 @endif
@@ -1345,7 +1447,7 @@
         <div class="aj-agent-priority-filters">
             @foreach($priorityOptions as $value => $label)
                 @if(($priorityCounts[$value] ?? 0) > 0)
-                    <a class="aj-agent-quick-filter {{ $currentPriority === $value ? 'is-active' : '' }}" href="{{ route('agent.custom-reservations.index', ['priority' => $value]) }}">
+                    <a class="aj-agent-quick-filter {{ $currentPriority === $value ? 'is-active' : '' }}" href="{{ $filterUrl(['priority' => $value]) }}">
                         {{ $label }} <strong>{{ $priorityCounts[$value] }}</strong>
                     </a>
                 @endif
@@ -1363,11 +1465,12 @@
                 <table class="aj-agent-dossiers-table">
                     <thead>
                         <tr>
+                            <th>Dossier</th>
                             <th>Client</th>
-                            <th>Destination</th>
-                            <th>Date</th>
-                            <th>Statut</th>
-                            <th>Agent</th>
+                            <th>Voyage</th>
+                            <th>Départ</th>
+                            <th>Suivi</th>
+                            <th>Responsable</th>
                             <th>Dernier devis</th>
                             <th class="aj-agent-table-actions-cell">Actions</th>
                         </tr>
@@ -1386,18 +1489,27 @@
                                     \App\Models\CustomRequest::STATUS_MODIFICATION_REQUESTED, \App\Models\CustomRequest::STATUS_MISSING_INFO => 'aj-agent-pill-orange',
                                     default => 'aj-agent-pill-blue',
                                 };
+                                $latestQuote = $requestRow->latestQuote;
+                                $canQuoteRequest = $quoteUser && $requestRow->canBeQuotedBy($quoteUser);
+                                $isAssignedToMe = $quoteUser && (int) ($requestRow->assigned_to ?? 0) === (int) $quoteUser->id;
+                                $isCreatedByMe = $quoteUser && (int) ($requestRow->created_by ?? 0) === (int) $quoteUser->id;
                             @endphp
-                            <tr>
+                            <tr class="{{ $canQuoteRequest ? 'is-actionable' : '' }}">
                                 <td>
-                                    <span class="aj-agent-client-main">{{ $requestRow->customer_full_name }}</span>
-                                    <span class="aj-agent-client-sub">{{ $requestRow->request_number }} - {{ $requestRow->travelers_count }} voyageur(s)</span>
+                                    <span class="aj-agent-client-main">{{ $requestRow->request_number }}</span>
+                                    <span class="aj-agent-client-sub">Créée le {{ $requestRow->created_at?->format('d/m/Y') }}</span>
                                 </td>
                                 <td>
-                                    <span class="aj-agent-table-strong">{{ $requestRow->desired_destination ?: 'Destination a confirmer' }}</span>
-                                    <span class="aj-agent-table-muted">Dossier DAC</span>
+                                    <span class="aj-agent-client-main">{{ $requestRow->customer_full_name ?: 'Client à compléter' }}</span>
+                                    <span class="aj-agent-client-sub">{{ $requestRow->customer_phone ?: '-' }} · {{ $requestRow->travelers_count }} voyageur(s)</span>
+                                </td>
+                                <td>
+                                    <span class="aj-agent-table-strong">{{ $requestRow->desired_destination ?: 'Destination à confirmer' }}</span>
+                                    <span class="aj-agent-table-muted">Départ {{ $requestRow->departure_city ?: 'à préciser' }}</span>
                                 </td>
                                 <td>
                                     <span class="aj-agent-table-strong">{{ $requestRow->desired_departure_date ? $requestRow->desired_departure_date->format('d/m/Y') : 'Flexible' }}</span>
+                                    <span class="aj-agent-table-muted">{{ $requestRow->desired_duration ?: 'Durée à préciser' }}</span>
                                 </td>
                                 <td>
                                     <div class="aj-agent-status-stack">
@@ -1407,27 +1519,33 @@
                                 </td>
                                 <td>
                                     <span class="aj-agent-table-strong">{{ $requestRow->assignedAgent?->name ?: 'En attente' }}</span>
+                                    @if($isAssignedToMe)
+                                        <span class="aj-agent-table-muted">À moi</span>
+                                    @elseif($isCreatedByMe)
+                                        <span class="aj-agent-table-muted">Créée par moi</span>
+                                    @endif
                                 </td>
                                 <td>
-                                    <span class="aj-agent-table-strong">{{ $requestRow->latestQuote ? number_format((float) $requestRow->latestQuote->total_sale, 2, ',', ' ') . ' ' . $requestRow->latestQuote->currency : '-' }}</span>
+                                    <span class="aj-agent-table-strong">{{ $latestQuote ? number_format((float) $latestQuote->total_sale, 2, ',', ' ') . ' ' . $latestQuote->currency : '-' }}</span>
+                                    <span class="aj-agent-table-muted">{{ $latestQuote?->quote_number ?: 'Aucun devis' }}</span>
                                 </td>
                                 <td class="aj-agent-table-actions-cell">
                                     <div class="aj-agent-table-actions">
-                                        @if($quoteUser && $requestRow->canBeQuotedBy($quoteUser))
-                                            @if((int) ($requestRow->assigned_to ?? 0) === (int) $quoteUser->id)
+                                        @if($canQuoteRequest)
+                                            @if($isAssignedToMe)
                                                 <a href="{{ route('agent.custom-reservations.quote', $requestRow) }}" class="aj-agent-primary-btn"><i class="bx bx-check-circle"></i> Traiter</a>
                                             @else
                                                 <form method="POST" action="{{ route('agent.custom-reservations.take', $requestRow) }}">
                                                     @csrf
                                                     <button type="submit" class="aj-agent-primary-btn">
                                                         <i class="bx bx-user-check"></i>
-                                                        {{ (int) ($requestRow->created_by ?? 0) === (int) $quoteUser->id ? 'Traiter' : 'Prendre en charge' }}
+                                                        {{ $isCreatedByMe ? 'Traiter' : 'Prendre en charge' }}
                                                     </button>
                                                 </form>
                                             @endif
                                         @endif
-                                        @if($requestRow->latestQuote?->pdf_path)
-                                            <a href="{{ route('agent.custom-reservations.quote.download', [$requestRow, $requestRow->latestQuote]) }}" class="aj-agent-action-btn"><i class="bx bx-file"></i> PDF</a>
+                                        @if($latestQuote?->pdf_path)
+                                            <a href="{{ route('agent.custom-reservations.quote.download', [$requestRow, $latestQuote]) }}" class="aj-agent-action-btn"><i class="bx bx-file"></i> PDF</a>
                                         @endif
                                         <a href="{{ route('agent.custom-reservations.show', $requestRow) }}" class="aj-agent-action-btn"><i class="bx bx-show"></i> Détail</a>
                                     </div>

@@ -608,6 +608,44 @@ class CustomRequestModuleTest extends TestCase
         $response->assertSee('Priorité');
     }
 
+    public function test_agent_index_can_filter_custom_requests_by_assignment(): void
+    {
+        $offline = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.quote',
+        ], ['Agent Offline']);
+
+        $commercial = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.create',
+        ], ['Agent']);
+
+        $this->customRequest($commercial, [
+            'customer_full_name' => 'Client Assigne Filtre',
+            'assigned_to' => $offline->id,
+            'status' => CustomRequest::STATUS_PROCESSING,
+        ]);
+
+        $this->customRequest($commercial, [
+            'customer_full_name' => 'Client En Attente Filtre',
+            'assigned_to' => null,
+            'status' => CustomRequest::STATUS_NEW,
+        ]);
+
+        $response = $this->actingAs($offline)->get(route('agent.custom-reservations.index', [
+            'assignment' => 'mine',
+            'sort' => 'departure_asc',
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('Client Assigne Filtre');
+        $response->assertSee('1 dossier(s) trouv');
+        $response->assertSee('Responsabilit');
+        $response->assertSee('Départ le plus proche');
+    }
+
     public function test_quote_prepare_calculates_totals_and_generates_client_pdf(): void
     {
         $offline = $this->userWithPermissions([
