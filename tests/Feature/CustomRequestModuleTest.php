@@ -341,6 +341,41 @@ class CustomRequestModuleTest extends TestCase
         $this->assertTrue($customRequest->canBeQuotedBy($offline));
     }
 
+    public function test_admin_with_quote_permission_can_process_assigned_custom_request(): void
+    {
+        $admin = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.view_all',
+            'custom_requests.quote',
+        ], ['Admin']);
+        $admin->forceFill([
+            'is_admin' => true,
+            'base_role' => 'Admin',
+            'job_title' => 'Administrateur',
+        ])->save();
+
+        $commercial = $this->userWithPermissions([
+            'dashboard.view',
+            'custom_requests.view',
+            'custom_requests.create',
+        ], ['Agent']);
+
+        $customRequest = $this->customRequest($commercial, [
+            'assigned_to' => $admin->id,
+            'status' => CustomRequest::STATUS_ASSIGNED,
+        ]);
+
+        $this->assertTrue($admin->canQuoteCustomRequests());
+        $this->assertTrue($customRequest->canBeQuotedBy($admin));
+
+        app(CustomReservationController::class)->take($this->requestAs($admin, []), $customRequest);
+
+        $customRequest->refresh();
+        $this->assertSame($admin->id, (int) $customRequest->assigned_to);
+        $this->assertSame(CustomRequest::STATUS_PROCESSING, $customRequest->status);
+    }
+
     public function test_creator_agent_can_download_quote_and_request_modification_after_offline_processing(): void
     {
         $commercial = $this->userWithPermissions([

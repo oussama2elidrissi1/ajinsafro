@@ -245,7 +245,8 @@ class User extends Authenticatable
 
     public function canQuoteCustomRequests(): bool
     {
-        return $this->can('custom_requests.quote') && $this->isAgentOffline();
+        return $this->can('custom_requests.quote')
+            && ($this->isAgentOffline() || $this->is_admin || $this->hasRole(['Admin', 'Super Admin']));
     }
 
     public function isCommercialReservationsOnly(): bool
