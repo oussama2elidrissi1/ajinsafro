@@ -2079,11 +2079,44 @@ body.voyage-layout-page .offcanvas {
     min-height: 260px !important;
     resize: vertical;
     border: 1px solid #cbd5e1 !important;
-    border-radius: 10px !important;
+    border-top: 0 !important;
+    border-radius: 0 0 10px 10px !important;
     background: #ffffff !important;
     box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04) !important;
     padding: 16px 18px !important;
     line-height: 1.6;
+}
+.voyage-edit-page .programme-detail-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 42px;
+    padding: 7px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px 10px 0 0;
+    background: #f8fafc;
+}
+.voyage-edit-page .programme-detail-tool {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: #1e293b;
+    cursor: pointer;
+}
+.voyage-edit-page .programme-detail-tool:hover,
+.voyage-edit-page .programme-detail-tool:focus {
+    border-color: #bfdbfe;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+.voyage-edit-page .programme-detail-tool i {
+    font-size: 18px;
+    line-height: 1;
 }
 .voyage-edit-page .programme-day-detail textarea.programme-detail-editor:focus {
     border-color: #3b82f6 !important;

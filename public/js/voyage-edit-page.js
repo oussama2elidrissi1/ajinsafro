@@ -3121,6 +3121,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     '<div class="field-resume ve-rich-field"><label class="form-label">Résumé</label>' +
                     '<textarea class="form-control programme-plain-editor" name="programme_days[' + index + '][description]" rows="3" placeholder="Résumé du jour"></textarea></div>' +
                     '<div class="field-description programme-day-detail ve-rich-field"><label class="form-label">Description détaillée</label>' +
+                    '<div class="programme-detail-toolbar" aria-label="Outils de mise en forme">' +
+                    '<button type="button" class="programme-detail-tool" data-programme-editor-action="bold" title="Gras"><i class="bx bx-bold"></i></button>' +
+                    '<button type="button" class="programme-detail-tool" data-programme-editor-action="italic" title="Italique"><i class="bx bx-italic"></i></button>' +
+                    '<button type="button" class="programme-detail-tool" data-programme-editor-action="heading" title="Titre"><i class="bx bx-heading"></i></button>' +
+                    '<button type="button" class="programme-detail-tool" data-programme-editor-action="ul" title="Liste"><i class="bx bx-list-ul"></i></button>' +
+                    '<button type="button" class="programme-detail-tool" data-programme-editor-action="ol" title="Liste numerotee"><i class="bx bx-list-ol"></i></button>' +
+                    '<button type="button" class="programme-detail-tool" data-programme-editor-action="link" title="Lien"><i class="bx bx-link"></i></button>' +
+                    '</div>' +
                     '<textarea class="form-control programme-detail-editor" name="programme_days[' + index + '][content_html]" rows="8" placeholder="Programme détaillé du jour"></textarea></div>' +
                     '<div class="field-notes programme-day-notes ve-rich-field"><label class="form-label">Notes</label>' +
                     '<textarea class="form-control programme-plain-editor" name="programme_days[' + index + '][notes]" rows="4" placeholder="Notes du jour"></textarea></div>' +
@@ -3287,6 +3295,69 @@ document.addEventListener('DOMContentLoaded', function () {
                     };
                 });
             }
+        })();
+
+        (function programmeDetailTextareaEditor() {
+            function selectedText(textarea) {
+                return textarea.value.slice(textarea.selectionStart || 0, textarea.selectionEnd || 0);
+            }
+
+            function replaceSelection(textarea, replacement, selectStart, selectEnd) {
+                var start = textarea.selectionStart || 0;
+                var end = textarea.selectionEnd || 0;
+                textarea.value = textarea.value.slice(0, start) + replacement + textarea.value.slice(end);
+                textarea.focus();
+                textarea.selectionStart = start + (selectStart || replacement.length);
+                textarea.selectionEnd = start + (selectEnd == null ? replacement.length : selectEnd);
+                textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                textarea.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            function wrap(textarea, before, after, fallback) {
+                var value = selectedText(textarea) || fallback || '';
+                replaceSelection(textarea, before + value + after, before.length, before.length + value.length);
+            }
+
+            function makeList(textarea, tag) {
+                var value = selectedText(textarea);
+                if (!value.trim()) {
+                    replaceSelection(textarea, '<' + tag + '>\n  <li>Element</li>\n</' + tag + '>', 12, 19);
+                    return;
+                }
+
+                var items = value.split(/\r?\n/).map(function (line) {
+                    return line.trim();
+                }).filter(Boolean).map(function (line) {
+                    return '  <li>' + line + '</li>';
+                });
+                replaceSelection(textarea, '<' + tag + '>\n' + items.join('\n') + '\n</' + tag + '>');
+            }
+
+            document.addEventListener('click', function (event) {
+                var button = event.target && event.target.closest
+                    ? event.target.closest('[data-programme-editor-action]')
+                    : null;
+                if (!button) return;
+
+                var field = button.closest('.programme-day-detail');
+                var textarea = field ? field.querySelector('textarea.programme-detail-editor') : null;
+                if (!textarea) return;
+
+                event.preventDefault();
+                var action = button.getAttribute('data-programme-editor-action');
+                if (action === 'bold') wrap(textarea, '<strong>', '</strong>', 'texte');
+                if (action === 'italic') wrap(textarea, '<em>', '</em>', 'texte');
+                if (action === 'heading') wrap(textarea, '<h3>', '</h3>', 'Titre');
+                if (action === 'ul') makeList(textarea, 'ul');
+                if (action === 'ol') makeList(textarea, 'ol');
+                if (action === 'link') {
+                    var label = selectedText(textarea) || 'Lien';
+                    var href = window.prompt('URL du lien', 'https://');
+                    if (href) {
+                        replaceSelection(textarea, '<a href="' + href.replace(/"/g, '&quot;') + '">' + label + '</a>');
+                    }
+                }
+            }, true);
         })();
 
         window.buildProgrammeDaysPayload = function() {
