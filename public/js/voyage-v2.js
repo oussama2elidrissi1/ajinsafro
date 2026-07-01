@@ -305,6 +305,12 @@
             var url = window.location.pathname + window.location.search + '#' + stepId;
             window.history.replaceState(null, document.title, url);
         }
+
+        if (typeof window.initVoyageRichEditors === 'function') {
+            window.setTimeout(function () {
+                window.initVoyageRichEditors(activePanel);
+            }, 0);
+        }
     }
 
     function resolveSaveUrl(stepId) {

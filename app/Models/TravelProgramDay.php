@@ -79,6 +79,11 @@ class TravelProgramDay extends Model
             ->orderBy('sort_order');
     }
 
+    public function dayItems()
+    {
+        return $this->items();
+    }
+
     public function getDayTypeLabelAttribute(): string
     {
         foreach (BusinessReferentialService::programDayTypes() as $row) {

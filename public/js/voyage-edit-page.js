@@ -1841,11 +1841,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 return 300;
             }
 
+            function isVisibleForEditor(el) {
+                return !!(el && (el.offsetParent || el.getClientRects().length));
+            }
+
             function initOne(el) {
                 if (!el || el.tagName !== 'TEXTAREA') return;
                 if (!el.classList.contains('rich-editor')) return;
-                if (el.dataset.richEditorInitialized === 'true') return;
+                if (el.dataset.richEditorInitialized === 'true' || el.dataset.richEditorInitialized === 'pending') return;
                 if (!window.tinymce || typeof tinymce.init !== 'function') return;
+                if (!isVisibleForEditor(el)) return;
 
                 var id = ensureId(el);
                 if (window.tinymce && tinymce.get(id)) {
@@ -1853,9 +1858,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     return;
                 }
 
-                el.dataset.richEditorInitialized = 'true';
+                el.dataset.richEditorInitialized = 'pending';
 
-                tinymce.init({
+                try {
+                    var initResult = tinymce.init({
                     target: el,
                     height: editorHeightFromRows(el),
                     plugins: [
@@ -1872,14 +1878,29 @@ document.addEventListener('DOMContentLoaded', function () {
                         {title: 'Example 2', inline: 'span', classes: 'example2'},
                         {title: 'Table styles'},
                         {title: 'Table row 1', selector: 'tr', classes: 'tablerow1'}
-                    ]
-                });
+                        ],
+                        init_instance_callback: function () {
+                            el.dataset.richEditorInitialized = 'true';
+                        }
+                    });
+
+                    if (initResult && typeof initResult.catch === 'function') {
+                        initResult.catch(function () {
+                            delete el.dataset.richEditorInitialized;
+                        });
+                    }
+                } catch (e) {
+                    delete el.dataset.richEditorInitialized;
+                    throw e;
+                }
             }
 
             function initAll(root) {
                 var scope = root && root.querySelectorAll ? root : document;
                 scope.querySelectorAll('textarea.rich-editor').forEach(initOne);
             }
+
+            window.initVoyageRichEditors = initAll;
 
             function bootRichEditors() {
                 initAll(document);
