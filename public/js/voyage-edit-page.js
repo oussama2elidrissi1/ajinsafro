@@ -1904,7 +1904,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         "save table contextmenu directionality emoticons template paste textcolor"
                     ],
                     toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | print preview media fullpage | forecolor backcolor emoticons",
-                    content_style: "body { min-height: 220px; cursor: text; padding: 12px 16px; } p { margin: 0 0 8px; }",
+                    placeholder: el.getAttribute('placeholder') || 'Ecrivez le programme detaille du jour...',
+                    content_style: "html, body { min-height: 220px; cursor: text; } body { box-sizing: border-box; margin: 0; padding: 16px 18px; background: #ffffff; color: #0f172a; font-size: 14px; line-height: 1.6; } body[data-mce-placeholder]:not(.mce-visualblocks)::before { color: #94a3b8; content: attr(data-mce-placeholder); position: absolute; } p { margin: 0 0 8px; min-height: 1.6em; }",
                     style_formats: [
                         {title: 'Bold text', inline: 'b'},
                         {title: 'Red text', inline: 'span', styles: {color: '#ff0000'}},
