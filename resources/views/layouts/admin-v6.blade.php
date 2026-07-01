@@ -93,6 +93,7 @@
         </div>
     </div>
 
+    @include('support.reclamations._floating_button')
     <script src="{{ URL::asset('build/libs/jquery/jquery.min.js') }}"></script>
     <script src="{{ URL::asset('build/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ URL::asset('js/admin-sidebar-v2.js') }}"></script>

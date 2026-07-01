@@ -33,6 +33,7 @@
 
     @include('partner.v2.partials.footer')
 
+    @include('support.reclamations._floating_button')
     @stack('script')
 </body>
 </html>

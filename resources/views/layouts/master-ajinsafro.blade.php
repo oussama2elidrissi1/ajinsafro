@@ -61,6 +61,7 @@
         @include('agent_v2.partials.footer')
     @endif
 
+    @include('support.reclamations._floating_button')
     @include('layouts.vendor-scripts')
     @stack('scripts')
     @stack('body-end')
@@ -105,6 +106,7 @@
     </div>
 
     @include('layouts.right-sidebar')
+    @include('support.reclamations._floating_button')
     @include('layouts.vendor-scripts')
     @stack('scripts')
     @stack('body-end')

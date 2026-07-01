@@ -1,0 +1,119 @@
+@once
+@auth
+    @php
+        $supportRouteExists = \Illuminate\Support\Facades\Route::has('support.reclamations.store');
+        $devRouteExists = \Illuminate\Support\Facades\Route::has('dev.reclamations.index');
+        $supportUser = auth()->user();
+        $isDevSupport = $supportUser && (
+            ($supportUser->is_admin ?? false)
+            || (method_exists($supportUser, 'canAccessAdmin') && $supportUser->canAccessAdmin())
+            || (method_exists($supportUser, 'hasRole') && $supportUser->hasRole(['Dev', 'Developer', 'Developpeur', 'Super Admin', 'Admin']))
+        );
+    @endphp
+
+    @if($supportRouteExists)
+        <div class="dev-support-widget">
+            @if($devRouteExists && $isDevSupport)
+                <a class="dev-support-widget__dev-link" href="{{ route('dev.reclamations.index') }}">
+                    <i class="bx bx-list-check"></i>
+                    Reclamations dev
+                </a>
+            @endif
+
+            <button type="button" class="dev-support-widget__button" data-dev-reclamation-open>
+                <i class="bx bx-message-square-error"></i>
+                <span>Signaler un probleme</span>
+            </button>
+        </div>
+
+        <div class="dev-support-modal" id="devSupportModal" aria-hidden="true">
+            <div class="dev-support-modal__backdrop" data-dev-reclamation-close></div>
+            <div class="dev-support-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="devSupportModalTitle">
+                <div class="dev-support-modal__header">
+                    <div>
+                        <h5 id="devSupportModalTitle">Envoyer une reclamation au dev</h5>
+                        <p>Expliquez le probleme et joignez une capture si necessaire.</p>
+                    </div>
+                    <button type="button" class="dev-support-modal__close" data-dev-reclamation-close aria-label="Fermer">
+                        <i class="bx bx-x"></i>
+                    </button>
+                </div>
+
+                <form method="POST" action="{{ route('support.reclamations.store') }}" enctype="multipart/form-data" class="dev-support-form">
+                    @csrf
+                    <input type="hidden" name="page_url" value="{{ url()->current() }}">
+
+                    <label>
+                        <span>Sujet</span>
+                        <input type="text" name="subject" maxlength="160" placeholder="Ex. Probleme sur la page reservation">
+                    </label>
+
+                    <label>
+                        <span>Message</span>
+                        <textarea name="message" rows="6" required placeholder="Decrivez le probleme, la page concernee, et ce qui devait se passer."></textarea>
+                    </label>
+
+                    <label>
+                        <span>Image / capture</span>
+                        <input type="file" name="attachment" accept="image/*">
+                    </label>
+
+                    <div class="dev-support-form__footer">
+                        <a href="{{ route('support.reclamations.index') }}">Mes reclamations</a>
+                        <button type="submit">
+                            <i class="bx bx-send"></i>
+                            Envoyer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <style>
+            .dev-support-widget{position:fixed;right:22px;bottom:22px;z-index:2140;display:flex;align-items:flex-end;gap:10px;flex-direction:column}
+            .dev-support-widget__button,.dev-support-widget__dev-link{border:0;border-radius:999px;box-shadow:0 18px 40px rgba(15,23,42,.22);font-weight:800;text-decoration:none;display:inline-flex;align-items:center;gap:8px;letter-spacing:0}
+            .dev-support-widget__button{background:#ff5b1a;color:#fff;padding:13px 18px}
+            .dev-support-widget__dev-link{background:#0f3150;color:#fff;padding:10px 14px;font-size:13px}
+            .dev-support-widget__button:hover,.dev-support-widget__dev-link:hover{color:#fff;transform:translateY(-1px)}
+            .dev-support-widget__button i,.dev-support-widget__dev-link i{font-size:18px}
+            .dev-support-modal{position:fixed;inset:0;z-index:2150;display:none}
+            .dev-support-modal.is-open{display:block}
+            .dev-support-modal__backdrop{position:absolute;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(3px)}
+            .dev-support-modal__dialog{position:absolute;right:24px;bottom:88px;width:min(520px,calc(100vw - 32px));background:#fff;border-radius:18px;box-shadow:0 30px 80px rgba(15,23,42,.32);overflow:hidden;border:1px solid #e2e8f0}
+            .dev-support-modal__header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:20px 22px;background:#f8fafc;border-bottom:1px solid #e2e8f0}
+            .dev-support-modal__header h5{margin:0;color:#0f3150;font-size:18px;font-weight:800}
+            .dev-support-modal__header p{margin:4px 0 0;color:#64748b;font-size:13px}
+            .dev-support-modal__close{border:0;background:#fff;border-radius:999px;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;color:#334155}
+            .dev-support-form{display:grid;gap:15px;padding:20px 22px}
+            .dev-support-form label{display:grid;gap:7px;margin:0;color:#0f3150;font-size:13px;font-weight:700}
+            .dev-support-form input,.dev-support-form textarea{width:100%;border:1px solid #cbd5e1;border-radius:12px;padding:11px 13px;font-size:14px;color:#0f172a;outline:none}
+            .dev-support-form input:focus,.dev-support-form textarea:focus{border-color:#0ea5e9;box-shadow:0 0 0 3px rgba(14,165,233,.14)}
+            .dev-support-form__footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:4px}
+            .dev-support-form__footer a{color:#0f3150;font-weight:700;text-decoration:none;font-size:13px}
+            .dev-support-form__footer button{border:0;border-radius:12px;background:#0f3150;color:#fff;padding:11px 16px;font-weight:800;display:inline-flex;align-items:center;gap:8px}
+            @media (max-width:640px){.dev-support-widget{right:14px;bottom:14px}.dev-support-widget__button span{display:none}.dev-support-modal__dialog{right:16px;bottom:74px}}
+        </style>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var modal = document.getElementById('devSupportModal');
+                if (!modal) return;
+
+                document.querySelectorAll('[data-dev-reclamation-open]').forEach(function (button) {
+                    button.addEventListener('click', function () {
+                        modal.classList.add('is-open');
+                        modal.setAttribute('aria-hidden', 'false');
+                    });
+                });
+
+                document.querySelectorAll('[data-dev-reclamation-close]').forEach(function (button) {
+                    button.addEventListener('click', function () {
+                        modal.classList.remove('is-open');
+                        modal.setAttribute('aria-hidden', 'true');
+                    });
+                });
+            });
+        </script>
+    @endif
+@endauth
+@endonce

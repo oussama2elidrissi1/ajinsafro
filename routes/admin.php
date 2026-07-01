@@ -63,6 +63,7 @@ use App\Http\Controllers\Admin\VoyageReservationDataController;
 use App\Http\Controllers\Admin\WordPress\HotelController;
 use App\Http\Controllers\Admin\WpMediaController;
 use App\Http\Controllers\Admin\WpTourController;
+use App\Http\Controllers\Dev\ReclamationController as DevReclamationController;
 use App\Http\Controllers\Client\ClientDashboardController;
 use App\Http\Controllers\Client\ClientProfileController;
 use App\Http\Controllers\Client\ClientReservationsController;
@@ -74,6 +75,7 @@ use App\Http\Controllers\Agent\ReservationController as AgentReservationControll
 use App\Http\Controllers\Auth\LockScreenController;
 use App\Http\Controllers\Front\GroupDealsController as FrontGroupDealsController;
 use App\Http\Controllers\Front\VoyageController as FrontVoyageController;
+use App\Http\Controllers\Support\ReclamationController as SupportReclamationController;
 use App\Http\Controllers\Admin\MenuHubController;
 use App\Http\Controllers\DemoController;
 use App\Http\Controllers\MessagerieController as AgentMessagerieController;
@@ -123,6 +125,18 @@ Route::get('logout', function (\Illuminate\Http\Request $request) {
 Route::middleware('auth')->group(function () {
     Route::get('lock-screen', [LockScreenController::class, 'show'])->name('lock-screen');
     Route::post('lock-screen', [LockScreenController::class, 'unlock'])->name('lock-screen.unlock');
+
+    Route::prefix('support/reclamations')->name('support.reclamations.')->group(function () {
+        Route::get('/', [SupportReclamationController::class, 'index'])->name('index');
+        Route::post('/', [SupportReclamationController::class, 'store'])->name('store');
+        Route::get('{reclamation}', [SupportReclamationController::class, 'show'])->name('show')->whereNumber('reclamation');
+    });
+
+    Route::prefix('dev/reclamations')->name('dev.reclamations.')->group(function () {
+        Route::get('/', [DevReclamationController::class, 'index'])->name('index');
+        Route::get('{reclamation}', [DevReclamationController::class, 'show'])->name('show')->whereNumber('reclamation');
+        Route::patch('{reclamation}', [DevReclamationController::class, 'update'])->name('update')->whereNumber('reclamation');
+    });
 });
 
 Route::middleware(['auth', 'client'])->prefix('client')->name('client.')->group(function () {

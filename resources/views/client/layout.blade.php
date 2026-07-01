@@ -408,6 +408,7 @@
 </div>
 
 <script src="{{ URL::asset('build/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+@include('support.reclamations._floating_button')
 @yield('page_scripts')
 </body>
 </html>
