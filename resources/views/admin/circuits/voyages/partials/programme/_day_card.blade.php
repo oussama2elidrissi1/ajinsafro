@@ -57,6 +57,9 @@
                 </div>
                 <div class="field-description programme-day-detail ve-rich-field">
                     <label class="form-label">Description détaillée</label>
+                    @php
+                        $programDetailHtml = old('programme_days.'.$dayIndex.'.content_html', $day->content_html ?? '');
+                    @endphp
                     <div class="programme-detail-toolbar" aria-label="Outils de mise en forme">
                         <button type="button" class="programme-detail-tool" data-programme-editor-action="bold" title="Gras"><i class="bx bx-bold"></i></button>
                         <button type="button" class="programme-detail-tool" data-programme-editor-action="italic" title="Italique"><i class="bx bx-italic"></i></button>
@@ -65,7 +68,8 @@
                         <button type="button" class="programme-detail-tool" data-programme-editor-action="ol" title="Liste numerotee"><i class="bx bx-list-ol"></i></button>
                         <button type="button" class="programme-detail-tool" data-programme-editor-action="link" title="Lien"><i class="bx bx-link"></i></button>
                     </div>
-                    <textarea class="form-control programme-detail-editor" name="programme_days[{{ $dayIndex }}][content_html]" rows="8" placeholder="Programme détaillé du jour">{{ old('programme_days.'.$dayIndex.'.content_html', $day->content_html ?? '') }}</textarea>
+                    <div class="programme-detail-surface" contenteditable="true" data-placeholder="Programme détaillé du jour">{!! $programDetailHtml !!}</div>
+                    <textarea class="d-none programme-detail-editor" name="programme_days[{{ $dayIndex }}][content_html]" rows="8">{{ $programDetailHtml }}</textarea>
                 </div>
                 <div class="field-notes programme-day-notes ve-rich-field">
                     <label class="form-label">Notes</label>

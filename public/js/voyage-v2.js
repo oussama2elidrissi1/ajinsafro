@@ -316,6 +316,12 @@
                 window.initVoyageRichEditors(activePanel);
             }, 0);
         }
+
+        if (typeof window.initProgrammeDetailEditors === 'function') {
+            window.setTimeout(function () {
+                window.initProgrammeDetailEditors(activePanel);
+            }, 0);
+        }
     }
 
     function resolveSaveUrl(stepId) {

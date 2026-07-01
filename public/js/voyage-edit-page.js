@@ -3129,7 +3129,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     '<button type="button" class="programme-detail-tool" data-programme-editor-action="ol" title="Liste numerotee"><i class="bx bx-list-ol"></i></button>' +
                     '<button type="button" class="programme-detail-tool" data-programme-editor-action="link" title="Lien"><i class="bx bx-link"></i></button>' +
                     '</div>' +
-                    '<textarea class="form-control programme-detail-editor" name="programme_days[' + index + '][content_html]" rows="8" placeholder="Programme détaillé du jour"></textarea></div>' +
+                    '<div class="programme-detail-surface" contenteditable="true" data-placeholder="Programme détaillé du jour"></div>' +
+                    '<textarea class="d-none programme-detail-editor" name="programme_days[' + index + '][content_html]" rows="8"></textarea></div>' +
                     '<div class="field-notes programme-day-notes ve-rich-field"><label class="form-label">Notes</label>' +
                     '<textarea class="form-control programme-plain-editor" name="programme_days[' + index + '][notes]" rows="4" placeholder="Notes du jour"></textarea></div>' +
                     '</div>' +
@@ -3178,6 +3179,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
                 attachDragToCards();
+                if (window.initProgrammeDetailEditors) {
+                    window.initProgrammeDetailEditors(lastCard || accordion);
+                }
                 if (window.updateProgrammeDayExtras && opts.skipExtrasRefresh !== true) {
                     try {
                         window.updateProgrammeDayExtras(String(count() - 1));
@@ -3297,41 +3301,68 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         })();
 
-        (function programmeDetailTextareaEditor() {
-            function selectedText(textarea) {
-                return textarea.value.slice(textarea.selectionStart || 0, textarea.selectionEnd || 0);
+        (function programmeDetailVisualEditor() {
+            function normalizeHtml(html) {
+                var value = String(html || '').trim();
+                return value === '<br>' || value === '<div><br></div>' ? '' : value;
             }
 
-            function replaceSelection(textarea, replacement, selectStart, selectEnd) {
-                var start = textarea.selectionStart || 0;
-                var end = textarea.selectionEnd || 0;
-                textarea.value = textarea.value.slice(0, start) + replacement + textarea.value.slice(end);
-                textarea.focus();
-                textarea.selectionStart = start + (selectStart || replacement.length);
-                textarea.selectionEnd = start + (selectEnd == null ? replacement.length : selectEnd);
-                textarea.dispatchEvent(new Event('input', { bubbles: true }));
-                textarea.dispatchEvent(new Event('change', { bubbles: true }));
+            function syncField(field) {
+                if (!field) return;
+                var surface = field.querySelector('.programme-detail-surface');
+                var source = field.querySelector('textarea.programme-detail-editor');
+                if (!surface || !source) return;
+                source.value = normalizeHtml(surface.innerHTML);
+                source.dispatchEvent(new Event('input', { bubbles: true }));
+                source.dispatchEvent(new Event('change', { bubbles: true }));
             }
 
-            function wrap(textarea, before, after, fallback) {
-                var value = selectedText(textarea) || fallback || '';
-                replaceSelection(textarea, before + value + after, before.length, before.length + value.length);
-            }
+            function initField(field) {
+                if (!field || field.dataset.programmeVisualEditor === 'true') return;
+                var surface = field.querySelector('.programme-detail-surface');
+                var source = field.querySelector('textarea.programme-detail-editor');
+                if (!surface || !source) return;
 
-            function makeList(textarea, tag) {
-                var value = selectedText(textarea);
-                if (!value.trim()) {
-                    replaceSelection(textarea, '<' + tag + '>\n  <li>Element</li>\n</' + tag + '>', 12, 19);
-                    return;
+                field.dataset.programmeVisualEditor = 'true';
+                if (!normalizeHtml(surface.innerHTML) && source.value) {
+                    surface.innerHTML = source.value;
                 }
 
-                var items = value.split(/\r?\n/).map(function (line) {
-                    return line.trim();
-                }).filter(Boolean).map(function (line) {
-                    return '  <li>' + line + '</li>';
+                surface.addEventListener('input', function () { syncField(field); });
+                surface.addEventListener('blur', function () { syncField(field); });
+                surface.addEventListener('paste', function () {
+                    window.setTimeout(function () { syncField(field); }, 0);
                 });
-                replaceSelection(textarea, '<' + tag + '>\n' + items.join('\n') + '\n</' + tag + '>');
             }
+
+            function initAll(root) {
+                var scope = root && root.querySelectorAll ? root : document;
+                scope.querySelectorAll('.programme-day-detail').forEach(initField);
+            }
+
+            function command(field, action) {
+                var surface = field ? field.querySelector('.programme-detail-surface') : null;
+                if (!surface) return;
+                surface.focus();
+
+                if (action === 'bold') document.execCommand('bold', false, null);
+                if (action === 'italic') document.execCommand('italic', false, null);
+                if (action === 'heading') document.execCommand('formatBlock', false, 'h3');
+                if (action === 'ul') document.execCommand('insertUnorderedList', false, null);
+                if (action === 'ol') document.execCommand('insertOrderedList', false, null);
+                if (action === 'link') {
+                    var href = window.prompt('URL du lien', 'https://');
+                    if (href) document.execCommand('createLink', false, href);
+                }
+
+                syncField(field);
+            }
+
+            document.addEventListener('mousedown', function (event) {
+                if (event.target && event.target.closest && event.target.closest('[data-programme-editor-action]')) {
+                    event.preventDefault();
+                }
+            }, true);
 
             document.addEventListener('click', function (event) {
                 var button = event.target && event.target.closest
@@ -3339,30 +3370,28 @@ document.addEventListener('DOMContentLoaded', function () {
                     : null;
                 if (!button) return;
 
-                var field = button.closest('.programme-day-detail');
-                var textarea = field ? field.querySelector('textarea.programme-detail-editor') : null;
-                if (!textarea) return;
-
                 event.preventDefault();
-                var action = button.getAttribute('data-programme-editor-action');
-                if (action === 'bold') wrap(textarea, '<strong>', '</strong>', 'texte');
-                if (action === 'italic') wrap(textarea, '<em>', '</em>', 'texte');
-                if (action === 'heading') wrap(textarea, '<h3>', '</h3>', 'Titre');
-                if (action === 'ul') makeList(textarea, 'ul');
-                if (action === 'ol') makeList(textarea, 'ol');
-                if (action === 'link') {
-                    var label = selectedText(textarea) || 'Lien';
-                    var href = window.prompt('URL du lien', 'https://');
-                    if (href) {
-                        replaceSelection(textarea, '<a href="' + href.replace(/"/g, '&quot;') + '">' + label + '</a>');
-                    }
-                }
+                command(button.closest('.programme-day-detail'), button.getAttribute('data-programme-editor-action'));
             }, true);
+
+            window.initProgrammeDetailEditors = initAll;
+            window.syncProgrammeDetailEditors = function (root) {
+                initAll(root || document);
+                var scope = root && root.querySelectorAll ? root : document;
+                scope.querySelectorAll('.programme-day-detail').forEach(syncField);
+            };
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function () { initAll(document); });
+            } else {
+                initAll(document);
+            }
         })();
 
         window.buildProgrammeDaysPayload = function() {
             var accordion = document.getElementById('accordionProgrammeDays');
             if (!accordion) return [];
+            if (window.syncProgrammeDetailEditors) window.syncProgrammeDetailEditors(accordion);
             var cards = accordion.querySelectorAll('.programme-day-card');
             var programmeDays = [];
 
