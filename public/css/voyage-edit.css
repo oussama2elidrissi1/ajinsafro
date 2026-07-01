@@ -2073,6 +2073,22 @@ body.voyage-layout-page .offcanvas {
 .voyage-edit-page .ve-rich-field textarea.rich-editor {
     min-height: 140px;
 }
+.voyage-edit-page .programme-day-detail textarea.programme-detail-editor {
+    display: block !important;
+    width: 100% !important;
+    min-height: 260px !important;
+    resize: vertical;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 10px !important;
+    background: #ffffff !important;
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+    padding: 16px 18px !important;
+    line-height: 1.6;
+}
+.voyage-edit-page .programme-day-detail textarea.programme-detail-editor:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14), inset 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
 .voyage-edit-page .ve-rich-field .tox,
 .voyage-edit-page .ve-rich-field .tox-tinymce,
 .voyage-edit-page .ve-rich-field .tox-editor-container,
