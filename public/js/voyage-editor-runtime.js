@@ -532,14 +532,25 @@
 
         var payloadField = document.getElementById('programme-days-payload');
         var programmeDays = buildProgrammeDaysPayloadFromDom();
+        var isV2Form = !!(form.closest('.v2-page') || form.hasAttribute('data-v2-current-step'));
 
         if (payloadField) {
             payloadField.value = JSON.stringify(programmeDays);
         }
 
+        if (isV2Form) {
+            Array.prototype.slice.call(form.querySelectorAll('[name^="programme_days["]')).forEach(function (field) {
+                field.removeAttribute('disabled');
+                field.removeAttribute('data-programme-submit-disabled');
+            });
+
+            return programmeDays;
+        }
+
         // Disable the large nested programme_days[*] inputs to avoid hitting PHP max_input_vars.
         Array.prototype.slice.call(form.querySelectorAll('[name^="programme_days["]')).forEach(function (field) {
             field.setAttribute('disabled', 'disabled');
+            field.setAttribute('data-programme-submit-disabled', '1');
         });
 
         return programmeDays;

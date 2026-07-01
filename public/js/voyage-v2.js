@@ -306,6 +306,11 @@
             window.history.replaceState(null, document.title, url);
         }
 
+        Array.prototype.slice.call(activePanel.querySelectorAll('[name^="programme_days["]')).forEach(function (field) {
+            field.removeAttribute('disabled');
+            field.removeAttribute('data-programme-submit-disabled');
+        });
+
         if (typeof window.initVoyageRichEditors === 'function') {
             window.setTimeout(function () {
                 window.initVoyageRichEditors(activePanel);

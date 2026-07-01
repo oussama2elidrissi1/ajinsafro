@@ -1845,16 +1845,50 @@ document.addEventListener('DOMContentLoaded', function () {
                 return !!(el && (el.offsetParent || el.getClientRects().length));
             }
 
+            function refreshEditor(editor, textarea) {
+                if (!editor) return;
+
+                try {
+                    if (editor.mode && typeof editor.mode.set === 'function') {
+                        editor.mode.set('design');
+                    } else if (typeof editor.setMode === 'function') {
+                        editor.setMode('design');
+                    }
+                } catch (e) {}
+
+                try {
+                    var body = editor.getBody && editor.getBody();
+                    if (body) {
+                        body.setAttribute('contenteditable', 'true');
+                        body.style.minHeight = '220px';
+                        body.style.cursor = 'text';
+                    }
+                } catch (e) {}
+
+                try {
+                    var container = editor.getContainer && editor.getContainer();
+                    if (container) {
+                        container.style.width = '100%';
+                        container.style.minHeight = editorHeightFromRows(textarea || editor.targetElm || null) + 'px';
+                    }
+                } catch (e) {}
+            }
+
             function initOne(el) {
                 if (!el || el.tagName !== 'TEXTAREA') return;
                 if (!el.classList.contains('rich-editor')) return;
-                if (el.dataset.richEditorInitialized === 'true' || el.dataset.richEditorInitialized === 'pending') return;
                 if (!window.tinymce || typeof tinymce.init !== 'function') return;
                 if (!isVisibleForEditor(el)) return;
 
                 var id = ensureId(el);
-                if (window.tinymce && tinymce.get(id)) {
+                var existingEditor = window.tinymce && tinymce.get(id);
+                if (existingEditor) {
                     el.dataset.richEditorInitialized = 'true';
+                    refreshEditor(existingEditor, el);
+                    return;
+                }
+
+                if (el.dataset.richEditorInitialized === 'true' || el.dataset.richEditorInitialized === 'pending') {
                     return;
                 }
 
@@ -1870,6 +1904,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         "save table contextmenu directionality emoticons template paste textcolor"
                     ],
                     toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | print preview media fullpage | forecolor backcolor emoticons",
+                    content_style: "body { min-height: 220px; cursor: text; padding: 12px 16px; } p { margin: 0 0 8px; }",
                     style_formats: [
                         {title: 'Bold text', inline: 'b'},
                         {title: 'Red text', inline: 'span', styles: {color: '#ff0000'}},
@@ -1881,6 +1916,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         ],
                         init_instance_callback: function () {
                             el.dataset.richEditorInitialized = 'true';
+                            refreshEditor(tinymce.get(id), el);
                         }
                     });
 
@@ -3354,17 +3390,28 @@ document.addEventListener('DOMContentLoaded', function () {
             var payloadField = document.getElementById('programme-days-payload');
             var form = document.getElementById('edit-voyage-form');
             var programmeDays = window.buildProgrammeDaysPayload ? window.buildProgrammeDaysPayload() : [];
+            var isV2Form = !!(form && (form.closest('.v2-page') || form.hasAttribute('data-v2-current-step')));
 
             if (payloadField) {
                 payloadField.value = JSON.stringify(programmeDays);
             }
 
-            if (!disableProgrammeInputs || !form) {
+            if (!form) {
                 return programmeDays;
             }
 
             form.querySelectorAll('[name^="programme_days["]').forEach(function(field) {
-                field.disabled = true;
+                if (!field) return;
+                if (disableProgrammeInputs && !isV2Form) {
+                    field.disabled = true;
+                    field.setAttribute('data-programme-submit-disabled', '1');
+                    return;
+                }
+                if (field.getAttribute('data-programme-submit-disabled') === '1' || isV2Form) {
+                    field.disabled = false;
+                    field.removeAttribute('disabled');
+                    field.removeAttribute('data-programme-submit-disabled');
+                }
             });
 
             return programmeDays;

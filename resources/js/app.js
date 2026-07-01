@@ -14,7 +14,9 @@ File: Main Js File
 
     function initMetisMenu() {
         //metis menu
-        $("#side-menu").metisMenu();
+        if ($("#side-menu").length && $.fn && typeof $.fn.metisMenu === 'function') {
+            $("#side-menu").metisMenu();
+        }
     }
 
     function initLeftMenuCollapse() {
