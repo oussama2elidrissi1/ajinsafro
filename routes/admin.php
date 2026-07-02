@@ -136,6 +136,12 @@ Route::middleware('auth')->group(function () {
     Route::get('dev/reclamations/{reclamation}', fn ($reclamation) => redirect()->route('admin.dev.reclamations.show', $reclamation))
         ->name('dev.reclamations.show')
         ->whereNumber('reclamation');
+
+    Route::prefix('admin/dev/reclamations')->name('admin.dev.reclamations.')->group(function () {
+        Route::get('/', [DevReclamationController::class, 'index'])->name('index');
+        Route::get('{reclamation}', [DevReclamationController::class, 'show'])->name('show')->whereNumber('reclamation');
+        Route::patch('{reclamation}', [DevReclamationController::class, 'update'])->name('update')->whereNumber('reclamation');
+    });
 });
 
 Route::middleware(['auth', 'client'])->prefix('client')->name('client.')->group(function () {
@@ -173,12 +179,6 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('dashboard/v4', [DashboardController::class, 'v4'])->name('dashboard.v4');
         Route::get('dashboard/v5', [DashboardController::class, 'v5'])->name('dashboard.v5');
         Route::get('dashboard/v6', [DashboardController::class, 'v6'])->name('dashboard.v6');
-
-        Route::prefix('dev/reclamations')->name('dev.reclamations.')->group(function () {
-            Route::get('/', [DevReclamationController::class, 'index'])->name('index');
-            Route::get('{reclamation}', [DevReclamationController::class, 'show'])->name('show')->whereNumber('reclamation');
-            Route::patch('{reclamation}', [DevReclamationController::class, 'update'])->name('update')->whereNumber('reclamation');
-        });
 
         Route::get('reservations', [ReservationsController::class, 'index'])->name('reservations.index');
         Route::get('reservations/agents', function (\Illuminate\Http\Request $request) {

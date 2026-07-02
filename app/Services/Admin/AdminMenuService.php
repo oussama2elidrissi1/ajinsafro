@@ -102,6 +102,18 @@ class AdminMenuService
 
     private function userCanAccessItem(User $user, array $item, bool $routeExists): bool
     {
+        if (! empty($item['emails'])) {
+            $allowedEmails = array_map(
+                static fn ($email): string => strtolower(trim((string) $email)),
+                is_array($item['emails']) ? $item['emails'] : [$item['emails']]
+            );
+            $userEmail = strtolower(trim((string) ($user->email ?? '')));
+
+            if (! in_array($userEmail, $allowedEmails, true)) {
+                return false;
+            }
+        }
+
         if (! empty($item['roles']) && ! $user->hasRole($item['roles'])) {
             return false;
         }

@@ -10,6 +10,8 @@ use Illuminate\View\View;
 
 class ReclamationController extends Controller
 {
+    private const DEV_EMAIL = 'dev@ajinsafro.ma';
+
     public function index(Request $request): View
     {
         $this->authorizeDevAccess($request);
@@ -77,11 +79,8 @@ class ReclamationController extends Controller
     private function authorizeDevAccess(Request $request): void
     {
         $user = $request->user();
+        $email = strtolower(trim((string) ($user?->email ?? '')));
 
-        abort_unless($user && (
-            ($user->is_admin ?? false)
-            || (method_exists($user, 'canAccessAdmin') && $user->canAccessAdmin())
-            || (method_exists($user, 'hasRole') && $user->hasRole(['Dev', 'Developer', 'Developpeur', 'Super Admin', 'Admin']))
-        ), 403);
+        abort_unless($email === self::DEV_EMAIL, 403);
     }
 }

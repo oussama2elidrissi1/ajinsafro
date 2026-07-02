@@ -4,11 +4,7 @@
         $supportRouteExists = \Illuminate\Support\Facades\Route::has('support.reclamations.store');
         $devRouteExists = \Illuminate\Support\Facades\Route::has('admin.dev.reclamations.index');
         $supportUser = auth()->user();
-        $isDevSupport = $supportUser && (
-            ($supportUser->is_admin ?? false)
-            || (method_exists($supportUser, 'canAccessAdmin') && $supportUser->canAccessAdmin())
-            || (method_exists($supportUser, 'hasRole') && $supportUser->hasRole(['Dev', 'Developer', 'Developpeur', 'Super Admin', 'Admin']))
-        );
+        $isDevSupport = strtolower(trim((string) ($supportUser?->email ?? ''))) === 'dev@ajinsafro.ma';
     @endphp
 
     @if($supportRouteExists)

@@ -59,7 +59,7 @@ return [
             'label' => 'Reclamations dev',
             'icon' => 'bx bx-message-square-error',
             'route' => 'admin.dev.reclamations.index',
-            'roles' => ['Dev', 'Developer', 'Developpeur', 'Super Admin', 'Admin'],
+            'emails' => ['dev@ajinsafro.ma'],
             'active_patterns' => ['admin.dev.reclamations.*'],
         ],
         [
