@@ -5,6 +5,7 @@
         $devRouteExists = \Illuminate\Support\Facades\Route::has('admin.dev.reclamations.index');
         $supportUser = auth()->user();
         $isDevSupport = strtolower(trim((string) ($supportUser?->email ?? ''))) === 'dev@ajinsafro.ma';
+        $supportInVoyageStudio = request()->routeIs('admin.circuits.voyages.create', 'admin.circuits.voyages.edit-v2');
         $myDevReclamations = collect();
         $myDevReclamationsCount = 0;
 
@@ -26,7 +27,7 @@
     @endphp
 
     @if($supportRouteExists)
-        <div class="dev-support-widget">
+        <div class="dev-support-widget {{ $supportInVoyageStudio ? 'dev-support-widget--voyage-studio' : '' }}">
             @if($devRouteExists && $isDevSupport)
                 <a class="dev-support-widget__dev-link" href="{{ route('admin.dev.reclamations.index') }}">
                     <i class="bx bx-list-check"></i>
@@ -114,6 +115,7 @@
 
         <style>
             .dev-support-widget{position:fixed;right:22px;bottom:22px;z-index:2140;display:flex;align-items:flex-end;gap:10px;flex-direction:column}
+            .dev-support-widget--voyage-studio{bottom:92px}
             .dev-support-widget__button,.dev-support-widget__dev-link{border:0;border-radius:999px;box-shadow:0 18px 40px rgba(15,23,42,.22);font-weight:800;text-decoration:none;display:inline-flex;align-items:center;gap:8px;letter-spacing:0}
             .dev-support-widget__button{background:#ff5b1a;color:#fff;padding:13px 18px}
             .dev-support-widget__dev-link{background:#0f3150;color:#fff;padding:10px 14px;font-size:13px}
@@ -123,6 +125,7 @@
             .dev-support-modal.is-open{display:block}
             .dev-support-modal__backdrop{position:absolute;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(3px)}
             .dev-support-modal__dialog{position:absolute;right:24px;bottom:88px;width:min(520px,calc(100vw - 32px));background:#fff;border-radius:18px;box-shadow:0 30px 80px rgba(15,23,42,.32);overflow:hidden;border:1px solid #e2e8f0}
+            .dev-support-widget--voyage-studio + .dev-support-modal .dev-support-modal__dialog{bottom:154px}
             .dev-support-modal__header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:20px 22px;background:#f8fafc;border-bottom:1px solid #e2e8f0}
             .dev-support-modal__header h5{margin:0;color:#0f3150;font-size:18px;font-weight:800}
             .dev-support-modal__header p{margin:4px 0 0;color:#64748b;font-size:13px}
@@ -147,7 +150,7 @@
             .dev-support-form__footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:4px}
             .dev-support-form__footer a{color:#0f3150;font-weight:700;text-decoration:none;font-size:13px}
             .dev-support-form__footer button{border:0;border-radius:12px;background:#0f3150;color:#fff;padding:11px 16px;font-weight:800;display:inline-flex;align-items:center;gap:8px}
-            @media (max-width:640px){.dev-support-widget{right:14px;bottom:14px}.dev-support-widget__button span{display:none}.dev-support-modal__dialog{right:16px;bottom:74px}}
+            @media (max-width:640px){.dev-support-widget{right:14px;bottom:14px}.dev-support-widget--voyage-studio{bottom:86px}.dev-support-widget__button span{display:none}.dev-support-modal__dialog{right:16px;bottom:74px}.dev-support-widget--voyage-studio + .dev-support-modal .dev-support-modal__dialog{bottom:142px}}
         </style>
 
         <script>
