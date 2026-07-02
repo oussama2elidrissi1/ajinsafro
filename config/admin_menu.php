@@ -55,6 +55,14 @@ return [
             'active_patterns' => ['admin.messagerie.*'],
         ],
         [
+            'key' => 'dev_reclamations',
+            'label' => 'Reclamations dev',
+            'icon' => 'bx bx-message-square-error',
+            'route' => 'admin.dev.reclamations.index',
+            'roles' => ['Dev', 'Developer', 'Developpeur', 'Super Admin', 'Admin'],
+            'active_patterns' => ['admin.dev.reclamations.*'],
+        ],
+        [
             'key' => 'customers',
             'label' => 'Clients',
             'icon' => 'bx bx-user',

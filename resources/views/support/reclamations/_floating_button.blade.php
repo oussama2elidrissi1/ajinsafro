@@ -2,7 +2,7 @@
 @auth
     @php
         $supportRouteExists = \Illuminate\Support\Facades\Route::has('support.reclamations.store');
-        $devRouteExists = \Illuminate\Support\Facades\Route::has('dev.reclamations.index');
+        $devRouteExists = \Illuminate\Support\Facades\Route::has('admin.dev.reclamations.index');
         $supportUser = auth()->user();
         $isDevSupport = $supportUser && (
             ($supportUser->is_admin ?? false)
@@ -14,7 +14,7 @@
     @if($supportRouteExists)
         <div class="dev-support-widget">
             @if($devRouteExists && $isDevSupport)
-                <a class="dev-support-widget__dev-link" href="{{ route('dev.reclamations.index') }}">
+                <a class="dev-support-widget__dev-link" href="{{ route('admin.dev.reclamations.index') }}">
                     <i class="bx bx-list-check"></i>
                     Reclamations dev
                 </a>

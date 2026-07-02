@@ -70,7 +70,7 @@ class ReclamationController extends Controller
         ])->save();
 
         return redirect()
-            ->route('dev.reclamations.show', $reclamation)
+            ->route('admin.dev.reclamations.show', $reclamation)
             ->with('success', 'Reclamation mise a jour.');
     }
 

@@ -1,4 +1,4 @@
-@extends('layouts.master-ajinsafro')
+@extends('layouts.admin-v6')
 
 @section('title', 'Traitement reclamation')
 
@@ -9,7 +9,7 @@
             <h4 class="mb-1">{{ $reclamation->subject ?: 'Reclamation' }}</h4>
             <p class="text-muted mb-0">Envoyee par {{ $reclamation->user?->name ?? 'Utilisateur' }} le {{ $reclamation->created_at->format('d/m/Y H:i') }}</p>
         </div>
-        <a href="{{ route('dev.reclamations.index') }}" class="btn btn-outline-secondary">Retour</a>
+        <a href="{{ route('admin.dev.reclamations.index') }}" class="btn btn-outline-secondary">Retour</a>
     </div>
 
     @if(session('success'))
@@ -37,7 +37,7 @@
             <div class="card">
                 <div class="card-header"><strong>Reponse et statut</strong></div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('dev.reclamations.update', $reclamation) }}" class="d-grid gap-3">
+                    <form method="POST" action="{{ route('admin.dev.reclamations.update', $reclamation) }}" class="d-grid gap-3">
                         @csrf
                         @method('PATCH')
                         <div>
@@ -62,4 +62,3 @@
     </div>
 </div>
 @endsection
-
