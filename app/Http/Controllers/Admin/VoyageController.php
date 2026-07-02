@@ -2996,71 +2996,8 @@ class VoyageController extends Controller
         }
 
         $capacity = max(0, $capacity);
-        $rows = [];
-        $sortOrder = 0;
-        $tourHotels = TourHotel::getAllForTour($wpTourId)->load('rooms');
 
-        foreach ($tourHotels as $hotel) {
-            $hotelRows = [];
-            $coveredSeats = 0;
-
-            foreach ($hotel->rooms as $room) {
-                if (! (bool) ($room->is_active ?? true)) {
-                    continue;
-                }
-
-                $roomType = trim((string) ($room->room_type ?? ''));
-                if ($roomType === '') {
-                    continue;
-                }
-
-                $quantity = max(0, (int) ($room->room_count ?? 0));
-                if ($quantity <= 0) {
-                    continue;
-                }
-
-                $capacityPerRoom = TourPlacesCalculator::effectiveCapacity(
-                    (int) ($room->capacity_total ?? 0),
-                    (int) ($room->capacity_adults ?? 0),
-                    (int) ($room->capacity_children ?? 0),
-                );
-                if ($capacityPerRoom <= 0) {
-                    continue;
-                }
-
-                $coveredSeats += ($quantity * $capacityPerRoom);
-                $hotelRows[] = [
-                    'hotel_id' => (int) $hotel->id,
-                    'room_type' => $roomType,
-                    'quantity' => $quantity,
-                    'capacity_per_room' => $capacityPerRoom,
-                    'supplement' => max(0, (float) ($room->supplement ?? 0)),
-                    'sort_order' => 0,
-                ];
-            }
-
-            if ($hotelRows === []) {
-                $rows = array_merge(
-                    $rows,
-                    $this->buildDefaultDepartureRoomAllocationsForHotel((int) $hotel->id, $capacity, $sortOrder)
-                );
-                continue;
-            }
-
-            foreach ($hotelRows as $hotelRow) {
-                $hotelRow['sort_order'] = $sortOrder++;
-                $rows[] = $hotelRow;
-            }
-
-            if ($capacity > $coveredSeats) {
-                $rows = array_merge(
-                    $rows,
-                    $this->buildDefaultDepartureRoomAllocationsForHotel((int) $hotel->id, $capacity - $coveredSeats, $sortOrder)
-                );
-            }
-        }
-
-        return $rows;
+        return $this->buildDefaultDepartureRoomAllocations($capacity);
     }
 
     private function resolveDepartureForTravelDate(Voyage $voyage, TravelDate $travelDate): ?Departure

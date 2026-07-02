@@ -156,46 +156,7 @@
     }
 
     function defaultRooms(capacity, hotelsOverride) {
-        var hotels = Array.isArray(hotelsOverride) ? hotelsOverride : collectHotels();
         var seats = Math.max(0, parseInt(String(capacity || '0'), 10) || 0);
-
-        if (hotels.length) {
-            var rows = [];
-
-            hotels.forEach(function (hotel) {
-                var hotelRows = [];
-                var covered = 0;
-
-                (hotel.rooms || []).forEach(function (room) {
-                    var roomType = String(room.room_type || '').trim();
-                    var quantity = Math.max(0, parseInt(String(room.room_count || '0'), 10) || 0);
-                    var capacityPerRoom = Math.max(1, parseInt(String(room.capacity_per_room || '1'), 10) || 1);
-                    if (!roomType || quantity <= 0 || capacityPerRoom <= 0) return;
-
-                    covered += quantity * capacityPerRoom;
-                    hotelRows.push({
-                        room_type: roomType,
-                        quantity: quantity,
-                        capacity_per_room: capacityPerRoom,
-                        hotel_id: hotel.hotel_id || '',
-                        hotel_index: hotel.index
-                    });
-                });
-
-                if (!hotelRows.length) {
-                    hotelRows = buildFallbackRoomsForHotel(seats, hotel);
-                } else if (seats > covered) {
-                    hotelRows = hotelRows.concat(buildFallbackRoomsForHotel(seats - covered, hotel));
-                }
-
-                rows = rows.concat(hotelRows);
-            });
-
-            if (rows.length) {
-                return rows;
-            }
-        }
-
         return buildFallbackRoomsForHotel(seats, null);
     }
 
@@ -316,6 +277,43 @@
         return covered;
     }
 
+    function collapseDuplicatedStayRoomsIfNeeded(rooms, hotels, expectedCapacity) {
+        var normalized = Array.isArray(rooms) ? rooms : [];
+        var stayCount = Array.isArray(hotels) ? hotels.length : 0;
+        var expected = Math.max(0, parseInt(String(expectedCapacity || '0'), 10) || 0);
+        if (expected <= 0 || stayCount <= 1 || normalized.length !== stayCount) {
+            return normalized;
+        }
+
+        var first = normalized[0] || {};
+        var firstSignature = [
+            String(first.room_type || '').trim().toLowerCase(),
+            String(first.quantity || '0'),
+            String(first.capacity_per_room || '1'),
+            String(first.supplement || '0')
+        ].join('|');
+
+        var duplicated = normalized.every(function (room) {
+            if (!room || room.hotel_index === '' || room.hotel_index == null) return false;
+            var signature = [
+                String(room.room_type || '').trim().toLowerCase(),
+                String(room.quantity || '0'),
+                String(room.capacity_per_room || '1'),
+                String(room.supplement || '0')
+            ].join('|');
+            return signature === firstSignature && roomCoveredSeats(room) === expected;
+        });
+
+        if (!duplicated) {
+            return normalized;
+        }
+
+        var collapsed = Object.assign({}, first);
+        collapsed.hotel_id = '';
+        collapsed.hotel_index = '';
+        return [collapsed];
+    }
+
     function getStayCoverageState(expected, covered) {
         if (covered === expected) return 'exact';
         if (covered < expected) return 'under';
@@ -337,10 +335,8 @@
             var stay = {
                 index: indexKey,
                 label: hotel && hotel.label ? String(hotel.label) : ('Sejour ' + (idx + 1)),
-                expected: expected,
                 covered: 0,
-                diff: 0,
-                state: 'exact'
+                state: 'info'
             };
             byHotelIndex[indexKey] = stay;
             return stay;
@@ -368,25 +364,11 @@
             }
         });
 
-        var exactCount = 0;
-        var underCount = 0;
-        var overCount = 0;
-        stays.forEach(function (stay) {
-            stay.diff = stay.covered - expected;
-            stay.state = getStayCoverageState(expected, stay.covered);
-            if (stay.state === 'exact') exactCount += 1;
-            if (stay.state === 'under') underCount += 1;
-            if (stay.state === 'over') overCount += 1;
-        });
-
-        var status = 'exact';
-        if (!stays.length) {
-            status = getStayCoverageState(expected, coverageStats(rooms));
-        } else if (underCount > 0 || unassigned > 0) {
-            status = 'under';
-        } else if (overCount > 0) {
-            status = 'over';
-        }
+        var totalCovered = coverageStats(rooms);
+        var status = getStayCoverageState(expected, totalCovered);
+        var exactCount = status === 'exact' ? 1 : 0;
+        var underCount = status === 'under' ? 1 : 0;
+        var overCount = status === 'over' ? 1 : 0;
 
         return {
             expected: expected,
@@ -396,7 +378,7 @@
             underCount: underCount,
             overCount: overCount,
             status: status,
-            totalCovered: coverageStats(rooms)
+            totalCovered: totalCovered
         };
     }
 
@@ -412,49 +394,51 @@
             return '<span class="badge bg-warning-subtle text-warning border border-warning-subtle">Couverture a verifier</span>';
         }
         if (coverage.status === 'exact') {
-            return '<span class="badge bg-success-subtle text-success border border-success-subtle">Sejours couverts</span>';
+            return '<span class="badge bg-success-subtle text-success border border-success-subtle">Capacite couverte</span>';
         }
         if (coverage.status === 'under') {
-            return '<span class="badge bg-warning-subtle text-warning border border-warning-subtle">Sejours incomplets</span>';
+            return '<span class="badge bg-warning-subtle text-warning border border-warning-subtle">Capacite incomplete</span>';
         }
-        return '<span class="badge bg-danger-subtle text-danger border border-danger-subtle">Sejours excedentaires</span>';
+        return '<span class="badge bg-danger-subtle text-danger border border-danger-subtle">Capacite excedentaire</span>';
     }
 
     function renderStayCoverage(coverage) {
-        if (!coverage || !coverage.stays || !coverage.stays.length) return '';
+        if (!coverage) return '';
 
-        var items = coverage.stays.map(function (stay, idx) {
+        var diff = coverage.totalCovered - coverage.expected;
+        var diffText = diff === 0 ? 'Ecart 0' : ('Ecart ' + (diff > 0 ? '+' : '') + diff);
+        var items = [
+            '<span class="badge ' + stayCoverageBadge(coverage.status) + '">Total depart : ' +
+                coverage.totalCovered + '/' + coverage.expected + ' (' + diffText + ')' +
+            '</span>'
+        ];
+
+        (coverage.stays || []).forEach(function (stay, idx) {
+            if (!stay.covered) return;
             var title = escapeHtml(stay.label || ('Sejour ' + (idx + 1)));
-            var diffText = stay.diff === 0 ? 'Ecart 0' : ('Ecart ' + (stay.diff > 0 ? '+' : '') + stay.diff);
-            return '<span class="badge ' + stayCoverageBadge(stay.state) + '">' +
-                title + ' : ' + stay.covered + '/' + stay.expected + ' (' + diffText + ')' +
-            '</span>';
+            items.push('<span class="badge bg-info-subtle text-info border border-info-subtle">' + title + ' : ' + stay.covered + ' place(s)</span>');
         });
 
         if (coverage.unassigned > 0) {
-            items.push('<span class="badge bg-warning-subtle text-warning border border-warning-subtle">Non associe : ' + coverage.unassigned + ' place(s)</span>');
+            items.push('<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Circuit complet : ' + coverage.unassigned + ' place(s)</span>');
         }
 
         return '<div class="d-flex flex-wrap gap-2 mb-2">' + items.join('') + '</div>';
     }
 
     function renderStayCoverageDetails(coverage) {
-        if (!coverage || !coverage.stays || !coverage.stays.length) return '';
+        if (!coverage || !coverage.stays || !coverage.stays.some(function (stay) { return stay.covered > 0; })) return '';
 
-        var cards = coverage.stays.map(function (stay, idx) {
+        var cards = coverage.stays.filter(function (stay) { return stay.covered > 0; }).map(function (stay, idx) {
             var title = escapeHtml(stay.label || ('Sejour ' + (idx + 1)));
-            var stateClass = stay.state === 'exact'
-                ? 've-stay-breakdown__item--exact'
-                : (stay.state === 'under' ? 've-stay-breakdown__item--under' : 've-stay-breakdown__item--over');
-            var diffText = stay.diff === 0 ? 'Ecart 0' : ('Ecart ' + (stay.diff > 0 ? '+' : '') + stay.diff);
 
             return '' +
-                '<article class="ve-stay-breakdown__item ' + stateClass + '">' +
+                '<article class="ve-stay-breakdown__item ve-stay-breakdown__item--exact">' +
                 '  <header class="ve-stay-breakdown__head">' +
                 '    <span class="ve-stay-breakdown__title">' + title + '</span>' +
-                '    <strong class="ve-stay-breakdown__ratio">' + stay.covered + '/' + stay.expected + '</strong>' +
+                '    <strong class="ve-stay-breakdown__ratio">' + stay.covered + '</strong>' +
                 '  </header>' +
-                '  <div class="ve-stay-breakdown__meta">' + diffText + '</div>' +
+                '  <div class="ve-stay-breakdown__meta">Affecte a ce sejour</div>' +
                 '</article>';
         });
 
@@ -462,10 +446,10 @@
             cards.push(
                 '<article class="ve-stay-breakdown__item ve-stay-breakdown__item--unassigned">' +
                 '  <header class="ve-stay-breakdown__head">' +
-                '    <span class="ve-stay-breakdown__title">Non associe</span>' +
+                '    <span class="ve-stay-breakdown__title">Circuit complet</span>' +
                 '    <strong class="ve-stay-breakdown__ratio">' + coverage.unassigned + '</strong>' +
                 '  </header>' +
-                '  <div class="ve-stay-breakdown__meta">Places sans sejour</div>' +
+                '  <div class="ve-stay-breakdown__meta">Applique a tout le circuit</div>' +
                 '</article>'
             );
         }
@@ -551,8 +535,8 @@
         var uniqueHotelIndexByHotelId = buildUniqueHotelIndexByHotelId(hotels);
         var hasSelection = false;
         var selectedLabel = '';
-        var options = ['<option value="">Aucun hotel</option>'];
-        var autoSelectSingle = selectedHotelId === '' && selectedIndex === '' && hotels.length === 1;
+        var options = ['<option value="">Circuit complet</option>'];
+        var autoSelectSingle = false;
         var autoSelectedDone = false;
         var normalizedSelectedIndex = selectedIndex == null ? '' : String(selectedIndex);
         var normalizedSelectedHotelId = selectedHotelId == null ? '' : String(selectedHotelId);
@@ -644,6 +628,8 @@
             var expectedCapacity = state.targetCapacity == null
                 ? travelDate.seats
                 : Math.max(0, parseInt(String(state.targetCapacity), 10) || 0);
+            rooms = collapseDuplicatedStayRoomsIfNeeded(rooms, hotels, expectedCapacity);
+            state.rooms = rooms;
             var coverage = buildDepartureCoverage(hotels, rooms, expectedCapacity);
 
             return {
@@ -669,9 +655,9 @@
                 '        <div class="text-muted small">Reservations: <strong>' + (row.state.reservedCapacity == null ? '—' : row.state.reservedCapacity) + '</strong> · Disponibles: <strong>' + (row.state.availableCapacity == null ? '—' : row.state.availableCapacity) + '</strong>' + (row.state.departureStatusLabel ? (' · Statut: <strong>' + escapeHtml(row.state.departureStatusLabel) + '</strong>') : '') + '</div>' +
                 '      </div>' +
                 '      <div class="text-end">' +
-                '        <div class="small mb-1">Sejours exacts : <strong>' + row.coverage.exactCount + '/' + row.coverage.stays.length + '</strong></div>' +
+                '        <div class="small mb-1">Total couvert : <strong>' + row.coverage.totalCovered + '/' + row.coverage.expected + '</strong></div>' +
                 '        ' + departureCoverageBadge(row.coverage) +
-                (row.coverage.unassigned > 0 ? ('<div class="text-muted small mt-1">Non associe : ' + row.coverage.unassigned + ' place(s)</div>') : '') +
+                (row.coverage.unassigned > 0 ? ('<div class="text-muted small mt-1">Circuit complet : ' + row.coverage.unassigned + ' place(s)</div>') : '') +
                 '      </div>' +
                 '    </div>' +
                 '  </summary>' +
@@ -683,7 +669,7 @@
                 renderStayCoverageDetails(row.coverage) +
                 '    <div class="table-responsive">' +
                 '      <table class="table table-sm align-middle mb-2">' +
-                '        <thead><tr><th>Type</th><th>Quantite</th><th>Cap./chambre</th><th>Suppl. (DH/pers)</th><th>Sejour</th><th>Places couvertes</th><th></th></tr></thead>' +
+                '        <thead><tr><th>Type</th><th>Quantite</th><th>Cap./chambre</th><th>Suppl. (DH/pers)</th><th>Application</th><th>Places couvertes</th><th></th></tr></thead>' +
                 '        <tbody>' + renderRooms(row.index, row.rooms, row.travelDate) + '</tbody>' +
                 '      </table>' +
                 '    </div>' +
@@ -704,19 +690,19 @@
     function renderSummary(viewRows) {
         summaryEl.innerHTML = viewRows.map(function (row) {
             var summaryMeta = [];
-            if (row.coverage.underCount > 0) summaryMeta.push('Incomplets ' + row.coverage.underCount);
-            if (row.coverage.overCount > 0) summaryMeta.push('Excedentaires ' + row.coverage.overCount);
-            if (row.coverage.unassigned > 0) summaryMeta.push('Non associe ' + row.coverage.unassigned);
+            if (row.coverage.status === 'under') summaryMeta.push('Manque ' + (row.coverage.expected - row.coverage.totalCovered));
+            if (row.coverage.status === 'over') summaryMeta.push('Excedent ' + (row.coverage.totalCovered - row.coverage.expected));
+            if (row.coverage.unassigned > 0) summaryMeta.push('Circuit complet ' + row.coverage.unassigned);
             return '' +
                 '<div class="col-xl-3 col-md-6">' +
                 '  <div class="ve-departure-summary ' + departureCoverageStateClass(row.coverage) + '">' +
                 '    <div class="ve-departure-summary__date">' + escapeHtml(row.travelDate.label) + '</div>' +
                 '    <div class="ve-departure-summary__stats">' +
                 '      <span>Capacite depart <strong>' + row.expectedCapacity + '</strong></span>' +
-                '      <span>Exacts <strong>' + row.coverage.exactCount + '/' + row.coverage.stays.length + '</strong></span>' +
+                '      <span>Couvert <strong>' + row.coverage.totalCovered + '/' + row.coverage.expected + '</strong></span>' +
                 '    </div>' +
                 '    <div class="ve-departure-summary__meta">' +
-                (summaryMeta.length ? summaryMeta.join(' | ') : 'Tous les sejours sont exacts') +
+                (summaryMeta.length ? summaryMeta.join(' | ') : 'Capacite depart exacte') +
                 (row.state.departureStatusLabel ? (' | Statut ' + row.state.departureStatusLabel) : '') +
                 '</div>' +
                 '    <div class="mt-2">' + departureCoverageBadge(row.coverage) + '</div>' +
@@ -757,7 +743,7 @@
                 '    <select class="form-select form-select-sm" name="departure_allocations[' + cardIndex + '][rooms][' + roomIndex + '][hotel_index]">' + hotelOptions.html + '</select>' +
                 (hotelOptions.hasSelection
                     ? '<div class="small text-muted mt-1">Sejour: ' + escapeHtml(hotelOptions.selectedLabel || '') + '</div>'
-                    : '<div class="small text-warning mt-1">Associer un sejour.</div>') +
+                    : '<div class="small text-muted mt-1">Applique au circuit complet.</div>') +
                 '    <div class="small text-muted mt-1">Dispo: <strong>' + escapeHtml(stockLabel) + '</strong></div>' +
                 stockHelp +
                 '  </td>' +
@@ -841,15 +827,13 @@
         }
 
         if (btn.getAttribute('data-allocation-action') === 'add-room') {
-            var hotels = collectHotels();
-            var defaultHotel = hotels.length ? hotels[0] : null;
             allocationState[key].rooms.push({
                 __draft: true,
                 room_type: '',
                 quantity: 0,
                 capacity_per_room: 1,
-                hotel_id: defaultHotel && defaultHotel.hotel_id ? String(defaultHotel.hotel_id) : '',
-                hotel_index: defaultHotel && defaultHotel.index != null ? String(defaultHotel.index) : ''
+                hotel_id: '',
+                hotel_index: ''
             });
             allocationState[key].manual = true;
             openState[key] = true;

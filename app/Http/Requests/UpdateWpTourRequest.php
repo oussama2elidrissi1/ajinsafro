@@ -106,10 +106,6 @@ class UpdateWpTourRequest extends FormRequest
                     continue;
                 }
 
-                if ($expectedHotelIndexes === []) {
-                    continue;
-                }
-
                 $rooms = $departureRow['rooms'] ?? [];
                 if (! is_array($rooms)) {
                     continue;
@@ -124,10 +120,7 @@ class UpdateWpTourRequest extends FormRequest
                     $targetSeats = max(0, (int) $travelDateSeatsByDate[$rowDate]);
                 }
 
-                $coverageByHotelIndex = [];
-                foreach ($expectedHotelIndexes as $expectedHotelIndex) {
-                    $coverageByHotelIndex[$expectedHotelIndex] = 0;
-                }
+                $totalCoveredSeats = 0;
                 $roomsTouched = false;
 
                 foreach ($rooms as $roomIndex => $roomRow) {
@@ -154,6 +147,7 @@ class UpdateWpTourRequest extends FormRequest
                     $quantity = max(0, (int) ($roomRow['quantity'] ?? 0));
                     $capacityPerRoom = max(1, (int) ($roomRow['capacity_per_room'] ?? 1));
                     $coveredSeats = $quantity * $capacityPerRoom;
+                    $totalCoveredSeats += $coveredSeats;
 
                     $hotelIndex = isset($roomRow['hotel_index']) && $roomRow['hotel_index'] !== '' ? max(0, (int) $roomRow['hotel_index']) : null;
                     $hotelId = isset($roomRow['hotel_id']) && $roomRow['hotel_id'] !== '' ? (int) $roomRow['hotel_id'] : null;
@@ -166,29 +160,25 @@ class UpdateWpTourRequest extends FormRequest
                     }
 
                     if ($hotelIndex === null || ! in_array($hotelIndex, $expectedHotelIndexes, true)) {
-                        $validator->errors()->add("departure_allocations.$departureIndex.rooms.$roomIndex.hotel_index", 'Associez cette chambre a un sejour.');
                         continue;
                     }
 
-                    if (! isset($coverageByHotelIndex[$hotelIndex])) {
-                        $coverageByHotelIndex[$hotelIndex] = 0;
-                    }
-                    $coverageByHotelIndex[$hotelIndex] += $coveredSeats;
                 }
 
-                if (! $roomsTouched || $targetSeats <= 0 || $expectedHotelIndexes === []) {
+                if (! $roomsTouched || $targetSeats <= 0) {
                     continue;
                 }
 
-                foreach ($expectedHotelIndexes as $expectedHotelIndex) {
-                    $coveredSeats = (int) ($coverageByHotelIndex[$expectedHotelIndex] ?? 0);
-                    if ($coveredSeats < $targetSeats) {
-                        $stayNumber = $expectedHotelIndex + 1;
-                        $validator->errors()->add(
-                            "departure_allocations.$departureIndex.rooms",
-                            "Le sejour {$stayNumber} couvre {$coveredSeats}/{$targetSeats} place(s) pour ce depart."
-                        );
-                    }
+                if ($totalCoveredSeats < $targetSeats) {
+                    $validator->errors()->add(
+                        "departure_allocations.$departureIndex.rooms",
+                        "La repartition couvre {$totalCoveredSeats}/{$targetSeats} place(s) pour ce depart."
+                    );
+                } elseif ($totalCoveredSeats > $targetSeats) {
+                    $validator->errors()->add(
+                        "departure_allocations.$departureIndex.rooms",
+                        "La repartition depasse la capacite du depart: {$totalCoveredSeats}/{$targetSeats} place(s)."
+                    );
                 }
             }
 
@@ -285,12 +275,11 @@ class UpdateWpTourRequest extends FormRequest
                         if ($hotelIndex === null && count($expectedHotelIndexes) === 1) {
                             $hotelIndex = $expectedHotelIndexes[0];
                         }
-                        if ($hotelIndex === null) {
-                            continue;
-                        }
-
                         $typeKey = mb_strtolower($roomType);
-                        $requested[$hotelIndex][$typeKey] = (int) ($requested[$hotelIndex][$typeKey] ?? 0) + $quantity;
+                        $targetHotelIndexes = $hotelIndex === null ? $expectedHotelIndexes : [$hotelIndex];
+                        foreach ($targetHotelIndexes as $targetHotelIndex) {
+                            $requested[$targetHotelIndex][$typeKey] = (int) ($requested[$targetHotelIndex][$typeKey] ?? 0) + $quantity;
+                        }
                     }
 
                     foreach ($requested as $hotelIndex => $types) {
@@ -359,7 +348,7 @@ class UpdateWpTourRequest extends FormRequest
             $this->merge(['flight_options' => $flightOptions]);
         }
 
-        // Clean departure_allocations: remove rooms without hotel_index
+        // Clean departure_allocations: keep valid room rows, hotel_index is optional when the allocation applies to the full circuit.
         $departureAllocations = $this->input('departure_allocations', []);
         if (is_array($departureAllocations)) {
             foreach (array_keys($departureAllocations) as $depIndex) {
@@ -378,8 +367,11 @@ class UpdateWpTourRequest extends FormRequest
 
                         if (is_numeric($hotelIndex) && (int) $hotelIndex >= 0) {
                             $room['hotel_index'] = (int) $hotelIndex;
-                            $cleanedRooms[$roomIndex] = $room;
+                        } else {
+                            unset($room['hotel_index']);
                         }
+
+                        $cleanedRooms[$roomIndex] = $room;
                     }
                     $departureAllocations[$depIndex]['rooms'] = $cleanedRooms;
                 }
