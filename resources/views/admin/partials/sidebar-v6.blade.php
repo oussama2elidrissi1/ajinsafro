@@ -46,6 +46,19 @@
         return false;
     };
 
+    $canSeeByEmail = function (array $item) use ($user) {
+        if (empty($item['emails'])) return true;
+        if (!$user) return false;
+
+        $allowedEmails = array_map(
+            static fn ($email) => strtolower(trim((string) $email)),
+            is_array($item['emails']) ? $item['emails'] : [$item['emails']]
+        );
+        $userEmail = strtolower(trim((string) ($user->email ?? '')));
+
+        return in_array($userEmail, $allowedEmails, true);
+    };
+
     $buildHref = function (array $item) {
         $route = $item['route'] ?? null;
         if (is_string($route) && $route !== '' && \Illuminate\Support\Facades\Route::has($route)) {
@@ -70,13 +83,14 @@
         return false;
     };
 
-    $renderItems = function (array $items, int $depth = 0) use (&$renderItems, $canSee, $buildHref, $isActive) {
+    $renderItems = function (array $items, int $depth = 0) use (&$renderItems, $canSee, $canSeeByEmail, $buildHref, $isActive) {
         $html = '<ul class="aj-sidebar-v2__list aj-sidebar-v2__list--depth-' . $depth . '">';
 
         foreach ($items as $item) {
             if (!is_array($item)) continue;
 
             $permission = $item['permission'] ?? null;
+            if (!$canSeeByEmail($item)) continue;
             if (!$canSee($permission)) continue;
 
             $children = $item['children'] ?? [];
@@ -86,6 +100,7 @@
             $filteredChildren = [];
             foreach ($children as $child) {
                 if (!is_array($child)) continue;
+                if (!$canSeeByEmail($child)) continue;
                 if (!$canSee($child['permission'] ?? null)) continue;
                 $filteredChildren[] = $child;
             }
@@ -204,4 +219,3 @@
 </aside>
 
 <div class="admin-v6-overlay" id="adminV6Overlay" aria-hidden="true"></div>
-

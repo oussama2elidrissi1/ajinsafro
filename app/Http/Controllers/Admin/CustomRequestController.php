@@ -89,6 +89,7 @@ class CustomRequestController extends Controller
     public function create(Request $request): View
     {
         abort_unless($request->user()?->can('custom_requests.create'), 403);
+        $this->authorizeDevManagement($request);
 
         return view('admin.custom-requests.create', $this->sharedViewData($request) + [
             'customRequest' => new CustomRequest([
@@ -111,6 +112,7 @@ class CustomRequestController extends Controller
     public function store(Request $request): RedirectResponse
     {
         abort_unless($request->user()?->can('custom_requests.create'), 403);
+        $this->authorizeDevManagement($request);
 
         $data = $this->validatedPayload($request);
         $data['created_by'] = $request->user()->id;
@@ -191,6 +193,7 @@ class CustomRequestController extends Controller
     {
         $this->authorizeVisible($request, $customRequest);
         abort_unless($request->user()?->can('custom_requests.delete'), 403);
+        $this->authorizeDevManagement($request);
 
         $customRequest->delete();
 
@@ -400,9 +403,15 @@ class CustomRequestController extends Controller
         abort_unless(CustomRequest::query()->visibleTo($request->user())->whereKey($customRequest->getKey())->exists(), 403);
     }
 
+    private function authorizeDevManagement(Request $request): void
+    {
+        abort_unless($request->user()?->isDevAdmin(), 403);
+    }
+
     private function sharedViewData(Request $request): array
     {
         return [
+            'canManageCustomRequests' => (bool) $request->user()?->isDevAdmin(),
             'statusOptions' => CustomRequest::statusOptions(),
             'priorityOptions' => CustomRequest::priorityOptions(),
             'paymentStatusOptions' => CustomRequest::paymentStatusOptions(),

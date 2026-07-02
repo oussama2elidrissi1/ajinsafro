@@ -60,6 +60,13 @@
             @if($customRequest->canBeQuotedBy(auth()->user()) && (int) ($customRequest->assigned_to ?? 0) === (int) auth()->id())
                 <a href="{{ route('admin.custom-requests.quote', $customRequest) }}" class="dac-btn dac-btn-primary"><i class="bx bx-calculator"></i> Quotation</a>
             @endif
+            @if($canManageCustomRequests && auth()->user()?->can('custom_requests.delete'))
+                <form method="POST" action="{{ route('admin.custom-requests.destroy', $customRequest) }}" onsubmit="return confirm('Supprimer cette demande ? Elle sera archivee.');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="dac-btn dac-btn-danger"><i class="bx bx-trash"></i> Supprimer</button>
+                </form>
+            @endif
         </div>
     </div>
 

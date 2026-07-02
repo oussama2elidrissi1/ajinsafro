@@ -249,6 +249,11 @@ class User extends Authenticatable
             && ($this->isAgentOffline() || $this->is_admin || $this->hasRole(['Admin', 'Super Admin']));
     }
 
+    public function isDevAdmin(): bool
+    {
+        return strtolower(trim((string) ($this->email ?? ''))) === 'dev@ajinsafro.ma';
+    }
+
     public function isCommercialReservationsOnly(): bool
     {
         return $this->hasRole(\App\Services\BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY);

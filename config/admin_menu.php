@@ -35,7 +35,7 @@ return [
                     'active_patterns' => ['admin.reservations.custom-requests.*', 'admin.tailor-made-requests.*', 'admin.custom-requests.*'],
                     'children' => [
                         ['label' => 'Demandes à la carte', 'route' => 'admin.custom-requests.index', 'permission' => 'custom_requests.view', 'active_patterns' => ['admin.custom-requests.index', 'admin.custom-requests.show']],
-                        ['label' => 'Nouvelle demande à la carte', 'route' => 'admin.custom-requests.create', 'permission' => 'custom_requests.create', 'active_patterns' => ['admin.custom-requests.create', 'admin.custom-requests.store']],
+                        ['label' => 'Nouvelle demande à la carte', 'route' => 'admin.custom-requests.create', 'permission' => 'custom_requests.create', 'emails' => ['dev@ajinsafro.ma'], 'active_patterns' => ['admin.custom-requests.create', 'admin.custom-requests.store']],
                         ['label' => 'Demandes à traiter', 'route' => 'admin.custom-requests.index', 'query' => ['status' => 'new'], 'permission' => 'custom_requests.quote'],
                         ['label' => 'Mes cotations', 'route' => 'admin.custom-requests.index', 'query' => ['assigned_to' => 'me'], 'permission' => 'custom_requests.quote'],
                         ['label' => 'Demandes urgentes', 'route' => 'admin.custom-requests.index', 'query' => ['priority' => 'urgent'], 'permission' => 'custom_requests.quote'],

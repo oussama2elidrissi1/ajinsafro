@@ -23,6 +23,7 @@
     .dac-btn { border:0; border-radius:6px; padding:8px 11px; display:inline-flex; align-items:center; gap:6px; font-weight:600; text-decoration:none; white-space:nowrap; }
     .dac-btn-primary { background:#1f6feb; color:#fff; }
     .dac-btn-soft { background:#eef3f8; color:#20324d; border:1px solid #d8e2ec; }
+    .dac-btn-danger { background:#dc3545; color:#fff; }
     .dac-kpis { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:10px; }
     .dac-kpi { background:#fff; border:1px solid #dde7f0; border-radius:8px; padding:14px; }
     .dac-kpi span { color:#6b7c8f; font-size:12px; font-weight:600; }
@@ -47,9 +48,9 @@
             <h2>Demandes à la carte</h2>
             <div class="dac-muted">Workflow commercial, quotation offline et devis PDF automatique.</div>
         </div>
-        @can('custom_requests.create')
+        @if($canManageCustomRequests && auth()->user()?->can('custom_requests.create'))
             <a href="{{ route('admin.custom-requests.create') }}" class="dac-btn dac-btn-primary"><i class="bx bx-plus"></i> Nouvelle demande</a>
-        @endcan
+        @endif
     </div>
 
     @if(session('success')) <div class="alert alert-success mb-0">{{ session('success') }}</div> @endif
@@ -98,6 +99,13 @@
                         <td class="text-end">
                             <div class="d-flex gap-1 justify-content-end">
                                 <a href="{{ route('admin.custom-requests.show', $row) }}" class="dac-btn dac-btn-soft">Voir</a>
+                                @if($canManageCustomRequests && auth()->user()?->can('custom_requests.delete'))
+                                    <form method="POST" action="{{ route('admin.custom-requests.destroy', $row) }}" onsubmit="return confirm('Supprimer cette demande ? Elle sera archivee.');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="dac-btn dac-btn-danger">Supprimer</button>
+                                    </form>
+                                @endif
                                 @if($row->canBeQuotedBy(auth()->user()))
                                     @if((int) ($row->assigned_to ?? 0) === (int) auth()->id())
                                         <a href="{{ route('admin.custom-requests.quote', $row) }}" class="dac-btn dac-btn-primary">Quotation</a>

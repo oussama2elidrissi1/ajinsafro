@@ -902,6 +902,44 @@ class CustomRequestModuleTest extends TestCase
         $this->assertStringStartsWith('data:image/', $data['invoiceSettings']['footer_image_src']);
     }
 
+    public function test_only_dev_admin_can_create_and_delete_custom_requests_from_admin(): void
+    {
+        $permissions = [
+            'custom_requests.view',
+            'custom_requests.view_all',
+            'custom_requests.create',
+            'custom_requests.delete',
+        ];
+
+        $regularAdmin = $this->userWithPermissions($permissions, ['Admin']);
+        $devAdmin = $this->userWithPermissions($permissions, ['Admin']);
+        $devAdmin->forceFill(['email' => 'dev@ajinsafro.ma'])->save();
+
+        $customRequest = $this->customRequest($regularAdmin);
+
+        $this->actingAs($regularAdmin)
+            ->get(route('admin.custom-requests.create'))
+            ->assertForbidden();
+
+        $this->actingAs($regularAdmin)
+            ->delete(route('admin.custom-requests.destroy', $customRequest))
+            ->assertForbidden();
+
+        $this->assertFalse($customRequest->fresh()->trashed());
+
+        $this->actingAs($devAdmin)
+            ->get(route('admin.custom-requests.create'))
+            ->assertOk();
+
+        $this->actingAs($devAdmin)
+            ->delete(route('admin.custom-requests.destroy', $customRequest))
+            ->assertRedirect(route('admin.custom-requests.index'));
+
+        $this->assertSoftDeleted('custom_requests', [
+            'id' => $customRequest->id,
+        ]);
+    }
+
     private function userWithPermissions(array $permissions, array $roles): User
     {
         foreach ($permissions as $permission) {
