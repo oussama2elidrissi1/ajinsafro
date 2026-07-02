@@ -16,7 +16,7 @@
 
 @push('styles')
 <style>
-    .dac-list { display:grid; gap:16px; }
+    .dac-list { display:grid; gap:16px; padding-bottom:120px; }
     .dac-toolbar,.dac-panel { background:#fff; border:1px solid #dde7f0; border-radius:8px; padding:16px; }
     .dac-toolbar { display:flex; justify-content:space-between; gap:12px; align-items:center; }
     .dac-toolbar h2 { margin:0; font-size:20px; font-weight:600; color:#10233f; }
@@ -24,6 +24,7 @@
     .dac-btn-primary { background:#1f6feb; color:#fff; }
     .dac-btn-soft { background:#eef3f8; color:#20324d; border:1px solid #d8e2ec; }
     .dac-btn-danger { background:#dc3545; color:#fff; }
+    .dac-btn-icon { width:34px; height:34px; justify-content:center; padding:0; font-size:16px; }
     .dac-kpis { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:10px; }
     .dac-kpi { background:#fff; border:1px solid #dde7f0; border-radius:8px; padding:14px; }
     .dac-kpi span { color:#6b7c8f; font-size:12px; font-weight:600; }
@@ -35,6 +36,11 @@
     .dac-table { min-width:1120px; width:100%; border-collapse:collapse; }
     .dac-table th { background:#f7fafc; color:#536276; font-size:12px; font-weight:600; padding:10px; border-bottom:1px solid #e7edf3; }
     .dac-table td { padding:11px 10px; border-bottom:1px solid #edf2f7; vertical-align:middle; color:#20324d; }
+    .dac-table th:last-child,.dac-table td:last-child { min-width:220px; }
+    .dac-actions { display:flex; align-items:center; justify-content:flex-end; gap:6px; flex-wrap:nowrap; }
+    .dac-actions form { margin:0; }
+    .dac-actions .dac-btn { min-height:34px; padding-top:7px; padding-bottom:7px; font-size:12px; }
+    .dac-actions .dac-btn-icon { order:-1; min-height:34px; padding:0; }
     .dac-muted { color:#718096; font-size:12px; }
     @media(max-width:1200px){ .dac-kpis{grid-template-columns:repeat(3,1fr)} .dac-filters{grid-template-columns:repeat(2,1fr)} }
     @media(max-width:720px){ .dac-toolbar{display:grid}.dac-kpis,.dac-filters{grid-template-columns:1fr} }
@@ -97,15 +103,17 @@
                         <td>{{ $row->assignedAgent?->name ?: '-' }}</td>
                         <td>{{ $row->latestQuote ? number_format((float) $row->latestQuote->total_sale, 2, ',', ' ').' '.$row->latestQuote->currency : '-' }}</td>
                         <td class="text-end">
-                            <div class="d-flex gap-1 justify-content-end">
-                                <a href="{{ route('admin.custom-requests.show', $row) }}" class="dac-btn dac-btn-soft">Voir</a>
+                            <div class="dac-actions">
                                 @if($canManageCustomRequests && auth()->user()?->can('custom_requests.delete'))
                                     <form method="POST" action="{{ route('admin.custom-requests.destroy', $row) }}" onsubmit="return confirm('Supprimer cette demande ? Elle sera archivee.');">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="dac-btn dac-btn-danger">Supprimer</button>
+                                        <button type="submit" class="dac-btn dac-btn-danger dac-btn-icon" title="Supprimer" aria-label="Supprimer">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
                                     </form>
                                 @endif
+                                <a href="{{ route('admin.custom-requests.show', $row) }}" class="dac-btn dac-btn-soft">Voir</a>
                                 @if($row->canBeQuotedBy(auth()->user()))
                                     @if((int) ($row->assigned_to ?? 0) === (int) auth()->id())
                                         <a href="{{ route('admin.custom-requests.quote', $row) }}" class="dac-btn dac-btn-primary">Quotation</a>
