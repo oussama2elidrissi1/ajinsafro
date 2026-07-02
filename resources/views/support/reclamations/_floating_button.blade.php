@@ -5,6 +5,24 @@
         $devRouteExists = \Illuminate\Support\Facades\Route::has('admin.dev.reclamations.index');
         $supportUser = auth()->user();
         $isDevSupport = strtolower(trim((string) ($supportUser?->email ?? ''))) === 'dev@ajinsafro.ma';
+        $myDevReclamations = collect();
+        $myDevReclamationsCount = 0;
+
+        try {
+            if ($supportUser && \Illuminate\Support\Facades\Schema::hasTable('dev_reclamations')) {
+                $myDevReclamationsCount = \App\Models\DevReclamation::query()
+                    ->where('user_id', $supportUser->id)
+                    ->count();
+                $myDevReclamations = \App\Models\DevReclamation::query()
+                    ->where('user_id', $supportUser->id)
+                    ->latest()
+                    ->limit(3)
+                    ->get();
+            }
+        } catch (\Throwable) {
+            $myDevReclamations = collect();
+            $myDevReclamationsCount = 0;
+        }
     @endphp
 
     @if($supportRouteExists)
@@ -54,8 +72,37 @@
                         <input type="file" name="attachment" accept="image/*">
                     </label>
 
+                    <div class="dev-support-history">
+                        <div class="dev-support-history__head">
+                            <span>Mes reclamations</span>
+                            <a href="{{ route('support.reclamations.index') }}">
+                                {{ $myDevReclamationsCount }} total
+                            </a>
+                        </div>
+
+                        @if($myDevReclamations->isNotEmpty())
+                            <div class="dev-support-history__list">
+                                @foreach($myDevReclamations as $historyReclamation)
+                                    <a class="dev-support-history__item" href="{{ route('support.reclamations.show', $historyReclamation) }}">
+                                        <span class="dev-support-history__title">
+                                            {{ \Illuminate\Support\Str::limit($historyReclamation->subject ?: 'Sans sujet', 44) }}
+                                        </span>
+                                        <span class="dev-support-history__meta">
+                                            <span class="dev-support-history__status dev-support-history__status--{{ $historyReclamation->status }}">
+                                                {{ $historyReclamation->status_label }}
+                                            </span>
+                                            <span>{{ $historyReclamation->created_at?->format('d/m/Y H:i') }}</span>
+                                        </span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="dev-support-history__empty">Aucune reclamation envoyee avec ce compte.</div>
+                        @endif
+                    </div>
+
                     <div class="dev-support-form__footer">
-                        <a href="{{ route('support.reclamations.index') }}">Mes reclamations</a>
+                        <a href="{{ route('support.reclamations.index') }}">Voir toutes mes reclamations</a>
                         <button type="submit">
                             <i class="bx bx-send"></i>
                             Envoyer
@@ -84,6 +131,19 @@
             .dev-support-form label{display:grid;gap:7px;margin:0;color:#0f3150;font-size:13px;font-weight:700}
             .dev-support-form input,.dev-support-form textarea{width:100%;border:1px solid #cbd5e1;border-radius:12px;padding:11px 13px;font-size:14px;color:#0f172a;outline:none}
             .dev-support-form input:focus,.dev-support-form textarea:focus{border-color:#0ea5e9;box-shadow:0 0 0 3px rgba(14,165,233,.14)}
+            .dev-support-history{border:1px solid #e2e8f0;border-radius:14px;background:#f8fafc;padding:12px}
+            .dev-support-history__head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;color:#0f3150;font-size:13px;font-weight:800}
+            .dev-support-history__head a{color:#0f3150;text-decoration:none;font-size:12px;font-weight:800}
+            .dev-support-history__list{display:grid;gap:7px}
+            .dev-support-history__item{display:grid;gap:4px;padding:10px 11px;border:1px solid #e2e8f0;border-radius:11px;background:#fff;text-decoration:none}
+            .dev-support-history__item:hover{border-color:#0ea5e9;box-shadow:0 8px 20px rgba(15,23,42,.08)}
+            .dev-support-history__title{color:#0f172a;font-size:13px;font-weight:800;line-height:1.25}
+            .dev-support-history__meta{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#64748b;font-size:11px}
+            .dev-support-history__status{display:inline-flex;align-items:center;border-radius:999px;padding:3px 8px;font-size:10px;font-weight:900;text-transform:uppercase}
+            .dev-support-history__status--ouverte{background:#e0f2fe;color:#075985}
+            .dev-support-history__status--en_cours{background:#fef3c7;color:#92400e}
+            .dev-support-history__status--traitee{background:#dcfce7;color:#166534}
+            .dev-support-history__empty{padding:10px 11px;border:1px dashed #cbd5e1;border-radius:11px;color:#64748b;background:#fff;font-size:12px}
             .dev-support-form__footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:4px}
             .dev-support-form__footer a{color:#0f3150;font-weight:700;text-decoration:none;font-size:13px}
             .dev-support-form__footer button{border:0;border-radius:12px;background:#0f3150;color:#fff;padding:11px 16px;font-weight:800;display:inline-flex;align-items:center;gap:8px}
