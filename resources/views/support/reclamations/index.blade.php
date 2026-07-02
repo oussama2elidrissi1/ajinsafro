@@ -1,4 +1,16 @@
-@extends((auth()->user() && method_exists(auth()->user(), 'isClientPortal') && auth()->user()->isClientPortal()) ? 'client.layout' : ((auth()->user() && method_exists(auth()->user(), 'isPartner') && auth()->user()->isPartner()) ? 'layouts.partner-v2' : 'layouts.master-ajinsafro'))
+@php
+    $supportUser = auth()->user();
+    $supportIsClient = $supportUser && method_exists($supportUser, 'isClientPortal') && $supportUser->isClientPortal();
+    $supportIsPartner = $supportUser && method_exists($supportUser, 'isPartner') && $supportUser->isPartner();
+    $supportUsesAgentPortal = !$supportIsClient
+        && !$supportIsPartner
+        && \App\Services\View\AgentPortalLayout::shouldUse($supportUser);
+    $supportLayout = $supportIsClient
+        ? 'client.layout'
+        : ($supportIsPartner ? 'layouts.partner-v2' : ($supportUsesAgentPortal ? 'layouts.master-ajinsafro' : 'layouts.admin-v6'));
+@endphp
+
+@extends($supportLayout)
 
 @section('title', 'Mes reclamations')
 @section('page_title', 'Mes reclamations')
@@ -61,8 +73,8 @@
 </div>
 
 <style>
-    .support-reclamations-page{position:relative;z-index:1;padding:26px 18px 56px;background:#f3f7fb;min-height:calc(100vh - 120px)}
-    .support-reclamations-shell{width:min(1220px,100%);margin:0 auto}
+    .support-reclamations-page{position:relative;z-index:1;padding:24px 28px 56px;background:#f3f7fb;min-height:calc(100vh - 120px)}
+    .support-reclamations-shell{width:100%;max-width:none;margin:0}
     .support-reclamations-header{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:18px;padding:22px 24px;border:1px solid #dbe6f2;border-radius:18px;background:#fff;box-shadow:0 16px 38px rgba(15,23,42,.07)}
     .support-reclamations-kicker{display:block;margin-bottom:6px;color:#64748b;font-size:11px;font-weight:900;letter-spacing:.04em;text-transform:uppercase}
     .support-reclamations-header h1{margin:0;color:#102a43;font-size:28px;font-weight:900;line-height:1.15}

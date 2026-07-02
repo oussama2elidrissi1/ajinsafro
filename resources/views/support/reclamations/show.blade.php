@@ -1,4 +1,16 @@
-@extends((auth()->user() && method_exists(auth()->user(), 'isClientPortal') && auth()->user()->isClientPortal()) ? 'client.layout' : ((auth()->user() && method_exists(auth()->user(), 'isPartner') && auth()->user()->isPartner()) ? 'layouts.partner-v2' : 'layouts.master-ajinsafro'))
+@php
+    $supportUser = auth()->user();
+    $supportIsClient = $supportUser && method_exists($supportUser, 'isClientPortal') && $supportUser->isClientPortal();
+    $supportIsPartner = $supportUser && method_exists($supportUser, 'isPartner') && $supportUser->isPartner();
+    $supportUsesAgentPortal = !$supportIsClient
+        && !$supportIsPartner
+        && \App\Services\View\AgentPortalLayout::shouldUse($supportUser);
+    $supportLayout = $supportIsClient
+        ? 'client.layout'
+        : ($supportIsPartner ? 'layouts.partner-v2' : ($supportUsesAgentPortal ? 'layouts.master-ajinsafro' : 'layouts.admin-v6'));
+@endphp
+
+@extends($supportLayout)
 
 @section('title', 'Reclamation')
 @section('page_title', 'Reclamation')
@@ -80,8 +92,8 @@
 </div>
 
 <style>
-    .support-reclamation-page{position:relative;z-index:1;padding:26px 18px 56px;background:#f3f7fb;min-height:calc(100vh - 120px)}
-    .support-reclamation-shell{width:min(1220px,100%);margin:0 auto}
+    .support-reclamation-page{position:relative;z-index:1;padding:24px 28px 56px;background:#f3f7fb;min-height:calc(100vh - 120px)}
+    .support-reclamation-shell{width:100%;max-width:none;margin:0}
     .support-reclamation-header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:18px;padding:20px 22px;border:1px solid #dbe6f2;border-radius:16px;background:#fff;box-shadow:0 14px 34px rgba(15,23,42,.06)}
     .support-reclamation-kicker,.support-card-kicker{display:block;margin-bottom:5px;color:#64748b;font-size:11px;font-weight:900;letter-spacing:.04em;text-transform:uppercase}
     .support-reclamation-title h1{margin:0;color:#102a43;font-size:26px;font-weight:900;line-height:1.18}
@@ -92,8 +104,9 @@
     .support-status--traitee{background:#dcfce7;color:#166534}
     .support-reclamation-back{display:inline-flex;align-items:center;gap:7px;border:1px solid #c7d7ea;border-radius:12px;padding:10px 14px;background:#fff;color:#0f3150;font-size:13px;font-weight:900;text-decoration:none;white-space:nowrap}
     .support-reclamation-back:hover{border-color:#0ea5e9;color:#0f3150;box-shadow:0 8px 22px rgba(14,165,233,.12)}
-    .support-reclamation-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(380px,0.95fr);gap:18px;align-items:start}
+    .support-reclamation-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(420px,1fr);gap:18px;align-items:start}
     .support-card{overflow:hidden;border:1px solid #dbe6f2;border-radius:16px;background:#fff;box-shadow:0 14px 34px rgba(15,23,42,.06)}
+    .support-card--response{min-width:0}
     .support-card-head{display:flex;align-items:center;justify-content:space-between;padding:17px 20px;border-bottom:1px solid #edf2f7;background:#fbfdff}
     .support-card-head h2{margin:0;color:#102a43;font-size:16px;font-weight:900}
     .support-card-body{padding:20px}
