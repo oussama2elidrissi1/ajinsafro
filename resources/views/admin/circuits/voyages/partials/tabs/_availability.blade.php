@@ -150,6 +150,7 @@
                 </div>
             </div>
 
+            @unless(request()->routeIs('admin.circuits.voyages.edit-v2'))
             <div class="avl-ops-wrap">
             <h4 class="card-title mb-1">Dates, stock et reservation</h4>
             <p class="text-muted small mb-3">Renseignez les dates ouvertes a la vente, le stock et les regles de reservation du voyage.</p>
@@ -219,6 +220,7 @@
                 </div>
             </div>
             </div>
+            @endunless
 
         </div>
     </div>
