@@ -45,8 +45,9 @@ class VoyageAvailabilityService
         $durationDays = max(1, (int) ($context['duration_days'] ?? 1));
         $preferredDepartureId = isset($context['preferred_departure_id']) ? (int) $context['preferred_departure_id'] : 0;
 
+        $today = Carbon::today('Africa/Casablanca');
         $activeTravelDates = $travelDates
-            ->filter(fn ($td) => ($td instanceof TravelDate) && (bool) ($td->is_active ?? false) && $td->date)
+            ->filter(fn ($td) => ($td instanceof TravelDate) && (bool) ($td->is_active ?? false) && $td->date && ! Carbon::parse($td->date)->lt($today))
             ->sortBy('date')
             ->values();
 

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TravelDate extends Model
@@ -35,6 +36,7 @@ class TravelDate extends Model
     {
         return self::where('travel_id', $tourId)
             ->where('is_active', true)
+            ->upcoming()
             ->orderBy('date')
             ->get();
     }
@@ -47,6 +49,15 @@ class TravelDate extends Model
             ->get();
     }
 
+    public static function getUpcomingDatesForTour(int $tourId)
+    {
+        return self::where('travel_id', $tourId)
+            ->upcoming()
+            ->orderBy('date')
+            ->orderBy('id')
+            ->get();
+    }
+
     /**
      * Récupérer les dates disponibles formatées pour le calendrier (array simple des dates)
      */
@@ -54,6 +65,7 @@ class TravelDate extends Model
     {
         return self::where('travel_id', $tourId)
             ->where('is_active', true)
+            ->upcoming()
             ->orderBy('date')
             ->pluck('date')
             ->map(function ($date) {
@@ -70,7 +82,18 @@ class TravelDate extends Model
         return self::where('travel_id', $tourId)
             ->where('date', $date)
             ->where('is_active', true)
+            ->whereDate('date', '>=', self::availabilityToday())
             ->exists();
+    }
+
+    public function scopeUpcoming(Builder $query): Builder
+    {
+        return $query->whereDate('date', '>=', self::availabilityToday());
+    }
+
+    public static function availabilityToday(): string
+    {
+        return Carbon::today('Africa/Casablanca')->toDateString();
     }
 
     public function roomAvailabilities(): HasMany

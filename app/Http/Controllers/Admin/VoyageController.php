@@ -1959,8 +1959,8 @@ class VoyageController extends Controller
             // table or column may not exist yet
         }
 
-        // Charger les dates disponibles
-        $travelDates = TravelDate::getDatesForTour($id);
+        // Charger uniquement les dates encore ouvertes : les dates expirees ne doivent plus rester dans l'edition.
+        $travelDates = TravelDate::getUpcomingDatesForTour($id);
 
         try {
             $this->voyageAvailabilityService->syncFromWpDates($laravelVoyage, [
@@ -2765,12 +2765,16 @@ class VoyageController extends Controller
         }
         $keptDateIds = [];
         $persistedDates = collect();
+        $today = TravelDate::availabilityToday();
         foreach (array_values($dates) as $dateData) {
             if (! is_array($dateData)) {
                 continue;
             }
             $date = trim((string) ($dateData['date'] ?? ''));
             if ($date === '') {
+                continue;
+            }
+            if ($date < $today) {
                 continue;
             }
             $travelDateId = isset($dateData['id']) && $dateData['id'] !== '' ? (int) $dateData['id'] : 0;

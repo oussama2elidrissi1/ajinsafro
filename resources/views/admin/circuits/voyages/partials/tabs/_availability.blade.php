@@ -3,7 +3,7 @@
         <div class="card-body">
             @php
                 $departureRows = ($laravelVoyage ?? null)
-                    ? $laravelVoyage->departures()->orderBy('start_date')->get()
+                    ? $laravelVoyage->departures()->whereDate('start_date', '>=', \App\Models\TravelDate::availabilityToday())->orderBy('start_date')->get()
                     : collect();
                 $firstDepartureRow = $departureRows->first();
                 $departureService = app(\App\Services\DepartureManagementService::class);
@@ -223,4 +223,3 @@
         </div>
     </div>
 </div>
-
