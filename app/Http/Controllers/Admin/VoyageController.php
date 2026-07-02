@@ -26,6 +26,7 @@ use App\Models\TravelDate;
 use App\Models\Departure;
 use App\Models\DepartureRoomAllocation;
 use App\Services\AdminWpTourCatalogQuery;
+use App\Services\BusinessReferentialService;
 use App\Services\VoyageAvailabilityService;
 use App\Services\VoyageFlightService;
 use App\Services\VoyageFlightOptionService;
@@ -248,6 +249,13 @@ class VoyageController extends Controller
             'is_meta_payment_gateway_st_paypal', 'is_meta_payment_gateway_st_onepay', 'is_meta_payment_gateway_st_onepay_atm', 'is_meta_payment_gateway_st_payu',
             'is_meta_payment_gateway_st_payulatam', 'is_meta_payment_gateway_st_payumoney', 'is_meta_payment_gateway_st_razor',
         ];
+        foreach (BusinessReferentialService::paymentMethods() as $paymentMethod) {
+            $paymentMetaKey = (string) ($paymentMethod['meta_key'] ?? '');
+            if ($paymentMetaKey !== '') {
+                $metaKeys[] = $paymentMetaKey;
+            }
+        }
+        $metaKeys = array_values(array_unique($metaKeys));
         $meta = array_fill_keys($metaKeys, '');
 
         $gallery_csv = '';
@@ -1736,6 +1744,10 @@ class VoyageController extends Controller
             'st_google_map' => $wpPost->getMeta('st_google_map'),
             
             // PAYMENT GATEWAYS
+            'is_meta_payment_gateway_st_cashplus' => $wpPost->getMeta('is_meta_payment_gateway_st_cashplus'),
+            'is_meta_payment_gateway_st_wafacash' => $wpPost->getMeta('is_meta_payment_gateway_st_wafacash'),
+            'is_meta_payment_gateway_st_bank_transfer' => $wpPost->getMeta('is_meta_payment_gateway_st_bank_transfer'),
+            'is_meta_payment_gateway_st_cash_transfer' => $wpPost->getMeta('is_meta_payment_gateway_st_cash_transfer'),
             'is_meta_payment_gateway_st_paypal' => $wpPost->getMeta('is_meta_payment_gateway_st_paypal'),
             'is_meta_payment_gateway_st_onepay' => $wpPost->getMeta('is_meta_payment_gateway_st_onepay'),
             'is_meta_payment_gateway_st_onepay_atm' => $wpPost->getMeta('is_meta_payment_gateway_st_onepay_atm'),

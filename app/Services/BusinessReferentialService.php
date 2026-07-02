@@ -66,13 +66,11 @@ final class BusinessReferentialService
                 ['value' => 'last_minute', 'label' => 'Last minute'],
             ],
             'payment_methods' => [
+                ['meta_key' => 'is_meta_payment_gateway_st_cashplus', 'label' => 'CashPlus'],
+                ['meta_key' => 'is_meta_payment_gateway_st_wafacash', 'label' => 'Wafacash'],
+                ['meta_key' => 'is_meta_payment_gateway_st_bank_transfer', 'label' => 'Virement bancaire'],
+                ['meta_key' => 'is_meta_payment_gateway_st_cash_transfer', 'label' => 'Transfert cash'],
                 ['meta_key' => 'is_meta_payment_gateway_st_paypal', 'label' => 'PayPal'],
-                ['meta_key' => 'is_meta_payment_gateway_st_onepay', 'label' => 'OnePay'],
-                ['meta_key' => 'is_meta_payment_gateway_st_onepay_atm', 'label' => 'OnePay ATM'],
-                ['meta_key' => 'is_meta_payment_gateway_st_payu', 'label' => 'PayU'],
-                ['meta_key' => 'is_meta_payment_gateway_st_payulatam', 'label' => 'PayU Latam'],
-                ['meta_key' => 'is_meta_payment_gateway_st_payumoney', 'label' => 'PayUmoney'],
-                ['meta_key' => 'is_meta_payment_gateway_st_razor', 'label' => 'Razorpay'],
             ],
             'activity_types' => [],
             'room_types' => [],
@@ -153,13 +151,7 @@ final class BusinessReferentialService
      */
     public static function paymentMethods(): array
     {
-        $all = self::allMerged();
-        $methods = $all['payment_methods'] ?? [];
-        if (! is_array($methods) || $methods === []) {
-            return self::normalizePaymentMethods(self::defaults()['payment_methods']);
-        }
-
-        return self::normalizePaymentMethods($methods);
+        return self::normalizePaymentMethods(self::defaults()['payment_methods']);
     }
 
     /**

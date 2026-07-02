@@ -8,6 +8,13 @@
     $paymentMethodsRefUrl = \Illuminate\Support\Facades\Route::has('admin.settings.referentiels-metier.group')
         ? route('admin.settings.referentiels-metier.group', ['groupKey' => 'payment_methods'])
         : (\Illuminate\Support\Facades\Route::has('admin.settings.index') ? route('admin.settings.index') : '#');
+    $paymentMethodUi = [
+        'is_meta_payment_gateway_st_cashplus' => ['icon' => 'bx bx-store-alt', 'tone' => 'orange', 'hint' => 'Paiement CashPlus'],
+        'is_meta_payment_gateway_st_wafacash' => ['icon' => 'bx bx-wallet', 'tone' => 'red', 'hint' => 'Paiement Wafacash'],
+        'is_meta_payment_gateway_st_bank_transfer' => ['icon' => 'bx bx-bank', 'tone' => 'blue', 'hint' => 'Virement bancaire'],
+        'is_meta_payment_gateway_st_cash_transfer' => ['icon' => 'bx bx-transfer-alt', 'tone' => 'green', 'hint' => 'Transfert cash'],
+        'is_meta_payment_gateway_st_paypal' => ['icon' => 'bx bxl-paypal', 'tone' => 'navy', 'hint' => 'Paiement PayPal'],
+    ];
 @endphp
 <div class="tab-pane" id="price" role="tabpanel" data-ve-pane-title="Tarifs">
     <div class="card ve-pane-card mb-3">
@@ -158,16 +165,28 @@
     <div class="card ve-pane-card mb-3">
         <div class="card-body">
             <p class="text-uppercase text-muted small fw-bold mb-2">Moyens de paiement</p>
-            <p class="text-muted small mb-3">Liste pilotée depuis <a href="{{ $paymentMethodsRefUrl }}">Référence métier ?' Moyens de paiement</a>.</p>
-            <div class="row g-2">
+            <p class="text-muted small mb-3">Liste métier utilisée pour ce voyage: CashPlus, Wafacash, virement bancaire, transfert cash et PayPal.</p>
+            <div class="ve-payment-method-grid">
                 @foreach($paymentMethodOptions as $pm)
-                    @php $mk = $pm['meta_key']; @endphp
-                    <div class="col-md-4">
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" id="{{ $mk }}" name="{{ $mk }}" value="1" {{ old($mk, $meta[$mk] ?? '') === 'on' ? 'checked' : '' }}>
-                            <label class="form-check-label" for="{{ $mk }}">{{ $pm['label'] }}</label>
-                        </div>
-                    </div>
+                    @php
+                        $mk = $pm['meta_key'];
+                        $paymentUi = $paymentMethodUi[$mk] ?? ['icon' => 'bx bx-credit-card', 'tone' => 'slate', 'hint' => 'Moyen de paiement'];
+                        $isChecked = old($mk, $meta[$mk] ?? '') === 'on';
+                    @endphp
+                    <label class="ve-payment-method-card ve-payment-method-card--{{ $paymentUi['tone'] }}" for="{{ $mk }}">
+                        <input type="hidden" name="{{ $mk }}" value="0">
+                        <input class="ve-payment-method-card__input" type="checkbox" id="{{ $mk }}" name="{{ $mk }}" value="1" @checked($isChecked)>
+                        <span class="ve-payment-method-card__check" aria-hidden="true">
+                            <i class="bx bx-check"></i>
+                        </span>
+                        <span class="ve-payment-method-card__icon" aria-hidden="true">
+                            <i class="{{ $paymentUi['icon'] }}"></i>
+                        </span>
+                        <span class="ve-payment-method-card__body">
+                            <span class="ve-payment-method-card__title">{{ $pm['label'] }}</span>
+                            <span class="ve-payment-method-card__hint">{{ $paymentUi['hint'] }}</span>
+                        </span>
+                    </label>
                 @endforeach
             </div>
         </div>
@@ -209,4 +228,3 @@
     });
 })();
 </script>
-

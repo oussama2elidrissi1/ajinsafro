@@ -501,6 +501,100 @@ body.voyage-layout-page.partner-v2 .agent-portal-main {
     color: #1e293b;
 }
 
+/* Payment methods */
+.voyage-edit-page .ve-payment-method-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px;
+}
+.voyage-edit-page .ve-payment-method-card {
+    --payment-accent: #4f46e5;
+    --payment-accent-bg: rgba(79, 70, 229, 0.08);
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 78px;
+    padding: 14px 42px 14px 14px;
+    margin: 0;
+    border: 1.5px solid #dbe4ef;
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color var(--ve-transition), box-shadow var(--ve-transition), transform var(--ve-transition), background var(--ve-transition);
+}
+.voyage-edit-page .ve-payment-method-card:hover {
+    border-color: var(--payment-accent);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+    transform: translateY(-1px);
+}
+.voyage-edit-page .ve-payment-method-card__input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+.voyage-edit-page .ve-payment-method-card__icon {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: var(--payment-accent-bg);
+    color: var(--payment-accent);
+}
+.voyage-edit-page .ve-payment-method-card__icon i {
+    font-size: 22px;
+}
+.voyage-edit-page .ve-payment-method-card__body {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+.voyage-edit-page .ve-payment-method-card__title {
+    color: #172033;
+    font-size: 0.92rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+.voyage-edit-page .ve-payment-method-card__hint {
+    color: #64748b;
+    font-size: 0.76rem;
+    line-height: 1.25;
+}
+.voyage-edit-page .ve-payment-method-card__check {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid #cbd5e1;
+    color: transparent;
+    background: #fff;
+    transition: all var(--ve-transition);
+}
+.voyage-edit-page .ve-payment-method-card__input:checked ~ .ve-payment-method-card__check {
+    border-color: var(--payment-accent);
+    background: var(--payment-accent);
+    color: #fff;
+}
+.voyage-edit-page .ve-payment-method-card:has(.ve-payment-method-card__input:checked) {
+    border-color: var(--payment-accent);
+    background: linear-gradient(180deg, #fff 0%, var(--payment-accent-bg) 100%);
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+}
+.voyage-edit-page .ve-payment-method-card--orange { --payment-accent: #f97316; --payment-accent-bg: rgba(249, 115, 22, 0.10); }
+.voyage-edit-page .ve-payment-method-card--red { --payment-accent: #dc2626; --payment-accent-bg: rgba(220, 38, 38, 0.09); }
+.voyage-edit-page .ve-payment-method-card--blue { --payment-accent: #2563eb; --payment-accent-bg: rgba(37, 99, 235, 0.09); }
+.voyage-edit-page .ve-payment-method-card--green { --payment-accent: #059669; --payment-accent-bg: rgba(5, 150, 105, 0.10); }
+.voyage-edit-page .ve-payment-method-card--navy { --payment-accent: #003087; --payment-accent-bg: rgba(0, 48, 135, 0.09); }
+.voyage-edit-page .ve-payment-method-card--slate { --payment-accent: #475569; --payment-accent-bg: rgba(71, 85, 105, 0.09); }
+
 /* ---------- Buttons ---------- */
 .voyage-edit-page .btn {
     border-radius: 10px;
