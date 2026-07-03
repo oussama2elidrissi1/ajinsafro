@@ -15,8 +15,14 @@
 @section('title', 'Mes reclamations')
 @section('page_title', 'Mes reclamations')
 
+@if($supportUsesAgentPortal)
+    @push('styles')
+        <link href="{{ URL::asset('css/agent-dashboard.css') }}" rel="stylesheet" type="text/css" />
+    @endpush
+@endif
+
 @section('content')
-<div class="support-reclamations-page">
+<div class="{{ $supportUsesAgentPortal ? 'aj-agent-dashboard ' : '' }}support-reclamations-page">
     <div class="support-reclamations-shell">
         <div class="support-reclamations-header">
             <div>
@@ -73,9 +79,9 @@
 </div>
 
 <style>
-    .support-reclamations-page{position:relative;z-index:1;padding:24px 28px 56px;background:#f3f7fb;min-height:calc(100vh - 120px)}
-    .support-reclamations-shell{width:100%;max-width:none;margin:0}
-    .support-reclamations-header{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:18px;padding:22px 24px;border:1px solid #dbe6f2;border-radius:18px;background:#fff;box-shadow:0 16px 38px rgba(15,23,42,.07)}
+    .support-reclamations-page{position:relative;z-index:1;padding:30px 30px 64px;background:transparent;min-height:calc(100vh - 120px)}
+    .support-reclamations-shell{width:100%;max-width:1260px;margin:0 auto}
+    .support-reclamations-header{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:18px;padding:22px 24px;border:1px solid #dbe6f2;border-radius:18px;background:rgba(255,255,255,.96);box-shadow:0 16px 38px rgba(15,23,42,.07);backdrop-filter:blur(8px)}
     .support-reclamations-kicker{display:block;margin-bottom:6px;color:#64748b;font-size:11px;font-weight:900;letter-spacing:.04em;text-transform:uppercase}
     .support-reclamations-header h1{margin:0;color:#102a43;font-size:28px;font-weight:900;line-height:1.15}
     .support-reclamations-header p{margin:7px 0 0;color:#64748b;font-size:14px}
@@ -83,7 +89,7 @@
     .support-reclamations-primary:hover{background:#164466}
     .support-reclamations-primary i{font-size:18px}
     .support-reclamations-list{display:grid;gap:12px}
-    .support-reclamation-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center;padding:18px 20px;border:1px solid #dbe6f2;border-radius:16px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.055)}
+    .support-reclamation-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center;padding:18px 20px;border:1px solid #dbe6f2;border-radius:16px;background:rgba(255,255,255,.97);box-shadow:0 12px 30px rgba(15,23,42,.055)}
     .support-reclamation-row__main{min-width:0}
     .support-reclamation-row__top{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:7px}
     .support-reclamation-row__top h2{margin:0;color:#102a43;font-size:16px;font-weight:900;line-height:1.25}
@@ -98,12 +104,14 @@
     .support-status--traitee{background:#dcfce7;color:#166534}
     .support-reclamation-row__action{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid #c7d7ea;border-radius:12px;padding:10px 13px;color:#0f3150;background:#fff;font-size:12px;font-weight:900;text-decoration:none;white-space:nowrap}
     .support-reclamation-row__action:hover{border-color:#0ea5e9;color:#0f3150;box-shadow:0 8px 22px rgba(14,165,233,.12)}
-    .support-empty-state{display:grid;place-items:center;text-align:center;gap:8px;padding:52px 20px;border:1px dashed #cbd5e1;border-radius:18px;background:#fff;color:#64748b}
-    .support-empty-state i{font-size:42px;color:#0ea5e9}
+    .support-empty-state{display:grid;place-items:center;text-align:center;gap:8px;min-height:220px;padding:48px 20px;border:1px dashed #cbd5e1;border-radius:18px;background:rgba(255,255,255,.9);color:#64748b}
+    .support-empty-state i{display:grid;place-items:center;width:56px;height:56px;border-radius:18px;background:#e0f2fe;font-size:30px;color:#0ea5e9}
     .support-empty-state h2{margin:0;color:#102a43;font-size:18px;font-weight:900}
     .support-empty-state p{margin:0;font-size:13px}
     .support-reclamations-pagination{margin-top:16px}
+    .agent-portal-content .support-reclamations-page{padding-top:34px}
+    @media (max-width:900px){.support-reclamations-page{padding:22px 18px 48px}}
     @media (max-width:760px){.support-reclamations-header{align-items:flex-start;flex-direction:column}.support-reclamation-row{grid-template-columns:1fr}.support-reclamation-row__action{justify-self:start}}
-    @media (max-width:640px){.support-reclamations-page{padding:16px 12px 40px}.support-reclamations-header h1{font-size:23px}}
+    @media (max-width:640px){.support-reclamations-page{padding:16px 12px 40px}.support-reclamations-header h1{font-size:23px}.support-reclamations-primary{width:100%;justify-content:center}}
 </style>
 @endsection
