@@ -2191,7 +2191,8 @@ body.voyage-layout-page .offcanvas {
     color: #94a3b8;
     pointer-events: none;
 }
-.voyage-edit-page .programme-detail-toolbar {
+.voyage-edit-page .programme-detail-toolbar,
+.programme-detail-toolbar {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
@@ -2202,10 +2203,14 @@ body.voyage-layout-page .offcanvas {
     border-radius: 10px 10px 0 0;
     background: #f8fafc;
 }
-.voyage-edit-page .programme-detail-select {
-    height: 30px;
-    min-width: 118px;
-    max-width: 160px;
+.voyage-edit-page .programme-detail-select,
+.programme-detail-select {
+    display: inline-flex !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    height: 30px !important;
+    min-width: 118px !important;
+    max-width: 160px !important;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
     background: #ffffff;
@@ -2215,15 +2220,18 @@ body.voyage-layout-page .offcanvas {
     padding: 0 28px 0 10px;
     outline: none;
 }
-.voyage-edit-page .programme-detail-select--size {
-    min-width: 70px;
-    max-width: 86px;
+.voyage-edit-page .programme-detail-select--size,
+.programme-detail-select--size {
+    min-width: 70px !important;
+    max-width: 86px !important;
 }
-.voyage-edit-page .programme-detail-select:focus {
+.voyage-edit-page .programme-detail-select:focus,
+.programme-detail-select:focus {
     border-color: #60a5fa;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
-.voyage-edit-page .programme-detail-tool {
+.voyage-edit-page .programme-detail-tool,
+.programme-detail-tool {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2236,16 +2244,20 @@ body.voyage-layout-page .offcanvas {
     cursor: pointer;
 }
 .voyage-edit-page .programme-detail-tool:hover,
-.voyage-edit-page .programme-detail-tool:focus {
+.voyage-edit-page .programme-detail-tool:focus,
+.programme-detail-tool:hover,
+.programme-detail-tool:focus {
     border-color: #bfdbfe;
     background: #eff6ff;
     color: #1d4ed8;
 }
-.voyage-edit-page .programme-detail-tool i {
+.voyage-edit-page .programme-detail-tool i,
+.programme-detail-tool i {
     font-size: 18px;
     line-height: 1;
 }
-.voyage-edit-page .programme-detail-color {
+.voyage-edit-page .programme-detail-color,
+.programme-detail-color {
     position: relative;
     display: inline-flex;
     align-items: center;
@@ -2262,16 +2274,20 @@ body.voyage-layout-page .offcanvas {
     font-weight: 800;
 }
 .voyage-edit-page .programme-detail-color:hover,
-.voyage-edit-page .programme-detail-color:focus-within {
+.voyage-edit-page .programme-detail-color:focus-within,
+.programme-detail-color:hover,
+.programme-detail-color:focus-within {
     border-color: #bfdbfe;
     background: #eff6ff;
     color: #1d4ed8;
 }
-.voyage-edit-page .programme-detail-color span {
+.voyage-edit-page .programme-detail-color span,
+.programme-detail-color span {
     position: relative;
     line-height: 1;
 }
-.voyage-edit-page .programme-detail-color span::after {
+.voyage-edit-page .programme-detail-color span::after,
+.programme-detail-color span::after {
     content: "";
     position: absolute;
     left: 0;
@@ -2281,16 +2297,22 @@ body.voyage-layout-page .offcanvas {
     border-radius: 999px;
     background: #0f172a;
 }
-.voyage-edit-page .programme-detail-color .programme-detail-color-mark::after {
+.voyage-edit-page .programme-detail-color .programme-detail-color-mark::after,
+.programme-detail-color .programme-detail-color-mark::after {
     background: #facc15;
 }
-.voyage-edit-page .programme-detail-color input[type="color"] {
+.voyage-edit-page .programme-detail-color input[type="color"],
+.programme-detail-color input[type="color"] {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-    opacity: 0;
+    opacity: 0.01;
     cursor: pointer;
+}
+.voyage-edit-page .programme-detail-color input[type="color"]:focus,
+.programme-detail-color input[type="color"]:focus {
+    outline: none;
 }
 .voyage-edit-page .programme-day-detail .programme-detail-surface:focus {
     border-color: #3b82f6 !important;

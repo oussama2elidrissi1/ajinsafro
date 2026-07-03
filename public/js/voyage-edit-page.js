@@ -3384,6 +3384,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             function command(field, action) {
+                if (['format', 'fontSize', 'foreColor', 'backColor'].indexOf(action) !== -1) return;
                 var surface = field ? field.querySelector('.programme-detail-surface') : null;
                 if (!surface) return;
                 surface.focus();
@@ -3427,14 +3428,20 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             document.addEventListener('mousedown', function (event) {
-                if (event.target && event.target.closest && event.target.closest('button[data-programme-editor-action]')) {
+                var target = event.target;
+                if (target && target.closest && target.closest('select[data-programme-editor-action], input[type="color"][data-programme-editor-action]')) {
+                    var colorField = target.closest('.programme-day-detail');
+                    if (colorField) saveSelection(colorField);
+                    return;
+                }
+                if (target && target.closest && target.closest('button[data-programme-editor-action]')) {
                     event.preventDefault();
                 }
             }, true);
 
             document.addEventListener('click', function (event) {
                 var button = event.target && event.target.closest
-                    ? event.target.closest('[data-programme-editor-action]')
+                    ? event.target.closest('button[data-programme-editor-action]')
                     : null;
                 if (!button) return;
 
@@ -3447,6 +3454,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     ? event.target.closest('select[data-programme-editor-action], input[type="color"][data-programme-editor-action]')
                     : null;
                 if (!control) return;
+                event.preventDefault();
                 commandWithValue(control.closest('.programme-day-detail'), control.getAttribute('data-programme-editor-action'), control.value);
             }, true);
 
