@@ -15,6 +15,20 @@
         'is_meta_payment_gateway_st_cash_transfer' => ['icon' => 'bx bx-transfer-alt', 'tone' => 'green', 'hint' => 'Transfert cash'],
         'is_meta_payment_gateway_st_paypal' => ['icon' => 'bx bxl-paypal', 'tone' => 'navy', 'hint' => 'Paiement PayPal'],
     ];
+    $rawChildAgePricing = old('child_age_pricing', $meta['child_age_pricing'] ?? []);
+    if (is_string($rawChildAgePricing)) {
+        $decodedChildAgePricing = json_decode($rawChildAgePricing, true);
+        $rawChildAgePricing = json_last_error() === JSON_ERROR_NONE ? $decodedChildAgePricing : [];
+    }
+    $childAgePricingRows = collect(is_array($rawChildAgePricing) ? $rawChildAgePricing : [])
+        ->filter(fn ($row) => is_array($row))
+        ->map(fn ($row) => [
+            'label' => (string) ($row['label'] ?? ''),
+            'age_from' => (string) ($row['age_from'] ?? ''),
+            'age_to' => (string) ($row['age_to'] ?? ''),
+            'price' => (string) ($row['price'] ?? ''),
+        ])
+        ->values();
 @endphp
 <div class="tab-pane" id="price" role="tabpanel" data-ve-pane-title="Tarifs">
     <div class="card ve-pane-card mb-3">
@@ -52,6 +66,47 @@
                 <div class="col-md-4">
                     <label class="form-label" for="infant_price">Prix bébé (MAD)</label>
                     <input type="number" class="form-control" id="infant_price" name="infant_price" value="{{ old('infant_price', $meta['infant_price'] ?? '') }}" step="0.01" min="0">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card ve-pane-card mb-3" id="ve-child-age-pricing-block">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+                <div>
+                    <p class="text-uppercase text-muted small fw-bold mb-1">Tarifs enfant par age</p>
+                    <p class="text-muted small mb-0">Ajoutez plusieurs tarifs selon la tranche d'age: exemple 2-5 ans, 5-11 ans, bebe.</p>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="ve-add-child-age-price">
+                    <i class="bx bx-plus"></i>
+                    Ajouter une tranche
+                </button>
+            </div>
+
+            <div class="ve-child-age-pricing-table">
+                <div class="ve-child-age-pricing-head">
+                    <span>Libelle</span>
+                    <span>Age de</span>
+                    <span>Age a</span>
+                    <span>Prix (MAD)</span>
+                    <span></span>
+                </div>
+                <div class="ve-child-age-pricing-body" id="ve-child-age-pricing-body">
+                    @foreach($childAgePricingRows as $idx => $row)
+                        <div class="ve-child-age-pricing-row">
+                            <input type="text" class="form-control" name="child_age_pricing[{{ $idx }}][label]" value="{{ $row['label'] }}" placeholder="Ex. Enfant 5-11 ans">
+                            <input type="number" class="form-control" name="child_age_pricing[{{ $idx }}][age_from]" value="{{ $row['age_from'] }}" min="0" max="17" step="1" placeholder="2">
+                            <input type="number" class="form-control" name="child_age_pricing[{{ $idx }}][age_to]" value="{{ $row['age_to'] }}" min="0" max="17" step="1" placeholder="11">
+                            <input type="number" class="form-control" name="child_age_pricing[{{ $idx }}][price]" value="{{ $row['price'] }}" min="0" step="0.01" placeholder="0">
+                            <button type="button" class="btn btn-outline-danger ve-remove-child-age-price" aria-label="Supprimer la tranche">
+                                <i class="bx bx-trash"></i>
+                            </button>
+                        </div>
+                    @endforeach
+                </div>
+                <div class="ve-child-age-pricing-empty {{ $childAgePricingRows->isNotEmpty() ? 'd-none' : '' }}" id="ve-child-age-pricing-empty">
+                    Aucune tranche specifique. Le prix enfant standard reste utilise.
                 </div>
             </div>
         </div>
@@ -193,8 +248,73 @@
     </div>
 </div>
 
+<style>
+    .ve-child-age-pricing-table{border:1px solid #dbe7f3;border-radius:14px;overflow:hidden;background:#fff}
+    .ve-child-age-pricing-head,.ve-child-age-pricing-row{display:grid;grid-template-columns:minmax(220px,1.5fr) minmax(100px,.55fr) minmax(100px,.55fr) minmax(140px,.8fr) 46px;gap:10px;align-items:center}
+    .ve-child-age-pricing-head{padding:12px 14px;background:#f1f7fc;color:#486581;font-size:11px;font-weight:900;text-transform:uppercase}
+    .ve-child-age-pricing-body{display:grid;gap:0}
+    .ve-child-age-pricing-row{padding:12px 14px;border-top:1px solid #edf2f7}
+    .ve-child-age-pricing-row:first-child{border-top:0}
+    .ve-child-age-pricing-row .btn{width:42px;height:42px;display:inline-flex;align-items:center;justify-content:center;border-radius:12px}
+    .ve-child-age-pricing-empty{padding:18px 14px;border-top:1px dashed #dbe7f3;color:#71829a;font-size:13px;font-weight:700;text-align:center}
+    @media (max-width:900px){
+        .ve-child-age-pricing-head{display:none}
+        .ve-child-age-pricing-row{grid-template-columns:1fr 1fr;gap:10px}
+        .ve-child-age-pricing-row input:first-child{grid-column:1 / -1}
+        .ve-child-age-pricing-row .btn{grid-column:1 / -1;width:100%}
+    }
+</style>
+
 <script>
 (function() {
+    const childAgeBody = document.getElementById('ve-child-age-pricing-body');
+    const childAgeEmpty = document.getElementById('ve-child-age-pricing-empty');
+    const childAgeAddBtn = document.getElementById('ve-add-child-age-price');
+    let childAgeIdx = childAgeBody ? childAgeBody.querySelectorAll('.ve-child-age-pricing-row').length : 0;
+
+    function escapeAttr(value) {
+        return String(value || '').replace(/[&<>"']/g, function (char) {
+            return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[char];
+        });
+    }
+
+    function refreshChildAgeEmpty() {
+        if (!childAgeBody || !childAgeEmpty) return;
+        childAgeEmpty.classList.toggle('d-none', childAgeBody.querySelectorAll('.ve-child-age-pricing-row').length > 0);
+    }
+
+    function addChildAgeRow(defaults) {
+        if (!childAgeBody) return;
+        const row = document.createElement('div');
+        row.className = 've-child-age-pricing-row';
+        row.innerHTML =
+            '<input type="text" class="form-control" name="child_age_pricing[' + childAgeIdx + '][label]" value="' + escapeAttr(defaults && defaults.label) + '" placeholder="Ex. Enfant 5-11 ans">' +
+            '<input type="number" class="form-control" name="child_age_pricing[' + childAgeIdx + '][age_from]" value="' + escapeAttr(defaults && defaults.age_from) + '" min="0" max="17" step="1" placeholder="2">' +
+            '<input type="number" class="form-control" name="child_age_pricing[' + childAgeIdx + '][age_to]" value="' + escapeAttr(defaults && defaults.age_to) + '" min="0" max="17" step="1" placeholder="11">' +
+            '<input type="number" class="form-control" name="child_age_pricing[' + childAgeIdx + '][price]" value="' + escapeAttr(defaults && defaults.price) + '" min="0" step="0.01" placeholder="0">' +
+            '<button type="button" class="btn btn-outline-danger ve-remove-child-age-price" aria-label="Supprimer la tranche"><i class="bx bx-trash"></i></button>';
+        childAgeBody.appendChild(row);
+        childAgeIdx++;
+        refreshChildAgeEmpty();
+    }
+
+    if (childAgeAddBtn) {
+        childAgeAddBtn.addEventListener('click', function () {
+            addChildAgeRow({});
+        });
+    }
+
+    if (childAgeBody) {
+        childAgeBody.addEventListener('click', function (event) {
+            const button = event.target.closest('.ve-remove-child-age-price');
+            if (!button) return;
+            const row = button.closest('.ve-child-age-pricing-row');
+            if (row) row.remove();
+            refreshChildAgeEmpty();
+        });
+        refreshChildAgeEmpty();
+    }
+
     const tbody = document.querySelector('#ve-discount-rules-table tbody');
     const addBtn = document.getElementById('ve-add-discount-rule');
     if (!tbody || !addBtn) return;

@@ -7,6 +7,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link rel="stylesheet" href="{{ asset('css/front-voyage-kiosk.css') }}?v=booking-2step-1">
+<style>
+    .ksk-child-age-prices{display:grid;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(15,49,80,.12);color:#486581;font-size:12px;font-weight:700}
+    .ksk-child-age-prices span{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+    .ksk-child-age-prices strong{color:#0f3150;font-weight:900}
+</style>
 @endpush
 
 @section('content')
@@ -27,6 +32,8 @@
     $hasExtras = $voyage->extras->isNotEmpty();
     $hasProgram = $voyage->programDays->isNotEmpty();
     $hasHighlights = isset($highlights) && count($highlights) > 0;
+    $childAgePricingRows = collect($childAgePricing ?? []);
+    $hasChildAgePricing = $childAgePricingRows->isNotEmpty();
 @endphp
     @php
         $stepBooking = 1;
@@ -83,6 +90,19 @@
                                 @endif
                                 <span class="ksk-hero2__per">/ personne</span>
                             </div>
+                            @if($hasChildAgePricing)
+                                <div class="ksk-child-age-prices">
+                                    @foreach($childAgePricingRows as $agePrice)
+                                        <span>
+                                            {{ $agePrice['label'] ?? 'Tarif enfant' }}
+                                            @if(isset($agePrice['age_from'], $agePrice['age_to']))
+                                                ({{ $agePrice['age_from'] }}-{{ $agePrice['age_to'] }} ans)
+                                            @endif
+                                            : <strong>{{ number_format((float) ($agePrice['price'] ?? 0), 0, ',', ' ') }} {{ $cur }}</strong>
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @endif
                         </div>
                     @endif
                     <button type="button" class="ksk-btn ksk-btn--hero" onclick="ksk.scrollToBuilder()">

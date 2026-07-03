@@ -233,6 +233,31 @@ class VoyageController extends Controller
             $wpAdult = WpPostMeta::where('post_id', $wpTourId)->where('meta_key', 'adult_price')->value('meta_value');
             $priceFrom = $wpAdult ? (int) $wpAdult : 0;
         }
+        $childAgePricing = [];
+        if ($wpTourId) {
+            $childAgePricingRaw = WpPostMeta::where('post_id', $wpTourId)
+                ->where('meta_key', 'child_age_pricing')
+                ->value('meta_value');
+            $decodedChildAgePricing = [];
+            if (is_string($childAgePricingRaw) && trim($childAgePricingRaw) !== '') {
+                $candidateChildAgePricing = json_decode($childAgePricingRaw, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($candidateChildAgePricing)) {
+                    $decodedChildAgePricing = $candidateChildAgePricing;
+                }
+            }
+            if ($decodedChildAgePricing !== []) {
+                $childAgePricing = collect($decodedChildAgePricing)
+                    ->filter(fn ($row) => is_array($row) && isset($row['price']) && is_numeric($row['price']))
+                    ->map(fn ($row) => [
+                        'label' => (string) ($row['label'] ?? 'Tarif enfant'),
+                        'age_from' => $row['age_from'] ?? null,
+                        'age_to' => $row['age_to'] ?? null,
+                        'price' => (float) $row['price'],
+                    ])
+                    ->values()
+                    ->all();
+            }
+        }
 
         $heroImages = $this->resolveHeroImages($voyage, $wpTourId);
         $heroImageUrls = array_values(array_filter(array_map(
@@ -370,6 +395,7 @@ class VoyageController extends Controller
         return view('front.voyages.show', [
             'voyage' => $voyage,
             'priceFrom' => $priceFrom,
+            'childAgePricing' => $childAgePricing,
             'heroImages' => $heroImages,
             'heroImageUrls' => $heroImageUrls,
             'nextDeparture' => $nextDeparture,

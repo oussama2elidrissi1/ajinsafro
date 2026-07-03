@@ -214,6 +214,7 @@ class WpTourRepository
             'adult_price' => 'adult_price',
             'child_price' => 'child_price',
             'infant_price' => 'infant_price',
+            'child_age_pricing' => 'child_age_pricing',
             'room_price_double' => 'room_price_double',
             'room_price_twin' => 'room_price_twin',
             'room_price_single' => 'room_price_single',
@@ -277,6 +278,10 @@ class WpTourRepository
             // Special handling for gallery (array to CSV)
             if ($inputKey === 'gallery_ids' && is_array($value)) {
                 $value = implode(',', $value);
+            }
+
+            if ($inputKey === 'child_age_pricing') {
+                $value = $this->normalizeChildAgePricingMeta($value);
             }
 
             // Toujours enregistrer la valeur (y compris null/'') pour vider les champs quand l'utilisateur les vide
@@ -359,6 +364,62 @@ class WpTourRepository
         
         // Update taxonomies
         $this->updateTourTaxonomies($post, $data);
+    }
+
+    protected function normalizeChildAgePricingMeta(mixed $value): string
+    {
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            $value = json_last_error() === JSON_ERROR_NONE ? $decoded : [];
+        }
+
+        if (! is_array($value)) {
+            return '';
+        }
+
+        $rows = [];
+        foreach ($value as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $label = trim((string) ($row['label'] ?? ''));
+            $ageFromRaw = trim((string) ($row['age_from'] ?? ''));
+            $ageToRaw = trim((string) ($row['age_to'] ?? ''));
+            $priceRaw = trim((string) ($row['price'] ?? ''));
+
+            if ($label === '' && $ageFromRaw === '' && $ageToRaw === '' && $priceRaw === '') {
+                continue;
+            }
+
+            if ($priceRaw === '') {
+                continue;
+            }
+
+            $ageFrom = $ageFromRaw === '' ? null : max(0, (int) $ageFromRaw);
+            $ageTo = $ageToRaw === '' ? null : max(0, (int) $ageToRaw);
+
+            if ($ageFrom !== null && $ageTo !== null && $ageTo < $ageFrom) {
+                [$ageFrom, $ageTo] = [$ageTo, $ageFrom];
+            }
+
+            if ($label === '') {
+                $label = $ageFrom !== null && $ageTo !== null
+                    ? "Enfant {$ageFrom}-{$ageTo} ans"
+                    : 'Tarif enfant';
+            }
+
+            $rows[] = [
+                'label' => $label,
+                'age_from' => $ageFrom,
+                'age_to' => $ageTo,
+                'price' => round((float) $priceRaw, 2),
+            ];
+        }
+
+        return $rows === []
+            ? ''
+            : json_encode($rows, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
     
     /**

@@ -8,7 +8,7 @@
             ? $supportUser?->isDevAdmin()
             : strtolower(trim((string) ($supportUser?->email ?? ''))) === 'dev@ajinsafro.ma';
         $isDevReclamationRoute = request()->routeIs('admin.dev.reclamations.*');
-        $supportInVoyageStudio = request()->routeIs('admin.circuits.voyages.create', 'admin.circuits.voyages.edit-v2');
+        $supportInVoyageStudio = request()->routeIs('admin.circuits.voyages.create', 'admin.circuits.voyages.create-v2', 'admin.circuits.voyages.edit-v2');
         $showDevReclamationLink = $devRouteExists && $isDevSupport && !$isDevReclamationRoute;
         $showSupportSubmit = $supportRouteExists && !$isDevSupport && !$isDevReclamationRoute;
         $myDevReclamations = collect();
