@@ -2002,6 +2002,7 @@ class ReservationsController extends Controller
 
                 return [$travelerKey => [
                     'gender' => $row['gender'] ?? null,
+                    'traveler_type' => $row['traveler_type'] ?? ($row['type'] ?? 'adult'),
                     'relationship' => $row['relationship_to_main'] ?? null,
                     'consumes_bed' => filter_var($row['consumes_bed'] ?? true, FILTER_VALIDATE_BOOLEAN),
                 ]];
@@ -2068,8 +2069,20 @@ class ReservationsController extends Controller
             $mode = (string) ($allocation['occupancy_mode'] ?? '');
             $familyAllowed = in_array($mode, ['family'], true)
                 || $relations->intersect(['spouse', 'child', 'parent', 'main'])->isNotEmpty();
+            $genderValues = $genders->sort()->values()->all();
+            $isCompleteDoubleCouple = $mode === 'full'
+                && $capacity === 2
+                && count($travelerKeys) === 2
+                && $genderValues === ['female', 'male']
+                && collect($travelerKeys)->every(function ($key) use ($travelers) {
+                    $traveler = $travelers->get($key);
 
-            if ($genders->count() > 1 && ! $familyAllowed) {
+                    return $traveler
+                        && ($traveler['traveler_type'] ?? 'adult') === 'adult'
+                        && (bool) ($traveler['consumes_bed'] ?? true);
+                });
+
+            if ($genders->count() > 1 && ! $familyAllowed && ! $isCompleteDoubleCouple) {
                 throw ValidationException::withMessages([
                     "room_allocations.{$index}" => ['Melange homme/femme interdit sans relation couple ou famille.'],
                 ]);

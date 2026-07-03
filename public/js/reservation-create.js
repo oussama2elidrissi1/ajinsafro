@@ -830,6 +830,7 @@
         });
 
         roomingAllocations.forEach(function (allocation) {
+            normalizeRoomingAllocation(allocation);
             var key = String(allocation.room_source_id || allocation.room_type || '');
             usedByType[key] = (usedByType[key] || 0) + 1;
             var assignedCount = (allocation.traveler_keys || []).length;
@@ -931,6 +932,37 @@
         };
     }
 
+    function isAdultMixedDouble(allocation) {
+        var keys = allocation && Array.isArray(allocation.traveler_keys) ? allocation.traveler_keys : [];
+        if (!allocation || Number(allocation.capacity) !== 2 || keys.length !== 2) return false;
+
+        var travelersById = {};
+        travelerRows().forEach(function (t) {
+            travelersById[t.id] = t;
+        });
+
+        var selected = keys.map(function (key) { return travelersById[key]; }).filter(Boolean);
+        if (selected.length !== 2 || !selected.every(function (t) { return t.type === 'adult'; })) return false;
+
+        var genders = selected.map(function (t) { return t.gender; }).sort();
+        return genders[0] === 'female' && genders[1] === 'male';
+    }
+
+    function normalizeRoomingAllocation(allocation) {
+        if (!allocation) return;
+
+        if (isAdultMixedDouble(allocation)) {
+            allocation.occupancy_mode = 'full';
+            allocation.status = 'complete';
+            return;
+        }
+
+        var keys = allocation.traveler_keys || [];
+        allocation.status = keys.length >= allocation.capacity || ['single', 'family', 'full'].indexOf(allocation.occupancy_mode) !== -1
+            ? 'complete'
+            : 'partial';
+    }
+
     function autoRooming() {
         var travelers = travelerRows().filter(function (t) { return t.consumesBed; });
         var stats = travelerStats();
@@ -979,6 +1011,17 @@
             if (coupleRoom) {
                 result.push(makeAllocation(coupleRoom, [main, spouse], 'full'));
                 mark([main, spouse]);
+            }
+        }
+
+        var remainingForCouple = unused();
+        if (remainingForCouple.length === 2
+            && remainingForCouple.every(function (t) { return t.type === 'adult' && (t.gender === 'male' || t.gender === 'female'); })
+            && remainingForCouple[0].gender !== remainingForCouple[1].gender) {
+            var directCoupleRoom = roomTypeForCapacity(2, 'double');
+            if (directCoupleRoom) {
+                result.push(makeAllocation(directCoupleRoom, remainingForCouple, 'full'));
+                mark(remainingForCouple);
             }
         }
 
@@ -2134,7 +2177,7 @@
                     }
                     roomingAllocations[roomIndex].traveler_keys = keys;
                     roomingAllocations[roomIndex].occupied_count = keys.length;
-                    roomingAllocations[roomIndex].status = keys.length >= roomingAllocations[roomIndex].capacity ? 'complete' : 'partial';
+                    normalizeRoomingAllocation(roomingAllocations[roomIndex]);
                     renderRooming();
                     syncFinancialSummary();
                 }
@@ -2150,7 +2193,7 @@
                     roomingAllocations[typeIndex].capacity = selectedRoom.capacity;
                     roomingAllocations[typeIndex].unit_supplement = selectedRoom.unit_supplement;
                     roomingAllocations[typeIndex].supplement_total = selectedRoom.unit_supplement;
-                    roomingAllocations[typeIndex].status = (roomingAllocations[typeIndex].traveler_keys || []).length >= selectedRoom.capacity ? 'complete' : 'partial';
+                    normalizeRoomingAllocation(roomingAllocations[typeIndex]);
                     renderRooming();
                     syncFinancialSummary();
                 }
@@ -2160,7 +2203,7 @@
                 if (roomingAllocations[modeIndex]) {
                     roomingUserTouched = true;
                     roomingAllocations[modeIndex].occupancy_mode = target.value;
-                    roomingAllocations[modeIndex].status = (roomingAllocations[modeIndex].traveler_keys || []).length >= roomingAllocations[modeIndex].capacity || ['single', 'family', 'full'].indexOf(target.value) !== -1 ? 'complete' : 'partial';
+                    normalizeRoomingAllocation(roomingAllocations[modeIndex]);
                     renderRooming();
                     syncFinancialSummary();
                 }
