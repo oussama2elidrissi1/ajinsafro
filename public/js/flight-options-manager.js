@@ -91,6 +91,22 @@
         console.log('✈ Removed flight: index=' + index);
     }
     
+    function syncSegmentDay(card) {
+        if (!card) return;
+        var index = card.getAttribute('data-flight-opt-index');
+        if (index === null || index === '') return;
+
+        var daySelect = card.querySelector('[name="flight_options[' + index + '][day_number_edit]"]');
+        var hiddenDay = card.querySelector('input[name="flight_options[' + index + '][day_number]"]');
+        if (!daySelect || !hiddenDay) return;
+
+        hiddenDay.value = daySelect.value || '1';
+    }
+
+    function syncAllSegmentDays() {
+        form.querySelectorAll('.flight-opt-card').forEach(syncSegmentDay);
+    }
+
     /**
      * Initialize event listeners
      */
@@ -115,9 +131,21 @@
                 return false;
             }
         }, true); // capture phase
+
+        form.addEventListener('change', function(e) {
+            if (!e.target || !e.target.matches('[name^="flight_options["][name$="[day_number_edit]"]')) {
+                return;
+            }
+            syncSegmentDay(e.target.closest('.flight-opt-card'));
+        }, true);
+
+        form.addEventListener('submit', function() {
+            syncAllSegmentDays();
+        }, true);
     }
     
     // Initialize
     initializeListeners();
+    syncAllSegmentDays();
     console.log('✅ Flight Options Manager: Ready');
 })();

@@ -55,12 +55,19 @@ class VoyageFlightOptionService
             if ($type === '') {
                 continue;
             }
-            $dayNumber = isset($row['day_number']) && $row['day_number'] !== '' ? (int) $row['day_number'] : null;
+            $daySource = $row['day_number'] ?? null;
+            if ($type === VoyageFlightOption::TYPE_SEGMENT && isset($row['day_number_edit']) && $row['day_number_edit'] !== '') {
+                $daySource = $row['day_number_edit'];
+            }
+            $dayNumber = isset($daySource) && $daySource !== '' ? (int) $daySource : null;
             if ($type === VoyageFlightOption::TYPE_OUTBOUND && $dayNumber === null) {
                 $dayNumber = 1;
             }
             if ($type === VoyageFlightOption::TYPE_RETURN && $dayNumber === null) {
                 $dayNumber = $lastDay;
+            }
+            if ($dayNumber !== null) {
+                $dayNumber = min(max(1, $dayNumber), max(1, $lastDay));
             }
 
             // Parse departure_place_id et date AVANT de vérifier $filled

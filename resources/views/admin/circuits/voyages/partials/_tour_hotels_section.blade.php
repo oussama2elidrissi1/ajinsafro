@@ -655,6 +655,85 @@
         document.dispatchEvent(new CustomEvent('voyage-hotels-changed'));
     }
 
+    function getProgrammeDayCountForHotels() {
+        var cardsCount = document.querySelectorAll('#accordionProgrammeDays .programme-day-card').length;
+        if (cardsCount > 0) {
+            return cardsCount;
+        }
+
+        var durationInput = document.getElementById('duration_day');
+        var duration = parseInt(durationInput && durationInput.value ? durationInput.value : '0', 10);
+        if (!isNaN(duration) && duration > 0) {
+            return duration;
+        }
+
+        var maxFromCurrentOptions = 0;
+        container.querySelectorAll('.tour-hotel-check-in option, .tour-hotel-check-out option').forEach(function (option) {
+            var value = parseInt(option.value || '0', 10);
+            if (!isNaN(value) && value > maxFromCurrentOptions) {
+                maxFromCurrentOptions = value;
+            }
+        });
+
+        return Math.max(1, maxFromCurrentOptions);
+    }
+
+    function normalizeHotelDay(value, fallback, maxDay) {
+        var parsed = parseInt(value || '', 10);
+        if (isNaN(parsed) || parsed < 1) {
+            parsed = fallback || 1;
+        }
+        return Math.min(Math.max(1, parsed), maxDay);
+    }
+
+    function rebuildHotelDaySelect(select, selectedValue, maxDay) {
+        if (!select) return;
+        var selected = normalizeHotelDay(selectedValue || select.value, 1, maxDay);
+        var fragment = document.createDocumentFragment();
+
+        for (var day = 1; day <= maxDay; day++) {
+            var option = document.createElement('option');
+            option.value = String(day);
+            option.textContent = 'Jour ' + day;
+            if (day === selected) {
+                option.selected = true;
+            }
+            fragment.appendChild(option);
+        }
+
+        select.innerHTML = '';
+        select.appendChild(fragment);
+        select.value = String(selected);
+    }
+
+    function refreshHotelDayOptions(dayCount) {
+        var maxDay = parseInt(dayCount || '0', 10);
+        if (isNaN(maxDay) || maxDay < 1) {
+            maxDay = getProgrammeDayCountForHotels();
+        }
+        maxDay = Math.min(Math.max(1, maxDay), 365);
+
+        container.querySelectorAll('.tour-hotel-row').forEach(function (row) {
+            var ciSel = row.querySelector('.tour-hotel-check-in');
+            var coSel = row.querySelector('.tour-hotel-check-out');
+            var ci = normalizeHotelDay(ciSel ? ciSel.value : '1', 1, maxDay);
+            var co = normalizeHotelDay(coSel ? coSel.value : String(ci), ci, maxDay);
+            if (co < ci) {
+                co = ci;
+            }
+
+            rebuildHotelDaySelect(ciSel, ci, maxDay);
+            rebuildHotelDaySelect(coSel, co, maxDay);
+            validateDays(row);
+            refreshCard(row);
+        });
+
+        updateGlobalTitle();
+    }
+
+    window.VoyageHotelDays = window.VoyageHotelDays || {};
+    window.VoyageHotelDays.refresh = refreshHotelDayOptions;
+
     function setRowImageFromPayload(row, imageId, imageUrl) {
         if (!row) return;
         var imageInput = getRowField(row, 'image_id');
@@ -990,6 +1069,7 @@
     }
 
     addBtn.addEventListener('click', function () {
+        refreshHotelDayOptions();
         var rows = container.querySelectorAll('.tour-hotel-row');
         var last = rows[rows.length - 1];
         if (!last) return;
@@ -1072,6 +1152,7 @@
 
         setIdentityLocked(clone, false);
         container.appendChild(clone);
+        refreshHotelDayOptions();
         refreshCard(clone);
         updateGlobalTitle();
         notify();
@@ -1149,6 +1230,28 @@
         notify();
     });
 
+    document.addEventListener('voyage:program-days-changed', function (event) {
+        var days = event && event.detail ? event.detail.days : null;
+        refreshHotelDayOptions(days);
+    });
+
+    document.addEventListener('click', function (event) {
+        var trigger = event.target && event.target.closest
+            ? event.target.closest('[data-v2-nav="s-hotels"], [data-v2-next="s-hotels"], a[href="#hotels"], a[href="#tour-hotels-anchor"]')
+            : null;
+        if (!trigger) return;
+        setTimeout(function () {
+            refreshHotelDayOptions();
+        }, 0);
+    }, true);
+
+    document.addEventListener('shown.bs.tab', function (event) {
+        var href = event && event.target && event.target.getAttribute ? event.target.getAttribute('href') : '';
+        if (href === '#hotels' || href === '#tour-hotels-anchor') {
+            refreshHotelDayOptions();
+        }
+    });
+
     if (pickerSearchInput) {
         pickerSearchInput.addEventListener('input', renderPickerResults);
     }
@@ -1192,6 +1295,7 @@
         syncLinkedSummaryFromRow(row);
         refreshCard(row);
     });
+    refreshHotelDayOptions();
     updateGlobalTitle();
     notify();
 })();

@@ -2939,9 +2939,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
             function updateDuration() {
+                var n = count();
                 if (durationInput) {
-                    var n = count();
                     durationInput.value = n > 0 ? n : (durationInput.value || 1);
+                }
+                var dayCount = n > 0 ? n : parseRequestedDuration();
+                document.dispatchEvent(new CustomEvent('voyage:program-days-changed', {
+                    detail: { days: dayCount }
+                }));
+                if (window.VoyageHotelDays && typeof window.VoyageHotelDays.refresh === 'function') {
+                    window.VoyageHotelDays.refresh(dayCount);
                 }
             }
             function parseRequestedDuration() {

@@ -841,8 +841,16 @@
 
     function syncProgrammeDuration() {
         var durationInput = document.getElementById('duration_day');
+        var count = Math.max(1, getProgrammeCards().length);
         if (durationInput) {
-            durationInput.value = Math.max(1, getProgrammeCards().length);
+            durationInput.value = count;
+        }
+
+        document.dispatchEvent(new CustomEvent('voyage:program-days-changed', {
+            detail: { days: count }
+        }));
+        if (window.VoyageHotelDays && typeof window.VoyageHotelDays.refresh === 'function') {
+            window.VoyageHotelDays.refresh(count);
         }
     }
 
