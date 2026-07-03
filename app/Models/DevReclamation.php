@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
@@ -43,6 +44,25 @@ class DevReclamation extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function scopeVisibleToUser(Builder $query, ?User $user): Builder
+    {
+        if (! $user) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        $email = strtolower(trim((string) ($user->email ?? '')));
+
+        return $query->where(function (Builder $visibleQuery) use ($user, $email): void {
+            $visibleQuery->where('user_id', $user->id);
+
+            if ($email !== '') {
+                $visibleQuery->orWhereHas('user', function (Builder $userQuery) use ($email): void {
+                    $userQuery->whereRaw('LOWER(TRIM(email)) = ?', [$email]);
+                });
+            }
+        });
     }
 
     public function handler(): BelongsTo

@@ -13,7 +13,7 @@ class ReclamationController extends Controller
     public function index(Request $request): View
     {
         $reclamations = DevReclamation::query()
-            ->where('user_id', $request->user()->id)
+            ->visibleToUser($request->user())
             ->latest()
             ->paginate(12);
 
@@ -22,7 +22,13 @@ class ReclamationController extends Controller
 
     public function show(Request $request, DevReclamation $reclamation): View
     {
-        abort_unless((int) $reclamation->user_id === (int) $request->user()->id, 403);
+        abort_unless(
+            DevReclamation::query()
+                ->visibleToUser($request->user())
+                ->whereKey($reclamation->getKey())
+                ->exists(),
+            403
+        );
 
         return view('support.reclamations.show', compact('reclamation'));
     }

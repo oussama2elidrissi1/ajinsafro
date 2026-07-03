@@ -65,7 +65,11 @@
                 </article>
             @empty
                 <div class="support-empty-state">
-                    <i class="bx bx-message-square-x"></i>
+                    <span class="support-empty-state__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M7.5 8.5h9M7.5 12h5.25M9 19.25H6.75A2.75 2.75 0 0 1 4 16.5v-9A2.75 2.75 0 0 1 6.75 4.75h10.5A2.75 2.75 0 0 1 20 7.5v9a2.75 2.75 0 0 1-2.75 2.75h-3.1L10.8 21.2A1.2 1.2 0 0 1 9 20.16v-.91Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </span>
                     <h2>Aucune reclamation envoyee</h2>
                     <p>Utilisez le bouton de support pour envoyer un probleme au dev avec une capture.</p>
                 </div>
@@ -105,7 +109,8 @@
     .support-reclamation-row__action{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid #c7d7ea;border-radius:12px;padding:10px 13px;color:#0f3150;background:#fff;font-size:12px;font-weight:900;text-decoration:none;white-space:nowrap}
     .support-reclamation-row__action:hover{border-color:#0ea5e9;color:#0f3150;box-shadow:0 8px 22px rgba(14,165,233,.12)}
     .support-empty-state{display:grid;place-items:center;text-align:center;gap:8px;min-height:220px;padding:48px 20px;border:1px dashed #cbd5e1;border-radius:18px;background:rgba(255,255,255,.9);color:#64748b}
-    .support-empty-state i{display:grid;place-items:center;width:56px;height:56px;border-radius:18px;background:#e0f2fe;font-size:30px;color:#0ea5e9}
+    .support-empty-state__icon{display:grid;place-items:center;width:56px;height:56px;border-radius:18px;background:#e0f2fe;color:#0ea5e9}
+    .support-empty-state__icon svg{width:30px;height:30px}
     .support-empty-state h2{margin:0;color:#102a43;font-size:18px;font-weight:900}
     .support-empty-state p{margin:0;font-size:13px}
     .support-reclamations-pagination{margin-top:16px}

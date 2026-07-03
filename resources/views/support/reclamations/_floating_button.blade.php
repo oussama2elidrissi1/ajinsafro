@@ -4,18 +4,23 @@
         $supportRouteExists = \Illuminate\Support\Facades\Route::has('support.reclamations.store');
         $devRouteExists = \Illuminate\Support\Facades\Route::has('admin.dev.reclamations.index');
         $supportUser = auth()->user();
-        $isDevSupport = strtolower(trim((string) ($supportUser?->email ?? ''))) === 'dev@ajinsafro.ma';
+        $isDevSupport = method_exists($supportUser, 'isDevAdmin')
+            ? $supportUser?->isDevAdmin()
+            : strtolower(trim((string) ($supportUser?->email ?? ''))) === 'dev@ajinsafro.ma';
+        $isDevReclamationRoute = request()->routeIs('admin.dev.reclamations.*');
         $supportInVoyageStudio = request()->routeIs('admin.circuits.voyages.create', 'admin.circuits.voyages.edit-v2');
+        $showDevReclamationLink = $devRouteExists && $isDevSupport && !$isDevReclamationRoute;
+        $showSupportSubmit = $supportRouteExists && !$isDevSupport && !$isDevReclamationRoute;
         $myDevReclamations = collect();
         $myDevReclamationsCount = 0;
 
         try {
-            if ($supportUser && \Illuminate\Support\Facades\Schema::hasTable('dev_reclamations')) {
+            if ($showSupportSubmit && $supportUser && \Illuminate\Support\Facades\Schema::hasTable('dev_reclamations')) {
                 $myDevReclamationsCount = \App\Models\DevReclamation::query()
-                    ->where('user_id', $supportUser->id)
+                    ->visibleToUser($supportUser)
                     ->count();
                 $myDevReclamations = \App\Models\DevReclamation::query()
-                    ->where('user_id', $supportUser->id)
+                    ->visibleToUser($supportUser)
                     ->latest()
                     ->limit(3)
                     ->get();
@@ -26,92 +31,96 @@
         }
     @endphp
 
-    @if($supportRouteExists)
+    @if($showSupportSubmit || $showDevReclamationLink)
         <div class="dev-support-widget {{ $supportInVoyageStudio ? 'dev-support-widget--voyage-studio' : '' }}">
-            @if($devRouteExists && $isDevSupport)
+            @if($showDevReclamationLink)
                 <a class="dev-support-widget__dev-link" href="{{ route('admin.dev.reclamations.index') }}">
                     <i class="bx bx-list-check"></i>
                     Reclamations dev
                 </a>
             @endif
 
-            <button type="button" class="dev-support-widget__button" data-dev-reclamation-open>
-                <i class="bx bx-message-square-error"></i>
-                <span>Signaler un probleme</span>
-            </button>
+            @if($showSupportSubmit)
+                <button type="button" class="dev-support-widget__button" data-dev-reclamation-open>
+                    <i class="bx bx-message-square-error"></i>
+                    <span>Signaler un probleme</span>
+                </button>
+            @endif
         </div>
 
-        <div class="dev-support-modal" id="devSupportModal" aria-hidden="true">
-            <div class="dev-support-modal__backdrop" data-dev-reclamation-close></div>
-            <div class="dev-support-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="devSupportModalTitle">
-                <div class="dev-support-modal__header">
-                    <div>
-                        <h5 id="devSupportModalTitle">Envoyer une reclamation au dev</h5>
-                        <p>Expliquez le probleme et joignez une capture si necessaire.</p>
-                    </div>
-                    <button type="button" class="dev-support-modal__close" data-dev-reclamation-close aria-label="Fermer">
-                        <i class="bx bx-x"></i>
-                    </button>
-                </div>
-
-                <form method="POST" action="{{ route('support.reclamations.store') }}" enctype="multipart/form-data" class="dev-support-form">
-                    @csrf
-                    <input type="hidden" name="page_url" value="{{ url()->current() }}">
-
-                    <label>
-                        <span>Sujet</span>
-                        <input type="text" name="subject" maxlength="160" placeholder="Ex. Probleme sur la page reservation">
-                    </label>
-
-                    <label>
-                        <span>Message</span>
-                        <textarea name="message" rows="6" required placeholder="Decrivez le probleme, la page concernee, et ce qui devait se passer."></textarea>
-                    </label>
-
-                    <label>
-                        <span>Image / capture</span>
-                        <input type="file" name="attachment" accept="image/*">
-                    </label>
-
-                    <div class="dev-support-history">
-                        <div class="dev-support-history__head">
-                            <span>Mes reclamations</span>
-                            <a href="{{ route('support.reclamations.index') }}">
-                                {{ $myDevReclamationsCount }} total
-                            </a>
+        @if($showSupportSubmit)
+            <div class="dev-support-modal" id="devSupportModal" aria-hidden="true">
+                <div class="dev-support-modal__backdrop" data-dev-reclamation-close></div>
+                <div class="dev-support-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="devSupportModalTitle">
+                    <div class="dev-support-modal__header">
+                        <div>
+                            <h5 id="devSupportModalTitle">Envoyer une reclamation au dev</h5>
+                            <p>Expliquez le probleme et joignez une capture si necessaire.</p>
                         </div>
-
-                        @if($myDevReclamations->isNotEmpty())
-                            <div class="dev-support-history__list">
-                                @foreach($myDevReclamations as $historyReclamation)
-                                    <a class="dev-support-history__item" href="{{ route('support.reclamations.show', $historyReclamation) }}">
-                                        <span class="dev-support-history__title">
-                                            {{ \Illuminate\Support\Str::limit($historyReclamation->subject ?: 'Sans sujet', 44) }}
-                                        </span>
-                                        <span class="dev-support-history__meta">
-                                            <span class="dev-support-history__status dev-support-history__status--{{ $historyReclamation->status }}">
-                                                {{ $historyReclamation->status_label }}
-                                            </span>
-                                            <span>{{ $historyReclamation->created_at?->format('d/m/Y H:i') }}</span>
-                                        </span>
-                                    </a>
-                                @endforeach
-                            </div>
-                        @else
-                            <div class="dev-support-history__empty">Aucune reclamation envoyee avec ce compte.</div>
-                        @endif
-                    </div>
-
-                    <div class="dev-support-form__footer">
-                        <a href="{{ route('support.reclamations.index') }}">Voir toutes mes reclamations</a>
-                        <button type="submit">
-                            <i class="bx bx-send"></i>
-                            Envoyer
+                        <button type="button" class="dev-support-modal__close" data-dev-reclamation-close aria-label="Fermer">
+                            <i class="bx bx-x"></i>
                         </button>
                     </div>
-                </form>
+
+                    <form method="POST" action="{{ route('support.reclamations.store') }}" enctype="multipart/form-data" class="dev-support-form">
+                        @csrf
+                        <input type="hidden" name="page_url" value="{{ url()->current() }}">
+
+                        <label>
+                            <span>Sujet</span>
+                            <input type="text" name="subject" maxlength="160" placeholder="Ex. Probleme sur la page reservation">
+                        </label>
+
+                        <label>
+                            <span>Message</span>
+                            <textarea name="message" rows="6" required placeholder="Decrivez le probleme, la page concernee, et ce qui devait se passer."></textarea>
+                        </label>
+
+                        <label>
+                            <span>Image / capture</span>
+                            <input type="file" name="attachment" accept="image/*">
+                        </label>
+
+                        <div class="dev-support-history">
+                            <div class="dev-support-history__head">
+                                <span>Mes reclamations</span>
+                                <a href="{{ route('support.reclamations.index') }}">
+                                    {{ $myDevReclamationsCount }} total
+                                </a>
+                            </div>
+
+                            @if($myDevReclamations->isNotEmpty())
+                                <div class="dev-support-history__list">
+                                    @foreach($myDevReclamations as $historyReclamation)
+                                        <a class="dev-support-history__item" href="{{ route('support.reclamations.show', $historyReclamation) }}">
+                                            <span class="dev-support-history__title">
+                                                {{ \Illuminate\Support\Str::limit($historyReclamation->subject ?: 'Sans sujet', 44) }}
+                                            </span>
+                                            <span class="dev-support-history__meta">
+                                                <span class="dev-support-history__status dev-support-history__status--{{ $historyReclamation->status }}">
+                                                    {{ $historyReclamation->status_label }}
+                                                </span>
+                                                <span>{{ $historyReclamation->created_at?->format('d/m/Y H:i') }}</span>
+                                            </span>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="dev-support-history__empty">Aucune reclamation envoyee avec ce compte.</div>
+                            @endif
+                        </div>
+
+                        <div class="dev-support-form__footer">
+                            <a href="{{ route('support.reclamations.index') }}">Voir toutes mes reclamations</a>
+                            <button type="submit">
+                                <i class="bx bx-send"></i>
+                                Envoyer
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </div>
+        @endif
 
         <style>
             .dev-support-widget{position:fixed;right:22px;bottom:22px;z-index:2140;display:flex;align-items:flex-end;gap:10px;flex-direction:column}
@@ -153,26 +162,28 @@
             @media (max-width:640px){.dev-support-widget{right:14px;bottom:14px}.dev-support-widget--voyage-studio{bottom:86px}.dev-support-widget__button span{display:none}.dev-support-modal__dialog{right:16px;bottom:74px}.dev-support-widget--voyage-studio + .dev-support-modal .dev-support-modal__dialog{bottom:142px}}
         </style>
 
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                var modal = document.getElementById('devSupportModal');
-                if (!modal) return;
+        @if($showSupportSubmit)
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    var modal = document.getElementById('devSupportModal');
+                    if (!modal) return;
 
-                document.querySelectorAll('[data-dev-reclamation-open]').forEach(function (button) {
-                    button.addEventListener('click', function () {
-                        modal.classList.add('is-open');
-                        modal.setAttribute('aria-hidden', 'false');
+                    document.querySelectorAll('[data-dev-reclamation-open]').forEach(function (button) {
+                        button.addEventListener('click', function () {
+                            modal.classList.add('is-open');
+                            modal.setAttribute('aria-hidden', 'false');
+                        });
+                    });
+
+                    document.querySelectorAll('[data-dev-reclamation-close]').forEach(function (button) {
+                        button.addEventListener('click', function () {
+                            modal.classList.remove('is-open');
+                            modal.setAttribute('aria-hidden', 'true');
+                        });
                     });
                 });
-
-                document.querySelectorAll('[data-dev-reclamation-close]').forEach(function (button) {
-                    button.addEventListener('click', function () {
-                        modal.classList.remove('is-open');
-                        modal.setAttribute('aria-hidden', 'true');
-                    });
-                });
-            });
-        </script>
+            </script>
+        @endif
     @endif
 @endauth
 @endonce
