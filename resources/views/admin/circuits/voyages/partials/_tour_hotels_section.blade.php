@@ -203,11 +203,16 @@
                         </div>
 
                         <div class="col-md-2">
-                            <label class="form-label small mb-1">?toiles</label>
-                            <input type="number" class="form-control form-control-sm tour-hotel-stars-input tour-hotel-identity-field"
-                                name="tour_hotels[{{ $hi }}][stars]"
-                                value="{{ old("tour_hotels.{$hi}.stars", optional($h)->stars ?? '') }}"
-                                min="0" max="5" placeholder="0?5">
+                            <label class="form-label small mb-1">Categorie</label>
+                            <select class="form-select form-select-sm tour-hotel-stars-input tour-hotel-identity-field"
+                                name="tour_hotels[{{ $hi }}][stars]">
+                                <option value="">A confirmer</option>
+                                @for($starOption = 5; $starOption >= 1; $starOption--)
+                                    <option value="{{ $starOption }}" @selected((string) old("tour_hotels.{$hi}.stars", optional($h)->stars ?? '') === (string) $starOption)>
+                                        Hotel {{ $starOption }}* {{ str_repeat('★', $starOption) }}
+                                    </option>
+                                @endfor
+                            </select>
                         </div>
 
                         <div class="col-md-4">
@@ -771,6 +776,24 @@
         return preview.src;
     }
 
+    function buildHotelStarsText(stars) {
+        var count = parseInt(stars || '0', 10);
+        if (isNaN(count) || count < 1) return '';
+        count = Math.min(5, count);
+        var text = '';
+        for (var i = 0; i < count; i++) text += '★';
+        return text;
+    }
+
+    function buildHotelFallbackName(stars, address) {
+        var count = parseInt(stars || '0', 10);
+        var base = !isNaN(count) && count > 0
+            ? 'Hotel ' + Math.min(5, count) + '* ' + buildHotelStarsText(count)
+            : 'Hotel';
+        var city = (address || '').toString().trim();
+        return base + (city ? ' a ' + city : '') + ' - a confirmer';
+    }
+
     function renderLinkedSummary(row, payload) {
         if (!row) return;
         var summary = row.querySelector('.tour-hotel-linked-summary');
@@ -864,14 +887,16 @@
             }
         }
 
-        var hotelName = nameInp && nameInp.value.trim() ? nameInp.value.trim() : 'Sejour ' + idx;
+        var hotelName = nameInp && nameInp.value.trim()
+            ? nameInp.value.trim()
+            : buildHotelFallbackName(starsInp && starsInp.value ? starsInp.value : '0', addrInp && addrInp.value ? addrInp.value : '');
         if (titleEl) titleEl.textContent = hotelName;
 
         var meta = [];
         var periodLabel = ci === co ? ('Jour ' + ci) : ('J' + ci + ' -> J' + co + ' - ' + nights + ' nuit' + (nights !== 1 ? 's' : ''));
         meta.push(periodLabel);
         var stars = parseInt(starsInp && starsInp.value ? starsInp.value : '0', 10);
-        if (!isNaN(stars) && stars > 0) meta.push(stars + ' etoile' + (stars > 1 ? 's' : ''));
+        if (!isNaN(stars) && stars > 0) meta.push(stars + ' etoile' + (stars > 1 ? 's' : '') + ' ' + buildHotelStarsText(stars));
         if (addrInp && addrInp.value.trim()) meta.push(addrInp.value.trim());
         if (mealInp && mealInp.value.trim()) meta.push(mealInp.value.trim());
         if (optInp && optInp.checked) meta.push('Option client');

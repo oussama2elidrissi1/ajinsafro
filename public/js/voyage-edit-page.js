@@ -3481,7 +3481,34 @@ document.addEventListener('DOMContentLoaded', function () {
 
             function fieldValue(scope, selector) {
                 var field = scope.querySelector(selector);
-                return field ? field.value : '';
+                return field ? normalizeFrenchText(field.value) : '';
+            }
+
+            function normalizeFrenchText(value) {
+                var text = String(value || '');
+                if (!text) return '';
+
+                var textarea = document.createElement('textarea');
+                textarea.innerHTML = text;
+                text = textarea.value;
+
+                var replacements = {
+                    'Ã©': 'é', 'Ã¨': 'è', 'Ãª': 'ê', 'Ã«': 'ë',
+                    'Ã ': 'à', 'Ã¢': 'â', 'Ã¤': 'ä',
+                    'Ã´': 'ô', 'Ã¶': 'ö',
+                    'Ã®': 'î', 'Ã¯': 'ï',
+                    'Ã§': 'ç',
+                    'Ã¹': 'ù', 'Ã»': 'û', 'Ã¼': 'ü',
+                    'Ã‰': 'É', 'Ãˆ': 'È', 'ÃŠ': 'Ê', 'Ã€': 'À', 'Ã‡': 'Ç',
+                    'â€™': '’', 'â€˜': '‘', 'â€œ': '“', 'â€�': '”',
+                    'â€“': '–', 'â€”': '—', 'Â«': '«', 'Â»': '»', 'Â ': ' '
+                };
+
+                Object.keys(replacements).forEach(function (bad) {
+                    text = text.split(bad).join(replacements[bad]);
+                });
+
+                return text;
             }
 
             function checkboxValue(scope, selector, fallback) {

@@ -62,7 +62,11 @@ class UpdateWpTourRequest extends FormRequest
                     || $mealPlan !== ''
                     || $notes !== ''
                     || ! empty($hotelRow['image_id'])
-                    || ! empty($hotelRow['is_optional']);
+                    || trim((string) ($hotelRow['image_path'] ?? '')) !== ''
+                    || ! empty($hotelRow['is_optional'])
+                    || (int) ($hotelRow['stars'] ?? 0) > 0
+                    || (int) ($hotelRow['hotel_id'] ?? 0) > 0
+                    || (int) ($hotelRow['source_hotel_id'] ?? 0) > 0;
 
                 if (! $hasHotelPayload && $hotelId <= 0) {
                     continue;

@@ -917,11 +917,7 @@ class VoyageController extends Controller
                     $hotels = collect($this->normalizeArrayInput($request->input('tour_hotels')))
                         ->filter(static fn ($value): bool => is_array($value));
                     $hasHotel = $hotels->contains(function (array $row): bool {
-                        // Accept both manual hotels and hotels linked/imported from WordPress.
-                        return trim((string) ($row['hotel_name'] ?? '')) !== ''
-                            || (int) ($row['hotel_id'] ?? 0) > 0
-                            || (int) ($row['source_hotel_id'] ?? 0) > 0
-                            || (int) ($row['id'] ?? 0) > 0;
+                        return $this->hasTourHotelPayload($row);
                     });
                     if (! $hasHotel) {
                         $validator->errors()->add('tour_hotels', 'Ajoutez au moins un hotel.');
@@ -966,6 +962,37 @@ class VoyageController extends Controller
     private function normalizeArrayInput(mixed $value): array
     {
         return is_array($value) ? array_values($value) : [];
+    }
+
+    private function hasTourHotelPayload(array $row): bool
+    {
+        $hotelName = trim((string) ($row['hotel_name'] ?? ''));
+        $address = trim((string) ($row['address'] ?? ''));
+        $mealPlan = trim((string) ($row['meal_plan'] ?? ''));
+        $notes = trim((string) ($row['notes'] ?? ''));
+
+        return $hotelName !== ''
+            || $address !== ''
+            || $mealPlan !== ''
+            || $notes !== ''
+            || ! empty($row['image_id'])
+            || trim((string) ($row['image_path'] ?? '')) !== ''
+            || ! empty($row['is_optional'])
+            || (int) ($row['stars'] ?? 0) > 0
+            || (int) ($row['hotel_id'] ?? 0) > 0
+            || (int) ($row['source_hotel_id'] ?? 0) > 0
+            || (int) ($row['id'] ?? 0) > 0;
+    }
+
+    private function buildFallbackTourHotelName(array $row): string
+    {
+        $stars = max(0, min(5, (int) ($row['stars'] ?? 0)));
+        $address = trim((string) ($row['address'] ?? ''));
+        $base = $stars > 0
+            ? 'Hotel ' . $stars . '* ' . str_repeat('★', $stars)
+            : 'Hotel';
+
+        return trim($base . ($address !== '' ? ' a ' . $address : '') . ' - a confirmer');
     }
 
     private function normalizeV2ActivitiesPayloadIntoRequest(Request $request): void
@@ -2315,15 +2342,12 @@ class VoyageController extends Controller
             $mealPlan = trim((string) ($raw['meal_plan'] ?? ''));
             $notes = trim((string) ($raw['notes'] ?? ''));
             $imagePath = trim((string) ($raw['image_path'] ?? ''));
-            $hasHotelPayload = $hotelName !== ''
-                || $address !== ''
-                || $mealPlan !== ''
-                || $notes !== ''
-                || ! empty($raw['image_id'])
-                || $imagePath !== ''
-                || ! empty($raw['is_optional']);
+            $hasHotelPayload = $this->hasTourHotelPayload($raw);
             if (! $hasHotelPayload) {
                 continue;
+            }
+            if ($hotelName === '') {
+                $hotelName = $this->buildFallbackTourHotelName($raw);
             }
             $payload = [
                 'tour_id' => $tourId,
@@ -2331,7 +2355,7 @@ class VoyageController extends Controller
                 'check_out_day' => $checkOutDay,
                 'day_number' => $oldDayNumber ?? $checkInDay,
                 'is_optional' => ! empty($raw['is_optional']) ? 1 : 0,
-                'hotel_name' => $hotelName !== '' ? $hotelName : null,
+                'hotel_name' => $hotelName,
                 'stars' => isset($raw['stars']) && $raw['stars'] !== '' ? (int) $raw['stars'] : null,
                 'address' => $address !== '' ? $address : null,
                 'meal_plan' => $mealPlan !== '' ? $mealPlan : null,
@@ -3653,10 +3677,10 @@ class VoyageController extends Controller
             }
             $dayNumber = $i + 1;
             $submittedDayNumbers[] = $dayNumber;
-            $dayTitle = isset($dayRow['day_title']) ? trim((string) $dayRow['day_title']) : '';
-            $plainDescription = isset($dayRow['description']) ? trim((string) $dayRow['description']) : '';
-            $notes = isset($dayRow['notes']) ? trim((string) $dayRow['notes']) : '';
-            $contentHtml = isset($dayRow['content_html']) ? trim((string) $dayRow['content_html']) : '';
+            $dayTitle = $this->normalizeFrenchText($dayRow['day_title'] ?? '');
+            $plainDescription = $this->normalizeFrenchText($dayRow['description'] ?? '');
+            $notes = $this->normalizeFrenchText($dayRow['notes'] ?? '');
+            $contentHtml = $this->normalizeFrenchText($dayRow['content_html'] ?? '');
             $wpProgramNotes = $contentHtml !== '' ? $contentHtml : $notes;
             $this->programService->updateDay($dayId, [
                 'mode' => $dayRow['mode'] ?? 'program',
@@ -3688,8 +3712,8 @@ class VoyageController extends Controller
                         'is_mandatory' => $isMandatory,
                         'is_included' => $isIncluded,
                         'day_scope' => $dayScope,
-                        'custom_title' => $row['custom_title'] ?? null,
-                        'custom_description' => $row['custom_description'] ?? null,
+                        'custom_title' => $this->nullableFrenchText($row['custom_title'] ?? null),
+                        'custom_description' => $this->nullableFrenchText($row['custom_description'] ?? null),
                         'sort_order' => $k,
                     ]);
                     $submittedDayActivityIds[] = $dayActivityId;
@@ -3699,8 +3723,8 @@ class VoyageController extends Controller
                         'is_included' => $isIncluded,
                         'day_scope' => $dayScope,
                         'is_mandatory' => $isMandatory,
-                        'custom_title' => $row['custom_title'] ?? null,
-                        'custom_description' => $row['custom_description'] ?? null,
+                        'custom_title' => $this->nullableFrenchText($row['custom_title'] ?? null),
+                        'custom_description' => $this->nullableFrenchText($row['custom_description'] ?? null),
                     ]);
                     $submittedDayActivityIds[] = $newDa->id;
                 }
@@ -4345,10 +4369,10 @@ class VoyageController extends Controller
             ['name' => optional($this->repository->getPost($tourId))->post_title ?? 'Tour', 'slug' => 'tour-' . $tourId]
         );
 
-        $dayTitle = trim((string) ($dayRow['day_title'] ?? $dayRow['title'] ?? ''));
-        $description = trim((string) ($dayRow['description'] ?? ''));
-        $notes = trim((string) ($dayRow['notes'] ?? ''));
-        $contentHtml = trim((string) ($dayRow['content_html'] ?? ''));
+        $dayTitle = $this->normalizeFrenchText($dayRow['day_title'] ?? $dayRow['title'] ?? '');
+        $description = $this->normalizeFrenchText($dayRow['description'] ?? '');
+        $notes = $this->normalizeFrenchText($dayRow['notes'] ?? '');
+        $contentHtml = $this->normalizeFrenchText($dayRow['content_html'] ?? '');
         $dayType = (string) ($dayRow['day_type'] ?? 'visite');
         if (!array_key_exists($dayType, TravelProgramDay::DAY_TYPES)) {
             $dayType = 'visite';
@@ -4369,6 +4393,38 @@ class VoyageController extends Controller
             'day_type' => $dayType,
         ]);
         $programDay->save();
+    }
+
+    protected function nullableFrenchText(mixed $value): ?string
+    {
+        $text = $this->normalizeFrenchText($value);
+
+        return $text !== '' ? $text : null;
+    }
+
+    protected function normalizeFrenchText(mixed $value): string
+    {
+        $text = trim((string) ($value ?? ''));
+        if ($text === '') {
+            return '';
+        }
+
+        $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = str_replace("\xc2\xa0", ' ', $text);
+
+        $replacements = [
+            'Ã©' => 'é', 'Ã¨' => 'è', 'Ãª' => 'ê', 'Ã«' => 'ë',
+            'Ã ' => 'à', 'Ã¢' => 'â', 'Ã¤' => 'ä',
+            'Ã´' => 'ô', 'Ã¶' => 'ö',
+            'Ã®' => 'î', 'Ã¯' => 'ï',
+            'Ã§' => 'ç',
+            'Ã¹' => 'ù', 'Ã»' => 'û', 'Ã¼' => 'ü',
+            'Ã‰' => 'É', 'Ãˆ' => 'È', 'ÃŠ' => 'Ê', 'Ã€' => 'À', 'Ã‡' => 'Ç',
+            'â€™' => '’', 'â€˜' => '‘', 'â€œ' => '“', 'â€�' => '”',
+            'â€“' => '–', 'â€”' => '—', 'Â«' => '«', 'Â»' => '»', 'Â ' => ' ',
+        ];
+
+        return str_replace(array_keys($replacements), array_values($replacements), $text);
     }
 
     protected function getOldProgrammeDaysInput(): array

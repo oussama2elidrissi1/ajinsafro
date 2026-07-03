@@ -65,8 +65,15 @@
                 <input type="text" class="form-control form-control-sm" id="day-builder-hotel-name" placeholder="Ex. Hôtel Les Almoravides">
             </div>
             <div class="col-6">
-                <label class="form-label small">?toiles (0?5)</label>
-                <input type="number" class="form-control form-control-sm" id="day-builder-hotel-stars" min="0" max="5" placeholder="3">
+                <label class="form-label small">Categorie</label>
+                <select class="form-select form-select-sm" id="day-builder-hotel-stars">
+                    <option value="">A confirmer</option>
+                    <option value="5">Hotel 5* ★★★★★</option>
+                    <option value="4">Hotel 4* ★★★★</option>
+                    <option value="3">Hotel 3* ★★★</option>
+                    <option value="2">Hotel 2* ★★</option>
+                    <option value="1">Hotel 1* ★</option>
+                </select>
             </div>
             <div class="col-6">
                 <label class="form-label small">Type de chambre</label>
@@ -772,9 +779,23 @@
             }
             var data = getFormData();
             if (!data.hotel_name || !data.hotel_name.trim()) {
-                alert('Veuillez saisir un nom d\'hôtel.');
-                if (formFields.hotel_name) formFields.hotel_name.focus();
-                return;
+                var hasHotelIdentity = (data.stars && parseInt(data.stars, 10) > 0)
+                    || (data.address && data.address.trim())
+                    || (data.meal_plan && data.meal_plan.trim());
+                if (!hasHotelIdentity) {
+                    alert('Selectionnez une categorie hotel ou saisissez un nom.');
+                    if (formFields.stars) formFields.stars.focus();
+                    return;
+                }
+                var stars = parseInt(data.stars || '0', 10);
+                var starsText = '';
+                if (!isNaN(stars) && stars > 0) {
+                    stars = Math.min(5, stars);
+                    for (var i = 0; i < stars; i++) starsText += '★';
+                    data.hotel_name = 'Hotel ' + stars + '* ' + starsText + ' - a confirmer';
+                } else {
+                    data.hotel_name = 'Hotel - a confirmer';
+                }
             }
             
             var hotelInfo = getHotelForDay(day.index, day.number);
@@ -854,4 +875,3 @@
     refreshUI();
 })();
 </script>
-
