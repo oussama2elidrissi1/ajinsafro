@@ -2194,12 +2194,34 @@ body.voyage-layout-page .offcanvas {
 .voyage-edit-page .programme-detail-toolbar {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 6px;
     min-height: 42px;
     padding: 7px 10px;
     border: 1px solid #cbd5e1;
     border-radius: 10px 10px 0 0;
     background: #f8fafc;
+}
+.voyage-edit-page .programme-detail-select {
+    height: 30px;
+    min-width: 118px;
+    max-width: 160px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #0f172a;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 0 28px 0 10px;
+    outline: none;
+}
+.voyage-edit-page .programme-detail-select--size {
+    min-width: 70px;
+    max-width: 86px;
+}
+.voyage-edit-page .programme-detail-select:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
 .voyage-edit-page .programme-detail-tool {
     display: inline-flex;
@@ -2222,6 +2244,53 @@ body.voyage-layout-page .offcanvas {
 .voyage-edit-page .programme-detail-tool i {
     font-size: 18px;
     line-height: 1;
+}
+.voyage-edit-page .programme-detail-color {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 30px;
+    margin: 0;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: #1e293b;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 800;
+}
+.voyage-edit-page .programme-detail-color:hover,
+.voyage-edit-page .programme-detail-color:focus-within {
+    border-color: #bfdbfe;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+.voyage-edit-page .programme-detail-color span {
+    position: relative;
+    line-height: 1;
+}
+.voyage-edit-page .programme-detail-color span::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -5px;
+    height: 3px;
+    border-radius: 999px;
+    background: #0f172a;
+}
+.voyage-edit-page .programme-detail-color .programme-detail-color-mark::after {
+    background: #facc15;
+}
+.voyage-edit-page .programme-detail-color input[type="color"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
 }
 .voyage-edit-page .programme-day-detail .programme-detail-surface:focus {
     border-color: #3b82f6 !important;

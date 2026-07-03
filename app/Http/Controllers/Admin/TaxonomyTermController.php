@@ -41,7 +41,7 @@ class TaxonomyTermController extends Controller
             $term = $this->tourRepository->createTaxonomyTerm(
                 $request->input('name'),
                 $request->input('taxonomy'),
-                $request->input('slug', '')
+                (string) ($request->input('slug') ?? '')
             );
             return response()->json([
                 'success' => true,
@@ -68,7 +68,7 @@ class TaxonomyTermController extends Controller
             $this->tourRepository->updateTaxonomyTerm(
                 $termId,
                 $request->input('name'),
-                $request->input('slug', '')
+                (string) ($request->input('slug') ?? '')
             );
             $terms = DB::connection('wp')
                 ->table('terms')

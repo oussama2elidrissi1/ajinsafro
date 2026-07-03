@@ -3113,12 +3113,20 @@ document.addEventListener('DOMContentLoaded', function () {
                     '<textarea class="form-control programme-plain-editor" name="programme_days[' + index + '][description]" rows="3" placeholder="Résumé du jour"></textarea></div>' +
                     '<div class="field-description programme-day-detail ve-rich-field"><label class="form-label">Description détaillée</label>' +
                     '<div class="programme-detail-toolbar" aria-label="Outils de mise en forme">' +
+                    '<select class="programme-detail-select" data-programme-editor-action="format" title="Style du texte"><option value="p">Paragraphe</option><option value="h2">Titre H2</option><option value="h3">Titre H3</option></select>' +
+                    '<select class="programme-detail-select programme-detail-select--size" data-programme-editor-action="fontSize" title="Taille du texte"><option value="14px">14</option><option value="16px" selected>16</option><option value="18px">18</option><option value="20px">20</option><option value="24px">24</option></select>' +
                     '<button type="button" class="programme-detail-tool" data-programme-editor-action="bold" title="Gras"><i class="bx bx-bold"></i></button>' +
                     '<button type="button" class="programme-detail-tool" data-programme-editor-action="italic" title="Italique"><i class="bx bx-italic"></i></button>' +
-                    '<button type="button" class="programme-detail-tool" data-programme-editor-action="heading" title="Titre"><i class="bx bx-heading"></i></button>' +
+                    '<button type="button" class="programme-detail-tool" data-programme-editor-action="underline" title="Souligner"><i class="bx bx-underline"></i></button>' +
                     '<button type="button" class="programme-detail-tool" data-programme-editor-action="ul" title="Liste"><i class="bx bx-list-ul"></i></button>' +
                     '<button type="button" class="programme-detail-tool" data-programme-editor-action="ol" title="Liste numerotee"><i class="bx bx-list-ol"></i></button>' +
+                    '<button type="button" class="programme-detail-tool" data-programme-editor-action="alignLeft" title="Aligner a gauche"><i class="bx bx-align-left"></i></button>' +
+                    '<button type="button" class="programme-detail-tool" data-programme-editor-action="alignCenter" title="Centrer"><i class="bx bx-align-middle"></i></button>' +
+                    '<button type="button" class="programme-detail-tool" data-programme-editor-action="alignRight" title="Aligner a droite"><i class="bx bx-align-right"></i></button>' +
+                    '<label class="programme-detail-color" title="Couleur du texte"><span>A</span><input type="color" value="#0f172a" data-programme-editor-action="foreColor"></label>' +
+                    '<label class="programme-detail-color" title="Surlignage"><span class="programme-detail-color-mark">A</span><input type="color" value="#fff3bf" data-programme-editor-action="backColor"></label>' +
                     '<button type="button" class="programme-detail-tool" data-programme-editor-action="link" title="Lien"><i class="bx bx-link"></i></button>' +
+                    '<button type="button" class="programme-detail-tool" data-programme-editor-action="clear" title="Nettoyer"><i class="bx bx-eraser"></i></button>' +
                     '</div>' +
                     '<div class="programme-detail-surface" contenteditable="true" data-placeholder="Programme détaillé du jour"></div>' +
                     '<textarea class="d-none programme-detail-editor" name="programme_days[' + index + '][content_html]" rows="8"></textarea></div>' +
@@ -3293,9 +3301,47 @@ document.addEventListener('DOMContentLoaded', function () {
         })();
 
         (function programmeDetailVisualEditor() {
+            var savedRanges = new WeakMap();
+            var fontSizeMap = {
+                '14px': '2',
+                '16px': '3',
+                '18px': '4',
+                '20px': '5',
+                '24px': '6'
+            };
+
             function normalizeHtml(html) {
                 var value = String(html || '').trim();
                 return value === '<br>' || value === '<div><br></div>' ? '' : value;
+            }
+
+            function saveSelection(field) {
+                var surface = field ? field.querySelector('.programme-detail-surface') : null;
+                var selection = window.getSelection ? window.getSelection() : null;
+                if (!surface || !selection || selection.rangeCount === 0) return;
+                var range = selection.getRangeAt(0);
+                if (!surface.contains(range.commonAncestorContainer)) return;
+                savedRanges.set(field, range.cloneRange());
+            }
+
+            function restoreSelection(field) {
+                var surface = field ? field.querySelector('.programme-detail-surface') : null;
+                var selection = window.getSelection ? window.getSelection() : null;
+                var range = savedRanges.get(field);
+                if (!surface || !selection || !range) return;
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+
+            function normalizeGeneratedFontTags(surface) {
+                if (!surface) return;
+                var map = { 1: '12px', 2: '14px', 3: '16px', 4: '18px', 5: '20px', 6: '24px', 7: '32px' };
+                surface.querySelectorAll('font[size]').forEach(function (font) {
+                    var span = document.createElement('span');
+                    span.style.fontSize = map[font.getAttribute('size')] || '16px';
+                    span.innerHTML = font.innerHTML;
+                    font.replaceWith(span);
+                });
             }
 
             function syncField(field) {
@@ -3303,6 +3349,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 var surface = field.querySelector('.programme-detail-surface');
                 var source = field.querySelector('textarea.programme-detail-editor');
                 if (!surface || !source) return;
+                normalizeGeneratedFontTags(surface);
                 source.value = normalizeHtml(surface.innerHTML);
                 source.dispatchEvent(new Event('input', { bubbles: true }));
                 source.dispatchEvent(new Event('change', { bubbles: true }));
@@ -3320,7 +3367,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 surface.addEventListener('input', function () { syncField(field); });
-                surface.addEventListener('blur', function () { syncField(field); });
+                surface.addEventListener('blur', function () {
+                    saveSelection(field);
+                    syncField(field);
+                });
+                surface.addEventListener('keyup', function () { saveSelection(field); });
+                surface.addEventListener('mouseup', function () { saveSelection(field); });
                 surface.addEventListener('paste', function () {
                     window.setTimeout(function () { syncField(field); }, 0);
                 });
@@ -3335,22 +3387,47 @@ document.addEventListener('DOMContentLoaded', function () {
                 var surface = field ? field.querySelector('.programme-detail-surface') : null;
                 if (!surface) return;
                 surface.focus();
+                restoreSelection(field);
 
                 if (action === 'bold') document.execCommand('bold', false, null);
                 if (action === 'italic') document.execCommand('italic', false, null);
+                if (action === 'underline') document.execCommand('underline', false, null);
                 if (action === 'heading') document.execCommand('formatBlock', false, 'h3');
                 if (action === 'ul') document.execCommand('insertUnorderedList', false, null);
                 if (action === 'ol') document.execCommand('insertOrderedList', false, null);
+                if (action === 'alignLeft') document.execCommand('justifyLeft', false, null);
+                if (action === 'alignCenter') document.execCommand('justifyCenter', false, null);
+                if (action === 'alignRight') document.execCommand('justifyRight', false, null);
+                if (action === 'clear') document.execCommand('removeFormat', false, null);
                 if (action === 'link') {
                     var href = window.prompt('URL du lien', 'https://');
                     if (href) document.execCommand('createLink', false, href);
                 }
 
                 syncField(field);
+                saveSelection(field);
+            }
+
+            function commandWithValue(field, action, value) {
+                var surface = field ? field.querySelector('.programme-detail-surface') : null;
+                if (!surface) return;
+                surface.focus();
+                restoreSelection(field);
+
+                if (action === 'format') document.execCommand('formatBlock', false, value || 'p');
+                if (action === 'fontSize') {
+                    document.execCommand('fontSize', false, fontSizeMap[value] || '3');
+                    normalizeGeneratedFontTags(surface);
+                }
+                if (action === 'foreColor') document.execCommand('foreColor', false, value || '#0f172a');
+                if (action === 'backColor') document.execCommand('hiliteColor', false, value || '#fff3bf');
+
+                syncField(field);
+                saveSelection(field);
             }
 
             document.addEventListener('mousedown', function (event) {
-                if (event.target && event.target.closest && event.target.closest('[data-programme-editor-action]')) {
+                if (event.target && event.target.closest && event.target.closest('button[data-programme-editor-action]')) {
                     event.preventDefault();
                 }
             }, true);
@@ -3363,6 +3440,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 event.preventDefault();
                 command(button.closest('.programme-day-detail'), button.getAttribute('data-programme-editor-action'));
+            }, true);
+
+            document.addEventListener('change', function (event) {
+                var control = event.target && event.target.closest
+                    ? event.target.closest('select[data-programme-editor-action], input[type="color"][data-programme-editor-action]')
+                    : null;
+                if (!control) return;
+                commandWithValue(control.closest('.programme-day-detail'), control.getAttribute('data-programme-editor-action'), control.value);
             }, true);
 
             window.initProgrammeDetailEditors = initAll;

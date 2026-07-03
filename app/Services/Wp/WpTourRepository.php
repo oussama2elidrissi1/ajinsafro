@@ -531,10 +531,10 @@ class WpTourRepository
      *
      * @param string $name
      * @param string $taxonomy
-     * @param string $slug
+     * @param string|null $slug
      * @return object { term_id, name, slug }
      */
-    public function createTaxonomyTerm(string $name, string $taxonomy, string $slug = ''): object
+    public function createTaxonomyTerm(string $name, string $taxonomy, ?string $slug = ''): object
     {
         if (!in_array($taxonomy, self::TOUR_TAXONOMIES, true)) {
             throw new \InvalidArgumentException("Taxonomy not allowed: {$taxonomy}");
@@ -543,6 +543,7 @@ class WpTourRepository
         if ($name === '') {
             throw new \InvalidArgumentException('Term name is required.');
         }
+        $slug = trim((string) $slug);
         $slug = $slug !== '' ? Str::slug($slug) : Str::slug($name);
         $slug = $this->ensureTermSlugUnique($slug, $taxonomy, null);
 
@@ -566,10 +567,10 @@ class WpTourRepository
      *
      * @param int $termId
      * @param string $name
-     * @param string $slug
+     * @param string|null $slug
      * @return bool
      */
-    public function updateTaxonomyTerm(int $termId, string $name, string $slug = ''): bool
+    public function updateTaxonomyTerm(int $termId, string $name, ?string $slug = ''): bool
     {
         $name = trim($name);
         if ($name === '') {
@@ -577,6 +578,7 @@ class WpTourRepository
         }
         $tt = \DB::connection('wp')->table('term_taxonomy')->where('term_id', $termId)->first();
         $taxonomy = $tt ? $tt->taxonomy : null;
+        $slug = trim((string) $slug);
         $slug = $slug !== '' ? Str::slug($slug) : Str::slug($name);
         $slug = $this->ensureTermSlugUnique($slug, $taxonomy, $termId);
 

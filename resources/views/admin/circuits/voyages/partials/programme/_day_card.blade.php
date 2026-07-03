@@ -61,12 +61,36 @@
                         $programDetailHtml = old('programme_days.'.$dayIndex.'.content_html', $day->content_html ?? '');
                     @endphp
                     <div class="programme-detail-toolbar" aria-label="Outils de mise en forme">
+                        <select class="programme-detail-select" data-programme-editor-action="format" title="Style du texte">
+                            <option value="p">Paragraphe</option>
+                            <option value="h2">Titre H2</option>
+                            <option value="h3">Titre H3</option>
+                        </select>
+                        <select class="programme-detail-select programme-detail-select--size" data-programme-editor-action="fontSize" title="Taille du texte">
+                            <option value="14px">14</option>
+                            <option value="16px" selected>16</option>
+                            <option value="18px">18</option>
+                            <option value="20px">20</option>
+                            <option value="24px">24</option>
+                        </select>
                         <button type="button" class="programme-detail-tool" data-programme-editor-action="bold" title="Gras"><i class="bx bx-bold"></i></button>
                         <button type="button" class="programme-detail-tool" data-programme-editor-action="italic" title="Italique"><i class="bx bx-italic"></i></button>
-                        <button type="button" class="programme-detail-tool" data-programme-editor-action="heading" title="Titre"><i class="bx bx-heading"></i></button>
+                        <button type="button" class="programme-detail-tool" data-programme-editor-action="underline" title="Souligner"><i class="bx bx-underline"></i></button>
                         <button type="button" class="programme-detail-tool" data-programme-editor-action="ul" title="Liste"><i class="bx bx-list-ul"></i></button>
                         <button type="button" class="programme-detail-tool" data-programme-editor-action="ol" title="Liste numerotee"><i class="bx bx-list-ol"></i></button>
+                        <button type="button" class="programme-detail-tool" data-programme-editor-action="alignLeft" title="Aligner a gauche"><i class="bx bx-align-left"></i></button>
+                        <button type="button" class="programme-detail-tool" data-programme-editor-action="alignCenter" title="Centrer"><i class="bx bx-align-middle"></i></button>
+                        <button type="button" class="programme-detail-tool" data-programme-editor-action="alignRight" title="Aligner a droite"><i class="bx bx-align-right"></i></button>
+                        <label class="programme-detail-color" title="Couleur du texte">
+                            <span>A</span>
+                            <input type="color" value="#0f172a" data-programme-editor-action="foreColor">
+                        </label>
+                        <label class="programme-detail-color" title="Surlignage">
+                            <span class="programme-detail-color-mark">A</span>
+                            <input type="color" value="#fff3bf" data-programme-editor-action="backColor">
+                        </label>
                         <button type="button" class="programme-detail-tool" data-programme-editor-action="link" title="Lien"><i class="bx bx-link"></i></button>
+                        <button type="button" class="programme-detail-tool" data-programme-editor-action="clear" title="Nettoyer"><i class="bx bx-eraser"></i></button>
                     </div>
                     <div class="programme-detail-surface" contenteditable="true" data-placeholder="Programme détaillé du jour">{!! $programDetailHtml !!}</div>
                     <textarea class="d-none programme-detail-editor" name="programme_days[{{ $dayIndex }}][content_html]" rows="8">{{ $programDetailHtml }}</textarea>
