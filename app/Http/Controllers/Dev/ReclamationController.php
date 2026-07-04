@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dev;
 
 use App\Http\Controllers\Controller;
+use App\Models\ClientNotification;
 use App\Models\DevReclamation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -64,12 +65,17 @@ class ReclamationController extends Controller
             'dev_response' => ['nullable', 'string', 'max:5000'],
         ]);
 
+        $previousStatus = $reclamation->status;
+        $previousResponse = (string) ($reclamation->dev_response ?? '');
+
         $reclamation->fill([
             'status' => $validated['status'],
             'dev_response' => $validated['dev_response'] ?? null,
             'handled_by' => $request->user()->id,
             'handled_at' => $validated['status'] === DevReclamation::STATUS_RESOLVED ? now() : $reclamation->handled_at,
         ])->save();
+
+        $this->notifyRequesterWhenTreatmentChanges($reclamation, $previousStatus, $previousResponse);
 
         return redirect()
             ->route('admin.dev.reclamations.show', $reclamation)
@@ -82,5 +88,34 @@ class ReclamationController extends Controller
         $email = strtolower(trim((string) ($user?->email ?? '')));
 
         abort_unless($email === self::DEV_EMAIL, 403);
+    }
+
+    private function notifyRequesterWhenTreatmentChanges(DevReclamation $reclamation, ?string $previousStatus, string $previousResponse): void
+    {
+        if (! $reclamation->user_id) {
+            return;
+        }
+
+        $response = trim((string) ($reclamation->dev_response ?? ''));
+        $statusChanged = $previousStatus !== $reclamation->status;
+        $responseChanged = trim($previousResponse) !== $response;
+
+        if (! $statusChanged && ! $responseChanged) {
+            return;
+        }
+
+        $statusLabel = $reclamation->status_label;
+        $message = $response !== ''
+            ? 'Le dev a ajoute une reponse a votre reclamation : '.$reclamation->subject
+            : 'Le statut de votre reclamation est passe a '.$statusLabel.' : '.$reclamation->subject;
+
+        ClientNotification::query()->create([
+            'user_id' => $reclamation->user_id,
+            'type' => 'dev_reclamation_response',
+            'title' => $response !== '' ? 'Reponse dev disponible' : 'Statut reclamation mis a jour',
+            'message' => $message,
+            'link' => route('support.reclamations.show', $reclamation),
+            'is_read' => false,
+        ]);
     }
 }

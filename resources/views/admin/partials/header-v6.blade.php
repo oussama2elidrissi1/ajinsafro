@@ -5,8 +5,9 @@
     $adminInitials  = $adminInitials  ?? 'AD';
     $adminAvatarUrl = $adminAvatarUrl ?? null;
 
-    $unreadCount  = $unreadCount  ?? 0;
-    $pendingCount = $pendingCount ?? 0;
+    $unreadCount = $unreadCount ?? 0;
+    $adminNotifications = $adminNotifications ?? collect();
+    $adminNotificationsUnread = (int) ($adminNotificationsUnread ?? 0);
 
     $v6Title = html_entity_decode(
         $pageTitle ?? trim((string) View::yieldContent('page_title', View::yieldContent('title', 'Espace Admin'))),
@@ -67,14 +68,54 @@
             </a>
         @endif
 
-        @if(\Illuminate\Support\Facades\Route::has('admin.reservations.en-attente'))
-            <a href="{{ route('admin.reservations.en-attente') }}" class="aj-topbar-notif" title="Reservations en attente">
+        <div class="dropdown">
+            <button type="button" class="aj-topbar-notif border-0" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" title="Notifications">
                 <i class="bx bx-bell"></i>
-                @if((int) $pendingCount > 0)
-                    <b class="aj-notif-badge">{{ min((int) $pendingCount, 99) }}</b>
+                @if($adminNotificationsUnread > 0)
+                    <b class="aj-notif-badge">{{ min($adminNotificationsUnread, 99) }}</b>
                 @endif
-            </a>
-        @endif
+            </button>
+            <div class="dropdown-menu dropdown-menu-end p-0 shadow-lg" style="width:min(420px, calc(100vw - 24px)); border:1px solid #dbe8f5; border-radius:16px; overflow:hidden;">
+                <div class="d-flex align-items-center justify-content-between gap-2 px-3 py-3 border-bottom" style="background:#fbfdff;">
+                    <div>
+                        <div class="fw-bold text-dark">Notifications</div>
+                        <div class="small text-muted">{{ $adminNotificationsUnread }} non lue(s)</div>
+                    </div>
+                    @if($adminNotificationsUnread > 0 && \Illuminate\Support\Facades\Route::has('admin.notifications.read-all'))
+                        <form method="POST" action="{{ route('admin.notifications.read-all') }}">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-light border fw-semibold">Tout marquer lu</button>
+                        </form>
+                    @endif
+                </div>
+                <div style="max-height:360px; overflow:auto;">
+                    @forelse($adminNotifications as $notification)
+                        <div class="d-flex align-items-start justify-content-between gap-3 px-3 py-3 border-bottom {{ $notification->is_read ? '' : 'bg-light' }}">
+                            <div class="min-w-0">
+                                <div class="fw-bold text-dark text-truncate">{{ $notification->title }}</div>
+                                <div class="small text-muted" style="line-height:1.45;">{{ \Illuminate\Support\Str::limit($notification->message, 130) }}</div>
+                                <div class="small text-muted mt-1">{{ $notification->created_at?->diffForHumans() }}</div>
+                            </div>
+                            <div class="flex-shrink-0">
+                                @if(! $notification->is_read && \Illuminate\Support\Facades\Route::has('admin.notifications.read'))
+                                    <form method="POST" action="{{ route('admin.notifications.read', $notification) }}">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-primary">{{ $notification->link ? 'Ouvrir' : 'Lu' }}</button>
+                                    </form>
+                                @elseif($notification->link)
+                                    <a href="{{ $notification->link }}" class="btn btn-sm btn-light border">Ouvrir</a>
+                                @endif
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center px-4 py-5">
+                            <div class="fw-bold text-dark">Aucune notification</div>
+                            <div class="small text-muted mt-1">Les alertes de votre compte apparaitront ici.</div>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
 
         @if(\Illuminate\Support\Facades\Route::has('admin.profile.edit'))
             <a href="{{ route('admin.profile.edit') }}" class="aj-topbar-profile" aria-label="Mon profil">

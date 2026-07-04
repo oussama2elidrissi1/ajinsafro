@@ -77,6 +77,7 @@ use App\Http\Controllers\Front\GroupDealsController as FrontGroupDealsController
 use App\Http\Controllers\Front\VoyageController as FrontVoyageController;
 use App\Http\Controllers\Support\ReclamationController as SupportReclamationController;
 use App\Http\Controllers\Admin\MenuHubController;
+use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
 use App\Http\Controllers\DemoController;
 use App\Http\Controllers\MessagerieController as AgentMessagerieController;
 use Illuminate\Support\Facades\Route;
@@ -154,6 +155,8 @@ Route::middleware(['auth', 'client'])->prefix('client')->name('client.')->group(
 
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('lock-screen/activate', [LockScreenController::class, 'lock'])->name('lock-screen.activate');
+    Route::post('admin/notifications/read-all', [AdminNotificationController::class, 'markAllRead'])->name('admin.notifications.read-all');
+    Route::post('admin/notifications/{notification}/read', [AdminNotificationController::class, 'markRead'])->name('admin.notifications.read')->whereNumber('notification');
 });
 
 // Legacy partner URLs under /partner/... are redirected to the dedicated subdomain portal.

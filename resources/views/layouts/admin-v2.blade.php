@@ -18,8 +18,9 @@
     $adminV2AvatarUrl = $adminV2User?->avatar_url;
 
     // Compute notification counts once — passed to header partial
-    $adminV2UnreadCount  = 0;
-    $adminV2PendingCount = 0;
+    $adminV2UnreadCount = 0;
+    $adminV2Notifications = collect();
+    $adminV2NotificationsUnread = 0;
     if ($adminV2User && \Illuminate\Support\Facades\Schema::hasTable('messages')) {
         $adminV2UnreadCount = \App\Models\Message::query()
             ->where('recipient_id', $adminV2User->id)
@@ -27,9 +28,15 @@
             ->where('read', false)
             ->count();
     }
-    if (\Illuminate\Support\Facades\Schema::hasTable('reservations')) {
-        $adminV2PendingCount = \App\Models\Reservation::query()
-            ->where('status', \App\Models\Reservation::STATUS_PENDING)
+    if ($adminV2User && \Illuminate\Support\Facades\Schema::hasTable('notifications')) {
+        $adminV2Notifications = \App\Models\ClientNotification::query()
+            ->where('user_id', $adminV2User->id)
+            ->latest()
+            ->limit(8)
+            ->get();
+        $adminV2NotificationsUnread = \App\Models\ClientNotification::query()
+            ->where('user_id', $adminV2User->id)
+            ->where('is_read', false)
             ->count();
     }
 @endphp
@@ -86,7 +93,8 @@
             'adminV2Initials'     => $adminV2Initials,
             'adminV2AvatarUrl'    => $adminV2AvatarUrl,
             'adminV2UnreadCount'  => $adminV2UnreadCount,
-            'adminV2PendingCount' => $adminV2PendingCount,
+            'adminNotifications' => $adminV2Notifications,
+            'adminNotificationsUnread' => $adminV2NotificationsUnread,
         ])
 
         <div class="aj-admin-v2-content">

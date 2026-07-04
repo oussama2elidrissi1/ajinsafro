@@ -14,8 +14,9 @@
     if ($adminInitials === '') { $adminInitials = 'AD'; }
     $adminAvatarUrl = $adminUser?->avatar_url;
 
-    $unreadCount  = 0;
-    $pendingCount = 0;
+    $unreadCount = 0;
+    $adminNotifications = collect();
+    $adminNotificationsUnread = 0;
     try {
         if ($adminUser && \Illuminate\Support\Facades\Schema::hasTable('messages')) {
             $unreadCount = \App\Models\Message::query()
@@ -28,13 +29,20 @@
         $unreadCount = 0;
     }
     try {
-        if (\Illuminate\Support\Facades\Schema::hasTable('reservations')) {
-            $pendingCount = \App\Models\Reservation::query()
-                ->where('status', \App\Models\Reservation::STATUS_PENDING)
+        if ($adminUser && \Illuminate\Support\Facades\Schema::hasTable('notifications')) {
+            $adminNotifications = \App\Models\ClientNotification::query()
+                ->where('user_id', $adminUser->id)
+                ->latest()
+                ->limit(8)
+                ->get();
+            $adminNotificationsUnread = \App\Models\ClientNotification::query()
+                ->where('user_id', $adminUser->id)
+                ->where('is_read', false)
                 ->count();
         }
     } catch (Throwable $e) {
-        $pendingCount = 0;
+        $adminNotifications = collect();
+        $adminNotificationsUnread = 0;
     }
 @endphp
 <!DOCTYPE html>
@@ -84,7 +92,8 @@
                 'adminInitials'  => $adminInitials,
                 'adminAvatarUrl' => $adminAvatarUrl,
                 'unreadCount'    => $unreadCount,
-                'pendingCount'   => $pendingCount,
+                'adminNotifications' => $adminNotifications,
+                'adminNotificationsUnread' => $adminNotificationsUnread,
             ])
 
             <main class="admin-v6-content aj-admin-v2-content">
