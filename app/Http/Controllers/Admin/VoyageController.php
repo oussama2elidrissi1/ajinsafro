@@ -3962,12 +3962,37 @@ class VoyageController extends Controller
                 $groupUuid = (string) Str::uuid();
             }
 
-            foreach ($targetDayNumbers as $targetIndex => $dayNumber) {
+            $activityItemDays = [];
+            if ($visibilityMode === 'multiple_days' && count($targetDayNumbers) > 1) {
+                $startDay = (int) min($targetDayNumbers);
+                $endDay = (int) max($targetDayNumbers);
+                $activityItemDays[] = [
+                    'day_number' => $startDay,
+                    'start_day' => $startDay,
+                    'end_day' => $endDay,
+                    'sort_offset' => 0,
+                ];
+            } else {
+                foreach ($targetDayNumbers as $targetIndex => $targetDayNumber) {
+                    $activityItemDays[] = [
+                        'day_number' => (int) $targetDayNumber,
+                        'start_day' => (int) $targetDayNumber,
+                        'end_day' => (int) $targetDayNumber,
+                        'sort_offset' => (int) $targetIndex,
+                    ];
+                }
+            }
+
+            foreach ($activityItemDays as $activityItemDay) {
+                $dayNumber = (int) $activityItemDay['day_number'];
+                $startDay = (int) $activityItemDay['start_day'];
+                $endDay = (int) $activityItemDay['end_day'];
+                $sortOffset = (int) $activityItemDay['sort_offset'];
                 $itemData = [
                     'voyage_id' => $voyage->id,
                     'day_number' => $dayNumber,
-                    'start_day' => $dayNumber,
-                    'end_day' => $dayNumber,
+                    'start_day' => $startDay,
+                    'end_day' => $endDay,
                     'nights' => 0,
                     'type' => 'activity',
                     'title' => $title !== '' ? $title : ($catalogTitle !== '' ? $catalogTitle : ('Activite #' . $activityId)),
@@ -3996,12 +4021,15 @@ class VoyageController extends Controller
                     'meta_json' => [
                         'source' => 'voyage_activities_tab',
                         'group_uuid' => $groupUuid,
+                        'days' => $targetDayNumbers,
+                        'duration_days' => max(1, count($targetDayNumbers)),
+                        'display_once' => $visibilityMode === 'multiple_days',
                     ],
-                    'sort_order' => $rowSortOrder + $targetIndex,
+                    'sort_order' => $rowSortOrder + $sortOffset,
                 ];
 
                 $existing = null;
-                if ($targetIndex === 0 && $itemId > 0) {
+                if ($sortOffset === 0 && $itemId > 0) {
                     $existing = $managedPool
                         ->first(fn (TravelDayItem $item): bool => $item->id === $itemId && ! in_array($item->id, $usedExistingIds, true));
                 }
@@ -4039,7 +4067,7 @@ class VoyageController extends Controller
                 }
             }
 
-            $sortOrder += count($targetDayNumbers);
+            $sortOrder += max(1, count($activityItemDays));
         }
 
         TravelDayItem::query()
@@ -4192,6 +4220,12 @@ class VoyageController extends Controller
                     ->values();
             if ($targetDays->isEmpty()) {
                 $targetDays = collect([$resolveDay($row['day_number'] ?? 1)])->filter()->values();
+            }
+            if ($visibilityMode === 'multiple_days' && $targetDays->count() > 1) {
+                $targetDays = $targetDays
+                    ->sortBy(fn ($day) => (int) ($day->day_number ?? 0))
+                    ->take(1)
+                    ->values();
             }
 
             foreach ($targetDays as $targetDay) {

@@ -126,6 +126,20 @@ class PackageStateBuilder
 
         $result = [];
         foreach ($items as $item) {
+            $meta = $item->meta_json;
+            if (is_string($meta)) {
+                $decoded = json_decode($meta, true);
+                $meta = json_last_error() === JSON_ERROR_NONE && is_array($decoded) ? $decoded : [];
+            }
+            if (
+                $item->type === 'activity'
+                && is_array($meta)
+                && !empty($meta['display_once'])
+                && (int) ($item->start_day ?? $item->day_number ?? 0) !== $dayNumber
+            ) {
+                continue;
+            }
+
             // Skip removed items
             if (in_array($item->id, $removedIds)) {
                 continue;
@@ -150,7 +164,7 @@ class PackageStateBuilder
                 'nights' => $item->nights,
                 'is_multi_day' => $item->isMultiDay(),
                 'duration_days' => $item->duration_days,
-                'meta' => $item->meta_json,
+                'meta' => $meta,
                 'sort_order' => $item->sort_order,
             ];
 
@@ -236,10 +250,18 @@ class PackageStateBuilder
     protected function collectSelectedItems(array $days, PackageSession $session): array
     {
         $selected = [];
+        $seenIds = [];
         
         foreach ($days as $day) {
             foreach ($day['items'] as $item) {
                 if ($item['selected'] ?? false) {
+                    $id = (int) ($item['id'] ?? 0);
+                    if ($id > 0 && isset($seenIds[$id])) {
+                        continue;
+                    }
+                    if ($id > 0) {
+                        $seenIds[$id] = true;
+                    }
                     $selected[] = $item;
                 }
             }

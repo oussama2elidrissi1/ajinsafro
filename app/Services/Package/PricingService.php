@@ -32,7 +32,12 @@ class PricingService
         ];
 
         // Calculate selected optional items
+        $pricedItemIds = [];
         foreach ($selectedItems as $item) {
+            $itemId = (int) ($item['id'] ?? 0);
+            if ($itemId > 0 && isset($pricedItemIds[$itemId])) {
+                continue;
+            }
             if (!$item['included'] && $item['selected']) {
                 $delta = $item['price_delta_per_person'] ?? 0;
                 $optionsPerPerson += $delta;
@@ -41,6 +46,9 @@ class PricingService
                     'title' => $item['title'],
                     'price_delta' => $delta,
                 ];
+            }
+            if ($itemId > 0) {
+                $pricedItemIds[$itemId] = true;
             }
         }
 
