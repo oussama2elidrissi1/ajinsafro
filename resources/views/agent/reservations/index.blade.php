@@ -233,7 +233,7 @@
             width: 100%;
             border-collapse: separate;
             border-spacing: 0;
-            min-width: 980px;
+            min-width: 1180px;
         }
 
         .aj-agent-res-table th {
@@ -245,7 +245,7 @@
             padding: 13px 14px;
             text-align: left;
             border-bottom: 1px solid #e2ebf3;
-            font-weight: 800;
+            font-weight: 700;
         }
 
         .aj-agent-res-table td {
@@ -267,15 +267,15 @@
 
         .aj-agent-ref {
             color: #0e3a5a;
-            font-weight: 800;
-            font-size: 15px;
+            font-weight: 650;
+            font-size: 14px;
             line-height: 1.2;
         }
 
         .aj-agent-voyage-name {
             max-width: 60ch;
             color: #0f172a;
-            font-weight: 700;
+            font-weight: 500;
             line-height: 1.35;
         }
 
@@ -287,7 +287,7 @@
 
         .aj-agent-row-main {
             color: #0f172a;
-            font-weight: 700;
+            font-weight: 500;
             line-height: 1.3;
         }
 
@@ -298,7 +298,7 @@
             padding: 7px 11px;
             border-radius: 999px;
             font-size: 12px;
-            font-weight: 800;
+            font-weight: 600;
             border: 1px solid transparent;
             white-space: nowrap;
         }
@@ -338,9 +338,24 @@
 
         .aj-agent-money {
             color: #0e3a5a;
-            font-size: 18px;
-            font-weight: 800;
-            line-height: 1.1;
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.25;
+            white-space: nowrap;
+        }
+
+        .aj-agent-money.is-rest {
+            color: #c25b06;
+        }
+
+        .aj-agent-money.is-paid {
+            color: #15803d;
+        }
+
+        .aj-agent-table-stat {
+            color: #0f172a;
+            font-size: 13px;
+            font-weight: 500;
             white-space: nowrap;
         }
 
@@ -356,7 +371,7 @@
             background: #fff;
             color: #0e3a5a;
             font-size: 13px;
-            font-weight: 800;
+            font-weight: 600;
             text-decoration: none;
             transition: .18s ease;
         }
@@ -392,7 +407,7 @@
             background: #fff;
             color: #0e3a5a;
             font-size: 12px;
-            font-weight: 800;
+            font-weight: 600;
             line-height: 1;
             text-decoration: none;
             white-space: nowrap;
@@ -509,6 +524,9 @@
         \App\Models\Reservation::STATUS_PAID,
     ], true))->count();
     $salesTotal = (float) $pageReservations->sum(fn ($reservation) => (float) ($reservation->total_amount ?? 0));
+    $paidTotal = (float) $pageReservations->sum(fn ($reservation) => (float) ($reservation->paid_amount ?? 0));
+    $remainingTotal = (float) $pageReservations->sum(fn ($reservation) => (float) ($reservation->remaining_amount ?? max(0, ((float) ($reservation->total_amount ?? 0)) - ((float) ($reservation->paid_amount ?? 0)))));
+    $travelerTotal = (int) $pageReservations->sum(fn ($reservation) => (int) ($reservation->passengers_count ?? 0));
 @endphp
 <div class="aj-agent-list-page">
     <div class="aj-agent-list-shell">
@@ -541,9 +559,24 @@
                 <small>Dossiers stabilises</small>
             </div>
             <div class="aj-agent-kpi-box">
-                <span>Montant cumule</span>
+                <span>Total dossiers</span>
                 <strong>{{ number_format($salesTotal, 0, ',', ' ') }}</strong>
                 <small>Valeur estimee sur cette page</small>
+            </div>
+            <div class="aj-agent-kpi-box">
+                <span>Total paye</span>
+                <strong>{{ number_format($paidTotal, 0, ',', ' ') }}</strong>
+                <small>Encaissements renseignes</small>
+            </div>
+            <div class="aj-agent-kpi-box">
+                <span>Reste a payer</span>
+                <strong>{{ number_format($remainingTotal, 0, ',', ' ') }}</strong>
+                <small>Solde a suivre</small>
+            </div>
+            <div class="aj-agent-kpi-box">
+                <span>Voyageurs</span>
+                <strong>{{ number_format($travelerTotal, 0, ',', ' ') }}</strong>
+                <small>Total declare</small>
             </div>
         </div>
 
@@ -594,9 +627,12 @@
                                 <th>Reference / dossier</th>
                                 <th>Client</th>
                                 <th>Voyage</th>
+                                <th>Voyageurs</th>
                                 <th>Date</th>
                                 <th>Statut</th>
-                                <th>Montant</th>
+                                <th>Total</th>
+                                <th>Paye</th>
+                                <th>Reste a payer</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -605,6 +641,10 @@
                                 @php
                                     $clientName = trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? ''));
                                     $date = $reservation->travelDate?->date ?? $reservation->departure?->start_date ?? $reservation->created_at;
+                                    $totalAmount = (float) ($reservation->total_amount ?? 0);
+                                    $paidAmount = (float) ($reservation->paid_amount ?? 0);
+                                    $remainingAmount = (float) ($reservation->remaining_amount ?? max(0, $totalAmount - $paidAmount));
+                                    $travelerCount = (int) ($reservation->passengers_count ?? 0);
                                     $statusClass = match ((string) $reservation->status) {
                                         \App\Models\Reservation::STATUS_CONFIRMED, \App\Models\Reservation::STATUS_PAID => 'is-success',
                                         \App\Models\Reservation::STATUS_CANCELLED, \App\Models\Reservation::STATUS_REFUNDED, \App\Models\Reservation::STATUS_EXPIRED => 'is-danger',
@@ -625,6 +665,9 @@
                                         <div class="aj-agent-voyage-name">{{ $reservation->tour?->name ?: 'Voyage non renseigne' }}</div>
                                     </td>
                                     <td>
+                                        <div class="aj-agent-table-stat">{{ number_format($travelerCount, 0, ',', ' ') }}</div>
+                                    </td>
+                                    <td>
                                         <div class="aj-agent-row-main">{{ $date ? $date->format('d/m/Y') : '-' }}</div>
                                         <div class="aj-agent-muted">{{ $date ? $date->format('H:i') : '' }}</div>
                                     </td>
@@ -632,7 +675,13 @@
                                         <span class="aj-agent-status-pill {{ $statusClass }}">{{ $statusOptions[$reservation->status] ?? $reservation->status }}</span>
                                     </td>
                                     <td>
-                                        <div class="aj-agent-money">{{ number_format((float) ($reservation->total_amount ?? 0), 0, ',', ' ') }} DH</div>
+                                        <div class="aj-agent-money">{{ number_format($totalAmount, 0, ',', ' ') }} DH</div>
+                                    </td>
+                                    <td>
+                                        <div class="aj-agent-money is-paid">{{ number_format($paidAmount, 0, ',', ' ') }} DH</div>
+                                    </td>
+                                    <td>
+                                        <div class="aj-agent-money is-rest">{{ number_format($remainingAmount, 0, ',', ' ') }} DH</div>
                                     </td>
                                     <td>
                                         <div class="aj-agent-row-actions">

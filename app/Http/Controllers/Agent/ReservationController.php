@@ -30,7 +30,8 @@ class ReservationController extends Controller
         ];
 
         $query = Reservation::query()
-            ->with(['tour:id,name', 'travelDate:id,date', 'departure:id,start_date']);
+            ->with(['tour:id,name', 'travelDate:id,date', 'departure:id,start_date'])
+            ->withCount('passengers');
 
         $this->branchScope->scopeReservations($query, $user);
         $this->branchScope->constrainReservationQueryForPortalUser($query, $user);
@@ -133,6 +134,13 @@ class ReservationController extends Controller
     {
         return [
             Reservation::STATUS_EN_COURS => 'En cours',
+            Reservation::STATUS_OPTION => 'Option',
+            Reservation::STATUS_SHARED_ROOM_PENDING => 'Rooming a suivre',
+            Reservation::STATUS_SHARED_ROOM_PAIRED => 'Rooming jumele',
+            Reservation::STATUS_PARTIALLY_PAID => 'Paiement partiel',
+            Reservation::STATUS_PAID => 'Payee',
+            Reservation::STATUS_EXPIRED => 'Expiree',
+            Reservation::STATUS_REFUNDED => 'Remboursee',
             Reservation::STATUS_VALIDEE => 'Validée',
             Reservation::STATUS_ANNULEE => 'Annulée',
         ];
