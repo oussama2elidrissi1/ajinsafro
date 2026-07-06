@@ -367,6 +367,63 @@
             color: #0074ad;
         }
 
+        .aj-agent-row-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            justify-content: flex-start;
+            min-width: 330px;
+        }
+
+        .aj-agent-row-actions form {
+            margin: 0;
+        }
+
+        .aj-agent-row-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            min-height: 38px;
+            padding: 8px 12px;
+            border-radius: 12px;
+            border: 1px solid #cfe0ee;
+            background: #fff;
+            color: #0e3a5a;
+            font-size: 12px;
+            font-weight: 800;
+            line-height: 1;
+            text-decoration: none;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: .18s ease;
+        }
+
+        .aj-agent-row-btn:hover {
+            border-color: #0083c4;
+            background: #eff8fc;
+            color: #0074ad;
+        }
+
+        .aj-agent-row-btn.is-primary {
+            border-color: #0b7fc2;
+            background: #0b7fc2;
+            color: #fff;
+            box-shadow: 0 8px 18px rgba(11, 127, 194, .18);
+        }
+
+        .aj-agent-row-btn.is-success {
+            border-color: #16a34a;
+            background: #16a34a;
+            color: #fff;
+            box-shadow: 0 8px 18px rgba(22, 163, 74, .16);
+        }
+
+        .aj-agent-row-btn.is-soft {
+            background: #f8fbfe;
+        }
+
         .aj-agent-empty {
             padding: 44px 24px;
             text-align: center;
@@ -540,7 +597,7 @@
                                 <th>Date</th>
                                 <th>Statut</th>
                                 <th>Montant</th>
-                                <th>Action</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -578,7 +635,31 @@
                                         <div class="aj-agent-money">{{ number_format((float) ($reservation->total_amount ?? 0), 0, ',', ' ') }} DH</div>
                                     </td>
                                     <td>
-                                        <a href="{{ route('agent.reservations.show', $reservation) }}" class="aj-agent-open-btn">Voir details</a>
+                                        <div class="aj-agent-row-actions">
+                                            <a href="{{ route('agent.reservations.show', $reservation) }}" class="aj-agent-row-btn is-primary">
+                                                <i class="bx bx-show"></i>
+                                                <span>Voir details</span>
+                                            </a>
+                                            @if($canManageReservations ?? false)
+                                                @if(!in_array((string) $reservation->status, [\App\Models\Reservation::STATUS_VALIDEE, \App\Models\Reservation::STATUS_CONFIRMED, \App\Models\Reservation::STATUS_PAID], true))
+                                                    <form method="POST" action="{{ route('agent.reservations.validate', $reservation) }}" onsubmit="return confirm('Valider cette reservation ?');">
+                                                        @csrf
+                                                        <button type="submit" class="aj-agent-row-btn is-success">
+                                                            <i class="bx bx-check"></i>
+                                                            <span>Valider</span>
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                                <a href="{{ route('agent.reservations.show', $reservation) }}#suivi-paiement" class="aj-agent-row-btn is-soft">
+                                                    <i class="bx bx-credit-card"></i>
+                                                    <span>Suivre paiement</span>
+                                                </a>
+                                                <a href="{{ route('agent.reservations.dossier.pdf', $reservation) }}" target="_blank" class="aj-agent-row-btn is-soft">
+                                                    <i class="bx bx-printer"></i>
+                                                    <span>Imprimer</span>
+                                                </a>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach

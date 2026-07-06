@@ -353,6 +353,51 @@
             white-space: pre-line;
         }
 
+        .aj-agent-res-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .aj-agent-res-actions form {
+            margin: 0;
+        }
+
+        .aj-agent-res-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 42px;
+            padding: 10px 14px;
+            border-radius: 13px;
+            border: 1px solid #cfe0ee;
+            background: #fff;
+            color: #0e3a5a;
+            font-size: 13px;
+            font-weight: 800;
+            line-height: 1;
+            text-decoration: none;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: .18s ease;
+        }
+
+        .aj-agent-res-action:hover {
+            border-color: #0083c4;
+            background: #eff8fc;
+            color: #0074ad;
+        }
+
+        .aj-agent-res-action.is-success {
+            border-color: #16a34a;
+            background: #16a34a;
+            color: #fff;
+            box-shadow: 0 8px 18px rgba(22, 163, 74, .16);
+        }
+
         @media (max-width: 1100px) {
             .aj-agent-res-hero,
             .aj-agent-res-grid {
@@ -368,6 +413,10 @@
             .aj-agent-res-head {
                 flex-direction: column;
                 align-items: stretch;
+            }
+
+            .aj-agent-res-actions {
+                justify-content: flex-start;
             }
 
             .aj-agent-res-title {
@@ -421,6 +470,12 @@
         Reservation::PAYMENT_STATUS_PARTIAL, Reservation::PAYMENT_STATUS_DEPOSIT => 'is-pending',
         default => 'is-neutral',
     };
+    $canManageReservations = $canManageReservations ?? false;
+    $canValidateReservation = $canManageReservations && !in_array((string) $reservation->status, [
+        Reservation::STATUS_VALIDEE,
+        Reservation::STATUS_CONFIRMED,
+        Reservation::STATUS_PAID,
+    ], true);
 @endphp
 
 <div class="aj-agent-res-show">
@@ -429,10 +484,31 @@
             <h1>Detail reservation</h1>
             <p>Consultation complete du dossier, du client, des voyageurs et du suivi paiement.</p>
         </div>
-        <a href="{{ route('agent.reservations.index') }}" class="aj-agent-action-btn">
-            <i class="bx bx-left-arrow-alt"></i>
-            <span>Retour</span>
-        </a>
+        <div class="aj-agent-res-actions">
+            @if($canManageReservations)
+                @if($canValidateReservation)
+                    <form method="POST" action="{{ route('agent.reservations.validate', $reservation) }}" onsubmit="return confirm('Valider cette reservation ?');">
+                        @csrf
+                        <button type="submit" class="aj-agent-res-action is-success">
+                            <i class="bx bx-check"></i>
+                            <span>Valider</span>
+                        </button>
+                    </form>
+                @endif
+                <a href="#suivi-paiement" class="aj-agent-res-action">
+                    <i class="bx bx-credit-card"></i>
+                    <span>Suivre paiement</span>
+                </a>
+                <a href="{{ route('agent.reservations.dossier.pdf', $reservation) }}" target="_blank" class="aj-agent-res-action">
+                    <i class="bx bx-printer"></i>
+                    <span>Imprimer</span>
+                </a>
+            @endif
+            <a href="{{ route('agent.reservations.index') }}" class="aj-agent-res-action">
+                <i class="bx bx-left-arrow-alt"></i>
+                <span>Retour</span>
+            </a>
+        </div>
     </div>
 
     <div class="aj-agent-res-shell">
@@ -538,7 +614,7 @@
                 </div>
             </div>
 
-            <div class="aj-agent-res-card">
+            <div class="aj-agent-res-card" id="suivi-paiement">
                 <div class="aj-agent-res-card-head">
                     <div>
                         <h2>Suivi financier</h2>

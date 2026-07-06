@@ -759,6 +759,8 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'not.client'])
         Route::get('customers/clients/search', [ClientController::class, 'search'])->name('customers.clients.search');
         Route::post('customers/clients/quick-store', [ClientController::class, 'quickStore'])->name('customers.clients.quick-store');
         Route::post('reservations', [AgentReservationController::class, 'store'])->name('reservations.store');
+        Route::post('reservations/{reservation}/validate', [AgentReservationController::class, 'validateReservation'])->name('reservations.validate')->whereNumber('reservation');
+        Route::get('reservations/{reservation}/dossier/pdf', [AgentReservationController::class, 'printDossier'])->name('reservations.dossier.pdf')->whereNumber('reservation');
         Route::get('reservations/{reservation}', [AgentReservationController::class, 'show'])->name('reservations.show')->whereNumber('reservation');
         Route::get('reservations-a-la-carte', [AgentCustomReservationController::class, 'index'])->name('custom-reservations.index');
         Route::get('reservations-a-la-carte/create', [AgentCustomReservationController::class, 'create'])->name('custom-reservations.create');

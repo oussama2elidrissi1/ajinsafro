@@ -8,6 +8,7 @@ use App\Models\Reservation;
 use App\Services\BranchScopeService;
 use App\Services\View\AgentPortalLayout;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -61,6 +62,7 @@ class ReservationController extends Controller
             'reservations' => $query->latest()->paginate(15)->withQueryString(),
             'filters' => $filters,
             'statusOptions' => $this->statusOptions(),
+            'canManageReservations' => $this->canManageReservations($user),
         ]);
     }
 
@@ -105,7 +107,26 @@ class ReservationController extends Controller
                 'createdBy',
                 'agent',
             ]),
+            'canManageReservations' => $this->canManageReservations($user),
         ]);
+    }
+
+    public function validateReservation(Request $request, Reservation $reservation): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user && AgentPortalLayout::shouldUse($user) && $this->canManageReservations($user), 403);
+        abort_unless($this->branchScope->userCanAccessReservation($user, $reservation), 403);
+
+        return app(AdminReservationsController::class)->validateReservation($request, $reservation);
+    }
+
+    public function printDossier(Request $request, Reservation $reservation)
+    {
+        $user = $request->user();
+        abort_unless($user && AgentPortalLayout::shouldUse($user) && $this->canManageReservations($user), 403);
+        abort_unless($this->branchScope->userCanAccessReservation($user, $reservation), 403);
+
+        return app(AdminReservationsController::class)->dossierPdf($request, $reservation);
     }
 
     private function statusOptions(): array
@@ -115,5 +136,10 @@ class ReservationController extends Controller
             Reservation::STATUS_VALIDEE => 'Validée',
             Reservation::STATUS_ANNULEE => 'Annulée',
         ];
+    }
+
+    private function canManageReservations($user): bool
+    {
+        return strtolower((string) ($user->email ?? '')) === 'booking@ajinsafro.ma';
     }
 }
