@@ -293,6 +293,11 @@
         letter-spacing: 0.02em;
     }
 
+    .reservation-dossiers-page .rd-badge-departure.is-departure-missing {
+        background: #fff7ed;
+        color: #c2410c;
+    }
+
     .reservation-dossiers-page .rd-mini-kpis {
         display: flex;
         gap: 8px;
@@ -627,7 +632,7 @@
                 <div>
                     <label class="form-label">Periode</label>
                     <select name="period" class="form-select" onchange="this.form.submit()">
-                        <option value="7d" @selected(($filters['period'] ?? '7d') === '7d')>7 derniers jours</option>
+                        <option value="7d" @selected(($filters['period'] ?? 'all') === '7d')>7 derniers jours</option>
                         <option value="30d" @selected(($filters['period'] ?? '') === '30d')>30 derniers jours</option>
                         <option value="90d" @selected(($filters['period'] ?? '') === '90d')>90 derniers jours</option>
                         <option value="all" @selected(($filters['period'] ?? '') === 'all')>Toutes les periodes</option>
@@ -664,7 +669,7 @@
                                         <h3>{{ $voyageCard->title }}</h3>
                                         <p>{{ $voyageCard->destination }}</p>
                                     </div>
-                                    <span class="rd-badge-departure">{{ $voyageCard->global_badge['label'] }}</span>
+                                    <span class="rd-badge-departure {{ $voyageCard->global_badge['class'] ?? '' }}">{{ $voyageCard->global_badge['label'] }}</span>
                                 </div>
 
                                 <div class="rd-mini-kpis">
@@ -687,7 +692,9 @@
 
                         <div class="collapse" id="voyage-{{ \Illuminate\Support\Str::slug($voyageCard->key) }}">
                             <div class="rd-card__detail">
-                                <p class="mb-3" style="color:#6b7a90;font-size:13px;font-weight:600;">Reservations de ce depart uniquement.</p>
+                                <p class="mb-3" style="color:#6b7a90;font-size:13px;font-weight:600;">
+                                    {{ $voyageCard->departure ? 'Reservations de ce depart uniquement.' : 'Reservations sans depart rattache.' }}
+                                </p>
                                 <div class="rd-table-wrap">
                                     <table class="table rd-table align-middle">
                                         <thead>

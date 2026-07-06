@@ -42,7 +42,7 @@ class ReservationDossierController extends Controller
         $scope = trim((string) $request->query('scope', 'all')) ?: 'all';
         $channel = trim((string) $request->query('channel', ''));
         $search = trim((string) $request->query('search', ''));
-        $period = trim((string) $request->query('period', '7d')) ?: '7d';
+        $period = trim((string) $request->query('period', 'all')) ?: 'all';
         $voyageId = (int) $request->query('voyage_id', 0);
         $agentId = (int) $request->query('agent_id', 0);
         $partnerId = (int) $request->query('partner_id', 0);
@@ -202,7 +202,12 @@ class ReservationDossierController extends Controller
 
         $voyageIdsForCards = $voyageId > 0
             ? collect(Voyage::allIdsSharingWpTour($voyageId))->map(fn ($id) => (int) $id)->filter()->unique()->values()
-            : $reservations->pluck('tour_id')->map(fn ($id) => (int) $id)->filter()->unique()->values();
+            : $reservations
+                ->map(fn (Reservation $reservation) => $this->resolveReservationOffer($reservation)?->id)
+                ->map(fn ($id) => (int) $id)
+                ->filter()
+                ->unique()
+                ->values();
 
         $voyagesById = Voyage::query()
             ->whereIn('id', $voyageIdsForCards->all())
@@ -225,6 +230,7 @@ class ReservationDossierController extends Controller
             ->groupBy(fn (Reservation $reservation) => (int) ($reservation->departure_id ?? 0));
 
         $departureCards = collect();
+        $renderedReservationIds = collect();
         foreach ($voyagesById as $voyage) {
             $departureCollection = $voyage->departures instanceof Collection ? $voyage->departures : collect($voyage->departures ?? []);
             $departureCollection = $departureCollection
@@ -245,6 +251,7 @@ class ReservationDossierController extends Controller
                 if ($sorted->count() === 0) {
                     continue;
                 }
+                $renderedReservationIds = $renderedReservationIds->merge($sorted->pluck('id')->map(fn ($id) => (int) $id));
                 $pendingCount = $sorted->filter(fn (Reservation $reservation) => in_array($reservation->status, [
                     Reservation::STATUS_PENDING,
                     Reservation::STATUS_OPTION,
@@ -291,6 +298,70 @@ class ReservationDossierController extends Controller
                     'travel_date_id' => $travelDateId,
                 ]);
             }
+        }
+
+        $unrenderedReservations = $reservations
+            ->reject(fn (Reservation $reservation) => $renderedReservationIds->contains((int) $reservation->id))
+            ->groupBy(fn (Reservation $reservation) => $this->resolveReservationGroupKey($reservation));
+
+        foreach ($unrenderedReservations as $group) {
+            $sorted = $group->sortByDesc(fn (Reservation $reservation) => optional($reservation->created_at)?->timestamp ?? 0)->values();
+            if ($sorted->count() === 0) {
+                continue;
+            }
+
+            $offer = $this->resolveReservationOffer($sorted->first());
+            if (! $offer) {
+                continue;
+            }
+
+            $pendingCount = $sorted->filter(fn (Reservation $reservation) => in_array($reservation->status, [
+                Reservation::STATUS_PENDING,
+                Reservation::STATUS_OPTION,
+                Reservation::STATUS_SHARED_ROOM_PENDING,
+            ], true))->count();
+            $confirmedCount = $sorted->filter(fn (Reservation $reservation) => in_array($reservation->status, [
+                Reservation::STATUS_CONFIRMED,
+                Reservation::STATUS_PARTIALLY_PAID,
+                Reservation::STATUS_PAID,
+                Reservation::STATUS_SHARED_ROOM_PAIRED,
+            ], true))->count();
+            $paidCount = $sorted->filter(fn (Reservation $reservation) => $reservation->payment_status === Reservation::PAYMENT_STATUS_PAID)->count();
+            $followUpCount = $sorted->filter(fn (Reservation $reservation) => (float) $reservation->effective_remaining_amount > 0.0 && $reservation->status !== Reservation::STATUS_CANCELLED)->count();
+            $cancelledCount = $sorted->filter(fn (Reservation $reservation) => $reservation->status === Reservation::STATUS_CANCELLED)->count();
+            $totalAmount = round($sorted->sum(fn (Reservation $reservation) => (float) $reservation->effective_total_amount), 2);
+            $paidAmount = round($sorted->sum(fn (Reservation $reservation) => (float) $reservation->effective_paid_amount), 2);
+            $remainingAmount = round($sorted->sum(fn (Reservation $reservation) => (float) $reservation->effective_remaining_amount), 2);
+            $latestReservation = $sorted->first();
+            $fallbackDate = $latestReservation->travelDate?->date
+                ?? $latestReservation->departure?->start_date
+                ?? $latestReservation->created_at
+                ?? now();
+
+            $departureCards->push((object) [
+                'key' => 'without-departure:'.$this->resolveReservationGroupKey($latestReservation),
+                'offer' => $offer,
+                'image_url' => $this->resolveOfferImageUrl($offer),
+                'title' => $offer->name ?? 'Voyage non renseigne',
+                'destination' => $offer->destination ?? 'Destination non renseignee',
+                'departure' => null,
+                'departure_date' => Carbon::parse($fallbackDate),
+                'departure_label' => 'Depart non renseigne',
+                'reservations' => $sorted,
+                'reservations_count' => $sorted->count(),
+                'pending_count' => $pendingCount,
+                'confirmed_count' => $confirmedCount,
+                'paid_count' => $paidCount,
+                'follow_up_count' => $followUpCount,
+                'cancelled_count' => $cancelledCount,
+                'total_amount' => $totalAmount,
+                'paid_amount' => $paidAmount,
+                'remaining_amount' => $remainingAmount,
+                'latest_reservation' => $latestReservation,
+                'global_badge' => ['label' => 'Depart non renseigne', 'class' => 'is-departure-missing'],
+                'departure_status_label' => 'Depart non renseigne',
+                'travel_date_id' => null,
+            ]);
         }
 
         $departureCards = $departureCards->sortBy(fn ($card) => optional($card->departure_date)?->timestamp ?? 0)->values();
