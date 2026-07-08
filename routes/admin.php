@@ -760,6 +760,10 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'not.client'])
         Route::post('customers/clients/quick-store', [ClientController::class, 'quickStore'])->name('customers.clients.quick-store');
         Route::post('reservations', [AgentReservationController::class, 'store'])->name('reservations.store');
         Route::post('reservations/{reservation}/validate', [AgentReservationController::class, 'validateReservation'])->name('reservations.validate')->whereNumber('reservation');
+        Route::post('reservations/{reservation}/payments', [AgentReservationController::class, 'storePayment'])->name('reservations.payments.store')->whereNumber('reservation');
+        Route::post('reservations/{reservation}/documents', [AgentReservationController::class, 'storeDocument'])->name('reservations.documents.store')->whereNumber('reservation');
+        Route::post('reservations/{reservation}/notes', [AgentReservationController::class, 'storeNote'])->name('reservations.notes.store')->whereNumber('reservation');
+        Route::post('reservations/{reservation}/cancel', [AgentReservationController::class, 'cancel'])->name('reservations.cancel')->whereNumber('reservation');
         Route::get('reservations/{reservation}/dossier/pdf', [AgentReservationController::class, 'printDossier'])->name('reservations.dossier.pdf')->whereNumber('reservation');
         Route::get('reservations/{reservation}', [AgentReservationController::class, 'show'])->name('reservations.show')->whereNumber('reservation');
         Route::get('reservations-a-la-carte', [AgentCustomReservationController::class, 'index'])->name('custom-reservations.index');

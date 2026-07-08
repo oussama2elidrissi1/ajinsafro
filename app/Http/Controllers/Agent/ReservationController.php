@@ -101,7 +101,9 @@ class ReservationController extends Controller
                 'dossier',
                 'client',
                 'passengers',
-                'payments',
+                'payments.creator',
+                'documents.creator',
+                'histories.user',
                 'branch',
                 'partner',
                 'creator',
@@ -110,6 +112,34 @@ class ReservationController extends Controller
             ]),
             'canManageReservations' => $this->canManageReservations($user),
         ]);
+    }
+
+    public function storePayment(Request $request, Reservation $reservation): RedirectResponse
+    {
+        $this->authorizeAgentReservationAction($request, $reservation);
+
+        return app(AdminReservationsController::class)->storePayment($request, $reservation);
+    }
+
+    public function storeDocument(Request $request, Reservation $reservation): RedirectResponse
+    {
+        $this->authorizeAgentReservationAction($request, $reservation);
+
+        return app(AdminReservationsController::class)->storeDocument($request, $reservation);
+    }
+
+    public function storeNote(Request $request, Reservation $reservation): RedirectResponse
+    {
+        $this->authorizeAgentReservationAction($request, $reservation);
+
+        return app(AdminReservationsController::class)->storeNote($request, $reservation);
+    }
+
+    public function cancel(Request $request, Reservation $reservation): RedirectResponse
+    {
+        $this->authorizeAgentReservationAction($request, $reservation);
+
+        return app(AdminReservationsController::class)->cancel($request, $reservation);
     }
 
     public function validateReservation(Request $request, Reservation $reservation): RedirectResponse
@@ -128,6 +158,14 @@ class ReservationController extends Controller
         abort_unless($this->branchScope->userCanAccessReservation($user, $reservation), 403);
 
         return app(AdminReservationsController::class)->dossierPdf($request, $reservation);
+    }
+
+    private function authorizeAgentReservationAction(Request $request, Reservation $reservation): void
+    {
+        $user = $request->user();
+        abort_unless($user && AgentPortalLayout::shouldUse($user) && $this->canManageReservations($user), 403);
+        abort_unless($this->branchScope->userCanAccessReservation($user, $reservation), 403);
+        $request->attributes->set('agent_reservation_mode', true);
     }
 
     private function statusOptions(): array
