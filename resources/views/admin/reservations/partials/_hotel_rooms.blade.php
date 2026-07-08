@@ -62,6 +62,7 @@
                         <input type="hidden" name="discount_scope" id="reservation-discount-scope" value="{{ old('discount_scope', $reservation?->discount_scope ?? 'per_unit') }}">
                     @endunless
                 </div>
+                @unless($compactAvailabilityOnly)
                 <div class="col-md-8">
                     <label class="form-label" for="reservation-discount-value">Réduction</label>
                     <div class="input-group">
@@ -73,6 +74,7 @@
                     </div>
                     <div class="form-text">Prix après réduction : <strong id="reservation-price-after-discount">—</strong></div>
                 </div>
+                @endunless
             </div>
         @else
             <div class="alert alert-warning py-2 small mb-3">
@@ -87,6 +89,7 @@
                         <input type="hidden" name="discount_scope" id="reservation-discount-scope" value="{{ old('discount_scope', $reservation?->discount_scope ?? 'per_unit') }}">
                     @endunless
                 </div>
+                @unless($compactAvailabilityOnly)
                 <div class="col-md-6">
                     <label class="form-label" for="reservation-discount-value">Réduction</label>
                     <div class="input-group">
@@ -98,6 +101,7 @@
                     </div>
                     <div class="form-text">Prix après réduction : <strong id="reservation-price-after-discount">—</strong></div>
                 </div>
+                @endunless
             </div>
         @endif
 

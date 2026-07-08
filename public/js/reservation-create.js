@@ -59,6 +59,10 @@
         return Number.isFinite(parsed) ? parsed : 0;
     }
 
+    function fieldByNameOrId(name, id) {
+        return document.querySelector('[name="' + name + '"]') || document.getElementById(id);
+    }
+
     function formatMoney(value) {
         return (Math.round((Number(value) || 0) * 100) / 100).toLocaleString('fr-FR', {
             minimumFractionDigits: 0,
@@ -294,9 +298,9 @@
 
     function discountSummary(basisAmount, travelerCount) {
         var unitPrice = getBaseUnitPrice();
-        var scopeInput = document.getElementById('reservation-discount-scope');
-        var typeInput = document.getElementById('reservation-discount-type');
-        var valueInput = document.getElementById('reservation-discount-value');
+        var scopeInput = fieldByNameOrId('discount_scope', 'reservation-discount-scope');
+        var typeInput = fieldByNameOrId('discount_type', 'reservation-discount-type');
+        var valueInput = fieldByNameOrId('discount_value', 'reservation-discount-value');
         var scope = scopeInput ? String(scopeInput.value || 'per_unit') : 'per_unit';
         var type = typeInput ? String(typeInput.value || 'percentage') : 'percentage';
         var value = Math.max(0, parseNumber(valueInput && valueInput.value));
@@ -1289,8 +1293,11 @@
     }
 
     function setText(id, value) {
-        var el = document.getElementById(id);
-        if (el) el.textContent = value;
+        var elements = document.querySelectorAll('#' + id);
+        if (!elements.length) return;
+        Array.prototype.forEach.call(elements, function (el) {
+            el.textContent = value;
+        });
     }
 
     function syncFinancialSummary() {
@@ -2122,7 +2129,7 @@
             var target = event.target;
             if (!target) return;
 
-            if (target.matches('#client_first_name, #client_last_name, #client_phone, #client_email, #client_external_id, #payment_amount, input[name="base_price"], #reservation-discount-value, .reservation-room-count')) {
+            if (target.matches('#client_first_name, #client_last_name, #client_phone, #client_email, #client_external_id, #payment_amount, input[name="base_price"], [name="discount_value"], #reservation-discount-value, .reservation-room-count')) {
                 syncFinancialSummary();
             }
             if (target.matches('#reservation-client-search')) {
@@ -2157,7 +2164,7 @@
             if (target.matches('#visa_ok')) {
                 syncVisaMode();
             }
-            if (target.matches('#select-tour-id, #reservation-departure-select, #client_external_id, #reservation-discount-type, .reservation-room-count, #payment_type, #payment_date')) {
+            if (target.matches('#select-tour-id, #reservation-departure-select, #client_external_id, [name="discount_type"], #reservation-discount-type, .reservation-room-count, #payment_type, #payment_date')) {
                 syncFinancialSummary();
                 if (target.id === 'select-tour-id') {
                     renderExtras();

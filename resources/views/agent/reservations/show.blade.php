@@ -398,6 +398,98 @@
             box-shadow: 0 8px 18px rgba(22, 163, 74, .16);
         }
 
+        .aj-agent-res-action.is-danger {
+            border-color: #fecaca;
+            color: #b91c1c;
+            background: #fff;
+        }
+
+        .aj-agent-res-action.is-danger:hover {
+            border-color: #ef4444;
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .aj-agent-res-table-wrap {
+            overflow-x: auto;
+            margin-top: 16px;
+        }
+
+        .aj-agent-res-table {
+            width: 100%;
+            min-width: 700px;
+            border-collapse: collapse;
+        }
+
+        .aj-agent-res-table th,
+        .aj-agent-res-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #edf2f7;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .aj-agent-res-table th {
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            background: #f5f9fc;
+        }
+
+        .aj-agent-res-table td {
+            color: #0f172a;
+            font-size: 13px;
+            font-weight: 650;
+        }
+
+        .aj-agent-res-form-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e7eef6;
+        }
+
+        .aj-agent-res-form-grid--document {
+            grid-template-columns: 180px minmax(0, 1fr) minmax(220px, .9fr) auto;
+            align-items: end;
+        }
+
+        .aj-agent-res-form-field label {
+            display: block;
+            margin-bottom: 6px;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .aj-agent-res-input {
+            width: 100%;
+            min-height: 42px;
+            padding: 9px 11px;
+            border: 1px solid #cfe0ee;
+            border-radius: 12px;
+            background: #fff;
+            color: #0f172a;
+            font-size: 13px;
+            font-weight: 650;
+        }
+
+        .aj-agent-res-form-field--full {
+            grid-column: 1 / -1;
+        }
+
+        .aj-agent-res-form-actions {
+            display: flex;
+            align-items: end;
+            justify-content: flex-end;
+        }
+
         @media (max-width: 1100px) {
             .aj-agent-res-hero,
             .aj-agent-res-grid {
@@ -425,7 +517,9 @@
             }
 
             .aj-agent-res-summary,
-            .aj-agent-res-info-grid {
+            .aj-agent-res-info-grid,
+            .aj-agent-res-form-grid,
+            .aj-agent-res-form-grid--document {
                 grid-template-columns: 1fr;
             }
 
@@ -476,6 +570,20 @@
         Reservation::STATUS_CONFIRMED,
         Reservation::STATUS_PAID,
     ], true);
+    $paymentRows = $reservation->payments
+        ->sortByDesc(fn ($payment) => optional($payment->payment_date)->timestamp ?? optional($payment->created_at)?->timestamp ?? 0)
+        ->values();
+    $documentRows = $reservation->documents
+        ->sortByDesc(fn ($document) => optional($document->created_at)?->timestamp ?? 0)
+        ->values();
+    $documentUrl = function ($path) {
+        $path = trim((string) $path);
+        if ($path === '') {
+            return null;
+        }
+
+        return \Illuminate\Support\Facades\Storage::url($path);
+    };
 @endphp
 
 <div class="aj-agent-res-show">
@@ -499,10 +607,23 @@
                     <i class="bx bx-credit-card"></i>
                     <span>Suivre paiement</span>
                 </a>
+                <a href="#documents-dossier" class="aj-agent-res-action">
+                    <i class="bx bx-file"></i>
+                    <span>Ajouter justificatif</span>
+                </a>
                 <a href="{{ route('agent.reservations.dossier.pdf', $reservation) }}" target="_blank" class="aj-agent-res-action">
                     <i class="bx bx-printer"></i>
                     <span>Imprimer</span>
                 </a>
+                @unless(in_array((string) $reservation->status, [Reservation::STATUS_CANCELLED, Reservation::STATUS_REFUNDED], true))
+                    <form method="POST" action="{{ route('agent.reservations.cancel', $reservation) }}" onsubmit="return confirm('Annuler cette reservation ?');">
+                        @csrf
+                        <button type="submit" class="aj-agent-res-action is-danger">
+                            <i class="bx bx-x-circle"></i>
+                            <span>Annuler</span>
+                        </button>
+                    </form>
+                @endunless
             @endif
             <a href="{{ route('agent.reservations.index') }}" class="aj-agent-res-action">
                 <i class="bx bx-left-arrow-alt"></i>
@@ -545,6 +666,7 @@
                         <span>Reste</span>
                         <strong>{{ number_format($remainingAmount, 0, ',', ' ') }} DH</strong>
                     </div>
+
                 </div>
             </div>
         </section>
@@ -641,6 +763,162 @@
                             <div>{{ $reservation->payments->count() }}</div>
                         </div>
                     </div>
+
+                    <div class="aj-agent-res-table-wrap">
+                        @if($paymentRows->isEmpty())
+                            <div class="aj-agent-res-empty">Aucun paiement enregistre pour ce dossier.</div>
+                        @else
+                            <table class="aj-agent-res-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Mode</th>
+                                        <th>Reference</th>
+                                        <th>Justificatif</th>
+                                        <th>Montant</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($paymentRows as $payment)
+                                        <tr>
+                                            <td>{{ optional($payment->payment_date ?? $payment->created_at)->format('d/m/Y') ?? '-' }}</td>
+                                            <td>{{ $payment->payment_method ?? '-' }}</td>
+                                            <td>{{ $payment->reference ?: '-' }}</td>
+                                            <td>
+                                                @if($documentUrl($payment->proof_file ?? null))
+                                                    <a href="{{ $documentUrl($payment->proof_file) }}" target="_blank" rel="noopener" class="aj-agent-res-action">Ouvrir</a>
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
+                                            <td>{{ number_format((float) ($payment->amount ?? 0), 0, ',', ' ') }} DH</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        @endif
+                    </div>
+
+                    @if($canManageReservations)
+                        <form method="POST" action="{{ route('agent.reservations.payments.store', $reservation) }}" enctype="multipart/form-data" class="aj-agent-res-form-grid">
+                            @csrf
+                            <div class="aj-agent-res-form-field">
+                                <label>Date paiement</label>
+                                <input type="date" name="payment_date" class="aj-agent-res-input" value="{{ now()->toDateString() }}" required>
+                            </div>
+                            <div class="aj-agent-res-form-field">
+                                <label>Mode</label>
+                                <select name="payment_method" class="aj-agent-res-input" required>
+                                    <option value="Espèces">Especes</option>
+                                    <option value="Virement bancaire">Virement bancaire</option>
+                                    <option value="Carte bancaire">Carte bancaire</option>
+                                    <option value="Chèque">Cheque</option>
+                                    <option value="TPE">TPE</option>
+                                    <option value="Autre">Autre</option>
+                                </select>
+                            </div>
+                            <div class="aj-agent-res-form-field">
+                                <label>Montant</label>
+                                <input type="number" name="amount" class="aj-agent-res-input" min="0.01" step="0.01" max="{{ max(0.01, $remainingAmount) }}" required>
+                            </div>
+                            <div class="aj-agent-res-form-field">
+                                <label>Reference</label>
+                                <input type="text" name="reference" class="aj-agent-res-input" maxlength="120">
+                            </div>
+                            <div class="aj-agent-res-form-field">
+                                <label>Justificatif</label>
+                                <input type="file" name="proof_file" class="aj-agent-res-input" accept=".pdf,.jpg,.jpeg,.png,.webp">
+                            </div>
+                            <div class="aj-agent-res-form-field aj-agent-res-form-field--full">
+                                <label>Note</label>
+                                <textarea name="note" class="aj-agent-res-input" rows="3"></textarea>
+                            </div>
+                            <div class="aj-agent-res-form-actions aj-agent-res-form-field--full">
+                                <button type="submit" class="aj-agent-res-action is-success">
+                                    <i class="bx bx-save"></i>
+                                    <span>Enregistrer paiement</span>
+                                </button>
+                            </div>
+                        </form>
+                    @endif
+                </div>
+            </div>
+
+            <div class="aj-agent-res-card" id="documents-dossier">
+                <div class="aj-agent-res-card-head">
+                    <div>
+                        <h2>Documents et justificatifs</h2>
+                        <p>Pieces rattachees au dossier et ajout rapide de fichiers.</p>
+                    </div>
+                    <span class="aj-agent-res-badge is-neutral">{{ $documentRows->count() }} fichier(s)</span>
+                </div>
+                <div class="aj-agent-res-card-body">
+                    <div class="aj-agent-res-table-wrap">
+                        @if($documentRows->isEmpty())
+                            <div class="aj-agent-res-empty">Aucun document charge pour ce dossier.</div>
+                        @else
+                            <table class="aj-agent-res-table">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Titre</th>
+                                        <th>Date</th>
+                                        <th>Ajoute par</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($documentRows as $document)
+                                        <tr>
+                                            <td>{{ ucfirst(str_replace('_', ' ', (string) $document->type)) }}</td>
+                                            <td>{{ $document->title ?: '-' }}</td>
+                                            <td>{{ optional($document->created_at)->format('d/m/Y H:i') ?? '-' }}</td>
+                                            <td>{{ $document->creator?->name ?: '-' }}</td>
+                                            <td>
+                                                @if($documentUrl($document->file_path ?? null))
+                                                    <a href="{{ $documentUrl($document->file_path) }}" target="_blank" rel="noopener" class="aj-agent-res-action">Ouvrir</a>
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        @endif
+                    </div>
+
+                    @if($canManageReservations)
+                        <form method="POST" action="{{ route('agent.reservations.documents.store', $reservation) }}" enctype="multipart/form-data" class="aj-agent-res-form-grid aj-agent-res-form-grid--document">
+                            @csrf
+                            <div class="aj-agent-res-form-field">
+                                <label>Type</label>
+                                <select name="type" class="aj-agent-res-input" required>
+                                    <option value="payment_receipt">Recu paiement</option>
+                                    <option value="invoice">Facture</option>
+                                    <option value="passport">Passeport</option>
+                                    <option value="booking_voucher">Bon de reservation</option>
+                                    <option value="visa">Visa</option>
+                                    <option value="voucher">Voucher</option>
+                                    <option value="other">Autre fichier</option>
+                                </select>
+                            </div>
+                            <div class="aj-agent-res-form-field">
+                                <label>Titre</label>
+                                <input type="text" name="title" class="aj-agent-res-input" placeholder="Ex. Recu acompte" required>
+                            </div>
+                            <div class="aj-agent-res-form-field">
+                                <label>Fichier</label>
+                                <input type="file" name="file" class="aj-agent-res-input" accept=".pdf,.jpg,.jpeg,.png,.webp" required>
+                            </div>
+                            <div class="aj-agent-res-form-actions">
+                                <button type="submit" class="aj-agent-res-action is-success">
+                                    <i class="bx bx-upload"></i>
+                                    <span>Ajouter</span>
+                                </button>
+                            </div>
+                        </form>
+                    @endif
                 </div>
             </div>
 
