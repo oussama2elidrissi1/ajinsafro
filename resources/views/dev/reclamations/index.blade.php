@@ -102,7 +102,7 @@
         </div>
 
         @if($reclamations->hasPages())
-            <div class="dev-pagination">{{ $reclamations->links() }}</div>
+            <div class="dev-pagination">{{ $reclamations->links('pagination::bootstrap-5') }}</div>
         @endif
     </section>
 </div>
@@ -143,7 +143,16 @@
     .dev-action-link:hover{border-color:#0b68d1;color:#0f3150;box-shadow:0 10px 24px rgba(11,104,209,.12)}
     .dev-empty-state{display:grid;place-items:center;gap:8px;padding:44px 20px;color:#64748b;text-align:center}
     .dev-empty-state i{font-size:40px;color:#0b68d1}
-    .dev-pagination{padding:16px 20px;border-top:1px solid #edf2f7}
+    .dev-pagination{display:flex;align-items:center;justify-content:flex-end;padding:16px 20px;border-top:1px solid #edf2f7}
+    .dev-pagination nav{display:flex;align-items:center;justify-content:flex-end;width:100%}
+    .dev-pagination .pagination{display:flex;align-items:center;gap:6px;margin:0}
+    .dev-pagination .page-item{display:block;margin:0}
+    .dev-pagination .page-link{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 11px;border:1px solid #d8e5f2;border-radius:10px;background:#fff;color:#0f3150;font-size:12px;font-weight:900;line-height:1;text-decoration:none;box-shadow:none}
+    .dev-pagination .page-link:hover{border-color:#0b68d1;color:#0b68d1;background:#f4f9ff}
+    .dev-pagination .page-item.active .page-link{border-color:#0b68d1;background:#0b68d1;color:#fff}
+    .dev-pagination .page-item.disabled .page-link{border-color:#edf2f7;background:#f8fafc;color:#94a3b8}
+    .dev-pagination svg{width:14px!important;height:14px!important;max-width:14px!important;max-height:14px!important;display:block}
+    .dev-pagination p{margin:0;color:#64748b;font-size:12px;font-weight:800}
     @media (max-width:1100px){.dev-reclamations-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.dev-reclamations-head{align-items:flex-start;flex-direction:column}.dev-reclamations-search{width:100%;grid-template-columns:auto minmax(0,1fr) auto}}
     @media (max-width:640px){.dev-reclamations-page{margin:-1rem -.75rem;padding:16px 12px 36px}.dev-reclamations-stats{grid-template-columns:1fr}.dev-reclamations-search{grid-template-columns:auto minmax(0,1fr)}.dev-reclamations-search button{grid-column:1 / -1}.dev-reclamations-table th,.dev-reclamations-table td{padding:12px}}
 </style>
