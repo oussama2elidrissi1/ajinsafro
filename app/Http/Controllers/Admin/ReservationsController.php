@@ -3408,7 +3408,9 @@ class ReservationsController extends Controller
 
             $priceFrom = $this->parsePriceFromMeta($wpPost->getMeta('min_price')) ?? $this->parsePriceFromMeta($wpPost->getMeta('base_price'));
             $priceOverride = $travelDate->price_override !== null ? (float) $travelDate->price_override : null;
-            $displayPrice = $priceOverride ?? $priceFrom;
+            $displayPrice = $priceFrom !== null
+                ? $priceFrom + (float) ($priceOverride ?? 0)
+                : $priceOverride;
 
             $currencySymbol = $wpPost->getMeta('currency') ?: 'DH';
             if (is_string($currencySymbol) && strtoupper($currencySymbol) === 'MAD') {

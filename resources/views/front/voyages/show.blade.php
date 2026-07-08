@@ -944,7 +944,7 @@
             var disabled = d.status === 'full' || d.status === 'closed' || d.status === 'canceled' || d.status === 'cancelled';
             var statusLabel = { open: 'Disponible', limited: 'Dernières places', full: 'Complet', closed: 'Fermé', canceled: 'Fermé', cancelled: 'Fermé', draft: 'Bientôt' }[d.status] || d.status;
             var statusClass = { open: 'ok', limited: 'warn', full: 'full', closed: 'full', canceled: 'full', cancelled: 'full' }[d.status] || 'ok';
-            var price = d.sale_price > 0 ? d.sale_price : (d.base_price > 0 ? d.base_price : BASE_PRICE);
+            var price = d.unit_price > 0 ? d.unit_price : (d.sale_price > 0 ? d.sale_price : (d.base_price > 0 ? d.base_price : BASE_PRICE));
             html += '<button type="button" class="ksk-date-card' + (disabled ? ' is-disabled' : '') + '" data-dep="' + i + '"' + (disabled ? ' disabled' : '') + '>';
             html += '<div class="ksk-date-card__date">' + esc(d.start_label) + '</div>';
             if (d.end_label) html += '<div class="ksk-date-card__range">→ ' + esc(d.end_label) + '</div>';
@@ -1072,7 +1072,7 @@
     function tsCalcTotal() {
         var dep = DEPARTURES[state.departureIdx];
         if (!dep) return 0;
-        var perPerson = dep.sale_price > 0 ? dep.sale_price : (dep.base_price > 0 ? dep.base_price : BASE_PRICE);
+        var perPerson = dep.unit_price > 0 ? dep.unit_price : (dep.sale_price > 0 ? dep.sale_price : (dep.base_price > 0 ? dep.base_price : BASE_PRICE));
         var place = state.placeIdx !== null ? PLACES[state.placeIdx] : null;
         if (place) perPerson += Number(place.price || 0);
         return (perPerson * Math.max(1, state.paxAdults + state.paxChildren)) + tsExtrasTotal();
@@ -1589,7 +1589,7 @@
             var disabled = d.status === 'full' || d.status === 'closed' || d.status === 'canceled' || d.status === 'cancelled';
             var statusLabel = {open:'Disponible', limited:'Dernières places', full:'Complet', closed:'Fermé', canceled:'Fermé', cancelled:'Fermé', draft:'Bientôt'}[d.status] || d.status;
             var statusClass = {open:'ok', limited:'warn', full:'full', closed:'full', canceled:'full', cancelled:'full'}[d.status] || 'ok';
-            var price = d.sale_price > 0 ? d.sale_price : (d.base_price > 0 ? d.base_price : BASE_PRICE);
+            var price = d.unit_price > 0 ? d.unit_price : (d.sale_price > 0 ? d.sale_price : (d.base_price > 0 ? d.base_price : BASE_PRICE));
             h += '<button type="button" class="ksk-date-card' + (disabled ? ' is-disabled' : '') + '" data-dep="'+i+'"' + (disabled ? ' disabled' : '') + '>';
             h += '<div class="ksk-date-card__date">' + esc(d.start_label) + '</div>';
             if(d.end_label) h += '<div class="ksk-date-card__range">→ ' + esc(d.end_label) + '</div>';
@@ -1774,7 +1774,7 @@
     function calcTotal() {
         var dep = DEPARTURES[state.departureIdx];
         if(!dep) return 0;
-        var perPerson = dep.sale_price > 0 ? dep.sale_price : (dep.base_price > 0 ? dep.base_price : BASE_PRICE);
+        var perPerson = dep.unit_price > 0 ? dep.unit_price : (dep.sale_price > 0 ? dep.sale_price : (dep.base_price > 0 ? dep.base_price : BASE_PRICE));
         if(state.roomIdx !== null && state.roomIdx >= 0 && dep.rooms[state.roomIdx]) {
             var sup = dep.rooms[state.roomIdx].supplement || 0;
             if (isHalfDoubleSelection()) sup = sup / 2;

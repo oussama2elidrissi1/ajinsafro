@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Agent;
 use App\Http\Controllers\Controller;
 use App\Models\DepartureHotelRoom;
 use App\Models\Reservation;
+use App\Models\TravelDate;
 use App\Models\Voyage;
 use App\Models\Wp\WpPost;
 use App\Models\Wp\WpPostMeta;
@@ -114,14 +115,19 @@ class CatalogueController extends Controller
             ->whereIn('ID', $voyages->pluck('wp_post_id')->filter()->unique()->values()->all())
             ->get()
             ->keyBy('ID');
+        $travelDatesById = TravelDate::query()
+            ->whereIn('id', $voyages->flatMap(fn (Voyage $voyage) => $voyage->departures->pluck('wp_travel_date_id'))->filter()->unique()->values()->all())
+            ->get()
+            ->keyBy('id');
 
-        return $voyages->map(function (Voyage $voyage) use ($wpPosts): Voyage {
+        return $voyages->map(function (Voyage $voyage) use ($wpPosts, $travelDatesById): Voyage {
             $wpPost = $wpPosts->get((int) ($voyage->wp_post_id ?? 0));
             $publicPrice = $this->resolvePublicPrice($voyage, $wpPost);
             $nextDeparture = $voyage->departures->first();
 
             if ($nextDeparture) {
-                $resolved = $this->reservationPricing->resolveUnitPrice($voyage, $nextDeparture, null);
+                $travelDate = $nextDeparture->wp_travel_date_id ? $travelDatesById->get((int) $nextDeparture->wp_travel_date_id) : null;
+                $resolved = $this->reservationPricing->resolveUnitPrice($voyage, $nextDeparture, $travelDate);
                 $unitPrice = (float) ($resolved['unit_price'] ?? 0);
                 if ($unitPrice > 0) {
                     $publicPrice = $unitPrice;
@@ -156,12 +162,23 @@ class CatalogueController extends Controller
 
     protected function buildModalDetailMap(Collection $voyages, bool $canCreateReservation): array
     {
-        return $voyages->mapWithKeys(function (Voyage $voyage) use ($canCreateReservation): array {
+        $travelDatesById = TravelDate::query()
+            ->whereIn('id', $voyages->flatMap(fn (Voyage $voyage) => $voyage->departures->pluck('wp_travel_date_id'))->filter()->unique()->values()->all())
+            ->get()
+            ->keyBy('id');
+
+        return $voyages->mapWithKeys(function (Voyage $voyage) use ($canCreateReservation, $travelDatesById): array {
             $code = 'agent-voyage-'.$voyage->id;
-            $departures = $voyage->departures->values()->map(function ($departure) use ($voyage, $canCreateReservation): array {
+            $departures = $voyage->departures->values()->map(function ($departure) use ($voyage, $canCreateReservation, $travelDatesById): array {
                 $capacity = (int) (($departure->capacity ?? null) ?: ($departure->total_capacity ?? 0));
                 $remaining = (int) ($departure->available_capacity ?? 0);
                 $fillPct = $capacity > 0 ? min(100, max(0, (int) round((($capacity - $remaining) / $capacity) * 100))) : 0;
+                $travelDate = $departure->wp_travel_date_id ? $travelDatesById->get((int) $departure->wp_travel_date_id) : null;
+                $resolvedPrice = $this->reservationPricing->resolveUnitPrice($voyage, $departure, $travelDate);
+                $unitPrice = (float) ($resolvedPrice['unit_price'] ?? 0);
+                $unitPriceLabel = $unitPrice > 0
+                    ? number_format($unitPrice, 0, ',', ' ').' '.$voyage->currency_symbol
+                    : 'Prix sur demande';
                 $dateLabel = trim(($departure->start_date ? $departure->start_date->format('d/m/Y') : '—')
                     .($departure->end_date ? ' - '.$departure->end_date->format('d/m/Y') : ''));
                 $reservations = $departure->reservations ?? collect();
@@ -225,8 +242,8 @@ class CatalogueController extends Controller
                     'routes' => [
                         'reserve' => $reserveRoute,
                     ],
-                    'unit_price' => (float) ($voyage->agent_catalogue_price_value ?? 0),
-                    'unit_price_label' => (string) ($voyage->agent_catalogue_price_label ?? 'Prix sur demande'),
+                    'unit_price' => $unitPrice,
+                    'unit_price_label' => $unitPriceLabel,
                     'rooms' => $rooms,
                 ];
             })->all();

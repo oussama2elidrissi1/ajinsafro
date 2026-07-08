@@ -146,6 +146,10 @@ class ReservationPricingService
      */
     public function resolveUnitPrice(Voyage $voyage, ?Departure $departure = null, ?TravelDate $travelDate = null): array
     {
+        $dateSupplement = $travelDate?->price_override !== null
+            ? round(max(0, (float) $travelDate->price_override), 2)
+            : 0.0;
+
         // 1) Prix officiel de la fiche produit (r?gle m?tier)
         $productPrice = $this->resolveReservationUnitPrice($voyage);
         if ($productPrice['unit_price'] > 0) {
@@ -153,10 +157,14 @@ class ReservationPricingService
             $sources['departure_sale_price'] = $departure?->sale_price !== null ? (float) $departure->sale_price : null;
             $sources['departure_base_price'] = $departure?->base_price !== null ? (float) $departure->base_price : null;
             $sources['travel_date_price_override'] = $travelDate?->price_override !== null ? (float) $travelDate->price_override : null;
+            $sources['unit_price_before_date_supplement'] = $productPrice['unit_price'];
+            $sources['date_supplement'] = $dateSupplement;
 
             return [
-                'unit_price' => $productPrice['unit_price'],
-                'source'     => $productPrice['source'],
+                'unit_price' => round($productPrice['unit_price'] + $dateSupplement, 2),
+                'source'     => $dateSupplement > 0
+                    ? $productPrice['source'].'_plus_travel_date_price_override'
+                    : $productPrice['source'],
                 'sources'    => $sources,
             ];
         }
@@ -172,12 +180,13 @@ class ReservationPricingService
             'wp_min_price' => $wpPrices['min_price'],
             'wp_base_price' => $wpPrices['base_price'],
             'voyage_price_from' => $voyage->price_from !== null ? (float) $voyage->price_from : null,
+            'unit_price_before_date_supplement' => null,
+            'date_supplement' => $dateSupplement,
         ];
 
         foreach ([
             'departure_sale_price',
             'departure_base_price',
-            'travel_date_price_override',
             'wp_adult_price',
             'wp_min_price',
             'wp_base_price',
@@ -185,12 +194,24 @@ class ReservationPricingService
         ] as $source) {
             $value = $sources[$source] ?? null;
             if ($value !== null && (float) $value > 0) {
+                $sources['unit_price_before_date_supplement'] = round((float) $value, 2);
+
                 return [
-                    'unit_price' => round((float) $value, 2),
-                    'source' => $source,
+                    'unit_price' => round((float) $value + $dateSupplement, 2),
+                    'source' => $dateSupplement > 0
+                        ? $source.'_plus_travel_date_price_override'
+                        : $source,
                     'sources' => $sources,
                 ];
             }
+        }
+
+        if ($dateSupplement > 0) {
+            return [
+                'unit_price' => $dateSupplement,
+                'source' => 'travel_date_price_override',
+                'sources' => $sources,
+            ];
         }
 
         return [

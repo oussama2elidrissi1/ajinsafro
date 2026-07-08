@@ -9,11 +9,13 @@ use App\Models\Hotel;
 use App\Models\Setting;
 use App\Models\TourHotel;
 use App\Models\TourTransfer;
+use App\Models\TravelDate;
 use App\Models\Voyage;
 use App\Models\VoyageDeparturePlace;
 use App\Models\VoyageTheme;
 use App\Models\Wp\WpPost;
 use App\Models\Wp\WpPostMeta;
+use App\Services\Reservations\ReservationPricingService;
 use App\Services\Wp\WpHeroImageService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -274,7 +276,13 @@ class VoyageController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        $departuresJson = $departures->map(function (Departure $d) {
+        $travelDatesById = TravelDate::query()
+            ->whereIn('id', $departures->pluck('wp_travel_date_id')->filter()->unique()->values()->all())
+            ->get()
+            ->keyBy('id');
+        $pricingService = app(ReservationPricingService::class);
+
+        $departuresJson = $departures->map(function (Departure $d) use ($voyage, $travelDatesById, $pricingService) {
             $roomsFromDepartureHotels = $d->departureHotels
                 ->flatMap(fn ($dh) => $dh->rooms->map(fn ($r) => [
                     'id' => (int) $r->id,
@@ -336,6 +344,9 @@ class VoyageController extends Controller
                     ->values();
             }
 
+            $travelDate = $d->wp_travel_date_id ? $travelDatesById->get((int) $d->wp_travel_date_id) : null;
+            $resolvedPrice = $pricingService->resolveUnitPrice($voyage, $d, $travelDate);
+
             return [
                 'id' => (int) $d->id,
                 'wp_travel_date_id' => (int) ($d->wp_travel_date_id ?? 0),
@@ -347,6 +358,9 @@ class VoyageController extends Controller
                 'available_capacity' => (int) ($d->available_capacity ?? 0),
                 'base_price' => (float) ($d->base_price ?? 0),
                 'sale_price' => (float) ($d->sale_price ?? 0),
+                'price_override' => $travelDate?->price_override !== null ? (float) $travelDate->price_override : 0.0,
+                'unit_price' => (float) ($resolvedPrice['unit_price'] ?? 0),
+                'unit_price_source' => (string) ($resolvedPrice['source'] ?? ''),
                 'rooms' => $rooms->all(),
             ];
         })->values()->all();

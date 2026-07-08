@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Front;
 use App\Http\Controllers\Controller;
 use App\Models\Departure;
 use App\Models\Reservation;
+use App\Models\TravelDate;
 use App\Models\Voyage;
 use App\Models\VoyageDeparturePlace;
+use App\Services\Reservations\ReservationPricingService;
 use App\Services\ReservationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,7 +17,7 @@ use Illuminate\View\View;
 
 class VoyageReservationController extends Controller
 {
-    public function store(Request $request, string $slug, ReservationService $reservationService): JsonResponse
+    public function store(Request $request, string $slug, ReservationService $reservationService, ReservationPricingService $reservationPricing): JsonResponse
     {
         $voyage = Voyage::query()->where('slug', $slug)->first();
         if (! $voyage) {
@@ -87,7 +89,12 @@ class VoyageReservationController extends Controller
                 ->value('price') ?? 0);
         }
 
-        $unitPrice = (float) ($departure->sale_price ?: $departure->base_price ?: $voyage->price_from ?: 0) + $placePrice;
+        $travelDate = TravelDate::query()->find((int) $data['travel_date_id']);
+        if (! $travelDate && (int) ($departure->wp_travel_date_id ?? 0) > 0) {
+            $travelDate = TravelDate::query()->find((int) $departure->wp_travel_date_id);
+        }
+        $resolvedPrice = $reservationPricing->resolveUnitPrice($voyage, $departure, $travelDate);
+        $unitPrice = (float) (($resolvedPrice['unit_price'] ?? 0) ?: ($departure->sale_price ?: $departure->base_price ?: $voyage->price_from ?: 0)) + $placePrice;
         $totalBase = round($unitPrice * $travelersCount, 2);
 
         $notes = [];
