@@ -1,10 +1,14 @@
-@php $modalAjax = $modalAjax ?? false; @endphp
+@php
+    $modalAjax = $modalAjax ?? false;
+    $agentVoyageMode = (bool) ($agentVoyageMode ?? request()->routeIs('agent.voyages.*'));
+    $voyageRoutePrefix = $voyageRoutePrefix ?? ($agentVoyageMode ? 'agent.voyages' : 'admin.circuits.voyages');
+@endphp
 <div class="card border shadow-sm">
     <div class="card-header bg-white py-3 border-bottom">
         <h5 class="mb-0"><i class="bx bx-cog me-1 text-primary"></i> Paramètres du départ</h5>
     </div>
     <div class="card-body">
-        <form method="post" action="{{ route('admin.circuits.voyages.departures.settings.update', [$voyage, $departure]) }}">
+        <form method="post" action="{{ route($voyageRoutePrefix . '.departures.settings.update', [$voyage, $departure]) }}">
             @csrf
             @method('PUT')
             @include('admin.circuits.voyages.departures.partials._modal_ajax_hidden', ['modalAjax' => $modalAjax])
@@ -60,4 +64,3 @@
         </form>
     </div>
 </div>
-

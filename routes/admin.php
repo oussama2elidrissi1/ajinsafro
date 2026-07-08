@@ -748,6 +748,55 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'not.client'])
     ->group(function () {
         Route::get('dashboard', [AgentDashboardController::class, 'index'])->name('dashboard');
         Route::get('catalogue', [AgentCatalogueController::class, 'index'])->name('catalogue');
+        Route::middleware('agent.voyage-manager')->prefix('voyages')->name('voyages.')->group(function () {
+            Route::get('create', [VoyageController::class, 'createV2'])->name('create');
+            Route::get('create-v2', [VoyageController::class, 'createV2'])->name('create-v2');
+            Route::post('v2/steps/{step}/save', [VoyageController::class, 'saveStepV2'])->name('v2.steps.save.create');
+            Route::get('v2/steps/{step}/save', static function () {
+                return redirect()->route('agent.voyages.create-v2')->with('error', 'Utilisez le formulaire pour enregistrer.');
+            });
+            Route::post('/', [VoyageController::class, 'store'])->name('store');
+            Route::get('{id}/edit', static function (int $id) {
+                return redirect()->route('agent.voyages.edit-v2', $id);
+            })->name('edit')->whereNumber('id');
+            Route::get('{id}/edit-v2', [VoyageController::class, 'editV2'])->name('edit-v2')->whereNumber('id');
+            Route::post('{id}/v2/steps/{step}/save', [VoyageController::class, 'saveStepV2'])->name('v2.steps.save')->whereNumber('id');
+            Route::get('{id}/v2/steps/{step}/save', static function (string $id) {
+                return redirect()->route('agent.voyages.edit-v2', (int) $id)->with('error', 'Utilisez le formulaire pour enregistrer.');
+            })->whereNumber('id');
+            Route::match(['put', 'patch'], '{id}', [VoyageController::class, 'update'])->name('update')->whereNumber('id');
+            Route::post('ensure-location', [VoyageController::class, 'ensureLocation'])->name('ensure-location');
+            Route::post('{id}/hero-image', [HeroImageController::class, 'upload'])->name('hero-image.upload')->whereNumber('id');
+            Route::post('{id}/hero-image/select', [HeroImageController::class, 'select'])->name('hero-image.select')->whereNumber('id');
+            Route::post('{id}/hero-image/remove', [HeroImageController::class, 'remove'])->name('hero-image.remove')->whereNumber('id');
+            Route::get('{id}/program', [ProgramApiController::class, 'show'])->name('program.show')->whereNumber('id');
+            Route::post('{id}/program', [ProgramApiController::class, 'save'])->name('program.save')->whereNumber('id');
+            Route::post('{id}/program/day', [VoyageController::class, 'addProgramDay'])->name('program.addDay')->whereNumber('id');
+            Route::post('{id}/program/day/{dayId}', [VoyageController::class, 'deleteProgramDay'])->name('program.deleteDay')->whereNumber(['id', 'dayId']);
+            Route::delete('{voyage}/images/{voyageImage}', [VoyageController::class, 'destroyImage'])->name('images.destroy');
+            Route::post('{voyage}/programme', [TravelProgramDayController::class, 'store'])->name('programme.store');
+            Route::match(['put', 'patch'], '{voyage}/programme/{programDay}', [TravelProgramDayController::class, 'update'])->name('programme.update');
+            Route::delete('{voyage}/programme/{programDay}', [TravelProgramDayController::class, 'destroy'])->name('programme.destroy');
+            Route::post('{voyage}/departures', [DepartureController::class, 'store'])->name('departures.store');
+            Route::match(['put', 'patch'], '{voyage}/departures/{departure}', [DepartureController::class, 'update'])->name('departures.update');
+            Route::delete('{voyage}/departures/{departure}', [DepartureController::class, 'destroy'])->name('departures.destroy');
+            Route::post('{voyage}/room-availability/sync-departures', [VoyageDepartureManageController::class, 'syncDepartures'])->name('sync-departures');
+            Route::get('{voyage}/room-availability/departures', [VoyageDepartureManageController::class, 'modalDeparturesJson'])->name('room-availability.departures');
+            Route::get('{voyage}/room-availability/departures/{departure}/panel', [VoyageDepartureManageController::class, 'modalDeparturePanel'])->name('room-availability.departure-panel');
+            Route::get('{voyage}/departures/{departure}', [VoyageDepartureManageController::class, 'show'])->name('departures.show');
+            Route::put('{voyage}/departures/{departure}/settings', [VoyageDepartureManageController::class, 'updateSettings'])->name('departures.settings.update');
+            Route::post('{voyage}/departures/{departure}/hotels', [VoyageDepartureManageController::class, 'storeHotel'])->name('departures.hotels.store');
+            Route::put('{voyage}/departures/hotels/{departureHotel}', [VoyageDepartureManageController::class, 'updateHotel'])->name('departures.hotels.update');
+            Route::delete('{voyage}/departures/hotels/{departureHotel}', [VoyageDepartureManageController::class, 'destroyHotel'])->name('departures.hotels.destroy');
+            Route::post('{voyage}/departures/hotels/{departureHotel}/rooms', [VoyageDepartureManageController::class, 'storeRoom'])->name('departures.rooms.store');
+            Route::put('{voyage}/departures/rooms/{departureHotelRoom}', [VoyageDepartureManageController::class, 'updateRoom'])->name('departures.rooms.update');
+            Route::delete('{voyage}/departures/rooms/{departureHotelRoom}', [VoyageDepartureManageController::class, 'destroyRoom'])->name('departures.rooms.destroy');
+            Route::post('{voyage}/items', [TravelDayItemController::class, 'store'])->name('items.store');
+            Route::get('{voyage}/items/{item}/edit', [TravelDayItemController::class, 'edit'])->name('items.edit');
+            Route::match(['put', 'patch'], '{voyage}/items/{item}', [TravelDayItemController::class, 'update'])->name('items.update');
+            Route::delete('{voyage}/items/{item}', [TravelDayItemController::class, 'destroy'])->name('items.destroy');
+            Route::post('{voyage}/items/reorder', [TravelDayItemController::class, 'reorder'])->name('items.reorder');
+        });
         Route::get('reservations', [AgentReservationController::class, 'index'])->name('reservations.index');
         Route::get('reservations/create', [AgentReservationController::class, 'create'])->name('reservations.create');
         Route::get('reservations/hotels-rooms', [ReservationsController::class, 'hotelsRooms'])->name('reservations.hotels-rooms');

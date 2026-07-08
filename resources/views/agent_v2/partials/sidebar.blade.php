@@ -10,6 +10,9 @@
     $menuItems = $agentPortalAdminMenu ?? [];
     $dashboardActive = request()->routeIs('agent.dashboard');
     $profileActive = request()->routeIs('agent.profile');
+    $agentIdentity = \Illuminate\Support\Str::lower(trim(($user?->name ?? '') . ' ' . ($user?->email ?? '')));
+    $agentCanCreateVoyages = \Illuminate\Support\Facades\Route::has('agent.voyages.create')
+        && \Illuminate\Support\Str::contains($agentIdentity, ['oumaima', 'oumayma']);
 @endphp
 
 <aside class="w-full lg:w-72 shrink-0">
@@ -36,6 +39,15 @@
             @foreach($menuItems as $node)
                 @include('agent_v2.partials.sidebar-node', ['node' => $node, 'depth' => 0])
             @endforeach
+
+            @if($agentCanCreateVoyages)
+                <a href="{{ route('agent.voyages.create') }}"
+                   data-partner-nav
+                   class="agent-sidebar-link {{ request()->routeIs('agent.voyages.*') ? 'active' : '' }}">
+                    <i class="bx bx-plus-circle agent-sidebar-icon"></i>
+                    <span class="agent-sidebar-text">Ajouter voyage</span>
+                </a>
+            @endif
 
             <div class="agent-sidebar-divider"></div>
 

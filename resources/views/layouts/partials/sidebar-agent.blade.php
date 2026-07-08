@@ -5,15 +5,22 @@
     $roleLabel = $user?->canQuoteCustomRequests()
         ? 'Agent Offline'
         : ($user?->isManager() ? 'Manager' : 'Agent');
+    $agentIdentity = \Illuminate\Support\Str::lower(trim(($user?->name ?? '') . ' ' . ($user?->email ?? '')));
+    $agentCanCreateVoyages = \Illuminate\Support\Str::contains($agentIdentity, ['oumaima', 'oumayma']);
 
     $navItems = collect([
         ['label' => 'Tableau de bord', 'icon' => 'bx bx-home-circle', 'route' => 'agent.dashboard', 'match' => ['agent.dashboard'], 'permission' => 'dashboard.view'],
         ['label' => 'Catalogue de voyage', 'icon' => 'bx bx-map-alt', 'route' => 'agent.catalogue', 'match' => ['agent.catalogue'], 'permission' => 'reservations.view'],
+        ['label' => 'Ajouter voyage', 'icon' => 'bx bx-plus-circle', 'route' => 'agent.voyages.create', 'match' => ['agent.voyages.'], 'permission' => null, 'visible' => $agentCanCreateVoyages],
         ['label' => 'Mes reservations', 'icon' => 'bx bx-calendar-check', 'route' => 'agent.reservations.index', 'match' => ['agent.reservations.'], 'permission' => 'reservations.view'],
         ['label' => 'Reservations a la carte', 'icon' => 'bx bx-edit-alt', 'route' => 'agent.custom-reservations.index', 'match' => ['agent.custom-reservations.'], 'permission' => 'custom_requests.view'],
         ['label' => 'Mon profil', 'icon' => 'bx bx-user', 'route' => 'agent.profile', 'match' => ['agent.profile'], 'permission' => ['dashboard.view', 'reservations.view', 'custom_requests.view']],
         ['label' => 'Messagerie', 'icon' => 'bx bx-envelope', 'route' => 'agent.messagerie.index', 'match' => ['agent.messagerie.'], 'permission' => null],
     ])->filter(function ($item) use ($user) {
+        if (array_key_exists('visible', $item) && ! $item['visible']) {
+            return false;
+        }
+
         if (empty($item['route']) || ! \Illuminate\Support\Facades\Route::has($item['route'])) {
             return false;
         }

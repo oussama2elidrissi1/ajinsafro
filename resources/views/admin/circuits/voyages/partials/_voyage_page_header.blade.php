@@ -1,7 +1,8 @@
 @php
     $formId = $formId ?? 'edit-voyage-form';
+    $agentVoyageMode = (bool) ($agentVoyageMode ?? request()->routeIs('agent.voyages.*'));
     $currentStatus = $currentStatus ?? old('post_status', $voyage->post_status ?? 'draft');
-    $cancelUrl = $cancelUrl ?? route('admin.circuits.voyages.index');
+    $cancelUrl = $cancelUrl ?? ($agentVoyageMode ? route('agent.catalogue') : route('admin.circuits.voyages.index'));
     $deleteFormId = $deleteFormId ?? 'delete-voyage-form';
     $pageTitle = $isCreate ? 'Creer un voyage' : ($voyage->post_title ?? $voyage->name);
     $statusLabel = match ($currentStatus) {
@@ -28,9 +29,14 @@
 <div class="ve-page-header">
     <div class="ve-header-topbar">
         <ul class="ve-breadcrumb mb-0">
-            <li><a href="{{ route('admin.dashboard') }}"><i class="bx bx-home-alt"></i> Admin</a></li>
-            <li><a href="{{ route('admin.circuits.index') }}">Circuits</a></li>
-            <li><a href="{{ route('admin.circuits.voyages.index') }}">Voyages</a></li>
+            @if($agentVoyageMode)
+                <li><a href="{{ route('agent.dashboard') }}"><i class="bx bx-home-alt"></i> Agent</a></li>
+                <li><a href="{{ route('agent.catalogue') }}">Catalogue</a></li>
+            @else
+                <li><a href="{{ route('admin.dashboard') }}"><i class="bx bx-home-alt"></i> Admin</a></li>
+                <li><a href="{{ route('admin.circuits.index') }}">Circuits</a></li>
+                <li><a href="{{ route('admin.circuits.voyages.index') }}">Voyages</a></li>
+            @endif
             <li class="active">{{ $isCreate ? 'Creation' : 'Edition' }}</li>
         </ul>
 
@@ -100,4 +106,3 @@
         </div>
     </div>
 </div>
-

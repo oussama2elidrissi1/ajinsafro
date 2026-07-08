@@ -1,4 +1,8 @@
 @php
+    $agentVoyageMode = (bool) ($agentVoyageMode ?? request()->routeIs('agent.voyages.*'));
+    $voyageRoutePrefix = $agentVoyageMode ? 'agent.voyages' : 'admin.circuits.voyages';
+    $voyageBackUrl = $agentVoyageMode ? route('agent.catalogue') : route('admin.circuits.voyages.index');
+    $voyageBackLabel = $agentVoyageMode ? 'Retour au catalogue' : 'Retour catalogue';
     $isCreate = isset($voyage->ID) && (int) $voyage->ID === 0;
     $veWpId = isset($voyage->ID) ? (int) $voyage->ID : 0;
     $laravelV = $laravelVoyage ?? null;
@@ -61,8 +65,8 @@
 
     $formId = 'edit-voyage-form';
     $formAction = $isCreate
-        ? route('admin.circuits.voyages.store')
-        : route('admin.circuits.voyages.update', $voyage->ID);
+        ? route($voyageRoutePrefix . '.store')
+        : route($voyageRoutePrefix . '.update', $voyage->ID);
 
     $cssV2 = file_exists(public_path('css/voyage-v2.css')) ? (string) filemtime(public_path('css/voyage-v2.css')) : '1';
     $cssV3 = file_exists(public_path('css/voyage-v3.css')) ? (string) filemtime(public_path('css/voyage-v3.css')) : '1';
@@ -91,8 +95,8 @@
         ? $v2StepStates
         : collect($sections)->mapWithKeys(fn ($sec) => [$sec['id'] => 'incomplete'])->all();
 
-    $saveCreateUrl = route('admin.circuits.voyages.v2.steps.save.create', ['step' => '__STEP__']);
-    $saveUpdateTemplate = route('admin.circuits.voyages.v2.steps.save', ['id' => 999999, 'step' => '__STEP__']);
+    $saveCreateUrl = route($voyageRoutePrefix . '.v2.steps.save.create', ['step' => '__STEP__']);
+    $saveUpdateTemplate = route($voyageRoutePrefix . '.v2.steps.save', ['id' => 999999, 'step' => '__STEP__']);
     $saveUpdateTemplate = str_replace('999999', '__ID__', $saveUpdateTemplate);
 
     $sectionsCount = count($sections);
@@ -117,7 +121,7 @@
         ['label' => 'Vols', 'step' => 's-flights', 'icon' => 'bx-paper-plane'],
     ], fn (array $item) => collect($sections)->contains(fn (array $sec) => $sec['id'] === $item['step'])));
 @endphp
-@extends('layouts.admin-v6')
+@extends($agentVoyageMode ? 'layouts.master-ajinsafro' : 'layouts.admin-v6')
 
 @section('title'){{ $isCreate ? 'Creer un voyage - Studio V3' : 'Modifier - ' . $headerTitle }}@endsection
 
@@ -881,7 +885,7 @@
         </div>
     </div>
 
-    @if(!$isCreate)
+    @if(!$isCreate && !$agentVoyageMode)
         <form id="v2-delete-form" action="{{ route('admin.circuits.voyages.destroy', $voyage->ID) }}" method="POST" class="d-none">@csrf @method('DELETE')</form>
     @endif
 </div>
@@ -903,5 +907,4 @@
     </script>
     <script src="{{ URL::asset('js/voyage-v2.js?v=' . $jsV2) }}"></script>
 @endpush
-
 

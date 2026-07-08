@@ -1,6 +1,8 @@
 @php
     $rooms = $departureHotel->rooms ?? collect();
     $modalAjax = $modalAjax ?? false;
+    $agentVoyageMode = (bool) ($agentVoyageMode ?? request()->routeIs('agent.voyages.*'));
+    $voyageRoutePrefix = $voyageRoutePrefix ?? ($agentVoyageMode ? 'agent.voyages' : 'admin.circuits.voyages');
 @endphp
 
 <div data-departure-hotel-section="{{ $departureHotel->id }}">
@@ -12,7 +14,7 @@
 </div>
 
 @foreach($rooms as $r)
-    <form id="room-update-form-{{ $r->id }}" method="post" action="{{ route('admin.circuits.voyages.departures.rooms.update', [$voyage, $r]) }}" class="d-none {{ $modalAjax ? 'ra-modal-ajax-form' : '' }}">
+    <form id="room-update-form-{{ $r->id }}" method="post" action="{{ route($voyageRoutePrefix . '.departures.rooms.update', [$voyage, $r]) }}" class="d-none {{ $modalAjax ? 'ra-modal-ajax-form' : '' }}">
         @csrf
         @method('PUT')
         @include('admin.circuits.voyages.departures.partials._modal_ajax_hidden', ['modalAjax' => $modalAjax])
@@ -82,7 +84,7 @@
                     </td>
                     <td class="text-end text-nowrap">
                         <button type="submit" form="room-update-form-{{ $r->id }}" class="btn btn-sm btn-primary">Enregistrer</button>
-                        <form method="post" action="{{ route('admin.circuits.voyages.departures.rooms.destroy', [$voyage, $r]) }}" class="d-inline ra-modal-ajax-form" data-confirm-msg="Supprimer ce type de chambre pour ce départ ?">
+                        <form method="post" action="{{ route($voyageRoutePrefix . '.departures.rooms.destroy', [$voyage, $r]) }}" class="d-inline ra-modal-ajax-form" data-confirm-msg="Supprimer ce type de chambre pour ce départ ?">
                             @csrf
                             @method('DELETE')
                             @include('admin.circuits.voyages.departures.partials._modal_ajax_hidden', ['modalAjax' => $modalAjax])
@@ -102,7 +104,7 @@
 <div class="card border-0 bg-light mt-3">
     <div class="card-body py-3">
         <h6 class="small fw-semibold text-uppercase text-muted mb-3">Ajouter un type de chambre</h6>
-        <form method="post" action="{{ route('admin.circuits.voyages.departures.rooms.store', [$voyage, $departureHotel]) }}" class="row g-2 align-items-end js-add-room-form ra-modal-ajax-form">
+        <form method="post" action="{{ route($voyageRoutePrefix . '.departures.rooms.store', [$voyage, $departureHotel]) }}" class="row g-2 align-items-end js-add-room-form ra-modal-ajax-form">
             @csrf
             @include('admin.circuits.voyages.departures.partials._modal_ajax_hidden', ['modalAjax' => $modalAjax])
             <div class="col-md-2">
@@ -188,4 +190,3 @@
     if (addManual) addManual.addEventListener('change', recalcAdd);
 })();
 </script>
-

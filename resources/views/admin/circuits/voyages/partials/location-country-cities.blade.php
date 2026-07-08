@@ -4,7 +4,9 @@
     $worldCountries = $worldCountries ?? [];
     $countryCitiesData = $countryCitiesData ?? [];
     $mergedCitiesByCode = $mergedCitiesByCode ?? [];
-    $ensureLocationUrl = route('admin.circuits.voyages.ensure-location');
+    $agentVoyageMode = (bool) ($agentVoyageMode ?? request()->routeIs('agent.voyages.*'));
+    $voyageRoutePrefix = $voyageRoutePrefix ?? ($agentVoyageMode ? 'agent.voyages' : 'admin.circuits.voyages');
+    $ensureLocationUrl = route($voyageRoutePrefix . '.ensure-location');
     $selectedIdStrings = collect($selectedIds)->map(fn ($id) => (string) $id)->filter()->values()->all();
     $selectedLocationLabels = [];
 
@@ -186,4 +188,3 @@
     });
 })();
 </script>
-

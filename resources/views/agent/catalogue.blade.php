@@ -4,6 +4,10 @@
 
 @php
     use Illuminate\Support\Facades\Route;
+
+    $agentIdentity = \Illuminate\Support\Str::lower(trim((auth()->user()->name ?? '') . ' ' . (auth()->user()->email ?? '')));
+    $agentCanCreateVoyages = Route::has('agent.voyages.create')
+        && \Illuminate\Support\Str::contains($agentIdentity, ['oumaima', 'oumayma']);
 @endphp
 
 @push('styles')
@@ -11,6 +15,7 @@
     <style>
         .aj-agent-catalogue { padding: 0 18px 28px; }
         .aj-agent-catalogue-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px; }
+        .aj-agent-catalogue-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
         .aj-agent-catalogue-head h1 { margin:0; color:#0e3a5a; font-weight:800; font-size:28px; }
         .aj-agent-catalogue-head p { margin:6px 0 0; color:#64748b; font-size:14px; }
         .aj-agent-filter-card { background:#fff; border:1px solid #e2e8f0; border-radius:18px; box-shadow:0 6px 16px rgba(15,23,42,.05); padding:16px; margin-bottom:18px; }
@@ -46,10 +51,18 @@
             <h1>Catalogue de voyage</h1>
             <p>Voyages actifs et départs disponibles dans l’espace Agent.</p>
         </div>
-        <a href="{{ route('agent.dashboard') }}" class="aj-agent-action-btn">
-            <i class="bx bx-arrow-back"></i>
-            <span>Tableau de bord</span>
-        </a>
+        <div class="aj-agent-catalogue-actions">
+            @if($agentCanCreateVoyages)
+                <a href="{{ route('agent.voyages.create') }}" class="aj-agent-primary-btn">
+                    <i class="bx bx-plus"></i>
+                    <span>Creer un voyage</span>
+                </a>
+            @endif
+            <a href="{{ route('agent.dashboard') }}" class="aj-agent-action-btn">
+                <i class="bx bx-arrow-back"></i>
+                <span>Tableau de bord</span>
+            </a>
+        </div>
     </div>
 
     <form method="GET" action="{{ route('agent.catalogue') }}" class="aj-agent-filter-card">

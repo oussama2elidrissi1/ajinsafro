@@ -1,8 +1,10 @@
 {{-- Modal : gestion stock chambres par date de départ (voyage Laravel requis). --}}
 @php
-    $raDeparturesUrl = route('admin.circuits.voyages.room-availability.departures', $voyage);
-    $raSyncDeparturesUrl = route('admin.circuits.voyages.sync-departures', $voyage);
-    $raPanelBase = url('/admin/circuits/voyages/'.$voyage->id.'/room-availability/departures');
+    $agentVoyageMode = (bool) ($agentVoyageMode ?? request()->routeIs('agent.voyages.*'));
+    $voyageRoutePrefix = $voyageRoutePrefix ?? ($agentVoyageMode ? 'agent.voyages' : 'admin.circuits.voyages');
+    $raDeparturesUrl = route($voyageRoutePrefix . '.room-availability.departures', $voyage);
+    $raSyncDeparturesUrl = route($voyageRoutePrefix . '.sync-departures', $voyage);
+    $raPanelBase = rtrim(route($voyageRoutePrefix . '.room-availability.departures', $voyage), '/');
     $raWpTourPostId = (int) ($wpTourPostId ?? 0);
     $raServerWpDates = (int) ($serverWpTravelDatesCount ?? 0);
     $raServerLaravelDeps = (int) ($serverLaravelDeparturesCount ?? 0);
@@ -94,4 +96,3 @@
     #voyageRoomAvailabilityModal .min-h-badges { min-height: 38px; align-items: center; }
     #voyageRoomAvailabilityModal .ra-departure-content .accordion-button { font-size: 0.95rem; }
 </style>
-

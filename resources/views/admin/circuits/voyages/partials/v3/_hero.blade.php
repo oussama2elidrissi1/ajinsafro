@@ -1,3 +1,9 @@
+@php
+    $agentVoyageMode = (bool) ($agentVoyageMode ?? request()->routeIs('agent.voyages.*'));
+    $voyageBackUrl = $voyageBackUrl ?? ($agentVoyageMode ? route('agent.catalogue') : route('admin.circuits.voyages.index'));
+    $voyageBackLabel = $voyageBackLabel ?? 'Retour catalogue';
+@endphp
+
 <section class="v3-hero-card">
     <div class="v3-hero-thumb{{ !empty($heroImageUrl) ? ' has-image' : '' }}" @if(!empty($heroImageUrl)) style="background-image:url('{{ $heroImageUrl }}')" @endif>
         @if(empty($heroImageUrl))
@@ -55,15 +61,14 @@
                 @endif
             </div>
             <div class="v3-header-workflow-card__links">
-                <a href="{{ route('admin.circuits.voyages.index') }}">Retour catalogue</a>
+                <a href="{{ $voyageBackUrl }}">{{ $voyageBackLabel }}</a>
                 @if($frontPreviewUrl)
                     <a href="{{ $frontPreviewUrl }}" target="_blank" rel="noopener">Aperçu public</a>
                 @endif
-                @if(!$isCreate)
+                @if(!$isCreate && !$agentVoyageMode)
                     <a href="{{ route('admin.circuits.voyages.edit', $veWpId) }}" data-v2-classic-link>Version classique</a>
                 @endif
             </div>
         </div>
     </div>
 </section>
-

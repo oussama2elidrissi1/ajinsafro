@@ -2,6 +2,8 @@
     <div class="card ve-pane-card">
         <div class="card-body">
             @php
+                $agentVoyageMode = (bool) ($agentVoyageMode ?? request()->routeIs('agent.voyages.*'));
+                $voyageRoutePrefix = $voyageRoutePrefix ?? ($agentVoyageMode ? 'agent.voyages' : 'admin.circuits.voyages');
                 $departureRows = ($laravelVoyage ?? null)
                     ? $laravelVoyage->departures()->whereDate('start_date', '>=', \App\Models\TravelDate::availabilityToday())->orderBy('start_date')->get()
                     : collect();
@@ -150,7 +152,7 @@
                 </div>
             </div>
 
-            @unless(request()->routeIs('admin.circuits.voyages.edit-v2'))
+            @unless(request()->routeIs('admin.circuits.voyages.edit-v2', 'agent.voyages.edit-v2'))
             <div class="avl-ops-wrap">
             <h4 class="card-title mb-1">Dates, stock et reservation</h4>
             <p class="text-muted small mb-3">Renseignez les dates ouvertes a la vente, le stock et les regles de reservation du voyage.</p>
@@ -160,7 +162,7 @@
                     <strong>{{ $departureRows->count() }}</strong> depart(s) synchronise(s)
                     @if(isset($laravelVoyage) && $laravelVoyage && $firstDepartureRow)
                         <span class="ve-inline-note__sep">|</span>
-                        <a href="{{ route('admin.circuits.voyages.departures.show', [$laravelVoyage, $firstDepartureRow]) }}" target="_blank" rel="noopener">Ouvrir un depart</a>
+                        <a href="{{ route($voyageRoutePrefix . '.departures.show', [$laravelVoyage, $firstDepartureRow]) }}" target="_blank" rel="noopener">Ouvrir un depart</a>
                     @endif
                 </div>
                 <span class="text-muted small">Chaque date active met a jour le depart correspondant.</span>

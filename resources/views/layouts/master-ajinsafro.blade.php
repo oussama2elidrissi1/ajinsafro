@@ -2,7 +2,13 @@
     $useAgentPortal = request()->routeIs('agent.*')
         || request()->attributes->get('agent_reservation_mode', false)
         || \App\Services\View\AgentPortalLayout::shouldUse(auth()->user());
-    $voyageLayoutPage = request()->routeIs('admin.circuits.voyages.create', 'admin.circuits.voyages.edit');
+    $voyageLayoutPage = request()->routeIs(
+        'admin.circuits.voyages.create',
+        'admin.circuits.voyages.edit',
+        'admin.circuits.voyages.create-v2',
+        'admin.circuits.voyages.edit-v2',
+        'agent.voyages.*'
+    );
     $hideInternalV2Topbar = true;
 @endphp
 

@@ -1,6 +1,8 @@
 @php
     $modalAjax = $modalAjax ?? false;
     $layout = $layout ?? 'default';
+    $agentVoyageMode = (bool) ($agentVoyageMode ?? request()->routeIs('agent.voyages.*'));
+    $voyageRoutePrefix = $voyageRoutePrefix ?? ($agentVoyageMode ? 'agent.voyages' : 'admin.circuits.voyages');
 @endphp
 <div class="card border shadow-sm">
     <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -9,7 +11,7 @@
     <div class="card-body">
         <div class="border rounded p-3 bg-light mb-4">
             <h6 class="small text-uppercase text-muted mb-3">Ajouter un hôtel</h6>
-            <form method="post" action="{{ route('admin.circuits.voyages.departures.hotels.store', [$voyage, $departure]) }}" class="row g-2 align-items-end ra-modal-ajax-form">
+            <form method="post" action="{{ route($voyageRoutePrefix . '.departures.hotels.store', [$voyage, $departure]) }}" class="row g-2 align-items-end ra-modal-ajax-form">
                 @csrf
                 @include('admin.circuits.voyages.departures.partials._modal_ajax_hidden', ['modalAjax' => $modalAjax])
                 <div class="col-md-4">
@@ -58,7 +60,7 @@
                         <div id="ra-hotel-c-{{ $dh->id }}" class="accordion-collapse collapse {{ $loop->first ? 'show' : '' }}" aria-labelledby="ra-hotel-h-{{ $dh->id }}">
                             <div class="accordion-body">
                                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 pb-2 border-bottom">
-                                    <form method="post" action="{{ route('admin.circuits.voyages.departures.hotels.update', [$voyage, $dh]) }}" class="d-flex flex-wrap gap-1 align-items-center ra-modal-ajax-form">
+                                    <form method="post" action="{{ route($voyageRoutePrefix . '.departures.hotels.update', [$voyage, $dh]) }}" class="d-flex flex-wrap gap-1 align-items-center ra-modal-ajax-form">
                                         @csrf
                                         @method('PUT')
                                         @include('admin.circuits.voyages.departures.partials._modal_ajax_hidden', ['modalAjax' => $modalAjax])
@@ -71,7 +73,7 @@
                                         </div>
                                         <button type="submit" class="btn btn-sm btn-outline-primary">MAJ</button>
                                     </form>
-                                    <form method="post" action="{{ route('admin.circuits.voyages.departures.hotels.destroy', [$voyage, $dh]) }}" class="ra-modal-ajax-form ra-hotel-destroy-form" data-confirm-msg="Retirer cet hôtel du départ ?">
+                                    <form method="post" action="{{ route($voyageRoutePrefix . '.departures.hotels.destroy', [$voyage, $dh]) }}" class="ra-modal-ajax-form ra-hotel-destroy-form" data-confirm-msg="Retirer cet hôtel du départ ?">
                                         @csrf
                                         @method('DELETE')
                                         @include('admin.circuits.voyages.departures.partials._modal_ajax_hidden', ['modalAjax' => $modalAjax])
@@ -95,7 +97,7 @@
                             @if($dh->hotel_id)<span class="badge bg-light text-dark ms-1">ID catalogue {{ $dh->hotel_id }}</span>@endif
                         </div>
                         <div class="d-flex flex-wrap gap-1 align-items-center">
-                            <form method="post" action="{{ route('admin.circuits.voyages.departures.hotels.update', [$voyage, $dh]) }}" class="d-flex flex-wrap gap-1 align-items-center ra-modal-ajax-form">
+                            <form method="post" action="{{ route($voyageRoutePrefix . '.departures.hotels.update', [$voyage, $dh]) }}" class="d-flex flex-wrap gap-1 align-items-center ra-modal-ajax-form">
                                 @csrf
                                 @method('PUT')
                                 @include('admin.circuits.voyages.departures.partials._modal_ajax_hidden', ['modalAjax' => $modalAjax])
@@ -108,7 +110,7 @@
                                 </div>
                                 <button type="submit" class="btn btn-sm btn-outline-primary">MAJ</button>
                             </form>
-                            <form method="post" action="{{ route('admin.circuits.voyages.departures.hotels.destroy', [$voyage, $dh]) }}" class="ra-modal-ajax-form ra-hotel-destroy-form" data-confirm-msg="Retirer cet hôtel du départ ?">
+                            <form method="post" action="{{ route($voyageRoutePrefix . '.departures.hotels.destroy', [$voyage, $dh]) }}" class="ra-modal-ajax-form ra-hotel-destroy-form" data-confirm-msg="Retirer cet hôtel du départ ?">
                                 @csrf
                                 @method('DELETE')
                                 @include('admin.circuits.voyages.departures.partials._modal_ajax_hidden', ['modalAjax' => $modalAjax])
@@ -126,4 +128,3 @@
         @endif
     </div>
 </div>
-

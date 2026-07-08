@@ -1,3 +1,8 @@
+@php
+    $agentVoyageMode = (bool) ($agentVoyageMode ?? request()->routeIs('agent.voyages.*'));
+    $voyageBackUrl = $voyageBackUrl ?? ($agentVoyageMode ? route('agent.catalogue') : route('admin.circuits.voyages.index'));
+@endphp
+
 <div class="ve-form-toolbar ve-pane-card">
     <div class="ve-form-actions-body">
         <div class="ve-form-toolbar__copy">
@@ -6,7 +11,7 @@
         </div>
 
         <div class="ve-form-actions-buttons">
-            <a href="{{ route('admin.circuits.voyages.index') }}" class="btn btn-outline-secondary">
+            <a href="{{ $voyageBackUrl }}" class="btn btn-outline-secondary">
                 <i class="bx bx-arrow-back"></i> Retour a la liste
             </a>
 
@@ -16,4 +21,3 @@
         </div>
     </div>
 </div>
-

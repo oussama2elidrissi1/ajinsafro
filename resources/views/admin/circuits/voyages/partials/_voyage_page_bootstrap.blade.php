@@ -1,5 +1,7 @@
 @php
     $voyageId = (int) ($voyage->ID ?? 0);
+    $agentVoyageMode = (bool) ($agentVoyageMode ?? request()->routeIs('agent.voyages.*'));
+    $voyageRoutePrefix = $voyageRoutePrefix ?? ($agentVoyageMode ? 'agent.voyages' : 'admin.circuits.voyages');
     $tourHotelsBootstrap = collect($tourHotels ?? [])->mapWithKeys(function ($hotel) {
         $hotelImgPath = trim((string) ($hotel->image_path ?? ''));
         $hotelImgUrl = $hotelImgPath !== ''
@@ -132,13 +134,13 @@
         'tourPlacesCalcDebug' => (bool) config('app.debug'),
         'wpTourId' => $voyageId,
         'csrfToken' => csrf_token(),
-        'heroUploadUrl' => route('admin.circuits.voyages.hero-image.upload', ['id' => $voyageId]),
-        'heroSelectUrl' => route('admin.circuits.voyages.hero-image.select', ['id' => $voyageId]),
-        'heroRemoveUrl' => route('admin.circuits.voyages.hero-image.remove', ['id' => $voyageId]),
-        'heroGalleryUploadUrl' => route('admin.circuits.voyages.hero-image.upload', ['id' => $voyageId]),
-        'heroGallerySelectUrl' => route('admin.circuits.voyages.hero-image.select', ['id' => $voyageId]),
-        'localMediaUploadUrl' => '/admin/local-media/upload',
-        'wpMediaSearchUrl' => url('admin/wp-media/search'),
+        'heroUploadUrl' => route($voyageRoutePrefix . '.hero-image.upload', ['id' => $voyageId]),
+        'heroSelectUrl' => route($voyageRoutePrefix . '.hero-image.select', ['id' => $voyageId]),
+        'heroRemoveUrl' => route($voyageRoutePrefix . '.hero-image.remove', ['id' => $voyageId]),
+        'heroGalleryUploadUrl' => route($voyageRoutePrefix . '.hero-image.upload', ['id' => $voyageId]),
+        'heroGallerySelectUrl' => route($voyageRoutePrefix . '.hero-image.select', ['id' => $voyageId]),
+        'localMediaUploadUrl' => route('admin.local-media.upload'),
+        'wpMediaSearchUrl' => route('admin.wp-media.search'),
         'wpFeaturedMediaListUrl' => route('admin.wp-media.list'),
         'wpFeaturedMediaUploadUrl' => route('admin.wp-media.upload'),
         'wpFeaturedMediaSelectUrl' => route('admin.wp-media.select'),

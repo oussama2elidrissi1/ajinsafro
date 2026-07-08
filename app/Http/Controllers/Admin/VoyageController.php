@@ -88,6 +88,41 @@ class VoyageController extends Controller
         $this->voyageAvailabilityService = $voyageAvailabilityService;
     }
 
+    private function isAgentVoyageRoute(?Request $request = null): bool
+    {
+        $request ??= request();
+
+        return $request->routeIs('agent.voyages.*');
+    }
+
+    private function voyageRouteName(Request $request, string $suffix): string
+    {
+        return ($this->isAgentVoyageRoute($request) ? 'agent.voyages.' : 'admin.circuits.voyages.') . $suffix;
+    }
+
+    private function assertAgentVoyageAccess(?Request $request = null): void
+    {
+        $request ??= request();
+
+        if (! $this->isAgentVoyageRoute($request)) {
+            return;
+        }
+
+        abort_unless($this->currentUserCanManageAgentVoyages(), 403);
+    }
+
+    private function currentUserCanManageAgentVoyages(): bool
+    {
+        $user = auth()->user();
+        if (! $user) {
+            return false;
+        }
+
+        $identity = Str::lower(trim(($user->name ?? '') . ' ' . ($user->email ?? '')));
+
+        return Str::contains($identity, ['oumaima', 'oumayma']);
+    }
+
     /**
      * Display listing of WordPress tours.
      */
@@ -335,8 +370,11 @@ class VoyageController extends Controller
      */
     public function createV2(): View
     {
+        $this->assertAgentVoyageAccess();
+
         $view = $this->create();
         $data = $view->getData();
+        $data['agentVoyageMode'] = $this->isAgentVoyageRoute();
         $data['v2StepStates'] = collect(self::V2_STEPS)
             ->mapWithKeys(fn ($stepId) => [$stepId => 'incomplete'])
             ->all();
@@ -348,8 +386,11 @@ class VoyageController extends Controller
      */
     public function editV2(int $id): View
     {
+        $this->assertAgentVoyageAccess();
+
         $view = $this->edit($id);
         $data = $view->getData();
+        $data['agentVoyageMode'] = $this->isAgentVoyageRoute();
         $data['v2StepStates'] = $this->buildV2StepStates($id);
         return view('admin.circuits.voyages.edit_v2', $data);
     }
@@ -361,6 +402,8 @@ class VoyageController extends Controller
      */
     public function saveStepV2(Request $request, string $stepOrId, ?string $step = null): JsonResponse|RedirectResponse
     {
+        $this->assertAgentVoyageAccess($request);
+
         $isAjax = $this->isV2AjaxSaveRequest($request);
         $routeStep = $step ?? $stepOrId;
         $routeId = $step === null ? 0 : (int) $stepOrId;
@@ -446,7 +489,7 @@ class VoyageController extends Controller
                 'state' => 'saved',
                 'step' => $step,
                 'voyage_id' => $wpPostId,
-                'redirect_url' => route('admin.circuits.voyages.edit-v2', $wpPostId),
+                'redirect_url' => route($this->voyageRouteName($request, 'edit-v2'), $wpPostId),
                 'step_states' => $this->safeBuildV2StepStates($wpPostId, $step),
                 'saved_at' => now()->toIso8601String(),
                 'message' => "\u{00C9}tape enregistr\u{00E9}e.",
@@ -526,8 +569,8 @@ class VoyageController extends Controller
     {
         $targetStep = $this->resolveV2RedirectStep($request, $fallbackStep);
         $baseUrl = $wpPostId > 0
-            ? route('admin.circuits.voyages.edit-v2', $wpPostId)
-            : route('admin.circuits.voyages.create-v2');
+            ? route($this->voyageRouteName($request, 'edit-v2'), $wpPostId)
+            : route($this->voyageRouteName($request, 'create-v2'));
 
         return $baseUrl . '#' . $targetStep;
     }
@@ -1635,6 +1678,8 @@ class VoyageController extends Controller
      */
     public function store(StoreWpTourRequest $request): RedirectResponse
     {
+        $this->assertAgentVoyageAccess($request);
+
         $validated = $request->validated();
 
         // G?n?rer slug si vide
@@ -1675,7 +1720,7 @@ class VoyageController extends Controller
             }
 
             return redirect()
-                ->route('admin.circuits.voyages.edit', $tour->ID)
+                ->route($this->voyageRouteName($request, $this->isAgentVoyageRoute($request) ? 'edit-v2' : 'edit'), $tour->ID)
                 ->with('success', 'Tour créé avec succès dans WordPress ! Visible immédiatement sur ajinsafro.net');
         } catch (\Exception $e) {
             return back()
@@ -2010,7 +2055,7 @@ class VoyageController extends Controller
         }
 
         $programJson = [];
-        $programApiUrl = route('admin.circuits.voyages.program.save', ['id' => $id]);
+        $programApiUrl = route($this->voyageRouteName(request(), 'program.save'), ['id' => $id]);
         try {
             $programJson = $this->programJsonService->getProgram($id);
         } catch (\Throwable $e) {
@@ -3296,6 +3341,8 @@ class VoyageController extends Controller
      */
     public function update(UpdateWpTourRequest $request, int $id): RedirectResponse
     {
+        $this->assertAgentVoyageAccess($request);
+
         $validated = $request->validated();
 
         // Option "Utiliser l'image principale comme image ? la une WP"
@@ -3510,7 +3557,7 @@ class VoyageController extends Controller
             }
 
             return redirect()
-                ->route('admin.circuits.voyages.edit', $id)
+                ->route($this->voyageRouteName($request, $this->isAgentVoyageRoute($request) ? 'edit-v2' : 'edit'), $id)
                 ->with('success', 'Tour mis ? jour avec succ?s dans WordPress ! Modifications visibles imm?diatement.');
         } catch (\Exception $e) {
             return back()
@@ -4637,10 +4684,12 @@ class VoyageController extends Controller
      */
     public function addProgramDay(int $id): RedirectResponse
     {
+        $this->assertAgentVoyageAccess();
+
         try {
             $this->programService->addDay($id);
             return redirect()
-                ->route('admin.circuits.voyages.edit', $id)
+                ->route($this->voyageRouteName(request(), $this->isAgentVoyageRoute() ? 'edit-v2' : 'edit'), $id)
                 ->with('success', 'Jour ajout?.')
                 ->withFragment('program-days');
         } catch (\Exception $e) {
@@ -4653,6 +4702,8 @@ class VoyageController extends Controller
      */
     public function deleteProgramDay(int $id, int $dayId): RedirectResponse
     {
+        $this->assertAgentVoyageAccess();
+
         try {
             $count = $this->programService->countDays($id);
             if ($count <= 1) {
@@ -4661,7 +4712,7 @@ class VoyageController extends Controller
             $this->programService->deleteDay($id, $dayId);
             $this->repository->updateTour($id, ['duration_day' => $this->programService->countDays($id)]);
             return redirect()
-                ->route('admin.circuits.voyages.edit', $id)
+                ->route($this->voyageRouteName(request(), $this->isAgentVoyageRoute() ? 'edit-v2' : 'edit'), $id)
                 ->with('success', 'Jour supprim?.')
                 ->withFragment('program-days');
         } catch (\Exception $e) {

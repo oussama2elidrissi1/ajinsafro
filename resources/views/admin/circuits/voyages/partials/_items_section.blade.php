@@ -1,4 +1,10 @@
 {{-- Package Builder Items Section --}}
+@php
+    $agentVoyageMode = (bool) ($agentVoyageMode ?? request()->routeIs('agent.voyages.*'));
+    $voyageRoutePrefix = $voyageRoutePrefix ?? ($agentVoyageMode ? 'agent.voyages' : 'admin.circuits.voyages');
+    $itemEditUrlTemplate = str_replace('__ITEM__', '${itemId}', route($voyageRoutePrefix . '.items.edit', [$voyage, '__ITEM__']));
+    $itemUpdateUrlTemplate = str_replace('__ITEM__', '${itemId}', route($voyageRoutePrefix . '.items.update', [$voyage, '__ITEM__']));
+@endphp
 <div class="card mt-4">
     <div class="card-body">
         <h4 class="card-title mb-4">
@@ -93,7 +99,7 @@
                                                                 onclick="editItem({{ $item->id }})" title="Modifier">
                                                                 <i class="bx bx-edit"></i>
                                                             </button>
-                                                            <form action="{{ route('admin.circuits.voyages.items.destroy', [$voyage, $item]) }}" 
+                                                            <form action="{{ route($voyageRoutePrefix . '.items.destroy', [$voyage, $item]) }}"
                                                                 method="POST" class="d-inline" 
                                                                 onsubmit="return confirm('Supprimer cet item ?');">
                                                                 @csrf
@@ -143,7 +149,7 @@
     function addItemForDay(dayNumber) {
         // Reset form
         itemForm.reset();
-        itemForm.action = "{{ route('admin.circuits.voyages.items.store', $voyage) }}";
+        itemForm.action = "{{ route($voyageRoutePrefix . '.items.store', $voyage) }}";
         itemForm.querySelector('input[name="_method"]')?.remove();
         
         // Set day_number
@@ -160,10 +166,10 @@
 
     function editItem(itemId) {
         // Fetch item data via AJAX and populate form
-        fetch(`/admin/circuits/voyages/{{ $voyage->id }}/items/${itemId}/edit`)
+        fetch(`{{ $itemEditUrlTemplate }}`)
             .then(response => response.json())
             .then(data => {
-                itemForm.action = `/admin/circuits/voyages/{{ $voyage->id }}/items/${itemId}`;
+                itemForm.action = `{{ $itemUpdateUrlTemplate }}`;
                 
                 // Add PUT method
                 let methodInput = itemForm.querySelector('input[name="_method"]');
@@ -206,4 +212,3 @@
     });
 </script>
 @endpush
-
