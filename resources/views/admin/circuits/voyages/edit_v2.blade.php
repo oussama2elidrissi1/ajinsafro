@@ -126,6 +126,9 @@
 @section('title'){{ $isCreate ? 'Creer un voyage - Studio V3' : 'Modifier - ' . $headerTitle }}@endsection
 
 @push('styles')
+    @if($agentVoyageMode)
+        <link href="{{ URL::asset('css/agent-dashboard.css') }}" rel="stylesheet" type="text/css" />
+    @endif
     <link href="{{ URL::asset('css/voyage-edit.css?v=' . $cssEdit) }}" rel="stylesheet">
     <link href="{{ URL::asset('css/flight-options-new.css') }}" rel="stylesheet">
     <link href="{{ URL::asset('css/voyage-v2.css?v=' . $cssV2) }}" rel="stylesheet">
@@ -907,4 +910,3 @@
     </script>
     <script src="{{ URL::asset('js/voyage-v2.js?v=' . $jsV2) }}"></script>
 @endpush
-
