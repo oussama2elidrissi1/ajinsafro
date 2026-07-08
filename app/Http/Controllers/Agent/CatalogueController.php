@@ -176,6 +176,8 @@ class CatalogueController extends Controller
                 $travelDate = $departure->wp_travel_date_id ? $travelDatesById->get((int) $departure->wp_travel_date_id) : null;
                 $resolvedPrice = $this->reservationPricing->resolveUnitPrice($voyage, $departure, $travelDate);
                 $unitPrice = (float) ($resolvedPrice['unit_price'] ?? 0);
+                $dateSupplement = (float) data_get($resolvedPrice, 'sources.date_supplement', 0);
+                $unitPriceBeforeDateSupplement = (float) data_get($resolvedPrice, 'sources.unit_price_before_date_supplement', 0);
                 $unitPriceLabel = $unitPrice > 0
                     ? number_format($unitPrice, 0, ',', ' ').' '.$voyage->currency_symbol
                     : 'Prix sur demande';
@@ -244,6 +246,11 @@ class CatalogueController extends Controller
                     ],
                     'unit_price' => $unitPrice,
                     'unit_price_label' => $unitPriceLabel,
+                    'unit_price_before_date_supplement' => $unitPriceBeforeDateSupplement,
+                    'date_supplement' => $dateSupplement,
+                    'date_supplement_label' => $dateSupplement > 0
+                        ? '+'.number_format($dateSupplement, 0, ',', ' ').' '.$voyage->currency_symbol
+                        : null,
                     'rooms' => $rooms,
                 ];
             })->all();

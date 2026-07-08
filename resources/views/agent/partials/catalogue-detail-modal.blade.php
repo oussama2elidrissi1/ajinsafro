@@ -147,8 +147,13 @@
 
             var html = '<section class="ws-md-card"><div class="ws-md-section-head"><h3 class="ws-md-section-title"><i class="fas fa-calendar-alt"></i>Choisir une date de départ</h3><span class="ws-md-muted">' + departures.length + ' date(s)</span></div><div class="ws-md-date-list">';
             departures.forEach(function (departure, index) {
+                var dateSupplement = Number(departure.date_supplement || 0);
+                var dateSupplementLabel = departure.date_supplement_label || money(dateSupplement, '');
                 html += '<button type="button" class="ws-md-date-option ' + (index === selectedIndex ? 'is-active' : '') + '" data-ws-md-date-index="' + index + '">';
                 html += '<span><span class="ws-md-date-main">' + esc(departure.date_label) + '</span><span class="ws-md-date-sub">' + esc(departure.remaining != null ? departure.remaining + ' place(s) restantes' : 'Disponibilité à vérifier') + '</span></span>';
+                if (dateSupplement > 0) {
+                    html += '<span class="ws-md-date-sub">Suppl. ' + esc(dateSupplementLabel) + '</span>';
+                }
                 html += statusBadge(departure.status_key, departure.status_label);
                 html += '</button>';
             });
@@ -184,7 +189,11 @@
         }
 
         function renderInfo(detail, departure) {
+            var dateSupplement = Number(departure.date_supplement || 0);
+            var dateSupplementLabel = departure.date_supplement_label || money(dateSupplement, '');
             var fields = [
+                ['Prix de base', departure.unit_price_before_date_supplement > 0 ? money(departure.unit_price_before_date_supplement, '') : (detail.prices && detail.prices.adult_label ? detail.prices.adult_label : 'â€”')],
+                ['SupplÃ©ment date', dateSupplement > 0 ? dateSupplementLabel : 'Aucun'],
                 ['Durée', detail.duration || '—'],
                 ['Date sélectionnée', departure.date_label || '—'],
                 ['Prix à partir de', departure.unit_price_label || money(departure.unit_price, detail.prices && detail.prices.adult_label)],
