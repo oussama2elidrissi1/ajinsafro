@@ -1535,6 +1535,10 @@
     font-size: 1rem;
 }
 
+.reservation-fast-discount--payment {
+    margin-bottom: 1rem;
+}
+
 .reservation-fast-traveler-counters {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));

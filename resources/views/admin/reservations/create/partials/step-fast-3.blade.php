@@ -23,6 +23,36 @@
             </div>
 
             <div class="reservation-create__payment-card">
+                <input type="hidden" name="discount_scope" id="reservation-discount-scope" value="total">
+
+                <div class="reservation-fast-discount reservation-fast-discount--payment">
+                    <div class="reservation-create__field">
+                        <label class="reservation-create__label" for="reservation-discount-value">Remise sur le total</label>
+                        <div class="reservation-fast-discount__control">
+                            <input
+                                type="number"
+                                id="reservation-discount-value"
+                                name="discount_value"
+                                class="reservation-create__input"
+                                value="{{ old('discount_value') }}"
+                                min="0"
+                                step="0.01"
+                                placeholder="0"
+                            >
+                            <select id="reservation-discount-type" name="discount_type" class="reservation-create__input reservation-fast-discount__type">
+                                <option value="percentage" @selected(old('discount_type', 'percentage') === 'percentage')>%</option>
+                                <option value="fixed" @selected(old('discount_type') === 'fixed')>DH</option>
+                            </select>
+                        </div>
+                        <p class="reservation-create__helper">La remise est appliquee une seule fois sur le total du dossier.</p>
+                    </div>
+
+                    <div class="reservation-fast-discount__preview">
+                        <span>Prix unitaire indicatif apres remise</span>
+                        <strong id="reservation-price-after-discount">—</strong>
+                    </div>
+                </div>
+
                 <p class="reservation-create__mini-title">Nouveau paiement</p>
                 <div class="reservation-fast-grid">
                     <div class="reservation-create__field">
