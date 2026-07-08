@@ -1,9 +1,23 @@
-@extends('layouts.admin-v6')
+@extends(request()->routeIs('agent.voyages.*') ? 'layouts.master-ajinsafro' : 'layouts.admin-v6')
 
 @php
     use Illuminate\Support\Str;
 
-    $pageTitle = 'Catalogue des voyages';
+    $agentVoyageMode = (bool) ($agentVoyageMode ?? request()->routeIs('agent.voyages.*'));
+    $voyageRoutePrefix = $agentVoyageMode ? 'agent.voyages' : 'admin.circuits.voyages';
+    $voyageIndexUrl = route($voyageRoutePrefix . '.index');
+    $voyageCreateUrl = route($voyageRoutePrefix . '.create-v2');
+    $pageTitle = $agentVoyageMode ? 'Gestion des voyages' : 'Catalogue des voyages';
+    $pageBreadcrumbs = $agentVoyageMode
+        ? [
+            ['label' => 'Agent', 'url' => route('agent.dashboard')],
+            ['label' => 'Voyages'],
+        ]
+        : [
+            ['label' => 'Admin', 'url' => route('admin.dashboard')],
+            ['label' => 'Circuits', 'url' => '#'],
+            ['label' => 'Voyages'],
+        ];
     $totalTours = $catalogSummary['total'] ?? $tours->total();
     $publishedTours = $catalogSummary['published'] ?? 0;
     $draftTours = $catalogSummary['draft'] ?? 0;
@@ -42,14 +56,10 @@
             <x-admin.page-header
                 :title="$pageTitle"
                 subtitle="Pilotez les offres, départs, prix et publications depuis une vue unique, sans changer la logique métier existante."
-                :breadcrumbs="[
-                    ['label' => 'Admin', 'url' => route('admin.dashboard')],
-                    ['label' => 'Circuits', 'url' => '#'],
-                    ['label' => 'Voyages'],
-                ]"
+                :breadcrumbs="$pageBreadcrumbs"
             >
                 <x-slot name="actions">
-                    <a href="{{ route('admin.circuits.voyages.create-v2') }}" class="aj-btn aj-btn-primary">
+                    <a href="{{ $voyageCreateUrl }}" class="aj-btn aj-btn-primary">
                         <i class="bx bx-plus"></i>
                         <span>Créer un voyage</span>
                     </a>
@@ -88,9 +98,9 @@
             />
 
             <x-admin.filter-panel
-                :action="route('admin.circuits.voyages.index')"
+                :action="$voyageIndexUrl"
                 method="GET"
-                :reset-url="route('admin.circuits.voyages.index')"
+                :reset-url="$voyageIndexUrl"
             >
                 <x-slot name="fields">
                     <div class="aj-field aj-search-wrap aj-col-3">
@@ -203,7 +213,7 @@
                     <x-admin.empty-state
                         title="Aucun voyage trouvé"
                         message="Ajustez vos filtres ou créez un nouveau voyage."
-                        :action-url="route('admin.circuits.voyages.create-v2')"
+                        :action-url="$voyageCreateUrl"
                         action-label="Créer un voyage"
                     />
                 @else
@@ -236,7 +246,7 @@
                                         </td>
                                         <td>
                                             <div class="aj-item-title">
-                                                <a href="{{ route('admin.circuits.voyages.edit-v2', $tour->ID) }}">{{ $tour->post_title }}</a>
+                                                <a href="{{ route($voyageRoutePrefix . '.edit-v2', $tour->ID) }}">{{ $tour->post_title }}</a>
                                                 @if(!empty($tour->laravel_slug))
                                                     <span class="aj-badge -info">Laravel</span>
                                                 @endif
@@ -260,18 +270,20 @@
                                         <td>{{ optional($tour->post_modified)->format('d/m/Y H:i') ?? '-' }}</td>
                                         <td class="text-end">
                                             <div class="aj-actions">
-                                                <a href="{{ route('admin.circuits.voyages.show', $tour->ID) }}" class="aj-icon-btn" title="Voir">
-                                                    <i class="bx bx-show"></i>
-                                                </a>
+                                                @unless($agentVoyageMode)
+                                                    <a href="{{ route('admin.circuits.voyages.show', $tour->ID) }}" class="aj-icon-btn" title="Voir">
+                                                        <i class="bx bx-show"></i>
+                                                    </a>
+                                                @endunless
                                                 @if(!empty($tour->laravel_slug))
                                                     <a href="{{ url('/voyages/'.$tour->laravel_slug) }}" target="_blank" rel="noopener noreferrer" class="aj-icon-btn" title="Page commerciale">
                                                         <i class="bx bx-link-external"></i>
                                                     </a>
                                                 @endif
-                                                <a href="{{ route('admin.circuits.voyages.edit-v2', $tour->ID) }}" class="aj-icon-btn" title="Modifier (V2)">
+                                                <a href="{{ route($voyageRoutePrefix . '.edit-v2', $tour->ID) }}" class="aj-icon-btn" title="Modifier (V2)">
                                                     <i class="bx bx-layer"></i>
                                                 </a>
-                                                <form action="{{ route('admin.circuits.voyages.destroy', $tour->ID) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce tour de WordPress ?');">
+                                                <form action="{{ route($voyageRoutePrefix . '.destroy', $tour->ID) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce voyage ?');">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="aj-icon-btn -danger" title="Supprimer">
@@ -298,7 +310,7 @@
                                     <span class="aj-badge -info">#{{ $tour->ID }}</span>
                                 </div>
                                 <div class="aj-card-body">
-                                    <h4 class="aj-card-title"><a href="{{ route('admin.circuits.voyages.edit-v2', $tour->ID) }}">{{ $tour->post_title }}</a></h4>
+                                    <h4 class="aj-card-title"><a href="{{ route($voyageRoutePrefix . '.edit-v2', $tour->ID) }}">{{ $tour->post_title }}</a></h4>
                                     <div class="aj-meta-text mb-2">{{ $tour->post_name }}</div>
                                     <div class="aj-meta-text mb-2">{{ $tour->address ?? 'Destination non renseignée' }}</div>
                                     <div class="d-flex flex-wrap gap-2 mb-3">
@@ -314,11 +326,18 @@
                                     <div class="aj-card-actions">
                                         <span class="aj-price">{{ $price > 0 ? number_format($price, 0, ',', ' ') . ' MAD' : '?' }}</span>
                                         <div class="aj-actions">
-                                            <a href="{{ route('admin.circuits.voyages.show', $tour->ID) }}" class="aj-icon-btn" title="Voir"><i class="bx bx-show"></i></a>
+                                            @unless($agentVoyageMode)
+                                                <a href="{{ route('admin.circuits.voyages.show', $tour->ID) }}" class="aj-icon-btn" title="Voir"><i class="bx bx-show"></i></a>
+                                            @endunless
                                             @if(!empty($tour->laravel_slug))
                                                 <a href="{{ url('/voyages/'.$tour->laravel_slug) }}" target="_blank" rel="noopener noreferrer" class="aj-icon-btn" title="Page commerciale"><i class="bx bx-link-external"></i></a>
                                             @endif
-                                            <a href="{{ route('admin.circuits.voyages.edit-v2', $tour->ID) }}" class="aj-icon-btn" title="Modifier (V2)"><i class="bx bx-layer"></i></a>
+                                            <a href="{{ route($voyageRoutePrefix . '.edit-v2', $tour->ID) }}" class="aj-icon-btn" title="Modifier (V2)"><i class="bx bx-layer"></i></a>
+                                            <form action="{{ route($voyageRoutePrefix . '.destroy', $tour->ID) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce voyage ?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="aj-icon-btn -danger" title="Supprimer"><i class="bx bx-trash"></i></button>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>
@@ -409,4 +428,3 @@
         });
     </script>
 @endpush
-

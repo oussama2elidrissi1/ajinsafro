@@ -11,7 +11,7 @@
     $dashboardActive = request()->routeIs('agent.dashboard');
     $profileActive = request()->routeIs('agent.profile');
     $agentIdentity = \Illuminate\Support\Str::lower(trim(($user?->name ?? '') . ' ' . ($user?->email ?? '')));
-    $agentCanCreateVoyages = \Illuminate\Support\Facades\Route::has('agent.voyages.create')
+    $agentCanCreateVoyages = \Illuminate\Support\Facades\Route::has('agent.voyages.index')
         && \Illuminate\Support\Str::contains($agentIdentity, ['oumaima', 'oumayma']);
 @endphp
 
@@ -41,7 +41,7 @@
             @endforeach
 
             @if($agentCanCreateVoyages)
-                <a href="{{ route('agent.voyages.create') }}"
+                <a href="{{ route('agent.voyages.index') }}"
                    data-partner-nav
                    class="agent-sidebar-link {{ request()->routeIs('agent.voyages.*') ? 'active' : '' }}">
                     <i class="bx bx-plus-circle agent-sidebar-icon"></i>

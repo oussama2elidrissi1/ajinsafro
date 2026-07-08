@@ -128,6 +128,9 @@ class VoyageController extends Controller
      */
     public function index(Request $request): View
     {
+        $this->assertAgentVoyageAccess($request);
+
+        $agentVoyageMode = $this->isAgentVoyageRoute($request);
         $wpConnectionFailed = false;
         $wpCatalogErrorMessage = null;
         $filters = AdminWpTourCatalogQuery::filtersFromRequest($request);
@@ -206,7 +209,8 @@ class VoyageController extends Controller
             'wpCatalogErrorMessage',
             'filterTourTypes',
             'catalogSummary',
-            'filters'
+            'filters',
+            'agentVoyageMode'
         ));
     }
 
@@ -4725,11 +4729,13 @@ class VoyageController extends Controller
      */
     public function destroy(int $id): RedirectResponse
     {
+        $this->assertAgentVoyageAccess();
+
         try {
             $this->repository->deleteTour($id);
 
             return redirect()
-                ->route('admin.circuits.voyages.index')
+                ->route($this->voyageRouteName(request(), 'index'))
                 ->with('success', 'Tour supprim? avec succ?s de WordPress !');
         } catch (\Exception $e) {
             return back()

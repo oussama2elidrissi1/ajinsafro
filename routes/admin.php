@@ -749,6 +749,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'not.client'])
         Route::get('dashboard', [AgentDashboardController::class, 'index'])->name('dashboard');
         Route::get('catalogue', [AgentCatalogueController::class, 'index'])->name('catalogue');
         Route::middleware('agent.voyage-manager')->prefix('voyages')->name('voyages.')->group(function () {
+            Route::get('/', [VoyageController::class, 'index'])->name('index');
             Route::get('create', [VoyageController::class, 'createV2'])->name('create');
             Route::get('create-v2', [VoyageController::class, 'createV2'])->name('create-v2');
             Route::post('v2/steps/{step}/save', [VoyageController::class, 'saveStepV2'])->name('v2.steps.save.create');
@@ -765,6 +766,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'not.client'])
                 return redirect()->route('agent.voyages.edit-v2', (int) $id)->with('error', 'Utilisez le formulaire pour enregistrer.');
             })->whereNumber('id');
             Route::match(['put', 'patch'], '{id}', [VoyageController::class, 'update'])->name('update')->whereNumber('id');
+            Route::delete('{id}', [VoyageController::class, 'destroy'])->name('destroy')->whereNumber('id');
             Route::post('ensure-location', [VoyageController::class, 'ensureLocation'])->name('ensure-location');
             Route::post('{id}/hero-image', [HeroImageController::class, 'upload'])->name('hero-image.upload')->whereNumber('id');
             Route::post('{id}/hero-image/select', [HeroImageController::class, 'select'])->name('hero-image.select')->whereNumber('id');

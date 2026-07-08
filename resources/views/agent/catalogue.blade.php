@@ -6,7 +6,7 @@
     use Illuminate\Support\Facades\Route;
 
     $agentIdentity = \Illuminate\Support\Str::lower(trim((auth()->user()->name ?? '') . ' ' . (auth()->user()->email ?? '')));
-    $agentCanCreateVoyages = Route::has('agent.voyages.create')
+    $agentCanCreateVoyages = Route::has('agent.voyages.index')
         && \Illuminate\Support\Str::contains($agentIdentity, ['oumaima', 'oumayma']);
 @endphp
 
@@ -53,9 +53,9 @@
         </div>
         <div class="aj-agent-catalogue-actions">
             @if($agentCanCreateVoyages)
-                <a href="{{ route('agent.voyages.create') }}" class="aj-agent-primary-btn">
+                <a href="{{ route('agent.voyages.index') }}" class="aj-agent-primary-btn">
                     <i class="bx bx-plus"></i>
-                    <span>Creer un voyage</span>
+                    <span>Gerer les voyages</span>
                 </a>
             @endif
             <a href="{{ route('agent.dashboard') }}" class="aj-agent-action-btn">
