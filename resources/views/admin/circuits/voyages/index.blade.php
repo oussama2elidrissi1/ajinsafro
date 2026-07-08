@@ -47,7 +47,53 @@
 @section('title', 'Voyages')
 
 @push('styles')
+    @if($agentVoyageMode)
+        <link href="{{ URL::asset('css/agent-dashboard.css') }}" rel="stylesheet" type="text/css" />
+    @endif
     <link href="{{ URL::asset('css/admin-catalog-premium.css') }}" rel="stylesheet" type="text/css" />
+    @if($agentVoyageMode)
+        <style>
+            .agent-portal-main .aj-catalog-page {
+                width: 100%;
+            }
+
+            .agent-portal-main .aj-catalog-page .aj-catalog-shell {
+                padding: 18px 22px 30px;
+            }
+
+            .agent-portal-main .aj-catalog-page .aj-kpis {
+                grid-template-columns: repeat(4, minmax(180px, 1fr));
+            }
+
+            .agent-portal-main .aj-catalog-page .aj-panel {
+                overflow: hidden;
+            }
+
+            .agent-portal-main .aj-catalog-page .aj-table-wrap {
+                overflow-x: auto;
+            }
+
+            .agent-portal-main .aj-catalog-page .aj-table {
+                min-width: 1180px;
+            }
+
+            @media (max-width: 1180px) {
+                .agent-portal-main .aj-catalog-page .aj-kpis {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+            }
+
+            @media (max-width: 720px) {
+                .agent-portal-main .aj-catalog-page .aj-catalog-shell {
+                    padding: 12px;
+                }
+
+                .agent-portal-main .aj-catalog-page .aj-kpis {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    @endif
 @endpush
 
 @section('content')
