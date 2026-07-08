@@ -1497,6 +1497,44 @@
     grid-column: 1 / -1;
 }
 
+.reservation-fast-discount {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(180px, 240px);
+    gap: 1rem;
+    align-items: end;
+}
+
+.reservation-fast-discount__control {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 92px;
+    gap: 0.6rem;
+}
+
+.reservation-fast-discount__type {
+    text-align: center;
+    font-weight: 800;
+}
+
+.reservation-fast-discount__preview {
+    display: grid;
+    gap: 0.35rem;
+    padding: 0.95rem 1rem;
+    border: 1px solid #e6edf5;
+    border-radius: 1rem;
+    background: #f8fafc;
+}
+
+.reservation-fast-discount__preview span {
+    color: #64748b;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.reservation-fast-discount__preview strong {
+    color: #0f172a;
+    font-size: 1rem;
+}
+
 .reservation-fast-traveler-counters {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1668,6 +1706,10 @@
         grid-template-columns: 1fr;
     }
 
+    .reservation-fast-discount {
+        grid-template-columns: 1fr;
+    }
+
     .reservation-fast-traveler-counters {
         grid-template-columns: 1fr;
     }
@@ -1706,6 +1748,10 @@
     .reservation-fast-tab {
         width: 100%;
         justify-content: flex-start;
+    }
+
+    .reservation-fast-discount__control {
+        grid-template-columns: minmax(0, 1fr) 82px;
     }
 
     .reservation-fast-summary__item {

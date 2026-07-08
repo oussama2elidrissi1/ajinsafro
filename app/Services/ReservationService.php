@@ -367,9 +367,9 @@ class ReservationService
         if ($this->reservationsHasBasePriceColumn()) {
             $reservation->base_price = isset($data['base_price']) && $data['base_price'] !== '' ? (float) $data['base_price'] : null;
         }
-        foreach (['unit_price_before_discount', 'discount_type', 'discount_value', 'unit_price_after_discount'] as $column) {
+        foreach (['unit_price_before_discount', 'discount_type', 'discount_scope', 'discount_value', 'unit_price_after_discount'] as $column) {
             if (array_key_exists($column, $data) && $this->reservationColumnExists($column)) {
-                $reservation->{$column} = in_array($column, ['discount_type'], true)
+                $reservation->{$column} = in_array($column, ['discount_type', 'discount_scope'], true)
                     ? ($data[$column] ?: null)
                     : ($data[$column] !== '' && $data[$column] !== null ? (float) $data[$column] : null);
             }

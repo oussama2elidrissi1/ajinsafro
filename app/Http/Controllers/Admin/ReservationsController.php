@@ -1325,6 +1325,7 @@ class ReservationsController extends Controller
         $data['base_price'] = $pricing['base_price'];
         $data['unit_price_before_discount'] = $pricing['unit_price_before_discount'] ?? $pricing['base_price'];
         $data['discount_type'] = $pricing['discount_type'] ?? null;
+        $data['discount_scope'] = $pricing['discount_scope'] ?? null;
         $data['discount_value'] = $pricing['discount_value'] ?? 0;
         $data['unit_price_after_discount'] = $pricing['unit_price_after_discount'] ?? $pricing['base_price'];
         $data['total_base'] = $pricing['total_base'];
@@ -1540,6 +1541,7 @@ class ReservationsController extends Controller
         $data['base_price'] = $pricing['base_price'];
         $data['unit_price_before_discount'] = $pricing['unit_price_before_discount'] ?? $pricing['base_price'];
         $data['discount_type'] = $pricing['discount_type'] ?? null;
+        $data['discount_scope'] = $pricing['discount_scope'] ?? null;
         $data['discount_value'] = $pricing['discount_value'] ?? 0;
         $data['unit_price_after_discount'] = $pricing['unit_price_after_discount'] ?? $pricing['base_price'];
         $data['total_base'] = $pricing['total_base'];
@@ -1641,6 +1643,7 @@ class ReservationsController extends Controller
             'departure_id' => 'required|integer|exists:departures,id',
             'travel_date_id' => 'nullable|integer',
             'payment_amount' => 'nullable|numeric|min:0',
+            'discount_scope' => 'nullable|in:per_unit,total',
             'discount_type' => 'nullable|in:percentage,fixed',
             'discount_value' => 'nullable|numeric|min:0',
             'extras_json' => 'nullable|string',
@@ -1904,6 +1907,7 @@ class ReservationsController extends Controller
             'payment_type' => 'nullable|string|max:50',
             'payment_receipt' => 'nullable|file|max:5120',
             'base_price' => 'nullable|numeric|min:0',
+            'discount_scope' => 'nullable|in:per_unit,total',
             'discount_type' => 'nullable|in:percentage,fixed',
             'discount_value' => 'nullable|numeric|min:0',
             'total_base' => 'nullable|numeric|min:0',
@@ -2149,6 +2153,7 @@ class ReservationsController extends Controller
             'passengers' => $data['passengers'] ?? $request->input('passengers', []),
             'extras_json' => $extrasPayload,
             'payment_amount' => $paymentAmount,
+            'discount_scope' => $request->input('discount_scope'),
             'discount_type' => $request->input('discount_type'),
             'discount_value' => $request->input('discount_value'),
             'accommodation_mode' => $accommodationMode,

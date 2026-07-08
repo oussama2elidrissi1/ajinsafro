@@ -292,29 +292,34 @@
         return getSelectedTripFallbackPrice();
     }
 
-    function discountSummary() {
+    function discountSummary(basisAmount, travelerCount) {
         var unitPrice = getBaseUnitPrice();
+        var scopeInput = document.getElementById('reservation-discount-scope');
         var typeInput = document.getElementById('reservation-discount-type');
         var valueInput = document.getElementById('reservation-discount-value');
+        var scope = scopeInput ? String(scopeInput.value || 'per_unit') : 'per_unit';
         var type = typeInput ? String(typeInput.value || 'percentage') : 'percentage';
         var value = Math.max(0, parseNumber(valueInput && valueInput.value));
         var amount = 0;
+        var basis = scope === 'total' ? Math.max(0, parseNumber(basisAmount)) : unitPrice;
 
         if (value > 0) {
             if (type === 'percentage') {
                 value = Math.min(100, value);
                 if (valueInput && parseNumber(valueInput.value) > 100) valueInput.value = '100';
-                amount = unitPrice * (value / 100);
+                amount = basis * (value / 100);
             } else {
-                amount = Math.min(unitPrice, value);
-                if (valueInput && value > unitPrice) valueInput.value = String(unitPrice.toFixed(2));
+                amount = Math.min(basis, value);
+                if (valueInput && value > basis) valueInput.value = String(basis.toFixed(2));
             }
         }
 
-        var after = Math.max(0, unitPrice - amount);
+        var amountPerTraveler = scope === 'total' && travelerCount > 0 ? amount / travelerCount : amount;
+        var after = Math.max(0, unitPrice - amountPerTraveler);
 
         return {
             unitPrice: unitPrice,
+            scope: scope,
             type: type,
             value: value,
             amount: amount,
@@ -1241,12 +1246,18 @@
         var travelerCount = getTravelerCount();
         var room = hotelRoomSummary();
         var rooming = roomingSummary();
-        var discount = discountSummary();
-        var unitPrice = discount.priceAfterDiscount;
-        var totalBase = unitPrice * travelerCount;
+        var unitPrice = getBaseUnitPrice();
+        var totalBaseBeforeDiscount = unitPrice * travelerCount;
         var extras = extrasTotal();
         var effectiveRoomSupplement = rooming.roomSupplementTotal > 0 ? rooming.roomSupplementTotal : room.roomSupplementTotal;
-        var totalAmount = totalBase + effectiveRoomSupplement + extras;
+        var totalBeforeDiscount = totalBaseBeforeDiscount + effectiveRoomSupplement + extras;
+        var discount = discountSummary(totalBeforeDiscount, travelerCount);
+        var totalBase = discount.scope === 'total'
+            ? totalBaseBeforeDiscount
+            : discount.priceAfterDiscount * travelerCount;
+        var totalAmount = discount.scope === 'total'
+            ? Math.max(0, totalBeforeDiscount - discount.amount)
+            : totalBase + effectiveRoomSupplement + extras;
         var paidAmount = parseNumber(document.getElementById('payment_amount') && document.getElementById('payment_amount').value);
         var remainingAmount = Math.max(0, totalAmount - paidAmount);
 

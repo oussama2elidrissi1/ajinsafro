@@ -33,8 +33,6 @@ class ReservationPricingService
         $travelDate = $this->resolveTravelDate($payload, $departure);
         $travelersCount = $this->countTravelers($payload['passengers'] ?? []);
         $unitPriceBeforeDiscount = $this->resolveBasePrice($payload, $voyage, $departure, $travelDate);
-        $discount = $this->resolveDiscount($payload, $unitPriceBeforeDiscount);
-        $basePrice = $discount['unit_price_after_discount'];
 
         if ($unitPriceBeforeDiscount <= 0) {
             throw ValidationException::withMessages([
@@ -46,8 +44,25 @@ class ReservationPricingService
         $extrasSummary = $this->resolveExtras($payload, $voyage);
         $paidAmount = round(max(0, (float) ($payload['payment_amount'] ?? 0)), 2);
 
-        $totalBase = round($basePrice * $travelersCount, 2);
-        $totalAmount = round($totalBase + $roomSummary['room_supplement_total'] + $extrasSummary['extras_total'], 2);
+        $discountScope = $this->normalizeDiscountScope($payload['discount_scope'] ?? null);
+        $grossTotalBase = round($unitPriceBeforeDiscount * $travelersCount, 2);
+        $grossTotalAmount = round($grossTotalBase + $roomSummary['room_supplement_total'] + $extrasSummary['extras_total'], 2);
+        $discount = $this->resolveDiscount(
+            $payload,
+            $discountScope === 'total' ? $grossTotalAmount : $unitPriceBeforeDiscount,
+            $discountScope
+        );
+
+        if ($discountScope === 'total') {
+            $totalAmount = round(max(0, $grossTotalAmount - $discount['discount_amount']), 2);
+            $discountPerTraveler = $travelersCount > 0 ? round($discount['discount_amount'] / $travelersCount, 2) : 0.0;
+            $basePrice = round(max(0, $unitPriceBeforeDiscount - $discountPerTraveler), 2);
+            $totalBase = $grossTotalBase;
+        } else {
+            $basePrice = $discount['unit_price_after_discount'];
+            $totalBase = round($basePrice * $travelersCount, 2);
+            $totalAmount = round($totalBase + $roomSummary['room_supplement_total'] + $extrasSummary['extras_total'], 2);
+        }
 
         if ($paidAmount > $totalAmount + 0.009) {
             throw ValidationException::withMessages([
@@ -61,6 +76,7 @@ class ReservationPricingService
             'base_price' => round($basePrice, 2),
             'unit_price_before_discount' => round($unitPriceBeforeDiscount, 2),
             'discount_type' => $discount['discount_type'],
+            'discount_scope' => $discount['discount_scope'],
             'discount_value' => $discount['discount_value'],
             'unit_price_after_discount' => round($basePrice, 2),
             'travelers_count' => $travelersCount,
@@ -186,32 +202,45 @@ class ReservationPricingService
 
     /**
      * @param  array<string, mixed>  $payload
-     * @return array{discount_type: string|null, discount_value: float, discount_amount: float, unit_price_after_discount: float}
+     * @return array{discount_type: string|null, discount_value: float, discount_amount: float, unit_price_after_discount: float, discount_scope: string}
      */
-    private function resolveDiscount(array $payload, float $unitPrice): array
+    private function resolveDiscount(array $payload, float $basisAmount, string $scope = 'per_unit'): array
     {
         $type = $this->normalizeDiscountType($payload['discount_type'] ?? null);
         $value = round(max(0, (float) ($payload['discount_value'] ?? 0)), 2);
+        $basisAmount = round(max(0, $basisAmount), 2);
 
         if ($type === null || $value <= 0) {
             return [
                 'discount_type' => null,
                 'discount_value' => 0.0,
                 'discount_amount' => 0.0,
-                'unit_price_after_discount' => round(max(0, $unitPrice), 2),
+                'unit_price_after_discount' => $basisAmount,
+                'discount_scope' => $scope,
             ];
         }
 
         $discountAmount = $type === 'percentage'
-            ? round($unitPrice * (min(100, $value) / 100), 2)
-            : min(round($value, 2), round($unitPrice, 2));
+            ? round($basisAmount * (min(100, $value) / 100), 2)
+            : min(round($value, 2), $basisAmount);
 
         return [
             'discount_type' => $type,
             'discount_value' => $type === 'percentage' ? min(100, $value) : $value,
             'discount_amount' => $discountAmount,
-            'unit_price_after_discount' => round(max(0, $unitPrice - $discountAmount), 2),
+            'unit_price_after_discount' => round(max(0, $basisAmount - $discountAmount), 2),
+            'discount_scope' => $scope,
         ];
+    }
+
+    private function normalizeDiscountScope(mixed $scope): string
+    {
+        $scope = strtolower(trim((string) $scope));
+
+        return match ($scope) {
+            'total', 'dossier', 'reservation' => 'total',
+            default => 'per_unit',
+        };
     }
 
     private function normalizeDiscountType(mixed $type): ?string

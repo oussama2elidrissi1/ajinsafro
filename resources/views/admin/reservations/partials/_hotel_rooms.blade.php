@@ -52,18 +52,21 @@
                     <select class="form-select" id="reservation-departure-select" disabled>
                         <option value="">— Choisir un départ —</option>
                     </select>
-                    <input type="hidden" name="departure_id" id="input-departure-id" value="{{ $initialDepartureId }}">
-                    <input type="hidden" name="travel_date_id" id="input-travel-date-id" value="{{ $initialTravelDateId }}">
+                    <input type="hidden" @unless($compactAvailabilityOnly) name="departure_id" @endunless id="input-departure-id" value="{{ $initialDepartureId }}">
+                    <input type="hidden" @unless($compactAvailabilityOnly) name="travel_date_id" @endunless id="input-travel-date-id" value="{{ $initialTravelDateId }}">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label" for="reservation-base-price">Prix unitaire par voyageur (DH)</label>
-                    <input type="number" id="reservation-base-price" name="base_price" class="form-control" value="{{ $initialBasePrice }}" min="0" step="0.01" placeholder="0.00" readonly>
+                    <input type="number" id="reservation-base-price" @unless($compactAvailabilityOnly) name="base_price" @endunless class="form-control" value="{{ $initialBasePrice }}" min="0" step="0.01" placeholder="0.00" readonly>
+                    @unless($compactAvailabilityOnly)
+                        <input type="hidden" name="discount_scope" id="reservation-discount-scope" value="{{ old('discount_scope', $reservation?->discount_scope ?? 'per_unit') }}">
+                    @endunless
                 </div>
                 <div class="col-md-8">
                     <label class="form-label" for="reservation-discount-value">Réduction</label>
                     <div class="input-group">
-                        <input type="number" id="reservation-discount-value" name="discount_value" class="form-control" value="{{ old('discount_value', $reservation?->discount_value ?? '') }}" min="0" step="0.01" placeholder="0">
-                        <select id="reservation-discount-type" name="discount_type" class="form-select" style="max-width: 96px;">
+                        <input type="number" id="reservation-discount-value" @unless($compactAvailabilityOnly) name="discount_value" @endunless class="form-control" value="{{ old('discount_value', $reservation?->discount_value ?? '') }}" min="0" step="0.01" placeholder="0">
+                        <select id="reservation-discount-type" @unless($compactAvailabilityOnly) name="discount_type" @endunless class="form-select" style="max-width: 96px;">
                             <option value="percentage" @selected(old('discount_type', $reservation?->discount_type ?? 'percentage') === 'percentage')>%</option>
                             <option value="fixed" @selected(old('discount_type', $reservation?->discount_type ?? '') === 'fixed')>DH</option>
                         </select>
@@ -79,13 +82,16 @@
             <div class="row g-2 mb-3">
                 <div class="col-md-4">
                     <label class="form-label" for="reservation-base-price">Prix unitaire par voyageur (DH)</label>
-                    <input type="number" id="reservation-base-price" name="base_price" class="form-control" value="{{ $initialBasePrice }}" min="0" step="0.01" placeholder="0.00" readonly>
+                    <input type="number" id="reservation-base-price" @unless($compactAvailabilityOnly) name="base_price" @endunless class="form-control" value="{{ $initialBasePrice }}" min="0" step="0.01" placeholder="0.00" readonly>
+                    @unless($compactAvailabilityOnly)
+                        <input type="hidden" name="discount_scope" id="reservation-discount-scope" value="{{ old('discount_scope', $reservation?->discount_scope ?? 'per_unit') }}">
+                    @endunless
                 </div>
                 <div class="col-md-6">
                     <label class="form-label" for="reservation-discount-value">Réduction</label>
                     <div class="input-group">
-                        <input type="number" id="reservation-discount-value" name="discount_value" class="form-control" value="{{ old('discount_value', $reservation?->discount_value ?? '') }}" min="0" step="0.01" placeholder="0">
-                        <select id="reservation-discount-type" name="discount_type" class="form-select" style="max-width: 96px;">
+                        <input type="number" id="reservation-discount-value" @unless($compactAvailabilityOnly) name="discount_value" @endunless class="form-control" value="{{ old('discount_value', $reservation?->discount_value ?? '') }}" min="0" step="0.01" placeholder="0">
+                        <select id="reservation-discount-type" @unless($compactAvailabilityOnly) name="discount_type" @endunless class="form-select" style="max-width: 96px;">
                             <option value="percentage" @selected(old('discount_type', $reservation?->discount_type ?? 'percentage') === 'percentage')>%</option>
                             <option value="fixed" @selected(old('discount_type', $reservation?->discount_type ?? '') === 'fixed')>DH</option>
                         </select>

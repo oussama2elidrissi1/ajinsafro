@@ -132,6 +132,7 @@ class Reservation extends Model
         'total_base',
         'unit_price_before_discount',
         'discount_type',
+        'discount_scope',
         'discount_value',
         'unit_price_after_discount',
         'paid_amount',

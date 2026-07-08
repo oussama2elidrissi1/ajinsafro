@@ -9,9 +9,49 @@
     <input type="hidden" name="departure_id" id="input-departure-id" value="{{ old('departure_id', $selectedDepartureId ?? '') }}">
     <input type="hidden" name="travel_date_id" id="input-travel-date-id" value="{{ old('travel_date_id', $travelDateId ?? '') }}">
     <input type="hidden" name="base_price" id="reservation-base-price" value="{{ old('base_price', $selectedUnitPrice !== null ? number_format((float) $selectedUnitPrice, 2, '.', '') : '') }}">
+    <input type="hidden" name="discount_scope" id="reservation-discount-scope" value="total">
+
+    {{-- Remise commerciale --}}
+    <div class="reservation-fast-card">
+        <div class="reservation-fast-card__head">
+            <div>
+                <p class="reservation-create__eyebrow">Tarif</p>
+                <h3 class="reservation-fast-card__title">Remise sur le total</h3>
+            </div>
+            <span class="reservation-fast-card__badge">Optionnel</span>
+        </div>
+
+        <div class="reservation-fast-discount">
+            <div class="reservation-create__field">
+                <label class="reservation-create__label" for="reservation-discount-value">Montant de la remise</label>
+                <div class="reservation-fast-discount__control">
+                    <input
+                        type="number"
+                        id="reservation-discount-value"
+                        name="discount_value"
+                        class="reservation-create__input"
+                        value="{{ old('discount_value') }}"
+                        min="0"
+                        step="0.01"
+                        placeholder="0"
+                    >
+                    <select id="reservation-discount-type" name="discount_type" class="reservation-create__input reservation-fast-discount__type">
+                        <option value="percentage" @selected(old('discount_type', 'percentage') === 'percentage')>%</option>
+                        <option value="fixed" @selected(old('discount_type') === 'fixed')>DH</option>
+                    </select>
+                </div>
+                <p class="reservation-create__helper">La remise est appliquee une seule fois sur le total du dossier.</p>
+            </div>
+
+            <div class="reservation-fast-discount__preview">
+                <span>Prix unitaire indicatif apres remise</span>
+                <strong id="reservation-price-after-discount">—</strong>
+            </div>
+        </div>
+    </div>
 
     {{-- Client principal --}}
-    <div class="reservation-fast-card">
+    <div class="reservation-fast-card mt-3">
         <div class="reservation-fast-card__head">
             <p class="reservation-create__eyebrow">Étape 1</p>
             <h3 class="reservation-fast-card__title">Client principal</h3>
