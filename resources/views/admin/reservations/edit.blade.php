@@ -25,6 +25,12 @@
         if ($passengersData === null) {
             $passengersData = $reservation->passengers ?? collect();
         }
+        $agentReservationMode = (bool) request()->attributes->get('agent_reservation_mode', false);
+        $canManageReservationActions = ! $agentReservationMode || (bool) request()->attributes->get('agent_can_manage_reservation_actions', false);
+        $reservationRoutePrefix = $agentReservationMode ? 'agent.reservations.' : 'admin.reservations.';
+        $reservationIndexRoute = $agentReservationMode ? route('agent.reservations.index') : route('admin.reservations.index');
+        $reservationDashboardRoute = $agentReservationMode ? route('agent.dashboard') : route('admin.dashboard');
+        $messagerieIndexRoute = $agentReservationMode ? route('agent.messagerie.index') : route('admin.messagerie.index');
     @endphp
 
     @unless(!empty($reservationEmbed))
@@ -36,15 +42,15 @@
                         <div class="text-muted small">{{ $reservation->dossier_number ?: 'Numéro généré à la confirmation' }}</div>
                     </div>
                     <div class="page-title-right d-flex align-items-center gap-2 flex-wrap">
-                        <a href="{{ route('admin.messagerie.index') }}?reservation_id={{ $reservation->id }}" class="btn btn-outline-primary btn-sm">
+                        <a href="{{ $messagerieIndexRoute }}?reservation_id={{ $reservation->id }}" class="btn btn-outline-primary btn-sm">
                             <i class="bx bx-message-dots me-1"></i> Messagerie
                         </a>
-                        <a href="{{ route('admin.reservations.dossier.pdf', $reservation) }}" target="_blank" class="btn btn-outline-dark btn-sm">
+                        <a href="{{ route($reservationRoutePrefix.'dossier.pdf', $reservation) }}" target="_blank" class="btn btn-outline-dark btn-sm">
                             <i class="bx bx-printer me-1"></i> Imprimer dossier
                         </a>
                         <ol class="breadcrumb m-0">
-                            <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('admin.reservations.index') }}">Réservations</a></li>
+                            <li class="breadcrumb-item"><a href="{{ $reservationDashboardRoute }}">{{ $agentReservationMode ? 'Agent' : 'Admin' }}</a></li>
+                            <li class="breadcrumb-item"><a href="{{ $reservationIndexRoute }}">Réservations</a></li>
                             <li class="breadcrumb-item active">Dossier</li>
                         </ol>
                     </div>
@@ -78,19 +84,21 @@
                     <a href="#modify-dossier" class="btn btn-outline-primary btn-sm">
                         <i class="bx bx-edit me-1"></i> Modifier dossier
                     </a>
-                    <a href="#reservation-add-payment" class="btn btn-outline-success btn-sm">
-                        <i class="bx bx-credit-card me-1"></i> Ajouter paiement
-                    </a>
-                    <a href="#reservation-add-document" class="btn btn-outline-info btn-sm">
-                        <i class="bx bx-paperclip me-1"></i> Ajouter justificatif
-                    </a>
+                    @if($canManageReservationActions)
+                        <a href="#reservation-add-payment" class="btn btn-outline-success btn-sm">
+                            <i class="bx bx-credit-card me-1"></i> Ajouter paiement
+                        </a>
+                        <a href="#reservation-add-document" class="btn btn-outline-info btn-sm">
+                            <i class="bx bx-paperclip me-1"></i> Ajouter justificatif
+                        </a>
+                    @endif
                     @if($reservation->client_email)
                         <a href="mailto:{{ $reservation->client_email }}?subject={{ rawurlencode('Dossier '.$reservation->dossier_number) }}" class="btn btn-outline-secondary btn-sm">
                             <i class="bx bx-envelope me-1"></i> Envoyer par email
                         </a>
                     @endif
-                    @if($reservation->status !== \App\Models\Reservation::STATUS_CANCELLED)
-                        <form method="post" action="{{ route('admin.reservations.cancel', $reservation) }}">
+                    @if($canManageReservationActions && $reservation->status !== \App\Models\Reservation::STATUS_CANCELLED)
+                        <form method="post" action="{{ route($reservationRoutePrefix.'cancel', $reservation) }}">
                             @csrf
                             <button type="submit" class="btn btn-outline-danger btn-sm">
                                 <i class="bx bx-x-circle me-1"></i> Annuler réservation
@@ -190,9 +198,9 @@
                                         <td class="text-end fw-semibold">{{ number_format((float) $payment->amount, 2, ',', ' ') }} DH</td>
                                         <td>
                                             <div class="d-flex flex-wrap gap-2">
-                                                <a href="{{ route('admin.reservations.payments.receipt.pdf', [$reservation, $payment]) }}" target="_blank" class="btn btn-outline-secondary btn-sm">PDF</a>
+                                                <a href="{{ route($reservationRoutePrefix.'payments.receipt.pdf', [$reservation, $payment]) }}" target="_blank" class="btn btn-outline-secondary btn-sm">PDF</a>
                                                 @if($payment->proof_file)
-                                                    <a href="{{ route('admin.reservations.receipt', ['path' => str_replace('\\', '/', trim($payment->proof_file, '/'))]) }}" target="_blank" class="btn btn-outline-primary btn-sm">Justificatif</a>
+                                                    <a href="{{ route($reservationRoutePrefix.'receipt', ['path' => str_replace('\\', '/', trim($payment->proof_file, '/'))]) }}" target="_blank" class="btn btn-outline-primary btn-sm">Justificatif</a>
                                                 @endif
                                             </div>
                                         </td>
@@ -208,7 +216,8 @@
 
                     <hr>
 
-                    <form method="post" action="{{ route('admin.reservations.payments.store', $reservation) }}" enctype="multipart/form-data" class="row g-3">
+                    @if($canManageReservationActions)
+                    <form method="post" action="{{ route($reservationRoutePrefix.'payments.store', $reservation) }}" enctype="multipart/form-data" class="row g-3">
                         @csrf
                         <div class="col-md-4">
                             <label class="form-label">Date paiement</label>
@@ -246,6 +255,7 @@
                             <button type="submit" class="btn btn-success">Ajouter paiement</button>
                         </div>
                     </form>
+                    @endif
                 </div>
             </div>
         </div>
@@ -272,7 +282,7 @@
                                         <td>{{ $document->type ?: 'other' }}</td>
                                         <td>{{ $document->title }}</td>
                                         <td>
-                                            <a href="{{ route('admin.reservations.receipt', ['path' => str_replace('\\', '/', trim($document->file_path, '/'))]) }}" target="_blank" class="btn btn-outline-primary btn-sm">Ouvrir</a>
+                                            <a href="{{ route($reservationRoutePrefix.'receipt', ['path' => str_replace('\\', '/', trim($document->file_path, '/'))]) }}" target="_blank" class="btn btn-outline-primary btn-sm">Ouvrir</a>
                                         </td>
                                     </tr>
                                 @empty
@@ -284,7 +294,8 @@
                         </table>
                     </div>
 
-                    <form method="post" action="{{ route('admin.reservations.documents.store', $reservation) }}" enctype="multipart/form-data" class="row g-3">
+                    @if($canManageReservationActions)
+                    <form method="post" action="{{ route($reservationRoutePrefix.'documents.store', $reservation) }}" enctype="multipart/form-data" class="row g-3">
                         @csrf
                         <div class="col-md-6">
                             <label class="form-label">Type</label>
@@ -309,6 +320,7 @@
                             <button type="submit" class="btn btn-primary">Ajouter document</button>
                         </div>
                     </form>
+                    @endif
                 </div>
             </div>
         </div>
@@ -422,7 +434,7 @@
         </div>
     </div>
 
-    <form method="post" action="{{ route('admin.reservations.update', $reservation) }}" enctype="multipart/form-data" id="modify-dossier">
+    <form method="post" action="{{ route($reservationRoutePrefix.'update', $reservation) }}" enctype="multipart/form-data" id="modify-dossier">
         @csrf
         @method('PUT')
         @if(!empty($reservationEmbed))
@@ -578,9 +590,9 @@
         @include('admin.reservations.partials._hotel_rooms', [
             'tourHotelsWithRooms' => $tourHotelsWithRooms ?? collect(),
             'reservation' => $reservation,
-            'hotelsRoomsUrl' => route('admin.reservations.hotels-rooms'),
-            'voyageDeparturesUrl' => route('admin.reservations.voyage-departures'),
-            'departureHotelsRoomsUrl' => route('admin.reservations.departure-hotels-rooms'),
+            'hotelsRoomsUrl' => route($reservationRoutePrefix.'hotels-rooms'),
+            'voyageDeparturesUrl' => route($reservationRoutePrefix.'voyage-departures'),
+            'departureHotelsRoomsUrl' => route($reservationRoutePrefix.'departure-hotels-rooms'),
         ])
 
         <div class="card mb-3 border">
@@ -621,7 +633,7 @@
         </div>
 
         <div class="d-flex gap-2 justify-content-end mb-3">
-            <a href="{{ route('admin.reservations.index') }}" class="btn btn-secondary">Retour liste</a>
+            <a href="{{ $reservationIndexRoute }}" class="btn btn-secondary">Retour liste</a>
             <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
         </div>
     </form>
@@ -682,4 +694,3 @@
         </script>
     @endpush
 @endsection
-

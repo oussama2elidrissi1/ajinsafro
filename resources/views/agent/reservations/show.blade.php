@@ -565,6 +565,7 @@
         default => 'is-neutral',
     };
     $canManageReservations = $canManageReservations ?? false;
+    $canEditReservations = $canEditReservations ?? false;
     $canValidateReservation = $canManageReservations && !in_array((string) $reservation->status, [
         Reservation::STATUS_VALIDEE,
         Reservation::STATUS_CONFIRMED,
@@ -593,6 +594,12 @@
             <p>Consultation complete du dossier, du client, des voyageurs et du suivi paiement.</p>
         </div>
         <div class="aj-agent-res-actions">
+            @if($canEditReservations)
+                <a href="{{ route('agent.reservations.edit', $reservation) }}" class="aj-agent-res-action">
+                    <i class="bx bx-edit"></i>
+                    <span>Modifier</span>
+                </a>
+            @endif
             @if($canManageReservations)
                 @if($canValidateReservation)
                     <form method="POST" action="{{ route('agent.reservations.validate', $reservation) }}" onsubmit="return confirm('Valider cette reservation ?');">

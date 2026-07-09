@@ -689,6 +689,12 @@
                                                 <i class="bx bx-show"></i>
                                                 <span>Voir details</span>
                                             </a>
+                                            @if($canEditReservations ?? false)
+                                                <a href="{{ route('agent.reservations.edit', $reservation) }}" class="aj-agent-row-btn is-soft">
+                                                    <i class="bx bx-edit"></i>
+                                                    <span>Modifier</span>
+                                                </a>
+                                            @endif
                                             @if($canManageReservations ?? false)
                                                 @if(!in_array((string) $reservation->status, [\App\Models\Reservation::STATUS_VALIDEE, \App\Models\Reservation::STATUS_CONFIRMED, \App\Models\Reservation::STATUS_PAID], true))
                                                     <form method="POST" action="{{ route('agent.reservations.validate', $reservation) }}" onsubmit="return confirm('Valider cette reservation ?');">

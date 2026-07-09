@@ -815,7 +815,11 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'not.client'])
         Route::post('reservations/{reservation}/documents', [AgentReservationController::class, 'storeDocument'])->name('reservations.documents.store')->whereNumber('reservation');
         Route::post('reservations/{reservation}/notes', [AgentReservationController::class, 'storeNote'])->name('reservations.notes.store')->whereNumber('reservation');
         Route::post('reservations/{reservation}/cancel', [AgentReservationController::class, 'cancel'])->name('reservations.cancel')->whereNumber('reservation');
+        Route::get('reservations/receipt', [AgentReservationController::class, 'showReceipt'])->name('reservations.receipt');
         Route::get('reservations/{reservation}/dossier/pdf', [AgentReservationController::class, 'printDossier'])->name('reservations.dossier.pdf')->whereNumber('reservation');
+        Route::get('reservations/{reservation}/payments/{payment}/receipt/pdf', [AgentReservationController::class, 'paymentReceiptPdf'])->name('reservations.payments.receipt.pdf')->whereNumber(['reservation', 'payment']);
+        Route::get('reservations/{reservation}/edit', [AgentReservationController::class, 'edit'])->name('reservations.edit')->whereNumber('reservation');
+        Route::put('reservations/{reservation}', [AgentReservationController::class, 'update'])->name('reservations.update')->whereNumber('reservation');
         Route::get('reservations/{reservation}', [AgentReservationController::class, 'show'])->name('reservations.show')->whereNumber('reservation');
         Route::get('reservations-a-la-carte', [AgentCustomReservationController::class, 'index'])->name('custom-reservations.index');
         Route::get('reservations-a-la-carte/create', [AgentCustomReservationController::class, 'create'])->name('custom-reservations.create');

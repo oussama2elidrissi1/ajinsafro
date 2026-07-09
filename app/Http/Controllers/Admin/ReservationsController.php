@@ -1471,7 +1471,7 @@ class ReservationsController extends Controller
      */
     public function show(Request $request, Reservation $reservation): RedirectResponse
     {
-        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃ¨s non autorisÃ© Ã  cette rÃ©servation.');
+        abort_unless($this->canAccessReservationForRequest($request, $reservation), 403, 'Acces non autorise a cette reservation.');
 
         if ($reservation->reservation_dossier_id) {
             return redirect()->route('admin.reservation-dossiers.show', $reservation->reservation_dossier_id);
@@ -1485,7 +1485,7 @@ class ReservationsController extends Controller
      */
     public function edit(Request $request, Reservation $reservation): View
     {
-        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃ¨s non autorisÃ© Ã  cette rÃ©servation.');
+        abort_unless($this->canAccessReservationForRequest($request, $reservation), 403, 'Acces non autorise a cette reservation.');
         $reservation->load(['passengers', 'client', 'offer', 'extras', 'payments.creator', 'documents.creator', 'histories.user', 'reservationRooms.departureHotelRoom', 'departure', 'branch', 'partner', 'creator', 'createdBy']);
         $voyages = AdminWpTourCatalogQuery::reservableVoyages();
         // Conserver le voyage historique de la rÃ©servation mÃªme s'il n'est plus reservable
@@ -1526,7 +1526,7 @@ class ReservationsController extends Controller
      */
     public function update(Request $request, Reservation $reservation): RedirectResponse|HttpResponse
     {
-        abort_unless($this->reservationVisibility->canAccessReservation($request->user(), $reservation), 403, 'AccÃ¨s non autorisÃ© Ã  cette rÃ©servation.');
+        abort_unless($this->canAccessReservationForRequest($request, $reservation), 403, 'Acces non autorise a cette reservation.');
         $this->mergeDepartureFromLegacyRequest($request, $reservation);
 
         $data = $request->validate($this->reservationValidationRules(true));
@@ -1623,12 +1623,26 @@ class ReservationsController extends Controller
 
                 return redirect()
                     ->route('agent.reservations.show', $reservationId)
-                    ->with('success', 'Dossier de réservation créé avec succès.');
+                    ->with('success', 'Dossier de reservation mis a jour avec succes.');
             }
 
             return redirect()
                 ->route('admin.reservation-dossiers.show', $dossier)
-                ->with('success', 'Dossier de réservation créé avec succès.');
+                ->with('success', 'Dossier de reservation mis a jour avec succes.');
+    }
+
+    private function canAccessReservationForRequest(Request $request, Reservation $reservation): bool
+    {
+        $user = $request->user();
+        if (! $user) {
+            return false;
+        }
+
+        if ($request->attributes->get('agent_reservation_mode', false)) {
+            return $this->branchScope->userCanAccessReservation($user, $reservation);
+        }
+
+        return $this->reservationVisibility->canAccessReservation($user, $reservation);
     }
 
     /**

@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Agent;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Admin\ReservationsController as AdminReservationsController;
 use App\Models\Reservation;
+use App\Models\ReservationPayment;
 use App\Services\BranchScopeService;
 use App\Services\View\AgentPortalLayout;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\View\View;
 
 class ReservationController extends Controller
@@ -64,6 +66,7 @@ class ReservationController extends Controller
             'filters' => $filters,
             'statusOptions' => $this->statusOptions(),
             'canManageReservations' => $this->canManageReservations($user),
+            'canEditReservations' => $this->canEditReservations($user),
         ]);
     }
 
@@ -85,6 +88,20 @@ class ReservationController extends Controller
         $request->attributes->set('agent_reservation_mode', true);
 
         return app(AdminReservationsController::class)->store($request);
+    }
+
+    public function edit(Request $request, Reservation $reservation): View
+    {
+        $this->authorizeAgentReservationEdit($request, $reservation);
+
+        return app(AdminReservationsController::class)->edit($request, $reservation);
+    }
+
+    public function update(Request $request, Reservation $reservation): RedirectResponse|HttpResponse
+    {
+        $this->authorizeAgentReservationEdit($request, $reservation);
+
+        return app(AdminReservationsController::class)->update($request, $reservation);
     }
 
     public function show(Request $request, Reservation $reservation): View
@@ -111,6 +128,7 @@ class ReservationController extends Controller
                 'agent',
             ]),
             'canManageReservations' => $this->canManageReservations($user),
+            'canEditReservations' => $this->canEditReservations($user),
         ]);
     }
 
@@ -156,8 +174,25 @@ class ReservationController extends Controller
         $user = $request->user();
         abort_unless($user && AgentPortalLayout::shouldUse($user) && $this->canManageReservations($user), 403);
         abort_unless($this->branchScope->userCanAccessReservation($user, $reservation), 403);
+        $request->attributes->set('agent_reservation_mode', true);
 
         return app(AdminReservationsController::class)->dossierPdf($request, $reservation);
+    }
+
+    public function paymentReceiptPdf(Request $request, Reservation $reservation, ReservationPayment $payment)
+    {
+        $this->authorizeAgentReservationView($request, $reservation);
+
+        return app(AdminReservationsController::class)->paymentReceiptPdf($request, $reservation, $payment);
+    }
+
+    public function showReceipt(Request $request)
+    {
+        $user = $request->user();
+        abort_unless($user && AgentPortalLayout::shouldUse($user) && $user->can('reservations.view'), 403);
+        $request->attributes->set('agent_reservation_mode', true);
+
+        return app(AdminReservationsController::class)->showReceipt($request);
     }
 
     private function authorizeAgentReservationAction(Request $request, Reservation $reservation): void
@@ -166,6 +201,23 @@ class ReservationController extends Controller
         abort_unless($user && AgentPortalLayout::shouldUse($user) && $this->canManageReservations($user), 403);
         abort_unless($this->branchScope->userCanAccessReservation($user, $reservation), 403);
         $request->attributes->set('agent_reservation_mode', true);
+    }
+
+    private function authorizeAgentReservationView(Request $request, Reservation $reservation): void
+    {
+        $user = $request->user();
+        abort_unless($user && AgentPortalLayout::shouldUse($user) && $user->can('reservations.view'), 403);
+        abort_unless($this->branchScope->userCanAccessReservation($user, $reservation), 403);
+        $request->attributes->set('agent_reservation_mode', true);
+    }
+
+    private function authorizeAgentReservationEdit(Request $request, Reservation $reservation): void
+    {
+        $user = $request->user();
+        abort_unless($user && AgentPortalLayout::shouldUse($user) && $this->canEditReservations($user), 403);
+        abort_unless($this->branchScope->userCanAccessReservation($user, $reservation), 403);
+        $request->attributes->set('agent_reservation_mode', true);
+        $request->attributes->set('agent_can_manage_reservation_actions', $this->canManageReservations($user));
     }
 
     private function statusOptions(): array
@@ -187,5 +239,13 @@ class ReservationController extends Controller
     private function canManageReservations($user): bool
     {
         return strtolower((string) ($user->email ?? '')) === 'booking@ajinsafro.ma';
+    }
+
+    private function canEditReservations($user): bool
+    {
+        return $this->canManageReservations($user)
+            || $user->can('reservations.update')
+            || $user->can('reservations.edit')
+            || $user->can('reservations.create');
     }
 }
