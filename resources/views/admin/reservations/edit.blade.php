@@ -2,6 +2,54 @@
 
 @section('title', 'Dossier de réservation')
 
+@push('styles')
+    @if(request()->attributes->get('agent_reservation_mode', false))
+        <link href="{{ URL::asset('css/agent-dashboard.css') }}" rel="stylesheet" type="text/css" />
+        <style>
+            .agent-portal-main .aj-agent-reservation-edit-page {
+                width: 100%;
+                max-width: 1340px;
+                margin: 0 auto;
+                padding: 0 18px 28px;
+                overflow-x: hidden;
+            }
+
+            .agent-portal-main .aj-agent-reservation-edit-page .page-title-box,
+            .agent-portal-main .aj-agent-reservation-edit-page .card {
+                border-radius: 10px;
+            }
+
+            .agent-portal-main .aj-agent-reservation-edit-page .card {
+                box-shadow: 0 8px 24px rgba(15, 23, 42, .06);
+            }
+
+            .agent-portal-main .aj-agent-reservation-edit-page .row {
+                --bs-gutter-x: 1rem;
+            }
+
+            .agent-portal-main .aj-agent-reservation-edit-page .form-control,
+            .agent-portal-main .aj-agent-reservation-edit-page .form-select {
+                min-width: 0;
+            }
+
+            .agent-portal-main .aj-agent-reservation-edit-page .table-responsive {
+                max-width: 100%;
+                overflow-x: auto;
+            }
+
+            .agent-portal-main .aj-agent-reservation-edit-page .companion-row {
+                align-items: flex-start;
+            }
+
+            @media (max-width: 991.98px) {
+                .agent-portal-main .aj-agent-reservation-edit-page {
+                    padding: 0 12px 24px;
+                }
+            }
+        </style>
+    @endif
+@endpush
+
 @section('content')
     @php
         $clientMode = old('client_mode', $reservation->client_mode ?? ($reservation->client_external_id ? 'existing' : 'new'));
@@ -33,6 +81,7 @@
         $messagerieIndexRoute = $agentReservationMode ? route('agent.messagerie.index') : route('admin.messagerie.index');
     @endphp
 
+    <div class="{{ $agentReservationMode ? 'aj-agent-reservation-edit-page' : '' }}">
     @unless(!empty($reservationEmbed))
         <div class="row mb-3">
             <div class="col-12">
@@ -637,6 +686,7 @@
             <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
         </div>
     </form>
+    </div>
 
     @push('scripts')
         <script>
