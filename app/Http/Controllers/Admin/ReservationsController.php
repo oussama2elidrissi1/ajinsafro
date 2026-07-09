@@ -1530,6 +1530,7 @@ class ReservationsController extends Controller
         $this->mergeDepartureFromLegacyRequest($request, $reservation);
 
         $data = $request->validate($this->reservationValidationRules(true));
+        $this->syncAgentEditableClientSnapshot($request, $reservation, $data);
         $this->validateDepartureMatchesTour($data);
 
         $pricingContext = $this->buildReservationPricingContext($request, $data);
@@ -1643,6 +1644,64 @@ class ReservationsController extends Controller
         }
 
         return $this->reservationVisibility->canAccessReservation($user, $reservation);
+    }
+
+    /**
+     * Agent edit mode exposes client fields directly instead of the admin existing-client selector.
+     * Persist those corrections on the linked client before ReservationService enriches snapshots.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function syncAgentEditableClientSnapshot(Request $request, Reservation $reservation, array $data): void
+    {
+        if (! $request->attributes->get('agent_reservation_mode', false)) {
+            return;
+        }
+
+        $clientId = (int) ($data['client_external_id'] ?? $reservation->client_external_id ?? 0);
+        if ($clientId <= 0) {
+            return;
+        }
+
+        $client = Client::query()->find($clientId);
+        if (! $client) {
+            return;
+        }
+
+        $filled = static fn ($value): bool => ! is_null($value) && (! is_string($value) || trim($value) !== '');
+        $firstName = trim((string) ($data['client_first_name'] ?? ''));
+        $lastName = trim((string) ($data['client_last_name'] ?? ''));
+        $fullName = trim($firstName.' '.$lastName);
+
+        $updates = [
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'full_name' => $fullName,
+            'phone' => $data['client_phone'] ?? null,
+            'email' => $data['client_email'] ?? null,
+            'nationality' => $data['client_nationality'] ?? null,
+            'address_line_1' => $data['client_address'] ?? null,
+        ];
+
+        foreach ($updates as $field => $value) {
+            if ($filled($value)) {
+                $client->{$field} = is_string($value) ? trim($value) : $value;
+            }
+        }
+
+        $documentType = strtolower(trim((string) ($data['client_document_type'] ?? '')));
+        $documentNumber = trim((string) ($data['client_document_number'] ?? ''));
+        if ($documentNumber !== '') {
+            if ($documentType === 'cin') {
+                $client->national_id_number = $documentNumber;
+            } elseif ($documentType === 'passport') {
+                $client->passport_number = $documentNumber;
+            }
+        }
+
+        if ($client->isDirty()) {
+            $client->save();
+        }
     }
 
     /**

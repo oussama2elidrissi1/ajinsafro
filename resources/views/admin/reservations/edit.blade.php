@@ -79,6 +79,15 @@
         $reservationIndexRoute = $agentReservationMode ? route('agent.reservations.index') : route('admin.reservations.index');
         $reservationDashboardRoute = $agentReservationMode ? route('agent.dashboard') : route('admin.dashboard');
         $messagerieIndexRoute = $agentReservationMode ? route('agent.messagerie.index') : route('admin.messagerie.index');
+        $editableClientMode = $reservation->client_external_id ? 'existing' : 'new';
+        $clientFirstNameValue = old('client_first_name', $reservation->client_first_name ?: $reservation->client?->first_name);
+        $clientLastNameValue = old('client_last_name', $reservation->client_last_name ?: $reservation->client?->last_name);
+        $clientPhoneValue = old('client_phone', $reservation->client_phone ?: $reservation->client?->phone);
+        $clientEmailValue = old('client_email', $reservation->client_email ?: $reservation->client?->email);
+        $clientDocumentTypeValue = old('client_document_type', $reservation->client_document_type ?: ($reservation->client?->national_id_number ? 'cin' : ($reservation->client?->passport_number ? 'passport' : null)));
+        $clientDocumentNumberValue = old('client_document_number', $reservation->client_document_number ?: ($reservation->client?->national_id_number ?: $reservation->client?->passport_number));
+        $clientNationalityValue = old('client_nationality', $reservation->client?->nationality);
+        $clientAddressValue = old('client_address', $reservation->client?->address_line_1);
     @endphp
 
     <div class="{{ $agentReservationMode ? 'aj-agent-reservation-edit-page' : '' }}">
@@ -529,6 +538,50 @@
         <div class="card mb-3 border">
             <div class="card-body">
                 <h6 class="card-title mb-3 text-secondary"><i class="bx bx-user me-1"></i>Client principal</h6>
+                @if($agentReservationMode)
+                    <input type="hidden" name="client_mode" value="{{ $editableClientMode }}">
+                    @if($reservation->client_external_id)
+                        <input type="hidden" name="client_external_id" value="{{ $reservation->client_external_id }}">
+                    @endif
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">PrÃ©nom <span class="text-danger">*</span></label>
+                            <input type="text" name="client_first_name" id="client_first_name" class="form-control" value="{{ $clientFirstNameValue }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Nom <span class="text-danger">*</span></label>
+                            <input type="text" name="client_last_name" id="client_last_name" class="form-control" value="{{ $clientLastNameValue }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">TÃ©lÃ©phone <span class="text-danger">*</span></label>
+                            <input type="text" name="client_phone" id="client_phone" class="form-control" value="{{ $clientPhoneValue }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="client_email" class="form-control" value="{{ $clientEmailValue }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Type document</label>
+                            <select name="client_document_type" class="form-select">
+                                <option value="">SÃ©lectionner</option>
+                                <option value="cin" {{ $clientDocumentTypeValue === 'cin' ? 'selected' : '' }}>CIN</option>
+                                <option value="passport" {{ $clientDocumentTypeValue === 'passport' ? 'selected' : '' }}>Passeport</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">NumÃ©ro document</label>
+                            <input type="text" name="client_document_number" class="form-control" value="{{ $clientDocumentNumberValue }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">NationalitÃ©</label>
+                            <input type="text" name="client_nationality" class="form-control" value="{{ $clientNationalityValue }}">
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Adresse</label>
+                            <input type="text" name="client_address" class="form-control" value="{{ $clientAddressValue }}">
+                        </div>
+                    </div>
+                @else
                 <div class="mb-3">
                     <label class="form-label d-block">Type de client</label>
                     <div class="form-check form-check-inline">
@@ -594,6 +647,7 @@
                         </div>
                     </div>
                 </div>
+                @endif
             </div>
         </div>
 
