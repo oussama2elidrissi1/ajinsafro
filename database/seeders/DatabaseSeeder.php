@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
             OthmaneOfflineAgentSeeder::class,
             TangerAgencyManagerSeeder::class,
             TangerAgentsSeeder::class,
+            CasablancaAgencyManagerSeeder::class,
         ]);
     }
 }
