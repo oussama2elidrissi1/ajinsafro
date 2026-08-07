@@ -314,24 +314,18 @@
         $makeLeaf('finance_commissions', 'Comission', 'admin.finance.commissions', 'bx bx-pie-chart-alt-2', ['admin.finance.commissions'], [], null, 'finance.view'),
     ]));
 
-    // Le groupe Administration n'est visible que pour les comptes disposant de vraies
-    // permissions d'administration globale (siège / super admin). Les responsables de
-    // point de vente gèrent leurs comptes via le menu unique « Gestion Rh ».
-    $sidebarUserCan = function (string $perm) use ($sidebarUser): bool {
-        if (!$sidebarUser || !method_exists($sidebarUser, 'can')) {
-            return false;
-        }
+    // Le groupe Administration (paramètres de l'application) est réservé aux comptes à
+    // portée globale : siège / super admin / dev. Les responsables de point de vente
+    // gèrent leurs comptes via le menu unique « Gestion Rh », scopé à leur agence.
+    $canSeeAdministration = false;
+    if ($sidebarUser) {
         try {
-            return $sidebarUser->can($perm);
+            $canSeeAdministration = app(\App\Services\BranchScopeService::class)->canSeeAllBranches($sidebarUser)
+                || (method_exists($sidebarUser, 'isDevAdmin') && $sidebarUser->isDevAdmin());
         } catch (Throwable $e) {
-            return false;
+            $canSeeAdministration = false;
         }
-    };
-    $canSeeAdministration = $sidebarUserCan('settings.view')
-        || $sidebarUserCan('settings.general.manage')
-        || $sidebarUserCan('settings.roles.manage')
-        || $sidebarUserCan('settings.security.manage')
-        || $sidebarUserCan('charge_types.manage');
+    }
 
     $administrationChildren = array_values(array_filter([
         $makeLeaf('admin_settings_index', 'Vue generale', 'admin.settings.index', 'bx bx-cog', ['admin.settings.index'], [], null, 'settings.view'),

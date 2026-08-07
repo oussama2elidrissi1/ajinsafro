@@ -2,12 +2,29 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\BranchScopeService;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureRoutePermission
 {
+    /**
+     * Administration globale de la plateforme : réservée aux comptes à portée globale
+     * (siège / super admin / dev), quel que soit l'état des permissions en base.
+     * La gestion des utilisateurs (admin.settings.utilisateurs*) reste hors de cette liste :
+     * elle est ouverte aux responsables de point de vente, scopée à leur agence.
+     */
+    private const GLOBAL_ADMIN_ROUTE_PREFIXES = [
+        'admin.settings.index',
+        'admin.settings.parametres-generaux',
+        'admin.settings.referentiels-metier',
+        'admin.settings.home-page',
+        'admin.settings.charge-types',
+        'admin.settings.roles-permissions',
+        'admin.settings.securite',
+    ];
+
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
@@ -19,6 +36,10 @@ class EnsureRoutePermission
         $routeName = $request->route()?->getName();
         if (! $routeName) {
             return $next($request);
+        }
+
+        if ($this->isGlobalAdminRoute($routeName) && ! $this->userHasGlobalScope($user)) {
+            abort(403, 'Section réservée à l\'administration siège.');
         }
 
         $routePermissions = config('admin_menu.route_permissions', []);
@@ -42,6 +63,23 @@ class EnsureRoutePermission
         }
 
         return $next($request);
+    }
+
+    private function isGlobalAdminRoute(string $routeName): bool
+    {
+        foreach (self::GLOBAL_ADMIN_ROUTE_PREFIXES as $prefix) {
+            if ($routeName === $prefix || str_starts_with($routeName, $prefix.'.')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function userHasGlobalScope($user): bool
+    {
+        return app(BranchScopeService::class)->canSeeAllBranches($user)
+            || (method_exists($user, 'isDevAdmin') && $user->isDevAdmin());
     }
 
     private function userCanAccess($user, string|array $permission): bool
