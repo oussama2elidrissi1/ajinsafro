@@ -25,9 +25,16 @@ class AjinsafroRolesSeeder extends Seeder
         $this->ensurePermissionsExist();
 
         $allPermissions = Permission::where('guard_name', 'web')->pluck('name')->all();
-        $exceptRolesSecurity = array_values(array_filter($allPermissions, function (string $p): bool {
-            return ! str_starts_with($p, 'settings.roles.') && ! str_starts_with($p, 'settings.security.');
+        // Administration globale (plateforme) : réservée au siège / super admin.
+        // Les responsables de point de vente gardent settings.users.* (Gestion RH de leur agence).
+        $globalAdministration = array_values(array_filter($allPermissions, function (string $p): bool {
+            return $p === 'settings.view'
+                || str_starts_with($p, 'settings.general.')
+                || str_starts_with($p, 'settings.roles.')
+                || str_starts_with($p, 'settings.security.')
+                || str_starts_with($p, 'charge_types.');
         }));
+        $branchAdmin = array_values(array_diff($allPermissions, $globalAdministration));
         $branchScoped = array_values(array_filter($allPermissions, function (string $p): bool {
             return str_starts_with($p, 'dashboard.') || str_starts_with($p, 'reservations.') || str_starts_with($p, 'customers.')
                 || str_starts_with($p, 'circuits.') || str_starts_with($p, 'accommodations.') || str_starts_with($p, 'operations.')
@@ -38,9 +45,7 @@ class AjinsafroRolesSeeder extends Seeder
                 || str_starts_with($p, 'agency_employees.') || str_starts_with($p, 'pos_employees.') || str_starts_with($p, 'assignments.')
                 || str_starts_with($p, 'agency_dashboard.') || str_starts_with($p, 'agency_performance.')
                 || str_starts_with($p, 'agency_commissions.')
-                || str_starts_with($p, 'settings.view')
                 || str_starts_with($p, 'settings.branches.') || str_starts_with($p, 'settings.users.')
-                || str_starts_with($p, 'settings.general.')
                 || $p === AdminMenuPermissionRegistry::ADMIN_ACCESS_PERMISSION;
         }));
         $branchScoped = array_values(array_diff($branchScoped, self::RESTRICTED_RESERVATION_PERMISSIONS));
@@ -74,7 +79,7 @@ class AjinsafroRolesSeeder extends Seeder
 
         $this->createRole(BranchScopeService::ROLE_SUPER_ADMIN, $allPermissions);
         $this->createRole(BranchScopeService::ROLE_SIEGE_ADMIN, $allPermissions);
-        $this->createRole(BranchScopeService::ROLE_BRANCH_ADMIN, $exceptRolesSecurity);
+        $this->createRole(BranchScopeService::ROLE_BRANCH_ADMIN, $branchAdmin);
         $this->createRole(BranchScopeService::ROLE_CHEF_COMMERCIAL, $branchScoped);
         $this->createRole(BranchScopeService::ROLE_COMMERCIAL, $commercial);
         $this->createRole(BranchScopeService::ROLE_MANAGER, $commercial);

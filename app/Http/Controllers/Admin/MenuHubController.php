@@ -95,11 +95,12 @@ class MenuHubController extends Controller
             ],
             'rh' => [
                 'title' => 'Gestion RH',
-                'subtitle' => 'Espace RH en cours de structuration pour la gestion des utilisateurs et roles.',
-                'status' => 'En cours',
+                'subtitle' => 'Gestion des comptes et des employes de votre point de vente.',
                 'links' => $this->links([
-                    ['label' => 'Utilisateurs', 'route' => 'admin.settings.utilisateurs', 'description' => 'Gestion des utilisateurs admin.'],
-                    ['label' => 'Roles & permissions', 'route' => 'admin.settings.roles-permissions', 'description' => 'Parametrage des droits et roles.'],
+                    ['label' => 'Utilisateurs', 'route' => 'admin.settings.utilisateurs', 'description' => 'Comptes et acces des utilisateurs.', 'permission' => 'settings.users.manage'],
+                    ['label' => 'Employes du point de vente', 'route' => 'admin.agency-employees.index', 'description' => 'Fiches employes et creation de comptes.', 'permission' => ['agency_employees.view', 'pos_employees.view']],
+                    ['label' => 'Comptes du point de vente', 'route' => 'admin.agency-accounts.index', 'description' => 'Comptes de connexion des employes.', 'permission' => 'agency_accounts.view'],
+                    ['label' => 'Roles & permissions', 'route' => 'admin.settings.roles-permissions', 'description' => 'Parametrage des droits et roles.', 'permission' => 'settings.roles.manage'],
                 ]),
             ],
         ];
@@ -107,11 +108,28 @@ class MenuHubController extends Controller
 
     private function links(array $links): array
     {
-        return array_values(array_filter(array_map(function (array $link): ?array {
+        $user = auth()->user();
+
+        return array_values(array_filter(array_map(function (array $link) use ($user): ?array {
             $route = $link['route'] ?? null;
 
             if (!is_string($route) || $route === '' || !Route::has($route)) {
                 return null;
+            }
+
+            $permissions = $link['permission'] ?? null;
+            if ($permissions !== null) {
+                $permissions = is_array($permissions) ? $permissions : [$permissions];
+                $allowed = false;
+                foreach ($permissions as $permission) {
+                    if ($user && is_string($permission) && $permission !== '' && $user->can($permission)) {
+                        $allowed = true;
+                        break;
+                    }
+                }
+                if (!$allowed) {
+                    return null;
+                }
             }
 
             return [

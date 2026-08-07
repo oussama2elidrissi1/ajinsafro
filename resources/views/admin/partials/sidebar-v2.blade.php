@@ -314,6 +314,25 @@
         $makeLeaf('finance_commissions', 'Comission', 'admin.finance.commissions', 'bx bx-pie-chart-alt-2', ['admin.finance.commissions'], [], null, 'finance.view'),
     ]));
 
+    // Le groupe Administration n'est visible que pour les comptes disposant de vraies
+    // permissions d'administration globale (siège / super admin). Les responsables de
+    // point de vente gèrent leurs comptes via le menu unique « Gestion Rh ».
+    $sidebarUserCan = function (string $perm) use ($sidebarUser): bool {
+        if (!$sidebarUser || !method_exists($sidebarUser, 'can')) {
+            return false;
+        }
+        try {
+            return $sidebarUser->can($perm);
+        } catch (Throwable $e) {
+            return false;
+        }
+    };
+    $canSeeAdministration = $sidebarUserCan('settings.view')
+        || $sidebarUserCan('settings.general.manage')
+        || $sidebarUserCan('settings.roles.manage')
+        || $sidebarUserCan('settings.security.manage')
+        || $sidebarUserCan('charge_types.manage');
+
     $administrationChildren = array_values(array_filter([
         $makeLeaf('admin_settings_index', 'Vue generale', 'admin.settings.index', 'bx bx-cog', ['admin.settings.index'], [], null, 'settings.view'),
         $makeLeaf('admin_users', 'Utilisateurs', 'admin.settings.utilisateurs', 'bx bx-user-pin', ['admin.settings.utilisateurs*'], [], null, 'settings.users.manage'),
@@ -333,7 +352,7 @@
         $makeGroup('grp_points_of_sale', 'Points de vente', $pointsOfSaleChildren, 'bx bx-buildings'),
         $makeLeaf('grp_rh', 'Gestion Rh', 'admin.menu-hubs.rh', 'bx bx-user-voice', ['admin.menu-hubs.rh', 'admin.settings.utilisateurs', 'admin.settings.roles-permissions'], [], null, 'settings.users.manage'),
         $makeGroup('grp_finance', 'Finace reporting', $financeChildren, 'bx bx-wallet'),
-        $makeGroup('grp_admin', 'Administration', $administrationChildren, 'bx bx-cog'),
+        $canSeeAdministration ? $makeGroup('grp_admin', 'Administration', $administrationChildren, 'bx bx-cog') : null,
     ]));
 
     if ($sidebarUser?->hasRole(\App\Services\BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY)) {

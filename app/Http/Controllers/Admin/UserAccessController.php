@@ -17,6 +17,15 @@ use Spatie\Permission\Models\Role;
 
 class UserAccessController extends Controller
 {
+    /** Rôles à portée globale : non attribuables par un compte limité à une agence. */
+    private const GLOBAL_ROLE_NAMES = [
+        BranchScopeService::ROLE_SUPER_ADMIN,
+        BranchScopeService::ROLE_SIEGE_ADMIN,
+        'Super Admin',
+        'Admin Siège',
+        'Admin',
+    ];
+
     public function __construct(
         protected BranchScopeService $branchScope
     ) {}
@@ -50,6 +59,7 @@ class UserAccessController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validatePayload($request, true);
+        $this->constrainPayloadToScope($request->user(), $data);
 
         $user = new User();
         $user->name = $data['name'];
@@ -84,6 +94,7 @@ class UserAccessController extends Controller
     {
         $this->ensureUserInScope($request->user(), $user);
         $data = $this->validatePayload($request, false, $user);
+        $this->constrainPayloadToScope($request->user(), $data);
 
         $user->name = $data['name'];
         $user->email = $data['email'];
@@ -134,6 +145,40 @@ class UserAccessController extends Controller
         return redirect()->route('admin.settings.utilisateurs')->with('success', 'Utilisateur supprimé.');
     }
 
+    /**
+     * Un compte limité à une agence ne peut créer/modifier que des utilisateurs de son
+     * point de vente, sans rôle global, sans is_admin, et sans permissions qu'il n'a pas lui-même.
+     */
+    private function constrainPayloadToScope(User $currentUser, array &$data): void
+    {
+        $visibleBranchIds = $this->branchScope->visibleBranchIds($currentUser);
+        if ($visibleBranchIds === null) {
+            return;
+        }
+
+        $branchId = ! empty($data['branch_id']) ? (int) $data['branch_id'] : null;
+        if ($branchId === null) {
+            $data['branch_id'] = $visibleBranchIds[0] ?? null;
+        } elseif (! in_array($branchId, $visibleBranchIds, true)) {
+            throw ValidationException::withMessages([
+                'branch_id' => 'Vous ne pouvez gérer que les utilisateurs de votre point de vente.',
+            ]);
+        }
+
+        $data['is_admin'] = false;
+
+        if (! empty($data['role_name']) && in_array($data['role_name'], self::GLOBAL_ROLE_NAMES, true)) {
+            throw ValidationException::withMessages([
+                'role_name' => 'Ce rôle est réservé au siège.',
+            ]);
+        }
+
+        if ($data['access_mode'] === 'custom') {
+            $ownPermissions = $currentUser->getAllPermissions()->pluck('name')->all();
+            $data['permissions'] = array_values(array_intersect($data['permissions'] ?? [], $ownPermissions));
+        }
+    }
+
     private function ensureUserInScope(User $currentUser, User $targetUser): void
     {
         $query = User::query()->where('id', $targetUser->id);
@@ -146,6 +191,9 @@ class UserAccessController extends Controller
     private function buildFormPayload(User $user): array
     {
         $roles = Role::query()->orderBy('name')->get();
+        if ($this->branchScope->visibleBranchIds(request()->user()) !== null) {
+            $roles = $roles->reject(fn (Role $role) => in_array($role->name, self::GLOBAL_ROLE_NAMES, true))->values();
+        }
         $permissionGroups = AdminMenuPermissionRegistry::flatPermissionGroups(
             Permission::query()->pluck('name')->all()
         );
