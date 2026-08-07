@@ -101,7 +101,7 @@ class TangerAgencyManagerSeeder extends Seeder
             ->whereKeyNot($manager->id)
             ->where(function ($query): void {
                 $query->whereIn('email', [
-                    'resa@ajinsafro.ma',
+                    'othman.aji@ajinsafro.ma',
                     'booking@ajinsafro.ma',
                     'commercial@ajinsafro.ma',
                     'Collaboration@ajinsafro.ma',

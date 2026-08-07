@@ -23,7 +23,9 @@ use Spatie\Permission\PermissionRegistrar;
  */
 class CasablancaAgencyManagerSeeder extends Seeder
 {
-    public const EMAIL = 'imad.bourja@ajinsafro.ma';
+    /** Ancien email du compte, migré automatiquement vers EMAIL. */
+    public const OLD_EMAIL = 'imad.bourja@ajinsafro.ma';
+    public const EMAIL = 'Resa@ajinsafro.ma';
     public const PASSWORD = 'Ajinsafro#2026';
 
     public function run(): void
@@ -47,8 +49,19 @@ class CasablancaAgencyManagerSeeder extends Seeder
             return;
         }
 
-        /** @var User $manager */
-        $manager = User::query()->firstOrNew(['email' => self::EMAIL]);
+        /** @var User|null $manager */
+        $manager = User::query()->where('email', self::OLD_EMAIL)->first()
+            ?? User::query()->where('email', self::EMAIL)->first();
+
+        // Resa@ajinsafro.ma appartenait à Othmane (Agent Offline) : ne pas écraser
+        // son compte tant qu'OthmaneOfflineAgentSeeder ne l'a pas migré.
+        if ($manager && $manager->name !== 'Imad Bourja' && $manager->base_role !== BranchScopeService::ROLE_BRANCH_ADMIN) {
+            $this->command?->warn(self::EMAIL.' est encore utilisé par « '.$manager->name.' ». Lancez OthmaneOfflineAgentSeeder d\'abord pour libérer cet email.');
+
+            return;
+        }
+
+        $manager ??= new User;
         $isNewManager = ! $manager->exists;
         $manager->name = 'Imad Bourja';
         $manager->email = self::EMAIL;
@@ -68,6 +81,11 @@ class CasablancaAgencyManagerSeeder extends Seeder
         $manager->syncRoles([$role->name]);
 
         $branch->update(['manager_user_id' => $manager->id]);
+
+        AgencyEmployee::query()
+            ->where('branch_id', $branch->id)
+            ->where('email', self::OLD_EMAIL)
+            ->update(['email' => self::EMAIL]);
 
         AgencyEmployee::query()->updateOrCreate(
             [
