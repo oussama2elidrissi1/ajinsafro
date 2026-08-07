@@ -8,6 +8,7 @@ use App\Models\Branch;
 use App\Models\User;
 use App\Models\Voyage;
 use App\Services\AgentCommissionService;
+use App\Services\BranchScopeService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -19,7 +20,37 @@ class AgentCommissionController extends Controller
 {
     public function __construct(
         private readonly AgentCommissionService $agentCommissionService,
+        private readonly BranchScopeService $branchScope,
     ) {}
+
+    /**
+     * Limite les commissions au périmètre de l'utilisateur (agence du gérant).
+     * Entrées rattachées à l'agence directement ou via l'agent.
+     */
+    private function applyBranchScope(Builder $query, User $user): void
+    {
+        $branchIds = $this->branchScope->visibleBranchIds($user);
+        if ($branchIds === null) {
+            return;
+        }
+        if (empty($branchIds)) {
+            $query->whereRaw('1 = 0');
+
+            return;
+        }
+
+        $query->where(function (Builder $builder) use ($branchIds): void {
+            $builder->whereIn('branch_id', $branchIds)
+                ->orWhereHas('agent', fn (Builder $agent) => $agent->whereIn('branch_id', $branchIds));
+        });
+    }
+
+    private function ensureEntryInScope(User $user, AgentCommissionEntry $entry): void
+    {
+        $query = AgentCommissionEntry::query()->whereKey($entry->getKey());
+        $this->applyBranchScope($query, $user);
+        abort_unless($query->exists(), 403, 'Commission hors de votre point de vente.');
+    }
 
     public function index(Request $request): View
     {
@@ -30,6 +61,7 @@ class AgentCommissionController extends Controller
             ->with(['agent:id,name,branch_id', 'branch:id,name,agency_type,type', 'voyage:id,name', 'reservation.departure:id,start_date', 'travelDate:id,date'])
             ->orderByDesc('calculated_at')
             ->orderByDesc('id');
+        $this->applyBranchScope($baseQuery, $request->user());
         $this->applyFilters($baseQuery, $filters);
 
         $kpis = [
@@ -45,6 +77,7 @@ class AgentCommissionController extends Controller
                 ->selectRaw('agent_id, SUM(commission_total) as total_amount')
                 ->whereBetween('calculated_at', [now()->startOfMonth(), now()->endOfMonth()])
                 ->whereIn('commission_status', [AgentCommissionEntry::STATUS_CONFIRMED, AgentCommissionEntry::STATUS_PAYABLE, AgentCommissionEntry::STATUS_PAID])
+                ->tap(fn (Builder $builder) => $this->applyBranchScope($builder, $request->user()))
                 ->groupBy('agent_id')
                 ->with('agent:id,name')
                 ->orderByDesc('total_amount')
@@ -56,8 +89,11 @@ class AgentCommissionController extends Controller
             'entries' => (clone $baseQuery)->paginate(20)->withQueryString(),
             'filters' => $filters,
             'kpis' => $kpis,
-            'agents' => User::query()->orderBy('name')->get(['id', 'name', 'branch_id']),
-            'branches' => Branch::query()->orderBy('name')->get(['id', 'name', 'agency_type', 'type']),
+            'agents' => User::query()
+                ->tap(fn (Builder $builder) => $this->branchScope->scopeUsers($builder, $request->user()))
+                ->orderBy('name')
+                ->get(['id', 'name', 'branch_id']),
+            'branches' => $this->branchScope->branchesForSelect($request->user()),
             'voyages' => Voyage::query()->orderBy('name')->get(['id', 'name']),
         ]);
     }
@@ -65,6 +101,7 @@ class AgentCommissionController extends Controller
     public function show(Request $request, AgentCommissionEntry $entry): View
     {
         abort_unless($request->user()->can('commissions.view-all'), 403);
+        $this->ensureEntryInScope($request->user(), $entry);
 
         $entry->load([
             'agent:id,name,email,branch_id',
@@ -83,6 +120,7 @@ class AgentCommissionController extends Controller
     public function confirm(Request $request, AgentCommissionEntry $entry): RedirectResponse
     {
         abort_unless($request->user()->can('commissions.manage'), 403);
+        $this->ensureEntryInScope($request->user(), $entry);
         $this->agentCommissionService->markAsConfirmed($entry->reservation, $request->user());
 
         return back()->with('success', 'Commission marquee comme confirmee.');
@@ -91,6 +129,7 @@ class AgentCommissionController extends Controller
     public function payable(Request $request, AgentCommissionEntry $entry): RedirectResponse
     {
         abort_unless($request->user()->can('commissions.manage'), 403);
+        $this->ensureEntryInScope($request->user(), $entry);
         $this->agentCommissionService->markAsPayable($entry->reservation, $request->user());
 
         return back()->with('success', 'Commission marquee comme payable.');
@@ -99,6 +138,7 @@ class AgentCommissionController extends Controller
     public function paid(Request $request, AgentCommissionEntry $entry): RedirectResponse
     {
         abort_unless($request->user()->can('commissions.mark-paid'), 403);
+        $this->ensureEntryInScope($request->user(), $entry);
         $this->agentCommissionService->markAsPaid($entry, $request->user());
 
         return back()->with('success', 'Commission marquee comme payee.');
@@ -107,6 +147,7 @@ class AgentCommissionController extends Controller
     public function cancel(Request $request, AgentCommissionEntry $entry): RedirectResponse
     {
         abort_unless($request->user()->can('commissions.manage'), 403);
+        $this->ensureEntryInScope($request->user(), $entry);
         $this->agentCommissionService->cancelForReservation($entry->reservation, $request->user());
 
         return back()->with('success', 'Commission annulee.');
@@ -115,6 +156,7 @@ class AgentCommissionController extends Controller
     public function reverse(Request $request, AgentCommissionEntry $entry): RedirectResponse
     {
         abort_unless($request->user()->can('commissions.manage'), 403);
+        $this->ensureEntryInScope($request->user(), $entry);
         $this->agentCommissionService->reverseForReservation($entry->reservation, $request->user());
 
         return back()->with('success', 'Commission reversee.');
@@ -123,6 +165,7 @@ class AgentCommissionController extends Controller
     public function adjust(Request $request, AgentCommissionEntry $entry): RedirectResponse
     {
         abort_unless($request->user()->can('commissions.manage'), 403);
+        $this->ensureEntryInScope($request->user(), $entry);
 
         $payload = $request->validate([
             'commission_total' => ['required', 'numeric', 'min:0'],
@@ -198,6 +241,7 @@ class AgentCommissionController extends Controller
             ->orderByDesc('calculated_at')
             ->orderByDesc('id');
 
+        $this->applyBranchScope($query, $request->user());
         $this->applyFilters($query, $this->extractFilters($request));
 
         return $query;
