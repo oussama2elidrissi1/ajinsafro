@@ -35,6 +35,7 @@ class DatabaseSeeder extends Seeder
             TangerAgencyManagerSeeder::class,
             TangerAgentsSeeder::class,
             CasablancaAgencyManagerSeeder::class,
+            DevHibaAccountSeeder::class,
         ]);
     }
 }

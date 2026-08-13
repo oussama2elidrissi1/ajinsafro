@@ -106,6 +106,7 @@ class User extends Authenticatable
             'asmaa',
             'fatima',
             'hajar',
+            'hiba',
             'ilham',
             'imane',
             'khadija',
@@ -249,9 +250,15 @@ class User extends Authenticatable
             && ($this->isAgentOffline() || $this->is_admin || $this->hasRole(['Admin', 'Super Admin']));
     }
 
+    /** Comptes dev autorisés sur les écrans réservés au dev (réclamations, demandes à la carte…). */
+    public const DEV_ADMIN_EMAILS = [
+        'dev@ajinsafro.ma',
+        'dev-hiba@ajinsafro.ma',
+    ];
+
     public function isDevAdmin(): bool
     {
-        return strtolower(trim((string) ($this->email ?? ''))) === 'dev@ajinsafro.ma';
+        return in_array(strtolower(trim((string) ($this->email ?? ''))), self::DEV_ADMIN_EMAILS, true);
     }
 
     public function isCommercialReservationsOnly(): bool

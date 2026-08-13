@@ -11,7 +11,6 @@ use Illuminate\View\View;
 
 class ReclamationController extends Controller
 {
-    private const DEV_EMAIL = 'dev@ajinsafro.ma';
 
     public function index(Request $request): View
     {
@@ -84,10 +83,7 @@ class ReclamationController extends Controller
 
     private function authorizeDevAccess(Request $request): void
     {
-        $user = $request->user();
-        $email = strtolower(trim((string) ($user?->email ?? '')));
-
-        abort_unless($email === self::DEV_EMAIL, 403);
+        abort_unless((bool) $request->user()?->isDevAdmin(), 403);
     }
 
     private function notifyRequesterWhenTreatmentChanges(DevReclamation $reclamation, ?string $previousStatus, string $previousResponse): void
