@@ -113,14 +113,19 @@ class DashboardV5StatsService
             ->count();
         $confirmationWeekEvolution = $this->percentEvolution($confirmedThisWeek, $confirmedPrevWeek);
 
+        // Chaque bloc est isolé : une colonne manquante en production est loguée
+        // sans jamais casser l'affichage du dashboard.
         return [
-            'destinations' => $this->destinationBreakdown((clone $baseReservations)),
-            'upcomingDepartures' => $this->upcomingDepartures(),
-            'alerts' => $this->pilotageAlerts($breakdown, (clone $baseReservations)),
-            'quality' => $this->qualityIndicators($breakdown, $recentActivity),
-            'channels' => $this->salesChannels((clone $baseReservations)),
-            'objective' => $this->monthlyObjective($revenueCurrentMonth, $currency),
-            'performanceChart' => $this->performanceChart($monthlyEvolution),
+            'destinations' => rescue(fn () => $this->destinationBreakdown((clone $baseReservations)), ['total' => 0, 'segments' => []]),
+            'upcomingDepartures' => rescue(fn () => $this->upcomingDepartures(), []),
+            'alerts' => rescue(fn () => $this->pilotageAlerts($breakdown, (clone $baseReservations)), []),
+            'quality' => rescue(fn () => $this->qualityIndicators($breakdown, $recentActivity), []),
+            'channels' => rescue(fn () => $this->salesChannels((clone $baseReservations)), []),
+            'objective' => rescue(
+                fn () => $this->monthlyObjective($revenueCurrentMonth, $currency),
+                ['revenue_month' => $revenueCurrentMonth, 'target' => 0.0, 'progress' => null, 'remaining' => null, 'currency' => $currency]
+            ),
+            'performanceChart' => rescue(fn () => $this->performanceChart($monthlyEvolution), ['has_data' => false]),
             'confirmationWeekEvolution' => $confirmationWeekEvolution,
             'stats' => [
                 'voyages' => $voyagesCount,
@@ -160,15 +165,17 @@ class DashboardV5StatsService
             return ['total' => 0, 'segments' => []];
         }
 
+        $hasDestinationColumn = Schema::hasColumn('voyages', 'destination');
         $voyages = Voyage::query()
             ->whereIn('id', $rows->pluck('tour_id')->all())
-            ->get(['id', 'name', 'destination'])
+            ->get($hasDestinationColumn ? ['id', 'name', 'destination'] : ['id', 'name'])
             ->keyBy('id');
 
         $byDestination = [];
         foreach ($rows as $row) {
             $voyage = $voyages->get((int) $row->tour_id);
-            $label = trim((string) ($voyage?->destination ?: $voyage?->name ?: 'Autres'));
+            $destination = $hasDestinationColumn ? $voyage?->destination : null;
+            $label = trim((string) ($destination ?: $voyage?->name ?: 'Autres'));
             if ($label === '') {
                 $label = 'Autres';
             }
@@ -288,11 +295,11 @@ class DashboardV5StatsService
             ],
         ];
 
-        if (Schema::hasTable('agent_commission_entries')) {
+        if (Schema::hasTable('agent_commission_entries') && Schema::hasColumn('agent_commission_entries', 'commission_status')) {
             $alerts[] = [
                 'label' => 'Commissions à approuver',
                 'subtitle' => 'Estimées, en attente de validation',
-                'value' => AgentCommissionEntry::query()->where('status', AgentCommissionEntry::STATUS_ESTIMATED)->count(),
+                'value' => AgentCommissionEntry::query()->where('commission_status', AgentCommissionEntry::STATUS_ESTIMATED)->count(),
                 'icon' => '□',
                 'color' => 'blue',
             ];
@@ -323,7 +330,7 @@ class DashboardV5StatsService
             ],
         ];
 
-        if (Schema::hasTable('custom_requests')) {
+        if (Schema::hasTable('custom_requests') && Schema::hasColumn('custom_requests', 'priority')) {
             $indicators[] = [
                 'label' => 'Demandes à la carte urgentes',
                 'subtitle' => 'Priorité urgente à traiter',
