@@ -39,6 +39,8 @@
         'draft' => ['Brouillon', 'orange'],
         'option' => ['Option', 'orange'],
         'expired' => ['Expirée', 'orange'],
+        'shared_room_pending' => ['Chambre à jumeler', 'orange'],
+        'shared_room_paired' => ['Chambre jumelée', 'green'],
         'cancelled' => ['Annulée', 'red'],
         'refunded' => ['Remboursée', 'red'],
     ];
@@ -89,6 +91,29 @@
   inset: 0;
   border-radius: 220px 220px 0 0;
 }
+
+/* Garde-fous d'affichage : les libellés voyages peuvent être longs. */
+.dashboard-v6 .kpi-change--down { color: #d64545 !important; }
+.dashboard-v6 .donut-center span { font-size: 10px !important; }
+.dashboard-v6 .legend-row { font-size: 12px !important; }
+.dashboard-v6 .legend-row > span:nth-child(2) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.dashboard-v6 .item-title,
+.dashboard-v6 .item-subtitle {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.dashboard-v6 .reservation-item > div:nth-child(2),
+.dashboard-v6 .agency-item > div:nth-child(2),
+.dashboard-v6 .alert-item > div:nth-child(2),
+.dashboard-v6 .quality-item > div:nth-child(2) { min-width: 0; }
+.dashboard-v6 .item-amount { text-align: right; white-space: nowrap; }
 
 html[data-sidebar="collapsed"] .content {
   max-width: none !important;
@@ -356,7 +381,7 @@ html[data-sidebar="collapsed"] .dashboard-grid.bottom {
                 <div class="kpi-info">
                     <div class="kpi-title">Réservations</div>
                     <div class="kpi-number">{{ $fmtMoney($stats['reservations'] ?? 0) }}</div>
-                    <div class="kpi-change">{{ $fmtEvolution((float) ($stats['reservations_evolution'] ?? 0)) }} ce mois</div>
+                    <div class="kpi-change {{ ((float) ($stats['reservations_evolution'] ?? 0)) < 0 ? 'kpi-change--down' : '' }}">{{ $fmtEvolution((float) ($stats['reservations_evolution'] ?? 0)) }} ce mois</div>
                     <div class="kpi-note">Total enregistré</div>
                 </div>
             </div>
@@ -493,14 +518,19 @@ html[data-sidebar="collapsed"] .dashboard-grid.bottom {
                     @endif
                 </div>
                 @if($upcomingDepartures !== [])
+                    @php
+                        $showDestinationColumn = collect($upcomingDepartures)->contains(fn ($d) => $d['destination'] !== '' && $d['destination'] !== '—');
+                    @endphp
                     <div class="table-wrap">
                         <table>
-                            <thead><tr><th>Date</th><th>Destination</th><th>Circuit</th><th>Places dispo.</th><th>Statut</th></tr></thead>
+                            <thead><tr><th>Date</th>@if($showDestinationColumn)<th>Destination</th>@endif<th>Circuit</th><th>Places dispo.</th><th>Statut</th></tr></thead>
                             <tbody>
                                 @foreach($upcomingDepartures as $departure)
                                     <tr>
                                         <td>{{ $departure['date'] }}</td>
-                                        <td>{{ $departure['destination'] }}</td>
+                                        @if($showDestinationColumn)
+                                            <td>{{ $departure['destination'] }}</td>
+                                        @endif
                                         <td>{{ $departure['voyage'] }}</td>
                                         <td>{{ $departure['available'] }} / {{ $departure['total'] }}</td>
                                         <td><span class="status {{ $departure['status_color'] }}">{{ $departure['status_label'] }}</span></td>

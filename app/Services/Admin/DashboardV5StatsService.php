@@ -175,7 +175,7 @@ class DashboardV5StatsService
         foreach ($rows as $row) {
             $voyage = $voyages->get((int) $row->tour_id);
             $destination = $hasDestinationColumn ? $voyage?->destination : null;
-            $label = trim((string) ($destination ?: $voyage?->name ?: 'Autres'));
+            $label = \Illuminate\Support\Str::limit(trim((string) ($destination ?: $voyage?->name ?: 'Autres')), 28);
             if ($label === '') {
                 $label = 'Autres';
             }
@@ -256,8 +256,8 @@ class DashboardV5StatsService
             return [
                 'id' => (int) $departure->id,
                 'date' => $departure->start_date?->locale('fr')->translatedFormat('d M Y') ?? '',
-                'destination' => (string) ($departure->voyage?->destination ?: '—'),
-                'voyage' => (string) ($departure->voyage?->name ?: 'Voyage'),
+                'destination' => \Illuminate\Support\Str::limit((string) ($departure->voyage?->destination ?: '—'), 24),
+                'voyage' => \Illuminate\Support\Str::limit((string) ($departure->voyage?->name ?: 'Voyage'), 46),
                 'available' => $available,
                 'total' => $total,
                 'status_label' => $statusLabel,
@@ -745,7 +745,7 @@ class DashboardV5StatsService
                 'dossier_id' => $reservation->reservation_dossier_id ? (int) $reservation->reservation_dossier_id : null,
                 'client_name' => $clientName,
                 'client_email' => (string) ($reservation->client_email ?: optional($reservation->client)->email ?: ''),
-                'tour_name' => (string) optional($reservation->tour)->name,
+                'tour_name' => \Illuminate\Support\Str::limit((string) optional($reservation->tour)->name, 46),
                 'status' => (string) $reservation->status,
                 'payment' => (string) ($reservation->payment_type ?? ''),
                 'amount' => $amount,
@@ -782,7 +782,7 @@ class DashboardV5StatsService
 
             return [
                 'id' => (int) $tour->id,
-                'name' => (string) $tour->name,
+                'name' => \Illuminate\Support\Str::limit((string) $tour->name, 60),
                 'count' => (int) $row->total,
             ];
         })->filter()->values()->all();
