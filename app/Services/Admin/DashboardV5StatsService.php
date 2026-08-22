@@ -2,11 +2,15 @@
 
 namespace App\Services\Admin;
 
+use App\Models\AgentCommissionEntry;
 use App\Models\Branch;
 use App\Models\Client;
+use App\Models\CustomRequest;
+use App\Models\Departure;
 use App\Models\Reservation;
 use App\Models\ReservationMessage;
 use App\Models\ReservationPayment;
+use App\Models\Setting;
 use App\Models\User;
 use App\Models\Voyage;
 use App\Services\BranchScopeService;
@@ -102,7 +106,22 @@ class DashboardV5StatsService
         $topTours = $this->topTours((clone $baseReservations));
         $activeAgencies = $this->activeAgencies($visibleBranchIds, $canSeeAll);
 
+        // Évolution du taux de confirmation : confirmées cette semaine vs semaine précédente.
+        $confirmedThisWeek = (clone $baseReservations)->whereIn('status', $confirmedStatuses)->where('created_at', '>=', $startOfWeek)->count();
+        $confirmedPrevWeek = (clone $baseReservations)->whereIn('status', $confirmedStatuses)
+            ->whereBetween('created_at', [$startOfWeek->copy()->subWeek(), $startOfWeek])
+            ->count();
+        $confirmationWeekEvolution = $this->percentEvolution($confirmedThisWeek, $confirmedPrevWeek);
+
         return [
+            'destinations' => $this->destinationBreakdown((clone $baseReservations)),
+            'upcomingDepartures' => $this->upcomingDepartures(),
+            'alerts' => $this->pilotageAlerts($breakdown, (clone $baseReservations)),
+            'quality' => $this->qualityIndicators($breakdown, $recentActivity),
+            'channels' => $this->salesChannels((clone $baseReservations)),
+            'objective' => $this->monthlyObjective($revenueCurrentMonth, $currency),
+            'performanceChart' => $this->performanceChart($monthlyEvolution),
+            'confirmationWeekEvolution' => $confirmationWeekEvolution,
             'stats' => [
                 'voyages' => $voyagesCount,
                 'agencies' => $agenciesCount,
@@ -123,6 +142,364 @@ class DashboardV5StatsService
             'topTours' => $topTours,
             'activeAgencies' => $activeAgencies,
         ];
+    }
+
+    /**
+     * Répartition des réservations par destination (top 4 + Autres), en pourcentage.
+     */
+    private function destinationBreakdown(Builder $baseReservations): array
+    {
+        $rows = (clone $baseReservations)
+            ->whereNotNull('tour_id')
+            ->selectRaw('tour_id, COUNT(*) as total')
+            ->groupBy('tour_id')
+            ->get();
+
+        $total = (int) $rows->sum('total');
+        if ($total === 0) {
+            return ['total' => 0, 'segments' => []];
+        }
+
+        $voyages = Voyage::query()
+            ->whereIn('id', $rows->pluck('tour_id')->all())
+            ->get(['id', 'name', 'destination'])
+            ->keyBy('id');
+
+        $byDestination = [];
+        foreach ($rows as $row) {
+            $voyage = $voyages->get((int) $row->tour_id);
+            $label = trim((string) ($voyage?->destination ?: $voyage?->name ?: 'Autres'));
+            if ($label === '') {
+                $label = 'Autres';
+            }
+            $byDestination[$label] = ($byDestination[$label] ?? 0) + (int) $row->total;
+        }
+        arsort($byDestination);
+
+        $palette = ['#0b4778', '#86cce7', '#1eae7d', '#ff7b1b'];
+        $segments = [];
+        $index = 0;
+        $othersCount = 0;
+        foreach ($byDestination as $label => $count) {
+            if ($index < 4) {
+                $segments[] = [
+                    'label' => $label,
+                    'count' => $count,
+                    'percent' => round(($count / $total) * 100),
+                    'color' => $palette[$index],
+                ];
+            } else {
+                $othersCount += $count;
+            }
+            $index++;
+        }
+        if ($othersCount > 0) {
+            $segments[] = [
+                'label' => 'Autres',
+                'count' => $othersCount,
+                'percent' => max(0, 100 - array_sum(array_column($segments, 'percent'))),
+                'color' => '#cdd5df',
+            ];
+        }
+
+        return ['total' => $total, 'segments' => $segments];
+    }
+
+    /**
+     * Prochains départs (capacité, disponibilité, urgence).
+     */
+    private function upcomingDepartures(): array
+    {
+        if (!Schema::hasTable('departures')) {
+            return [];
+        }
+
+        $rows = Departure::query()
+            ->with('voyage:id,name,destination')
+            ->whereDate('start_date', '>=', now('Africa/Casablanca')->toDateString())
+            ->whereNotIn('status', [
+                Departure::STATUS_DRAFT,
+                Departure::STATUS_CLOSED,
+                Departure::STATUS_CANCELED,
+                Departure::STATUS_CANCELLED,
+            ])
+            ->orderBy('start_date')
+            ->limit(4)
+            ->get();
+
+        return $rows->map(function (Departure $departure) {
+            $total = max(0, (int) $departure->total_capacity);
+            $available = max(0, (int) ($departure->available_capacity ?? 0));
+            $ratio = $total > 0 ? $available / $total : 1.0;
+
+            if ($departure->status === Departure::STATUS_FULL || ($total > 0 && $available === 0)) {
+                $statusLabel = 'Complet';
+                $statusColor = 'red';
+            } elseif ($ratio <= 0.15) {
+                $statusLabel = 'Presque complet';
+                $statusColor = 'red';
+            } elseif ($departure->status === Departure::STATUS_LIMITED || $ratio <= 0.4) {
+                $statusLabel = 'Urgent';
+                $statusColor = 'orange';
+            } else {
+                $statusLabel = 'Ouvert';
+                $statusColor = 'green';
+            }
+
+            return [
+                'id' => (int) $departure->id,
+                'date' => $departure->start_date?->locale('fr')->translatedFormat('d M Y') ?? '',
+                'destination' => (string) ($departure->voyage?->destination ?: '—'),
+                'voyage' => (string) ($departure->voyage?->name ?: 'Voyage'),
+                'available' => $available,
+                'total' => $total,
+                'status_label' => $statusLabel,
+                'status_color' => $statusColor,
+            ];
+        })->all();
+    }
+
+    /**
+     * Alertes de pilotage quotidien (compteurs réels).
+     */
+    private function pilotageAlerts(array $breakdown, Builder $baseReservations): array
+    {
+        $alerts = [
+            [
+                'label' => 'Dossiers confirmés',
+                'subtitle' => 'Part des réservations confirmées',
+                'value' => round($breakdown['confirmed_pct']) . '%',
+                'icon' => '✓',
+                'color' => 'green',
+            ],
+            [
+                'label' => 'Réservations en attente',
+                'subtitle' => 'À confirmer ou relancer',
+                'value' => $breakdown['pending'],
+                'icon' => '!',
+                'color' => 'orange',
+            ],
+            [
+                'label' => 'Acomptes à suivre',
+                'subtitle' => 'Paiements partiels en cours',
+                'value' => (clone $baseReservations)->where('status', Reservation::STATUS_PARTIALLY_PAID)->count(),
+                'icon' => '○',
+                'color' => 'orange',
+            ],
+        ];
+
+        if (Schema::hasTable('agent_commission_entries')) {
+            $alerts[] = [
+                'label' => 'Commissions à approuver',
+                'subtitle' => 'Estimées, en attente de validation',
+                'value' => AgentCommissionEntry::query()->where('status', AgentCommissionEntry::STATUS_ESTIMATED)->count(),
+                'icon' => '□',
+                'color' => 'blue',
+            ];
+        }
+
+        return $alerts;
+    }
+
+    /**
+     * Indicateurs de qualité opérationnelle (distincts des alertes).
+     */
+    private function qualityIndicators(array $breakdown, array $recentActivity): array
+    {
+        $indicators = [
+            [
+                'label' => 'Réservations aujourd\'hui',
+                'subtitle' => 'Nouvelles ventes du jour',
+                'value' => $recentActivity['today'],
+                'icon' => '✓',
+                'color' => 'green',
+            ],
+            [
+                'label' => 'Taux d\'annulation',
+                'subtitle' => 'Part des réservations annulées',
+                'value' => round($breakdown['cancelled_pct']) . '%',
+                'icon' => '!',
+                'color' => 'orange',
+            ],
+        ];
+
+        if (Schema::hasTable('custom_requests')) {
+            $indicators[] = [
+                'label' => 'Demandes à la carte urgentes',
+                'subtitle' => 'Priorité urgente à traiter',
+                'value' => CustomRequest::query()
+                    ->whereIn('priority', ['urgent', 'very_urgent'])
+                    ->whereNotIn('status', [CustomRequest::STATUS_CONFIRMED, CustomRequest::STATUS_CANCELLED])
+                    ->count(),
+                'icon' => '○',
+                'color' => 'orange',
+            ];
+        }
+
+        if (Schema::hasTable('departures')) {
+            $indicators[] = [
+                'label' => 'Départs presque complets',
+                'subtitle' => 'Capacité restante faible',
+                'value' => Departure::query()
+                    ->whereDate('start_date', '>=', now('Africa/Casablanca')->toDateString())
+                    ->where(function ($query) {
+                        $query->where('status', Departure::STATUS_FULL)
+                            ->orWhere(function ($sub) {
+                                $sub->where('total_capacity', '>', 0)
+                                    ->whereRaw('COALESCE(available_capacity, 0) <= total_capacity * 0.15');
+                            });
+                    })
+                    ->count(),
+                'icon' => '□',
+                'color' => 'blue',
+            ];
+        }
+
+        return $indicators;
+    }
+
+    /**
+     * Ventes par canal (colonne reservations.channel).
+     */
+    private function salesChannels(Builder $baseReservations): array
+    {
+        if (!Schema::hasColumn('reservations', 'channel')) {
+            return [];
+        }
+
+        $rows = (clone $baseReservations)
+            ->selectRaw('channel, COUNT(*) as total')
+            ->groupBy('channel')
+            ->orderByDesc('total')
+            ->limit(4)
+            ->get();
+
+        $max = max(1, (int) $rows->max('total'));
+        $labels = [
+            '' => 'Agence',
+            'agency' => 'Agence',
+            'agence' => 'Agence',
+            'client' => 'Client web',
+            'web' => 'Client web',
+            'partner' => 'Partenaires',
+            'partenaire' => 'Partenaires',
+            'group_deal' => 'Group deals',
+            'group_deals' => 'Group deals',
+        ];
+
+        return $rows->map(function ($row) use ($labels, $max) {
+            $key = strtolower(trim((string) ($row->channel ?? '')));
+
+            return [
+                'label' => $labels[$key] ?? ucfirst($key),
+                'count' => (int) $row->total,
+                'percent' => (int) round(((int) $row->total / $max) * 100),
+            ];
+        })->all();
+    }
+
+    /**
+     * Objectif mensuel de chiffre d'affaires (cible configurable via settings).
+     */
+    private function monthlyObjective(float $revenueCurrentMonth, string $currency): array
+    {
+        $target = 0.0;
+        if (Schema::hasTable('settings')) {
+            $target = (float) Setting::getValue('dashboard_monthly_revenue_target', 0);
+        }
+
+        $progress = $target > 0.0 ? min(100, round(($revenueCurrentMonth / $target) * 100)) : null;
+        $remaining = $target > 0.0 ? max(0.0, $target - $revenueCurrentMonth) : null;
+
+        return [
+            'revenue_month' => $revenueCurrentMonth,
+            'target' => $target,
+            'progress' => $progress,
+            'remaining' => $remaining,
+            'currency' => $currency,
+        ];
+    }
+
+    /**
+     * Géométrie SVG du graphe « Performance commerciale » (mêmes repères que la maquette :
+     * x de 62 à 728, y de 46 (max) à 246 (zéro)).
+     */
+    private function performanceChart(array $monthlyEvolution): array
+    {
+        $count = count($monthlyEvolution);
+        if ($count < 2) {
+            return ['has_data' => false];
+        }
+
+        $revenues = array_map(static fn (array $m) => (float) $m['revenue'], $monthlyEvolution);
+        $volumes = array_map(static fn (array $m) => (int) $m['reservations'], $monthlyEvolution);
+        $hasData = array_sum($revenues) > 0 || array_sum($volumes) > 0;
+
+        $maxRevenue = max(1.0, max($revenues));
+        $maxVolume = max(1, max($volumes));
+
+        $xFor = static fn (int $i) => 62 + ($i * (666 / max(1, $count - 1)));
+        $yFor = static fn (float $value, float $max) => 246 - (($value / $max) * 200);
+
+        $revenuePoints = [];
+        $volumePoints = [];
+        for ($i = 0; $i < $count; $i++) {
+            $revenuePoints[] = [round($xFor($i), 1), round($yFor($revenues[$i], $maxRevenue), 1)];
+            $volumePoints[] = [round($xFor($i), 1), round($yFor((float) $volumes[$i], (float) $maxVolume), 1)];
+        }
+
+        $revenueLine = $this->smoothPath($revenuePoints);
+        $volumeLine = $this->smoothPath($volumePoints);
+        $lastRevenue = end($revenuePoints);
+        $firstRevenue = $revenuePoints[0];
+        $revenueArea = $revenueLine . ' L' . $lastRevenue[0] . ',246 L' . $firstRevenue[0] . ',246 Z';
+
+        $peakIndex = (int) array_search(max($revenues), $revenues, true);
+        $yLabels = [];
+        foreach ([1.0, 0.75, 0.5, 0.25] as $step) {
+            $yLabels[] = ['y' => round(246 - (200 * $step)) + 4, 'label' => $this->formatCompactAmount($maxRevenue * $step)];
+        }
+
+        return [
+            'has_data' => $hasData,
+            'revenue_line' => $revenueLine,
+            'revenue_area' => $revenueArea,
+            'volume_line' => $volumeLine,
+            'y_labels' => $yLabels,
+            'month_labels' => array_map(static function (array $m, int $i) use ($xFor) {
+                return ['x' => round($xFor($i)), 'label' => $m['label']];
+            }, $monthlyEvolution, array_keys($monthlyEvolution)),
+            'peak' => [
+                'x' => $revenuePoints[$peakIndex][0],
+                'y' => $revenuePoints[$peakIndex][1],
+                'label' => $this->formatCompactAmount($revenues[$peakIndex]),
+            ],
+        ];
+    }
+
+    private function smoothPath(array $points): string
+    {
+        $path = 'M' . $points[0][0] . ',' . $points[0][1];
+        for ($i = 1, $n = count($points); $i < $n; $i++) {
+            [$x1, $y1] = $points[$i - 1];
+            [$x2, $y2] = $points[$i];
+            $dx = round(($x2 - $x1) / 3, 1);
+            $path .= ' C' . ($x1 + $dx) . ',' . $y1 . ' ' . ($x2 - $dx) . ',' . $y2 . ' ' . $x2 . ',' . $y2;
+        }
+
+        return $path;
+    }
+
+    private function formatCompactAmount(float $amount): string
+    {
+        if ($amount >= 1000000) {
+            return rtrim(rtrim(number_format($amount / 1000000, 1, ',', ' '), '0'), ',') . ' M';
+        }
+        if ($amount >= 1000) {
+            return number_format($amount / 1000, 0, ',', ' ') . ' k';
+        }
+
+        return number_format($amount, 0, ',', ' ');
     }
 
     private function countActiveVoyages(): int
