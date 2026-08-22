@@ -149,7 +149,7 @@
                 </div>
 
                 @if($deals->hasPages())
-                    <div class="mt-8">{{ $deals->links() }}</div>
+                    <div class="mt-8">{{ $deals->links("pagination::tailwind") }}</div>
                 @endif
             </div>
         </div>

@@ -7,6 +7,7 @@ use App\Models\Message;
 use App\Models\Voyage;
 use App\Observers\VoyageObserver;
 use App\Services\Admin\AdminMenuService;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Route;
@@ -30,6 +31,13 @@ class AppServiceProvider extends ServiceProvider
     {
         Schema::defaultStringLength(191);
         Voyage::observe(VoyageObserver::class);
+
+        // Les layouts (admin, agent, client) sont en Bootstrap : la vue de pagination
+        // Tailwind par défaut y affiche des chevrons SVG géants non stylés.
+        // Les vues Tailwind (front public, partner_v2) passent explicitement
+        // ->links('pagination::tailwind').
+        Paginator::defaultView('pagination::bootstrap-5');
+        Paginator::defaultSimpleView('pagination::simple-bootstrap-5');
 
         Route::bind('airline', fn ($value) => AjAirline::findOrFail($value));
 

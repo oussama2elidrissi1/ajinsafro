@@ -47,7 +47,7 @@
 </div>
 
 <div class="mt-6">
-    {{ $voyages->links() }}
+    {{ $voyages->links("pagination::tailwind") }}
 </div>
 
 {{-- Modal réservation : choix du départ (comme le catalogue ventes admin) --}}

@@ -182,7 +182,7 @@
 
                         @if($voyages->hasPages())
                             <div class="mt-8 flex justify-center border-t border-gray-100 pt-6">
-                                {{ $voyages->links() }}
+                                {{ $voyages->links("pagination::tailwind") }}
                             </div>
                         @endif
                     </div>

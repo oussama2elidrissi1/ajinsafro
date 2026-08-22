@@ -67,7 +67,7 @@
         </table>
     </div>
     <div class="p-4">
-        {{ $clients->links() }}
+        {{ $clients->links("pagination::tailwind") }}
     </div>
 </div>
 @endsection

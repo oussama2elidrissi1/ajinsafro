@@ -93,7 +93,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="p-5">{{ $transactions->links() }}</div>
+        <div class="p-5">{{ $transactions->links("pagination::tailwind") }}</div>
     </div>
 </div>
 @endsection

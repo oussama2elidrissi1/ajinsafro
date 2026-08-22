@@ -232,7 +232,7 @@
 </div>
 
 <div class="mt-6">
-    {{ $voyages->links() }}
+    {{ $voyages->links("pagination::tailwind") }}
 </div>
 
 {{-- Modal liste départs (identique concept admin : "voir tous les départs") --}}

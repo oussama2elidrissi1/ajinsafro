@@ -81,7 +81,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="p-5">{{ $agents->links() }}</div>
+        <div class="p-5">{{ $agents->links("pagination::tailwind") }}</div>
     </div>
 </div>
 @endsection

@@ -74,7 +74,7 @@
         </table>
     </div>
     <div class="p-4">
-        {{ $commissions->links() }}
+        {{ $commissions->links("pagination::tailwind") }}
     </div>
 </div>
 @endsection
