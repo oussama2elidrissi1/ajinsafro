@@ -10,11 +10,11 @@
         </button>
 
         <p class="ve-tab-zone-hint text-muted small mb-0">
-            ?tape actuelle: <strong class="ve-stepper-current" data-ve-current-step-label>Informations générales</strong>
+            Étape actuelle: <strong class="ve-stepper-current" data-ve-current-step-label>Informations générales</strong>
         </p>
     </div>
 
-    <div class="ve-stepper" role="tablist" aria-label="?tapes du voyage">
+    <div class="ve-stepper" role="tablist" aria-label="Étapes du voyage">
         <button type="button" class="ve-stepper__step is-active"
             data-ve-step="1" data-ve-step-label="Informations générales" data-ve-step-target="#basic"
             data-ve-step-tabs="#basic,#location,#information">
@@ -56,10 +56,10 @@
 
     <div class="ve-stepper-nav">
         <button type="button" class="btn btn-outline-secondary btn-sm" data-ve-step-prev>
-            <i class="bx bx-chevron-left"></i> ?tape précédente
+            <i class="bx bx-chevron-left"></i> Étape précédente
         </button>
         <button type="button" class="btn btn-primary btn-sm" data-ve-step-next>
-            ?tape suivante <i class="bx bx-chevron-right"></i>
+            Étape suivante <i class="bx bx-chevron-right"></i>
         </button>
     </div>
 

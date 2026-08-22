@@ -115,40 +115,12 @@
         ];
     };
 
-    if ($sidebarUser?->hasRole(\App\Services\BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY)) {
-        $adminGroups = array_values(array_filter([
-            $makeLeaf(
-                'sales_workspace_only_final',
-                'Vente / Catalogue',
-                \Illuminate\Support\Facades\Route::has('admin.vente.catalogue') ? 'admin.vente.catalogue' : 'admin.reservations.workspace',
-                'bx bx-briefcase-alt',
-                ['admin.vente.catalogue', 'admin.reservations.workspace*', 'admin.reservations.create', 'admin.reservations.store'],
-                [],
-                null,
-                'reservations.view'
-            ),
-            $makeLeaf(
-                'reservations_index_only_final',
-                'R?servations',
-                'admin.reservation-dossiers.index',
-                'bx bx-calendar-check',
-                ['admin.reservation-dossiers.*', 'admin.reservations.index', 'admin.reservations.show', 'admin.reservations.edit', 'admin.reservations.update', 'admin.reservations.destroy'],
-                [],
-                null,
-                'reservations.view'
-            ),
-        ]));
-    }
+    $unreadCount = 0;
     if ($sidebarUser && \Illuminate\Support\Facades\Schema::hasTable('messages')) {
         $unreadCount = \App\Models\Message::query()
             ->where('recipient_id', $sidebarUser->id)
             ->where('folder_recipient', 'inbox')
             ->where('read', false)
-            ->count();
-    }
-    if (\Illuminate\Support\Facades\Schema::hasTable('reservations')) {
-        $pendingReservationsCount = \App\Models\Reservation::query()
-            ->where('status', \App\Models\Reservation::STATUS_PENDING)
             ->count();
     }
 
@@ -249,7 +221,7 @@
         }
     }
     $dashboardChildren = array_values(array_filter([
-        $makeLeaf('dashboard_overview', 'Vue d ensemble', 'admin.dashboard.vue-globale', 'bx bx-home-circle', ['admin.dashboard', 'admin.dashboard.vue-globale', 'admin.dashboard.v6'], [], null, 'dashboard.overview.view'),
+        $makeLeaf('dashboard_overview', 'Vue d\'ensemble', 'admin.dashboard.vue-globale', 'bx bx-home-circle', ['admin.dashboard', 'admin.dashboard.vue-globale', 'admin.dashboard.v6'], [], null, 'dashboard.overview.view'),
         $makeLeaf('dashboard_stats', 'Statistiques', 'admin.dashboard.statistiques', 'bx bx-bar-chart-alt-2', ['admin.dashboard.statistiques'], [], null, 'dashboard.stats.view'),
         $makeLeaf('dashboard_alerts', 'Alertes', 'admin.dashboard.alertes', 'bx bx-bell', ['admin.dashboard.alertes'], [], null, 'dashboard.alerts.view'),
     ]));
@@ -275,43 +247,43 @@
             $makeLeaf('custom_reservation_requests', 'Demandes à la carte', 'admin.custom-requests.index', 'bx bx-message-square-detail', ['admin.custom-requests.*'], [], null, 'custom_requests.view'),
             $makeLeaf('tailor_made_requests_online', 'Demandes à la carte en ligne', 'admin.tailor-made-requests.index', 'bx bx-globe', ['admin.tailor-made-requests.*'], [], null, 'reservations.view'),
         ])), 'bx bx-edit-alt'),
-        $makeLeaf('messagerie_index', 'Messagerie', 'admin.messagerie.index', 'bx bx-envelope', ['admin.messagerie.*'], [], $unreadCount > 0 ? $unreadCount : null, 'dashboard.view'),
+        $makeLeaf('messagerie_index', 'Messagerie', 'admin.messagerie.index', 'bx bx-envelope', ['admin.messagerie.*'], [], $unreadCount > 0 ? $unreadCount : null, 'messagerie.view'),
     ]));
 
     $productsChildren = array_values(array_filter([
         $makeLeaf('products_voyages', 'Voyage', 'admin.circuits.voyages.index', 'bx bx-map-alt', ['admin.circuits.voyages.*'], [], null, ['circuits.view', 'products-services.view']),
-        $makeLeaf('products_billetterie', 'Billetrie', 'admin.menu-hubs.billetterie', 'bx bx-ticket', ['admin.menu-hubs.billetterie'], [], null, 'products-services.view'),
-        $makeLeaf('products_hebergement', 'Hebergement', 'admin.menu-hubs.hebergement', 'bx bx-bed', ['admin.menu-hubs.hebergement', 'admin.wordpress.hotels.*', 'admin.accommodation-packages.*'], [], null, ['accommodations.view', 'products-services.view']),
+        $makeLeaf('products_billetterie', 'Billetterie', 'admin.menu-hubs.billetterie', 'bx bx-ticket', ['admin.menu-hubs.billetterie'], [], null, 'products-services.view'),
+        $makeLeaf('products_hebergement', 'Hébergement', 'admin.menu-hubs.hebergement', 'bx bx-bed', ['admin.menu-hubs.hebergement', 'admin.wordpress.hotels.*', 'admin.accommodation-packages.*'], [], null, ['accommodations.view', 'products-services.view']),
         $makeLeaf('products_hajj_omra', 'Hajj & Omra', 'admin.menu-hubs.hajj-omra', 'bx bx-moon', ['admin.menu-hubs.hajj-omra', 'admin.hajj-omra.*'], [], null, 'hajj-omra.view'),
-        $makeLeaf('products_low_cost', 'Formule low coast', 'admin.menu-hubs.low-cost', 'bx bx-wallet-alt', ['admin.menu-hubs.low-cost', 'admin.economic-offers.*'], [], null, 'economic-offers.view'),
-        $makeLeaf('products_activities', 'Activite', 'admin.menu-hubs.activites', 'bx bx-run', ['admin.menu-hubs.activites', 'admin.activity-offers.*', 'admin.circuits.activities.*', 'admin.activities.*'], [], null, 'activities.view'),
-        $makeLeaf('products_transfers', 'Transfer', 'admin.menu-hubs.transfers', 'bx bx-transfer-alt', ['admin.menu-hubs.transfers', 'admin.circuits.tour-transfers.*', 'admin.transfers.*'], [], null, 'transfers.view'),
+        $makeLeaf('products_low_cost', 'Formule low cost', 'admin.menu-hubs.low-cost', 'bx bx-wallet-alt', ['admin.menu-hubs.low-cost', 'admin.economic-offers.*'], [], null, 'economic-offers.view'),
+        $makeLeaf('products_activities', 'Activités', 'admin.menu-hubs.activites', 'bx bx-run', ['admin.menu-hubs.activites', 'admin.activity-offers.*', 'admin.circuits.activities.*', 'admin.activities.*'], [], null, 'activities.view'),
+        $makeLeaf('products_transfers', 'Transferts', 'admin.menu-hubs.transfers', 'bx bx-transfer-alt', ['admin.menu-hubs.transfers', 'admin.circuits.tour-transfers.*', 'admin.transfers.*'], [], null, 'transfers.view'),
         $makeLeaf('products_visa', 'Visa', 'admin.menu-hubs.visa', 'bx bx-id-card', ['admin.menu-hubs.visa', 'admin.visa.*'], [], null, 'visa.view'),
         $makeLeaf('products_group_deals', 'Deals', 'admin.group-deals.index', 'bx bx-purchase-tag', ['admin.group-deals.*'], [], null, 'group-deals.offers.view'),
     ]));
 
     $customersChildren = [];
-    $customersChildren[] = $makeLeaf('customers_prospects', 'Prospect', 'admin.customers.prospects', 'bx bx-user-plus', ['admin.customers.prospects'], [], null, 'customers.clients.view');
-    $customersChildren[] = $makeLeaf('customers_travelers', 'Voyageur', 'admin.customers.voyageurs', 'bx bx-id-card', ['admin.customers.voyageurs'], [], null, 'customers.travelers.view');
-    $customersChildren[] = $makeLeaf('partners_list', 'Partenaire', 'admin.partners.partenaires', 'bx bx-group', ['admin.partners.partenaires'], [], null, 'partners.list.view');
-    $customersChildren[] = $makeLeaf('partners_suppliers', 'Fournisseure', 'admin.partners.fournisseurs', 'bx bx-briefcase', ['admin.partners.fournisseurs'], [], null, 'partners.suppliers.view');
+    $customersChildren[] = $makeLeaf('customers_prospects', 'Prospects', 'admin.customers.prospects', 'bx bx-user-plus', ['admin.customers.prospects'], [], null, 'customers.clients.view');
+    $customersChildren[] = $makeLeaf('customers_travelers', 'Voyageurs', 'admin.customers.voyageurs', 'bx bx-id-card', ['admin.customers.voyageurs'], [], null, 'customers.travelers.view');
+    $customersChildren[] = $makeLeaf('partners_list', 'Partenaires', 'admin.partners.partenaires', 'bx bx-group', ['admin.partners.partenaires'], [], null, 'partners.list.view');
+    $customersChildren[] = $makeLeaf('partners_suppliers', 'Fournisseurs', 'admin.partners.fournisseurs', 'bx bx-briefcase', ['admin.partners.fournisseurs'], [], null, 'partners.suppliers.view');
     $customersChildren = collect($customersChildren)->filter()->unique('key')->values()->all();
 
     $pointsOfSaleChildren = array_values(array_filter([
         $makeLeaf('points_of_sale_index', 'Liste des points de vente', 'admin.points-of-sale.index', 'bx bx-buildings', ['admin.points-of-sale.*', 'admin.agencies.index', 'admin.agencies.show'], [], null, ['points_of_sale.view', 'agencies.view']),
-        $makeLeaf('pos_employees_index', 'Employes des points de vente', 'admin.agency-employees.index', 'bx bx-user-pin', ['admin.agency-employees.*'], [], null, ['pos_employees.view', 'agency_employees.view']),
+        $makeLeaf('pos_employees_index', 'Employés des points de vente', 'admin.agency-employees.index', 'bx bx-user-pin', ['admin.agency-employees.*'], [], null, ['pos_employees.view', 'agency_employees.view']),
         $makeLeaf('agency_accounts_pos_index', 'Comptes points de vente', 'admin.agency-accounts.index', 'bx bx-id-card', ['admin.agency-accounts.*'], [], null, 'agency_accounts.view'),
         $makeLeaf('assignments_index_secondary', 'Affectations', 'admin.assignments.index', 'bx bx-transfer', ['admin.assignments.*'], [], null, 'assignments.view'),
         $makeLeaf('points_of_sale_performance', 'Performance points de vente', 'admin.points-of-sale.performance', 'bx bx-bar-chart-alt-2', ['admin.points-of-sale.performance', 'admin.agencies.performance'], [], null, ['points_of_sale.performance', 'agency_performance.view']),
     ]));
 
     $financeChildren = array_values(array_filter([
-        $makeLeaf('finance_my_commissions', 'Mes comission', 'admin.agent.commissions.index', 'bx bx-line-chart', ['admin.agent.commissions.*'], [], null, 'agent.commissions.view'),
-        $makeLeaf('finance_factures', 'Facture', 'admin.finance.factures', 'bx bx-receipt', ['admin.finance.factures'], [], null, 'finance.view'),
-        $makeLeaf('finance_paiements', 'Paeiment', 'admin.finance.paiements', 'bx bx-credit-card', ['admin.finance.paiements'], [], null, 'finance.view'),
-        $makeLeaf('finance_depenses', 'Depennse', 'admin.finance.depenses', 'bx bx-money-withdraw', ['admin.finance.depenses'], [], null, 'finance.view'),
-        $makeLeaf('finance_departures', 'Finances departs', 'admin.finance.departures.index', 'bx bx-calculator', ['admin.finance.departures.*'], [], null, 'departures_finance.view'),
-        $makeLeaf('finance_commissions', 'Comission', 'admin.finance.commissions', 'bx bx-pie-chart-alt-2', ['admin.finance.commissions'], [], null, 'finance.view'),
+        $makeLeaf('finance_my_commissions', 'Mes commissions', 'admin.agent.commissions.index', 'bx bx-line-chart', ['admin.agent.commissions.*'], [], null, ['commissions.view-own', 'commissions.view-team', 'commissions.view-all']),
+        $makeLeaf('finance_factures', 'Factures', 'admin.finance.factures', 'bx bx-receipt', ['admin.finance.factures'], [], null, 'finance.view'),
+        $makeLeaf('finance_paiements', 'Paiements', 'admin.finance.paiements', 'bx bx-credit-card', ['admin.finance.paiements'], [], null, 'finance.view'),
+        $makeLeaf('finance_depenses', 'Dépenses', 'admin.finance.depenses', 'bx bx-money-withdraw', ['admin.finance.depenses'], [], null, 'finance.view'),
+        $makeLeaf('finance_departures', 'Finances départs', 'admin.finance.departures.index', 'bx bx-calculator', ['admin.finance.departures.*'], [], null, 'departures_finance.view'),
+        $makeLeaf('finance_commissions', 'Commissions', 'admin.finance.commissions', 'bx bx-pie-chart-alt-2', ['admin.finance.commissions'], [], null, 'finance.view'),
     ]));
 
     // Le groupe Administration (paramètres de l'application) est réservé aux comptes à
@@ -328,82 +300,26 @@
     }
 
     $administrationChildren = array_values(array_filter([
-        $makeLeaf('admin_settings_index', 'Vue generale', 'admin.settings.index', 'bx bx-cog', ['admin.settings.index'], [], null, 'settings.view'),
+        $makeLeaf('admin_settings_index', 'Vue générale', 'admin.settings.index', 'bx bx-cog', ['admin.settings.index'], [], null, 'settings.view'),
         $makeLeaf('admin_users', 'Utilisateurs', 'admin.settings.utilisateurs', 'bx bx-user-pin', ['admin.settings.utilisateurs*'], [], null, 'settings.users.manage'),
-        $makeLeaf('admin_roles', 'Roles & permissions', 'admin.settings.roles-permissions', 'bx bx-shield-quarter', ['admin.settings.roles-permissions*'], [], null, 'settings.roles.manage'),
-        $makeLeaf('admin_general', 'Parametres generaux', 'admin.settings.parametres-generaux', 'bx bx-slider-alt', ['admin.settings.parametres-generaux*'], [], null, 'settings.general.manage'),
-        $makeLeaf('admin_referentials', 'Referentiels metier', 'admin.settings.referentiels-metier', 'bx bx-list-ul', ['admin.settings.referentiels-metier*'], [], null, 'settings.general.manage'),
+        $makeLeaf('admin_roles', 'Rôles & permissions', 'admin.settings.roles-permissions', 'bx bx-shield-quarter', ['admin.settings.roles-permissions*'], [], null, 'settings.roles.manage'),
+        $makeLeaf('admin_general', 'Paramètres généraux', 'admin.settings.parametres-generaux', 'bx bx-slider-alt', ['admin.settings.parametres-generaux*'], [], null, 'settings.general.manage'),
+        $makeLeaf('admin_referentials', 'Référentiels métier', 'admin.settings.referentiels-metier', 'bx bx-list-ul', ['admin.settings.referentiels-metier*'], [], null, 'settings.general.manage'),
         $makeLeaf('admin_charge_types', 'Types de charges', 'admin.settings.charge-types.index', 'bx bx-purchase-tag-alt', ['admin.settings.charge-types*'], [], null, 'charge_types.manage'),
         $makeLeaf('admin_home_page', 'Home page', 'admin.settings.home-page.edit', 'bx bx-home-heart', ['admin.settings.home-page.*'], [], null, 'settings.general.manage'),
-        $makeLeaf('admin_security', 'Securite', 'admin.settings.securite', 'bx bx-lock-alt', ['admin.settings.securite*'], [], null, 'settings.security.manage'),
+        $makeLeaf('admin_security', 'Sécurité', 'admin.settings.securite', 'bx bx-lock-alt', ['admin.settings.securite*'], [], null, 'settings.security.manage'),
     ]));
 
     $adminGroups = array_values(array_filter([
-        $makeGroup('grp_dashboard', 'Tableau de board', $dashboardChildren, 'bx bx-home-circle'),
-        $makeGroup('grp_reservations', 'Reservation', $reservationsChildren, 'bx bx-calendar-check'),
-        $makeGroup('grp_products', 'Produit et service', $productsChildren, 'bx bx-layer'),
-        $makeGroup('grp_customers', 'Client', $customersChildren, 'bx bx-group'),
+        $makeGroup('grp_dashboard', 'Tableau de bord', $dashboardChildren, 'bx bx-home-circle'),
+        $makeGroup('grp_reservations', 'Réservations', $reservationsChildren, 'bx bx-calendar-check'),
+        $makeGroup('grp_products', 'Produits & services', $productsChildren, 'bx bx-layer'),
+        $makeGroup('grp_customers', 'Clients', $customersChildren, 'bx bx-group'),
         $makeGroup('grp_points_of_sale', 'Points de vente', $pointsOfSaleChildren, 'bx bx-buildings'),
-        $makeLeaf('grp_rh', 'Gestion Rh', 'admin.menu-hubs.rh', 'bx bx-user-voice', ['admin.menu-hubs.rh', 'admin.settings.utilisateurs', 'admin.settings.roles-permissions'], [], null, 'settings.users.manage'),
-        $makeGroup('grp_finance', 'Finace reporting', $financeChildren, 'bx bx-wallet'),
+        $makeLeaf('grp_rh', 'Gestion RH', 'admin.menu-hubs.rh', 'bx bx-user-voice', ['admin.menu-hubs.rh', 'admin.settings.utilisateurs', 'admin.settings.roles-permissions'], [], null, 'settings.users.manage'),
+        $makeGroup('grp_finance', 'Finance & reporting', $financeChildren, 'bx bx-wallet'),
         $canSeeAdministration ? $makeGroup('grp_admin', 'Administration', $administrationChildren, 'bx bx-cog') : null,
     ]));
-
-    if ($sidebarUser?->hasRole(\App\Services\BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY)) {
-        $reservationsOnlyChildren = array_values(array_filter([
-            $makeLeaf(
-                'reservations_index_only',
-                'Réservations',
-                'admin.reservations.index',
-                'bx bx-calendar-check',
-                ['admin.reservations.*', 'admin.reservation-dossiers.*'],
-                [],
-                null,
-                'reservations.view'
-            ),
-        ]));
-
-        $adminGroups = array_values(array_filter([
-            $makeGroup('grp_reservations', 'Réservations', $reservationsOnlyChildren, 'bx bx-calendar-check'),
-        ]));
-    }
-
-    if ($sidebarUser?->hasRole(\App\Services\BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY)) {
-        $adminGroups = array_values(array_filter([
-            $makeLeaf(
-                'sales_workspace_only',
-                'Vente',
-                \Illuminate\Support\Facades\Route::has('admin.vente.catalogue') ? 'admin.vente.catalogue' : 'admin.reservations.workspace',
-                'bx bx-briefcase-alt',
-                [
-                    'admin.vente.catalogue',
-                    'admin.reservations.workspace*',
-                    'admin.reservations.create',
-                    'admin.reservations.store',
-                ],
-                [],
-                null,
-                'reservations.view'
-            ),
-            $makeLeaf(
-                'reservations_index_only_flat',
-                'R?servations',
-                'admin.reservations.index',
-                'bx bx-calendar-check',
-                [
-                    'admin.reservations.index',
-                    'admin.reservation-dossiers.*',
-                    'admin.reservations.show',
-                    'admin.reservations.edit',
-                    'admin.reservations.update',
-                    'admin.reservations.destroy',
-                ],
-                [],
-                null,
-                'reservations.view'
-            ),
-        ]));
-    }
 
     if ($sidebarUser?->hasRole(\App\Services\BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY)) {
         $adminGroups = array_values(array_filter([
@@ -419,7 +335,7 @@
             ),
             $makeLeaf(
                 'reservations_index_only_final',
-                'Reservations',
+                'Réservations',
                 'admin.reservation-dossiers.index',
                 'bx bx-calendar-check',
                 ['admin.reservations.index', 'admin.reservation-dossiers.*', 'admin.reservations.show', 'admin.reservations.edit', 'admin.reservations.update', 'admin.reservations.destroy'],
@@ -429,7 +345,7 @@
             ),
             $makeLeaf(
                 'custom_requests_only_final',
-                'Demandes a la carte',
+                'Demandes à la carte',
                 'admin.custom-requests.index',
                 'bx bx-message-square-detail',
                 ['admin.custom-requests.*'],
@@ -439,7 +355,7 @@
             ),
             $makeLeaf(
                 'tailor_made_requests_online_only_final',
-                'Demande a la carte en ligne',
+                'Demandes à la carte en ligne',
                 'admin.tailor-made-requests.index',
                 'bx bx-globe',
                 ['admin.tailor-made-requests.*'],

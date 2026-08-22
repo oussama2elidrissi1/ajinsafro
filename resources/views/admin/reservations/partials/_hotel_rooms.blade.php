@@ -469,7 +469,7 @@
             return explicitUnitPrice;
         }
 
-        // Fallback sur le prix du voyage s?lectionn? (data-price-from)
+        // Fallback sur le prix du voyage sélectionné (data-price-from)
         var tripOption = getSelectedTripOption();
         return parseNumber(tripOption && tripOption.getAttribute('data-price-from'));
     }

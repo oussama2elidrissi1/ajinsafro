@@ -1,6 +1,6 @@
 @extends('layouts.admin-v6')
 
-@section('title', 'Détail demande Formule ?conomique')
+@section('title', 'Détail demande Formule économique')
 
 @section('content')
     <x-admin.page-header

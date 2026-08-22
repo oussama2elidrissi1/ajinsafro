@@ -50,7 +50,7 @@ return [
             'key' => 'messagerie',
             'label' => 'Messagerie',
             'icon' => 'bx bx-envelope',
-            'permission' => 'dashboard.view',
+            'permission' => 'messagerie.view',
             'route' => 'admin.messagerie.index',
             'active_patterns' => ['admin.messagerie.*'],
         ],
@@ -165,7 +165,7 @@ return [
                 ],
                 [
                     'key' => 'economic_offers',
-                    'label' => 'Formule ?conomique',
+                    'label' => 'Formule économique',
                     'icon' => 'bx bx-wallet-alt',
                     'permission' => 'economic-offers.view',
                     'children' => [
@@ -468,6 +468,19 @@ return [
         'admin.settings.charge-types.store' => 'charge_types.manage',
         'admin.settings.charge-types.update' => 'charge_types.manage',
         'admin.settings.charge-types.destroy' => 'charge_types.manage',
+
+        'admin.reservation-dossiers.destroy' => 'reservations.delete',
+
+        // Réseau d'agences (branches) : mêmes droits que les points de vente.
+        'admin.branches.index' => ['agencies.view', 'points_of_sale.view'],
+        'admin.branches.create' => ['agencies.create', 'points_of_sale.create'],
+        'admin.branches.store' => ['agencies.create', 'points_of_sale.create'],
+        'admin.branches.edit' => ['agencies.edit', 'points_of_sale.edit'],
+        'admin.branches.update' => ['agencies.edit', 'points_of_sale.edit'],
+        'admin.branches.destroy' => ['agencies.delete', 'points_of_sale.delete'],
+
+        // Médias du studio voyages.
+        'admin.local-media.upload' => 'circuits.voyages.view',
     ],
 
     'route_prefix_permissions' => [
@@ -510,5 +523,9 @@ return [
         'admin.group-deals.trips.' => 'group-deals.trips.view',
         'admin.group-deals.departures.' => 'group-deals.departures.view',
         'admin.group-deals.' => 'group-deals.offers.view',
+        'admin.messagerie.' => 'messagerie.view',
+        'admin.partner-accounts.' => 'partners.view',
+        'admin.partner-commission-rules.' => 'partners.view',
+        'admin.wp-media.' => 'circuits.voyages.view',
     ],
 ];

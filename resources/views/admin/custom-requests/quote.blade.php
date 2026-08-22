@@ -547,7 +547,7 @@ document.addEventListener('DOMContentLoaded', function () {
         day.innerHTML = `<div class="quote-day-head"><div class="quote-day-title">Jour <span data-day-label>${dayIndex + 1}</span></div><div class="d-flex gap-2 flex-wrap"><button type="button" class="quote-btn quote-btn-soft quote-day-toggle" data-toggle-day aria-label="Ouvrir ou fermer"><i class="bx bx-chevron-down"></i></button><button type="button" class="quote-btn quote-btn-danger" data-remove-day><i class="bx bx-trash"></i></button></div></div><div class="quote-day-body">
             <div class="quote-grid">
                 <input type="hidden" name="days[${dayIndex}][id]" value="" data-day-id>
-                <div class="quote-field"><label>Num?ro du jour</label><input type="number" min="1" name="days[${dayIndex}][day_number]" data-day-number value="${dayIndex + 1}"></div>
+                <div class="quote-field"><label>Numéro du jour</label><input type="number" min="1" name="days[${dayIndex}][day_number]" data-day-number value="${dayIndex + 1}"></div>
                 <div class="quote-field"><label>Date du jour</label><input type="date" name="days[${dayIndex}][date]"></div>
                 <div class="quote-field"><label>Titre du jour</label><input name="days[${dayIndex}][title]"></div>
                 <div class="quote-field"><label>Ville / destination</label><input name="days[${dayIndex}][city]"></div>

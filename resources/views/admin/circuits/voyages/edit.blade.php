@@ -139,7 +139,7 @@
 
                             <div class="editor-save-bar">
                                 <button type="button" class="btn btn-outline-primary" data-ve-step-next-secondary>
-                                    ?tape suivante : Tarifs & capacité <i class="bx bx-chevron-right"></i>
+                                    Étape suivante : Tarifs & capacité <i class="bx bx-chevron-right"></i>
                                 </button>
                                 <button type="submit" form="edit-voyage-form" class="btn btn-primary" id="edit-voyage-submit-btn">
                                     <i class="bx bx-save"></i> Enregistrer cette étape
@@ -866,7 +866,7 @@
                 syncUIFromTarget(target);
             });
 
-            // After-save pending navigation: if a save was triggered by "?tape suivante",
+            // After-save pending navigation: if a save was triggered by "Étape suivante",
             // redirect to the target section that was stored before submit.
             var _pendingTab = (function () {
                 try { return sessionStorage.getItem('ve_pending_next_tab'); } catch (e) { return null; }

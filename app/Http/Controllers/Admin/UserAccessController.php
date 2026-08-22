@@ -190,6 +190,8 @@ class UserAccessController extends Controller
 
     private function buildFormPayload(User $user): array
     {
+        AdminMenuPermissionRegistry::ensurePermissionsExist();
+
         $roles = Role::query()->orderBy('name')->get();
         if ($this->branchScope->visibleBranchIds(request()->user()) !== null) {
             $roles = $roles->reject(fn (Role $role) => in_array($role->name, self::GLOBAL_ROLE_NAMES, true))->values();
@@ -296,14 +298,6 @@ class UserAccessController extends Controller
         $roleName = $data['role_name'] ?? null;
         $permissions = $this->normalizePermissionsInput($data['permissions'] ?? []);
 
-        \Log::debug('UserAccessController@syncUserAccess payload', [
-            'user_id' => $user->id,
-            'access_mode' => $accessMode,
-            'role_name' => $roleName,
-            'permissions_count' => count($permissions),
-            'permissions' => $permissions,
-        ]);
-
         if ($accessMode === 'role') {
             $user->syncRoles($roleName ? [$roleName] : []);
             $user->syncPermissions([]);
@@ -314,54 +308,5 @@ class UserAccessController extends Controller
         $user->syncRoles([]);
         $user->syncPermissions($permissions);
         app(PermissionRegistrar::class)->forgetCachedPermissions();
-    }
-
-    private function permissionGroups(): array
-    {
-        $groups = [];
-        $availablePermissions = Permission::query()->pluck('name')->flip();
-
-        foreach (config('admin_menu.items', []) as $section) {
-            $permissions = [];
-            $addedInGroup = [];
-
-            $pushPermission = static function (string $name, string $label) use (&$permissions, &$addedInGroup, $availablePermissions): void {
-                if (! $availablePermissions->has($name)) {
-                    return;
-                }
-
-                if (isset($addedInGroup[$name])) {
-                    return;
-                }
-
-                $permissions[] = [
-                    'name' => $name,
-                    'label' => $label,
-                ];
-                $addedInGroup[$name] = true;
-            };
-
-            if (! empty($section['permission'])) {
-                $pushPermission((string) $section['permission'], 'Accès section: ' . $section['label']);
-            }
-
-            foreach ($section['children'] ?? [] as $child) {
-                if (empty($child['permission'])) {
-                    continue;
-                }
-
-                $pushPermission((string) $child['permission'], (string) ($child['label'] ?? $child['permission']));
-            }
-
-            if (! empty($permissions)) {
-                $groups[] = [
-                    'key' => $section['key'] ?? str()->slug($section['label']),
-                    'label' => $section['label'],
-                    'permissions' => $permissions,
-                ];
-            }
-        }
-
-        return $groups;
     }
 }

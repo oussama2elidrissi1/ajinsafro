@@ -95,7 +95,7 @@
                     </div>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">T?l?phone</label>
+                            <label class="form-label">Téléphone</label>
                             <input type="text" class="form-control" name="header[phone]"
                                    value="{{ old('header.phone', data_get($header, 'phone')) }}">
                         </div>

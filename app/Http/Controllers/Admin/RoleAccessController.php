@@ -24,6 +24,8 @@ class RoleAccessController extends Controller
 
     public function create()
     {
+        AdminMenuPermissionRegistry::ensurePermissionsExist();
+
         return view('admin.settings.roles-permissions.form', [
             'roleModel' => new Role(['guard_name' => 'web']),
             'permissionSections' => AdminMenuPermissionRegistry::rolePermissionSections(
@@ -54,6 +56,8 @@ class RoleAccessController extends Controller
 
     public function edit(Role $role)
     {
+        AdminMenuPermissionRegistry::ensurePermissionsExist();
+
         return view('admin.settings.roles-permissions.form', [
             'roleModel' => $role,
             'permissionSections' => AdminMenuPermissionRegistry::rolePermissionSections(

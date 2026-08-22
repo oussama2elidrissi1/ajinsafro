@@ -25,7 +25,7 @@
             <div class="ws-flow-nav-card">
                 <p class="ws-flow-nav-card__eyebrow">Nouvelle réservation</p>
                 <h3 class="ws-flow-nav-card__title">Workflow</h3>
-                <div class="ws-flow-nav" role="tablist" aria-label="?tapes de réservation">
+                <div class="ws-flow-nav" role="tablist" aria-label="Étapes de réservation">
                     <button type="button" class="ws-flow-nav__item is-active" data-ws-step-nav="1">
                         <span class="ws-flow-nav__index">1</span>
                         <span class="ws-flow-nav__text">Prestation</span>
@@ -75,7 +75,7 @@
                 <div id="ws-prefill-panel" class="hidden ws-section ws-section--voyage">
                     <div class="ws-step-head">
                         <div>
-                            <p class="ws-step-head__eyebrow">?tape 1</p>
+                            <p class="ws-step-head__eyebrow">Étape 1</p>
                             <h3 class="ws-step-head__title">Sélection de la prestation</h3>
                             <p class="ws-step-head__desc">Vérifiez le voyage, le départ, la disponibilité et la formule avant de continuer.</p>
                         </div>
@@ -144,7 +144,7 @@
                 <div class="ws-section">
                     <div class="ws-step-head">
                         <div>
-                            <p class="ws-step-head__eyebrow">?tape 2</p>
+                            <p class="ws-step-head__eyebrow">Étape 2</p>
                             <h3 class="ws-step-head__title">Informations client</h3>
                             <p class="ws-step-head__desc">Identifiez le client ou créez un nouveau dossier avec les informations utiles au voyage.</p>
                         </div>
@@ -235,7 +235,7 @@
                 <div class="ws-section">
                     <div class="ws-step-head">
                         <div>
-                            <p class="ws-step-head__eyebrow">?tape 3</p>
+                            <p class="ws-step-head__eyebrow">Étape 3</p>
                             <h3 class="ws-step-head__title">Participants</h3>
                             <p class="ws-step-head__desc">Ajoutez les accompagnants et répartissez clairement adulte, enfant et bébé.</p>
                         </div>
@@ -267,7 +267,7 @@
                 <div id="section-extras" class="ws-section">
                     <div class="ws-step-head">
                         <div>
-                            <p class="ws-step-head__eyebrow">?tape 4</p>
+                            <p class="ws-step-head__eyebrow">Étape 4</p>
                             <h3 class="ws-step-head__title">Extras et activités</h3>
                             <p class="ws-step-head__desc">Ajoutez les options de réservation pertinentes et visualisez leur impact sur le total.</p>
                         </div>
@@ -286,7 +286,7 @@
                 <div class="ws-section ws-section--final">
                     <div class="ws-step-head">
                         <div>
-                            <p class="ws-step-head__eyebrow">?tape 5</p>
+                            <p class="ws-step-head__eyebrow">Étape 5</p>
                             <h3 class="ws-step-head__title">Paiement et validation</h3>
                             <p class="ws-step-head__desc">Vérifiez le récapitulatif final, enregistrez le paiement et confirmez la réservation.</p>
                         </div>

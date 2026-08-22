@@ -6,7 +6,7 @@
     <input type="text" class="form-control" name="title" id="title" value="{{ old('title', $day?->title) }}" required placeholder="Ex : Arrivée à Casablanca">
 </div>
 <div class="mb-3">
-    <label for="city" class="form-label">Ville / ?tape</label>
+    <label for="city" class="form-label">Ville / Étape</label>
     <input type="text" class="form-control" name="city" id="city" value="{{ old('city', $day?->city) }}" placeholder="Ex : Casablanca">
 </div>
 <div class="mb-3">

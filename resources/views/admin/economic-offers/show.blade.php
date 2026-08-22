@@ -1,6 +1,6 @@
 @extends('layouts.admin-v6')
 
-@section('title', 'Fiche Formule ?conomique')
+@section('title', 'Fiche Formule économique')
 
 @section('content')
     <x-admin.page-header
@@ -8,7 +8,7 @@
         :subtitle="$offer->short_description ?: 'Offre économique Ajinsafro'"
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Formule ?conomique', 'url' => route('admin.economic-offers.index')],
+            ['label' => 'Formule économique', 'url' => route('admin.economic-offers.index')],
             ['label' => 'Fiche offre'],
         ]"
     >

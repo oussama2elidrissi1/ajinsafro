@@ -1,15 +1,15 @@
 @extends('layouts.admin-v6')
 
-@section('title', 'Formule ?conomique')
+@section('title', 'Formule économique')
 
 @section('content')
     <x-admin.page-header
-        title="Formule ?conomique"
+        title="Formule économique"
         subtitle="Pilotez les offres petit budget Ajinsafro depuis un espace unique."
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
             ['label' => 'Produits & Services'],
-            ['label' => 'Formule ?conomique'],
+            ['label' => 'Formule économique'],
         ]"
     >
         <x-slot name="actions">

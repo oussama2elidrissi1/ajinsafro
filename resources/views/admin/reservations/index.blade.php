@@ -834,13 +834,13 @@
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="pairingModalLabel">Jumeler la r?servation</h5>
+                    <h5 class="modal-title" id="pairingModalLabel">Jumeler la réservation</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
                 </div>
                 <div class="modal-body" id="pairing-modal-body">
                     <div class="text-center py-5">
                         <div class="spinner-border text-primary" role="status"></div>
-                        <p class="mt-2 text-muted">Recherche des r?servations compatibles...</p>
+                        <p class="mt-2 text-muted">Recherche des réservations compatibles...</p>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1314,9 +1314,9 @@
             var resCode = btn.getAttribute('data-res-code');
             if (!resId) return;
             if (pairingModalLabel) {
-                pairingModalLabel.textContent = 'Jumeler la r?servation ' + (resCode || '#'+resId);
+                pairingModalLabel.textContent = 'Jumeler la réservation ' + (resCode || '#'+resId);
             }
-            pairingModalBody.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Recherche des r?servations compatibles...</p></div>';
+            pairingModalBody.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Recherche des réservations compatibles...</p></div>';
             pairingModal.show();
 
             var url = base + '/reservations/' + encodeURIComponent(resId) + '/pairing-candidates';

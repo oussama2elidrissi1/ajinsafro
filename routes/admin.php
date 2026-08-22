@@ -80,6 +80,7 @@ use App\Http\Controllers\Admin\MenuHubController;
 use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
 use App\Http\Controllers\DemoController;
 use App\Http\Controllers\MessagerieController as AgentMessagerieController;
+use App\Http\Controllers\Admin\MessagerieController as AdminMessagerieController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -392,7 +393,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::post('circuits/voyages/v2/steps/{step}/save', [VoyageController::class, 'saveStepV2'])->name('circuits.voyages.v2.steps.save.create');
         Route::get('circuits/voyages/v2/steps/{step}/save', static function (string $step) {
             return redirect()->route('admin.circuits.voyages.create-v2')->with('error', 'Utilisez le formulaire pour enregistrer.');
-        });
+        })->name('circuits.voyages.v2.steps.save.create.redirect');
         Route::post('circuits/voyages', [VoyageController::class, 'store'])->name('circuits.voyages.store');
         Route::get('circuits/voyages/{id}', [VoyageController::class, 'show'])->name('circuits.voyages.show')->whereNumber('id');
         Route::get('circuits/voyages/{id}/edit', static function (int $id) {
@@ -402,7 +403,7 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::post('circuits/voyages/{id}/v2/steps/{step}/save', [VoyageController::class, 'saveStepV2'])->name('circuits.voyages.v2.steps.save')->whereNumber('id');
         Route::get('circuits/voyages/{id}/v2/steps/{step}/save', static function (string $id, string $step) {
             return redirect()->route('admin.circuits.voyages.edit-v2', (int) $id)->with('error', 'Utilisez le formulaire pour enregistrer.');
-        })->whereNumber('id');
+        })->name('circuits.voyages.v2.steps.save.redirect')->whereNumber('id');
         Route::get('circuits/voyages/{voyage}/reservation-data', VoyageReservationDataController::class)->name('circuits.voyages.reservation-data');
         Route::match(['put', 'patch'], 'circuits/voyages/{id}', [VoyageController::class, 'update'])->name('circuits.voyages.update')->whereNumber('id');
         Route::delete('circuits/voyages/{id}', [VoyageController::class, 'destroy'])->name('circuits.voyages.destroy')->whereNumber('id');
@@ -680,11 +681,16 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::prefix('messagerie')
             ->name('messagerie.')
             ->group(function () {
-                Route::get('/', [AgentMessagerieController::class, 'index'])->name('index');
+                // Conversations temps réel (canaux : direct / réservation / partenaires).
+                Route::get('/', [AdminMessagerieController::class, 'index'])->name('index');
+                Route::get('channels', [AdminMessagerieController::class, 'channels'])->name('channels');
+                Route::post('channels', [AdminMessagerieController::class, 'createChannel'])->name('channels.create');
+                Route::get('channels/{channel}/messages', [AdminMessagerieController::class, 'messages'])->name('messages')->whereNumber('channel');
+                Route::post('channels/{channel}/messages', [AdminMessagerieController::class, 'send'])->name('send')->whereNumber('channel');
+
+                // Boîte interne (messages type mail échangés avec le portail agent).
                 Route::post('/', [AgentMessagerieController::class, 'store'])->name('store');
-                Route::get('{message}', [AgentMessagerieController::class, 'show'])->name('show')->whereNumber('message');
                 Route::patch('{message}/read', [AgentMessagerieController::class, 'markRead'])->name('read')->whereNumber('message');
-                Route::patch('{message}/star', [AgentMessagerieController::class, 'toggleStar'])->name('star')->whereNumber('message');
                 Route::delete('{message}', [AgentMessagerieController::class, 'destroy'])->name('destroy')->whereNumber('message');
             });
 

@@ -31,7 +31,31 @@ class MessagerieController extends Controller
         $this->branchScope->scopeReservations($reservationQuery, $user);
         $reservations = $reservationQuery->get(['id', 'client_first_name', 'client_last_name']);
         $users = \App\Models\User::where('is_active', true)->orderBy('name')->get(['id', 'name', 'email']);
-        return view('admin.messagerie.index', compact('reservations', 'users'));
+
+        // Boîte interne (messages type mail échangés avec le portail agent).
+        $inboxMessages = \App\Models\Message::query()
+            ->with('sender:id,name,email')
+            ->where('recipient_id', $user->id)
+            ->where('folder_recipient', 'inbox')
+            ->latest()
+            ->limit(100)
+            ->get();
+        $sentMessages = \App\Models\Message::query()
+            ->with('recipient:id,name,email')
+            ->where('sender_id', $user->id)
+            ->whereNull('folder_sender')
+            ->latest()
+            ->limit(50)
+            ->get();
+        $inboxUnreadCount = $inboxMessages->where('read', false)->count();
+
+        return view('admin.messagerie.index', compact(
+            'reservations',
+            'users',
+            'inboxMessages',
+            'sentMessages',
+            'inboxUnreadCount'
+        ));
     }
 
     /**

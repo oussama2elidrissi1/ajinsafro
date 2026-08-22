@@ -57,6 +57,7 @@ class AdminPermissionsSeeder extends Seeder
                 || str_starts_with($permission, 'accommodations.')
                 || str_starts_with($permission, 'operations.')
                 || str_starts_with($permission, 'visa.')
+                || str_starts_with($permission, 'messagerie.')
                 || in_array($permission, ['agencies.view', 'points_of_sale.view', 'commissions.view-own'], true);
         }));
         $agentRole->syncPermissions(array_values(array_diff($agentPermissions, self::RESTRICTED_RESERVATION_PERMISSIONS)));
@@ -76,6 +77,7 @@ class AdminPermissionsSeeder extends Seeder
                 || str_starts_with($permission, 'finance.')
                 || str_starts_with($permission, 'reporting.')
                 || str_starts_with($permission, 'reservations.payments.')
+                || str_starts_with($permission, 'messagerie.')
                 || str_starts_with($permission, 'commissions.');
         })));
 
@@ -94,6 +96,7 @@ class AdminPermissionsSeeder extends Seeder
                 'custom_requests.confirm',
                 'custom_requests.cancel',
                 'custom_requests.documents',
+                'messagerie.view',
             ], true);
         })));
 

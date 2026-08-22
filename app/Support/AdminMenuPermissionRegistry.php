@@ -110,6 +110,28 @@ class AdminMenuPermissionRegistry
         return array_values(array_unique(array_filter($names)));
     }
 
+    /**
+     * Crée en base les permissions du registre qui n'existent pas encore, afin que
+     * chaque page du menu ait toujours sa case dans les écrans Accès / Rôles.
+     * Ne fait aucune écriture quand tout est déjà synchronisé.
+     */
+    public static function ensurePermissionsExist(): void
+    {
+        $names = static::allPermissionNames();
+        $existing = Permission::query()->whereIn('name', $names)->pluck('name')->all();
+        $missing = array_diff($names, $existing);
+
+        if ($missing === []) {
+            return;
+        }
+
+        foreach ($missing as $name) {
+            Permission::findOrCreate($name, 'web');
+        }
+
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+    }
+
     public static function legacyPermissionMap(): array
     {
         return [

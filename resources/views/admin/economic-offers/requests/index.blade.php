@@ -1,14 +1,14 @@
 @extends('layouts.admin-v6')
 
-@section('title', 'Demandes Formule ?conomique')
+@section('title', 'Demandes Formule économique')
 
 @section('content')
     <x-admin.page-header
-        title="Demandes Formule ?conomique"
+        title="Demandes Formule économique"
         subtitle="Suivez les demandes envoyées depuis la page publique."
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Formule ?conomique', 'url' => route('admin.economic-offers.index')],
+            ['label' => 'Formule économique', 'url' => route('admin.economic-offers.index')],
             ['label' => 'Demandes'],
         ]"
     />

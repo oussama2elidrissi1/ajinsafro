@@ -67,7 +67,7 @@
                     @if($voyage->discount_percent !== null && $voyage->discount_percent > 0)
                         <div class="col-md-6 text-md-end">
                             <span class="badge bg-danger font-size-14 me-2">Remise : {{ $voyage->discount_percent }} %</span>
-                            <span class="badge bg-success font-size-14">?conomie : {{ number_format($voyage->discount_amount, 0, ',', ' ') }} {{ $voyage->currency_symbol }}</span>
+                            <span class="badge bg-success font-size-14">Économie : {{ number_format($voyage->discount_amount, 0, ',', ' ') }} {{ $voyage->currency_symbol }}</span>
                         </div>
                     @endif
                 </div>

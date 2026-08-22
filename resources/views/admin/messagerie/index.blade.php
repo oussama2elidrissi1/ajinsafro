@@ -6,63 +6,177 @@
 @php
     $breadcrumbs = [
         ['label' => 'Accueil', 'url' => \Illuminate\Support\Facades\Route::has('admin.dashboard.v6') ? route('admin.dashboard.v6') : (\Illuminate\Support\Facades\Route::has('admin.dashboard') ? route('admin.dashboard') : url('/admin'))],
-        ['label' => 'Réservations', 'url' => \Illuminate\Support\Facades\Route::has('admin.reservations.workspace') ? route('admin.reservations.workspace') : null],
         ['label' => 'Messagerie'],
     ];
 @endphp
 
 @section('content')
     <div class="admin-v6-card p-3 p-md-4">
+        @if(session('status'))
+            <div class="alert alert-success py-2">{{ session('status') }}</div>
+        @endif
+
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
             <div class="d-grid gap-1">
                 <div class="text-muted" style="font-weight:700">Messagerie interne</div>
-                <div style="font-weight:800;font-size:16px">Conversations</div>
+                <div style="font-weight:800;font-size:16px">Conversations & boîte interne</div>
             </div>
-
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newChannelModal">
-                <i class="bx bx-plus"></i>
-                <span class="ms-1">Nouveau message</span>
-            </button>
         </div>
 
-        <div class="row g-3">
-            <div class="col-12 col-lg-4">
-                <div class="admin-v6-card p-3" style="height:100%">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <div style="font-weight:800">Conversations</div>
-                        <span class="badge bg-light text-muted">Auto</span>
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#pane-conversations" type="button" role="tab">
+                    <i class="bx bx-conversation me-1"></i>Conversations
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pane-inbox" type="button" role="tab">
+                    <i class="bx bx-envelope me-1"></i>Boîte interne
+                    @if(($inboxUnreadCount ?? 0) > 0)
+                        <span class="badge bg-danger ms-1">{{ $inboxUnreadCount }}</span>
+                    @endif
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content pt-3">
+            {{-- ─── Onglet 1 : conversations temps réel (canaux) ─────────────── --}}
+            <div class="tab-pane fade show active" id="pane-conversations" role="tabpanel">
+                <div class="d-flex justify-content-end mb-3">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newChannelModal">
+                        <i class="bx bx-plus"></i>
+                        <span class="ms-1">Nouvelle conversation</span>
+                    </button>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-lg-4">
+                        <div class="admin-v6-card p-3" style="height:100%">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div style="font-weight:800">Conversations</div>
+                                <span class="badge bg-light text-muted">Auto</span>
+                            </div>
+
+                            <div class="mb-2">
+                                <input type="search" class="form-control" placeholder="Rechercher une conversation..." id="channel-search">
+                            </div>
+
+                            <div id="channel-list" class="list-group mail-list" style="max-height: 520px; overflow:auto">
+                                <div class="text-muted small">Chargement...</div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="mb-2">
-                        <input type="search" class="form-control" placeholder="Rechercher une conversation..." id="channel-search">
-                    </div>
+                    <div class="col-12 col-lg-8">
+                        <div class="admin-v6-card p-3" style="min-height: 560px">
+                            <div id="message-area-placeholder" class="text-center text-muted py-5">
+                                <i class="bx bx-message-detail" style="font-size:52px"></i>
+                                <p class="mt-2 mb-0">Sélectionnez une conversation ou créez-en une.</p>
+                            </div>
 
-                    <div id="channel-list" class="list-group mail-list" style="max-height: 520px; overflow:auto">
-                        <div class="text-muted small">Chargement...</div>
+                            <div id="message-area" class="d-none">
+                                <div class="d-flex align-items-start justify-content-between gap-2 mb-3">
+                                    <div class="d-grid gap-1" style="min-width:0">
+                                        <h5 id="channel-title" class="mb-0" style="font-weight:900"></h5>
+                                        <div class="text-muted small">Historique des messages</div>
+                                    </div>
+                                </div>
+
+                                <div id="messages-container" class="border rounded p-3 mb-3" style="max-height: 380px; overflow-y: auto; background:#fff"></div>
+
+                                <div class="d-flex gap-2">
+                                    <input type="text" id="message-input" class="form-control" placeholder="Écrire un message..." maxlength="10000">
+                                    <button type="button" id="send-btn" class="btn btn-primary">Envoyer</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-12 col-lg-8">
-                <div class="admin-v6-card p-3" style="min-height: 560px">
-                    <div id="message-area-placeholder" class="text-center text-muted py-5">
-                        <i class="bx bx-message-detail" style="font-size:52px"></i>
-                        <p class="mt-2 mb-0">Sélectionnez une conversation ou créez-en une.</p>
+            {{-- ─── Onglet 2 : boîte interne (messages portail agent) ────────── --}}
+            <div class="tab-pane fade" id="pane-inbox" role="tabpanel">
+                <div class="d-flex justify-content-end mb-3">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newInternalMessageModal">
+                        <i class="bx bx-plus"></i>
+                        <span class="ms-1">Nouveau message</span>
+                    </button>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-lg-7">
+                        <div class="admin-v6-card p-3">
+                            <div style="font-weight:800" class="mb-2">Boîte de réception</div>
+
+                            @forelse($inboxMessages ?? [] as $inboxMessage)
+                                <div class="border rounded mb-2 internal-message {{ $inboxMessage->read ? '' : 'internal-message--unread' }}" data-message-id="{{ $inboxMessage->id }}">
+                                    <button type="button"
+                                            class="btn w-100 text-start p-2 internal-message__head"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#internal-message-{{ $inboxMessage->id }}"
+                                            data-read-url="{{ $inboxMessage->read ? '' : route('admin.messagerie.read', $inboxMessage) }}">
+                                        <div class="d-flex align-items-center justify-content-between gap-2">
+                                            <div style="min-width:0">
+                                                <div class="text-truncate" style="font-weight:{{ $inboxMessage->read ? '600' : '800' }}">
+                                                    {{ $inboxMessage->subject ?: 'Sans sujet' }}
+                                                </div>
+                                                <div class="small text-muted text-truncate">
+                                                    De : {{ $inboxMessage->sender->name ?? 'Utilisateur supprimé' }}
+                                                </div>
+                                            </div>
+                                            <div class="text-end flex-shrink-0">
+                                                @unless($inboxMessage->read)
+                                                    <span class="badge bg-danger internal-message__unread-badge">Non lu</span>
+                                                @endunless
+                                                <div class="small text-muted">{{ $inboxMessage->created_at?->format('d/m/Y H:i') }}</div>
+                                            </div>
+                                        </div>
+                                    </button>
+
+                                    <div class="collapse" id="internal-message-{{ $inboxMessage->id }}">
+                                        <div class="border-top p-3">
+                                            <div class="mb-3" style="white-space:pre-wrap">{{ $inboxMessage->body }}</div>
+
+                                            @if($inboxMessage->sender)
+                                                <form method="POST" action="{{ route('admin.messagerie.store') }}" class="d-grid gap-2">
+                                                    @csrf
+                                                    <input type="hidden" name="recipient_id" value="{{ $inboxMessage->sender_id }}">
+                                                    <input type="hidden" name="subject" value="{{ \Illuminate\Support\Str::startsWith((string) $inboxMessage->subject, 'Re:') ? $inboxMessage->subject : 'Re: '.$inboxMessage->subject }}">
+                                                    <textarea name="body" rows="3" class="form-control" placeholder="Répondre à {{ $inboxMessage->sender->name }}..." required></textarea>
+                                                    <div class="d-flex justify-content-end">
+                                                        <button type="submit" class="btn btn-sm btn-primary">
+                                                            <i class="bx bx-send"></i>
+                                                            <span class="ms-1">Répondre</span>
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="text-muted small">Aucun message reçu.</div>
+                            @endforelse
+                        </div>
                     </div>
 
-                    <div id="message-area" class="d-none">
-                        <div class="d-flex align-items-start justify-content-between gap-2 mb-3">
-                            <div class="d-grid gap-1" style="min-width:0">
-                                <h5 id="channel-title" class="mb-0" style="font-weight:900"></h5>
-                                <div class="text-muted small">Historique des messages</div>
-                            </div>
-                        </div>
+                    <div class="col-12 col-lg-5">
+                        <div class="admin-v6-card p-3">
+                            <div style="font-weight:800" class="mb-2">Messages envoyés</div>
 
-                        <div id="messages-container" class="border rounded p-3 mb-3" style="max-height: 380px; overflow-y: auto; background:#fff"></div>
-
-                        <div class="d-flex gap-2">
-                            <input type="text" id="message-input" class="form-control" placeholder="Écrire un message..." maxlength="10000">
-                            <button type="button" id="send-btn" class="btn btn-primary">Envoyer</button>
+                            @forelse($sentMessages ?? [] as $sentMessage)
+                                <div class="border rounded mb-2 p-2">
+                                    <div class="d-flex align-items-center justify-content-between gap-2">
+                                        <div style="min-width:0">
+                                            <div class="text-truncate" style="font-weight:600">{{ $sentMessage->subject ?: 'Sans sujet' }}</div>
+                                            <div class="small text-muted text-truncate">À : {{ $sentMessage->recipient->name ?? 'Utilisateur supprimé' }}</div>
+                                        </div>
+                                        <div class="small text-muted flex-shrink-0">{{ $sentMessage->created_at?->format('d/m/Y H:i') }}</div>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="text-muted small">Aucun message envoyé.</div>
+                            @endforelse
                         </div>
                     </div>
                 </div>
@@ -70,11 +184,12 @@
         </div>
     </div>
 
+    {{-- Modal : nouvelle conversation (canaux) --}}
     <div class="modal fade" id="newChannelModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Nouveau message</h5>
+                    <h5 class="modal-title">Nouvelle conversation</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
                 </div>
                 <div class="modal-body">
@@ -115,6 +230,53 @@
             </div>
         </div>
     </div>
+
+    {{-- Modal : nouveau message interne --}}
+    <div class="modal fade" id="newInternalMessageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form method="POST" action="{{ route('admin.messagerie.store') }}">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title">Nouveau message interne</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    </div>
+                    <div class="modal-body d-grid gap-3">
+                        <div>
+                            <label class="form-label">Destinataire</label>
+                            <select name="recipient_id" class="form-select" required>
+                                <option value="">- Choisir -</option>
+                                @foreach($users ?? [] as $u)
+                                    @continue($u->id === auth()->id())
+                                    <option value="{{ $u->id }}">{{ $u->name }} ({{ $u->email }})</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Sujet</label>
+                            <input type="text" name="subject" class="form-control" maxlength="255" required>
+                        </div>
+                        <div>
+                            <label class="form-label">Message</label>
+                            <textarea name="body" rows="5" class="form-control" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bx bx-send"></i>
+                            <span class="ms-1">Envoyer</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .internal-message--unread { border-color: #0ea5e9 !important; background: #f0f9ff; }
+        .internal-message__head:focus { box-shadow: none; }
+    </style>
 
     @push('scripts')
         <script>
@@ -158,7 +320,8 @@
                         const a = document.createElement('a');
                         a.href = 'javascript:void(0);';
                         a.className = 'list-group-item list-group-item-action';
-                        a.innerHTML = '<div style="font-weight:800">' + escapeHtml(ch.name || 'Conversation') + '</div>'
+                        const unread = ch.unread > 0 ? ' <span class="badge bg-danger">' + ch.unread + '</span>' : '';
+                        a.innerHTML = '<div style="font-weight:800">' + escapeHtml(ch.name || 'Conversation') + unread + '</div>'
                             + '<div class="small text-muted">' + escapeHtml(ch.last_message_preview || '') + '</div>';
                         a.addEventListener('click', function(){ selectChannel(ch.id, ch.name || 'Conversation'); });
                         $list.appendChild(a);
@@ -247,7 +410,6 @@
                             fetchChannels();
                         })
                         .catch(err => {
-                            // Keep it simple: show inline text instead of a raw alert.
                             $messagesContainer.insertAdjacentHTML('beforeend', '<div class="text-danger small mt-2">' + escapeHtml(err.message || 'Erreur lors de l\'envoi du message.') + '</div>');
                         });
                 }
@@ -312,6 +474,27 @@
                 }
 
                 fetchChannels();
+
+                // Boîte interne : marquer lu à l'ouverture d'un message non lu.
+                document.querySelectorAll('.internal-message__head[data-read-url]').forEach(function (head) {
+                    head.addEventListener('click', function () {
+                        const url = head.getAttribute('data-read-url');
+                        if (!url) return;
+                        head.setAttribute('data-read-url', '');
+
+                        fetch(url, {
+                            method: 'PATCH',
+                            headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                        }).catch(() => {});
+
+                        const wrapper = head.closest('.internal-message');
+                        if (wrapper) {
+                            wrapper.classList.remove('internal-message--unread');
+                            const badge = wrapper.querySelector('.internal-message__unread-badge');
+                            if (badge) badge.remove();
+                        }
+                    }, { once: false });
+                });
             })();
         </script>
     @endpush

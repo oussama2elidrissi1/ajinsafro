@@ -36,6 +36,7 @@ class DatabaseSeeder extends Seeder
             TangerAgentsSeeder::class,
             CasablancaAgencyManagerSeeder::class,
             DevHibaAccountSeeder::class,
+            MessageriePermissionSeeder::class,
         ]);
     }
 }
