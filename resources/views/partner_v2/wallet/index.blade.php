@@ -21,7 +21,7 @@
             <p class="text-xs text-gray-500 mt-2">Le solde change uniquement apres validation Ajinsafro.</p>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-custom border border-gray-100 p-6">
+        <div id="recharge" class="bg-white rounded-2xl shadow-custom border border-gray-100 p-6">
             <h2 class="font-bold text-[#0e3a5a] mb-4">Demander une recharge</h2>
             <form method="POST" action="{{ route('partner.wallet.recharge-request') }}" enctype="multipart/form-data" class="space-y-4">
                 @csrf

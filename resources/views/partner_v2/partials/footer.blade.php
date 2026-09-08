@@ -91,6 +91,7 @@
             @endforeach
             <span class="aj-payments-v2__text-badge">CASH PLUS</span>
         </div>
+        <span class="pp-footer-copy">&copy; Ajinsafro SARL AU</span>
     </div>
 
     <div style="height:128px;"></div>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Partner;
 
 use App\Http\Controllers\Controller;
 use App\Models\PartnerCommission;
+use App\Models\PartnerWalletTransaction;
 use App\Models\Reservation;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -50,6 +51,11 @@ class DashboardController extends Controller
             ->orderByDesc('created_at')
             ->limit(5)
             ->get();
+        // Total réellement crédité : seules les recharges validées comptent.
+        $walletRechargedTotal = (float) $partner->walletTransactions()
+            ->where('type', PartnerWalletTransaction::TYPE_RECHARGE)
+            ->where('status', PartnerWalletTransaction::STATUS_APPROVED)
+            ->sum('amount');
 
         $topVoyages = (clone $reservationQuery)
             ->whereNotNull('tour_id')
@@ -73,6 +79,7 @@ class DashboardController extends Controller
             'commissionsPaid' => $commissionsPaid,
             'recentReservations' => $recentReservations,
             'recentWalletTransactions' => $recentWalletTransactions,
+            'walletRechargedTotal' => $walletRechargedTotal,
             'topVoyages' => $topVoyages,
         ]);
     }
