@@ -238,14 +238,23 @@ body.ea-agent .eag-burger { min-height: 0 !important; height: 42px !important; p
 /* --------------------------------------------------------------------------
    Zone de contenu
    -------------------------------------------------------------------------- */
-body.ea-agent .eag-content {
+body.ea-agent .eag-main { flex: 1; width: 100%; min-width: 0; }
+body.ea-agent .eag-main__inner { width: 100%; min-width: 0; }
+/* Spécificité (0,3,2) : prime sur les remises à zéro héritées du portail. */
+body.ea-agent main .eag-content.agent-portal-main {
   padding: clamp(18px, 2.4vw, 28px) var(--eag-gutter) 40px;
   max-width: 1500px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
-  flex: 1;
   min-width: 0;
+}
+/* Studio voyage : ces pages sont concues pleine largeur (voyage-edit.css neutralise
+   deja la gouttiere heritee du portail). On retire donc le conteneur centre. */
+body.ea-agent.voyage-layout-page main .eag-content.agent-portal-main {
+  max-width: none;
+  padding: 0;
+  margin: 0;
 }
 .eag-dashboard { display: flex; flex-direction: column; gap: 20px; }
 

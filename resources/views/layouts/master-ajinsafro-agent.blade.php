@@ -49,7 +49,13 @@
     {{-- Coque Espace Agent — chargée en dernier pour primer sur les règles héritées. --}}
     <link href="{{ URL::asset('css/espace-agent.css') }}?v={{ $eagCss }}" rel="stylesheet" type="text/css" />
 </head>
-<body class="partner-v2 admin-premium-ui aj-admin aj-admin-compact ea-agent text-gray-800 antialiased font-sans internal-v2-topbar-hidden{{ $voyageLayoutPage ? ' voyage-layout-page' : '' }}">
+{{--
+    La classe `internal-v2-topbar-hidden` n'est volontairement plus posée : elle compensait
+    l'ancienne barre fixe (décalage du contenu, remise à zéro des marges de .agent-portal-main
+    et de `main > div`). Cette coque n'affiche plus cette barre, et ces règles écrasaient
+    la gouttière des pages du portail.
+--}}
+<body class="partner-v2 admin-premium-ui aj-admin aj-admin-compact ea-agent text-gray-800 antialiased font-sans{{ $voyageLayoutPage ? ' voyage-layout-page' : '' }}">
 <div class="ea-agent-shell">
 
     {{-- Barre héritée masquée en CSS : elle fournit encore la fenêtre des notifications. --}}
@@ -57,8 +63,14 @@
 
     @include('agent_v2.partials.shell-header')
 
-    <main class="eag-content agent-portal-main">
-        @yield('content')
+    {{-- Deux niveaux conservés : les pages du portail sont écrites pour ne pas être
+         enfant direct de <main>, certaines feuilles ciblant `main > div`. --}}
+    <main class="eag-main">
+        <div class="eag-main__inner">
+            <div class="eag-content agent-portal-main">
+                @yield('content')
+            </div>
+        </div>
     </main>
 
     @if(trim($__env->yieldContent('hidePageFooter')) !== '1' && !request()->routeIs('admin.reservations.workspace'))
