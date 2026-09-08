@@ -235,6 +235,7 @@ body.ea-body .vf-step { min-height: 0 !important; height: auto !important; paddi
 }
 .vf-aside-block { display: none; flex-direction: column; gap: 4px; }
 .vf-aside-block.is-active { display: flex; }
+.vf-aside.is-empty { display: none; }
 .vf-aside__kicker { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--vf-muted-3); padding: 4px 12px 8px; }
 .vf-aside-link {
   display: flex;

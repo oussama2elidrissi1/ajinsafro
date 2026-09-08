@@ -885,3 +885,23 @@ a.ea-alert:hover { background: var(--ea-soft); color: inherit; }
 }
 
 body.ea-no-scroll { overflow: hidden; }
+
+/* --------------------------------------------------------------------------
+   Bouton flottant du support (partial support.reclamations._floating_button)
+   Les feuilles héritées posent `body.admin-v6 a { color: inherit }`, plus
+   spécifique que la règle du widget : le libellé blanc redevenait sombre,
+   donc illisible sur la pastille foncée. On rétablit ici, après ces feuilles.
+   -------------------------------------------------------------------------- */
+body.ea-body .dev-support-widget a.dev-support-widget__dev-link,
+body.ea-body .dev-support-widget a.dev-support-widget__dev-link:hover,
+body.ea-body .dev-support-widget a.dev-support-widget__dev-link:focus { color: #fff; }
+body.ea-body .dev-support-widget__dev-link,
+body.ea-body .dev-support-widget__button {
+  white-space: nowrap;
+  min-height: 0 !important;
+  height: auto !important;
+  border-radius: 999px !important;
+  line-height: 1.3 !important;
+}
+body.ea-body .dev-support-widget__dev-link { padding: 10px 14px !important; font-size: 13px !important; }
+body.ea-body .dev-support-widget__button { padding: 13px 18px !important; font-size: 14px !important; }

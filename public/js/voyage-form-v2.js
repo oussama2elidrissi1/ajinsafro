@@ -24,11 +24,17 @@
 
     /* Blocs latéraux liés à l'étape courante (attribut posé par voyage-v2.js). */
     var asideBlocks = Array.prototype.slice.call(page.querySelectorAll('[data-vf-for]'));
+    var aside = page.querySelector('.vf-aside');
     function syncAside() {
         var current = String(form.getAttribute('data-v2-current-step') || 's-general');
+        var anyActive = false;
         asideBlocks.forEach(function (block) {
-            block.classList.toggle('is-active', block.getAttribute('data-vf-for') === current);
+            var active = block.getAttribute('data-vf-for') === current;
+            block.classList.toggle('is-active', active);
+            if (active) anyActive = true;
         });
+        // Sans bloc actif, le rail est masqué : le contenu occupe toute la largeur.
+        if (aside) aside.classList.toggle('is-empty', !anyActive);
         var chip = page.querySelector('.vf-step.active');
         if (chip && typeof chip.scrollIntoView === 'function') {
             try { chip.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' }); } catch (e) { /* ignore */ }

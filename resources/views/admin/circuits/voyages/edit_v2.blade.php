@@ -866,11 +866,13 @@
 
     {{-- ═══ Grille : navigation de l'étape | contenu | colonne droite ═══ --}}
     <div class="vf-grid">
+        {{-- Rail de gauche : uniquement les sections de l'étape 1. Pour les autres étapes,
+             les repères et la navigation vivent dans la colonne de droite (_side_quick). --}}
         <aside class="vf-aside" aria-label="Navigation dans l'étape">
             @foreach($sections as $i => $sec)
+                @continue($sec['id'] !== 's-general')
                 <div class="vf-aside-block" data-vf-for="{{ $sec['id'] }}">
-                    <div class="vf-aside__kicker">Étape {{ $i + 1 }} · {{ $sec['id'] === 's-general' ? 'sections' : $sec['group'] }}</div>
-                    @if($sec['id'] === 's-general')
+                    <div class="vf-aside__kicker">Étape {{ $i + 1 }} · sections</div>
                         <a href="#sec-fiche" class="vf-aside-link is-active" data-vf-section="sec-fiche">Fiche commerciale<span class="vf-aside-link__meta {{ in_array('titre', $vfMissing, true) ? 'is-warn' : 'is-ok' }}">{{ in_array('titre', $vfMissing, true) ? 'titre' : '✓' }}</span></a>
                         <a href="#sec-seo" class="vf-aside-link" data-vf-section="sec-seo">SEO &amp; URL<span class="vf-aside-link__meta {{ trim((string) old('slug', $voyage->post_name ?? '')) !== '' ? 'is-ok' : '' }}">{{ trim((string) old('slug', $voyage->post_name ?? '')) !== '' ? '✓' : 'auto' }}</span></a>
                         <a href="#sec-presentation" class="vf-aside-link" data-vf-section="sec-presentation">Présentation<span class="vf-aside-link__meta {{ trim(strip_tags((string) old('content', $voyage->post_content ?? ''))) !== '' ? 'is-ok' : '' }}">{{ trim(strip_tags((string) old('content', $voyage->post_content ?? ''))) !== '' ? '✓' : 'vide' }}</span></a>
@@ -887,18 +889,6 @@
                                 <div class="vf-aside-callout__text">Passez aux tarifs et à la capacité.</div>
                             </div>
                         @endif
-                    @else
-                        <div class="vf-aside-card">
-                            <div class="vf-aside-card__title">{{ $sec['title'] }}</div>
-                            <div class="vf-aside-card__text">{{ $sec['desc'] }}</div>
-                        </div>
-                        @if(isset($sections[$i - 1]))
-                            <button type="button" class="vf-aside-link" data-v2-prev="{{ $sections[$i - 1]['id'] }}">← {{ $sections[$i - 1]['label'] }}</button>
-                        @endif
-                        @if(isset($sections[$i + 1]))
-                            <button type="button" class="vf-aside-link" data-v2-next="{{ $sections[$i + 1]['id'] }}">{{ $sections[$i + 1]['label'] }} →</button>
-                        @endif
-                    @endif
                 </div>
             @endforeach
         </aside>
