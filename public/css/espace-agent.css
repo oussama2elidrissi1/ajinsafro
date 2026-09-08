@@ -43,8 +43,10 @@ body.ea-agent {
 body.ea-agent .ea-agent-shell { display: flex; flex-direction: column; min-height: 100vh; }
 
 /* Spécificité basse : chaque composant peut redéfinir sa couleur de lien. */
-.ea-agent :where(a) { color: var(--eag-primary); text-decoration: none; }
-.ea-agent :where(a:hover) { color: var(--eag-primary-dark); }
+/* Les boutons-liens Bootstrap (.btn) portent deja leur propre couleur : les exclure
+   evite un texte bleu marine illisible sur les fonds pleins (.btn-primary, .btn-danger...). */
+.ea-agent :where(a:not(.btn)) { color: var(--eag-primary); text-decoration: none; }
+.ea-agent :where(a:not(.btn):hover) { color: var(--eag-primary-dark); }
 
 /* --------------------------------------------------------------------------
    Barre de service (contact, notifications, profil)

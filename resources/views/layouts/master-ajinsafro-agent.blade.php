@@ -15,6 +15,9 @@
         'agent.voyages.create-v2',
         'agent.voyages.edit-v2'
     );
+    // Mode compact : reserve aux plans de travail denses, comme dans la coque admin
+    // (espace-admin-v2). Ailleurs, le portail garde la typographie du design Espace Agent.
+    $eagCompact = request()->routeIs('admin.reservations.workspace', 'admin.vente.catalogue');
     $eagCss = file_exists(public_path('css/espace-agent.css')) ? (string) filemtime(public_path('css/espace-agent.css')) : '1';
     $eagJs = file_exists(public_path('js/espace-agent.js')) ? (string) filemtime(public_path('js/espace-agent.js')) : '1';
 @endphp
@@ -58,7 +61,7 @@
     et de `main > div`). Cette coque n'affiche plus cette barre, et ces règles écrasaient
     la gouttière des pages du portail.
 --}}
-<body class="partner-v2 admin-premium-ui aj-admin aj-admin-compact ea-agent text-gray-800 antialiased font-sans{{ $voyageLayoutPage ? ' voyage-layout-page' : '' }}">
+<body class="partner-v2 admin-premium-ui aj-admin{{ $eagCompact ? ' aj-admin-compact' : '' }} ea-agent text-gray-800 antialiased font-sans{{ $voyageLayoutPage ? ' voyage-layout-page' : '' }}">
 <div class="ea-agent-shell">
 
     {{-- Barre héritée masquée en CSS : elle fournit encore la fenêtre des notifications. --}}
