@@ -24,7 +24,7 @@
 </style>
 
 <div class="flight-opt-section" data-flight-section="outbound">
-    <h6><i class="bx bx-trip"></i> Vols Aller (options) ? Jour 1</h6>
+    <h6><i class="bx bx-trip"></i> Vols Aller (options) — Jour 1</h6>
     <div class="flight-opt-cards-outbound">
         @foreach($flightOptionsWithIndex as $entry)
             @if($entry['type'] === 'outbound')
@@ -36,7 +36,8 @@
 </div>
 
 <div class="flight-opt-section" data-flight-section="return">
-    <h6><i class="bx bx-trip"></i> Vols Retour (options) ? Jour {{ $lastDayNumber }}</h6>
+    {{-- Le numéro de jour est réactualisé sans rechargement quand l'étape Programme change (voyage-form-v2.js). --}}
+    <h6><i class="bx bx-trip"></i> Vols Retour (options) — Jour <span data-flight-return-day>{{ $lastDayNumber }}</span></h6>
     <div class="flight-opt-cards-return">
         @foreach($flightOptionsWithIndex as $entry)
             @if($entry['type'] === 'return')

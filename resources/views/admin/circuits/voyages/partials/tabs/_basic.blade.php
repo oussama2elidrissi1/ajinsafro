@@ -61,6 +61,9 @@
                         <input type="text" class="vf-input vf-input--mono" value="{{ $vfNights ?? '' }}" placeholder="4" readonly tabindex="-1" aria-label="Nuits (calculées)" data-vf-nights>
                     </div>
                     <span class="vf-hint">jours / nuits</span>
+                    {{-- Champ technique : nombre de jours du programme. Alimenté par l'étape Programme et
+                         lu par les listes « Jour » des étapes Vols, Hôtels et Transferts. --}}
+                    <input type="hidden" id="duration_day" name="duration_day" value="{{ old('duration_day', $meta['duration_day'] ?? ($vfDays ?: 1)) }}">
                 </label>
                 <label class="vf-field vf-field--grow">
                     <span class="vf-label">Destination</span>

@@ -34,9 +34,17 @@
             try { chip.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' }); } catch (e) { /* ignore */ }
         }
     }
+    function onStepChange() {
+        syncAside();
+        var current = String(form.getAttribute('data-v2-current-step') || '');
+        // Filet de sécurité : les listes « Jour » sont aussi rafraîchies à l'ouverture des étapes concernées.
+        if (current === 's-flights' || current === 's-transfers') {
+            refreshDayOptions();
+        }
+    }
     syncAside();
     if (typeof MutationObserver !== 'undefined') {
-        new MutationObserver(syncAside).observe(form, { attributes: true, attributeFilter: ['data-v2-current-step'] });
+        new MutationObserver(onStepChange).observe(form, { attributes: true, attributeFilter: ['data-v2-current-step'] });
     }
 
     /* Liens de sections (étape 1) : défilement doux + état actif. */
@@ -149,6 +157,78 @@
         });
         mirrorSaveState();
     }
+
+    /* ------------------------------------------------------------------
+       Jours du programme
+       Les listes « Jour » des étapes Vols et Transferts sont rendues côté
+       serveur au chargement de la page. Sans ce rafraîchissement, un jour
+       ajouté à l'étape Programme n'apparaissait qu'après un rechargement
+       complet (Ctrl+F5). Les hôtels ont déjà leur propre rafraîchissement
+       (window.VoyageHotelDays).
+       ------------------------------------------------------------------ */
+    function programDayCount() {
+        var accordion = document.getElementById('accordionProgrammeDays');
+        if (accordion) {
+            var cards = accordion.querySelectorAll('.programme-day-card').length;
+            if (cards > 0) return cards;
+        }
+        var hidden = document.getElementById('duration_day');
+        var fromHidden = parseInt(String((hidden && hidden.value) || '').trim(), 10);
+        if (fromHidden > 0) return fromHidden;
+        var fromText = parseInt(String((durationInput && durationInput.value) || '').replace(/[^0-9]/g, ''), 10);
+        return fromText > 0 ? fromText : 1;
+    }
+
+    function clampDay(value, fallback, maxDay) {
+        var parsed = parseInt(String(value === null || value === undefined ? '' : value).trim(), 10);
+        if (!(parsed > 0)) parsed = fallback;
+        if (!(parsed > 0)) parsed = 1;
+        return Math.min(parsed, maxDay);
+    }
+
+    function rebuildDaySelect(select, maxDay) {
+        if (!select) return;
+        var selected = clampDay(select.value, 1, maxDay);
+        if (select.options.length === maxDay && String(select.value) === String(selected)) return;
+        var html = '';
+        for (var day = 1; day <= maxDay; day++) {
+            html += '<option value="' + day + '">Jour ' + day + '</option>';
+        }
+        select.innerHTML = html;
+        select.value = String(selected);
+    }
+
+    function refreshDayOptions(dayCount) {
+        var maxDay = clampDay(dayCount, programDayCount(), 365);
+
+        // Vols : liste des segments, jour caché envoyé au serveur, libellé et boutons d'ajout.
+        Array.prototype.slice.call(document.querySelectorAll('.flight-opt-card')).forEach(function (card) {
+            var typeInput = card.querySelector('input[name$="[type]"]');
+            var type = typeInput ? String(typeInput.value || '') : '';
+            var hiddenDay = card.querySelector('input[name$="[day_number]"]');
+            if (type === 'segment') {
+                var daySelect = card.querySelector('select.flight-opt-day');
+                rebuildDaySelect(daySelect, maxDay);
+                if (hiddenDay && daySelect) hiddenDay.value = daySelect.value || '1';
+            } else if (type === 'return' && hiddenDay) {
+                hiddenDay.value = String(maxDay);
+            }
+        });
+        Array.prototype.slice.call(document.querySelectorAll('.btn-add-flight-opt[data-type="return"], .btn-add-flight-opt[data-type="segment"]')).forEach(function (btn) {
+            btn.setAttribute('data-day', String(maxDay));
+        });
+        var returnDayLabel = document.querySelector('[data-flight-return-day]');
+        if (returnDayLabel) returnDayLabel.textContent = String(maxDay);
+
+        // Transferts : une liste par ligne (les nouvelles lignes sont clonées de la dernière).
+        Array.prototype.slice.call(document.querySelectorAll('select[name^="tour_transfers["][name$="[day_number]"]')).forEach(function (select) {
+            rebuildDaySelect(select, maxDay);
+        });
+    }
+
+    document.addEventListener('voyage:program-days-changed', function (event) {
+        refreshDayOptions(event && event.detail ? event.detail.days : null);
+    });
 
     /* Suggestions de présentation : insère un titre de section dans l'éditeur. */
     Array.prototype.slice.call(page.querySelectorAll('[data-vf-suggest]')).forEach(function (btn) {
