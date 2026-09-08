@@ -10,7 +10,10 @@
         'admin.circuits.voyages.edit',
         'admin.circuits.voyages.create-v2',
         'admin.circuits.voyages.edit-v2',
-        'agent.voyages.*'
+        'agent.voyages.create',
+        'agent.voyages.edit',
+        'agent.voyages.create-v2',
+        'agent.voyages.edit-v2'
     );
     $eagCss = file_exists(public_path('css/espace-agent.css')) ? (string) filemtime(public_path('css/espace-agent.css')) : '1';
     $eagJs = file_exists(public_path('js/espace-agent.js')) ? (string) filemtime(public_path('js/espace-agent.js')) : '1';
