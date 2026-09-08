@@ -11,11 +11,6 @@ return [
                 ['label' => 'Vue d\'ensemble', 'route' => 'admin.dashboard.vue-globale', 'permission' => 'dashboard.overview.view'],
                 ['label' => 'Statistiques', 'route' => 'admin.dashboard.statistiques', 'permission' => 'dashboard.stats.view'],
                 ['label' => 'Alertes', 'route' => 'admin.dashboard.alertes', 'permission' => 'dashboard.alerts.view'],
-                ['label' => 'Dashboard V2', 'route' => 'admin.dashboard.v2', 'permission' => 'dashboard.overview.view'],
-                ['label' => 'Dashboard V3', 'route' => 'admin.dashboard.v3', 'permission' => 'dashboard.overview.view'],
-                ['label' => 'Dashboard V4', 'route' => 'admin.dashboard.v4', 'permission' => 'dashboard.overview.view'],
-                ['label' => 'Dashboard V5', 'route' => 'admin.dashboard.v5', 'permission' => 'dashboard.overview.view'],
-                ['label' => 'Espace Admin v2', 'route' => 'admin.dashboard.espace-v2', 'permission' => 'dashboard.overview.view'],
             ],
         ],
         [
@@ -69,7 +64,8 @@ return [
             'icon' => 'bx bx-user',
             'permission' => 'customers.view',
             'children' => [
-                ['label' => 'Liste clients', 'route' => 'admin.customers.clients', 'permission' => 'customers.clients.view'],
+                ['label' => 'Liste clients', 'route' => 'admin.customers.clients.index', 'permission' => 'customers.clients.view', 'active_patterns' => ['admin.customers.clients.*']],
+                ['label' => 'Prospects', 'route' => 'admin.customers.prospects', 'permission' => 'customers.clients.view'],
                 ['label' => 'Voyageurs', 'route' => 'admin.customers.voyageurs', 'permission' => 'customers.travelers.view'],
                 ['label' => 'Historique', 'route' => 'admin.customers.historique', 'permission' => 'customers.history.view'],
                 ['label' => 'Fidélité', 'route' => 'admin.customers.fidelite', 'permission' => 'customers.loyalty.view'],
@@ -88,6 +84,7 @@ return [
                 ['label' => 'Archiver les agences', 'route' => 'admin.agencies.index', 'permission' => 'agencies.delete'],
                 ['label' => 'Employés des agences', 'route' => 'admin.agency-employees.index', 'permission' => 'agency_employees.view', 'active_patterns' => ['admin.agency-employees.*']],
                 ['label' => 'Comptes agences', 'route' => 'admin.agency-accounts.index', 'permission' => 'agency_accounts.view', 'active_patterns' => ['admin.agency-accounts.*']],
+                ['label' => 'Affectations', 'route' => 'admin.assignments.index', 'permission' => 'assignments.view', 'active_patterns' => ['admin.assignments.*']],
                 ['label' => 'Créer les employés des agences', 'route' => 'admin.agency-employees.index', 'permission' => 'agency_employees.create'],
                 ['label' => 'Modifier les employés des agences', 'route' => 'admin.agency-employees.index', 'permission' => 'agency_employees.edit'],
                 ['label' => 'Supprimer les employés des agences', 'route' => 'admin.agency-employees.index', 'permission' => 'agency_employees.delete'],
@@ -113,6 +110,15 @@ return [
             'icon' => 'bx bx-layer',
             'permission' => 'products-services.view',
             'children' => [
+                [
+                    'key' => 'billetterie',
+                    'label' => 'Billetterie',
+                    'icon' => 'bx bx-ticket',
+                    'permission' => 'products-services.view',
+                    'children' => [
+                        ['label' => 'Espace billetterie', 'route' => 'admin.menu-hubs.billetterie', 'permission' => 'products-services.view', 'active_patterns' => ['admin.menu-hubs.billetterie']],
+                    ],
+                ],
                 [
                     'key' => 'voyages',
                     'label' => 'Voyages',
@@ -146,6 +152,7 @@ return [
                     'icon' => 'bx bx-hotel',
                     'permission' => 'accommodations.view',
                     'children' => [
+                        ['label' => 'Espace hébergement', 'route' => 'admin.menu-hubs.hebergement', 'permission' => ['accommodations.view', 'products-services.view'], 'active_patterns' => ['admin.menu-hubs.hebergement']],
                         ['label' => 'Tous les hébergements', 'route' => 'admin.accommodations.hotels', 'permission' => 'accommodations.catalog.view'],
                         ['label' => 'Hôtels WordPress', 'route' => 'admin.wordpress.hotels.index', 'permission' => 'accommodations.wordpress-hotels.view'],
                         ['label' => 'Packs hébergement', 'route' => 'admin.accommodation-packages.index', 'permission' => 'accommodations.packages.view'],
@@ -160,6 +167,7 @@ return [
                     'icon' => 'bx bx-building-house',
                     'permission' => 'hajj-omra.view',
                     'children' => [
+                        ['label' => 'Espace Hajj & Omra', 'route' => 'admin.menu-hubs.hajj-omra', 'permission' => 'hajj-omra.view', 'active_patterns' => ['admin.menu-hubs.hajj-omra']],
                         ['label' => 'Toutes les offres', 'route' => 'admin.hajj-omra.index', 'permission' => 'hajj-omra.view', 'active_patterns' => ['admin.hajj-omra.index', 'admin.hajj-omra.create', 'admin.hajj-omra.store', 'admin.hajj-omra.show', 'admin.hajj-omra.edit', 'admin.hajj-omra.update', 'admin.hajj-omra.destroy']],
                         ['label' => 'Demandes', 'route' => 'admin.hajj-omra.requests.index', 'permission' => 'hajj-omra.requests.view', 'active_patterns' => ['admin.hajj-omra.requests.*']],
                     ],
@@ -170,6 +178,7 @@ return [
                     'icon' => 'bx bx-wallet-alt',
                     'permission' => 'economic-offers.view',
                     'children' => [
+                        ['label' => 'Espace formule low cost', 'route' => 'admin.menu-hubs.low-cost', 'permission' => 'economic-offers.view', 'active_patterns' => ['admin.menu-hubs.low-cost']],
                         ['label' => 'Toutes les offres', 'route' => 'admin.economic-offers.index', 'permission' => 'economic-offers.view', 'active_patterns' => ['admin.economic-offers.index', 'admin.economic-offers.create', 'admin.economic-offers.store', 'admin.economic-offers.show', 'admin.economic-offers.edit', 'admin.economic-offers.update', 'admin.economic-offers.destroy']],
                         ['label' => 'Demandes', 'route' => 'admin.economic-offers.requests.index', 'permission' => 'economic-offers.requests.view', 'active_patterns' => ['admin.economic-offers.requests.*']],
                     ],
@@ -180,6 +189,7 @@ return [
                     'icon' => 'bx bx-camera',
                     'permission' => 'activities.view',
                     'children' => [
+                        ['label' => 'Espace activités', 'route' => 'admin.menu-hubs.activites', 'permission' => 'activities.view', 'active_patterns' => ['admin.menu-hubs.activites']],
                         ['label' => 'Offres activités', 'route' => 'admin.activity-offers.index', 'permission' => 'activities.offers.view'],
                         ['label' => 'Catégories', 'route' => 'admin.activities.categories', 'permission' => 'activities.categories.view'],
                         ['label' => 'Images / galerie', 'route' => 'admin.activities.gallery', 'permission' => 'activities.gallery.view'],
@@ -192,6 +202,7 @@ return [
                     'icon' => 'bx bx-car',
                     'permission' => 'transfers.view',
                     'children' => [
+                        ['label' => 'Espace transferts', 'route' => 'admin.menu-hubs.transfers', 'permission' => 'transfers.view', 'active_patterns' => ['admin.menu-hubs.transfers']],
                         ['label' => 'Offres transfert', 'route' => 'admin.circuits.tour-transfers.index', 'permission' => 'transfers.offers.view'],
                         ['label' => 'Véhicules', 'route' => 'admin.transfers.vehicles', 'permission' => 'transfers.vehicles.view'],
                         ['label' => 'Tarifs', 'route' => 'admin.transfers.pricing', 'permission' => 'transfers.pricing.view'],
@@ -218,6 +229,7 @@ return [
             'icon' => 'bx bx-id-card',
             'permission' => 'visa.view',
             'children' => [
+                ['label' => 'Espace visa', 'route' => 'admin.menu-hubs.visa', 'permission' => 'visa.view', 'active_patterns' => ['admin.menu-hubs.visa']],
                 ['label' => 'Demandes de visa', 'route' => 'admin.visa.demandes-visa', 'permission' => 'visa.requests.view'],
                 ['label' => 'Documents', 'route' => 'admin.visa.documents', 'permission' => 'visa.documents.view'],
                 ['label' => 'Statuts', 'route' => 'admin.visa.statuts', 'permission' => 'visa.statuses.view'],
@@ -267,6 +279,7 @@ return [
             'icon' => 'bx bx-cog',
             'permission' => 'settings.view',
             'children' => [
+                ['label' => 'Gestion RH', 'route' => 'admin.menu-hubs.rh', 'permission' => 'settings.users.manage', 'active_patterns' => ['admin.menu-hubs.rh']],
                 ['label' => 'Utilisateurs', 'route' => 'admin.settings.utilisateurs', 'permission' => 'settings.users.manage'],
                 ['label' => 'Rôles & Permissions', 'route' => 'admin.settings.roles-permissions', 'permission' => 'settings.roles.manage'],
                 ['label' => 'Paramètres généraux', 'route' => 'admin.settings.parametres-generaux', 'permission' => 'settings.general.manage'],

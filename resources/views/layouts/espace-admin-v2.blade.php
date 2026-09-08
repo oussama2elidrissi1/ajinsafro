@@ -1,4 +1,15 @@
 @php
+    /**
+     * Espace Admin v2 — coque unique de l'administration (navigation horizontale + méga-menus).
+     * Tous les layouts admin historiques (admin-v6, admin-v2, master-ajinsafro côté admin) délèguent ici.
+     *
+     * Points d'extension pour les vues et layouts intermédiaires :
+     *   @section('title')          titre de l'onglet
+     *   @section('body_class')     classes body supplémentaires
+     *   @section('core_scripts')   remplace le socle jQuery + Bootstrap (ex. layouts.vendor-scripts)
+     *   @section('hidePageFooter') '1' pour masquer le pied de page
+     *   @push('styles') / @push('css') / @push('scripts') / @push('body-end')
+     */
     $eaUser = auth()->user();
     $eaBrandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');
     $eaBrandLogo = \App\Models\Setting::brandLogoUrl('dark');
@@ -46,9 +57,28 @@
     }
 
     $eaProfileHref = \Illuminate\Support\Facades\Route::has('admin.profile.edit') ? route('admin.profile.edit') : null;
-    $eaDashboardHref = \Illuminate\Support\Facades\Route::has('admin.dashboard.espace-v2')
-        ? route('admin.dashboard.espace-v2')
-        : route('admin.dashboard');
+    $eaLogoutHref = \Illuminate\Support\Facades\Route::has('logout.get') ? route('logout.get') : null;
+    $eaDashboardHref = route('admin.dashboard');
+
+    // Classes body héritées : elles pilotent les styles de contenu (cartes, tableaux, formulaires) des pages existantes.
+    $eaIsWorkspaceRoute = request()->routeIs('admin.reservations.workspace') || request()->routeIs('admin.vente.catalogue');
+    $eaIsVoyageStudio = request()->routeIs(
+        'admin.circuits.voyages.create',
+        'admin.circuits.voyages.edit',
+        'admin.circuits.voyages.create-v2',
+        'admin.circuits.voyages.edit-v2'
+    );
+    $eaBodyClass = trim(implode(' ', array_filter([
+        'ea-body aj-admin-v2-body aj-admin admin-v6 aj-admin-v6',
+        $eaIsWorkspaceRoute ? 'admin-v6-compact aj-admin-compact' : '',
+        $eaIsVoyageStudio ? 'voyage-layout-page' : '',
+        trim($__env->yieldContent('body_class')),
+    ])));
+    $eaHideFooter = trim($__env->yieldContent('hidePageFooter')) === '1' || $eaIsWorkspaceRoute;
+    $eaCounts = array_merge(
+        $eaUnreadMessages > 0 ? ['admin.messagerie.index' => $eaUnreadMessages] : [],
+        is_array($eaCounts ?? null) ? $eaCounts : []
+    );
 @endphp
 <!DOCTYPE html>
 <html lang="fr" class="ea-html">
@@ -63,19 +93,27 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
+    @stack('css')
+    {{-- Socle Bootstrap + Qovex : styles des contenus (cartes, tableaux, formulaires, badges). --}}
     <link href="{{ URL::asset('build/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ URL::asset('build/css/icons.min.css') }}" rel="stylesheet">
-    <link href="{{ URL::asset('css/espace-admin-v2.css') }}" rel="stylesheet">
+    <link href="{{ URL::asset('build/css/app.min.css') }}" rel="stylesheet">
+    <link href="{{ URL::asset('css/admin-branding.css') }}" rel="stylesheet">
+    <link href="{{ URL::asset('css/admin-premium.css') }}" rel="stylesheet">
+    <link href="{{ URL::asset('css/admin-v2.css') }}" rel="stylesheet">
+    <link href="{{ URL::asset('css/admin-v6.css') }}" rel="stylesheet">
     @stack('styles')
+    {{-- Coque Espace Admin v2 — chargée en dernier pour primer sur les règles de mise en page héritées. --}}
+    <link href="{{ URL::asset('css/espace-admin-v2.css') }}?v=2" rel="stylesheet">
 </head>
-<body class="ea-body">
+<body class="{{ $eaBodyClass }}">
 
     <header class="ea-header" data-ea-header>
         <a href="{{ $eaDashboardHref }}" class="ea-brand" aria-label="{{ $eaBrandName }}">
             <img src="{{ $eaBrandLogo }}" alt="{{ $eaBrandName }}">
         </a>
 
-        @include('admin.partials.nav-espace-v2', ['eaCounts' => $eaCounts ?? []])
+        @include('admin.partials.nav-espace-v2', ['eaCounts' => $eaCounts])
 
         <div class="ea-header-actions">
             <label class="ea-search">
@@ -150,9 +188,17 @@
                 </span>
                 <div class="ea-user-meta">
                     <span class="ea-user-name">{{ $eaUserName }}</span>
-                    @if($eaProfileHref)
-                        <a href="{{ $eaProfileHref }}" class="ea-user-link">Mon profil</a>
-                    @endif
+                    <span class="ea-user-links">
+                        @if($eaProfileHref)
+                            <a href="{{ $eaProfileHref }}" class="ea-user-link">Mon profil</a>
+                        @endif
+                        @if($eaProfileHref && $eaLogoutHref)
+                            <span class="ea-user-sep" aria-hidden="true">·</span>
+                        @endif
+                        @if($eaLogoutHref)
+                            <a href="{{ $eaLogoutHref }}" class="ea-user-link">Déconnexion</a>
+                        @endif
+                    </span>
                 </div>
             </div>
         </div>
@@ -160,20 +206,27 @@
 
     <div class="ea-backdrop" data-ea-backdrop></div>
 
-    <main class="ea-content">
+    <main class="ea-content admin-v6-content aj-admin-v2-content">
         @yield('content')
     </main>
 
-    <footer class="ea-footer">
-        <div>© {{ now()->year }} {{ $eaBrandName }} — Tous droits réservés.</div>
-        <div>Espace Admin v2</div>
-    </footer>
+    @unless($eaHideFooter)
+        <footer class="ea-footer">
+            <div>© {{ now()->year }} {{ $eaBrandName }} — Tous droits réservés.</div>
+            <div>Espace Admin v2</div>
+        </footer>
+    @endunless
 
     @include('support.reclamations._floating_button')
 
-    <script src="{{ URL::asset('build/libs/jquery/jquery.min.js') }}"></script>
-    <script src="{{ URL::asset('build/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-    <script src="{{ URL::asset('js/espace-admin-v2.js') }}"></script>
+    @hasSection('core_scripts')
+        @yield('core_scripts')
+    @else
+        <script src="{{ URL::asset('build/libs/jquery/jquery.min.js') }}"></script>
+        <script src="{{ URL::asset('build/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    @endif
+    <script src="{{ URL::asset('js/espace-admin-v2.js') }}?v=2"></script>
     @stack('scripts')
+    @stack('body-end')
 </body>
 </html>

@@ -1,173 +1,139 @@
 @php
     /**
      * Navigation horizontale « Espace Admin v2 » : méga-menus desktop + tiroir mobile.
-     * Les entrées sont filtrées par existence de route et par permission ($user->can()).
-     * $eaCounts (optionnel) : compteurs affichés à droite des entrées, indexés par clé d'entrée.
+     *
+     * Source unique : config/admin_menu.php, filtré par permissions et routes via AdminMenuService.
+     * Les modules du menu sont regroupés dans les quatre sections du design.
+     * $eaCounts (optionnel) : compteurs affichés à droite des entrées, indexés par nom de route.
      */
     $eaUser = auth()->user();
     $eaCounts = is_array($eaCounts ?? null) ? $eaCounts : [];
-    $eaDashboardHref = \Illuminate\Support\Facades\Route::has('admin.dashboard.espace-v2')
-        ? route('admin.dashboard.espace-v2')
-        : route('admin.dashboard');
+    $eaDashboardHref = route('admin.dashboard');
+    $eaIsDashboard = request()->routeIs('admin.dashboard', 'admin.dashboard.vue-globale', 'admin.dashboard.espace-v2', 'admin.dashboard.v*');
 
-    $eaCan = function ($permission) use ($eaUser): bool {
-        if ($permission === null) {
-            return true;
-        }
-        if (!$eaUser || !method_exists($eaUser, 'can')) {
-            return false;
-        }
-        foreach ((array) $permission as $perm) {
-            if (!is_string($perm) || trim($perm) === '') {
-                continue;
-            }
-            try {
-                if ($eaUser->can($perm)) {
-                    return true;
-                }
-            } catch (\Throwable $e) {
-                // permission inconnue : on continue
-            }
-        }
-        return false;
-    };
-
-    $eaItem = function (string $key, string $label, string $routeName, array $activePatterns = [], $permission = null) use ($eaCan, $eaCounts): ?array {
-        if (!\Illuminate\Support\Facades\Route::has($routeName) || !$eaCan($permission)) {
-            return null;
-        }
-        $active = request()->routeIs($routeName);
-        foreach ($activePatterns as $pattern) {
-            if (request()->routeIs($pattern)) {
-                $active = true;
-                break;
-            }
-        }
-        $meta = $eaCounts[$key] ?? null;
-
-        return [
-            'key' => $key,
-            'label' => $label,
-            'href' => route($routeName),
-            'active' => $active,
-            'meta' => $meta === null || $meta === '' ? '' : (string) $meta,
-        ];
-    };
-
-    $eaGroup = function (string $title, array $items): ?array {
-        $items = array_values(array_filter($items));
-        return $items === [] ? null : ['title' => $title, 'items' => $items];
-    };
-
-    $eaCanSeeAdministration = false;
+    $eaMenu = [];
     if ($eaUser) {
         try {
-            $eaCanSeeAdministration = app(\App\Services\BranchScopeService::class)->canSeeAllBranches($eaUser)
-                || (method_exists($eaUser, 'isDevAdmin') && $eaUser->isDevAdmin());
+            $eaMenu = app(\App\Services\Admin\AdminMenuService::class)->buildForUser($eaUser);
         } catch (\Throwable $e) {
-            $eaCanSeeAdministration = false;
+            $eaMenu = [];
         }
     }
+    $eaByKey = collect($eaMenu)->keyBy('key');
+
+    // Transforme une liste de nœuds cliquables en entrées (dédoublonnées par URL).
+    $eaItems = function (array $nodes) use ($eaCounts): array {
+        $items = [];
+        $seen = [];
+        foreach ($nodes as $node) {
+            $href = (string) ($node['href'] ?? '');
+            if ($href === '' || empty($node['is_clickable']) || isset($seen[$href])) {
+                continue;
+            }
+            $seen[$href] = true;
+            $meta = isset($node['route']) ? ($eaCounts[$node['route']] ?? null) : null;
+            $items[] = [
+                'label' => (string) $node['label'],
+                'href' => $href,
+                'active' => !empty($node['active']),
+                'meta' => $meta === null || $meta === '' ? '' : (string) $meta,
+            ];
+        }
+        return $items;
+    };
+
+    // Un module devient : un groupe pour ses feuilles directes + un groupe par sous-module.
+    $eaGroupsFromNode = function (?array $node, ?string $leafTitle = null) use ($eaItems): array {
+        if (!$node) {
+            return [];
+        }
+        $groups = [];
+        $leaves = [];
+        foreach ($node['children'] ?? [] as $child) {
+            if (!empty($child['children'])) {
+                $items = $eaItems(array_merge([$child], $child['children']));
+                if ($items !== []) {
+                    $groups[] = ['title' => (string) $child['label'], 'items' => $items];
+                }
+            } else {
+                $leaves[] = $child;
+            }
+        }
+        $leafItems = $eaItems($leaves);
+        if ($leafItems !== []) {
+            array_unshift($groups, ['title' => $leafTitle ?? (string) $node['label'], 'items' => $leafItems]);
+        }
+        return $groups;
+    };
+
+    // Plusieurs modules « feuille » de premier niveau regroupés sous un même titre.
+    $eaLeafGroup = function (string $title, array $keys) use ($eaByKey, $eaItems): array {
+        $nodes = [];
+        foreach ($keys as $key) {
+            $node = $eaByKey->get($key);
+            if ($node) {
+                $nodes[] = $node;
+            }
+        }
+        $items = $eaItems($nodes);
+        return $items === [] ? [] : [['title' => $title, 'items' => $items]];
+    };
 
     $eaSections = [
         'produits' => [
             'title' => 'Produits & services',
             'sub' => 'Catalogue, prestations et offres commerciales',
-            'groups' => array_values(array_filter([
-                $eaGroup('Voyages', [
-                    $eaItem('voyages', 'Voyage', 'admin.circuits.voyages.index', ['admin.circuits.voyages.*'], ['circuits.view', 'products-services.view']),
-                    $eaItem('low_cost', 'Formule low cost', 'admin.menu-hubs.low-cost', ['admin.menu-hubs.low-cost', 'admin.economic-offers.*'], 'economic-offers.view'),
-                    $eaItem('hajj_omra', 'Hajj & Omra', 'admin.menu-hubs.hajj-omra', ['admin.menu-hubs.hajj-omra', 'admin.hajj-omra.*'], 'hajj-omra.view'),
-                    $eaItem('deals', 'Deals', 'admin.group-deals.index', ['admin.group-deals.*'], 'group-deals.offers.view'),
-                ]),
-                $eaGroup('Prestations', [
-                    $eaItem('billetterie', 'Billetterie', 'admin.menu-hubs.billetterie', ['admin.menu-hubs.billetterie'], 'products-services.view'),
-                    $eaItem('hebergement', 'Hébergement', 'admin.menu-hubs.hebergement', ['admin.menu-hubs.hebergement', 'admin.wordpress.hotels.*', 'admin.accommodation-packages.*'], ['accommodations.view', 'products-services.view']),
-                    $eaItem('transferts', 'Transferts', 'admin.menu-hubs.transfers', ['admin.menu-hubs.transfers', 'admin.transfers.*'], 'transfers.view'),
-                    $eaItem('activites', 'Activités', 'admin.menu-hubs.activites', ['admin.menu-hubs.activites', 'admin.activity-offers.*', 'admin.activities.*'], 'activities.view'),
-                ]),
-                $eaGroup('Services', [
-                    $eaItem('visa', 'Visa', 'admin.menu-hubs.visa', ['admin.menu-hubs.visa', 'admin.visa.*'], 'visa.view'),
-                    $eaItem('departures', 'Dates de départ', 'admin.circuits.departs-dates', ['admin.circuits.departs-dates'], ['circuits.view', 'products-services.view']),
-                    $eaItem('custom_requests_products', 'Groupes & sur-mesure', 'admin.custom-requests.index', [], 'custom_requests.view'),
-                ]),
-            ])),
+            'groups' => array_merge(
+                $eaGroupsFromNode($eaByKey->get('products_services'), 'Catalogue'),
+                $eaGroupsFromNode($eaByKey->get('products'), 'Grille commerciale'),
+                $eaGroupsFromNode($eaByKey->get('visa'), 'Visa')
+            ),
         ],
         'resa' => [
             'title' => 'Réservations',
             'sub' => 'Dossiers, demandes et paiements',
-            'groups' => array_values(array_filter([
-                $eaGroup('Dossiers', [
-                    $eaItem('reservations_all', 'Toutes les réservations', 'admin.reservation-dossiers.index', ['admin.reservation-dossiers.*', 'admin.reservations.index'], 'reservations.view'),
-                    $eaItem('catalogue', 'Catalogue de produits', \Illuminate\Support\Facades\Route::has('admin.vente.catalogue') ? 'admin.vente.catalogue' : 'admin.reservations.workspace', ['admin.vente.catalogue', 'admin.reservations.workspace*'], 'reservations.view'),
-                    $eaItem('custom_requests', 'Demandes à la carte', 'admin.custom-requests.index', ['admin.custom-requests.*'], 'custom_requests.view'),
-                    $eaItem('tailor_made', 'Demandes à la carte en ligne', 'admin.tailor-made-requests.index', ['admin.tailor-made-requests.*'], 'reservations.view'),
-                ]),
-                $eaGroup('Suivi', [
-                    $eaItem('reservations_agents', 'Réservations agents', 'admin.reservations.agents', [], 'reservations.view'),
-                    $eaItem('reservations_partners', 'Réservations partenaires', 'admin.reservations.partners', ['admin.reservations.partners'], 'reservations.view'),
-                    $eaItem('reservations_clients', 'Réservations en ligne', 'admin.reservations.clients', ['admin.reservations.clients'], 'reservations.view'),
-                    $eaItem('calendrier', 'Calendrier des départs', 'admin.reservations.calendrier', ['admin.reservations.calendrier*'], 'reservations.view'),
-                    $eaItem('messagerie', 'Messagerie', 'admin.messagerie.index', ['admin.messagerie.*'], 'messagerie.view'),
-                ]),
-                $eaGroup('Finance', [
-                    $eaItem('paiements', 'Paiements', 'admin.finance.paiements', ['admin.finance.paiements'], ['finance.payments.view', 'finance.view']),
-                    $eaItem('factures', 'Factures', 'admin.finance.factures', ['admin.finance.factures'], ['finance.invoices.view', 'finance.view']),
-                    $eaItem('depenses', 'Dépenses', 'admin.finance.depenses', ['admin.finance.depenses'], ['finance.expenses.view', 'finance.view']),
-                    $eaItem('finance_departures', 'Finances départs', 'admin.finance.departures.index', ['admin.finance.departures.*'], 'departures_finance.view'),
-                    $eaItem('commissions', 'Commissions', 'admin.finance.commissions', ['admin.finance.commissions*'], 'finance.view'),
-                    $eaItem('my_commissions', 'Mes commissions', 'admin.agent.commissions.index', ['admin.agent.commissions.*'], ['commissions.view-own', 'commissions.view-team', 'commissions.view-all']),
-                ]),
-            ])),
+            'groups' => array_merge(
+                $eaGroupsFromNode($eaByKey->get('reservations'), 'Dossiers'),
+                $eaLeafGroup('Communication', ['messagerie', 'dev_reclamations']),
+                $eaGroupsFromNode($eaByKey->get('finance'), 'Finance')
+            ),
         ],
         'clients' => [
             'title' => 'Clients',
             'sub' => 'Base clients et relation commerciale',
-            'groups' => array_values(array_filter([
-                $eaGroup('Base', [
-                    $eaItem('clients_all', 'Tous les clients', 'admin.customers.clients.index', ['admin.customers.clients.*'], 'customers.clients.view'),
-                    $eaItem('prospects', 'Prospects', 'admin.customers.prospects', ['admin.customers.prospects'], 'customers.clients.view'),
-                    $eaItem('voyageurs', 'Voyageurs', 'admin.customers.voyageurs', ['admin.customers.voyageurs'], 'customers.travelers.view'),
-                    $eaItem('historique', 'Historique', 'admin.customers.historique', ['admin.customers.historique'], 'customers.history.view'),
-                ]),
-                $eaGroup('Relation', [
-                    $eaItem('avis', 'Avis clients', 'admin.customers.avis-clients', ['admin.customers.avis-clients'], 'customers.view'),
-                    $eaItem('fidelite', 'Fidélité', 'admin.customers.fidelite', ['admin.customers.fidelite'], 'customers.loyalty.view'),
-                    $eaItem('partenaires', 'Partenaires', 'admin.partners.partenaires', ['admin.partners.partenaires*'], 'partners.list.view'),
-                    $eaItem('fournisseurs', 'Fournisseurs', 'admin.partners.fournisseurs', ['admin.partners.fournisseurs'], 'partners.suppliers.view'),
-                ]),
-            ])),
+            'groups' => array_merge(
+                $eaGroupsFromNode($eaByKey->get('customers'), 'Base clients'),
+                $eaGroupsFromNode($eaByKey->get('partners'), 'Partenaires')
+            ),
         ],
         'admin' => [
             'title' => 'Administration',
-            'sub' => 'Réseau, équipes et reporting',
-            'groups' => array_values(array_filter([
-                $eaGroup('Réseau', [
-                    $eaItem('points_of_sale', 'Points de vente', 'admin.points-of-sale.index', ['admin.points-of-sale.index', 'admin.points-of-sale.show', 'admin.agencies.*'], ['points_of_sale.view', 'agencies.view']),
-                    $eaItem('pos_employees', 'Employés des points de vente', 'admin.agency-employees.index', ['admin.agency-employees.*'], ['pos_employees.view', 'agency_employees.view']),
-                    $eaItem('pos_accounts', 'Comptes points de vente', 'admin.agency-accounts.index', ['admin.agency-accounts.*'], 'agency_accounts.view'),
-                    $eaItem('assignments', 'Affectations', 'admin.assignments.index', ['admin.assignments.*'], 'assignments.view'),
-                    $eaItem('pos_performance', 'Performance points de vente', 'admin.points-of-sale.performance', ['admin.points-of-sale.performance'], ['points_of_sale.performance', 'agency_performance.view']),
-                ]),
-                $eaGroup('Équipe', [
-                    $eaItem('rh', 'Gestion RH', 'admin.menu-hubs.rh', ['admin.menu-hubs.rh'], 'settings.users.manage'),
-                    $eaCanSeeAdministration ? $eaItem('users', 'Utilisateurs', 'admin.settings.utilisateurs', ['admin.settings.utilisateurs*'], 'settings.users.manage') : null,
-                    $eaCanSeeAdministration ? $eaItem('roles', 'Rôles & permissions', 'admin.settings.roles-permissions', ['admin.settings.roles-permissions*'], 'settings.roles.manage') : null,
-                ]),
-                $eaGroup('Pilotage', [
-                    $eaItem('stats', 'Statistiques', 'admin.dashboard.statistiques', ['admin.dashboard.statistiques'], 'dashboard.stats.view'),
-                    $eaItem('alerts', 'Alertes', 'admin.dashboard.alertes', ['admin.dashboard.alertes'], 'dashboard.alerts.view'),
-                    $eaItem('reports', 'Rapports financiers', 'admin.finance.rapports-financiers', ['admin.finance.rapports-financiers'], ['finance.reports.view', 'finance.view']),
-                    $eaCanSeeAdministration ? $eaItem('settings', 'Paramètres', 'admin.settings.index', ['admin.settings.index', 'admin.settings.parametres-generaux*', 'admin.settings.securite*'], 'settings.view') : null,
-                    $eaCanSeeAdministration ? $eaItem('home_page', 'Home page', 'admin.settings.home-page.edit', ['admin.settings.home-page.*'], 'settings.general.manage') : null,
-                ]),
-            ])),
+            'sub' => 'Réseau, opérations, pilotage et paramètres',
+            'groups' => array_merge(
+                $eaGroupsFromNode($eaByKey->get('agencies'), 'Points de vente'),
+                $eaGroupsFromNode($eaByKey->get('operations'), 'Opérations terrain'),
+                $eaGroupsFromNode($eaByKey->get('dashboard'), 'Pilotage'),
+                $eaGroupsFromNode($eaByKey->get('reporting'), 'Reporting'),
+                $eaGroupsFromNode($eaByKey->get('settings'), 'Paramètres')
+            ),
         ],
     ];
 
-    // Une section sans aucune entrée visible n'est pas affichée.
+    // Une section sans entrée visible n'est pas affichée ; une section est « active » si l'une de ses entrées l'est.
     $eaSections = array_filter($eaSections, fn (array $section) => $section['groups'] !== []);
-    $eaIsDashboard = request()->routeIs('admin.dashboard', 'admin.dashboard.espace-v2', 'admin.dashboard.vue-globale', 'admin.dashboard.v*');
+    foreach ($eaSections as $key => $section) {
+        $active = false;
+        foreach ($section['groups'] as $group) {
+            foreach ($group['items'] as $item) {
+                if ($item['active']) {
+                    $active = true;
+                    break 2;
+                }
+            }
+        }
+        $eaSections[$key]['active'] = $active && !$eaIsDashboard;
+    }
+
     $eaProfileHref = \Illuminate\Support\Facades\Route::has('admin.profile.edit') ? route('admin.profile.edit') : null;
     $eaLogoutHref = \Illuminate\Support\Facades\Route::has('logout.get') ? route('logout.get') : null;
 @endphp
@@ -176,7 +142,7 @@
 <nav class="ea-nav" aria-label="Navigation principale">
     <a href="{{ $eaDashboardHref }}" class="ea-nav-link {{ $eaIsDashboard ? 'is-active' : '' }}">Tableau de bord</a>
     @foreach($eaSections as $key => $section)
-        <button type="button" class="ea-nav-btn" data-ea-menu-toggle="{{ $key }}" aria-expanded="false" aria-controls="ea-mega-{{ $key }}">
+        <button type="button" class="ea-nav-btn {{ $section['active'] ? 'is-current' : '' }}" data-ea-menu-toggle="{{ $key }}" aria-expanded="false" aria-controls="ea-mega-{{ $key }}">
             {{ $section['title'] }}<span class="ea-caret" aria-hidden="true"></span>
         </button>
     @endforeach

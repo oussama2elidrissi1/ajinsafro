@@ -28,8 +28,8 @@ class DashboardController extends Controller
 
     public function index(Request $request)
     {
-        // Dashboard principal = Dashboard V6 (design system officiel).
-        return $this->v6($request);
+        // Dashboard principal = Espace Admin v2 (interface unique de l'administration).
+        return $this->espaceV2($request);
     }
 
     public function page(Request $request)
@@ -46,8 +46,8 @@ class DashboardController extends Controller
      */
     public function vueGlobale(Request $request)
     {
-        // Vue globale alignée sur le design officiel V6.
-        return $this->v6($request);
+        // Vue globale alignée sur l'interface unique Espace Admin v2.
+        return $this->espaceV2($request);
 
         $user = $request->user();
         $branchIds = $this->branchScope->visibleBranchIds($user);
@@ -203,65 +203,32 @@ class DashboardController extends Controller
     }
 
     /**
-     * Dashboard V2 — page autonome avec design dashboard.html.
-     * Réutilise les mêmes données que vueGlobale() en appelant la sous-réponse.
-     * Ne touche pas à vueGlobale() — capture juste sa data via View::getData().
+     * Anciennes versions du dashboard (V2 à V6) : les routes restent valides
+     * mais rendent toutes l'interface unique Espace Admin v2.
      */
     public function v2(Request $request)
     {
-        $response = $this->vueGlobale($request);
-        $data = $response->getData();
-
-        return view('admin.dashboard.v2.index', $data);
+        return $this->espaceV2($request);
     }
 
-    /**
-     * Dashboard V3 — nouvelle page autonome sans impact sur les dashboards existants.
-     */
     public function v3(Request $request)
     {
-        $response = $this->vueGlobale($request);
-        $data = $response->getData();
-
-        return view('admin.dashboard.v3.index', $data);
+        return $this->espaceV2($request);
     }
 
-    /**
-     * Dashboard V4 — nouvelle page autonome avec la maquette fournie.
-     */
     public function v4(Request $request)
     {
-        $response = $this->vueGlobale($request);
-        $data = $response->getData();
-
-        return view('admin.dashboard.v4.index', $data);
+        return $this->espaceV2($request);
     }
 
-    /**
-     * Dashboard V5 — page autonome fidèle à la maquette HTML fournie.
-     */
     public function v5(Request $request)
     {
-        $service = app(DashboardV5StatsService::class);
-        $dashboardV5 = $service->build($request->user());
-
-        return view('admin.dashboard.v5.index', [
-            'dashboardV5' => $dashboardV5,
-        ]);
+        return $this->espaceV2($request);
     }
 
-    /**
-     * Dashboard V6 — base technique V5, structure visuelle inspirée V4.
-     */
     public function v6(Request $request)
     {
-        $service = app(DashboardV5StatsService::class);
-        $dashboardV5 = $service->build($request->user());
-
-        return view('admin.dashboard.v6.index', [
-            'dashboardV5' => $dashboardV5,
-            'customRequestWidgets' => $this->customRequestWidgets($request),
-        ]);
+        return $this->espaceV2($request);
     }
 
     /**

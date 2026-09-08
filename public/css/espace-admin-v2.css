@@ -105,6 +105,7 @@ body.ea-body ::-webkit-scrollbar-thumb { background: #c9dcee; border-radius: 8px
 .ea-nav-btn[aria-expanded="true"] { background: var(--ea-soft); color: var(--ea-primary); }
 .ea-nav-link.is-active { padding: 8px 14px; background: var(--ea-primary); color: #fff; font-weight: 500; }
 .ea-nav-link.is-active:hover { background: var(--ea-primary-dark); color: #fff; }
+.ea-nav-btn.is-current { color: var(--ea-primary); font-weight: 500; }
 
 .ea-caret {
   width: 6px;
@@ -229,7 +230,10 @@ body.ea-body ::-webkit-scrollbar-thumb { background: #c9dcee; border-radius: 8px
 .ea-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 .ea-user-meta { display: none; flex-direction: column; line-height: 1.2; white-space: nowrap; }
 .ea-user-name { font-size: 13px; font-weight: 600; color: var(--ea-text); }
+.ea-user-links { font-size: 11px; color: var(--ea-muted); }
 .ea-user-link { font-size: 11px; color: var(--ea-muted); }
+.ea-user-link:hover { color: var(--ea-primary); }
+.ea-user-sep { margin: 0 4px; color: var(--ea-muted-3); }
 
 /* Notifications (dropdown Bootstrap) */
 .ea-notif-menu {
@@ -307,6 +311,18 @@ body.ea-body ::-webkit-scrollbar-thumb { background: #c9dcee; border-radius: 8px
   padding: 0;
 }
 .ea-burger span { width: 16px; height: 2px; border-radius: 2px; background: var(--ea-primary); }
+
+/* Le header est immunisé contre les règles génériques des feuilles héritées
+   (admin-compact.css : `button`, `input`…) — spécificité (0,3,1). */
+body.ea-body .ea-header .ea-nav-btn { min-height: 0 !important; height: auto !important; padding: 8px 13px !important; font-size: 13.5px !important; border-radius: 999px !important; line-height: 1.45 !important; }
+body.ea-body .ea-header .ea-nav-link { min-height: 0 !important; height: auto !important; font-size: 13.5px !important; line-height: 1.45 !important; }
+body.ea-body .ea-header .ea-icon-btn { width: 36px !important; height: 36px !important; min-height: 0 !important; padding: 0 !important; border-radius: 50% !important; font-size: 18px !important; line-height: 1 !important; }
+body.ea-body .ea-header .ea-burger { width: 40px !important; height: 40px !important; min-height: 0 !important; padding: 0 !important; border-radius: 12px !important; }
+body.ea-body .ea-header .ea-mega-close { min-height: 0 !important; height: auto !important; padding: 0 !important; font-size: 12px !important; border-radius: 0 !important; line-height: 1.4 !important; }
+body.ea-body .ea-header .ea-search input,
+body.ea-body .ea-header .ea-drawer-search input { height: auto !important; min-height: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; font-size: 13px !important; font-weight: 400 !important; }
+body.ea-body .ea-header .ea-btn-sm { min-height: 0 !important; height: auto !important; padding: 6px 12px !important; font-size: 12px !important; border-radius: 999px !important; line-height: 1.4 !important; }
+body.ea-body .ea-header .ea-search { padding: 10px 13px; }
 
 /* --------------------------------------------------------------------------
    Méga-menus
@@ -464,7 +480,8 @@ body.ea-body ::-webkit-scrollbar-thumb { background: #c9dcee; border-radius: 8px
    Contenu
    -------------------------------------------------------------------------- */
 
-.ea-content {
+/* Spécificité (0,2,1) : prime sur les paddings des anciens wrappers .admin-v6-content / .aj-admin-v2-content. */
+body.ea-body .ea-content {
   padding: clamp(18px, 2.4vw, 30px) var(--ea-gutter) 48px;
   display: flex;
   flex-direction: column;
@@ -472,8 +489,34 @@ body.ea-body ::-webkit-scrollbar-thumb { background: #c9dcee; border-radius: 8px
   max-width: 1560px;
   margin: 0 auto;
   width: 100%;
+  min-height: 0;
   box-sizing: border-box;
+  overflow-x: clip;
 }
+/* Les pages de contenu héritées gèrent leur propre rythme vertical (composant page-header, .row, .card). */
+body.ea-body .ea-content > :not(.ea-page-head):not(.ea-kpis):not(.ea-main) { min-width: 0; }
+body.ea-body .ea-content > .row,
+body.ea-body .ea-content > .container-fluid { margin-top: 0; }
+/* L'ancien topbar V6 affichait le titre de page et masquait .page-title-box ; la coque v2 rend le titre dans la page. */
+body.ea-body.admin-v6 .admin-v6-content .page-title-box {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  margin-bottom: 8px;
+}
+body.ea-body .ea-content .page-title-box .page-title-right { display: block; }
+body.ea-body .ea-content .page-title-box h4 { text-transform: none; line-height: 1.2; }
+body.ea-body .ea-content .page-title-box .page-title,
+body.ea-body .ea-content .page-title-box h4 { font-family: var(--ea-font); font-size: clamp(20px, 2vw, 26px); font-weight: 600; letter-spacing: -.02em; color: var(--ea-text); }
+body.ea-body .ea-content .breadcrumb { font-size: 12px; margin: 0; }
+body.ea-body .ea-content .breadcrumb a { color: var(--ea-muted); }
+body.ea-body .ea-content .breadcrumb-item.active { color: var(--ea-text); }
+body.ea-body .ea-content .aj-page-head .aj-title { font-family: var(--ea-font); font-weight: 600; letter-spacing: -.02em; color: var(--ea-text); }
+body.ea-body .ea-content .card,
+body.ea-body .ea-content .admin-v6-card { border-radius: 18px; border-color: var(--ea-border); box-shadow: none; }
 
 .ea-page-head {
   display: flex;
@@ -536,7 +579,8 @@ body.ea-body ::-webkit-scrollbar-thumb { background: #c9dcee; border-radius: 8px
   padding: 8px 15px;
 }
 .ea-btn-outline:hover { background: var(--ea-soft); }
-.ea-link { font-size: 12.5px; font-weight: 600; }
+.ea-link { font-size: 12.5px; font-weight: 600; color: var(--ea-primary); }
+.ea-link:hover { color: var(--ea-primary-dark); }
 
 /* KPI */
 .ea-kpis {
