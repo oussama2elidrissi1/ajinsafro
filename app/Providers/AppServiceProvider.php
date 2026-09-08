@@ -41,7 +41,7 @@ class AppServiceProvider extends ServiceProvider
 
         Route::bind('airline', fn ($value) => AjAirline::findOrFail($value));
 
-        View::composer(['agent.*', 'layouts.partials.sidebar-agent', 'agent_v2.partials.sidebar', 'layouts.partials.sidebar-ajinsafro'], function ($view): void {
+        View::composer(['agent.*', 'layouts.partials.sidebar-agent', 'agent_v2.partials.sidebar', 'agent_v2.partials.shell-header', 'layouts.partials.sidebar-ajinsafro'], function ($view): void {
             $unreadCount = 0;
             $adminMenu = [];
             $agentPortalMenu = [];
@@ -81,7 +81,7 @@ class AppServiceProvider extends ServiceProvider
                     if (\Illuminate\Support\Facades\Route::has('agent.reservations.index')) {
                         $agentPortalMenu[] = [
                             'key' => 'agent_reservations',
-                            'label' => 'Mes reservations',
+                            'label' => 'Mes réservations',
                             'icon' => 'bx bx-calendar-check',
                             'route' => 'agent.reservations.index',
                             'href' => route('agent.reservations.index'),
@@ -99,7 +99,7 @@ class AppServiceProvider extends ServiceProvider
                 if ($user->can('custom_requests.view') && \Illuminate\Support\Facades\Route::has('agent.custom-reservations.index')) {
                     $agentPortalMenu[] = [
                         'key' => 'agent_reservations_a_la_carte',
-                        'label' => 'Reservations a la carte',
+                        'label' => 'Réservations à la carte',
                         'icon' => 'bx bx-edit-alt',
                         'route' => 'agent.custom-reservations.index',
                         'href' => route('agent.custom-reservations.index'),

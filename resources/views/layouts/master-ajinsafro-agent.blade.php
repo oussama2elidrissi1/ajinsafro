@@ -1,7 +1,10 @@
 @php
-    $useAgentPortal = request()->routeIs('agent.*')
-        || request()->attributes->get('agent_reservation_mode', false)
-        || \App\Services\View\AgentPortalLayout::shouldUse(auth()->user());
+    /**
+     * Espace Agent — coque du portail (design « Espace Agent »).
+     * L'ancienne barre latérale est remplacée par une navigation horizontale ;
+     * les feuilles de style du contenu (Tailwind partner-v2, Bootstrap, Qovex)
+     * restent chargées à l'identique pour ne pas casser les pages du portail.
+     */
     $voyageLayoutPage = request()->routeIs(
         'admin.circuits.voyages.create',
         'admin.circuits.voyages.edit',
@@ -9,9 +12,9 @@
         'admin.circuits.voyages.edit-v2',
         'agent.voyages.*'
     );
-    $hideInternalV2Topbar = true;
+    $eagCss = file_exists(public_path('css/espace-agent.css')) ? (string) filemtime(public_path('css/espace-agent.css')) : '1';
+    $eagJs = file_exists(public_path('js/espace-agent.js')) ? (string) filemtime(public_path('js/espace-agent.js')) : '1';
 @endphp
-{{-- Portail agent (Tailwind partner-v2) : branche historique de master-ajinsafro, inchangée. --}}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -22,7 +25,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
@@ -30,7 +33,7 @@
 
     @stack('css')
 
-    {{-- Tailwind shell (sidebar / header) first; Bootstrap + app after so admin widgets keep expected styling. --}}
+    {{-- Tailwind du portail d'abord ; Bootstrap et Qovex ensuite pour les composants d'administration. --}}
     @vite(['resources/css/partner-v2.css', 'resources/js/partner-v2.js'])
 
     <link href="{{ URL::asset('build/css/bootstrap.min.css') }}" rel="stylesheet" type="text/css" />
@@ -43,31 +46,30 @@
 
     @stack('styles')
     <link href="{{ URL::asset('css/admin-compact.css') }}?v=workspace-fixed-v7" rel="stylesheet" type="text/css" />
+    {{-- Coque Espace Agent — chargée en dernier pour primer sur les règles héritées. --}}
+    <link href="{{ URL::asset('css/espace-agent.css') }}?v={{ $eagCss }}" rel="stylesheet" type="text/css" />
 </head>
-<body class="partner-v2 admin-premium-ui aj-admin aj-admin-compact text-gray-800 antialiased font-sans{{ $voyageLayoutPage ? ' voyage-layout-page' : '' }}{{ $hideInternalV2Topbar ? ' internal-v2-topbar-hidden' : '' }}">
-    @if($hideInternalV2Topbar)
-        @include('layouts.partials.internal-v2-topbar')
-    @else
-        @include('partner_v2.partials.header', ['portalLogoutUsesPartner' => false])
-    @endif
+<body class="partner-v2 admin-premium-ui aj-admin aj-admin-compact ea-agent text-gray-800 antialiased font-sans internal-v2-topbar-hidden{{ $voyageLayoutPage ? ' voyage-layout-page' : '' }}">
+<div class="ea-agent-shell">
 
-    <main class="flex-grow w-full relative">
-        <div class="w-full px-0 mt-0 mb-16 fade-in">
-            <div class="flex flex-col lg:flex-row gap-6 lg:gap-8">
-                @include('agent_v2.partials.sidebar')
-                <div class="flex-1 min-w-0 agent-portal-main">
-                    @yield('content')
-                </div>
-            </div>
-        </div>
+    {{-- Barre héritée masquée en CSS : elle fournit encore la fenêtre des notifications. --}}
+    @include('layouts.partials.internal-v2-topbar')
+
+    @include('agent_v2.partials.shell-header')
+
+    <main class="eag-content agent-portal-main">
+        @yield('content')
     </main>
 
     @if(trim($__env->yieldContent('hidePageFooter')) !== '1' && !request()->routeIs('admin.reservations.workspace'))
         @include('agent_v2.partials.footer')
     @endif
 
+</div>
+
     @include('support.reclamations._floating_button')
     @include('layouts.vendor-scripts')
+    <script src="{{ URL::asset('js/espace-agent.js') }}?v={{ $eagJs }}"></script>
     @stack('scripts')
     @stack('body-end')
 </body>

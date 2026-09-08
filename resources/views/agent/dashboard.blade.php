@@ -4,10 +4,6 @@
 
 @section('hidePageFooter', '1')
 
-@push('styles')
-    <link href="{{ URL::asset('css/agent-dashboard.css') }}" rel="stylesheet" type="text/css" />
-@endpush
-
 @section('content')
 @php
     use App\Models\CustomRequest;
@@ -16,305 +12,344 @@
 
     $user = auth()->user();
     $displayName = $user?->name ?: 'Agent';
+    $firstName = trim((string) \Illuminate\Support\Str::before($displayName, ' ')) ?: $displayName;
     $agencyLabel = $user?->branch?->name ?: 'Ajinsafro';
-    $catalogueVoyageUrl = route('agent.catalogue');
+    $catalogueUrl = route('agent.catalogue');
     $reservationsUrl = route('agent.reservations.index');
+    $createUrl = Route::has('agent.reservations.create') ? route('agent.reservations.create') : $catalogueUrl;
+    $profileUrl = Route::has('agent.profile') ? route('agent.profile') : null;
+    $customUrl = Route::has('agent.custom-reservations.index') ? route('agent.custom-reservations.index') : null;
+    $logoutUrl = Route::has('logout.get') ? route('logout.get') : null;
+
+    $fmt = fn ($n) => number_format((float) $n, 0, ',', ' ');
+    $total = (int) ($stats['reservations_total'] ?? 0);
+    $confirmed = (int) ($stats['reservations_validees'] ?? 0);
+    $pending = (int) ($stats['reservations_en_cours'] ?? 0);
+    $confirmedPct = $total > 0 ? round(($confirmed / $total) * 100) : 0;
+    $others = max(0, $total - $confirmed - $pending);
+
+    $initials = strtoupper(
+        collect(preg_split('/\s+/', trim((string) $displayName)))->filter()->take(2)->map(fn ($s) => mb_substr($s, 0, 1))->implode('')
+    ) ?: 'AG';
+
+    // Dernier dossier en attente : le contrôleur le fournit sous forme de phrase.
+    $pendingPrefix = 'Dernier dossier en attente : ';
+    $pendingNote = collect($todayStats['notifications'] ?? [])
+        ->first(fn ($n) => \Illuminate\Support\Str::startsWith($n, $pendingPrefix));
+    $pendingClient = $pendingNote
+        ? rtrim(\Illuminate\Support\Str::after($pendingNote, $pendingPrefix), '.')
+        : null;
+
+    // Correspondance statut → présentation, alignée sur les couleurs du design.
+    $statusMap = [
+        Reservation::STATUS_CONFIRMED => ['Confirmée', 'confirmed'],
+        Reservation::STATUS_PAID => ['Payée', 'confirmed'],
+        Reservation::STATUS_PARTIALLY_PAID => ['Acompte', 'confirmed'],
+        Reservation::STATUS_PENDING => ['En attente', 'pending'],
+        Reservation::STATUS_DRAFT => ['Brouillon', 'pending'],
+        Reservation::STATUS_OPTION => ['Option', 'pending'],
+        Reservation::STATUS_EXPIRED => ['Expirée', 'pending'],
+        Reservation::STATUS_SHARED_ROOM_PENDING => ['Chambre à jumeler', 'shared'],
+        Reservation::STATUS_SHARED_ROOM_PAIRED => ['Chambre jumelée', 'confirmed'],
+        Reservation::STATUS_CANCELLED => ['Annulée', 'cancelled'],
+        Reservation::STATUS_REFUNDED => ['Remboursée', 'cancelled'],
+    ];
+
+    $rows = collect($recentReservations)->map(function ($reservation) use ($statusMap) {
+        $clientName = trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? ''));
+        [$label, $tone] = $statusMap[$reservation->status] ?? [ucfirst((string) $reservation->status), 'pending'];
+
+        return [
+            'model' => $reservation,
+            'client' => $clientName !== '' ? $clientName : 'Client non renseigné',
+            'ref' => $reservation->dossier_number ?: 'RES-' . str_pad((string) $reservation->id, 6, '0', STR_PAD_LEFT),
+            'trip' => $reservation->tour?->name ?: 'Voyage non renseigné',
+            'pax' => $reservation->passengers_count ? $reservation->passengers_count . ' voyageur(s)' : 'Dossier en cours',
+            'date' => optional($reservation->travelDate?->date)->format('d/m/Y') ?: optional($reservation->created_at)->format('d/m/Y'),
+            'amount' => (float) ($reservation->total_amount ?? 0),
+            'label' => $label,
+            'tone' => $tone,
+        ];
+    });
+
+    $filters = [
+        ['key' => 'all', 'label' => 'Tous', 'count' => $rows->count()],
+        ['key' => 'pending', 'label' => 'En attente', 'count' => $rows->where('tone', 'pending')->count()],
+        ['key' => 'shared', 'label' => 'À jumeler', 'count' => $rows->where('tone', 'shared')->count()],
+        ['key' => 'confirmed', 'label' => 'Confirmées', 'count' => $rows->where('tone', 'confirmed')->count()],
+    ];
 @endphp
 
-<div class="aj-agent-dashboard">
-    <div class="aj-agent-page-head">
-        <div class="aj-agent-page-title">
-            <h1>{{ $isManager ? 'Tableau de bord agence' : 'Tableau de bord' }}</h1>
-            <p>
-                {{ $isManager ? 'Pilotage equipe, reservations et chiffre agence.' : 'Bienvenue,' }}
-                {{ $displayName }} - {{ $agencyLabel }}.
-            </p>
+<div class="eag-dashboard">
+
+    {{-- ═══ En-tête de page ═══ --}}
+    <div class="eag-page-head">
+        <div style="min-width:0">
+            <span class="eag-eyebrow">{{ $isManager ? 'Tableau de bord agence' : 'Tableau de bord' }}</span>
+            <h1 class="eag-h1">Bonjour {{ $firstName }}</h1>
+            <p class="eag-page-sub">{{ $agencyLabel }} · {{ $total }} dossier{{ $total > 1 ? 's' : '' }} suivi{{ $total > 1 ? 's' : '' }}</p>
         </div>
-        <a href="{{ $catalogueVoyageUrl }}" class="aj-agent-primary-btn">
-            <i class="bx bx-map-alt" aria-hidden="true"></i>
-            <span>Catalogue de voyage</span>
-        </a>
+        <div class="eag-page-actions">
+            <a href="{{ $createUrl }}" class="eag-btn eag-btn--outline">Créer une réservation</a>
+            <a href="{{ $catalogueUrl }}" class="eag-btn eag-btn--accent">Catalogue de voyage</a>
+        </div>
     </div>
 
-    <section class="aj-agent-kpi-grid">
-        <div class="aj-agent-kpi-card aj-agent-kpi-blue">
-            <div class="aj-agent-kpi-icon"><i class="bx bx-briefcase-alt-2"></i></div>
-            <div>
-                <span>{{ $isManager ? 'Portefeuille' : 'Reservations' }}</span>
-                <strong>{{ number_format((int) ($stats['reservations_total'] ?? 0), 0, ',', ' ') }}</strong>
-            </div>
-        </div>
-        <div class="aj-agent-kpi-card aj-agent-kpi-green">
-            <div class="aj-agent-kpi-icon"><i class="bx bx-check-shield"></i></div>
-            <div>
-                <span>Confirmees</span>
-                <strong>{{ number_format((int) ($stats['reservations_validees'] ?? 0), 0, ',', ' ') }}</strong>
-            </div>
-        </div>
-        <div class="aj-agent-kpi-card aj-agent-kpi-purple">
-            <div class="aj-agent-kpi-icon"><i class="bx bx-time-five"></i></div>
-            <div>
-                <span>En attente</span>
-                <strong>{{ number_format((int) ($stats['reservations_en_cours'] ?? 0), 0, ',', ' ') }}</strong>
-            </div>
-        </div>
-        <div class="aj-agent-kpi-card aj-agent-kpi-orange">
-            <div class="aj-agent-kpi-icon"><i class="bx bx-wallet"></i></div>
-            <div>
-                <span>{{ $isManager ? 'Total ventes' : 'Revenus' }}</span>
-                <strong>{{ number_format((float) ($stats['revenue_generated'] ?? 0), 0, ',', ' ') }} DH</strong>
-            </div>
+    {{-- ═══ Indicateurs ═══ --}}
+    <section class="eag-kpis" aria-label="Indicateurs">
+        <a href="{{ $reservationsUrl }}" class="eag-kpi">
+            <div class="eag-kpi__label">{{ $isManager ? 'Portefeuille' : 'Réservations' }}</div>
+            <div class="eag-kpi__value">{{ $fmt($total) }}</div>
+            @if($total > 0)
+                <div class="eag-kpi__bar" aria-hidden="true">
+                    <span class="is-green" style="flex:{{ max(0, $confirmed) }}"></span>
+                    <span class="is-accent" style="flex:{{ max(0, $pending) }}"></span>
+                    <span class="is-rest" style="flex:{{ max($others, $confirmed + $pending === 0 ? 1 : 0) }}"></span>
+                </div>
+            @else
+                <div class="eag-kpi__note">aucun dossier pour l'instant</div>
+            @endif
+        </a>
+        <a href="{{ $reservationsUrl }}" class="eag-kpi eag-kpi--green">
+            <div class="eag-kpi__label">Confirmées</div>
+            <div class="eag-kpi__value">{{ $fmt($confirmed) }}</div>
+            <div class="eag-kpi__note">{{ $confirmedPct }} % du portefeuille</div>
+        </a>
+        <a href="{{ $reservationsUrl }}" class="eag-kpi eag-kpi--warn">
+            <div class="eag-kpi__label">En attente</div>
+            <div class="eag-kpi__value">{{ $fmt($pending) }}</div>
+            <div class="eag-kpi__note">{{ $pending > 0 ? 'à relancer' : 'rien à relancer' }}</div>
+        </a>
+        <div class="eag-kpi eag-kpi--blue">
+            <div class="eag-kpi__label">{{ $isManager ? 'Total ventes' : 'Revenus' }}</div>
+            <div class="eag-kpi__money"><span>{{ $fmt($stats['revenue_generated'] ?? 0) }}</span><span>DH</span></div>
+            <div class="eag-kpi__note">encaissé et engagé</div>
         </div>
     </section>
 
+    {{-- ═══ Dossiers + colonne de droite ═══ --}}
+    <section class="eag-main">
+
+        <div class="eag-col-main">
+            <div class="eag-card">
+                <div class="eag-card__head">
+                    <div style="min-width:0">
+                        <h2 class="eag-card__title">{{ $isManager ? 'Dernières réservations agence' : 'Mes dernières réservations' }}</h2>
+                        <p class="eag-card__sub">{{ $isManager ? 'Dossiers récents de votre équipe.' : 'Vue opérationnelle sur les dossiers les plus récents.' }}</p>
+                    </div>
+                    <a href="{{ $reservationsUrl }}" class="eag-link">Tous mes dossiers →</a>
+                </div>
+
+                @if($isManager)
+                    <form method="GET" action="{{ route('agent.dashboard') }}" class="eag-filters" style="align-items:center">
+                        <label class="eag-filter" style="cursor:default">Périmètre</label>
+                        <select name="scope" class="eag-filter" onchange="this.form.submit()" style="cursor:pointer">
+                            <option value="team" {{ ($scope ?? 'team') === 'team' ? 'selected' : '' }}>Mon équipe</option>
+                            <option value="mine" {{ ($scope ?? 'team') === 'mine' ? 'selected' : '' }}>Mes réservations</option>
+                        </select>
+                    </form>
+                @endif
+
+                @if($rows->isNotEmpty())
+                    <div class="eag-filters" role="group" aria-label="Filtrer les dossiers">
+                        @foreach($filters as $filter)
+                            <button type="button" class="eag-filter {{ $filter['key'] === 'all' ? 'is-active' : '' }}" data-eag-filter="{{ $filter['key'] }}">
+                                {{ $filter['label'] }}<b>{{ $filter['count'] }}</b>
+                            </button>
+                        @endforeach
+                    </div>
+
+                    <div class="eag-rows" data-eag-rows>
+                        @foreach($rows as $row)
+                            @php
+                                $detailUrl = Route::has('agent.reservations.show') ? route('agent.reservations.show', $row['model']) : null;
+                            @endphp
+                            <div class="eag-row eag-row--{{ $row['tone'] }}" data-eag-status="{{ $row['tone'] }}">
+                                <div class="eag-row__client">
+                                    <div class="eag-row__name">{{ $row['client'] }}</div>
+                                    <div class="eag-row__ref">{{ $row['ref'] }}</div>
+                                </div>
+                                <div class="eag-row__trip">
+                                    <div class="eag-row__trip-name">{{ \Illuminate\Support\Str::limit($row['trip'], 90) }}</div>
+                                    <div class="eag-row__pax">{{ $row['pax'] }}</div>
+                                </div>
+                                <div class="eag-row__figures">
+                                    <div class="eag-row__date">{{ $row['date'] }}</div>
+                                    @if($row['amount'] > 0)
+                                        <div class="eag-row__amount">{{ $fmt($row['amount']) }} DH</div>
+                                    @endif
+                                </div>
+                                <span class="eag-status eag-status--{{ $row['tone'] }}">{{ $row['label'] }}</span>
+                                @if($detailUrl)
+                                    <a href="{{ $detailUrl }}" class="eag-row__action">Voir</a>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                    <div class="eag-empty" data-eag-filter-empty hidden>Aucun dossier dans ce filtre.</div>
+                @else
+                    <div class="eag-empty">
+                        <strong>Aucune réservation récente</strong>
+                        Commencez par consulter le catalogue ou créer une nouvelle réservation.
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <div class="eag-col-side">
+
+            {{-- Aujourd'hui --}}
+            <section class="eag-side-card eag-side-card--navy">
+                <h2 class="eag-side-card__title">Aujourd'hui</h2>
+                <p class="eag-side-card__sub">{{ $isManager ? 'Activité de votre agence.' : "Résumé rapide de l'activité" }}</p>
+                <div class="eag-today__stats">
+                    <div class="eag-today__stat">
+                        <div class="eag-today__stat-label">Réservations</div>
+                        <div class="eag-today__stat-value">{{ $fmt($todayStats['reservations_today'] ?? 0) }}</div>
+                    </div>
+                    <div class="eag-today__stat">
+                        <div class="eag-today__stat-label">En attente</div>
+                        <div class="eag-today__stat-value">{{ $fmt($todayStats['pending_today'] ?? 0) }}</div>
+                    </div>
+                </div>
+                <div class="eag-today__note">
+                    @if($pendingClient)
+                        Dernier dossier en attente : <b>{{ $pendingClient }}</b>
+                    @else
+                        Aucune alerte prioritaire aujourd'hui.
+                    @endif
+                </div>
+                <div class="eag-today__actions">
+                    <a href="{{ $createUrl }}" class="eag-today__action">Créer une réservation<span aria-hidden="true">+</span></a>
+                    <a href="{{ $catalogueUrl }}" class="eag-today__action eag-today__action--ghost">Voir les voyages disponibles<span aria-hidden="true">→</span></a>
+                </div>
+            </section>
+
+            {{-- Profil --}}
+            <section class="eag-side-card">
+                <div class="eag-profile">
+                    <span class="eag-profile__avatar" aria-hidden="true">
+                        <span>{{ $initials }}</span>
+                        @if($user?->avatar_url)
+                            <img src="{{ $user->avatar_url }}" alt="" onerror="this.remove();">
+                        @endif
+                    </span>
+                    <div style="min-width:0">
+                        <div class="eag-profile__name">{{ $displayName }}</div>
+                        <div class="eag-profile__role">Agent · {{ $agencyLabel }}</div>
+                    </div>
+                </div>
+                <div class="eag-profile__links">
+                    @if($profileUrl)
+                        <a href="{{ $profileUrl }}" class="eag-profile__link">Mon profil<span class="eag-profile__chev" aria-hidden="true">›</span></a>
+                    @endif
+                    @if($customUrl)
+                        <a href="{{ $customUrl }}" class="eag-profile__link">Réservations à la carte<span class="eag-profile__chev" aria-hidden="true">›</span></a>
+                    @endif
+                    @if($logoutUrl)
+                        <a href="{{ $logoutUrl }}" class="eag-profile__link is-danger">Se déconnecter<span class="eag-profile__chev" aria-hidden="true">›</span></a>
+                    @endif
+                </div>
+            </section>
+
+            {{-- Support --}}
+            <section class="eag-side-card eag-side-card--dark">
+                <div class="eag-support__title">Un souci sur un dossier ?</div>
+                <p class="eag-support__text">L'équipe support répond sous 2 h ouvrées.</p>
+                <button type="button" class="eag-support__btn" data-dev-reclamation-open>Signaler un problème</button>
+            </section>
+        </div>
+    </section>
+
+    {{-- ═══ Demandes à la carte (responsables d'agence) ═══ --}}
     @if($isManager)
         @php
-            $personal = $managerStats['personal'] ?? [];
-            $teamOnly = $managerStats['team_only'] ?? [];
             $agentRows = $managerStats['agents'] ?? collect();
         @endphp
-        <section class="aj-agent-manager-board">
-            <div class="aj-agent-manager-card aj-agent-manager-card-dark">
-                <div>
-                    <span class="aj-agent-manager-kicker">Responsable agence</span>
-                    <h2>{{ $agencyLabel }}</h2>
-                    <p>{{ ($directReports ?? collect())->count() }} agent(s) rattache(s) a votre equipe.</p>
+        <section class="eag-card">
+            <div class="eag-card__head">
+                <div style="min-width:0">
+                    <h2 class="eag-card__title">Équipe {{ $agencyLabel }}</h2>
+                    <p class="eag-card__sub">Suivi des agents rattachés et de leur volume de réservations.</p>
                 </div>
-                <a href="{{ $reservationsUrl }}" class="aj-agent-manager-link">Voir toutes les reservations</a>
+                <a href="{{ $reservationsUrl }}" class="eag-link">Voir toutes les réservations →</a>
             </div>
-
-            <div class="aj-agent-manager-card">
-                <span class="aj-agent-manager-kicker">Mes dossiers</span>
-                <div class="aj-agent-manager-metrics">
-                    <div><strong>{{ number_format((int) ($personal['reservations_total'] ?? 0), 0, ',', ' ') }}</strong><small>Total</small></div>
-                    <div><strong>{{ number_format((int) ($personal['reservations_en_cours'] ?? 0), 0, ',', ' ') }}</strong><small>En attente</small></div>
-                    <div><strong>{{ number_format((float) ($personal['revenue_generated'] ?? 0), 0, ',', ' ') }} DH</strong><small>Ventes</small></div>
-                </div>
-            </div>
-
-            <div class="aj-agent-manager-card">
-                <span class="aj-agent-manager-kicker">Equipe</span>
-                <div class="aj-agent-manager-metrics">
-                    <div><strong>{{ number_format((int) ($teamOnly['reservations_total'] ?? 0), 0, ',', ' ') }}</strong><small>Total</small></div>
-                    <div><strong>{{ number_format((int) ($teamOnly['reservations_en_cours'] ?? 0), 0, ',', ' ') }}</strong><small>En attente</small></div>
-                    <div><strong>{{ number_format((float) ($teamOnly['revenue_generated'] ?? 0), 0, ',', ' ') }} DH</strong><small>Ventes</small></div>
-                </div>
-            </div>
-        </section>
-
-        <section class="aj-agent-team-strip">
-            <div class="aj-agent-team-strip-head">
-                <div>
-                    <h2>Equipe Tanger</h2>
-                    <p>Suivi des agents rattaches et de leur volume de reservations.</p>
-                </div>
-            </div>
-            <div class="aj-agent-team-list">
-                @forelse($agentRows as $row)
-                    @php $agent = $row['user']; @endphp
-                    <div class="aj-agent-team-row">
-                        <div class="aj-agent-team-person">
-                            <img src="{{ $agent->avatar_url }}" alt="Avatar" class="aj-agent-team-avatar">
-                            <div>
-                                <strong>{{ $agent->name }}</strong>
-                                <span>{{ $agent->email }}</span>
-                            </div>
+            <div class="eag-rows">
+                @forelse($agentRows as $agentRow)
+                    @php $agent = $agentRow['user']; @endphp
+                    <div class="eag-row">
+                        <div class="eag-row__client">
+                            <div class="eag-row__name">{{ $agent->name }}</div>
+                            <div class="eag-row__ref">{{ $agent->email }}</div>
                         </div>
-                        <div class="aj-agent-team-stat"><strong>{{ $row['reservations_total'] }}</strong><span>Reservations</span></div>
-                        <div class="aj-agent-team-stat"><strong>{{ $row['reservations_en_cours'] }}</strong><span>En attente</span></div>
-                        <div class="aj-agent-team-stat"><strong>{{ number_format((float) $row['revenue_generated'], 0, ',', ' ') }} DH</strong><span>Ventes</span></div>
+                        <div class="eag-row__figures">
+                            <div class="eag-row__date">Réservations</div>
+                            <div class="eag-row__amount">{{ $fmt($agentRow['reservations_total']) }}</div>
+                        </div>
+                        <div class="eag-row__figures">
+                            <div class="eag-row__date">En attente</div>
+                            <div class="eag-row__amount">{{ $fmt($agentRow['reservations_en_cours']) }}</div>
+                        </div>
+                        <div class="eag-row__figures">
+                            <div class="eag-row__date">Ventes</div>
+                            <div class="eag-row__amount">{{ $fmt($agentRow['revenue_generated']) }} DH</div>
+                        </div>
                     </div>
                 @empty
-                    <div class="aj-agent-alert-box">Aucun agent rattache pour le moment.</div>
+                    <div class="eag-empty">Aucun agent rattaché pour le moment.</div>
                 @endforelse
             </div>
         </section>
 
-        <section class="aj-agent-custom-board">
-            <div class="aj-agent-custom-summary">
-                <div>
-                    <span class="aj-agent-manager-kicker">Demandes personnalisees</span>
-                    <h2>Reservations a la carte</h2>
-                    <p>Dossiers transmis par les agents et suivis par le service quotation.</p>
+        <section class="eag-card">
+            <div class="eag-card__head">
+                <div style="min-width:0">
+                    <h2 class="eag-card__title">Réservations à la carte</h2>
+                    <p class="eag-card__sub">Dossiers transmis par les agents et suivis par le service quotation.</p>
                 </div>
-                <div class="aj-agent-custom-metrics">
-                    <div><strong>{{ number_format((int) ($customRequestStats['total'] ?? 0), 0, ',', ' ') }}</strong><span>Total</span></div>
-                    <div><strong>{{ number_format((int) ($customRequestStats['new'] ?? 0), 0, ',', ' ') }}</strong><span>Nouvelles</span></div>
-                    <div><strong>{{ number_format((int) ($customRequestStats['quoted'] ?? 0), 0, ',', ' ') }}</strong><span>Devis</span></div>
-                    <div><strong>{{ number_format((int) ($customRequestStats['confirmed'] ?? 0), 0, ',', ' ') }}</strong><span>Confirmees</span></div>
-                </div>
+                @if($customUrl)
+                    <a href="{{ $customUrl }}" class="eag-link">Voir tout →</a>
+                @endif
             </div>
-            <div class="aj-agent-custom-list">
+            <div class="eag-filters" aria-hidden="true">
+                <span class="eag-filter">Total<b>{{ $fmt($customRequestStats['total'] ?? 0) }}</b></span>
+                <span class="eag-filter">Nouvelles<b>{{ $fmt($customRequestStats['new'] ?? 0) }}</b></span>
+                <span class="eag-filter">Devis<b>{{ $fmt($customRequestStats['quoted'] ?? 0) }}</b></span>
+                <span class="eag-filter">Confirmées<b>{{ $fmt($customRequestStats['confirmed'] ?? 0) }}</b></span>
+            </div>
+            <div class="eag-rows">
                 @forelse($recentCustomRequests as $customRequest)
                     @php
-                        $customUrl = route('agent.custom-reservations.show', $customRequest);
+                        $customShowUrl = Route::has('agent.custom-reservations.show') ? route('agent.custom-reservations.show', $customRequest) : null;
                         $customOwner = $customRequest->creator ?: $customRequest->assignedAgent;
                     @endphp
-                    <a href="{{ $customUrl }}" class="aj-agent-custom-row">
-                        <div>
-                            <strong>{{ $customRequest->customer_full_name ?: 'Client non renseigne' }}</strong>
-                            <span>{{ $customRequest->request_number }}{{ $customOwner ? ' - '.$customOwner->name : '' }}</span>
+                    <div class="eag-row">
+                        <div class="eag-row__client">
+                            <div class="eag-row__name">{{ $customRequest->customer_full_name ?: 'Client non renseigné' }}</div>
+                            <div class="eag-row__ref">{{ $customRequest->request_number }}{{ $customOwner ? ' · ' . $customOwner->name : '' }}</div>
                         </div>
-                        <div>
-                            <strong>{{ $customRequest->desired_destination ?: 'Destination a definir' }}</strong>
-                            <span>{{ optional($customRequest->desired_departure_date)->format('d/m/Y') ?: 'Date a definir' }}</span>
+                        <div class="eag-row__trip">
+                            <div class="eag-row__trip-name">{{ $customRequest->desired_destination ?: 'Destination à définir' }}</div>
+                            <div class="eag-row__pax">{{ $customRequest->travelers_count ?: 1 }} voyageur(s)</div>
                         </div>
-                        <div class="aj-agent-custom-tags">
-                            <span>{{ $customRequest->travelers_count ?: 1 }} voyageur(s)</span>
-                            <span>{{ CustomRequest::statusOptions()[$customRequest->status] ?? $customRequest->status }}</span>
+                        <div class="eag-row__figures">
+                            <div class="eag-row__date">{{ optional($customRequest->desired_departure_date)->format('d/m/Y') ?: 'Date à définir' }}</div>
                         </div>
-                    </a>
+                        <span class="eag-status">{{ CustomRequest::statusOptions()[$customRequest->status] ?? $customRequest->status }}</span>
+                        @if($customShowUrl)
+                            <a href="{{ $customShowUrl }}" class="eag-row__action">Voir</a>
+                        @endif
+                    </div>
                 @empty
-                    <div class="aj-agent-alert-box">Aucune demande a la carte visible pour votre equipe.</div>
+                    <div class="eag-empty">Aucune demande à la carte visible pour votre équipe.</div>
                 @endforelse
             </div>
         </section>
     @endif
 
-    <section class="aj-agent-content-grid">
-        <div class="aj-agent-panel aj-agent-panel-summary">
-            <div class="aj-agent-panel-header">
-                <div>
-                    <h2>Aujourd'hui</h2>
-                    <p>{{ $isManager ? 'Activite de votre agence.' : "Resume rapide de l'activite." }}</p>
-                </div>
-            </div>
-            <div class="aj-agent-panel-body">
-                <div class="aj-agent-section-kicker">Suivi operationnel</div>
-
-                <div class="aj-agent-today-item">
-                    <span>Reservations du jour</span>
-                    <small>{{ number_format((int) ($todayStats['reservations_today'] ?? 0), 0, ',', ' ') }}</small>
-                </div>
-
-                <div class="aj-agent-today-item">
-                    <span>En attente aujourd'hui</span>
-                    <small>{{ number_format((int) ($todayStats['pending_today'] ?? 0), 0, ',', ' ') }}</small>
-                </div>
-
-                @if(!empty($todayStats['notifications']))
-                    @foreach(($todayStats['notifications'] ?? []) as $notification)
-                        <div class="aj-agent-alert-box">{{ $notification }}</div>
-                    @endforeach
-                @else
-                    <div class="aj-agent-alert-box">Aucune alerte prioritaire aujourd'hui.</div>
-                @endif
-
-                <div class="aj-agent-quick-actions">
-                    <a href="{{ $catalogueVoyageUrl }}" class="aj-agent-action-btn">
-                        <i class="bx bx-plus-circle"></i>
-                        <span>Creer une reservation</span>
-                    </a>
-                    <a href="{{ $catalogueVoyageUrl }}" class="aj-agent-action-btn">
-                        <i class="bx bx-map-alt"></i>
-                        <span>Voir les voyages disponibles</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="aj-agent-panel aj-agent-panel-wide">
-            <div class="aj-agent-panel-header aj-agent-table-header">
-                <div>
-                    <h2>{{ $isManager ? 'Dernieres reservations agence' : 'Mes dernieres reservations' }}</h2>
-                    <p>{{ $isManager ? 'Dossiers recents de votre equipe.' : 'Vue operationnelle sur les dossiers les plus recents.' }}</p>
-                </div>
-                <form method="GET" action="{{ route('agent.dashboard') }}" class="aj-agent-table-actions">
-                    <select name="scope" id="scope" class="aj-agent-select" {{ $isManager ? '' : 'disabled' }}>
-                        <option value="mine" {{ ($scope ?? 'mine') === 'mine' ? 'selected' : '' }}>Mes reservations</option>
-                        @if($isManager)
-                            <option value="team" {{ ($scope ?? 'team') === 'team' ? 'selected' : '' }}>Mon equipe</option>
-                        @endif
-                    </select>
-                    @unless($isManager)
-                        <input type="hidden" name="scope" value="mine">
-                    @endunless
-                    <button type="submit" class="aj-agent-small-btn aj-agent-small-btn-primary">Filtrer</button>
-                </form>
-            </div>
-
-            <div class="aj-agent-table-wrap">
-                <table class="aj-agent-table aj-agent-table-pro">
-                    <colgroup>
-                        <col style="width: 24%;">
-                        <col style="width: 44%;">
-                        <col style="width: 12%;">
-                        <col style="width: 12%;">
-                        <col style="width: 8%;">
-                    </colgroup>
-                    <thead>
-                        <tr>
-                            <th>Client</th>
-                            <th>Voyage</th>
-                            <th>Date</th>
-                            <th>Statut</th>
-                            <th class="aj-agent-th-actions">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    @forelse($recentReservations as $reservation)
-                        @php
-                            $clientName = trim(($reservation->client_first_name ?? '') . ' ' . ($reservation->client_last_name ?? ''));
-                            $status = $reservation->status;
-                            $badgeClass = $status === Reservation::STATUS_VALIDEE
-                                ? 'aj-agent-status-green'
-                                : ($status === Reservation::STATUS_ANNULEE ? 'aj-agent-status-red' : 'aj-agent-status-orange');
-                            $detailUrl = Route::has('agent.reservations.show')
-                                ? route('agent.reservations.show', $reservation)
-                                : '#';
-                            $displayDate = optional($reservation->travelDate?->date)->format('d/m/Y') ?: optional($reservation->created_at)->format('d/m/Y');
-                            $owner = $reservation->agent ?: ($reservation->creator ?: $reservation->createdBy);
-                        @endphp
-                        <tr>
-                            <td>
-                                <div class="aj-agent-cell-main">{{ $clientName !== '' ? $clientName : 'Client non renseigne' }}</div>
-                                <div class="aj-agent-cell-sub">
-                                    {{ $reservation->dossier_number ?: 'Dossier #'.$reservation->id }}
-                                    @if($isManager && $owner)
-                                        - {{ $owner->name }}
-                                    @endif
-                                </div>
-                            </td>
-                            <td>
-                                <div class="aj-agent-cell-main aj-agent-cell-title">{{ $reservation->tour?->name ?: 'Voyage non renseigne' }}</div>
-                                <div class="aj-agent-cell-sub">
-                                    {{ $reservation->passengers_count ? $reservation->passengers_count.' voyageur(s)' : 'Dossier en cours' }}
-                                    @if((float) ($reservation->total_amount ?? 0) > 0)
-                                        - {{ number_format((float) $reservation->total_amount, 0, ',', ' ') }} DH
-                                    @endif
-                                </div>
-                            </td>
-                            <td>
-                                <div class="aj-agent-cell-date">{{ $displayDate }}</div>
-                            </td>
-                            <td>
-                                <span class="aj-agent-status {{ $badgeClass }}">{{ $status }}</span>
-                            </td>
-                            <td class="aj-agent-td-actions">
-                                <a href="{{ $detailUrl }}" class="aj-agent-small-btn">Voir</a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5">
-                                <div class="aj-agent-empty-state">
-                                    <div class="aj-agent-empty-icon"><i class="bx bx-briefcase-alt-2"></i></div>
-                                    <h3>Aucune reservation recente</h3>
-                                    <p>Commencez par consulter le catalogue ou creer une nouvelle reservation.</p>
-                                    <a href="{{ $catalogueVoyageUrl }}" class="aj-agent-primary-btn">Voir le catalogue</a>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
-
-    <footer class="aj-agent-footer">
-        <div>© Ajinsafro SARL AU</div>
-        <div>Licence N° 489117 | RC: 18989 | IF: 15254892</div>
+    <footer class="eag-footer">
+        <div class="eag-footer__legal">© Ajinsafro SARL AU</div>
+        <div class="eag-footer__licence">Licence N° 489117 | RC: 18989 | IF: 15254892</div>
     </footer>
 </div>
 @endsection
