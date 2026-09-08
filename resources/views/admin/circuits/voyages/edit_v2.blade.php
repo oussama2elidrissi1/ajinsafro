@@ -130,6 +130,8 @@
         trim((string) old('tour_price_by', $meta['tour_price_by'] ?? '')) === '' ? 'tarification par' : null,
         trim((string) old('min_people', $meta['min_people'] ?? '')) === '' ? 'min. personnes' : null,
     ]));
+    // Étapes dont le partial rend lui-même ses colonnes (mise en page issue des maquettes).
+    $vfOwnLayoutSteps = ['s-general', 's-hotels', 's-activities'];
     $vfBrandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');
     $vfBaseDisplay = preg_replace('#^https?://#', '', rtrim((string) $publicVoyagesBaseUrl, '/')) . '/';
     $cssVf = file_exists(public_path('css/voyage-form-v2.css')) ? (string) filemtime(public_path('css/voyage-form-v2.css')) : '1';
@@ -916,8 +918,9 @@
                     $next = $sections[$index + 1] ?? null;
                 @endphp
                 <section class="v2-panel vf-panel{{ $index === 0 ? ' active' : '' }}" id="{{ $sec['id'] }}">
-                    @if($sec['id'] === 's-general')
-                        @include('admin.circuits.voyages.partials.tabs._basic')
+                    @if(in_array($sec['id'], $vfOwnLayoutSteps, true))
+                        {{-- Étapes dessinées : le partial rend lui-même ses deux colonnes. --}}
+                        @include('admin.circuits.voyages.partials.' . $sec['partial'])
                     @else
                         <div class="vf-col-main">
                             <section class="vf-card">
@@ -940,21 +943,7 @@
                                 </div>
                             @endif
                         </div>
-                        <div class="vf-col-side">
-                            <section class="vf-side-card vf-side-card--navy">
-                                <h2 class="vf-side-card__title">Vue rapide</h2>
-                                <p class="vf-side-card__sub">État du produit</p>
-                                <div class="vf-quick">
-                                    <div class="vf-quick__row"><span class="vf-quick__label">Réf. voyage</span><span class="vf-quick__value">{{ $isCreate ? 'nouveau' : '#' . $veWpId }}</span></div>
-                                    <div class="vf-quick__row"><span class="vf-quick__label">Départs programmés</span><span class="vf-quick__value {{ $veDatesCount > 0 ? '' : 'is-accent' }}">{{ $veDatesCount }}</span></div>
-                                    <div class="vf-quick__row"><span class="vf-quick__label">Prix de base</span><span class="vf-quick__value">{{ $vePriceLabel ?: '—' }}</span></div>
-                                    <div class="vf-quick__row"><span class="vf-quick__label">Destination</span><span class="vf-quick__value is-text">{{ $veDestination ?: '—' }}</span></div>
-                                </div>
-                                @if($veDatesCount === 0)
-                                    <div class="vf-quick__note">Aucun départ programmé : le voyage reste invisible à la réservation.</div>
-                                @endif
-                            </section>
-                        </div>
+                        @include('admin.circuits.voyages.partials.v2._side_quick')
                     @endif
 
                     {{-- Barre d'actions fixe de l'étape --}}

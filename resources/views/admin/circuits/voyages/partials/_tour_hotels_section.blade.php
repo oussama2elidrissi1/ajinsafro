@@ -48,7 +48,7 @@
                     ? \Illuminate\Support\Facades\Storage::disk('public')->url($himgPath)
                     : ($himg ? \App\Services\Wp\WpHeroImageService::getAttachmentUrl((int) $himg) : '');
                 $himgEffectiveUrl = $himgUrl ?: ($defaultHotelImgUrl ?: '');
-                $himgLabel = $himgUrl ? 'Image personnalisÃ©e' : ($defaultHotelImgUrl ? 'Image par dÃ©faut utilisÃ©e' : '');
+                $himgLabel = $himgUrl ? 'Image personnalisée' : ($defaultHotelImgUrl ? 'Image par défaut utilisée' : '');
                 $oldDayNumber = old("tour_hotels.{$hi}.day_number", optional($h)->day_number);
                 $checkInDay = old("tour_hotels.{$hi}.check_in_day", optional($h)->check_in_day);
                 $checkOutDay = old("tour_hotels.{$hi}.check_out_day", optional($h)->check_out_day);
@@ -70,7 +70,7 @@
                     ? ($linkedWpHotelId . ' - ' . ($initialHotelName !== '' ? $initialHotelName : ('Hebergement #' . $linkedWpHotelId)))
                     : '';
             @endphp
-            <div class="card mb-3 border tour-hotel-row"
+            <div class="tour-hotel-row vf-hotel{{ $hi === 0 ? ' is-open' : '' }}"
                 data-index="{{ $hi }}"
                 data-hotel-id="{{ optional($h)->id ?? '' }}"
                 data-source-hotel-id="{{ old("tour_hotels.{$hi}.source_hotel_id", '') }}">
@@ -80,168 +80,133 @@
                 <input type="hidden" name="tour_hotels[{{ $hi }}][hotel_id]" value="{{ old("tour_hotels.{$hi}.hotel_id", '') }}">
                 <input type="hidden" name="tour_hotels[{{ $hi }}][source_hotel_id]" value="{{ old("tour_hotels.{$hi}.source_hotel_id", '') }}">
 
-                {{-- En-tête de la carte séjour --}}
-                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-start gap-3">
-                    <div class="tour-hotel-card-heading lh-sm">
-                        <div class="tour-hotel-card-title fw-semibold">Séjour {{ $hi + 1 }}</div>
-                        <div class="tour-hotel-card-meta text-muted small mt-1"></div>
+                {{-- En-tête repliable du séjour --}}
+                <div class="vf-hotel__head" data-vf-hotel-toggle role="button" tabindex="0">
+                    <span class="vf-hotel__nights tour-hotel-nights-badge"><i class="bx bx-moon"></i><span class="tour-hotel-nights-count">{{ $nuits }}</span> nuit{{ $nuits !== 1 ? 's' : '' }}</span>
+
+                    <div class="vf-hotel__ident tour-hotel-card-heading">
+                        <div class="vf-hotel__name tour-hotel-card-title">{{ $initialHotelName !== '' ? $initialHotelName : 'Séjour ' . ($hi + 1) }}</div>
+                        <div class="vf-hotel__chips">
+                            <span class="vf-hotel__chip vf-hotel__chip--range" data-vf-hotel-range>{{ $checkInDay === $checkOutDay ? ('Jour ' . $checkInDay) : ('J' . $checkInDay . ' → J' . $checkOutDay) }}</span>
+                            <span class="vf-hotel__chip vf-hotel__chip--cat {{ $initialStars > 0 ? 'is-set' : '' }}" data-vf-hotel-cat>{{ $initialStars > 0 ? ('Hôtel ' . $initialStars . '*') : 'À confirmer' }}</span>
+                        </div>
+                        <div class="vf-hotel__meta tour-hotel-card-meta"></div>
                     </div>
+
+                    <span class="vf-hotel__toggle" data-vf-hotel-toggle-label>{{ $hi === 0 ? 'Replier ▲' : 'Modifier ▼' }}</span>
                     @if($hi > 0)
-                        <button type="button" class="btn btn-sm btn-outline-danger tour-remove-row flex-shrink-0" aria-label="Supprimer ce séjour">
-                            <i class="bx bx-trash"></i>
-                        </button>
+                        <button type="button" class="vf-hotel__remove tour-remove-row" aria-label="Supprimer ce séjour"><i class="bx bx-trash"></i></button>
                     @endif
                 </div>
 
-                <div class="card-body tour-hotel-card-body">
-                    <div class="row g-3">
+                {{-- Corps du séjour --}}
+                <div class="vf-hotel__body tour-hotel-card-body">
 
-                        {{-- ?"??"? SECTION : Période du séjour ?"??"? --}}
-                        <div class="col-12">
-                            <p class="text-uppercase text-muted fw-semibold small mb-0" style="font-size:.7rem;letter-spacing:.05em;">Période du séjour</p>
-                            <hr class="mt-1 mb-2">
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label small mb-1">Jour check-in</label>
-                            <select class="form-select form-select-sm tour-hotel-check-in" name="tour_hotels[{{ $hi }}][check_in_day]" data-index="{{ $hi }}">
+                    <div class="vf-row vf-row--end">
+                        <label class="vf-field" style="flex:1 1 130px">
+                            <span class="vf-label">Check-in</span>
+                            <select class="vf-input vf-input--sm tour-hotel-check-in" name="tour_hotels[{{ $hi }}][check_in_day]" data-index="{{ $hi }}">
                                 @for($d = 1; $d <= $lastDayNumber; $d++)
                                     <option value="{{ $d }}" {{ $checkInDay === $d ? 'selected' : '' }}>Jour {{ $d }}</option>
                                 @endfor
                             </select>
-                        </div>
+                        </label>
 
-                        <div class="col-md-3">
-                            <label class="form-label small mb-1">Jour check-out</label>
-                            <select class="form-select form-select-sm tour-hotel-check-out" name="tour_hotels[{{ $hi }}][check_out_day]" data-index="{{ $hi }}">
+                        <label class="vf-field" style="flex:1 1 130px">
+                            <span class="vf-label">Check-out</span>
+                            <select class="vf-input vf-input--sm tour-hotel-check-out" name="tour_hotels[{{ $hi }}][check_out_day]" data-index="{{ $hi }}">
                                 @for($d = 1; $d <= $lastDayNumber; $d++)
                                     <option value="{{ $d }}" {{ $checkOutDay === $d ? 'selected' : '' }}>Jour {{ $d }}</option>
                                 @endfor
                             </select>
-                            <small class="text-danger d-none tour-hotel-checkout-error">Check-out ?? check-in requis.</small>
+                            <span class="vf-hint is-over d-none tour-hotel-checkout-error">Check-out ≥ check-in requis.</span>
+                        </label>
+
+                        <label class="vf-field" style="flex:1 1 150px">
+                            <span class="vf-label">Catégorie</span>
+                            <select class="vf-input vf-input--sm tour-hotel-stars-input tour-hotel-identity-field" name="tour_hotels[{{ $hi }}][stars]">
+                                <option value="">À confirmer</option>
+                                @for($starOption = 5; $starOption >= 1; $starOption--)
+                                    <option value="{{ $starOption }}" @selected((string) old("tour_hotels.{$hi}.stars", optional($h)->stars ?? '') === (string) $starOption)>Hôtel {{ $starOption }}* {{ str_repeat('★', $starOption) }}</option>
+                                @endfor
+                            </select>
+                        </label>
+
+                        <label class="vf-toggle vf-toggle--boxed" for="tour_hotel_optional_{{ $hi }}">
+                            <span class="vf-toggle__title">Option client</span>
+                            <input type="checkbox" id="tour_hotel_optional_{{ $hi }}" name="tour_hotels[{{ $hi }}][is_optional]" value="1" {{ old("tour_hotels.{$hi}.is_optional", optional($h)->is_optional ?? false) ? 'checked' : '' }}>
+                            <span class="vf-switch" aria-hidden="true"></span>
+                        </label>
+                    </div>
+
+                    {{-- Hébergement lié à la base --}}
+                    <div class="vf-hotel__link tour-hotel-wp-link-box">
+                        <div class="vf-hotel__link-head">
+                            <span class="vf-hotel__link-title">Hébergement lié</span>
+                            <span class="vf-tag is-green tour-hotel-linked-badge {{ $linkedWpHotelId > 0 ? '' : 'd-none' }}">✓ lié à la base</span>
+                        </div>
+                        <div class="vf-row vf-row--tight" style="margin-top:11px">
+                            <input type="text"
+                                class="vf-input vf-input--sm tour-hotel-wp-search"
+                                style="flex:1 1 200px; background:#fff"
+                                list="tour-hotels-wp-datalist"
+                                value="{{ $initialSearchValue }}"
+                                placeholder="Recherche rapide (nom ou ID)…">
+                            <button type="button" class="vf-btn vf-btn--primary tour-hotel-open-modal-btn" style="flex:none">Choisir un hôtel</button>
+                            <button type="button" class="vf-btn vf-btn--outline tour-hotel-link-wp-btn" style="flex:none" title="Appliquer la recherche rapide"><i class="bx bx-check"></i></button>
+                            <button type="button" class="vf-btn vf-btn--ghost tour-hotel-unlink-wp-btn {{ $linkedWpHotelId > 0 ? '' : 'd-none' }}" style="flex:none" title="Détacher"><i class="bx bx-unlink"></i></button>
                         </div>
 
-                        <div class="col-md-3 d-flex align-items-end">
-                            <span class="tour-hotel-nights-badge badge bg-light text-dark border fw-normal px-3 py-2">
-                                <i class="bx bx-moon"></i>
-                                <span class="tour-hotel-nights-count">{{ $nuits }}</span> nuit{{ $nuits !== 1 ? 's' : '' }}
-                            </span>
-                        </div>
-
-                        <div class="col-md-3 d-flex align-items-end pb-1">
-                            <div class="form-check mb-1">
-                                <input type="checkbox" class="form-check-input" name="tour_hotels[{{ $hi }}][is_optional]" value="1" {{ old("tour_hotels.{$hi}.is_optional", optional($h)->is_optional ?? false) ? 'checked' : '' }}>
-                                <label class="form-check-label small">Option client</label>
+                        <div class="tour-hotel-linked-summary vf-hotel__linked {{ $linkedWpHotelId > 0 ? '' : 'd-none' }}" data-linked-id="{{ $linkedWpHotelId > 0 ? $linkedWpHotelId : '' }}">
+                            <div class="tour-hotel-linked-summary-image-wrap vf-hotel__linked-img {{ $initialSummaryImageUrl !== '' ? '' : 'd-none' }}">
+                                <img src="{{ $initialSummaryImageUrl }}" alt="" class="tour-hotel-linked-summary-image">
                             </div>
-                        </div>
-
-                        {{-- ?"??"? SECTION : Identification de l'hôtel ?"??"? --}}
-                        <div class="col-12 mt-2">
-                            <p class="text-uppercase text-muted fw-semibold small mb-0" style="font-size:.7rem;letter-spacing:.05em;">Identification de l'hôtel</p>
-                            <hr class="mt-1 mb-2">
-                        </div>
-
-                        <div class="col-12">
-                            <div class="tour-hotel-wp-link-box border rounded-3 p-3">
-                                <div class="row g-2 align-items-end">
-                                    <div class="col-lg-8">
-                                        <label class="form-label small mb-1 fw-semibold">Lier un hebergement existant</label>
-                                        <input type="text"
-                                            class="form-control form-control-sm tour-hotel-wp-search"
-                                            list="tour-hotels-wp-datalist"
-                                            value="{{ $initialSearchValue }}"
-                                            placeholder="Recherche rapide (nom ou ID)...">
-                                        <div class="form-text">Utilisez le modal pour une selection complete, ou cette recherche rapide si vous connaissez deja l'hotel.</div>
-                                    </div>
-                                    <div class="col-lg-4 d-flex flex-wrap gap-2">
-                                        <button type="button" class="btn btn-sm btn-primary tour-hotel-open-modal-btn flex-grow-1">
-                                            <i class="bx bx-building-house"></i> Choisir un hotel
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-outline-primary tour-hotel-link-wp-btn" title="Appliquer la recherche rapide">
-                                            <i class="bx bx-check"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary tour-hotel-unlink-wp-btn {{ $linkedWpHotelId > 0 ? '' : 'd-none' }}">
-                                            <i class="bx bx-unlink"></i>
-                                        </button>
-                                    </div>
+                            <div class="tour-hotel-linked-summary-content" style="min-width:0">
+                                <div class="tour-hotel-linked-summary-name vf-hotel__linked-name">{{ $initialHotelName !== '' ? $initialHotelName : ($linkedWpHotelId > 0 ? ('Hébergement #' . $linkedWpHotelId) : '') }}</div>
+                                <div class="tour-hotel-linked-summary-meta vf-hotel__linked-meta">
+                                    {{ collect([
+                                        $initialStars > 0 ? ($initialStars . ' étoile' . ($initialStars > 1 ? 's' : '')) : '',
+                                        $initialAddress,
+                                        $initialMealPlan,
+                                    ])->filter()->implode(' · ') }}
                                 </div>
-
-                                <div class="tour-hotel-linked-summary mt-3 {{ $linkedWpHotelId > 0 ? '' : 'd-none' }}" data-linked-id="{{ $linkedWpHotelId > 0 ? $linkedWpHotelId : '' }}">
-                                    <div class="d-flex align-items-start gap-3">
-                                        <div class="tour-hotel-linked-summary-image-wrap {{ $initialSummaryImageUrl !== '' ? '' : 'd-none' }}">
-                                            <img src="{{ $initialSummaryImageUrl }}" alt="" class="tour-hotel-linked-summary-image">
-                                        </div>
-                                        <div class="tour-hotel-linked-summary-content">
-                                            <div class="tour-hotel-linked-summary-name fw-semibold">{{ $initialHotelName !== '' ? $initialHotelName : ($linkedWpHotelId > 0 ? ('Hebergement #' . $linkedWpHotelId) : '') }}</div>
-                                            <div class="tour-hotel-linked-summary-meta text-muted small">
-                                                {{ collect([
-                                                    $initialStars > 0 ? ($initialStars . ' etoile' . ($initialStars > 1 ? 's' : '')) : '',
-                                                    $initialAddress,
-                                                    $initialMealPlan,
-                                                ])->filter()->implode(' - ') }}
-                                            </div>
-                                            <div class="d-flex align-items-center gap-2 mt-1">
-                                                <span class="badge rounded-pill bg-soft-primary text-primary tour-hotel-linked-summary-id">
-                                                    {{ $linkedWpHotelId > 0 ? ('#' . $linkedWpHotelId) : '' }}
-                                                </span>
-                                                <a href="{{ $initialWpUrl }}" target="_blank" rel="noopener" class="small tour-hotel-linked-summary-link {{ $initialWpUrl !== '' ? '' : 'd-none' }}">
-                                                    Ouvrir dans WordPress
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div class="vf-hotel__linked-actions">
+                                    <span class="vf-tag is-blue tour-hotel-linked-summary-id">{{ $linkedWpHotelId > 0 ? ('#' . $linkedWpHotelId) : '' }}</span>
+                                    <a href="{{ $initialWpUrl }}" target="_blank" rel="noopener" class="vf-link tour-hotel-linked-summary-link {{ $initialWpUrl !== '' ? '' : 'd-none' }}">Ouvrir dans WordPress</a>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label small mb-1">Nom de l'hôtel</label>
-                            <input type="text" class="form-control form-control-sm tour-hotel-name-input tour-hotel-identity-field"
+                    {{-- Identité de l'hôtel --}}
+                    <div class="vf-row">
+                        <label class="vf-field" style="flex:2 1 240px">
+                            <span class="vf-label">Nom de l'hôtel</span>
+                            <input type="text" class="vf-input vf-input--sm tour-hotel-name-input tour-hotel-identity-field"
                                 name="tour_hotels[{{ $hi }}][hotel_name]"
                                 value="{{ old("tour_hotels.{$hi}.hotel_name", optional($h)->hotel_name ?? '') }}"
                                 placeholder="Ex : Ibis Marrakech Centre">
-                        </div>
-
-                        <div class="col-md-2">
-                            <label class="form-label small mb-1">Categorie</label>
-                            <select class="form-select form-select-sm tour-hotel-stars-input tour-hotel-identity-field"
-                                name="tour_hotels[{{ $hi }}][stars]">
-                                <option value="">A confirmer</option>
-                                @for($starOption = 5; $starOption >= 1; $starOption--)
-                                    <option value="{{ $starOption }}" @selected((string) old("tour_hotels.{$hi}.stars", optional($h)->stars ?? '') === (string) $starOption)>
-                                        Hotel {{ $starOption }}* {{ str_repeat('★', $starOption) }}
-                                    </option>
-                                @endfor
-                            </select>
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label small mb-1">Ville / adresse</label>
-                            <input type="text" class="form-control form-control-sm tour-hotel-address-input tour-hotel-identity-field"
+                        </label>
+                        <label class="vf-field" style="flex:1 1 180px">
+                            <span class="vf-label">Ville / adresse</span>
+                            <input type="text" class="vf-input vf-input--sm tour-hotel-address-input tour-hotel-identity-field"
                                 name="tour_hotels[{{ $hi }}][address]"
                                 value="{{ old("tour_hotels.{$hi}.address", optional($h)->address ?? '') }}"
                                 placeholder="Ex : Marrakech, Médina">
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label small mb-1">Formule / pension</label>
-                            <input type="text" class="form-control form-control-sm tour-hotel-meal-input tour-hotel-identity-field"
+                        </label>
+                        <label class="vf-field" style="flex:1 1 180px">
+                            <span class="vf-label">Formule / pension</span>
+                            <input type="text" class="vf-input vf-input--sm tour-hotel-meal-input tour-hotel-identity-field"
                                 name="tour_hotels[{{ $hi }}][meal_plan]"
                                 value="{{ old("tour_hotels.{$hi}.meal_plan", optional($h)->meal_plan ?? '') }}"
                                 placeholder="Ex : Petit-déjeuner inclus">
-                        </div>
+                        </label>
+                    </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label small mb-1">Notes internes</label>
-                            <textarea class="form-control form-control-sm tour-hotel-identity-field"
-                                name="tour_hotels[{{ $hi }}][notes]"
-                                rows="2"
-                                placeholder="Informations complémentaires pour l'équipe">{{ old("tour_hotels.{$hi}.notes", optional($h)->notes ?? '') }}</textarea>
-                        </div>
-
-                        {{-- Image --}}
-                        <div class="col-12 tour-hotel-media-block">
-                            <label class="form-label small mb-1">Photo de l'hôtel</label>
+                    {{-- Photo + notes internes --}}
+                    <div class="vf-row vf-row--stretch tour-hotel-media-block">
+                        <div class="vf-field" style="flex:0 1 190px; min-width:150px">
+                            <span class="vf-label">Photo de l'hôtel</span>
                             <input type="hidden" class="tour-hotel-identity-field" name="tour_hotels[{{ $hi }}][image_id]" id="{{ $hid }}" value="{{ old("tour_hotels.{$hi}.image_id", optional($h)->image_id ?? '') }}">
                             <input type="hidden" class="tour-hotel-identity-field" name="tour_hotels[{{ $hi }}][image_path]" id="{{ $hid }}_path" value="{{ old("tour_hotels.{$hi}.image_path", optional($h)->image_path ?? '') }}">
                             <input type="file"
@@ -254,37 +219,39 @@
                                 data-preview="{{ $hid }}_preview"
                                 data-preview-wrap="{{ $hid }}_preview_wrap"
                                 data-preview-label="{{ $hid }}_preview_label">
-                            <div class="d-flex flex-wrap align-items-center gap-3">
-                                <div>
-                                    <div id="{{ $hid }}_preview_wrap" class="border rounded overflow-hidden bg-light" style="width:120px;height:80px;display:{{ $himgEffectiveUrl ? 'flex' : 'none' }};">
-                                        <img id="{{ $hid }}_preview" src="{{ $himgEffectiveUrl }}" alt="" class="img-fluid" style="max-width:100%;max-height:100%;object-fit:cover;">
-                                    </div>
-                                    <div id="{{ $hid }}_preview_label" class="text-muted small" style="line-height:1.1; margin-top:4px; display: {{ $himgEffectiveUrl ? 'block' : 'none' }};">{{ $himgLabel }}</div>
+                            <div class="vf-hotel__photo">
+                                <div id="{{ $hid }}_preview_wrap" class="vf-hotel__photo-frame" style="display:{{ $himgEffectiveUrl ? 'flex' : 'none' }};">
+                                    <img id="{{ $hid }}_preview" src="{{ $himgEffectiveUrl }}" alt="">
                                 </div>
-                                <div class="tour-hotel-media-actions d-flex gap-2">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary ajtb-logistique-media-btn"
-                                        data-upload-mode="local"
-                                        data-file-input="{{ $hid }}_file"
-                                        data-target="tour_hotel" data-input="{{ $hid }}" data-preview="{{ $hid }}_preview" data-preview-wrap="{{ $hid }}_preview_wrap">
-                                        <i class="bx bx-images"></i> Choisir une photo
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-danger ajtb-logistique-media-remove"
-                                        data-input="{{ $hid }}" data-input-path="{{ $hid }}_path" data-preview="{{ $hid }}_preview" data-preview-wrap="{{ $hid }}_preview_wrap" data-preview-label="{{ $hid }}_preview_label" data-default-url="{{ $defaultHotelImgUrl }}" data-default-label="Image par dÃ©faut utilisÃ©e">
-                                        <i class="bx bx-x"></i>
-                                    </button>
-                                </div>
+                                <div class="vf-hotel__photo-empty" @if($himgEffectiveUrl) style="display:none" @endif>photo hôtel</div>
+                            </div>
+                            <div id="{{ $hid }}_preview_label" class="vf-hint" style="display: {{ $himgEffectiveUrl ? 'block' : 'none' }};">{{ $himgLabel }}</div>
+                            <div class="tour-hotel-media-actions vf-hotel__photo-actions">
+                                <button type="button" class="vf-btn vf-btn--outline vf-btn--sm ajtb-logistique-media-btn"
+                                    data-upload-mode="local"
+                                    data-file-input="{{ $hid }}_file"
+                                    data-target="tour_hotel" data-input="{{ $hid }}" data-preview="{{ $hid }}_preview" data-preview-wrap="{{ $hid }}_preview_wrap">Choisir une photo</button>
+                                <button type="button" class="vf-btn vf-btn--danger vf-btn--sm ajtb-logistique-media-remove"
+                                    data-input="{{ $hid }}" data-input-path="{{ $hid }}_path" data-preview="{{ $hid }}_preview" data-preview-wrap="{{ $hid }}_preview_wrap" data-preview-label="{{ $hid }}_preview_label" data-default-url="{{ $defaultHotelImgUrl }}" data-default-label="Image par défaut utilisée">Retirer</button>
                             </div>
                         </div>
 
-                    </div>{{-- /row --}}
-                </div>{{-- /card-body --}}
+                        <label class="vf-field" style="flex:1 1 240px">
+                            <span class="vf-label">Notes internes</span>
+                            <textarea class="vf-input vf-input--sm tour-hotel-identity-field"
+                                name="tour_hotels[{{ $hi }}][notes]"
+                                rows="6"
+                                style="flex:1"
+                                placeholder="Informations complémentaires pour l'équipe">{{ old("tour_hotels.{$hi}.notes", optional($h)->notes ?? '') }}</textarea>
+                        </label>
+                    </div>
+
+                </div>{{-- /vf-hotel__body --}}
             </div>{{-- /card --}}
         @endforeach
     </div>{{-- /tour-hotels-container --}}
 
-    <button type="button" class="btn btn-sm btn-soft-primary mb-4" id="tour-add-hotel">
-        <i class="bx bx-plus"></i> Ajouter un séjour hôtel
-    </button>
+    {{-- Le bouton « + Ajouter un séjour » est rendu dans l'en-tête de la carte (tabs/_hotels). --}}
 </div>{{-- /tour-hotels-wrapper --}}
 
 <div class="modal fade" id="tour-hotel-picker-modal" tabindex="-1" aria-hidden="true">
@@ -753,7 +720,7 @@
         var previewLabel = document.getElementById(imageInputId + '_preview_label');
         var removeBtn = row.querySelector('.ajtb-logistique-media-remove');
         var defaultUrl = removeBtn ? (removeBtn.getAttribute('data-default-url') || '') : '';
-        var defaultLabel = removeBtn ? (removeBtn.getAttribute('data-default-label') || 'Image par dÃ©faut utilisÃ©e') : 'Image par dÃ©faut utilisÃ©e';
+        var defaultLabel = removeBtn ? (removeBtn.getAttribute('data-default-label') || 'Image par défaut utilisée') : 'Image par défaut utilisée';
 
         var finalUrl = imageUrl || defaultUrl || '';
         var isCustom = !!imageUrl;
@@ -761,7 +728,7 @@
         if (preview) preview.src = finalUrl;
         if (previewWrap) previewWrap.style.display = finalUrl ? 'flex' : 'none';
         if (previewLabel) {
-            previewLabel.textContent = finalUrl ? (isCustom ? 'Image personnalisÃ©e' : defaultLabel) : '';
+            previewLabel.textContent = finalUrl ? (isCustom ? 'Image personnalisée' : defaultLabel) : '';
             previewLabel.style.display = finalUrl ? 'block' : 'none';
         }
     }
@@ -892,15 +859,25 @@
             : buildHotelFallbackName(starsInp && starsInp.value ? starsInp.value : '0', addrInp && addrInp.value ? addrInp.value : '');
         if (titleEl) titleEl.textContent = hotelName;
 
-        var meta = [];
-        var periodLabel = ci === co ? ('Jour ' + ci) : ('J' + ci + ' -> J' + co + ' - ' + nights + ' nuit' + (nights !== 1 ? 's' : ''));
-        meta.push(periodLabel);
+        // En-tete du sejour : la periode et la categorie sont affichees en pastilles,
+        // la ligne meta ne garde que le descriptif (adresse, pension, option client).
         var stars = parseInt(starsInp && starsInp.value ? starsInp.value : '0', 10);
-        if (!isNaN(stars) && stars > 0) meta.push(stars + ' etoile' + (stars > 1 ? 's' : '') + ' ' + buildHotelStarsText(stars));
+        var rangeEl = row.querySelector('[data-vf-hotel-range]');
+        if (rangeEl) {
+            rangeEl.textContent = ci === co ? ('Jour ' + ci) : ('J' + ci + ' → J' + co);
+        }
+        var catEl = row.querySelector('[data-vf-hotel-cat]');
+        if (catEl) {
+            var hasStars = !isNaN(stars) && stars > 0;
+            catEl.textContent = hasStars ? ('Hôtel ' + stars + '*') : 'À confirmer';
+            catEl.classList.toggle('is-set', hasStars);
+        }
+
+        var meta = [];
         if (addrInp && addrInp.value.trim()) meta.push(addrInp.value.trim());
         if (mealInp && mealInp.value.trim()) meta.push(mealInp.value.trim());
         if (optInp && optInp.checked) meta.push('Option client');
-        if (metaEl) metaEl.textContent = meta.filter(Boolean).join(' - ');
+        if (metaEl) metaEl.textContent = meta.filter(Boolean).join(' · ');
     }
 
     function syncLinkedSummaryFromRow(row) {
@@ -937,7 +914,7 @@
         var rows = container.querySelectorAll('.tour-hotel-row');
         if (!titleEl) return;
         if (!rows.length) {
-            titleEl.textContent = '(aucun sejour configure)';
+            titleEl.textContent = 'aucun séjour configuré';
             return;
         }
         var minCI = null;
@@ -950,7 +927,7 @@
             if (maxCO === null || co > maxCO) maxCO = co;
         });
         if (minCI !== null && maxCO !== null) {
-            titleEl.textContent = minCI === maxCO ? ('(Jour ' + minCI + ')') : ('(J' + minCI + ' -> J' + maxCO + ')');
+            titleEl.textContent = minCI === maxCO ? ('Jour ' + minCI) : ('J' + minCI + ' → J' + maxCO);
         }
     }
 
@@ -1154,7 +1131,7 @@
         var prevLabel = clone.querySelector('[id$="_preview_label"]');
         var removeMediaBtn = clone.querySelector('.ajtb-logistique-media-remove');
         var defaultUrl = removeMediaBtn ? (removeMediaBtn.getAttribute('data-default-url') || '') : '';
-        var defaultLabel = removeMediaBtn ? (removeMediaBtn.getAttribute('data-default-label') || 'Image par dÃ©faut utilisÃ©e') : 'Image par dÃ©faut utilisÃ©e';
+        var defaultLabel = removeMediaBtn ? (removeMediaBtn.getAttribute('data-default-label') || 'Image par défaut utilisée') : 'Image par défaut utilisée';
         if (prevImg) prevImg.src = defaultUrl || '';
         if (prevWrap) prevWrap.style.display = defaultUrl ? 'flex' : 'none';
         if (prevLabel) {

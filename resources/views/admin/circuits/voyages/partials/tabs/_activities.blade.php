@@ -20,192 +20,188 @@
         $activityDayOptions = collect([['number' => 1, 'label' => 'Jour 1']]);
     }
 @endphp
-<div class="tab-pane" id="activities" role="tabpanel" data-ve-pane-title="Activites">
-    <div class="card ve-pane-card activities-card step-card">
-        <div class="card-body">
-            <div class="section-header">
-                <h4 class="card-title mb-0">Activites</h4>
-                <button type="button" class="btn btn-primary" id="btn-open-activities-modal" data-bs-toggle="modal" data-bs-target="#activitiesCatalogModal">
-                    <i class="bx bx-plus me-1"></i> Ajouter une activite
-                </button>
+{{-- Étape 12 · Activités — design « Voyage - Hôtels et Activités » (Espace Admin v2).
+     La table est conservée : le catalogue d'activités y ajoute ses lignes en JavaScript.
+     Elle est présentée en cartes par voyage-form-v2.css (une carte = une ligne). --}}
+<div class="vf-activities-pane" id="activities" data-ve-pane-title="Activites">
+<div class="vf-col-main">
+    <section class="vf-card">
+        <div class="vf-card__head">
+            <span class="vf-card__num">{{ str_pad((string) (($index ?? 11) + 1), 2, '0', STR_PAD_LEFT) }}</span>
+            <div style="min-width:0">
+                <h2 class="vf-card__title">Activités</h2>
+                <p class="vf-card__desc">Catalogue des activités du voyage, classées par jour.</p>
             </div>
+            <button type="button" class="vf-btn vf-btn--primary vf-card__action" id="btn-open-activities-modal" data-bs-toggle="modal" data-bs-target="#activitiesCatalogModal">+ Ajouter une activité</button>
+        </div>
 
-            <div class="table-responsive activities-table-wrapper">
-                <table class="table table-bordered align-middle mb-0 activities-table">
-                    <colgroup>
-                        <col style="width:55px;">
-                        <col style="width:300px;">
-                        <col style="width:260px;">
-                        <col style="width:150px;">
-                        <col style="width:220px;">
-                        <col>
-                        <col style="width:130px;">
-                        <col style="width:110px;">
-                        <col style="width:110px;">
-                        <col style="width:110px;">
-                        <col style="width:120px;">
-                    </colgroup>
-                    <thead class="table-light">
-                        <tr>
-                            <th>Ordre</th>
-                            <th>Activite / nom complet</th>
-                            <th>Jour / visibilite</th>
-                            <th>Statut</th>
-                            <th>Titre affiche</th>
-                            <th>Description</th>
-                            <th>Type</th>
-                            <th>Prix adulte</th>
-                            <th>Prix enfant</th>
-                            <th>Total ligne</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="voyage-activities-rows" data-day-options='@json($activityDayOptions->values()->all())'>
-                        @forelse(($tourActivities ?? collect()) as $idx => $tourActivity)
-                            @php
-                                $opts = is_array($tourActivity->options_json ?? null) ? $tourActivity->options_json : [];
-                                $activityId = (int) ($opts['activity_id'] ?? 0);
-                                $pricingType = in_array(($opts['pricing_type'] ?? 'per_person'), ['per_person', 'fixed'], true) ? ($opts['pricing_type'] ?? 'per_person') : 'per_person';
-                                $unitPrice = (float) ($opts['unit_price'] ?? ($pricingType === 'per_person' ? ((int) ($tourActivity->price_delta_per_person ?? 0) / 100) : 0));
-                                $childPrice = (float) ($opts['child_price'] ?? 0);
-                                $description = (string) ($tourActivity->details ?? ($opts['description'] ?? ''));
-                                $displayTitle = (string) old('tour_activities.'.$idx.'.title', $tourActivity->title ?? ($opts['title'] ?? ''));
-                                $metaJson = is_array($tourActivity->meta_json ?? null) ? $tourActivity->meta_json : [];
-                                $groupUuid = (string) old('tour_activities.'.$idx.'.group_uuid', $metaJson['group_uuid'] ?? '');
-                                $status = (string) old('tour_activities.'.$idx.'.status', (string) ($opts['status'] ?? ((int) ($tourActivity->included ?? 1) === 1 ? 'included' : 'optional')));
-                                if (!in_array($status, ['included', 'optional', 'proposition'], true)) {
-                                    $status = (int) ($tourActivity->included ?? 1) === 1 ? 'included' : 'optional';
+        <div class="vf-activities">
+            <table class="activities-table">
+                <thead>
+                    <tr>
+                        <th>Ordre</th>
+                        <th>Activité / nom complet</th>
+                        <th>Type</th>
+                        <th>Jours de visibilité</th>
+                        <th>Statut</th>
+                        <th>Titre affiché</th>
+                        <th>Description</th>
+                        <th>Tarification</th>
+                        <th>Prix adulte</th>
+                        <th>Prix enfant</th>
+                        <th>Total ligne</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="voyage-activities-rows" data-day-options='@json($activityDayOptions->values()->all())'>
+                    @forelse(($tourActivities ?? collect()) as $idx => $tourActivity)
+                        @php
+                            $opts = is_array($tourActivity->options_json ?? null) ? $tourActivity->options_json : [];
+                            $activityId = (int) ($opts['activity_id'] ?? 0);
+                            $pricingType = in_array(($opts['pricing_type'] ?? 'per_person'), ['per_person', 'fixed'], true) ? ($opts['pricing_type'] ?? 'per_person') : 'per_person';
+                            $unitPrice = (float) ($opts['unit_price'] ?? ($pricingType === 'per_person' ? ((int) ($tourActivity->price_delta_per_person ?? 0) / 100) : 0));
+                            $childPrice = (float) ($opts['child_price'] ?? 0);
+                            $description = (string) ($tourActivity->details ?? ($opts['description'] ?? ''));
+                            $displayTitle = (string) old('tour_activities.'.$idx.'.title', $tourActivity->title ?? ($opts['title'] ?? ''));
+                            $metaJson = is_array($tourActivity->meta_json ?? null) ? $tourActivity->meta_json : [];
+                            $groupUuid = (string) old('tour_activities.'.$idx.'.group_uuid', $metaJson['group_uuid'] ?? '');
+                            $status = (string) old('tour_activities.'.$idx.'.status', (string) ($opts['status'] ?? ((int) ($tourActivity->included ?? 1) === 1 ? 'included' : 'optional')));
+                            if (!in_array($status, ['included', 'optional', 'proposition'], true)) {
+                                $status = (int) ($tourActivity->included ?? 1) === 1 ? 'included' : 'optional';
+                            }
+                            $isIncluded = $status === 'included';
+                            $activityTitle = (string) old('tour_activities.'.$idx.'.activity_title', (string) ($opts['activity_title'] ?? $tourActivity->title ?? ''));
+                            $activityType = (string) old('tour_activities.'.$idx.'.activity_type', (string) ($opts['activity_type'] ?? ''));
+                            $dayScope = (string) old('tour_activities.'.$idx.'.day_scope', (string) ($opts['day_scope'] ?? 'fixed'));
+                            if (!in_array($dayScope, ['fixed', 'open'], true)) {
+                                $dayScope = 'fixed';
+                            }
+                            $selectedDay = (int) old('tour_activities.'.$idx.'.day_number', $tourActivity->day_number ?? ($opts['day_number'] ?? 1));
+                            if ($selectedDay < 1) {
+                                $selectedDay = (int) ($activityDayOptions->first()['number'] ?? 1);
+                            }
+                            $visibilityMode = (string) old('tour_activities.'.$idx.'.visibility_mode', (string) ($opts['visibility_mode'] ?? ($dayScope === 'open' ? 'all_days' : 'single_day')));
+                            if (!in_array($visibilityMode, ['single_day', 'multiple_days', 'all_days'], true)) {
+                                $visibilityMode = $dayScope === 'open' ? 'all_days' : 'single_day';
+                            }
+                            $rawDays = old('tour_activities.'.$idx.'.days', $opts['days'] ?? [$selectedDay]);
+                            if (is_string($rawDays)) {
+                                $decoded = json_decode($rawDays, true);
+                                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                                    $rawDays = $decoded;
+                                } else {
+                                    $rawDays = array_filter(array_map('trim', explode(',', $rawDays)), fn ($v) => $v !== '');
                                 }
-                                $isIncluded = $status === 'included';
-                                $activityTitle = (string) old('tour_activities.'.$idx.'.activity_title', (string) ($opts['activity_title'] ?? $tourActivity->title ?? ''));
-                                $activityType = (string) old('tour_activities.'.$idx.'.activity_type', (string) ($opts['activity_type'] ?? ''));
-                                $dayScope = (string) old('tour_activities.'.$idx.'.day_scope', (string) ($opts['day_scope'] ?? 'fixed'));
-                                if (!in_array($dayScope, ['fixed', 'open'], true)) {
-                                    $dayScope = 'fixed';
-                                }
-                                $selectedDay = (int) old('tour_activities.'.$idx.'.day_number', $tourActivity->day_number ?? ($opts['day_number'] ?? 1));
-                                if ($selectedDay < 1) {
-                                    $selectedDay = (int) ($activityDayOptions->first()['number'] ?? 1);
-                                }
-                                $visibilityMode = (string) old('tour_activities.'.$idx.'.visibility_mode', (string) ($opts['visibility_mode'] ?? ($dayScope === 'open' ? 'all_days' : 'single_day')));
-                                if (!in_array($visibilityMode, ['single_day', 'multiple_days', 'all_days'], true)) {
-                                    $visibilityMode = $dayScope === 'open' ? 'all_days' : 'single_day';
-                                }
-                                $rawDays = old('tour_activities.'.$idx.'.days', $opts['days'] ?? [$selectedDay]);
-                                if (is_string($rawDays)) {
-                                    $decoded = json_decode($rawDays, true);
-                                    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                                        $rawDays = $decoded;
-                                    } else {
-                                        $rawDays = array_filter(array_map('trim', explode(',', $rawDays)), fn ($v) => $v !== '');
-                                    }
-                                }
-                                if (!is_array($rawDays)) {
-                                    $rawDays = [$selectedDay];
-                                }
-                                $selectedDays = collect($rawDays)->map(fn ($d) => (int) $d)->filter(fn ($d) => $d > 0)->unique()->values()->all();
-                                if (empty($selectedDays)) {
-                                    $selectedDays = [$selectedDay];
-                                }
-                            @endphp
-                            <tr class="voyage-activity-row {{ $isIncluded ? '' : 'table-warning' }}" data-activity-id="{{ $activityId }}" data-included="{{ $isIncluded ? '1' : '0' }}" data-status="{{ $status }}">
-                                <td class="text-center">
-                                    <span class="badge rounded-pill bg-light text-dark voyage-activity-order">{{ $idx + 1 }}</span>
-                                    <input type="hidden" data-field="sort_order" name="tour_activities[{{ $idx }}][sort_order]" value="{{ old('tour_activities.'.$idx.'.sort_order', $tourActivity->sort_order ?? $idx) }}">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm fw-medium mb-2" data-field="activity_title" name="tour_activities[{{ $idx }}][activity_title]" value="{{ $activityTitle }}" placeholder="Nom complet de l'activité">
-                                    <input type="text" class="form-control form-control-sm" data-field="activity_type" name="tour_activities[{{ $idx }}][activity_type]" value="{{ $activityType }}" placeholder="Type d'activité">
-                                    <input type="hidden" data-field="id" name="tour_activities[{{ $idx }}][id]" value="{{ $tourActivity->id }}">
-                                    <input type="hidden" data-field="activity_id" name="tour_activities[{{ $idx }}][activity_id]" value="{{ $activityId }}">
-                                    <input type="hidden" data-field="group_uuid" name="tour_activities[{{ $idx }}][group_uuid]" value="{{ $groupUuid }}">
-                                </td>
-                                <td>
-                                    <select class="form-select form-select-sm voyage-activity-visibility-mode" data-field="visibility_mode" name="tour_activities[{{ $idx }}][visibility_mode]">
-                                        <option value="single_day" @selected($visibilityMode === 'single_day')>Jour unique</option>
-                                        <option value="multiple_days" @selected($visibilityMode === 'multiple_days')>Plusieurs jours</option>
-                                        <option value="all_days" @selected($visibilityMode === 'all_days')>Tous les jours</option>
-                                    </select>
-                                    <div class="mt-2 voyage-activity-single-day-wrap">
-                                        <select class="form-select form-select-sm voyage-activity-day-select">
-                                            @foreach($activityDayOptions as $dayOption)
-                                                <option value="{{ $dayOption['number'] }}" @selected(in_array((int) $dayOption['number'], $selectedDays, true))>{{ $dayOption['label'] }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="mt-2 voyage-activity-multi-days-wrap d-none">
-                                        <div class="d-flex flex-wrap gap-2">
-                                            @foreach($activityDayOptions as $dayOption)
-                                                <label class="form-check form-check-inline mb-0 small">
-                                                    <input type="checkbox" class="form-check-input voyage-activity-day-checkbox" value="{{ $dayOption['number'] }}" @checked(in_array((int) $dayOption['number'], $selectedDays, true))>
-                                                    <span class="form-check-label">J{{ $dayOption['number'] }}</span>
-                                                </label>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                    <input type="hidden" data-field="day_number" name="tour_activities[{{ $idx }}][day_number]" value="{{ $selectedDay }}">
-                                    <input type="hidden" data-field="days" name="tour_activities[{{ $idx }}][days]" value="{{ implode(',', $selectedDays) }}">
-                                    <input type="hidden" data-field="day_scope" name="tour_activities[{{ $idx }}][day_scope]" value="{{ $visibilityMode === 'all_days' ? 'open' : 'fixed' }}">
-                                    <div class="small text-muted mt-1 voyage-activity-scope-text"></div>
-                                </td>
-                                <td>
-                                    <select class="form-select form-select-sm voyage-activity-included" data-field="status" name="tour_activities[{{ $idx }}][status]">
-                                        <option value="included" @selected($status === 'included')>Inclus</option>
-                                        <option value="optional" @selected($status === 'optional')>Option client</option>
-                                        <option value="proposition" @selected($status === 'proposition')>Proposition</option>
-                                    </select>
-                                    <input type="hidden" data-field="included" name="tour_activities[{{ $idx }}][included]" value="{{ $isIncluded ? '1' : '0' }}">
-                                    <div class="small text-muted mt-1 voyage-activity-state-text">{{ $status === 'included' ? 'Activite incluse dans le programme.' : ($status === 'proposition' ? 'Proposition Ajinsafro avec choix client obligatoire.' : 'Activite proposee au client comme option.') }}</div>
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm voyage-activity-title" data-field="title" name="tour_activities[{{ $idx }}][title]" value="{{ old('tour_activities.'.$idx.'.title', $displayTitle) }}" placeholder="Titre affiche dans le voyage">
-                                </td>
-                                <td>
-                                    <textarea class="form-control form-control-sm voyage-activity-description" data-field="description" name="tour_activities[{{ $idx }}][description]" rows="2" placeholder="-">{{ old('tour_activities.'.$idx.'.description', $description) }}</textarea>
-                                </td>
-                                <td>
-                                    <select class="form-select form-select-sm voyage-activity-pricing" data-field="pricing_type" name="tour_activities[{{ $idx }}][pricing_type]">
-                                        @foreach($voyageActivityPricingTypes as $pt)
-                                            <option value="{{ $pt['value'] }}" @selected($pricingType === $pt['value'])>{{ $pt['label'] }}</option>
+                            }
+                            if (!is_array($rawDays)) {
+                                $rawDays = [$selectedDay];
+                            }
+                            $selectedDays = collect($rawDays)->map(fn ($d) => (int) $d)->filter(fn ($d) => $d > 0)->unique()->values()->all();
+                            if (empty($selectedDays)) {
+                                $selectedDays = [$selectedDay];
+                            }
+                        @endphp
+                        <tr class="voyage-activity-row {{ $isIncluded ? '' : 'is-option' }}" data-activity-id="{{ $activityId }}" data-included="{{ $isIncluded ? '1' : '0' }}" data-status="{{ $status }}">
+                            <td data-label="Ordre">
+                                <span class="vf-activity__order voyage-activity-order">{{ $idx + 1 }}</span>
+                                <input type="hidden" data-field="sort_order" name="tour_activities[{{ $idx }}][sort_order]" value="{{ old('tour_activities.'.$idx.'.sort_order', $tourActivity->sort_order ?? $idx) }}">
+                            </td>
+                            <td data-label="Activité / nom complet">
+                                <input type="text" class="vf-input vf-input--sm" data-field="activity_title" name="tour_activities[{{ $idx }}][activity_title]" value="{{ $activityTitle }}" placeholder="Nom complet de l'activité">
+                                <input type="hidden" data-field="id" name="tour_activities[{{ $idx }}][id]" value="{{ $tourActivity->id }}">
+                                <input type="hidden" data-field="activity_id" name="tour_activities[{{ $idx }}][activity_id]" value="{{ $activityId }}">
+                                <input type="hidden" data-field="group_uuid" name="tour_activities[{{ $idx }}][group_uuid]" value="{{ $groupUuid }}">
+                            </td>
+                            <td data-label="Type">
+                                <input type="text" class="vf-input vf-input--sm" data-field="activity_type" name="tour_activities[{{ $idx }}][activity_type]" value="{{ $activityType }}" placeholder="Excursion, soirée…">
+                            </td>
+                            <td data-label="Jours de visibilité">
+                                <select class="vf-input vf-input--sm voyage-activity-visibility-mode" data-field="visibility_mode" name="tour_activities[{{ $idx }}][visibility_mode]">
+                                    <option value="single_day" @selected($visibilityMode === 'single_day')>Jour unique</option>
+                                    <option value="multiple_days" @selected($visibilityMode === 'multiple_days')>Plusieurs jours</option>
+                                    <option value="all_days" @selected($visibilityMode === 'all_days')>Tous les jours</option>
+                                </select>
+                                <div class="voyage-activity-single-day-wrap vf-activity__day-single">
+                                    <select class="vf-input vf-input--sm voyage-activity-day-select">
+                                        @foreach($activityDayOptions as $dayOption)
+                                            <option value="{{ $dayOption['number'] }}" @selected(in_array((int) $dayOption['number'], $selectedDays, true))>{{ $dayOption['label'] }}</option>
                                         @endforeach
                                     </select>
-                                </td>
-                                <td>
-                                    <input type="number" class="form-control form-control-sm voyage-activity-price" data-field="unit_price" name="tour_activities[{{ $idx }}][unit_price]" value="{{ number_format($unitPrice, 2, '.', '') }}" min="0" step="0.01">
-                                </td>
-                                <td>
-                                    <input type="number" class="form-control form-control-sm voyage-activity-child-price" data-field="child_price" name="tour_activities[{{ $idx }}][child_price]" value="{{ number_format($childPrice, 2, '.', '') }}" min="0" step="0.01">
-                                </td>
-                                <td>
-                                    <span class="voyage-activity-line-total fw-semibold">0.00</span>
-                                </td>
-                                <td>
-                                    <div class="d-flex gap-1">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary voyage-activity-duplicate" title="Dupliquer"><i class="bx bx-copy"></i></button>
-                                        <button type="button" class="btn btn-sm btn-outline-primary voyage-activity-edit"><i class="bx bx-pencil"></i></button>
-                                        <button type="button" class="btn btn-sm btn-outline-info voyage-activity-image" title="Image"><i class="bx bx-image"></i></button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger voyage-activity-remove"><i class="bx bx-trash"></i></button>
+                                </div>
+                                <div class="voyage-activity-multi-days-wrap vf-activity__day-chips d-none">
+                                    <div class="vf-daychips">
+                                        @foreach($activityDayOptions as $dayOption)
+                                            <label class="vf-daychip">
+                                                <input type="checkbox" class="voyage-activity-day-checkbox" value="{{ $dayOption['number'] }}" @checked(in_array((int) $dayOption['number'], $selectedDays, true))>
+                                                <span>J{{ $dayOption['number'] }}</span>
+                                            </label>
+                                        @endforeach
                                     </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr class="voyage-activities-empty-row">
-                                <td colspan="11" class="text-center text-muted py-3">Aucune activite ajoutee pour ce voyage.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            <p class="small text-muted mt-2 mb-0">
-                Les activites sont classees par jour. Pour une <strong>Option client</strong>, utilisez le select <strong>Jour / visibilite</strong> : jour precis ou tous les jours du programme.
-            </p>
-
-            <div class="alert alert-info mt-3 mb-0" id="voyage-activities-empty-state" style="display:none;">
-                Aucune activite ajoutee. Cliquez sur <strong>Ajouter une activite</strong> pour commencer.
-            </div>
+                                </div>
+                                <input type="hidden" data-field="day_number" name="tour_activities[{{ $idx }}][day_number]" value="{{ $selectedDay }}">
+                                <input type="hidden" data-field="days" name="tour_activities[{{ $idx }}][days]" value="{{ implode(',', $selectedDays) }}">
+                                <input type="hidden" data-field="day_scope" name="tour_activities[{{ $idx }}][day_scope]" value="{{ $visibilityMode === 'all_days' ? 'open' : 'fixed' }}">
+                                <div class="vf-hint voyage-activity-scope-text"></div>
+                            </td>
+                            <td data-label="Statut">
+                                <select class="vf-input vf-input--sm voyage-activity-included" data-field="status" name="tour_activities[{{ $idx }}][status]">
+                                    <option value="included" @selected($status === 'included')>Incluse dans le programme</option>
+                                    <option value="optional" @selected($status === 'optional')>Option client</option>
+                                    <option value="proposition" @selected($status === 'proposition')>Proposition avec choix client</option>
+                                </select>
+                                <input type="hidden" data-field="included" name="tour_activities[{{ $idx }}][included]" value="{{ $isIncluded ? '1' : '0' }}">
+                                <div class="vf-hint voyage-activity-state-text">{{ $status === 'included' ? 'Affichée sur un jour unique du programme.' : ($status === 'proposition' ? 'Le client choisit son créneau.' : 'Activité proposée au client comme option.') }}</div>
+                            </td>
+                            <td data-label="Titre affiché">
+                                <input type="text" class="vf-input vf-input--sm voyage-activity-title" data-field="title" name="tour_activities[{{ $idx }}][title]" value="{{ old('tour_activities.'.$idx.'.title', $displayTitle) }}" placeholder="Titre affiché dans le voyage">
+                            </td>
+                            <td data-label="Description">
+                                <textarea class="vf-input vf-input--sm voyage-activity-description" data-field="description" rows="2" name="tour_activities[{{ $idx }}][description]" placeholder="—">{{ old('tour_activities.'.$idx.'.description', $description) }}</textarea>
+                            </td>
+                            <td data-label="Tarification">
+                                <select class="vf-input vf-input--sm voyage-activity-pricing" data-field="pricing_type" name="tour_activities[{{ $idx }}][pricing_type]">
+                                    @foreach($voyageActivityPricingTypes as $pt)
+                                        <option value="{{ $pt['value'] }}" @selected($pricingType === $pt['value'])>{{ $pt['label'] }}</option>
+                                    @endforeach
+                                </select>
+                            </td>
+                            <td data-label="Prix adulte">
+                                <input type="number" class="vf-input vf-input--sm vf-input--mono voyage-activity-price" data-field="unit_price" name="tour_activities[{{ $idx }}][unit_price]" value="{{ number_format($unitPrice, 2, '.', '') }}" min="0" step="0.01">
+                            </td>
+                            <td data-label="Prix enfant">
+                                <input type="number" class="vf-input vf-input--sm vf-input--mono voyage-activity-child-price" data-field="child_price" name="tour_activities[{{ $idx }}][child_price]" value="{{ number_format($childPrice, 2, '.', '') }}" min="0" step="0.01">
+                            </td>
+                            <td data-label="Total ligne">
+                                <span class="vf-activity__total voyage-activity-line-total">0.00</span>
+                            </td>
+                            <td data-label="Actions">
+                                <div class="vf-activity__actions">
+                                    <button type="button" class="vf-iconbtn voyage-activity-duplicate" title="Dupliquer"><i class="bx bx-copy"></i></button>
+                                    <button type="button" class="vf-iconbtn voyage-activity-edit" title="Modifier"><i class="bx bx-pencil"></i></button>
+                                    <button type="button" class="vf-iconbtn voyage-activity-image" title="Image"><i class="bx bx-image"></i></button>
+                                    <button type="button" class="vf-iconbtn is-danger voyage-activity-remove" title="Supprimer"><i class="bx bx-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr class="voyage-activities-empty-row">
+                            <td colspan="12">Aucune activité ajoutée pour ce voyage.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
-    </div>
+
+        <p class="vf-activities__note">Les activités sont classées par jour. Pour une <b>option client</b>, cochez plusieurs jours : le client choisira son créneau à la réservation.</p>
+
+        <div class="vf-alert vf-alert--ok" id="voyage-activities-empty-state" style="display:none;">
+            <i class="bx bx-info-circle"></i>
+            <div>Aucune activité ajoutée. Cliquez sur <b>Ajouter une activité</b> pour commencer.</div>
+        </div>
+    </section>
+</div>
+
+@include('admin.circuits.voyages.partials.v2._side_quick')
 <div class="modal fade" id="activitiesCatalogModal" tabindex="-1" aria-labelledby="activitiesCatalogModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">

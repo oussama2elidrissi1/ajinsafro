@@ -519,3 +519,240 @@ body.ea-body .vf-page .vf-chip { min-height: 0 !important; height: auto !importa
   .vf-card { padding: 18px 16px; }
   .vf-bottombar__actions { margin-left: 0; width: 100%; }
 }
+
+/* ==========================================================================
+   Étapes Hôtels (10) et Activités (12) — design « Voyage - Hôtels et Activités »
+   ========================================================================== */
+
+/* Le conteneur de l'étape Activités ne doit pas casser la grille à deux colonnes. */
+.vf-activities-pane { display: contents; }
+
+/* Action alignée à droite dans l'en-tête d'une carte */
+.vf-card__action { margin-left: auto; flex: none; }
+.vf-card__num i { font-size: 17px; line-height: 1; }
+
+/* Variantes de rangée */
+.vf-row--end { align-items: flex-end; }
+.vf-row--stretch { align-items: stretch; }
+
+/* Pastilles et liens réutilisables */
+.vf-tag { display: inline-flex; align-items: center; white-space: nowrap; font-size: 11.5px; font-weight: 600; border-radius: 999px; padding: 3px 9px; color: var(--vf-muted-2); background: var(--vf-soft); }
+.vf-tag.is-green { color: #0f6b52; background: #e8f6f1; }
+.vf-tag.is-blue { color: var(--vf-primary); background: var(--vf-border-2); }
+.vf-tag.is-orange { color: var(--vf-orange-text); background: var(--vf-orange-bg); }
+.vf-link { font-size: 12px; font-weight: 600; color: var(--vf-primary); }
+.vf-link:hover { color: #0d3767; }
+
+/* Boutons icône compacts */
+.vf-iconbtn { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; flex: none; border: 1px solid var(--vf-border); border-radius: 9px; background: #fff; color: var(--vf-muted-2); cursor: pointer; padding: 0; font-size: 15px; }
+body.ea-body .vf-page .vf-iconbtn { min-height: 0 !important; height: 30px !important; padding: 0 !important; font-size: 15px !important; border-radius: 9px !important; }
+.vf-iconbtn:hover { border-color: #cfe0f0; color: var(--vf-primary); background: var(--vf-soft); }
+.vf-iconbtn.is-danger:hover { border-color: #f1d6d5; color: #b4413c; background: #fdecec; }
+
+/* Interrupteur encadré (option client) */
+.vf-toggle--boxed { flex: 0 1 auto; display: flex; align-items: center; gap: 10px; padding: 10px 13px; border-radius: 11px; background: var(--vf-panel); cursor: pointer; margin: 0; }
+.vf-toggle--boxed .vf-toggle__title { font-size: 12.5px; font-weight: 500; white-space: nowrap; }
+.vf-toggle--boxed:has(input:checked) { background: var(--vf-orange-bg); }
+
+/* --------------------------------------------------------------------------
+   Couverture du séjour
+   -------------------------------------------------------------------------- */
+.vf-coverage { margin-top: 20px; padding: 16px 18px; border-radius: 14px; background: var(--vf-panel); border: 1px solid var(--vf-border-2); }
+.vf-coverage__head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.vf-coverage__label { font-size: 12px; font-weight: 600; }
+.vf-coverage__label.is-ok { color: #0f6b52; }
+.vf-coverage__label.is-warn { color: var(--vf-orange-text); }
+.vf-coverage__bar { display: flex; gap: 3px; margin-top: 12px; }
+.vf-coverage__seg { min-width: 0; height: 26px; border-radius: 3px; display: flex; align-items: center; justify-content: center; color: #fff; font-family: var(--vf-mono); font-size: 10.5px; overflow: hidden; white-space: nowrap; }
+.vf-coverage__seg:first-child { border-radius: 8px 3px 3px 8px; }
+.vf-coverage__seg:last-child { border-radius: 3px 8px 8px 3px; }
+.vf-coverage__seg:only-child { border-radius: 8px; }
+.vf-coverage__seg--0 { background: var(--vf-primary); }
+.vf-coverage__seg--1 { background: var(--vf-primary-2); }
+.vf-coverage__seg--2 { background: #6aa9dc; }
+.vf-coverage__seg.is-empty { background: var(--vf-border-2); color: var(--vf-muted-3); }
+
+/* --------------------------------------------------------------------------
+   Séjours hôteliers (accordéon)
+   -------------------------------------------------------------------------- */
+.vf-hotels #tour-hotels-container { display: flex; flex-direction: column; gap: 10px; }
+.vf-hotel { border: 1px solid var(--vf-border-2); border-radius: 15px; overflow: hidden; background: #fff; }
+.vf-hotel.is-open { border-color: #cfe0f0; }
+.vf-hotel__head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 14px 16px; cursor: pointer; background: #fff; }
+.vf-hotel.is-open .vf-hotel__head { background: var(--vf-panel); }
+.vf-hotel__nights { width: 44px; flex: none; text-align: center; border-radius: 10px; background: #fff; border: 1px solid var(--vf-border); padding: 6px 0; font-size: 9.5px; color: var(--vf-muted); line-height: 1.25; }
+.vf-hotel__nights i { display: none; }
+.vf-hotel__nights .tour-hotel-nights-count { display: block; font-family: var(--vf-mono); font-size: 13px; font-weight: 500; color: var(--vf-text); }
+.vf-hotel__ident { flex: 1 1 220px; min-width: 0; }
+.vf-hotel__name { font-size: 14.5px; font-weight: 600; line-height: 1.3; }
+.vf-hotel__chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 5px; }
+.vf-hotel__chip { display: inline-flex; align-items: center; white-space: nowrap; border-radius: 6px; padding: 2px 8px; font-size: 11.5px; }
+.vf-hotel__chip--range { font-family: var(--vf-mono); font-size: 11px; color: var(--vf-muted-2); background: var(--vf-border-2); }
+.vf-hotel__chip--cat { color: var(--vf-orange-muted); background: var(--vf-orange-bg); }
+.vf-hotel__chip--cat.is-set { color: #0f6b52; background: #e8f6f1; }
+.vf-hotel__meta { font-size: 11.5px; color: var(--vf-muted); margin-top: 5px; }
+.vf-hotel__meta:empty { display: none; }
+.vf-hotel__toggle { display: inline-flex; align-items: center; white-space: nowrap; font-size: 12px; font-weight: 600; color: var(--vf-primary); flex: none; }
+.vf-hotel__remove { flex: none; width: 30px; height: 30px; border: 1px solid #f1d6d5; border-radius: 9px; background: #fff; color: #b4413c; cursor: pointer; padding: 0; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; }
+body.ea-body .vf-page .vf-hotel__remove { min-height: 0 !important; height: 30px !important; padding: 0 !important; border-radius: 9px !important; font-size: 15px !important; }
+.vf-hotel__remove:hover { background: #fdecec; }
+.vf-hotel__body { display: none; padding: 18px 16px; border-top: 1px solid var(--vf-border-2); flex-direction: column; gap: 18px; }
+.vf-hotel.is-open .vf-hotel__body { display: flex; }
+
+/* Hébergement lié à la base */
+.vf-hotel__link { border: 1px solid var(--vf-border); border-radius: 14px; padding: 14px; background: var(--vf-panel); }
+.vf-hotel__link-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.vf-hotel__link-title { font-size: 12px; font-weight: 600; }
+.vf-hotel__linked { display: flex; align-items: flex-start; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--vf-border-2); }
+.vf-hotel__linked-img { width: 64px; height: 48px; flex: none; border-radius: 9px; overflow: hidden; background: var(--vf-border-2); }
+.vf-hotel__linked-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.vf-hotel__linked-name { font-size: 13px; font-weight: 600; }
+.vf-hotel__linked-meta { font-size: 11.5px; color: var(--vf-muted); margin-top: 2px; }
+.vf-hotel__linked-actions { display: flex; align-items: center; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+
+/* Photo du séjour */
+.vf-hotel__photo { position: relative; aspect-ratio: 16 / 10; border-radius: 12px; border: 1px solid var(--vf-border); overflow: hidden; background: repeating-linear-gradient(135deg, #f7fafd, #f7fafd 9px, #eef4fa 9px, #eef4fa 18px); }
+.vf-hotel__photo-frame { position: absolute; inset: 0; align-items: center; justify-content: center; background: #fff; }
+.vf-hotel__photo-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.vf-hotel__photo-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--vf-mono); font-size: 10.5px; color: var(--vf-muted-4); }
+.vf-hotel__photo-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+
+/* Sélecteur d'hôtel : la fenêtre modale garde le style Bootstrap, arrondi harmonisé. */
+.vf-page #tour-hotel-picker-modal .modal-content { border-radius: 18px; border: 1px solid var(--vf-border); }
+
+/* --------------------------------------------------------------------------
+   Activités : la table est présentée en cartes (une ligne = une carte)
+   -------------------------------------------------------------------------- */
+.vf-activities { margin-top: 20px; }
+.vf-activities table, .vf-activities tbody, .vf-activities tr, .vf-activities td { display: block; width: auto; }
+.vf-activities thead { display: none; }
+.vf-activities table { border: 0; border-collapse: separate; margin: 0; }
+.vf-activities tbody { display: flex; flex-direction: column; gap: 12px; }
+
+.vf-activities tr.voyage-activity-row {
+  border: 1px solid var(--vf-border-2);
+  border-left: 3px solid #cfe0f0;
+  border-radius: 14px;
+  background: #fff;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 2fr) minmax(0, 1fr) 110px 110px;
+  grid-template-areas:
+    "ord   title  type    padult pchild"
+    "desc  desc   desc    status status"
+    "days  days   days    days   days"
+    "full  full   pricing total  actions";
+  gap: 14px;
+  align-items: start;
+}
+.vf-activities tr.voyage-activity-row.is-option,
+.vf-activities tr.voyage-activity-row[data-included="0"] { border-left-color: var(--vf-accent); background: #fffaf4; border-color: #f2d9bd; }
+/* Le script bascule .table-warning sur les lignes non incluses : la teinte du design prime. */
+.vf-activities tr.voyage-activity-row.table-warning { --bs-table-bg: transparent; --bs-table-accent-bg: transparent; box-shadow: none; }
+
+.vf-activities td { border: 0; padding: 0; min-width: 0; }
+.vf-activities td::before { content: attr(data-label); display: block; font-size: 12px; font-weight: 500; color: var(--vf-text); margin-bottom: 6px; }
+.vf-activities td[data-label="Ordre"]::before { display: none; }
+.vf-activities td[data-label="Actions"]::before,
+.vf-activities td[data-label="Total ligne"]::before { font-size: 11px; color: var(--vf-muted); }
+
+.vf-activities td[data-label="Ordre"] { grid-area: ord; }
+.vf-activities td[data-label="Activité / nom complet"] { grid-area: full; }
+.vf-activities td[data-label="Type"] { grid-area: type; }
+.vf-activities td[data-label="Jours de visibilité"] { grid-area: days; }
+.vf-activities td[data-label="Statut"] { grid-area: status; }
+.vf-activities td[data-label="Titre affiché"] { grid-area: title; }
+.vf-activities td[data-label="Description"] { grid-area: desc; }
+.vf-activities td[data-label="Tarification"] { grid-area: pricing; }
+.vf-activities td[data-label="Prix adulte"] { grid-area: padult; }
+.vf-activities td[data-label="Prix enfant"] { grid-area: pchild; }
+.vf-activities td[data-label="Total ligne"] { grid-area: total; }
+.vf-activities td[data-label="Actions"] { grid-area: actions; }
+
+.vf-activity__order { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 9px; background: #fff; border: 1px solid var(--vf-border); font-family: var(--vf-mono); font-size: 12px; color: var(--vf-muted-2); }
+.vf-activity__total { font-family: var(--vf-mono); font-size: 14px; color: var(--vf-primary); }
+/* Quatre actions en pavé 2×2 : elles tiennent dans la colonne sans se disloquer. */
+.vf-activity__actions { display: grid; grid-template-columns: repeat(2, 30px); gap: 6px; }
+.vf-activity__day-single, .vf-activity__day-chips { margin-top: 8px; }
+.vf-activities__note { margin: 16px 0 0; font-size: 12px; color: var(--vf-muted); line-height: 1.55; }
+.vf-activities__note b { font-weight: 600; color: var(--vf-muted-2); }
+.vf-activities tr.voyage-activities-empty-row { display: block; border: 1px dashed var(--vf-border); border-radius: 14px; }
+.vf-activities tr.voyage-activities-empty-row td { padding: 26px 16px; text-align: center; font-size: 13px; color: var(--vf-muted); }
+.vf-activities tr.voyage-activities-empty-row td::before { display: none; }
+
+/* Pastilles de jour */
+.vf-daychips { display: flex; gap: 6px; flex-wrap: wrap; }
+.vf-daychip { position: relative; display: inline-flex; align-items: center; justify-content: center; min-width: 38px; padding: 6px 10px; border-radius: 9px; border: 1px solid var(--vf-border); background: #fff; color: var(--vf-muted); font-family: var(--vf-mono); font-size: 11.5px; cursor: pointer; margin: 0; user-select: none; }
+.vf-daychip input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+.vf-daychip:hover { border-color: #cfe0f0; color: var(--vf-primary); }
+.vf-daychip:has(input:checked) { background: var(--vf-primary); border-color: var(--vf-primary); color: #fff; }
+
+/* --------------------------------------------------------------------------
+   Répartition des chambres par départ (rendu par voyage-edit-page.js)
+   -------------------------------------------------------------------------- */
+.vf-allocations #departure-room-allocation-manager,
+.vf-allocations #departure-room-allocation-manager > .card { border: 0 !important; box-shadow: none !important; background: transparent !important; margin: 0 !important; }
+.vf-allocations #departure-room-allocation-manager > .card-body { padding: 0 !important; }
+.vf-allocations h5, .vf-allocations h6 { font-family: var(--vf-font); font-size: 12.5px; font-weight: 600; color: var(--vf-muted-2); }
+.vf-allocations #departure-room-allocation-manager > .card-body > h5 { display: none; }
+
+.vf-allocations #departure-room-allocation-summary { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 16px; }
+.vf-allocations #departure-room-allocation-summary > [class*="col-"] { flex: 1 1 130px; min-width: 120px; width: auto; max-width: none; padding: 0; }
+.vf-allocations .ve-departure-summary { border: 1px solid var(--vf-border-2); border-radius: 12px; padding: 12px 14px; background: #fff; height: 100%; }
+.vf-allocations .ve-departure-summary__date { font-size: 11.5px; color: var(--vf-muted); }
+.vf-allocations .ve-departure-summary__stats { display: flex; flex-direction: column; gap: 2px; margin-top: 3px; font-size: 11.5px; color: var(--vf-muted-2); }
+.vf-allocations .ve-departure-summary__stats strong { font-family: var(--vf-mono); font-size: 16px; font-weight: 500; color: var(--vf-text); }
+.vf-allocations .ve-departure-summary__meta { font-size: 11px; color: var(--vf-muted-3); margin-top: 4px; }
+
+.vf-allocations .ve-departure-card { border: 1px solid var(--vf-border-2) !important; border-radius: 14px !important; overflow: hidden; background: #fff !important; margin-bottom: 12px !important; }
+.vf-allocations .ve-departure-card__summary { padding: 14px 16px !important; background: var(--vf-panel); cursor: pointer; }
+.vf-allocations .ve-departure-card h6 { font-size: 14px; font-weight: 600; color: var(--vf-text); }
+.vf-allocations .ve-departure-card .card-body { padding: 16px !important; }
+
+.vf-allocations table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 0; }
+.vf-allocations table thead th { background: var(--vf-panel) !important; border: 0 !important; border-bottom: 1px solid var(--vf-border-2) !important; padding: 12px 10px !important; font-size: 10.5px !important; font-weight: 600 !important; letter-spacing: .1em; text-transform: uppercase; color: var(--vf-muted-3) !important; white-space: nowrap; }
+.vf-allocations table tbody td { border: 0 !important; border-bottom: 1px solid var(--vf-border-2) !important; padding: 12px 10px !important; vertical-align: top; font-size: 12.5px; }
+.vf-allocations table tbody tr:last-child td { border-bottom: 0 !important; }
+.vf-allocations .table-responsive { border: 1px solid var(--vf-border-2); border-radius: 14px; overflow: auto; }
+
+/* Champs Bootstrap rendus par le script : alignés sur les champs du design. */
+.vf-page .vf-allocations .form-control,
+.vf-page .vf-allocations .form-select {
+  border: 1px solid var(--vf-border) !important;
+  border-radius: 11px !important;
+  background: var(--vf-panel) !important;
+  padding: 10px 12px !important;
+  font-size: 13px !important;
+  min-height: 0 !important;
+  height: auto !important;
+  color: var(--vf-text) !important;
+  box-shadow: none !important;
+}
+.vf-page .vf-allocations .form-control:focus,
+.vf-page .vf-allocations .form-select:focus { border-color: var(--vf-accent) !important; box-shadow: 0 0 0 3px rgba(245, 130, 31, .16) !important; }
+.vf-page .vf-allocations .btn { border-radius: 999px !important; min-height: 0 !important; height: auto !important; padding: 9px 15px !important; font-size: 12.5px !important; font-weight: 600 !important; }
+.vf-page .vf-allocations .btn-outline-primary { color: var(--vf-primary) !important; border-color: #cfe0f0 !important; background: #fff !important; }
+.vf-page .vf-allocations .btn-outline-secondary { color: var(--vf-muted-2) !important; border-color: var(--vf-border) !important; background: #fff !important; }
+.vf-page .vf-allocations .btn-outline-danger { color: #b4413c !important; border-color: #f1d6d5 !important; background: #fff !important; padding: 6px 12px !important; }
+.vf-allocations .badge { border-radius: 999px; font-weight: 600; padding: 4px 10px; }
+
+/* Colonne de droite : repères de l'étape */
+.vf-side-nav { display: flex; flex-direction: column; gap: 8px; }
+.vf-side-nav__link { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border: 0; border-radius: 11px; background: var(--vf-panel); font: inherit; font-size: 13px; color: var(--vf-text); text-align: left; cursor: pointer; width: 100%; }
+body.ea-body .vf-page .vf-side-nav__link { min-height: 0 !important; height: auto !important; padding: 10px 12px !important; font-size: 13px !important; border-radius: 11px !important; }
+.vf-side-nav__link:hover { background: var(--vf-soft); color: var(--vf-primary); }
+
+@media (max-width: 900px) {
+  .vf-activities tr.voyage-activity-row {
+    grid-template-columns: 30px minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "ord     title  title"
+      "type    type   type"
+      "padult  padult pchild"
+      "desc    desc   desc"
+      "status  status status"
+      "days    days   days"
+      "full    full   full"
+      "pricing total  actions";
+  }
+}

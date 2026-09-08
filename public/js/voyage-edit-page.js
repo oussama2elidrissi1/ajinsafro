@@ -5004,9 +5004,9 @@ document.addEventListener('DOMContentLoaded', function () {
             function buildMultiDayCheckboxes(dayOptions, selectedDays) {
                 return dayOptions.map(function(dayOpt) {
                     var checked = selectedDays.indexOf(String(dayOpt.value)) !== -1 ? ' checked' : '';
-                    return '<label class="form-check form-check-inline mb-0 small">'
-                        + '<input type="checkbox" class="form-check-input voyage-activity-day-checkbox" value="' + esc(dayOpt.value) + '"' + checked + '>'
-                        + '<span class="form-check-label">J' + esc(dayOpt.value) + '</span>'
+                    return '<label class="vf-daychip">'
+                        + '<input type="checkbox" class="voyage-activity-day-checkbox" value="' + esc(dayOpt.value) + '"' + checked + '>'
+                        + '<span>J' + esc(dayOpt.value) + '</span>'
                         + '</label>';
                 }).join('');
             }
@@ -5038,67 +5038,69 @@ document.addEventListener('DOMContentLoaded', function () {
                 tr.setAttribute('data-activity-id', activity.id);
                 tr.setAttribute('data-included', '1');
                 tr.innerHTML =
-                    '<td class="text-center">' +
-                        '<span class="badge rounded-pill bg-light text-dark voyage-activity-order">1</span>' +
+                    '<td data-label="Ordre">' +
+                        '<span class="vf-activity__order voyage-activity-order">1</span>' +
                         '<input type="hidden" data-field="sort_order" value="0">' +
                     '</td>' +
-                    '<td>' +
-                        '<input type="text" class="form-control form-control-sm fw-medium mb-2" data-field="activity_title" value="' + title + '" placeholder="Nom complet activite">' +
-                        '<input type="text" class="form-control form-control-sm" data-field="activity_type" value="' + type + '" placeholder="Type activite">' +
+                    '<td data-label="Activit\u00e9 / nom complet">' +
+                        '<input type="text" class="vf-input vf-input--sm" data-field="activity_title" value="' + title + '" placeholder="Nom complet de l\'activit\u00e9">' +
                         '<input type="hidden" data-field="id" value="">' +
                         '<input type="hidden" data-field="activity_id" value="' + activity.id + '">' +
                         '<input type="hidden" data-field="group_uuid" value="' + esc(groupUuid) + '">' +
                     '</td>' +
-                    '<td>' +
-                        '<select class="form-select form-select-sm voyage-activity-visibility-mode" data-field="visibility_mode">' +
+                    '<td data-label="Type">' +
+                        '<input type="text" class="vf-input vf-input--sm" data-field="activity_type" value="' + type + '" placeholder="Excursion, soir\u00e9e\u2026">' +
+                    '</td>' +
+                    '<td data-label="Jours de visibilit\u00e9">' +
+                        '<select class="vf-input vf-input--sm voyage-activity-visibility-mode" data-field="visibility_mode">' +
                             '<option value="single_day" selected>Jour unique</option>' +
                             '<option value="multiple_days">Plusieurs jours</option>' +
                             '<option value="all_days">Tous les jours</option>' +
                         '</select>' +
-                        '<div class="mt-2 voyage-activity-single-day-wrap">' +
-                            '<select class="form-select form-select-sm voyage-activity-day-select">'
+                        '<div class="voyage-activity-single-day-wrap vf-activity__day-single">' +
+                            '<select class="vf-input vf-input--sm voyage-activity-day-select">'
                             + dayOptions.map(function(dayOpt, i) {
                                 return '<option value="' + esc(dayOpt.value) + '"' + (i === 0 ? ' selected' : '') + '>' + esc(dayOpt.label) + '</option>';
                             }).join('')
                             + '</select>' +
                         '</div>' +
-                        '<div class="mt-2 voyage-activity-multi-days-wrap d-none">' +
-                            '<div class="d-flex flex-wrap gap-2">' + buildMultiDayCheckboxes(dayOptions, selectedDays) + '</div>' +
+                        '<div class="voyage-activity-multi-days-wrap vf-activity__day-chips d-none">' +
+                            '<div class="vf-daychips">' + buildMultiDayCheckboxes(dayOptions, selectedDays) + '</div>' +
                         '</div>' +
                         '<input type="hidden" data-field="day_number" value="' + esc(firstDayValue) + '">' +
                         '<input type="hidden" data-field="days" value="' + esc(selectedDays.join(',')) + '">' +
                         '<input type="hidden" data-field="day_scope" value="fixed">' +
-                        '<div class="small text-muted mt-1 voyage-activity-scope-text"></div>' +
+                        '<div class="vf-hint voyage-activity-scope-text"></div>' +
                     '</td>' +
-                    '<td>' +
-                        '<select class="form-select form-select-sm voyage-activity-included" data-field="status">' +
-                            '<option value="included" selected>Inclus</option>' +
+                    '<td data-label="Statut">' +
+                        '<select class="vf-input vf-input--sm voyage-activity-included" data-field="status">' +
+                            '<option value="included" selected>Incluse dans le programme</option>' +
                             '<option value="optional">Option client</option>' +
-                            '<option value="proposition">Proposition</option>' +
+                            '<option value="proposition">Proposition avec choix client</option>' +
                         '</select>' +
                         '<input type="hidden" data-field="included" value="1">' +
-                        '<div class="small text-muted mt-1 voyage-activity-state-text">Activite incluse dans le programme.</div>' +
+                        '<div class="vf-hint voyage-activity-state-text">Affich\u00e9e sur un jour unique du programme.</div>' +
                     '</td>' +
-                    '<td>' +
-                        '<input type="text" class="form-control form-control-sm voyage-activity-title" data-field="title" value="' + title + '" placeholder="Titre affiche dans le voyage">' +
+                    '<td data-label="Titre affich\u00e9">' +
+                        '<input type="text" class="vf-input vf-input--sm voyage-activity-title" data-field="title" value="' + title + '" placeholder="Titre affich\u00e9 dans le voyage">' +
                     '</td>' +
-                    '<td>' +
-                        '<textarea class="form-control form-control-sm voyage-activity-description" data-field="description" rows="2" placeholder="-">' + description + '</textarea>' +
+                    '<td data-label="Description">' +
+                        '<textarea class="vf-input vf-input--sm voyage-activity-description" data-field="description" rows="2" placeholder="\u2014">' + description + '</textarea>' +
                     '</td>' +
-                    '<td>' +
-                        '<select class="form-select form-select-sm voyage-activity-pricing" data-field="pricing_type">' +
+                    '<td data-label="Tarification">' +
+                        '<select class="vf-input vf-input--sm voyage-activity-pricing" data-field="pricing_type">' +
                             pricingSelect +
                         '</select>' +
                     '</td>' +
-                    '<td><input type="number" class="form-control form-control-sm voyage-activity-price" data-field="unit_price" min="0" step="0.01" value="' + defaultPrice + '"></td>' +
-                    '<td><input type="number" class="form-control form-control-sm voyage-activity-child-price" data-field="child_price" min="0" step="0.01" value="' + defaultChild + '"></td>' +
-                    '<td><span class="voyage-activity-line-total fw-semibold">0.00</span></td>' +
-                    '<td>' +
-                        '<div class="d-flex gap-1">' +
-                            '<button type="button" class="btn btn-sm btn-outline-secondary voyage-activity-duplicate" title="Dupliquer"><i class="bx bx-copy"></i></button>' +
-                            '<button type="button" class="btn btn-sm btn-outline-primary voyage-activity-edit" title="Modifier activité"><i class="bx bx-pencil"></i></button>' +
-                            '<button type="button" class="btn btn-sm btn-outline-info voyage-activity-image" title="Image"><i class="bx bx-image"></i></button>' +
-                            '<button type="button" class="btn btn-sm btn-outline-danger voyage-activity-remove"><i class="bx bx-trash"></i></button>' +
+                    '<td data-label="Prix adulte"><input type="number" class="vf-input vf-input--sm vf-input--mono voyage-activity-price" data-field="unit_price" min="0" step="0.01" value="' + defaultPrice + '"></td>' +
+                    '<td data-label="Prix enfant"><input type="number" class="vf-input vf-input--sm vf-input--mono voyage-activity-child-price" data-field="child_price" min="0" step="0.01" value="' + defaultChild + '"></td>' +
+                    '<td data-label="Total ligne"><span class="vf-activity__total voyage-activity-line-total">0.00</span></td>' +
+                    '<td data-label="Actions">' +
+                        '<div class="vf-activity__actions">' +
+                            '<button type="button" class="vf-iconbtn voyage-activity-duplicate" title="Dupliquer"><i class="bx bx-copy"></i></button>' +
+                            '<button type="button" class="vf-iconbtn voyage-activity-edit" title="Modifier"><i class="bx bx-pencil"></i></button>' +
+                            '<button type="button" class="vf-iconbtn voyage-activity-image" title="Image"><i class="bx bx-image"></i></button>' +
+                            '<button type="button" class="vf-iconbtn is-danger voyage-activity-remove" title="Supprimer"><i class="bx bx-trash"></i></button>' +
                         '</div>' +
                     '</td>';
 

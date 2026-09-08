@@ -230,6 +230,94 @@
         refreshDayOptions(event && event.detail ? event.detail.days : null);
     });
 
+    /* ------------------------------------------------------------------
+       Étape Hôtels : séjours repliables + couverture du séjour.
+       La délégation d'évènements couvre aussi les séjours ajoutés en cours
+       de saisie (ils sont clonés depuis une ligne existante).
+       ------------------------------------------------------------------ */
+    function setHotelOpen(row, open) {
+        if (!row) return;
+        row.classList.toggle('is-open', open);
+        var label = row.querySelector('[data-vf-hotel-toggle-label]');
+        if (label) label.textContent = open ? 'Replier ▲' : 'Modifier ▼';
+    }
+
+    page.addEventListener('click', function (event) {
+        var target = event.target;
+        if (!target || !target.closest) return;
+        if (target.closest('.tour-remove-row')) return;
+        var head = target.closest('[data-vf-hotel-toggle]');
+        if (!head) return;
+        var row = head.closest('.vf-hotel');
+        if (!row) return;
+        setHotelOpen(row, !row.classList.contains('is-open'));
+    });
+
+    page.addEventListener('keydown', function (event) {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        var head = event.target && event.target.closest ? event.target.closest('[data-vf-hotel-toggle]') : null;
+        if (!head) return;
+        event.preventDefault();
+        var row = head.closest('.vf-hotel');
+        if (row) setHotelOpen(row, !row.classList.contains('is-open'));
+    });
+
+    function refreshStayCoverage() {
+        var bar = page.querySelector('[data-vf-coverage-bar]');
+        var label = page.querySelector('[data-vf-coverage-label]');
+        if (!bar) return;
+
+        var maxDay = programDayCount();
+        var nightsTotal = Math.max(0, maxDay - 1);
+        var rows = Array.prototype.slice.call(page.querySelectorAll('.tour-hotel-row'));
+        var covered = {};
+        var segments = [];
+
+        rows.forEach(function (row) {
+            var ci = clampDay((row.querySelector('.tour-hotel-check-in') || {}).value, 1, maxDay);
+            var co = clampDay((row.querySelector('.tour-hotel-check-out') || {}).value, ci, maxDay);
+            if (co < ci) co = ci;
+            for (var d = ci; d < co; d++) covered[d] = true;
+            segments.push({ from: ci, to: co, nights: Math.max(0, co - ci) });
+        });
+
+        var coveredCount = Object.keys(covered).length;
+        if (label) {
+            label.textContent = coveredCount + ' nuit' + (coveredCount !== 1 ? 's' : '')
+                + ' couverte' + (coveredCount !== 1 ? 's' : '') + ' sur ' + nightsTotal;
+            var ok = nightsTotal > 0 && coveredCount >= nightsTotal;
+            label.classList.toggle('is-ok', ok);
+            label.classList.toggle('is-warn', !ok);
+        }
+
+        if (!segments.length) {
+            bar.innerHTML = '<span class="vf-coverage__seg is-empty" style="flex:1">aucun séjour configuré</span>';
+            return;
+        }
+        bar.innerHTML = segments.map(function (seg, i) {
+            return '<span class="vf-coverage__seg vf-coverage__seg--' + (i % 3) + '" style="flex:'
+                + Math.max(1, seg.nights) + '">J' + seg.from + '→J' + seg.to + '</span>';
+        }).join('');
+    }
+
+    page.addEventListener('change', function (event) {
+        var target = event.target;
+        if (!target || !target.classList) return;
+        if (target.classList.contains('tour-hotel-check-in') || target.classList.contains('tour-hotel-check-out')) {
+            window.setTimeout(refreshStayCoverage, 0);
+        }
+    });
+    document.addEventListener('voyage:program-days-changed', function () {
+        window.setTimeout(refreshStayCoverage, 0);
+    });
+    // Un séjour ajouté ou supprimé modifie la couverture : on observe le conteneur.
+    var hotelsContainer = document.getElementById('tour-hotels-container');
+    if (hotelsContainer && typeof MutationObserver !== 'undefined') {
+        new MutationObserver(function () { window.setTimeout(refreshStayCoverage, 0); })
+            .observe(hotelsContainer, { childList: true });
+    }
+    refreshStayCoverage();
+
     /* Suggestions de présentation : insère un titre de section dans l'éditeur. */
     Array.prototype.slice.call(page.querySelectorAll('[data-vf-suggest]')).forEach(function (btn) {
         btn.addEventListener('click', function () {
