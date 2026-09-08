@@ -26,6 +26,7 @@
     $veWpId = isset($voyage->ID) ? (int) $voyage->ID : 0;
     if ($veWpId > 0) {
         $wpAddress = null;
+        $wpPost = null;
         try {
             $wpPost = \App\Models\Wp\WpPost::tours()->find($veWpId);
             if ($wpPost) {
@@ -58,7 +59,7 @@
 
     $headerTitle = old('title', $voyage->post_title ?? '') ?: ($isCreate ? 'Nouveau voyage' : 'Modifier le voyage');
     $postStatus = old('post_status', $voyage->post_status ?? 'draft');
-    $statusLabels = ['publish' => 'Publie', 'draft' => 'Brouillon', 'pending' => 'En attente', 'private' => 'Archive'];
+    $statusLabels = ['publish' => 'Publié', 'draft' => 'Brouillon', 'pending' => 'En attente', 'private' => 'Archivé'];
     $statusCls = ['publish' => 'v2-pill-publish', 'draft' => 'v2-pill-draft', 'pending' => 'v2-pill-pending', 'private' => 'v2-pill-private'];
     $statusLabel = $statusLabels[$postStatus] ?? ucfirst($postStatus);
     $statusClass = $statusCls[$postStatus] ?? 'v2-pill-draft';
@@ -75,20 +76,20 @@
     $jsV2 = file_exists(public_path('js/voyage-v2.js')) ? (string) filemtime(public_path('js/voyage-v2.js')) : '1';
 
     $sections = [
-        ['id' => 's-general', 'icon' => 'bx-file-blank', 'label' => 'Infos generales', 'group' => 'Fiche produit', 'partial' => 'tabs._basic', 'eyebrow' => 'Fiche produit', 'title' => 'Informations generales', 'desc' => 'Titre, publication et presentation publique du voyage.'],
-        ['id' => 's-pricing', 'icon' => 'bx-euro', 'label' => 'Tarifs & capacite', 'group' => 'Fiche produit', 'partial' => 'tabs._pricing', 'eyebrow' => 'Fiche produit', 'title' => 'Tarifs & capacite', 'desc' => 'Prix publics et parametres commerciaux.'],
-        ['id' => 's-location', 'icon' => 'bx-map-pin', 'label' => 'Destination', 'group' => 'Fiche produit', 'partial' => 'tabs._location', 'eyebrow' => 'Fiche produit', 'title' => 'Destination', 'desc' => 'Localisations geographiques et informations de contact.'],
-        ['id' => 's-media', 'icon' => 'bx-image-alt', 'label' => 'Medias', 'group' => 'Fiche produit', 'partial' => 'tabs._media', 'eyebrow' => 'Fiche produit', 'title' => 'Medias', 'desc' => 'Hero, image a la une et galeries.'],
-        ['id' => 's-programme', 'icon' => 'bx-calendar-check', 'label' => 'Programme', 'group' => 'Contenu', 'partial' => 'tabs._programme', 'eyebrow' => 'Contenu', 'title' => 'Programme du circuit', 'desc' => 'Detail jour par jour du voyage.'],
+        ['id' => 's-general', 'icon' => 'bx-file-blank', 'label' => 'Infos générales', 'group' => 'Fiche produit', 'partial' => 'tabs._basic', 'eyebrow' => 'Fiche produit', 'title' => 'Informations générales', 'desc' => 'Titre, publication et présentation publique du voyage.'],
+        ['id' => 's-pricing', 'icon' => 'bx-euro', 'label' => 'Tarifs & capacité', 'group' => 'Fiche produit', 'partial' => 'tabs._pricing', 'eyebrow' => 'Fiche produit', 'title' => 'Tarifs & capacité', 'desc' => 'Prix publics et paramètres commerciaux.'],
+        ['id' => 's-location', 'icon' => 'bx-map-pin', 'label' => 'Destination', 'group' => 'Fiche produit', 'partial' => 'tabs._location', 'eyebrow' => 'Fiche produit', 'title' => 'Destination', 'desc' => 'Localisations géographiques et informations de contact.'],
+        ['id' => 's-media', 'icon' => 'bx-image-alt', 'label' => 'Médias', 'group' => 'Fiche produit', 'partial' => 'tabs._media', 'eyebrow' => 'Fiche produit', 'title' => 'Médias', 'desc' => 'Hero, image à la une et galeries.'],
+        ['id' => 's-programme', 'icon' => 'bx-calendar-check', 'label' => 'Programme', 'group' => 'Contenu', 'partial' => 'tabs._programme', 'eyebrow' => 'Contenu', 'title' => 'Programme du circuit', 'desc' => 'Détail jour par jour du voyage.'],
         ['id' => 's-information', 'icon' => 'bx-list-ul', 'label' => 'Inclus / Exclus', 'group' => 'Contenu', 'partial' => 'tabs._information', 'eyebrow' => 'Contenu', 'title' => 'Inclus / Exclus / FAQ', 'desc' => 'Informations commerciales et pratiques.'],
-        ['id' => 's-taxonomies', 'icon' => 'bx-tag', 'label' => 'Categories', 'group' => 'Contenu', 'partial' => 'tabs._taxonomies', 'eyebrow' => 'Contenu', 'title' => 'Categories & tags', 'desc' => 'Classement pour catalogue et SEO.'],
-        ['id' => 's-availability', 'icon' => 'bx-calendar', 'label' => 'Disponibilites', 'group' => 'Exploitation', 'partial' => 'tabs._availability', 'eyebrow' => 'Exploitation', 'title' => 'Disponibilites', 'desc' => 'Dates, stock et parametres de reservation.'],
-        ['id' => 's-flights', 'icon' => 'bx-paper-plane', 'label' => 'Vols', 'group' => 'Logistique', 'partial' => 'tabs._flights', 'eyebrow' => 'Logistique', 'title' => 'Vols', 'desc' => 'Compagnies, itineraires et options de vol.'],
-        ['id' => 's-hotels', 'icon' => 'bx-hotel', 'label' => 'Hotels', 'group' => 'Logistique', 'partial' => 'tabs._hotels', 'eyebrow' => 'Logistique', 'title' => 'Hotels', 'desc' => 'Hebergements et allocations de chambres.'],
-        ['id' => 's-transfers', 'icon' => 'bx-bus', 'label' => 'Transferts', 'group' => 'Logistique', 'partial' => 'tabs._transfers', 'eyebrow' => 'Logistique', 'title' => 'Transferts', 'desc' => 'Transferts arrivee / depart.'],
-        ['id' => 's-activities', 'icon' => 'bx-run', 'label' => 'Activites', 'group' => 'Logistique', 'partial' => 'tabs._activities', 'eyebrow' => 'Logistique', 'title' => 'Activites', 'desc' => 'Catalogue des activites du voyage.'],
-        ['id' => 's-extras', 'icon' => 'bx-star', 'label' => 'Extras', 'group' => 'Logistique', 'partial' => 'tabs._extras', 'eyebrow' => 'Logistique', 'title' => 'Supplements & extras', 'desc' => 'Options payantes complementaires.'],
-        ['id' => 's-logistics', 'icon' => 'bx-cog', 'label' => 'Parametres', 'group' => 'Exploitation', 'partial' => 'tabs._logistics', 'eyebrow' => 'Exploitation', 'title' => 'Parametres avances', 'desc' => 'Reglages techniques et logistiques.'],
+        ['id' => 's-taxonomies', 'icon' => 'bx-tag', 'label' => 'Catégories', 'group' => 'Contenu', 'partial' => 'tabs._taxonomies', 'eyebrow' => 'Contenu', 'title' => 'Catégories & tags', 'desc' => 'Classement pour catalogue et SEO.'],
+        ['id' => 's-availability', 'icon' => 'bx-calendar', 'label' => 'Disponibilités', 'group' => 'Exploitation', 'partial' => 'tabs._availability', 'eyebrow' => 'Exploitation', 'title' => 'Disponibilités', 'desc' => 'Dates, stock et paramètres de réservation.'],
+        ['id' => 's-flights', 'icon' => 'bx-paper-plane', 'label' => 'Vols', 'group' => 'Logistique', 'partial' => 'tabs._flights', 'eyebrow' => 'Logistique', 'title' => 'Vols', 'desc' => 'Compagnies, itinéraires et options de vol.'],
+        ['id' => 's-hotels', 'icon' => 'bx-hotel', 'label' => 'Hôtels', 'group' => 'Logistique', 'partial' => 'tabs._hotels', 'eyebrow' => 'Logistique', 'title' => 'Hôtels', 'desc' => 'Hébergements et allocations de chambres.'],
+        ['id' => 's-transfers', 'icon' => 'bx-bus', 'label' => 'Transferts', 'group' => 'Logistique', 'partial' => 'tabs._transfers', 'eyebrow' => 'Logistique', 'title' => 'Transferts', 'desc' => 'Transferts arrivée / départ.'],
+        ['id' => 's-activities', 'icon' => 'bx-run', 'label' => 'Activités', 'group' => 'Logistique', 'partial' => 'tabs._activities', 'eyebrow' => 'Logistique', 'title' => 'Activités', 'desc' => 'Catalogue des activités du voyage.'],
+        ['id' => 's-extras', 'icon' => 'bx-star', 'label' => 'Extras', 'group' => 'Logistique', 'partial' => 'tabs._extras', 'eyebrow' => 'Logistique', 'title' => 'Supplements & extras', 'desc' => 'Options payantes complémentaires.'],
+        ['id' => 's-logistics', 'icon' => 'bx-cog', 'label' => 'Paramètres', 'group' => 'Exploitation', 'partial' => 'tabs._logistics', 'eyebrow' => 'Exploitation', 'title' => 'Paramètres avancés', 'desc' => 'Réglages techniques et logistiques.'],
     ];
 
     $initialStepStates = is_array($v2StepStates ?? null)
@@ -115,11 +116,25 @@
         ? 'Structurez la fiche, les departs et la logistique avant la premiere publication.'
         : 'Pilotez le contenu, les departs et la logistique depuis un seul studio de production.';
     $v3QuickActions = array_values(array_filter([
-        ['label' => 'Infos generales', 'step' => 's-general', 'icon' => 'bx-file-blank'],
-        ['label' => 'Medias', 'step' => 's-media', 'icon' => 'bx-image-alt'],
-        ['label' => 'Disponibilites', 'step' => 's-availability', 'icon' => 'bx-calendar'],
+        ['label' => 'Infos générales', 'step' => 's-general', 'icon' => 'bx-file-blank'],
+        ['label' => 'MÃ©dias', 'step' => 's-media', 'icon' => 'bx-image-alt'],
+        ['label' => 'DisponibilitÃ©s', 'step' => 's-availability', 'icon' => 'bx-calendar'],
         ['label' => 'Vols', 'step' => 's-flights', 'icon' => 'bx-paper-plane'],
     ], fn (array $item) => collect($sections)->contains(fn (array $sec) => $sec['id'] === $item['step'])));
+
+    // Espace Admin v2 « Voyage - Formulaire » : champs de l'étape 1 encore vides (rappel dans la colonne de gauche).
+    $vfMissing = array_values(array_filter([
+        trim((string) old('title', $voyage->post_title ?? '')) === '' ? 'titre' : null,
+        trim((string) old('excerpt', $voyage->post_excerpt ?? '')) === '' ? 'accroche' : null,
+        trim((string) old('destination', $veDestination ?? '')) === '' ? 'destination' : null,
+        trim((string) old('tour_price_by', $meta['tour_price_by'] ?? '')) === '' ? 'tarification par' : null,
+        trim((string) old('min_people', $meta['min_people'] ?? '')) === '' ? 'min. personnes' : null,
+    ]));
+    $vfBrandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');
+    $vfBaseDisplay = preg_replace('#^https?://#', '', rtrim((string) $publicVoyagesBaseUrl, '/')) . '/';
+    $cssVf = file_exists(public_path('css/voyage-form-v2.css')) ? (string) filemtime(public_path('css/voyage-form-v2.css')) : '1';
+    $jsVf = file_exists(public_path('js/voyage-form-v2.js')) ? (string) filemtime(public_path('js/voyage-form-v2.js')) : '1';
+    $vfStatusClass = 'is-' . (in_array($postStatus, ['publish', 'draft', 'pending', 'private'], true) ? $postStatus : 'draft');
 @endphp
 @extends($agentVoyageMode ? 'layouts.master-ajinsafro' : 'layouts.admin-v6')
 
@@ -133,6 +148,7 @@
     <link href="{{ URL::asset('css/flight-options-new.css') }}" rel="stylesheet">
     <link href="{{ URL::asset('css/voyage-v2.css?v=' . $cssV2) }}" rel="stylesheet">
     <link href="{{ URL::asset('css/voyage-v3.css?v=' . $cssV3) }}" rel="stylesheet">
+    <link href="{{ URL::asset('css/voyage-form-v2.css?v=' . $cssVf) }}" rel="stylesheet">
     <style>
         .voyage-edit-v2-page.workflow-collapsed .v3-workspace,
         .voyage-edit-v2-page.workflow-collapsed .v2-body,
@@ -785,108 +801,184 @@
 @endpush
 
 @section('content')
-<div class="v2-page voyage-edit-page voyage-edit-v2-page voyage-studio-v3" data-v2-initial-id="{{ $veWpId }}" data-v2-save-create-url="{{ $saveCreateUrl }}" data-v2-save-update-template="{{ $saveUpdateTemplate }}" data-v2-is-create="{{ $isCreate ? '1' : '0' }}" data-v3-public-base-url="{{ $publicVoyagesBaseUrl }}">
-    <div class="v3-shell">
-        @include('admin.circuits.voyages.partials.v3._hero', [
-            'isCreate' => $isCreate,
-            'headerTitle' => $headerTitle,
-            'statusClass' => $statusClass,
-            'statusLabel' => $statusLabel,
-            'veWpId' => $veWpId,
-            'heroImageUrl' => $heroImageUrl ?? null,
-            'veDatesCount' => $veDatesCount,
-            'vePriceLabel' => $vePriceLabel,
-            'veDestination' => $veDestination,
-            'journeySubtitle' => $journeySubtitle,
-            'frontPreviewUrl' => $frontPreviewUrl,
-            'nextActionSection' => $nextActionSection,
-            'completedSteps' => $completedSteps,
-            'sectionsCount' => $sectionsCount,
-            'progressPercent' => $progressPercent,
-        ])
+<div class="v2-page vf-page voyage-edit-page voyage-edit-v2-page" id="v2-main"
+     data-v2-initial-id="{{ $veWpId }}"
+     data-v2-save-create-url="{{ $saveCreateUrl }}"
+     data-v2-save-update-template="{{ $saveUpdateTemplate }}"
+     data-v2-is-create="{{ $isCreate ? '1' : '0' }}"
+     data-v3-public-base-url="{{ $publicVoyagesBaseUrl }}"
+     data-vf-brand="{{ $vfBrandName }}"
+     data-vf-base-display="{{ $vfBaseDisplay }}">
 
-        <div class="v2-body v3-workspace">
-            @include('admin.circuits.voyages.partials.v3._steps', [
-                'sections' => $sections,
-                'initialStepStates' => $initialStepStates,
-                'isCreate' => $isCreate,
-            ])
-
-            <main class="v2-main v3-main" id="v2-main">
-                <div class="v3-editor-stack">
-                    @if(session('success'))
-                        <div class="v2-alert v2-alert-ok mb-4"><i class="bx bx-check-circle"></i><div>{{ session('success') }}</div></div>
-                    @endif
-                    @if($errors->any())
-                        <div class="v2-alert v2-alert-err mb-4"><i class="bx bx-error-circle"></i><div><strong>Corrections requises :</strong><ul class="mb-0 mt-1 ps-3">@foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach</ul></div></div>
-                    @endif
-                    <div class="v2-alert v2-alert-err d-none mb-4" id="v2-step-errors"></div>
-
-                    <form id="{{ $formId }}" action="{{ $formAction }}" method="POST" data-voyage-id="{{ $veWpId }}" data-v2-current-step="s-general" novalidate>
-                        @csrf
-                        @if(!$isCreate) @method('PUT') @endif
-                        <input type="hidden" name="current_step" value="s-general">
-                        <input type="hidden" name="redirect_step" value="s-general">
-                        <input type="hidden" name="v2_save_mode" value="manual">
-                        <input type="hidden" name="voyage_id" value="{{ $veWpId }}">
-                        <textarea name="programme_days_payload" id="programme-days-payload" class="d-none" aria-hidden="true"></textarea>
-
-                        @foreach($sections as $index => $sec)
-                            @php $groupSlug = \Illuminate\Support\Str::slug($sec['group']); @endphp
-                            <section class="v2-panel v3-panel{{ $index === 0 ? ' active' : '' }}" id="{{ $sec['id'] }}">
-                                <div class="v2-section-hdr v3-panel-head">
-                                    <div>
-                                        <p class="v2-section-eyebrow">{{ $sec['eyebrow'] }}</p>
-                                        <h1 class="v2-section-title">{{ $sec['title'] }}</h1>
-                                        <p class="v2-section-desc">{{ $sec['desc'] }}</p>
-                                    </div>
-                                    <div class="v3-panel-head__meta">
-                                        <span class="v3-step-chip">Etape {{ $index + 1 }} / {{ $sectionsCount }}</span>
-                                        <span class="v3-step-chip v3-step-chip--group v3-step-chip--{{ $groupSlug }}">{{ $sec['group'] }}</span>
-                                    </div>
-                                </div>
-
-                                <div class="v2-card v3-editor-card">
-                                    @if($sec['id'] === 's-general')
-                                        <div class="v3-editor-tabs" aria-hidden="true">
-                                            <span class="v3-editor-tab is-active"><i class="bx bx-list-ul"></i>Fiche commerciale</span>
-                                            <span class="v3-editor-tab"><i class="bx bx-link"></i>SEO & URL</span>
-                                            <span class="v3-editor-tab"><i class="bx bx-detail"></i>Presentation</span>
-                                            <span class="v3-editor-tab"><i class="bx bx-cog"></i>Reglages</span>
-                                        </div>
-                                    @endif
-                                    <div class="v2-card-hdr">
-                                        <div class="v2-card-icon"><i class="bx {{ $sec['icon'] }}"></i></div>
-                                        <div class="v2-card-hdr-text"><p class="v2-card-hdr-title">{{ $sec['title'] }}</p></div>
-                                    </div>
-                                    <div class="v2-card-body">@include('admin.circuits.voyages.partials.' . $sec['partial'])</div>
-                                </div>
-
-                                @if($sec['id'] === 's-logistics' && !$isCreate)
-                                    <div class="v2-danger-zone">
-                                        <div>
-                                            <p class="v2-danger-title"><i class="bx bx-error-circle me-1"></i>Suppression definitive</p>
-                                            <p class="v2-danger-desc">Action irreversible.</p>
-                                        </div>
-                                        <button type="submit" form="v2-delete-form" class="v2-btn v2-btn-danger-ghost" onclick="return confirm('Supprimer definitivement ce voyage ?')"><i class="bx bx-trash"></i> Supprimer</button>
-                                    </div>
-                                @endif
-
-                                @php
-                                    $prev = $sections[$index - 1]['id'] ?? null;
-                                    $next = $sections[$index + 1]['id'] ?? null;
-                                    $prevLabel = $sections[$index - 1]['label'] ?? null;
-                                    $nextLabel = $sections[$index + 1]['label'] ?? null;
-                                @endphp
-                                @include('admin.circuits.voyages.partials.v2._footer', compact('prev', 'next', 'prevLabel', 'nextLabel', 'formId'))
-                            </section>
-                        @endforeach
-                    </form>
+    {{-- ═══ Sous-en-tête collant : titre, workflow, étapes ═══ --}}
+    <div class="vf-subhead">
+        <div class="vf-subhead__inner">
+            <div class="vf-subhead__row">
+                <div class="vf-subhead__title">
+                    <div class="vf-subhead__meta">
+                        <a href="{{ $voyageBackUrl }}" class="vf-back">← Catalogue voyages</a>
+                        <span class="vf-status {{ $vfStatusClass }}" id="v2-live-status">{{ $statusLabel }}</span>
+                        <span class="vf-ref" id="v2-live-subtitle">{{ $isCreate ? 'Brouillon à créer au premier enregistrement' : 'ID #' . $veWpId }}</span>
+                    </div>
+                    <h1 class="vf-h1" id="v2-live-title">{{ $headerTitle }}</h1>
                 </div>
-            </main>
+                <div class="vf-workflow">
+                    <div class="vf-workflow__head">
+                        <span class="vf-kicker">Workflow</span>
+                        <span class="vf-workflow__count" id="v2-progress-text">{{ $completedSteps }} / {{ $sectionsCount }} étapes validées</span>
+                    </div>
+                    <div class="vf-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ $progressPercent }}"><span id="v2-progress-bar" style="width:{{ $progressPercent }}%"></span></div>
+                    <div class="vf-workflow__actions">
+                        @if($frontPreviewUrl)
+                            <a href="{{ $frontPreviewUrl }}" target="_blank" rel="noopener" class="vf-btn vf-btn--outline">Aperçu public</a>
+                        @else
+                            <span class="vf-btn vf-btn--outline" style="opacity:.55; cursor:default" title="Disponible après le premier enregistrement">Aperçu public</span>
+                        @endif
+                        <button type="button" class="vf-btn vf-btn--accent" data-v2-save><span>{{ $isCreate ? 'Créer le voyage' : 'Enregistrer' }}</span></button>
+                    </div>
+                </div>
+            </div>
 
+            <div class="vf-steps" role="list" aria-label="Étapes du voyage">
+                @foreach($sections as $i => $sec)
+                    @php $stepState = $initialStepStates[$sec['id']] ?? 'incomplete'; @endphp
+                    <button type="button" class="vf-step state-{{ $stepState }}{{ $i === 0 ? ' active' : '' }}" data-v2-nav="{{ $sec['id'] }}" data-v2-step-state="{{ $stepState }}" title="{{ $sec['label'] }}" role="listitem">
+                        <span class="vf-step__dot"><span class="vf-step__num">{{ str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) }}</span><i class="bx bx-check" aria-hidden="true"></i></span>
+                        <span class="vf-step__label">{{ $sec['label'] }}</span>
+                    </button>
+                @endforeach
+            </div>
         </div>
     </div>
+
+    {{-- ═══ Messages ═══ --}}
+    <div class="vf-alerts">
+        @if(session('success'))
+            <div class="vf-alert vf-alert--ok"><i class="bx bx-check-circle"></i><div>{{ session('success') }}</div></div>
+        @endif
+        @if($errors->any())
+            <div class="vf-alert vf-alert--err"><i class="bx bx-error-circle"></i><div><strong>Corrections requises :</strong><ul>@foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach</ul></div></div>
+        @endif
+        <div class="vf-alert vf-alert--err d-none" id="v2-step-errors"></div>
+    </div>
+
+    {{-- ═══ Grille : navigation de l'étape | contenu | colonne droite ═══ --}}
+    <div class="vf-grid">
+        <aside class="vf-aside" aria-label="Navigation dans l'étape">
+            @foreach($sections as $i => $sec)
+                <div class="vf-aside-block" data-vf-for="{{ $sec['id'] }}">
+                    <div class="vf-aside__kicker">Étape {{ $i + 1 }} · {{ $sec['id'] === 's-general' ? 'sections' : $sec['group'] }}</div>
+                    @if($sec['id'] === 's-general')
+                        <a href="#sec-fiche" class="vf-aside-link is-active" data-vf-section="sec-fiche">Fiche commerciale<span class="vf-aside-link__meta {{ in_array('titre', $vfMissing, true) ? 'is-warn' : 'is-ok' }}">{{ in_array('titre', $vfMissing, true) ? 'titre' : '✓' }}</span></a>
+                        <a href="#sec-seo" class="vf-aside-link" data-vf-section="sec-seo">SEO &amp; URL<span class="vf-aside-link__meta {{ trim((string) old('slug', $voyage->post_name ?? '')) !== '' ? 'is-ok' : '' }}">{{ trim((string) old('slug', $voyage->post_name ?? '')) !== '' ? '✓' : 'auto' }}</span></a>
+                        <a href="#sec-presentation" class="vf-aside-link" data-vf-section="sec-presentation">Présentation<span class="vf-aside-link__meta {{ trim(strip_tags((string) old('content', $voyage->post_content ?? ''))) !== '' ? 'is-ok' : '' }}">{{ trim(strip_tags((string) old('content', $voyage->post_content ?? ''))) !== '' ? '✓' : 'vide' }}</span></a>
+                        <a href="#sec-medias" class="vf-aside-link" data-vf-section="sec-medias">Médias<span class="vf-aside-link__meta {{ !empty($heroImageUrl) ? 'is-ok' : '' }}">{{ !empty($heroImageUrl) ? '✓' : '0' }}</span></a>
+                        <a href="#sec-reglages" class="vf-aside-link" data-vf-section="sec-reglages">Réglages<span class="vf-aside-link__meta {{ count(array_intersect($vfMissing, ['tarification par', 'min. personnes'])) > 0 ? 'is-warn' : 'is-ok' }}">{{ count(array_intersect($vfMissing, ['tarification par', 'min. personnes'])) > 0 ? count(array_intersect($vfMissing, ['tarification par', 'min. personnes'])) : '✓' }}</span></a>
+                        @if($vfMissing !== [])
+                            <div class="vf-aside-callout">
+                                <div class="vf-aside-callout__title">{{ count($vfMissing) }} champ{{ count($vfMissing) > 1 ? 's' : '' }} à compléter</div>
+                                <div class="vf-aside-callout__text">{{ \Illuminate\Support\Str::ucfirst(implode(', ', $vfMissing)) }}</div>
+                            </div>
+                        @else
+                            <div class="vf-aside-callout is-ok">
+                                <div class="vf-aside-callout__title">Fiche complète</div>
+                                <div class="vf-aside-callout__text">Passez aux tarifs et à la capacité.</div>
+                            </div>
+                        @endif
+                    @else
+                        <div class="vf-aside-card">
+                            <div class="vf-aside-card__title">{{ $sec['title'] }}</div>
+                            <div class="vf-aside-card__text">{{ $sec['desc'] }}</div>
+                        </div>
+                        @if(isset($sections[$i - 1]))
+                            <button type="button" class="vf-aside-link" data-v2-prev="{{ $sections[$i - 1]['id'] }}">← {{ $sections[$i - 1]['label'] }}</button>
+                        @endif
+                        @if(isset($sections[$i + 1]))
+                            <button type="button" class="vf-aside-link" data-v2-next="{{ $sections[$i + 1]['id'] }}">{{ $sections[$i + 1]['label'] }} →</button>
+                        @endif
+                    @endif
+                </div>
+            @endforeach
+        </aside>
+
+        <form id="{{ $formId }}" class="vf-form" action="{{ $formAction }}" method="POST" data-voyage-id="{{ $veWpId }}" data-v2-current-step="s-general" novalidate>
+            @csrf
+            @if(!$isCreate) @method('PUT') @endif
+            <input type="hidden" name="current_step" value="s-general">
+            <input type="hidden" name="redirect_step" value="s-general">
+            <input type="hidden" name="v2_save_mode" value="manual">
+            <input type="hidden" name="voyage_id" value="{{ $veWpId }}">
+            <textarea name="programme_days_payload" id="programme-days-payload" class="d-none" aria-hidden="true"></textarea>
+
+            @foreach($sections as $index => $sec)
+                @php
+                    $prev = $sections[$index - 1] ?? null;
+                    $next = $sections[$index + 1] ?? null;
+                @endphp
+                <section class="v2-panel vf-panel{{ $index === 0 ? ' active' : '' }}" id="{{ $sec['id'] }}">
+                    @if($sec['id'] === 's-general')
+                        @include('admin.circuits.voyages.partials.tabs._basic')
+                    @else
+                        <div class="vf-col-main">
+                            <section class="vf-card">
+                                <div class="vf-card__head">
+                                    <span class="vf-card__num">{{ str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT) }}</span>
+                                    <div style="min-width:0">
+                                        <h2 class="vf-card__title">{{ $sec['title'] }}</h2>
+                                        <p class="vf-card__desc">{{ $sec['desc'] }}</p>
+                                    </div>
+                                </div>
+                                <div class="vf-card__body vf-card__body--legacy">@include('admin.circuits.voyages.partials.' . $sec['partial'])</div>
+                            </section>
+                            @if($sec['id'] === 's-logistics' && !$isCreate && !$agentVoyageMode)
+                                <div class="vf-danger">
+                                    <div>
+                                        <div class="vf-danger__title">Suppression définitive</div>
+                                        <div class="vf-danger__desc">Action irréversible : le voyage et sa fiche publique sont supprimés.</div>
+                                    </div>
+                                    <button type="submit" form="v2-delete-form" class="vf-btn vf-btn--danger" onclick="return confirm('Supprimer définitivement ce voyage ?')">Supprimer le voyage</button>
+                                </div>
+                            @endif
+                        </div>
+                        <div class="vf-col-side">
+                            <section class="vf-side-card vf-side-card--navy">
+                                <h2 class="vf-side-card__title">Vue rapide</h2>
+                                <p class="vf-side-card__sub">État du produit</p>
+                                <div class="vf-quick">
+                                    <div class="vf-quick__row"><span class="vf-quick__label">Réf. voyage</span><span class="vf-quick__value">{{ $isCreate ? 'nouveau' : '#' . $veWpId }}</span></div>
+                                    <div class="vf-quick__row"><span class="vf-quick__label">Départs programmés</span><span class="vf-quick__value {{ $veDatesCount > 0 ? '' : 'is-accent' }}">{{ $veDatesCount }}</span></div>
+                                    <div class="vf-quick__row"><span class="vf-quick__label">Prix de base</span><span class="vf-quick__value">{{ $vePriceLabel ?: '—' }}</span></div>
+                                    <div class="vf-quick__row"><span class="vf-quick__label">Destination</span><span class="vf-quick__value is-text">{{ $veDestination ?: '—' }}</span></div>
+                                </div>
+                                @if($veDatesCount === 0)
+                                    <div class="vf-quick__note">Aucun départ programmé : le voyage reste invisible à la réservation.</div>
+                                @endif
+                            </section>
+                        </div>
+                    @endif
+
+                    {{-- Barre d'actions fixe de l'étape --}}
+                    <div class="vf-bottombar">
+                        <div class="vf-bottombar__inner">
+                            <span class="vf-bottombar__status" data-state="idle"><span data-vf-save-help>Modifiez un champ pour activer la sauvegarde d'étape.</span> · <b data-vf-save-state>Prêt</b></span>
+                            <div class="vf-bottombar__actions">
+                                @if($prev)
+                                    <button type="button" class="vf-btn vf-btn--ghost" data-v2-prev="{{ $prev['id'] }}">← {{ $prev['label'] }}</button>
+                                @endif
+                                <button type="button" class="vf-btn vf-btn--accent" data-v2-save><span>Enregistrer cette étape</span></button>
+                                @if($next)
+                                    <button type="button" class="vf-btn vf-btn--primary" data-v2-next="{{ $next['id'] }}">{{ $next['label'] }} →</button>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            @endforeach
+        </form>
+    </div>
+
+    {{-- Bloc d'état alimenté par voyage-v2.js, recopié dans les barres d'actions par voyage-form-v2.js --}}
+    <div id="v2-save-card" data-state="idle" hidden><span id="v2-save-state">Prêt</span><span id="v2-save-help">Modifiez un champ pour activer la sauvegarde d'étape.</span></div>
 
     @if(!$isCreate && !$agentVoyageMode)
         <form id="v2-delete-form" action="{{ route('admin.circuits.voyages.destroy', $voyage->ID) }}" method="POST" class="d-none">@csrf @method('DELETE')</form>
@@ -909,4 +1001,5 @@
         };
     </script>
     <script src="{{ URL::asset('js/voyage-v2.js?v=' . $jsV2) }}"></script>
+    <script src="{{ URL::asset('js/voyage-form-v2.js?v=' . $jsVf) }}"></script>
 @endpush

@@ -645,6 +645,8 @@ class VoyageController extends Controller
                 'duration_text' => 'nullable|string|max:100',
                 'is_featured' => 'nullable',
                 'is_group_deal' => 'nullable',
+                'min_people' => 'nullable|integer|min:1',
+                'tour_price_by' => 'nullable|string|max:100',
             ],
             's-pricing' => [
                 'adult_price' => 'nullable|numeric|min:0',
@@ -1451,7 +1453,7 @@ class VoyageController extends Controller
     private function extractWpPayloadForV2Step(string $step, Request $request): array
     {
         $fieldsByStep = [
-            's-general' => ['title', 'slug', 'content', 'excerpt', 'post_status', 'duration_text', 'destination', 'is_featured'],
+            's-general' => ['title', 'slug', 'content', 'excerpt', 'post_status', 'duration_text', 'destination', 'is_featured', 'min_people', 'tour_price_by'],
             's-pricing' => ['adult_price', 'child_price', 'min_price', 'base_price', 'sale_price', 'infant_price', 'child_age_pricing', 'commission_adulte', 'commission_adulte_type', 'commission_enfant', 'commission_enfant_type', 'discount', 'discount_type', 'discount_by_people_type', 'calculator_discount_by_people_type', 'min_people', 'max_people'],
             's-location' => ['locations', 'address', 'contact_email', 'phone', 'fax', 'website', 'map_lat', 'map_lng', 'map_zoom', 'map_type'],
             's-media' => ['thumbnail_id', 'hero_image_id', 'hero_gallery_ids', 'gallery_ids', 'video', 'st_google_map', 'hero_use_as_thumbnail'],
