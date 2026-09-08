@@ -264,6 +264,21 @@ class DashboardController extends Controller
         ]);
     }
 
+    /**
+     * Espace Admin v2 — navigation horizontale (méga-menus) + vue d'ensemble.
+     * Mêmes données que le V6 (service V5 + widgets demandes à la carte).
+     */
+    public function espaceV2(Request $request)
+    {
+        $service = app(DashboardV5StatsService::class);
+        $dashboardV5 = $service->build($request->user());
+
+        return view('admin.dashboard.espace-v2.index', [
+            'dashboardV5' => $dashboardV5,
+            'customRequestWidgets' => $this->customRequestWidgets($request),
+        ]);
+    }
+
     private function customRequestWidgets(Request $request): array
     {
         if (! Schema::hasTable('custom_requests')) {

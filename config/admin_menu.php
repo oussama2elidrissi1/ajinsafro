@@ -15,6 +15,7 @@ return [
                 ['label' => 'Dashboard V3', 'route' => 'admin.dashboard.v3', 'permission' => 'dashboard.overview.view'],
                 ['label' => 'Dashboard V4', 'route' => 'admin.dashboard.v4', 'permission' => 'dashboard.overview.view'],
                 ['label' => 'Dashboard V5', 'route' => 'admin.dashboard.v5', 'permission' => 'dashboard.overview.view'],
+                ['label' => 'Espace Admin v2', 'route' => 'admin.dashboard.espace-v2', 'permission' => 'dashboard.overview.view'],
             ],
         ],
         [

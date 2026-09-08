@@ -221,8 +221,12 @@ class DashboardV5StatsService
             return [];
         }
 
+        $voyageColumns = Schema::hasColumn('voyages', 'duration_text')
+            ? 'voyage:id,name,destination,duration_text'
+            : 'voyage:id,name,destination';
+
         $rows = Departure::query()
-            ->with('voyage:id,name,destination')
+            ->with($voyageColumns)
             ->whereDate('start_date', '>=', now('Africa/Casablanca')->toDateString())
             ->whereNotIn('status', [
                 Departure::STATUS_DRAFT,
@@ -253,13 +257,20 @@ class DashboardV5StatsService
                 $statusColor = 'green';
             }
 
+            $sold = max(0, $total - $available);
+
             return [
                 'id' => (int) $departure->id,
                 'date' => $departure->start_date?->locale('fr')->translatedFormat('d M Y') ?? '',
+                'date_day' => $departure->start_date?->format('d') ?? '',
+                'date_month' => $departure->start_date?->locale('fr')->translatedFormat('M') ?? '',
                 'destination' => \Illuminate\Support\Str::limit((string) ($departure->voyage?->destination ?: '—'), 24),
                 'voyage' => \Illuminate\Support\Str::limit((string) ($departure->voyage?->name ?: 'Voyage'), 46),
+                'duration' => trim((string) ($departure->voyage?->duration_text ?? '')),
                 'available' => $available,
                 'total' => $total,
+                'sold' => $sold,
+                'fill_pct' => $total > 0 ? (int) round(($sold / $total) * 100) : 0,
                 'status_label' => $statusLabel,
                 'status_color' => $statusColor,
             ];
