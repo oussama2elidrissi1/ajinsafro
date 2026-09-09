@@ -497,6 +497,8 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
             Route::match(['put', 'patch'], 'requests/{requestItem}', [HajjOmraBookingRequestController::class, 'update'])->name('requests.update')->whereNumber('requestItem');
             Route::get('{hajjOmraPackage}', [HajjOmraPackageController::class, 'show'])->name('show')->whereNumber('hajjOmraPackage');
             Route::get('{hajjOmraPackage}/edit', [HajjOmraPackageController::class, 'edit'])->name('edit')->whereNumber('hajjOmraPackage');
+            Route::get('{hajjOmraPackage}/preview', [HajjOmraPackageController::class, 'preview'])->name('preview')->whereNumber('hajjOmraPackage');
+            Route::post('{hajjOmraPackage}/generate-program', [HajjOmraPackageController::class, 'generateProgram'])->name('generate-program')->whereNumber('hajjOmraPackage');
             Route::match(['put', 'patch'], '{hajjOmraPackage}', [HajjOmraPackageController::class, 'update'])->name('update')->whereNumber('hajjOmraPackage');
             Route::delete('{hajjOmraPackage}', [HajjOmraPackageController::class, 'destroy'])->name('destroy')->whereNumber('hajjOmraPackage');
         });

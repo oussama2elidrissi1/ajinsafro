@@ -24,6 +24,7 @@ class HajjOmraDeparture extends Model
         'package_id',
         'departure_date',
         'return_date',
+        'departure_city',
         'status',
         'available_places',
         'reserved_places',

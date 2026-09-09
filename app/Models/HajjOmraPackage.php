@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Locale\HasBilingualFields;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,6 +11,29 @@ use Illuminate\Support\Str;
 
 class HajjOmraPackage extends Model
 {
+    use HasBilingualFields;
+
+    /**
+     * Champs a double saisie. La colonne nue porte le francais, la colonne `_ar` l'arabe.
+     *
+     * @var list<string>
+     */
+    protected array $bilingual = [
+        'title',
+        'short_description',
+        'short_description_ar',
+        'description',
+        'description_ar',
+        'booking_conditions',
+        'booking_conditions_ar',
+        'required_documents',
+        'required_documents_ar',
+        'meta_title',
+        'meta_title_ar',
+        'meta_description',
+        'meta_description_ar',
+    ];
+
     public const TYPE_OMRA = 'omra';
     public const TYPE_HAJJ = 'hajj';
     public const TYPE_RAMADAN = 'ramadan';
@@ -38,6 +62,7 @@ class HajjOmraPackage extends Model
 
     protected $fillable = [
         'title',
+        'title_ar',
         'slug',
         'type',
         'status',
@@ -51,6 +76,8 @@ class HajjOmraPackage extends Model
         'start_date',
         'return_date',
         'adult_price',
+        'old_price',
+        'discount_amount',
         'child_price',
         'baby_price',
         'currency',
@@ -80,6 +107,8 @@ class HajjOmraPackage extends Model
         'start_date' => 'date',
         'return_date' => 'date',
         'adult_price' => 'decimal:2',
+        'old_price' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
         'child_price' => 'decimal:2',
         'baby_price' => 'decimal:2',
         'available_places' => 'integer',
@@ -96,6 +125,7 @@ class HajjOmraPackage extends Model
 
     protected $appends = [
         'main_image_url',
+        'savings_value',
         'type_label',
         'status_label',
         'price_from_value',
@@ -152,6 +182,26 @@ class HajjOmraPackage extends Model
     public function programDays(): HasMany
     {
         return $this->hasMany(HajjOmraProgramDay::class, 'package_id')->orderBy('day_number')->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function hotels(): HasMany
+    {
+        return $this->hasMany(HajjOmraPackageHotel::class, 'package_id')->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function serviceItems(): HasMany
+    {
+        return $this->hasMany(HajjOmraServiceItem::class, 'package_id')->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function includedItems(): HasMany
+    {
+        return $this->serviceItems()->where('kind', HajjOmraServiceItem::KIND_INCLUDED);
+    }
+
+    public function excludedItems(): HasMany
+    {
+        return $this->serviceItems()->where('kind', HajjOmraServiceItem::KIND_EXCLUDED);
     }
 
     public function bookingRequests(): HasMany
@@ -304,6 +354,25 @@ class HajjOmraPackage extends Model
         }
 
         return sprintf('%d nuits', $nights);
+    }
+
+    /**
+     * Economie affichee : valeur saisie, sinon deduite de l'ancien prix.
+     */
+    public function getSavingsValueAttribute(): ?float
+    {
+        if ($this->discount_amount !== null) {
+            return round((float) $this->discount_amount, 2);
+        }
+
+        $old = $this->old_price !== null ? (float) $this->old_price : null;
+        $current = $this->price_from_value;
+
+        if ($old === null || $current === null || $old <= $current) {
+            return null;
+        }
+
+        return round($old - $current, 2);
     }
 
     public function resolveUpcomingDeparture(): ?HajjOmraDeparture

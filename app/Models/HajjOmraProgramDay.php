@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Locale\HasBilingualFields;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
@@ -9,11 +10,18 @@ use Illuminate\Support\Str;
 
 class HajjOmraProgramDay extends Model
 {
+    use HasBilingualFields;
+
+    /** @var list<string> */
+    protected array $bilingual = ['title', 'description'];
+
     protected $fillable = [
         'package_id',
         'day_number',
         'title',
+        'title_ar',
         'description',
+        'description_ar',
         'city',
         'image_path',
         'sort_order',

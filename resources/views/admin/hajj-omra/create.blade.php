@@ -4,20 +4,15 @@
 
 @section('content')
     <x-admin.page-header
-        title="Nouvelle offre Hajj & Omra"
-        subtitle="Structurez l offre, les chambres, les departs, le programme et les medias."
+        title="Nouvelle offre Hajj &amp; Omra"
+        subtitle="Renseignez l'offre étape par étape : tarifs, départs, hébergement, programme et médias."
         :breadcrumbs="[
             ['label' => 'Admin', 'url' => route('admin.dashboard')],
             ['label' => 'Hajj & Omra', 'url' => route('admin.hajj-omra.index')],
-            ['label' => 'Creation'],
+            ['label' => 'Création'],
         ]"
     />
 
-    <x-admin.flash-messages />
-
-    <form action="{{ route('admin.hajj-omra.store') }}" method="POST" enctype="multipart/form-data">
-        @csrf
-        @include('admin.hajj-omra._form')
-    </form>
+    {{-- Le formulaire est porte par le partial : pas de balise <form> ici, sous peine d'imbrication. --}}
+    @include('admin.hajj-omra._form')
 @endsection
-
