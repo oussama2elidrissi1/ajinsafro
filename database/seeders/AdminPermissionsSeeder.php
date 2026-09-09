@@ -110,6 +110,13 @@ class AdminPermissionsSeeder extends Seeder
                 continue;
             }
 
+            // Ne jamais retrograder un administrateur principal : `syncRoles` remplace les
+            // roles existants et retirerait `super_admin`, seul role habilite sur le module
+            // Finance & Controle (voir SuperAdminAccountsSeeder).
+            if ($adminUser->hasRole(BranchScopeService::ROLE_SUPER_ADMIN)) {
+                continue;
+            }
+
             $adminUser->syncRoles([$adminRole]);
 
             if ($hasAccessMode) {

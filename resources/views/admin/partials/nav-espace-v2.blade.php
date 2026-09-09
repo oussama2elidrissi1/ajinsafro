@@ -114,6 +114,7 @@
                 $eaGroupsFromNode($eaByKey->get('operations'), 'Opérations terrain'),
                 $eaGroupsFromNode($eaByKey->get('dashboard'), 'Pilotage'),
                 $eaGroupsFromNode($eaByKey->get('reporting'), 'Reporting'),
+                $eaGroupsFromNode($eaByKey->get('finance-control'), 'Finance & Contrôle'),
                 $eaGroupsFromNode($eaByKey->get('settings'), 'Paramètres')
             ),
         ],

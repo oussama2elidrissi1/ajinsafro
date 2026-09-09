@@ -353,6 +353,74 @@ class FinanceControlModuleTest extends TestCase
         $this->assertSame([BranchScopeService::ROLE_SUPER_ADMIN], FinanceControlPermissions::adminRoleNames());
     }
 
+    /**
+     * Scenario de production reel : dev@ajinsafro.ma portait le role legacy `Admin` avec
+     * is_admin = true, et ne voyait donc pas le module. Apres SuperAdminAccountsSeeder il
+     * doit y acceder, sans qu'aucun autre compte is_admin ne soit promu au passage.
+     */
+    public function test_super_admin_accounts_seeder_promotes_dev_accounts_only(): void
+    {
+        $this->seedProject();
+        $this->seed(\Database\Seeders\AjinsafroRolesSeeder::class);
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+        $legacyAdminRole = Role::findOrCreate('Admin', 'web');
+        $legacyAdminRole->givePermissionTo(Permission::findOrCreate(AdminMenuPermissionRegistry::ADMIN_ACCESS_PERMISSION, 'web'));
+
+        $dev = User::factory()->create(['email' => 'dev@ajinsafro.ma', 'is_admin' => true]);
+        $hiba = User::factory()->create(['email' => 'dev-hiba@ajinsafro.ma', 'is_admin' => true]);
+        // Autre compte historique is_admin : il ne doit PAS etre promu.
+        $otherLegacy = User::factory()->create(['email' => 'ancien-admin@ajinsafro.ma', 'is_admin' => true]);
+
+        foreach ([$dev, $hiba, $otherLegacy] as $user) {
+            $user->assignRole($legacyAdminRole);
+        }
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        // Avant promotion : aucun acces, y compris pour les comptes dev.
+        $this->assertFalse(FinanceControlPermissions::userIsFinanceAdmin($dev->fresh()));
+        $this->actingAs($dev->fresh())->get(route('admin.finance.control.dashboard'))->assertForbidden();
+
+        $this->seed(\Database\Seeders\SuperAdminAccountsSeeder::class);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        // Apres promotion : les deux comptes dev accedent au module.
+        foreach ([$dev, $hiba] as $user) {
+            $user = $user->fresh();
+            $this->assertTrue($user->hasRole(BranchScopeService::ROLE_SUPER_ADMIN), $user->email.' doit etre super_admin.');
+            $this->assertTrue(FinanceControlPermissions::userIsFinanceAdmin($user));
+            $this->actingAs($user)->get(route('admin.finance.control.dashboard'))->assertOk();
+        }
+
+        // Le compte is_admin non liste reste exclu.
+        $otherLegacy = $otherLegacy->fresh();
+        $this->assertFalse($otherLegacy->hasRole(BranchScopeService::ROLE_SUPER_ADMIN));
+        $this->actingAs($otherLegacy)->get(route('admin.finance.control.dashboard'))->assertForbidden();
+    }
+
+    /**
+     * AdminPermissionsSeeder fait `syncRoles(['Admin'])` sur tout compte is_admin : il ne
+     * doit jamais retrograder un super_admin, sous peine de couper l'acces au module
+     * a chaque re-seed.
+     */
+    public function test_admin_permissions_seeder_never_demotes_a_super_admin(): void
+    {
+        $this->seed(\Database\Seeders\AjinsafroRolesSeeder::class);
+        $this->seed(\Database\Seeders\SuperAdminAccountsSeeder::class);
+
+        $dev = User::factory()->create(['email' => 'dev@ajinsafro.ma', 'is_admin' => true]);
+        $dev->assignRole(Role::findOrCreate(BranchScopeService::ROLE_SUPER_ADMIN, 'web'));
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $this->seed(\Database\Seeders\AdminPermissionsSeeder::class);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $this->assertTrue(
+            $dev->fresh()->hasRole(BranchScopeService::ROLE_SUPER_ADMIN),
+            'AdminPermissionsSeeder a retrograde le compte super_admin.'
+        );
+    }
+
     /** Le seeder de roles ne redistribue jamais les permissions du module. */
     public function test_role_seeder_grants_finance_permissions_to_super_admin_only(): void
     {
@@ -391,6 +459,36 @@ class FinanceControlModuleTest extends TestCase
             ->assertForbidden();
 
         $this->assertDatabaseMissing('structural_expenses', ['label' => 'Tentative']);
+    }
+
+    /**
+     * Niveau 1 (rendu reel) : la barre de navigation « Espace Admin v2 » n'affiche les
+     * modules que via une liste blanche de cles codee en dur dans
+     * resources/views/admin/partials/nav-espace-v2.blade.php.
+     *
+     * Ce test echoue si la cle `finance-control` en est retiree : sans lui, le module
+     * devient invisible dans l'interface alors que routes et permissions restent correctes.
+     */
+    public function test_navbar_renders_the_module_for_super_admin_only(): void
+    {
+        $admin = $this->adminUser();
+        $admin->givePermissionTo(Permission::findOrCreate('dashboard.view', 'web'));
+        $admin->givePermissionTo(Permission::findOrCreate('dashboard.overview.view', 'web'));
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $html = $this->actingAs($admin->fresh())->get('/admin/dashboard/vue-globale')->getContent();
+
+        $this->assertStringContainsString('/admin/finance/travel-projects', $html);
+        $this->assertStringContainsString('/admin/finance/dashboard', $html);
+
+        // Le role legacy `Admin` (attribue a tout compte is_admin) ne voit rien.
+        $legacy = $this->nonAdminUser('Admin');
+        $legacy->givePermissionTo(Permission::findOrCreate('dashboard.view', 'web'));
+        $legacy->givePermissionTo(Permission::findOrCreate('dashboard.overview.view', 'web'));
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $legacyHtml = $this->actingAs($legacy->fresh())->get('/admin/dashboard/vue-globale')->getContent();
+        $this->assertStringNotContainsString('/admin/finance/travel-projects', $legacyHtml);
     }
 
     /** Niveau 1 : le menu n'expose le module qu'au role super_admin. */

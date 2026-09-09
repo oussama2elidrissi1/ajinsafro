@@ -18,6 +18,9 @@ class DatabaseSeeder extends Seeder
             BranchesSeeder::class,
             AdminPermissionsSeeder::class,
             AjinsafroRolesSeeder::class,
+            // Doit suivre AdminPermissionsSeeder et AjinsafroRolesSeeder :
+            // le role super_admin doit exister et ne pas etre ecrase ensuite.
+            SuperAdminAccountsSeeder::class,
             PartnerDemoSeeder::class,
             BranchAccountsSeeder::class,
             NormalizeAjinsafroTestUsersSeeder::class,
