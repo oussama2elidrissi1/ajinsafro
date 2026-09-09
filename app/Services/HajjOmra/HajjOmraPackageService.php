@@ -131,11 +131,27 @@ class HajjOmraPackageService
      * @param  array<int, array<string, mixed>>  $rows
      * @param  callable(array<string, mixed>, int): (array<string, mixed>|null)  $mapper
      *         retourne les attributs a ecrire, ou null pour ignorer la ligne
+     * @param  callable(array<string, mixed>): (string|null)|null  $naturalKey
+     *         cle metier de repli quand la ligne arrive sans identifiant (ex. la date d'un
+     *         depart, protegee par un index unique). Sans elle, un formulaire poste sans id
+     *         — cas des offres creees avant la refonte — provoquerait une violation
+     *         de contrainte unique au lieu de mettre a jour la ligne existante.
      */
-    private function syncCollection(HasMany $relation, array $rows, callable $mapper): void
+    private function syncCollection(HasMany $relation, array $rows, callable $mapper, ?callable $naturalKey = null): void
     {
         /** @var Collection $existing */
         $existing = $relation->get()->keyBy('id');
+
+        $byNaturalKey = [];
+        if ($naturalKey !== null) {
+            foreach ($existing as $model) {
+                $key = $naturalKey($model->getAttributes());
+                if ($key !== null && ! isset($byNaturalKey[$key])) {
+                    $byNaturalKey[$key] = $model;
+                }
+            }
+        }
+
         $keptIds = [];
         $position = 0;
 
@@ -148,18 +164,27 @@ class HajjOmraPackageService
 
             $position++;
             $id = (int) ($row['id'] ?? 0);
+            $target = null;
 
             if ($id > 0 && $existing->has($id)) {
-                $model = $existing->get($id);
-                $model->fill($attributes);
-                $model->save();
-                $keptIds[] = $id;
+                $target = $existing->get($id);
+            } elseif ($naturalKey !== null) {
+                $key = $naturalKey($attributes);
+                if ($key !== null && isset($byNaturalKey[$key]) && ! in_array((int) $byNaturalKey[$key]->id, $keptIds, true)) {
+                    $target = $byNaturalKey[$key];
+                }
+            }
+
+            if ($target !== null) {
+                $target->fill($attributes);
+                $target->save();
+                $keptIds[] = (int) $target->id;
 
                 continue;
             }
 
             $created = $relation->create($attributes);
-            $keptIds[] = $created->id;
+            $keptIds[] = (int) $created->id;
         }
 
         // Seules les lignes reellement retirees du formulaire sont supprimees.
@@ -218,6 +243,14 @@ class HajjOmraPackageService
                 'internal_notes' => trim((string) ($row['internal_notes'] ?? '')) ?: null,
                 'sort_order' => $position + 1,
             ];
+        }, static function (array $attributes): ?string {
+            $date = $attributes['departure_date'] ?? null;
+
+            if ($date instanceof \DateTimeInterface) {
+                return $date->format('Y-m-d');
+            }
+
+            return $date ? substr((string) $date, 0, 10) : null;
         });
     }
 

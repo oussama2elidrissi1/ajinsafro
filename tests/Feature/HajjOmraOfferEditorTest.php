@@ -336,7 +336,6 @@ class HajjOmraOfferEditorTest extends TestCase
             ['id' => $kept->id, 'room_type' => 'quadruple', 'price' => 54000, 'stock' => 18, 'is_active' => 1],
         ];
 
-        $this->withoutExceptionHandling(); // DEBUG
         $this->actingAs($admin)->put(route('admin.hajj-omra.update', $package), $payload);
 
         $this->assertSame(1, $package->roomPrices()->count());
