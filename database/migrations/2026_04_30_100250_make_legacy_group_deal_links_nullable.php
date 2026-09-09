@@ -5,8 +5,21 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
+    /**
+     * Ces instructions (DROP FOREIGN KEY / MODIFY) sont propres a MySQL.
+     * Sur un autre moteur la migration est sans objet et ne doit pas echouer.
+     */
+    private function supportsInlineAlter(): bool
+    {
+        return DB::connection()->getDriverName() === 'mysql';
+    }
+
     public function up(): void
     {
+        if (! $this->supportsInlineAlter()) {
+            return;
+        }
+
         DB::statement('ALTER TABLE group_deal_pricing_tiers DROP FOREIGN KEY group_deal_pricing_tiers_voyage_id_foreign');
         DB::statement('ALTER TABLE group_deal_pricing_tiers MODIFY voyage_id BIGINT UNSIGNED NULL');
         DB::statement('ALTER TABLE group_deal_pricing_tiers ADD CONSTRAINT group_deal_pricing_tiers_voyage_id_foreign FOREIGN KEY (voyage_id) REFERENCES voyages(id) ON DELETE CASCADE');
@@ -19,6 +32,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (! $this->supportsInlineAlter()) {
+            return;
+        }
+
         DB::statement('ALTER TABLE group_deal_pricing_tiers DROP FOREIGN KEY group_deal_pricing_tiers_voyage_id_foreign');
         DB::statement('ALTER TABLE group_deal_pricing_tiers MODIFY voyage_id BIGINT UNSIGNED NOT NULL');
         DB::statement('ALTER TABLE group_deal_pricing_tiers ADD CONSTRAINT group_deal_pricing_tiers_voyage_id_foreign FOREIGN KEY (voyage_id) REFERENCES voyages(id) ON DELETE CASCADE');

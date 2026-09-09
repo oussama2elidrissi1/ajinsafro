@@ -42,6 +42,8 @@ return new class extends Migration
 
         $prefix = DB::connection($connection)->getTablePrefix();
         $tableName = $prefix . 'aj_tour_flights';
+        // Les instructions ALTER ... MODIFY ci-dessous sont propres a MySQL.
+        $isMysql = DB::connection($connection)->getDriverName() === 'mysql';
         // Skip alter if table not reachable (e.g. missing on this connection)
         try {
             DB::connection($connection)->selectOne("SELECT 1 FROM {$tableName} LIMIT 1");
@@ -54,11 +56,13 @@ return new class extends Migration
                 $table->enum('flight_type', ['outbound', 'inbound'])->nullable()->after('tour_id');
             });
             DB::connection($connection)->statement(
-                "UPDATE {$tableName} SET flight_type = IF(segment_number = 1, 'outbound', 'inbound') WHERE flight_type IS NULL"
+                "UPDATE {$tableName} SET flight_type = CASE WHEN segment_number = 1 THEN 'outbound' ELSE 'inbound' END WHERE flight_type IS NULL"
             );
-            DB::connection($connection)->statement(
-                "ALTER TABLE {$tableName} MODIFY flight_type ENUM('outbound','inbound') NOT NULL"
-            );
+            if ($isMysql) {
+                DB::connection($connection)->statement(
+                    "ALTER TABLE {$tableName} MODIFY flight_type ENUM('outbound','inbound') NOT NULL"
+                );
+            }
         }
 
         if (!$schema->hasColumn('aj_tour_flights', 'from_city')) {
@@ -95,9 +99,11 @@ return new class extends Migration
             });
         }
         if ($schema->hasColumn('aj_tour_flights', 'is_tentative')) {
-            DB::connection($connection)->statement(
-                "ALTER TABLE {$tableName} MODIFY is_tentative TINYINT(1) NOT NULL DEFAULT 1"
-            );
+            if ($isMysql) {
+                DB::connection($connection)->statement(
+                    "ALTER TABLE {$tableName} MODIFY is_tentative TINYINT(1) NOT NULL DEFAULT 1"
+                );
+            }
         }
 
         if ($schema->hasColumn('aj_tour_flights', 'segment_number')) {

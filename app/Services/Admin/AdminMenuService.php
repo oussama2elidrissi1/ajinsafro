@@ -118,6 +118,12 @@ class AdminMenuService
             return false;
         }
 
+        // Garde par Gate : utilisee par les modules dont l'acces ne doit pas pouvoir etre
+        // accorde via l'ecran Roles & Permissions (ex. Finance & Controle).
+        if (! empty($item['gate']) && ! $user->can((string) $item['gate'])) {
+            return false;
+        }
+
         if (! $this->userCanAccessPermission($user, $item['permission'] ?? null)) {
             return false;
         }

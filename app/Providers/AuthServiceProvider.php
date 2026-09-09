@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
-// use Illuminate\Support\Facades\Gate;
+use App\Models\User;
+use App\Support\FinanceControlPermissions;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -21,6 +23,15 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        /**
+         * Acces au module « Finance & Controle ».
+         *
+         * Defini comme Gate et non comme permission Spatie : il ne peut donc etre accorde
+         * depuis l'ecran Roles & Permissions, et le menu applique exactement la meme regle
+         * que le middleware `finance.control`.
+         */
+        Gate::define(FinanceControlPermissions::ACCESS_GATE, function (User $user): bool {
+            return FinanceControlPermissions::userIsFinanceAdmin($user);
+        });
     }
 }

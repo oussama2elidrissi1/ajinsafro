@@ -25,6 +25,16 @@ use App\Http\Controllers\Admin\FinanceController;
 use App\Http\Controllers\Admin\Finance\AgentCommissionController as FinanceAgentCommissionController;
 use App\Http\Controllers\Admin\Finance\ChargeTypeController as FinanceChargeTypeController;
 use App\Http\Controllers\Admin\Finance\DepartureFinanceController;
+use App\Http\Controllers\Admin\Finance\Control\ClientCollectionController as FinanceClientCollectionController;
+use App\Http\Controllers\Admin\Finance\Control\FinanceDashboardController;
+use App\Http\Controllers\Admin\Finance\Control\FinanceExportController;
+use App\Http\Controllers\Admin\Finance\Control\FinanceResultController;
+use App\Http\Controllers\Admin\Finance\Control\FinanceSupplierController;
+use App\Http\Controllers\Admin\Finance\Control\FinancialDocumentController;
+use App\Http\Controllers\Admin\Finance\Control\StructuralExpenseController;
+use App\Http\Controllers\Admin\Finance\Control\TravelExpenseController;
+use App\Http\Controllers\Admin\Finance\Control\TravelProjectController;
+use App\Http\Controllers\Admin\Finance\Control\TreasuryController;
 use App\Http\Controllers\Admin\GroupDeals\GroupDealController;
 use App\Http\Controllers\Admin\GroupDeals\OfferController as GroupDealOfferController;
 use App\Http\Controllers\Admin\HajjOmraBookingRequestController;
@@ -558,6 +568,61 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::post('finance/commissions/{entry}/reverse', [FinanceAgentCommissionController::class, 'reverse'])->name('finance.commissions.reverse');
         Route::post('finance/commissions/{entry}/adjust', [FinanceAgentCommissionController::class, 'adjust'])->name('finance.commissions.adjust');
         Route::get('finance/rapports-financiers', [FinanceController::class, 'page'])->name('finance.rapports-financiers')->defaults('submenu', 'rapports-financiers');
+
+        /*
+        |----------------------------------------------------------------------
+        | Module « Finance & Controle » — reserve a l'administration
+        |----------------------------------------------------------------------
+        | Le middleware `finance.control` s'ajoute a `auth` + `admin` + `route.permission`
+        | deja portes par le groupe parent. Un role operationnel qui saisirait une de ces
+        | URLs recoit un 403, meme si une permission lui avait ete attribuee par erreur.
+        */
+        Route::middleware('finance.control')
+            ->prefix('finance')
+            ->name('finance.control.')
+            ->group(function () {
+                Route::get('dashboard', [FinanceDashboardController::class, 'index'])->name('dashboard');
+
+                Route::get('travel-projects', [TravelProjectController::class, 'index'])->name('travel-projects.index');
+                Route::get('travel-projects/{departure}', [TravelProjectController::class, 'show'])->name('travel-projects.show')->whereNumber('departure');
+
+                Route::get('client-collections', [FinanceClientCollectionController::class, 'index'])->name('client-collections.index');
+
+                Route::get('travel-expenses', [TravelExpenseController::class, 'index'])->name('travel-expenses.index');
+                Route::get('travel-expenses/create', [TravelExpenseController::class, 'create'])->name('travel-expenses.create');
+                Route::post('travel-expenses', [TravelExpenseController::class, 'store'])->name('travel-expenses.store');
+                Route::get('travel-expenses/{travel_expense}/edit', [TravelExpenseController::class, 'edit'])->name('travel-expenses.edit')->whereNumber('travel_expense');
+                Route::put('travel-expenses/{travel_expense}', [TravelExpenseController::class, 'update'])->name('travel-expenses.update')->whereNumber('travel_expense');
+                Route::post('travel-expenses/{travel_expense}/cancel', [TravelExpenseController::class, 'cancel'])->name('travel-expenses.cancel')->whereNumber('travel_expense');
+                Route::post('travel-expenses/{travel_expense}/validate', [TravelExpenseController::class, 'validateCharge'])->name('travel-expenses.validate')->whereNumber('travel_expense');
+
+                Route::get('structural-expenses', [StructuralExpenseController::class, 'index'])->name('structural-expenses.index');
+                Route::get('structural-expenses/create', [StructuralExpenseController::class, 'create'])->name('structural-expenses.create');
+                Route::post('structural-expenses', [StructuralExpenseController::class, 'store'])->name('structural-expenses.store');
+                Route::get('structural-expenses/recurrences', [StructuralExpenseController::class, 'recurrences'])->name('structural-expenses.recurrences');
+                Route::post('structural-expenses/recurrences', [StructuralExpenseController::class, 'generateRecurrences'])->name('structural-expenses.recurrences.generate');
+                Route::get('structural-expenses/{structural_expense}/edit', [StructuralExpenseController::class, 'edit'])->name('structural-expenses.edit')->whereNumber('structural_expense');
+                Route::put('structural-expenses/{structural_expense}', [StructuralExpenseController::class, 'update'])->name('structural-expenses.update')->whereNumber('structural_expense');
+                Route::post('structural-expenses/{structural_expense}/cancel', [StructuralExpenseController::class, 'cancel'])->name('structural-expenses.cancel')->whereNumber('structural_expense');
+
+                Route::get('suppliers', [FinanceSupplierController::class, 'index'])->name('suppliers.index');
+                Route::post('suppliers', [FinanceSupplierController::class, 'store'])->name('suppliers.store');
+                Route::put('suppliers/{supplier}', [FinanceSupplierController::class, 'update'])->name('suppliers.update')->whereNumber('supplier');
+                Route::delete('suppliers/{supplier}', [FinanceSupplierController::class, 'destroy'])->name('suppliers.destroy')->whereNumber('supplier');
+
+                Route::get('treasury', [TreasuryController::class, 'index'])->name('treasury.index');
+
+                Route::get('documents', [FinancialDocumentController::class, 'index'])->name('documents.index');
+                Route::post('documents', [FinancialDocumentController::class, 'store'])->name('documents.store');
+                Route::put('documents/{document}', [FinancialDocumentController::class, 'update'])->name('documents.update')->whereNumber('document');
+                Route::post('documents/{document}/status', [FinancialDocumentController::class, 'setStatus'])->name('documents.status')->whereNumber('document');
+                Route::get('documents/{document}/download', [FinancialDocumentController::class, 'download'])->name('documents.download')->whereNumber('document');
+
+                Route::get('results', [FinanceResultController::class, 'index'])->name('results.index');
+
+                Route::get('exports', [FinanceExportController::class, 'index'])->name('exports.index');
+                Route::get('exports/{type}', [FinanceExportController::class, 'download'])->name('exports.download');
+            });
 
         Route::get('partners', [PartnersController::class, 'index'])->name('partners.index');
         Route::get('partners/partenaires', [PartnersController::class, 'page'])->name('partners.partenaires')->defaults('submenu', 'partenaires');

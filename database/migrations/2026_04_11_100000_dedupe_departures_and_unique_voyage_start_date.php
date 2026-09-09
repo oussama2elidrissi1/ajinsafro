@@ -119,6 +119,19 @@ return new class extends Migration
 
     private function indexExists(string $connection, string $table, string $indexName): bool
     {
+        // information_schema n'existe pas sur tous les moteurs : on interroge le catalogue natif.
+        if (DB::connection($connection)->getDriverName() === 'sqlite') {
+            $rows = DB::connection($connection)->select('PRAGMA index_list('.$table.')');
+
+            foreach ($rows as $row) {
+                if (($row->name ?? null) === $indexName) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         $db = Schema::connection($connection)->getConnection()->getDatabaseName();
 
         $row = DB::connection($connection)->selectOne(

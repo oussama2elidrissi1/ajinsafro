@@ -62,6 +62,7 @@ class Kernel extends HttpKernel
         'auth' => \App\Http\Middleware\Authenticate::class,
         'ensure.not.locked' => \App\Http\Middleware\EnsureNotLocked::class,
         'agent.voyage-manager' => \App\Http\Middleware\EnsureAgentCanManageVoyages::class,
+        'finance.control' => \App\Http\Middleware\EnsureFinanceControlAccess::class,
         'route.permission' => \App\Http\Middleware\EnsureRoutePermission::class,
         'sync.token' => \App\Http\Middleware\VerifySyncToken::class,
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,

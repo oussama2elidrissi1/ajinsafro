@@ -251,6 +251,28 @@ return [
             ],
         ],
         [
+            // Module reserve a l'administration : la cle `gate` applique exactement la meme
+            // regle que le middleware `finance.control`, et ne peut pas etre accordee
+            // depuis l'ecran Roles & Permissions.
+            'key' => 'finance-control',
+            'label' => 'Finance & Contrôle',
+            'icon' => 'bx bx-line-chart',
+            'gate' => 'finance-control.access',
+            'permission' => 'finance.projects.view',
+            'children' => [
+                ['label' => 'Vue d\'ensemble', 'route' => 'admin.finance.control.dashboard', 'gate' => 'finance-control.access', 'permission' => 'finance.projects.view'],
+                ['label' => 'Projets de voyage', 'route' => 'admin.finance.control.travel-projects.index', 'gate' => 'finance-control.access', 'permission' => 'finance.projects.view', 'active_patterns' => ['admin.finance.control.travel-projects.*']],
+                ['label' => 'Encaissements clients', 'route' => 'admin.finance.control.client-collections.index', 'gate' => 'finance-control.access', 'permission' => 'finance.projects.view'],
+                ['label' => 'Charges voyages', 'route' => 'admin.finance.control.travel-expenses.index', 'gate' => 'finance-control.access', 'permission' => 'finance.expenses.manage', 'active_patterns' => ['admin.finance.control.travel-expenses.*']],
+                ['label' => 'Charges de structure', 'route' => 'admin.finance.control.structural-expenses.index', 'gate' => 'finance-control.access', 'permission' => 'finance.structural_expenses.manage', 'active_patterns' => ['admin.finance.control.structural-expenses.*']],
+                ['label' => 'Fournisseurs', 'route' => 'admin.finance.control.suppliers.index', 'gate' => 'finance-control.access', 'permission' => 'finance.expenses.manage'],
+                ['label' => 'Trésorerie', 'route' => 'admin.finance.control.treasury.index', 'gate' => 'finance-control.access', 'permission' => 'finance.treasury.view'],
+                ['label' => 'Justificatifs', 'route' => 'admin.finance.control.documents.index', 'gate' => 'finance-control.access', 'permission' => 'finance.documents.manage', 'active_patterns' => ['admin.finance.control.documents.*']],
+                ['label' => 'Résultats & marges', 'route' => 'admin.finance.control.results.index', 'gate' => 'finance-control.access', 'permission' => 'finance.reporting.view'],
+                ['label' => 'Exports comptables', 'route' => 'admin.finance.control.exports.index', 'gate' => 'finance-control.access', 'permission' => 'finance.reporting.view', 'active_patterns' => ['admin.finance.control.exports.*']],
+            ],
+        ],
+        [
             'key' => 'partners',
             'label' => 'Partenaires',
             'icon' => 'bx bx-group',
@@ -530,6 +552,8 @@ return [
         'admin.wordpress.transfers.' => 'transfers.offers.view',
         'admin.operations.' => 'operations.view',
         'admin.visa.' => 'visa.view',
+        // Plus specifique que 'admin.finance.' : doit rester declare AVANT lui.
+        'admin.finance.control.' => 'finance.projects.view',
         'admin.finance.' => 'finance.view',
         'admin.partners.' => 'partners.view',
         'admin.reporting.' => 'reporting.view',

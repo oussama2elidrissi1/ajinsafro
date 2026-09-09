@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class ReservationPayment extends Model
 {
@@ -43,5 +44,16 @@ class ReservationPayment extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Justificatifs du module Finance & Controle rattaches a cet encaissement.
+     *
+     * Complementaire de `proof_file` deja porte par la table : le centre de justificatifs
+     * considere l'un ou l'autre comme couvrant, sans imposer de resaisie.
+     */
+    public function financialDocuments(): MorphMany
+    {
+        return $this->morphMany(FinancialDocument::class, 'documentable');
     }
 }
