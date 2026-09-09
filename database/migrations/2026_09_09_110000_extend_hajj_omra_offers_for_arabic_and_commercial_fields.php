@@ -165,9 +165,10 @@ return new class extends Migration
 
     /**
      * Reprend les donnees deja saisies dans les anciens champs plats, sans les supprimer :
-     * les colonnes makkah_*/madinah_* et les JSON included_items/excluded_items restent en
-     * place et continuent d'alimenter l'API publique. On les recopie simplement dans les
-     * nouvelles structures pour que l'editeur refonte parte des donnees existantes.
+     * les colonnes makkah_... et madinah_... ainsi que les JSON included_items et
+     * excluded_items restent en place et continuent d'alimenter l'API publique. On les
+     * recopie simplement dans les nouvelles structures pour que l'editeur refondu
+     * parte des donnees deja saisies.
      */
     private function backfill(): void
     {
