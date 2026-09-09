@@ -194,8 +194,11 @@ class FinanceControlModuleTest extends TestCase
     }
 
     /**
-     * Role operationnel a qui on attribue volontairement les permissions du module :
-     * il ne doit malgre tout pas pouvoir entrer.
+     * Role NON super_admin a qui on attribue volontairement les permissions du module
+     * ET la permission d'acces admin : il ne doit malgre tout pas pouvoir entrer.
+     *
+     * C'est le scenario le plus defavorable : il prouve que le verrou est bien le role,
+     * et non une permission qui pourrait etre cochee par erreur dans Roles & Permissions.
      */
     private function nonAdminUser(string $roleName = BranchScopeService::ROLE_CHEF_COMMERCIAL): User
     {
@@ -270,10 +273,20 @@ class FinanceControlModuleTest extends TestCase
         $this->seedProject();
 
         $roles = [
-            BranchScopeService::ROLE_CHEF_COMMERCIAL,
+            BranchScopeService::ROLE_SIEGE_ADMIN,
             BranchScopeService::ROLE_BRANCH_ADMIN,
+            BranchScopeService::ROLE_CHEF_COMMERCIAL,
+            BranchScopeService::ROLE_MANAGER,
             BranchScopeService::ROLE_COMMERCIAL,
             BranchScopeService::ROLE_AGENT,
+            BranchScopeService::ROLE_COMMERCIAL_RESERVATIONS_ONLY,
+            'partner_admin',
+            'partner_agent',
+            // Roles legacy : ils ne doivent pas davantage ouvrir le module.
+            'Admin',
+            'Super Admin',
+            'Admin Siege',
+            'Comptable',
         ];
 
         foreach ($roles as $roleName) {
@@ -287,7 +300,81 @@ class FinanceControlModuleTest extends TestCase
         }
     }
 
-    /** 2 bis. Les ecritures sont refusees aux non-admins. */
+    /**
+     * 2 bis. Aucun contournement legacy : ni `is_admin`, ni compte dev, ni `access_mode = custom`
+     * ne doit ouvrir le module a un utilisateur qui n'a pas le role super_admin.
+     */
+    public function test_legacy_is_admin_flag_does_not_bypass_the_role_restriction(): void
+    {
+        $this->seedProject();
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+        $permissions = [AdminMenuPermissionRegistry::ADMIN_ACCESS_PERMISSION];
+        foreach (FinanceControlPermissions::moduleOwned() as $name) {
+            $permissions[] = $name;
+        }
+        foreach ($permissions as $name) {
+            Permission::findOrCreate($name, 'web');
+        }
+
+        // Compte historique : flag is_admin, permissions directes, aucun role super_admin.
+        $legacyAdmin = User::factory()->create(['is_admin' => true]);
+        $legacyAdmin->givePermissionTo($permissions);
+
+        // Compte dev identifie par email (App\Models\User::DEV_ADMIN_EMAILS).
+        $devAccount = User::factory()->create(['email' => 'dev@ajinsafro.ma', 'is_admin' => true]);
+        $devAccount->givePermissionTo($permissions);
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        foreach ([$legacyAdmin->fresh(), $devAccount->fresh()] as $user) {
+            $this->assertFalse(FinanceControlPermissions::userIsFinanceAdmin($user));
+            $this->actingAs($user)->get(route('admin.finance.control.dashboard'))->assertForbidden();
+            $this->actingAs($user)->get(route('admin.finance.control.travel-projects.index'))->assertForbidden();
+            $this->actingAs($user)->get(route('admin.finance.control.structural-expenses.index'))->assertForbidden();
+        }
+    }
+
+    /** Le role super_admin, et lui seul, ouvre le module. */
+    public function test_only_super_admin_role_grants_access(): void
+    {
+        $this->seedProject();
+
+        $superAdmin = $this->adminUser();
+        $this->assertTrue($superAdmin->hasRole(BranchScopeService::ROLE_SUPER_ADMIN));
+        $this->assertTrue(FinanceControlPermissions::userIsFinanceAdmin($superAdmin));
+        $this->actingAs($superAdmin)->get(route('admin.finance.control.dashboard'))->assertOk();
+
+        $siegeAdmin = $this->nonAdminUser(BranchScopeService::ROLE_SIEGE_ADMIN);
+        $this->assertFalse(FinanceControlPermissions::userIsFinanceAdmin($siegeAdmin));
+        $this->actingAs($siegeAdmin)->get(route('admin.finance.control.dashboard'))->assertForbidden();
+
+        // La liste des roles autorises reste volontairement reduite a un seul element.
+        $this->assertSame([BranchScopeService::ROLE_SUPER_ADMIN], FinanceControlPermissions::adminRoleNames());
+    }
+
+    /** Le seeder de roles ne redistribue jamais les permissions du module. */
+    public function test_role_seeder_grants_finance_permissions_to_super_admin_only(): void
+    {
+        $this->seed(\Database\Seeders\AjinsafroRolesSeeder::class);
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        foreach (FinanceControlPermissions::moduleOwned() as $permission) {
+            $holders = Role::query()
+                ->whereHas('permissions', fn ($query) => $query->where('name', $permission))
+                ->pluck('name')
+                ->all();
+
+            $this->assertSame(
+                [BranchScopeService::ROLE_SUPER_ADMIN],
+                $holders,
+                "La permission {$permission} ne doit etre portee que par super_admin."
+            );
+        }
+    }
+
+    /** 2 ter. Les ecritures sont refusees aux non-admins. */
     public function test_non_admin_cannot_write_finance_data(): void
     {
         $this->seedProject();
@@ -306,8 +393,8 @@ class FinanceControlModuleTest extends TestCase
         $this->assertDatabaseMissing('structural_expenses', ['label' => 'Tentative']);
     }
 
-    /** 2 ter. Le menu ne contient pas le module pour un non-admin, mais le contient pour l'admin. */
-    public function test_menu_exposes_module_only_to_admin(): void
+    /** Niveau 1 : le menu n'expose le module qu'au role super_admin. */
+    public function test_menu_exposes_module_only_to_super_admin(): void
     {
         $menuService = app(\App\Services\Admin\AdminMenuService::class);
 
@@ -315,8 +402,25 @@ class FinanceControlModuleTest extends TestCase
             return collect($menuService->buildForUser($user))->pluck('key')->all();
         };
 
-        $this->assertNotContains('finance-control', $keysFor($this->nonAdminUser()));
         $this->assertContains('finance-control', $keysFor($this->adminUser()));
+
+        foreach ([
+            BranchScopeService::ROLE_SIEGE_ADMIN,
+            BranchScopeService::ROLE_BRANCH_ADMIN,
+            BranchScopeService::ROLE_CHEF_COMMERCIAL,
+            BranchScopeService::ROLE_MANAGER,
+            BranchScopeService::ROLE_COMMERCIAL,
+            BranchScopeService::ROLE_AGENT,
+            'partner_admin',
+            'Admin',
+            'Super Admin',
+        ] as $roleName) {
+            $this->assertNotContains(
+                'finance-control',
+                $keysFor($this->nonAdminUser($roleName)),
+                "Le menu ne doit pas apparaitre pour le role {$roleName}."
+            );
+        }
     }
 
     /** 3, 4, 7, 8, 9. Les paiements remontent et tous les totaux du projet sont exacts. */

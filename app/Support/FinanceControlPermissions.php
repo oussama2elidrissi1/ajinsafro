@@ -8,13 +8,14 @@ use App\Services\BranchScopeService;
 /**
  * Referentiel du module « Finance & Controle ».
  *
- * Ce module est reserve a l'administration globale de la plateforme (siege / super admin),
- * exactement la meme portee que celle deja appliquee par
- * {@see \App\Http\Middleware\EnsureRoutePermission::GLOBAL_ADMIN_ROUTE_PREFIXES}.
+ * Ce module est reserve au SEUL role d'administrateur principal : `super_admin`.
+ * Aucun autre role n'y a acces, y compris `siege_admin` et les roles legacy `Admin` /
+ * `Super Admin`. Le flag historique `users.is_admin` et l'appartenance aux comptes dev
+ * ne donnent AUCUN acces : seule la detention du role compte.
  *
- * Les permissions listees ici ne doivent JAMAIS etre distribuees aux roles operationnels
- * (branch_admin, chef_commercial, manager, commercial, agent, partenaires) : elles sont
- * explicitement exclues des lots calcules par AjinsafroRolesSeeder.
+ * Les permissions listees ici ne doivent JAMAIS etre distribuees a un autre role : elles
+ * sont explicitement exclues de tous les lots calcules par AjinsafroRolesSeeder, et la
+ * migration 2026_09_09_100200 purge toute attribution parasite (role ou utilisateur).
  */
 class FinanceControlPermissions
 {
@@ -60,7 +61,11 @@ class FinanceControlPermissions
     }
 
     /**
-     * Roles autorises a detenir les permissions du module (graphies actuelles + legacy).
+     * Seul role autorise a detenir les permissions du module.
+     *
+     * Volontairement reduit a `super_admin` : les graphies legacy `Super Admin` et `Admin`
+     * en sont exclues car le role `Admin` est attribue automatiquement a tout compte
+     * `is_admin` par AdminPermissionsSeeder, ce qui rouvrirait le module par la bande.
      *
      * @return list<string>
      */
@@ -68,16 +73,14 @@ class FinanceControlPermissions
     {
         return [
             BranchScopeService::ROLE_SUPER_ADMIN,
-            BranchScopeService::ROLE_SIEGE_ADMIN,
-            'Super Admin',
-            'Admin Siege',
-            'Admin Siège',
-            'Admin',
         ];
     }
 
     /**
-     * Seule source de verite de l'acces au module.
+     * Seule source de verite de l'acces au module (menu, middleware, controleurs, FormRequests).
+     *
+     * Aucun contournement possible : ni `is_admin`, ni `access_mode = custom`, ni compte dev,
+     * ni permission attribuee par erreur. Seule la detention du role `super_admin` ouvre l'acces.
      */
     public static function userIsFinanceAdmin(?User $user): bool
     {
@@ -85,16 +88,10 @@ class FinanceControlPermissions
             return false;
         }
 
+        // Defense en profondeur : un compte portail client ou partenaire reste exclu
+        // meme si le role lui avait ete attribue par erreur.
         if ($user->isClientPortal() || $user->isPartner()) {
             return false;
-        }
-
-        if (method_exists($user, 'isDevAdmin') && $user->isDevAdmin()) {
-            return true;
-        }
-
-        if ((bool) ($user->is_admin ?? false)) {
-            return true;
         }
 
         return $user->hasRole(self::adminRoleNames());

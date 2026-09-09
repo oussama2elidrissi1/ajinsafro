@@ -26,11 +26,12 @@ class AjinsafroRolesSeeder extends Seeder
         $this->ensurePermissionsExist();
 
         $allPermissions = Permission::where('guard_name', 'web')->pluck('name')->all();
-        // Module « Finance & Controle » : strictement reserve a l'administration globale.
+        // Module « Finance & Controle » : strictement reserve au role super_admin.
         // Ces permissions commencent par « finance. » et seraient donc happees par les lots
-        // calcules plus bas ; on les isole explicitement pour qu'aucun role operationnel
-        // ne les recoive lors d'un re-seed.
+        // calcules plus bas ; on les isole explicitement pour qu'aucun autre role
+        // (siege_admin inclus) ne les recoive lors d'un re-seed.
         $financeControl = FinanceControlPermissions::moduleOwned();
+        $allExceptFinanceControl = array_values(array_diff($allPermissions, $financeControl));
         // Administration globale (plateforme) : réservée au siège / super admin.
         // Les responsables de point de vente gardent settings.users.* (Gestion RH de leur agence).
         $globalAdministration = array_values(array_filter($allPermissions, function (string $p): bool {
@@ -84,8 +85,9 @@ class AjinsafroRolesSeeder extends Seeder
             ], true);
         }));
 
+        // super_admin est le SEUL role a recevoir les permissions Finance & Controle.
         $this->createRole(BranchScopeService::ROLE_SUPER_ADMIN, $allPermissions);
-        $this->createRole(BranchScopeService::ROLE_SIEGE_ADMIN, $allPermissions);
+        $this->createRole(BranchScopeService::ROLE_SIEGE_ADMIN, $allExceptFinanceControl);
         $this->createRole(BranchScopeService::ROLE_BRANCH_ADMIN, $branchAdmin);
         $this->createRole(BranchScopeService::ROLE_CHEF_COMMERCIAL, $branchScoped);
         $this->createRole(BranchScopeService::ROLE_COMMERCIAL, $commercial);

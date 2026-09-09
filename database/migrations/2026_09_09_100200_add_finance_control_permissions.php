@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use App\Support\FinanceControlPermissions;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
@@ -10,11 +9,15 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
- * Cree les permissions du module « Finance & Controle » et ne les attribue QU'AUX roles
- * d'administration globale (super_admin / siege_admin et graphies legacy).
+ * Cree les permissions du module « Finance & Controle » et ne les attribue QU'AU seul role
+ * `super_admin`.
  *
- * Aucune permission existante n'est modifiee : les autres roles conservent strictement
- * les droits qu'ils avaient avant cette migration.
+ * Tout autre porteur de ces permissions est purge : role (role_has_permissions) comme
+ * utilisateur en attribution directe (model_has_permissions). Le flag `users.is_admin`
+ * ne donne aucun droit ici.
+ *
+ * Aucune permission ETRANGERE au module n'est touchee : les autres roles conservent
+ * strictement les droits qu'ils avaient avant cette migration.
  */
 return new class extends Migration
 {
@@ -42,17 +45,8 @@ return new class extends Migration
             }
         }
 
-        // Comptes super-administrateurs historiques identifies par le flag is_admin.
-        if (Schema::hasTable('users') && Schema::hasColumn('users', 'is_admin')) {
-            User::query()->where('is_admin', true)->get()->each(function (User $user) use ($permissions) {
-                foreach ($permissions as $permission) {
-                    $user->givePermissionTo($permission);
-                }
-            });
-        }
-
-        // Filet de securite : si un role operationnel avait deja recu l'une de ces
-        // permissions (synchronisation anterieure), on la retire.
+        // Filet de securite : toute attribution a un autre role (synchronisation anterieure
+        // ou reglage manuel) est retiree.
         $allowedRoleIds = $adminRoles->pluck('id')->all();
         $permissionIds = collect($permissions)->pluck('id')->all();
 
@@ -61,6 +55,14 @@ return new class extends Migration
                 ->whereIn('permission_id', $permissionIds)
                 ->when($allowedRoleIds !== [], fn ($query) => $query->whereNotIn('role_id', $allowedRoleIds))
                 ->delete();
+
+            // Attributions directes a un utilisateur : aucune n'est legitime pour ce module,
+            // l'acces passe exclusivement par le role super_admin.
+            if (Schema::hasTable('model_has_permissions')) {
+                DB::table('model_has_permissions')
+                    ->whereIn('permission_id', $permissionIds)
+                    ->delete();
+            }
         }
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
