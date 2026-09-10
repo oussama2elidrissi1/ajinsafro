@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 
 class HajjOmraPackage extends Model
 {
-    use HasBilingualFields;
+    use HasBilingualFields { localized as private localizedField; }
 
     /**
      * Champs a double saisie. La colonne nue porte le francais, la colonne `_ar` l'arabe.
@@ -21,17 +21,11 @@ class HajjOmraPackage extends Model
     protected array $bilingual = [
         'title',
         'short_description',
-        'short_description_ar',
         'description',
-        'description_ar',
         'booking_conditions',
-        'booking_conditions_ar',
         'required_documents',
-        'required_documents_ar',
         'meta_title',
-        'meta_title_ar',
         'meta_description',
-        'meta_description_ar',
     ];
 
     public const TYPE_OMRA = 'omra';
@@ -168,6 +162,16 @@ class HajjOmraPackage extends Model
                 $package->published_at = null;
             }
         });
+    }
+
+    public function formulas(): HasMany
+    {
+        return $this->hasMany(HajjOmraFormula::class, 'package_id')->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function localized(string $field, ?string $locale = null): ?string
+    {
+        return $this->localizedField($field, $locale) ?: ($this->{$field.'_ar'} ?: null);
     }
 
     public function images(): HasMany
@@ -310,25 +314,21 @@ class HajjOmraPackage extends Model
 
     public function getPriceFromValueAttribute(): ?float
     {
-        $departurePrice = $this->relationLoaded('departures')
-            ? $this->departures->pluck('price_from')->filter(fn ($value) => $value !== null)->min()
-            : $this->departures()->whereNotNull('price_from')->min('price_from');
-
-        $roomPrice = $this->relationLoaded('roomPrices')
-            ? $this->roomPrices->pluck('price')->filter(fn ($value) => $value !== null)->min()
-            : $this->roomPrices()->min('price');
-
-        $candidates = array_filter([
-            $departurePrice !== null ? (float) $departurePrice : null,
-            $roomPrice !== null ? (float) $roomPrice : null,
-            $this->adult_price !== null ? (float) $this->adult_price : null,
-        ], static fn ($value) => $value !== null);
-
-        if ($candidates === []) {
-            return null;
+        $this->loadMissing(['formulas.tariffs', 'formulas.stays', 'roomPrices', 'departures']);
+        if ($this->formulas->isNotEmpty()) {
+            $prices = $this->formulas->filter(fn ($formula) => $formula->is_active
+                && ($formula->name_fr || $formula->name_ar) && $formula->stays->isNotEmpty())
+                ->flatMap(fn ($formula) => $formula->tariffs->where('is_active', true))->pluck('price');
+            return $prices->isEmpty() ? null : (float) $prices->min();
         }
-
-        return (float) min($candidates);
+        if ($this->roomPrices->isNotEmpty()) {
+            $prices = $this->roomPrices->where('is_active', true)->pluck('price');
+            return $prices->isEmpty() ? null : (float) $prices->min();
+        }
+        // Legacy offers without a tariff catalogue retain their fallback prices.
+        $prices = $this->departures->where('status', HajjOmraDeparture::STATUS_PUBLISHED)
+            ->pluck('price_from')->push($this->adult_price)->filter(fn ($price) => $price !== null);
+        return $prices->isEmpty() ? null : (float) $prices->min();
     }
 
     public function getRemainingPlacesAttribute(): int

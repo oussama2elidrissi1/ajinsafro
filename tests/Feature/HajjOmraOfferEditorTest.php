@@ -237,9 +237,9 @@ class HajjOmraOfferEditorTest extends TestCase
     {
         $admin = $this->admin();
 
-        // Titre francais manquant
+        // Au moins un titre français ou arabe est nécessaire.
         $this->actingAs($admin)
-            ->post(route('admin.hajj-omra.store'), $this->payload(['title_fr' => '']))
+            ->post(route('admin.hajj-omra.store'), $this->payload(['title_fr' => '', 'title_ar' => '']))
             ->assertSessionHasErrors('title');
 
         // Duree nulle

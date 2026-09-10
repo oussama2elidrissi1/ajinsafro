@@ -25,6 +25,12 @@
                     <div><strong>Adultes :</strong> {{ $requestItem->adults }}</div>
                     <div><strong>Enfants :</strong> {{ $requestItem->children }}</div>
                     <div><strong>Type chambre :</strong> {{ $requestItem->room_type ?: 'Non precise' }}</div>
+                    @if ($requestItem->formula)
+                        <div><strong>Formule :</strong> <bdi>{{ $requestItem->formula->localized('name') }}</bdi> (#{{ $requestItem->formula_id }})</div>
+                    @endif
+                    @if ($requestItem->tariff)
+                        <div><strong>Tarif lié :</strong> {{ $requestItem->tariff->room_type_label }} (#{{ $requestItem->tariff_id }})</div>
+                    @endif
                     <div><strong>Date depart choisie :</strong> {{ $requestItem->selected_departure_date?->format('d/m/Y') ?: '?' }}</div>
                     <div><strong>Message :</strong><br>{!! nl2br(e($requestItem->message ?: 'Aucun message')) !!}</div>
                 </div>
@@ -70,5 +76,4 @@
         </div>
     </div>
 @endsection
-
 

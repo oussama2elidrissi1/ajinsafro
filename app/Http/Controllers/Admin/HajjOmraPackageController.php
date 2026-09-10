@@ -20,6 +20,7 @@ class HajjOmraPackageController extends Controller
     /** Relations chargees par l'editeur et l'apercu. */
     private const EDITOR_RELATIONS = [
         'images', 'departures', 'roomPrices', 'programDays', 'hotels', 'serviceItems',
+        'formulas.tariffs', 'formulas.stays.hotel', 'formulas.stays.programDay', 'formulas.departure',
     ];
 
     public function __construct(private readonly HajjOmraPackageService $packages)
@@ -36,7 +37,7 @@ class HajjOmraPackageController extends Controller
         ];
 
         $query = HajjOmraPackage::query()
-            ->with(['departures', 'roomPrices'])
+            ->with(['departures', 'roomPrices', 'formulas.tariffs', 'formulas.stays'])
             ->withCount('bookingRequests');
 
         if ($filters['q'] !== '') {

@@ -1,50 +1,10 @@
 {{-- Etape 4 : hebergement detaille, un bloc par ville. --}}
 @php
-    $existingHotels = $package->hotels->keyBy('city');
-
-    // Makkah et Madinah sont toujours proposes ; les autres etapes sont ajoutables.
-    $defaultCities = [
-        \App\Models\HajjOmraPackageHotel::CITY_MAKKAH,
-        \App\Models\HajjOmraPackageHotel::CITY_MADINAH,
-    ];
-
     $hotelRows = old('hotels');
-
     if ($hotelRows === null) {
-        $hotelRows = [];
-        foreach ($defaultCities as $city) {
-            $hotel = $existingHotels->get($city);
-            $hotelRows[] = [
-                'id' => $hotel?->id,
-                'city' => $city,
-                'name' => $hotel?->name,
-                'stars' => $hotel?->stars,
-                'haram_distance' => $hotel?->haram_distance,
-                'location' => $hotel?->location,
-                'nights' => $hotel?->nights,
-                'meal_plan' => $hotel?->meal_plan,
-                'description' => $hotel?->description,
-                'description_ar' => $hotel?->description_ar,
-                'image_path' => $hotel?->image_path,
-            ];
-        }
-
-        foreach ($package->hotels as $hotel) {
-            if (! in_array($hotel->city, $defaultCities, true)) {
-                $hotelRows[] = [
-                    'id' => $hotel->id,
-                    'city' => $hotel->city,
-                    'name' => $hotel->name,
-                    'stars' => $hotel->stars,
-                    'haram_distance' => $hotel->haram_distance,
-                    'location' => $hotel->location,
-                    'nights' => $hotel->nights,
-                    'meal_plan' => $hotel->meal_plan,
-                    'description' => $hotel->description,
-                    'description_ar' => $hotel->description_ar,
-                    'image_path' => $hotel->image_path,
-                ];
-            }
+        $hotelRows = $package->hotels->map(fn ($hotel) => $hotel->getAttributes())->values()->all();
+        foreach (['makkah', 'madinah'] as $city) {
+            if (! $package->hotels->contains('city', $city)) { $hotelRows[] = ['city' => $city]; }
         }
     }
 @endphp
@@ -53,7 +13,7 @@
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
         <div>
             <h6 class="text-uppercase text-muted small mb-1">Hébergement</h6>
-            <p class="text-muted small mb-0">Un bloc par ville. Un bloc laissé entièrement vide n'est pas enregistré.</p>
+            <p class="text-muted small mb-0">Un bloc par hébergement. Plusieurs hôtels par ville sont possibles. Un bloc laissé entièrement vide n'est pas enregistré.</p>
         </div>
         <button type="button" class="btn btn-sm btn-outline-primary" data-repeat-add="hotel">+ Ajouter une étape</button>
     </div>
@@ -62,6 +22,7 @@
         @foreach ($hotelRows as $i => $row)
             <div class="ho-row" data-repeat-item>
                 <input type="hidden" name="hotels[{{ $i }}][id]" value="{{ $row['id'] ?? '' }}">
+<input type="hidden" name="hotels[{{ $i }}][client_key]" value="{{ $row['client_key'] ?? '' }}">
                 <div class="row g-3">
                     <div class="col-md-3">
                         <label class="form-label small text-muted">Ville</label>
@@ -72,8 +33,8 @@
                         </select>
                     </div>
                     <div class="col-md-5">
-                        <label class="form-label small text-muted">Nom de l'hôtel</label>
-                        <input type="text" name="hotels[{{ $i }}][name]" class="form-control form-control-sm" value="{{ $row['name'] ?? '' }}">
+                        <div data-lang-pane="fr"><label class="form-label small text-muted">Nom de l'hôtel</label>
+                        <input type="text" name="hotels[{{ $i }}][name]" class="form-control form-control-sm" value="{{ $row['name'] ?? '' }}"></div><div data-lang-pane="ar"><label class="form-label small text-muted">اسم الفندق</label><input type="text" dir="rtl" lang="ar" name="hotels[{{ $i }}][name_ar]" class="form-control form-control-sm" value="{{ $row['name_ar'] ?? '' }}"></div>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label small text-muted">Catégorie</label>
@@ -94,8 +55,8 @@
                         <input type="text" name="hotels[{{ $i }}][haram_distance]" class="form-control form-control-sm" value="{{ $row['haram_distance'] ?? '' }}" placeholder="300 m">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label small text-muted">Localisation</label>
-                        <input type="text" name="hotels[{{ $i }}][location]" class="form-control form-control-sm" value="{{ $row['location'] ?? '' }}" placeholder="Quartier Ajyad">
+                        <div data-lang-pane="fr"><label class="form-label small text-muted">Localisation</label>
+                        <input type="text" name="hotels[{{ $i }}][location]" class="form-control form-control-sm" value="{{ $row['location'] ?? '' }}" placeholder="Quartier Ajyad"></div><div data-lang-pane="ar"><label class="form-label small text-muted">الموقع</label><input type="text" dir="rtl" lang="ar" name="hotels[{{ $i }}][location_ar]" class="form-control form-control-sm" value="{{ $row['location_ar'] ?? '' }}"></div>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label small text-muted">Nombre de nuits</label>
@@ -137,6 +98,7 @@
     <template data-repeat-template="hotel">
         <div class="ho-row" data-repeat-item>
             <input type="hidden" name="hotels[__INDEX__][id]" value="">
+<input type="hidden" name="hotels[__INDEX__][client_key]" value="">
             <div class="row g-3">
                 <div class="col-md-3">
                     <label class="form-label small text-muted">Ville</label>
@@ -147,8 +109,8 @@
                     </select>
                 </div>
                 <div class="col-md-5">
-                    <label class="form-label small text-muted">Nom de l'hôtel</label>
-                    <input type="text" name="hotels[__INDEX__][name]" class="form-control form-control-sm">
+                    <div data-lang-pane="fr"><label class="form-label small text-muted">Nom de l'hôtel</label>
+                    <input type="text" name="hotels[__INDEX__][name]" class="form-control form-control-sm"></div><div data-lang-pane="ar"><label class="form-label small text-muted">اسم الفندق</label><input type="text" dir="rtl" lang="ar" name="hotels[__INDEX__][name_ar]" class="form-control form-control-sm"></div>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label small text-muted">Catégorie</label>
@@ -166,8 +128,8 @@
                     <input type="text" name="hotels[__INDEX__][haram_distance]" class="form-control form-control-sm">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label small text-muted">Localisation</label>
-                    <input type="text" name="hotels[__INDEX__][location]" class="form-control form-control-sm">
+                    <div data-lang-pane="fr"><label class="form-label small text-muted">Localisation</label>
+                    <input type="text" name="hotels[__INDEX__][location]" class="form-control form-control-sm"></div><div data-lang-pane="ar"><label class="form-label small text-muted">الموقع</label><input type="text" dir="rtl" lang="ar" name="hotels[__INDEX__][location_ar]" class="form-control form-control-sm"></div>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label small text-muted">Nombre de nuits</label>

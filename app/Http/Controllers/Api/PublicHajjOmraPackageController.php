@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\HajjOmraPackage;
+use App\Services\HajjOmra\HajjOmraCommercialPresenter;
 use Illuminate\Http\JsonResponse;
 
 class PublicHajjOmraPackageController extends Controller
@@ -15,11 +16,11 @@ class PublicHajjOmraPackageController extends Controller
                 'images',
                 'departures' => fn ($query) => $query->orderBy('departure_date'),
                 'roomPrices',
+                ...HajjOmraCommercialPresenter::RELATIONS,
             ])
             ->whereIn('status', [
                 HajjOmraPackage::STATUS_PUBLISHED,
                 HajjOmraPackage::STATUS_FULL,
-                HajjOmraPackage::STATUS_EXPIRED,
             ])
             ->orderByDesc('is_featured')
             ->orderBy('sort_order')
@@ -31,7 +32,7 @@ class PublicHajjOmraPackageController extends Controller
         $items = $packages->map(function (HajjOmraPackage $package) use ($publicBase) {
             $nextDeparture = $package->resolveUpcomingDeparture();
 
-            return [
+            return array_merge([
                 'id' => $package->id,
                 'title' => $package->title,
                 'slug' => $package->slug,
@@ -68,7 +69,7 @@ class PublicHajjOmraPackageController extends Controller
                     'remaining_places' => $departure->remaining_places,
                     'price_from' => $departure->price_from !== null ? (float) $departure->price_from : null,
                 ])->values()->all(),
-            ];
+            ], app(HajjOmraCommercialPresenter::class)->package($package));
         })->values();
 
         $departureCities = $packages
@@ -91,7 +92,7 @@ class PublicHajjOmraPackageController extends Controller
     public function show(string $slug): JsonResponse
     {
         $package = HajjOmraPackage::query()
-            ->with(['images', 'departures', 'roomPrices', 'programDays'])
+            ->with(['images', ...HajjOmraCommercialPresenter::RELATIONS])
             ->where('slug', $slug)
             ->whereIn('status', [
                 HajjOmraPackage::STATUS_PUBLISHED,
@@ -103,7 +104,7 @@ class PublicHajjOmraPackageController extends Controller
         $publicBase = rtrim((string) config('app.public_url', config('app.url', 'https://ajinsafro.net')), '/');
 
         return response()->json([
-            'data' => [
+            'data' => array_merge([
                 'id' => $package->id,
                 'title' => $package->title,
                 'slug' => $package->slug,
@@ -163,7 +164,6 @@ class PublicHajjOmraPackageController extends Controller
                     'reserved_places' => $departure->reserved_places,
                     'remaining_places' => $departure->remaining_places,
                     'price_from' => $departure->price_from !== null ? (float) $departure->price_from : null,
-                    'internal_notes' => $departure->internal_notes,
                 ])->values()->all(),
                 'room_prices' => $package->roomPrices->map(fn ($roomPrice) => [
                     'room_type' => $roomPrice->room_type,
@@ -178,7 +178,7 @@ class PublicHajjOmraPackageController extends Controller
                     'city' => $programDay->city,
                     'image_url' => $programDay->image_url,
                 ])->values()->all(),
-            ],
+            ], app(HajjOmraCommercialPresenter::class)->package($package)),
         ]);
     }
 }

@@ -54,7 +54,7 @@ class HajjOmraBookingRequestController extends Controller
 
     public function show(HajjOmraBookingRequest $requestItem): View
     {
-        $requestItem->load(['package.departures', 'departure']);
+        $requestItem->load(['package.departures', 'departure', 'formula', 'tariff']);
 
         return view('admin.hajj-omra.requests.show', [
             'requestItem' => $requestItem,
@@ -73,6 +73,11 @@ class HajjOmraBookingRequestController extends Controller
 
         $requestItem->status = $data['status'];
         $requestItem->package_id = $data['package_id'] ?: $requestItem->package_id;
+        if ($requestItem->isDirty('package_id')) {
+            $requestItem->formula_id = null;
+            $requestItem->tariff_id = null;
+            $requestItem->departure_id = null;
+        }
         $requestItem->internal_notes = $data['internal_notes'] ?? null;
 
         if ($requestItem->package_id) {

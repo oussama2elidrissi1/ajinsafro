@@ -32,20 +32,35 @@ class HajjOmraPackageService
     public function save(HajjOmraPackage $package, array $data): HajjOmraPackage
     {
         return DB::transaction(function () use ($package, $data) {
+            $retainedFormulas = ! array_key_exists('formulas', $data) && $package->exists
+                ? $package->formulas()->with(['stays', 'tariffs'])->get() : collect();
             $package->fill($this->packageAttributes($data));
             $package->save();
 
-            $this->syncRoomPrices($package, $data['room_prices'] ?? []);
-            $this->syncDepartures($package, $data['departures'] ?? []);
-            $this->syncHotels($package, $data['hotels'] ?? []);
-            $this->syncProgramDays($package, $data['program_days'] ?? []);
+            $maps['room_prices'] = $this->syncRoomPrices($package, $data['room_prices'] ?? []);
+            $maps['departures'] = $this->syncDepartures($package, $data['departures'] ?? []);
+            $maps['hotels'] = $this->syncHotels($package, $data['hotels'] ?? []);
+            $maps['program_days'] = $this->syncProgramDays($package, $data['program_days'] ?? []);
+            // Old clients must not silently detach formulas when removing a linked source.
+            foreach ($retainedFormulas as $formula) {
+                $links = ['departures' => [$formula->departure_id], 'room_prices' => $formula->tariffs->modelKeys(),
+                    'hotels' => $formula->stays->pluck('hotel_id')->all(), 'program_days' => $formula->stays->pluck('program_day_id')->all()];
+                foreach ($links as $collection => $ids) {
+                    foreach (array_filter($ids) as $id) {
+                        if (! isset($maps[$collection][(string) $id])) {
+                            throw \Illuminate\Validation\ValidationException::withMessages(['formulas' => 'Un élément retiré est lié à une formule. Modifiez d’abord ses liaisons dans les formules commerciales.']);
+                        }
+                    }
+                }
+            }
             $this->syncServiceItems($package, $data['service_items'] ?? []);
+            app(HajjOmraFormulaService::class)->sync($package, $data['formulas'] ?? null, $maps);
             $this->syncGallery($package, $data['gallery'] ?? []);
 
             $this->syncLegacyMirrors($package);
 
             return $package->fresh([
-                'images', 'departures', 'roomPrices', 'programDays', 'hotels', 'serviceItems',
+                'images', 'departures', 'roomPrices', 'programDays', 'hotels', 'serviceItems', 'formulas.tariffs', 'formulas.stays',
             ]);
         });
     }
@@ -110,7 +125,7 @@ class HajjOmraPackageService
 
         foreach ($keys as $key) {
             if (array_key_exists($key, $data)) {
-                $attributes[$key] = $data[$key] === '' ? null : $data[$key];
+                $attributes[$key] = $key === 'title' ? (string) $data[$key] : ($data[$key] === '' ? null : $data[$key]);
             }
         }
 
@@ -137,7 +152,7 @@ class HajjOmraPackageService
      *         — cas des offres creees avant la refonte — provoquerait une violation
      *         de contrainte unique au lieu de mettre a jour la ligne existante.
      */
-    private function syncCollection(HasMany $relation, array $rows, callable $mapper, ?callable $naturalKey = null): void
+    private function syncCollection(HasMany $relation, array $rows, callable $mapper, ?callable $naturalKey = null): array
     {
         /** @var Collection $existing */
         $existing = $relation->get()->keyBy('id');
@@ -153,6 +168,7 @@ class HajjOmraPackageService
         }
 
         $keptIds = [];
+        $references = [];
         $position = 0;
 
         foreach (array_values($rows) as $row) {
@@ -179,12 +195,19 @@ class HajjOmraPackageService
                 $target->fill($attributes);
                 $target->save();
                 $keptIds[] = (int) $target->id;
-
+                $references[(string) $target->id] = (int) $target->id;
+                if (! empty($row['client_key'])) {
+                    $references['new:'.$row['client_key']] = (int) $target->id;
+                }
                 continue;
             }
 
             $created = $relation->create($attributes);
             $keptIds[] = (int) $created->id;
+            $references[(string) $created->id] = (int) $created->id;
+            if (! empty($row['client_key'])) {
+                $references['new:'.$row['client_key']] = (int) $created->id;
+            }
         }
 
         // Seules les lignes reellement retirees du formulaire sont supprimees.
@@ -193,14 +216,16 @@ class HajjOmraPackageService
         if ($removed->isNotEmpty()) {
             $relation->whereIn('id', $removed->all())->delete();
         }
+
+        return $references;
     }
 
     /**
      * @param  array<int, array<string, mixed>>  $rows
      */
-    private function syncRoomPrices(HajjOmraPackage $package, array $rows): void
+    private function syncRoomPrices(HajjOmraPackage $package, array $rows): array
     {
-        $this->syncCollection($package->roomPrices(), $rows, function (array $row, int $position): ?array {
+        return $this->syncCollection($package->roomPrices(), $rows, function (array $row, int $position): ?array {
             $type = trim((string) ($row['room_type'] ?? ''));
             $price = $row['price'] ?? null;
 
@@ -223,9 +248,9 @@ class HajjOmraPackageService
     /**
      * @param  array<int, array<string, mixed>>  $rows
      */
-    private function syncDepartures(HajjOmraPackage $package, array $rows): void
+    private function syncDepartures(HajjOmraPackage $package, array $rows): array
     {
-        $this->syncCollection($package->departures(), $rows, function (array $row, int $position): ?array {
+        return $this->syncCollection($package->departures(), $rows, function (array $row, int $position): ?array {
             $date = $row['departure_date'] ?? null;
 
             if (! $date) {
@@ -257,20 +282,22 @@ class HajjOmraPackageService
     /**
      * @param  array<int, array<string, mixed>>  $rows
      */
-    private function syncHotels(HajjOmraPackage $package, array $rows): void
+    private function syncHotels(HajjOmraPackage $package, array $rows): array
     {
-        $this->syncCollection($package->hotels(), $rows, function (array $row, int $position): ?array {
+        return $this->syncCollection($package->hotels(), $rows, function (array $row, int $position): ?array {
             $name = trim((string) ($row['name'] ?? ''));
             $distance = trim((string) ($row['haram_distance'] ?? ''));
 
             // Un bloc entierement vide n'est pas enregistre.
-            if ($name === '' && $distance === '') {
+            if ($name === '' && trim((string) ($row['name_ar'] ?? '')) === '' && $distance === '') {
                 return null;
             }
 
             return [
                 'city' => $row['city'] ?? HajjOmraPackageHotel::CITY_MAKKAH,
                 'name' => $name ?: null,
+                'name_ar' => trim((string) ($row['name_ar'] ?? '')) ?: null,
+                'location_ar' => trim((string) ($row['location_ar'] ?? '')) ?: null,
                 'stars' => ($row['stars'] ?? '') !== '' ? (int) $row['stars'] : null,
                 'haram_distance' => $distance ?: null,
                 'location' => trim((string) ($row['location'] ?? '')) ?: null,
@@ -287,9 +314,9 @@ class HajjOmraPackageService
     /**
      * @param  array<int, array<string, mixed>>  $rows
      */
-    private function syncProgramDays(HajjOmraPackage $package, array $rows): void
+    private function syncProgramDays(HajjOmraPackage $package, array $rows): array
     {
-        $this->syncCollection($package->programDays(), $rows, function (array $row, int $position): ?array {
+        return $this->syncCollection($package->programDays(), $rows, function (array $row, int $position): ?array {
             $dayNumber = (int) ($row['day_number'] ?? 0);
 
             if ($dayNumber <= 0) {
@@ -344,6 +371,7 @@ class HajjOmraPackageService
     {
         $existing = $package->images()->get()->keyBy('id');
         $keptIds = [];
+        $references = [];
         $position = 0;
 
         foreach (array_values($rows) as $row) {

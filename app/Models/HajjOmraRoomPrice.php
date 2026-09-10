@@ -50,8 +50,11 @@ class HajjOmraRoomPrice extends Model
         return $this->belongsTo(HajjOmraPackage::class, 'package_id');
     }
 
-    public static function roomTypeOptions(): array
+    public static function roomTypeOptions(string $locale = 'fr'): array
     {
+        if ($locale === 'ar') {
+            return array_combine(self::ROOM_TYPES, ['الخماسي', 'الرباعي', 'الثلاثي', 'الثنائي', 'الفردي']);
+        }
         return [
             self::ROOM_QUINTUPLE => 'Chambre quintuple',
             self::ROOM_QUADRUPLE => 'Chambre quadruple',

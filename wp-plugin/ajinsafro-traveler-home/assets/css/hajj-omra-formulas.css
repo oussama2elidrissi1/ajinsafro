@@ -1,0 +1,36 @@
+.ajho-formulas{color:#172820;font-family:inherit;font-size:14px;line-height:1.6;min-width:0;text-align:start}
+.ajho-formulas *{box-sizing:border-box}
+.ajho-formula{border:1px solid #dce6e0;border-radius:16px;overflow:hidden;background:#fff;margin-block:18px}
+.ajho-formula__heading{padding:20px 24px;background:#f1f7f3;border-bottom:1px solid #dce6e0;display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px}
+.ajho-formula__heading h3{margin:0;font-size:19px;font-weight:600;flex:1 1 180px;color:#184b37}
+.ajho-formula__heading p{flex-basis:100%;margin:0;color:#596960;white-space:normal}
+.ajho-formula__heading>span{font-size:12px}
+.ajho-formula__table{width:100%;border-collapse:collapse;table-layout:fixed;margin:0;color:inherit}
+.ajho-formula__table caption{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.ajho-formula__table th{background:#fafbf9;font-weight:500;font-size:12px;color:#5a6e60}
+.ajho-formula__table th,.ajho-formula__table td{padding:18px 12px;text-align:start;border:0;border-inline-end:1px solid #e8ede8;vertical-align:top;overflow-wrap:anywhere}
+.ajho-formula__table th:last-child,.ajho-formula__table td:last-child{border-inline-end:0}
+.ajho-formula__hotel{display:flex;flex-direction:column;align-items:flex-start;gap:4px;font-size:12px}
+.ajho-formula__hotel+.ajho-formula__hotel{margin-top:20px;padding-top:16px;border-top:1px solid #e8ede8}
+.ajho-formula__hotel strong{font-weight:600;font-size:14px;line-height:1.5}
+.ajho-formula__hotel p{margin:4px 0 0;color:#68736b;white-space:normal}
+.ajho-formula__hotel img{width:100%;height:80px;object-fit:cover;border-radius:6px;margin-bottom:5px}
+.ajho-formula__stars{color:#b38c38;letter-spacing:1px}
+.ajho-formula__dates{font-size:11px;color:#596960}
+.ajho-formulas bdi{white-space:nowrap}
+.ajho-formula__price strong{font-weight:650;color:#1b6547;font-size:15px;display:block}
+.ajho-formula__price small,.ajho-formula__price del{display:block;font-size:11px;color:#6d776e}
+.ajho-formula__mobile-label{display:none}
+.ajho-formulas[dir=rtl]{font-family:'Noto Sans Arabic',Tahoma,Arial,sans-serif}
+@media(max-width:900px){
+ .ajho-formula__heading{padding:18px}
+ .ajho-formula__table,.ajho-formula__table tbody,.ajho-formula__table tr{display:block;width:100%}
+ .ajho-formula__table thead{display:none}
+ .ajho-formula__table td{display:block;width:100%;border-inline-end:0;border-bottom:1px solid #e8ede8;padding:16px 18px}
+ .ajho-formula__table td:last-child{border-bottom:0}
+ .ajho-formula__mobile-label{display:block;color:#647468;font-weight:500;margin-bottom:10px;font-size:12px}
+ .ajho-formula__table .ajho-formula__price{display:flex;justify-content:space-between;gap:16px;align-items:center}
+ .ajho-formula__price .ajho-formula__mobile-label{margin:0}
+ .ajho-formula__price>div{text-align:end}
+ .ajho-formula__hotel img{max-width:180px;height:95px}
+}

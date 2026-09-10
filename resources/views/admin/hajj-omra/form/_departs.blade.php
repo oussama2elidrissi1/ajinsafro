@@ -31,6 +31,7 @@
             @endphp
             <div class="ho-row" data-repeat-item>
                 <input type="hidden" name="departures[{{ $i }}][id]" value="{{ $row['id'] ?? '' }}">
+<input type="hidden" name="departures[{{ $i }}][client_key]" value="{{ $row['client_key'] ?? '' }}">
                 <div class="row g-2 align-items-end">
                     <div class="col-md-2">
                         <label class="form-label small text-muted">Date de départ</label>
@@ -95,6 +96,7 @@
     <template data-repeat-template="departure">
         <div class="ho-row" data-repeat-item>
             <input type="hidden" name="departures[__INDEX__][id]" value="">
+<input type="hidden" name="departures[__INDEX__][client_key]" value="">
             <div class="row g-2 align-items-end">
                 <div class="col-md-2">
                     <label class="form-label small text-muted">Date de départ</label>

@@ -87,7 +87,8 @@
 .page-hajj-omra-detail .ajod-gallery__main { position: relative; overflow: hidden; border-radius: 16px; background: #eaf1f8; }
 .page-hajj-omra-detail .ajod-gallery img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .page-hajj-omra-detail .ajod-gallery__count { position: absolute; right: 10px; bottom: 10px; padding: 3px 9px; border-radius: 8px; background: rgba(13,55,103,.82); color: #fff; font: 11px 'JetBrains Mono', Consolas, monospace; }
-.page-hajj-omra-detail .ajod-gallery__thumbs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: calc(50% - 5px); overflow-y: auto; gap: 10px; min-height: 0; padding: 2px; }
+.page-hajj-omra-detail .ajod-gallery__thumbs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: calc(50% - 5px); overflow-y: auto; gap: 10px; min-height: 0; padding: 2px; scrollbar-width: none; }
+.page-hajj-omra-detail .ajod-gallery__thumbs::-webkit-scrollbar { display: none; }
 .page-hajj-omra-detail .ajod-gallery__thumb { min-width: 0; padding: 0; border: 1px solid var(--ajod-line); border-radius: 14px; overflow: hidden; background: #eaf1f8; cursor: pointer; }
 .page-hajj-omra-detail .ajod-gallery__thumb[aria-pressed="true"] { outline: 2px solid var(--ajod-accent); outline-offset: -2px; }
 .page-hajj-omra-detail .ajod-tabs { position: sticky; top: calc(var(--ajod-header-height) + var(--ajod-admin-height)); z-index: 20; margin-top: 22px; background: rgba(244,248,252,.96); backdrop-filter: blur(8px); border-bottom: 1px solid var(--ajod-line); }
@@ -219,3 +220,12 @@
 @media (prefers-reduced-motion: reduce) {
   .page-hajj-omra-detail .ajod * { scroll-behavior: auto; transition: none; }
 }
+
+.page-hajj-omra-detail .ajod-language{display:flex;justify-content:flex-end;gap:14px;padding-top:18px;font-size:13px}
+.page-hajj-omra-detail .ajod-language a[aria-current]{color:#16724d;text-decoration:underline;text-underline-offset:5px}
+.page-hajj-omra-detail .ajod[dir=rtl]{font-family:'Noto Sans Arabic',Tahoma,Arial,sans-serif;text-align:right}
+.page-hajj-omra-detail .ajod[dir=rtl] .ajod-mono,.page-hajj-omra-detail .ajod[dir=rtl] .ajod-price,.page-hajj-omra-detail .ajod[dir=rtl] input[type=number],.page-hajj-omra-detail .ajod[dir=rtl] input[type=tel],.page-hajj-omra-detail .ajod[dir=rtl] input[type=email]{direction:ltr;unicode-bidi:isolate}
+.page-hajj-omra-detail .ajod[dir=rtl] .ajod-hero__copy{left:auto;right:0}
+.page-hajj-omra-detail .ajod[dir=rtl] .ajod-list{padding-left:0;padding-right:20px}
+.page-hajj-omra-detail .ajod[dir=rtl] .ajod-timeline__body{text-align:right}
+.page-hajj-omra-detail .ajod[dir=rtl] .ajod-form label{text-align:right}

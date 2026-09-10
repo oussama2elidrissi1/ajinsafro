@@ -226,6 +226,13 @@
                                                     {{ $permission['label'] }}
                                                     <span class="permission-key">{{ $permission['name'] }}</span>
                                                 </label>
+                                                @if(($permission['pages'] ?? []) !== [])
+                                                    <ul class="permission-pages list-unstyled text-muted small mb-0 mt-1">
+                                                        @foreach($permission['pages'] as $page)
+                                                            <li>&middot; {{ $page['label'] }}</li>
+                                                        @endforeach
+                                                    </ul>
+                                                @endif
                                             </div>
                                         </div>
                                     @endforeach
@@ -273,6 +280,13 @@
                                                             {{ $permission['label'] }}
                                                             <span class="permission-key">{{ $permission['name'] }}</span>
                                                         </label>
+                                                        @if(($permission['pages'] ?? []) !== [])
+                                                            <ul class="permission-pages list-unstyled text-muted small mb-0 mt-1">
+                                                                @foreach($permission['pages'] as $page)
+                                                                    <li>&middot; {{ $page['label'] }}</li>
+                                                                @endforeach
+                                                            </ul>
+                                                        @endif
                                                     </div>
                                                 </div>
                                             @endforeach
@@ -280,6 +294,19 @@
                                     </div>
                                 </div>
                             @endforeach
+
+                            @if(($section['unmanaged'] ?? []) !== [])
+                                <div class="permissions-module">
+                                    <div class="permissions-module-header">
+                                        <h6 class="mb-0">Pages sans permission dédiée</h6>
+                                    </div>
+                                    <div class="permissions-module-body p-3">
+                                        @foreach($section['unmanaged'] as $page)
+                                            <div class="text-muted small">&middot; {{ $page['label'] }} — {{ $page['reason'] }}</div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     </section>
                 @endforeach

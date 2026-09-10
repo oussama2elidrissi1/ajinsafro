@@ -22,6 +22,8 @@ class HajjOmraBookingRequest extends Model
     protected $fillable = [
         'package_id',
         'departure_id',
+        'formula_id',
+        'tariff_id',
         'package_title',
         'selected_departure_date',
         'full_name',
@@ -60,6 +62,16 @@ class HajjOmraBookingRequest extends Model
     public function departure(): BelongsTo
     {
         return $this->belongsTo(HajjOmraDeparture::class, 'departure_id');
+    }
+
+    public function formula(): BelongsTo
+    {
+        return $this->belongsTo(HajjOmraFormula::class, 'formula_id');
+    }
+
+    public function tariff(): BelongsTo
+    {
+        return $this->belongsTo(HajjOmraRoomPrice::class, 'tariff_id');
     }
 
     public static function statusOptions(): array

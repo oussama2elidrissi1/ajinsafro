@@ -442,15 +442,20 @@
     editor.querySelector('[data-role="save-draft"]')?.addEventListener('click', function () {
         var status = editor.querySelector('#status');
         if (status) { status.value = 'draft'; }
+        editor.dispatchEvent(new CustomEvent('ho:before-submit'));
         form.submit();
     });
 
     editor.querySelector('[data-role="publish"]')?.addEventListener('click', function () {
         var status = editor.querySelector('#status');
         if (status) { status.value = 'published'; }
+        editor.dispatchEvent(new CustomEvent('ho:before-submit'));
         form.submit();
     });
 
     renumberDays();
 })();
 </script>
+
+<script src="{{ asset('js/hajj-omra-editor-locale.js') }}"></script>
+<script src="{{ asset('js/hajj-omra-formulas.js') }}"></script>

@@ -10,6 +10,40 @@ use PHPUnit\Framework\TestCase;
 #[RunTestsInSeparateProcesses]
 class HajjOmraDetailTemplateTest extends TestCase
 {
+    public function test_formula_table_uses_dynamic_room_types_fallback_languages_and_safe_json(): void
+    {
+        $formula = ['id' => 3, 'name_fr' => 'Séjour Médine', 'name_ar' => '', 'description_fr' => '</script><script>alert(1)</script>',
+            'departure_id' => null, 'prices' => ['quintuple' => ['id' => 9, 'tariff_id' => 9, 'room_type' => 'quintuple',
+                'room_type_label' => 'Chambre quintuple', 'room_type_label_ar' => 'الخماسي', 'price' => 12000, 'stock' => 10]],
+            'accommodations' => [['id' => 4, 'city' => 'madinah', 'name' => 'Hôtel Médine', 'name_ar' => 'فندق المدينة', 'nights' => 4]]];
+        $_GET['lang'] = 'ar';
+        $html = \HajjOmraDetailFixture::render(['has_formulas' => true, 'formulas' => [$formula], 'price_from' => 12000]);
+        $document = $this->document($html);
+        $this->assertSame('rtl', $document->evaluate('string(//article/@dir)'));
+        $this->assertSame('ar', $document->evaluate('string(//article/@lang)'));
+        $this->assertSame(1, $document->query('//section[@data-formula-id="3"]')->length);
+        $this->assertStringContainsString('الخماسي', $html);
+        $this->assertStringContainsString('فندق المدينة', $html);
+        $this->assertStringContainsString('Séjour Médine', $html);
+        $this->assertSame(2, $document->query('//table[contains(@class,"ajho-formula__table")]//th')->length);
+        $this->assertSame(0, $document->query('//script[not(@type="application/json")]')->length);
+        $json = $document->evaluate('string(//script[@data-formulas-json])');
+        $this->assertSame($formula['description_fr'], json_decode($json, true, 512, JSON_THROW_ON_ERROR)[0]['description_fr']);
+        $this->assertStringNotContainsString('</script>', $json);
+        $this->assertSame('9', $document->evaluate('string(//input[@name="tariff_id"]/@value)'));
+        $this->assertSame(0, $document->query('//div[contains(@class,"ajod-room ")]')->length);
+    }
+
+    public function test_disabled_formulas_do_not_show_legacy_prices_or_selectable_tariffs(): void
+    {
+        $html = \HajjOmraDetailFixture::render(['has_formulas' => true, 'formulas' => [], 'price_from' => null]);
+        $document = $this->document($html);
+        $this->assertStringContainsString('Aucune formule disponible pour le moment.', $html);
+        $this->assertSame(1, $document->query('//select[@id="ajho-room-type"]/option')->length);
+        $this->assertSame('', $document->evaluate('string(//input[@name="tariff_id"]/@value)'));
+        $this->assertSame('Sur demande', $document->evaluate('string(//output[@data-estimate])'));
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -62,7 +96,7 @@ class HajjOmraDetailTemplateTest extends TestCase
             'selected_departure_date' => '2026-12-05', 'room_type' => 'double', 'adults' => 2, 'children' => 1,
         ], 'Vérifiez votre email.');
         $document = $this->document($html);
-        $this->assertSame(0, $document->query('//script')->length);
+        $this->assertSame(0, $document->query('//script[not(@type="application/json")]')->length);
         $this->assertSame('double', $document->evaluate('string(//select[@id="ajho-room-type"]/option[@selected]/@value)'));
         $this->assertSame('2026-12-05', $document->evaluate('string(//select[@id="ajho-departure"]/option[@selected]/@value)'));
         $this->assertSame('49 000 DH', $document->evaluate('string(//output[@data-estimate])'));

@@ -41,6 +41,7 @@
             @php $collapseId = 'hoDay'.$i; @endphp
             <div class="accordion-item ho-repeat-item mb-2" data-repeat-item>
                 <input type="hidden" name="program_days[{{ $i }}][id]" value="{{ $row['id'] ?? '' }}">
+<input type="hidden" name="program_days[{{ $i }}][client_key]" value="{{ $row['client_key'] ?? '' }}">
                 <input type="hidden" name="program_days[{{ $i }}][day_number]" value="{{ $row['day_number'] ?? ($i + 1) }}" data-role="day-number">
 
                 <h2 class="accordion-header d-flex align-items-center">
@@ -107,6 +108,7 @@
     <template data-repeat-template="day">
         <div class="accordion-item ho-repeat-item mb-2" data-repeat-item>
             <input type="hidden" name="program_days[__INDEX__][id]" value="">
+<input type="hidden" name="program_days[__INDEX__][client_key]" value="">
             <input type="hidden" name="program_days[__INDEX__][day_number]" value="" data-role="day-number">
             <h2 class="accordion-header d-flex align-items-center">
                 <span class="ho-handle px-2" title="Déplacer">⠿</span>

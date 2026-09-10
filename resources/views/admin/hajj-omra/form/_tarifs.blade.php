@@ -15,7 +15,7 @@
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
         <div>
             <h6 class="text-uppercase text-muted small mb-1">Tarifs &amp; chambres</h6>
-            <p class="text-muted small mb-0">Un tarif par type de chambre. Le plus bas devient le « à partir de » affiché au client.</p>
+            <p class="text-muted small mb-0">Liez ces tarifs aux formules ci-dessous. Le prix actif le plus bas devient le « à partir de ».</p>
         </div>
         <button type="button" class="btn btn-sm btn-outline-primary" data-repeat-add="room">+ Ajouter un tarif</button>
     </div>
@@ -38,6 +38,7 @@
                     <tr class="ho-repeat-item" data-repeat-item>
                         <td>
                             <input type="hidden" name="room_prices[{{ $i }}][id]" value="{{ $row['id'] ?? '' }}">
+<input type="hidden" name="room_prices[{{ $i }}][client_key]" value="{{ $row['client_key'] ?? '' }}">
                             <select name="room_prices[{{ $i }}][room_type]" class="form-select form-select-sm">
                                 <option value="">—</option>
                                 @foreach ($roomTypeOptions as $key => $label)
@@ -74,6 +75,7 @@
         <tr class="ho-repeat-item" data-repeat-item>
             <td>
                 <input type="hidden" name="room_prices[__INDEX__][id]" value="">
+<input type="hidden" name="room_prices[__INDEX__][client_key]" value="">
                 <select name="room_prices[__INDEX__][room_type]" class="form-select form-select-sm">
                     <option value="">—</option>
                     @foreach ($roomTypeOptions as $key => $label)
@@ -92,4 +94,5 @@
             <td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger" data-repeat-remove>Retirer</button></td>
         </tr>
     </template>
+    @include('admin.hajj-omra.form._formulas')
 </div>

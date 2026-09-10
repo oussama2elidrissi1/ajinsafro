@@ -26,7 +26,7 @@ class AdminMenuPermissionRegistry
         }
 
         foreach (config('admin_menu.items', []) as $section) {
-            $sectionNode = static::buildSectionNode($section, $available);
+            $sectionNode = static::buildSectionNode($section, $available, static::pageIndex($section));
 
             if ($sectionNode !== null) {
                 $sections[] = $sectionNode;
@@ -47,6 +47,7 @@ class AdminMenuPermissionRegistry
         }
 
         foreach (config('admin_menu.items', []) as $section) {
+            $index = static::pageIndex($section);
             $permissions = [];
             $added = [];
 
@@ -55,14 +56,15 @@ class AdminMenuPermissionRegistry
                 $added,
                 $available,
                 $section['permission'] ?? null,
-                static::accessLabel($section['label'] ?? 'Section')
+                static::accessLabel($section['label'] ?? 'Section'),
+                $index['pages']
             );
 
             foreach ($section['children'] ?? [] as $child) {
-                static::flattenNodePermissions($permissions, $added, $available, $child);
+                static::flattenNodePermissions($permissions, $added, $available, $child, $index['pages']);
             }
 
-            if ($permissions === []) {
+            if ($permissions === [] && $index['unmanaged'] === []) {
                 continue;
             }
 
@@ -70,10 +72,134 @@ class AdminMenuPermissionRegistry
                 'key' => $section['key'] ?? str()->slug((string) ($section['label'] ?? 'section')),
                 'label' => (string) ($section['label'] ?? 'Section'),
                 'permissions' => $permissions,
+                // Pages du menu qu'aucune permission ne pilote : affichees pour information,
+                // afin que l'ecran d'acces reste le reflet exact du menu.
+                'unmanaged' => $index['unmanaged'],
             ];
         }
 
         return $groups;
+    }
+
+    /**
+     * Toutes les pages du menu admin (tout noeud portant une route), avec le contexte
+     * necessaire pour les rapprocher d'une permission.
+     *
+     * @return list<array{section_key:string, section_label:string, label:string, trail:string, route:string, permissions:list<string>, reason:?string}>
+     */
+    public static function menuPages(): array
+    {
+        $pages = [];
+
+        foreach (config('admin_menu.items', []) as $section) {
+            $sectionKey = (string) ($section['key'] ?? str()->slug((string) ($section['label'] ?? 'section')));
+            $sectionLabel = (string) ($section['label'] ?? 'Section');
+            $index = static::pageIndex($section);
+
+            foreach ($index['pages'] as $permission => $permissionPages) {
+                foreach ($permissionPages as $page) {
+                    $pages[$page['route'].'|'.$page['trail']]['section_key'] = $sectionKey;
+                    $pages[$page['route'].'|'.$page['trail']]['section_label'] = $sectionLabel;
+                    $pages[$page['route'].'|'.$page['trail']]['label'] = $page['label'];
+                    $pages[$page['route'].'|'.$page['trail']]['trail'] = $page['trail'];
+                    $pages[$page['route'].'|'.$page['trail']]['route'] = $page['route'];
+                    $pages[$page['route'].'|'.$page['trail']]['permissions'][] = (string) $permission;
+                    $pages[$page['route'].'|'.$page['trail']]['reason'] = null;
+                }
+            }
+
+            foreach ($index['unmanaged'] as $page) {
+                $pages[$page['route'].'|'.$page['trail']] = [
+                    'section_key' => $sectionKey,
+                    'section_label' => $sectionLabel,
+                    'label' => $page['label'],
+                    'trail' => $page['trail'],
+                    'route' => $page['route'],
+                    'permissions' => [],
+                    'reason' => $page['reason'],
+                ];
+            }
+        }
+
+        return array_values($pages);
+    }
+
+    /**
+     * Index des pages d'une branche du menu : liste des pages par permission effective,
+     * plus les pages qu'aucune permission ne pilote.
+     *
+     * @return array{pages: array<string, list<array{label:string, trail:string, route:string}>>, unmanaged: list<array{label:string, trail:string, route:string, reason:string}>}
+     */
+    private static function pageIndex(array $section): array
+    {
+        $pages = [];
+        $unmanaged = [];
+
+        static::collectPages($section, $pages, $unmanaged, [], null);
+
+        return ['pages' => $pages, 'unmanaged' => $unmanaged];
+    }
+
+    /**
+     * Une page herite de la permission de son parent quand elle n'en declare pas :
+     * c'est exactement la regle appliquee par AdminMenuService pour l'affichage du menu.
+     */
+    private static function collectPages(array $node, array &$pages, array &$unmanaged, array $trail, mixed $inherited): void
+    {
+        $trail[] = (string) ($node['label'] ?? '?');
+        $own = $node['permission'] ?? null;
+        $effective = static::permissionNames($own) !== [] ? $own : $inherited;
+
+        if (! empty($node['route'])) {
+            $page = [
+                'label' => (string) ($node['label'] ?? '?'),
+                'trail' => implode(' › ', $trail),
+                'route' => (string) $node['route'],
+            ];
+
+            $names = static::permissionNames($effective);
+
+            if ($names === []) {
+                $unmanaged[] = $page + ['reason' => static::restrictionReason($node)];
+            } else {
+                foreach ($names as $name) {
+                    $pages[$name][] = $page;
+                }
+            }
+        }
+
+        foreach ($node['children'] ?? [] as $child) {
+            static::collectPages($child, $pages, $unmanaged, $trail, $effective);
+        }
+    }
+
+    /** @return list<string> */
+    private static function permissionNames(mixed $permission): array
+    {
+        $names = is_array($permission) ? $permission : [$permission];
+
+        return array_values(array_filter(
+            $names,
+            static fn ($name): bool => is_string($name) && $name !== ''
+        ));
+    }
+
+    /** Pourquoi une page n'a pas de case a cocher. */
+    private static function restrictionReason(array $node): string
+    {
+        if (! empty($node['emails'])) {
+            return 'Réservée à des comptes nominatifs (adresse e-mail).';
+        }
+
+        if (! empty($node['roles'])) {
+            return 'Réservée à des rôles précis.';
+        }
+
+        if (! empty($node['gate'])) {
+            return 'Réservée par une règle système non délégable.';
+        }
+
+        return 'Ouverte à tout compte ayant accès à l\'administration.';
     }
 
     public static function allPermissionNames(): array
@@ -191,6 +317,7 @@ class AdminMenuPermissionRegistry
             'label' => 'Acces systeme',
             'permissions' => $permissions,
             'modules' => [],
+            'unmanaged' => [],
         ];
     }
 
@@ -206,17 +333,22 @@ class AdminMenuPermissionRegistry
             'key' => 'system_access',
             'label' => 'Acces systeme',
             'permissions' => $permissions,
+            'unmanaged' => [],
         ];
     }
 
     private static function availableSystemPermissions(array $available): array
     {
-        return array_values(array_filter(self::SYSTEM_PERMISSIONS, static function (array $permission) use ($available): bool {
-            return isset($available[$permission['name']]);
-        }));
+        return array_values(array_map(
+            static fn (array $permission): array => $permission + ['pages' => []],
+            array_filter(
+                self::SYSTEM_PERMISSIONS,
+                static fn (array $permission): bool => isset($available[$permission['name']])
+            )
+        ));
     }
 
-    private static function buildSectionNode(array $section, array $available): ?array
+    private static function buildSectionNode(array $section, array $available, array $index): ?array
     {
         $permissions = [];
         $added = [];
@@ -227,11 +359,12 @@ class AdminMenuPermissionRegistry
             $added,
             $available,
             $section['permission'] ?? null,
-            static::accessLabel($section['label'] ?? 'Section')
+            static::accessLabel($section['label'] ?? 'Section'),
+            $index['pages']
         );
 
         foreach ($section['children'] ?? [] as $child) {
-            $module = static::buildModuleNode($child, $available);
+            $module = static::buildModuleNode($child, $available, $index['pages']);
 
             if ($module !== null) {
                 $modules[] = $module;
@@ -247,10 +380,11 @@ class AdminMenuPermissionRegistry
             'label' => (string) ($section['label'] ?? 'Section'),
             'permissions' => $permissions,
             'modules' => $modules,
+            'unmanaged' => $index['unmanaged'],
         ];
     }
 
-    private static function buildModuleNode(array $item, array $available): ?array
+    private static function buildModuleNode(array $item, array $available, array $pageIndex): ?array
     {
         $permissions = [];
         $added = [];
@@ -260,7 +394,8 @@ class AdminMenuPermissionRegistry
             $added,
             $available,
             $item['permission'] ?? null,
-            static::accessLabel($item['label'] ?? 'Module')
+            static::accessLabel($item['label'] ?? 'Module'),
+            $pageIndex
         );
 
         foreach ($item['children'] ?? [] as $child) {
@@ -270,7 +405,8 @@ class AdminMenuPermissionRegistry
                     $added,
                     $available,
                     $child['permission'] ?? null,
-                    static::accessLabel($child['label'] ?? 'Sous-module')
+                    static::accessLabel($child['label'] ?? 'Sous-module'),
+                    $pageIndex
                 );
 
                 foreach ($child['children'] as $grandChild) {
@@ -279,7 +415,8 @@ class AdminMenuPermissionRegistry
                         $added,
                         $available,
                         $grandChild['permission'] ?? null,
-                        (string) ($grandChild['label'] ?? $grandChild['permission'])
+                        (string) ($grandChild['label'] ?? $grandChild['permission']),
+                        $pageIndex
                     );
                 }
 
@@ -291,7 +428,8 @@ class AdminMenuPermissionRegistry
                 $added,
                 $available,
                 $child['permission'] ?? null,
-                (string) ($child['label'] ?? $child['permission'])
+                (string) ($child['label'] ?? $child['permission']),
+                $pageIndex
             );
         }
 
@@ -306,7 +444,7 @@ class AdminMenuPermissionRegistry
         ];
     }
 
-    private static function flattenNodePermissions(array &$permissions, array &$added, array $available, array $node): void
+    private static function flattenNodePermissions(array &$permissions, array &$added, array $available, array $node, array $pageIndex): void
     {
         static::pushPermission(
             $permissions,
@@ -315,11 +453,12 @@ class AdminMenuPermissionRegistry
             $node['permission'] ?? null,
             ! empty($node['children'])
                 ? static::accessLabel($node['label'] ?? 'Module')
-                : (string) ($node['label'] ?? ($node['permission'] ?? 'Permission'))
+                : (string) ($node['label'] ?? ($node['permission'] ?? 'Permission')),
+            $pageIndex
         );
 
         foreach ($node['children'] ?? [] as $child) {
-            static::flattenNodePermissions($permissions, $added, $available, $child);
+            static::flattenNodePermissions($permissions, $added, $available, $child, $pageIndex);
         }
     }
 
@@ -342,18 +481,19 @@ class AdminMenuPermissionRegistry
         }
     }
 
-    private static function pushPermission(array &$permissions, array &$added, array $available, mixed $name, string $label): void
+    private static function pushPermission(array &$permissions, array &$added, array $available, mixed $name, string $label, array $pageIndex = []): void
     {
-        $names = is_array($name) ? $name : [$name];
-
-        foreach ($names as $permissionName) {
-            if (! is_string($permissionName) || $permissionName === '' || ! isset($available[$permissionName]) || isset($added[$permissionName])) {
+        foreach (static::permissionNames($name) as $permissionName) {
+            if (! isset($available[$permissionName]) || isset($added[$permissionName])) {
                 continue;
             }
 
             $permissions[] = [
                 'name' => $permissionName,
                 'label' => $label,
+                // Toutes les pages du menu que cette permission ouvre : une permission
+                // partagee par plusieurs pages ne doit plus en masquer aucune.
+                'pages' => $pageIndex[$permissionName] ?? [],
             ];
             $added[$permissionName] = true;
         }

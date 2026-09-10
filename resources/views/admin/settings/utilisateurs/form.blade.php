@@ -158,6 +158,12 @@
                                     Passez en <strong>Permissions personnalisées</strong> pour définir une sélection manuelle.
                                 </div>
 
+                                <p class="text-muted small mb-3">
+                                    Chaque case liste les pages du menu qu'elle ouvre. Les cases proviennent directement du
+                                    menu admin : une page ajoutée ou retirée du menu apparaît ou disparaît ici sans intervention.
+                                    Quand plusieurs pages partagent une permission, elles s'accordent ensemble.
+                                </p>
+
                                 <div class="d-flex gap-2 mb-3">
                                     <button type="button" class="btn btn-sm btn-outline-primary" id="check-all">Tout cocher</button>
                                     <button type="button" class="btn btn-sm btn-outline-secondary" id="uncheck-all">Tout décocher</button>
@@ -176,10 +182,24 @@
                                     $selectedPermissions = array_values(array_unique(old('permissions', $selectedPermissions ?? [])));
                                 @endphp
 
+                                {{--
+                                    Une ligne par permission, et sous chaque ligne la liste exacte des pages du menu
+                                    qu'elle ouvre : aucune page du menu n'est plus invisible ici, y compris quand
+                                    plusieurs pages partagent la meme permission.
+                                --}}
                                 @foreach($permissionGroups as $group)
+                                    @php
+                                        $groupPages = collect($group['permissions'])->sum(fn ($permission) => count($permission['pages'] ?? []));
+                                        $groupUnmanaged = $group['unmanaged'] ?? [];
+                                    @endphp
                                     <div class="border rounded p-3 mb-3 permission-group" data-group="{{ $group['key'] }}">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <h6 class="mb-0">{{ $group['label'] }}</h6>
+                                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                                            <h6 class="mb-0">
+                                                {{ $group['label'] }}
+                                                @if($groupPages > 0)
+                                                    <span class="badge bg-light text-muted fw-normal ms-1">{{ $groupPages }} page{{ $groupPages > 1 ? 's' : '' }}</span>
+                                                @endif
+                                            </h6>
                                             <div class="d-flex gap-1">
                                                 <button type="button" class="btn btn-sm btn-light check-section" data-group="{{ $group['key'] }}">Cocher section</button>
                                                 <button type="button" class="btn btn-sm btn-light uncheck-section" data-group="{{ $group['key'] }}">Décocher section</button>
@@ -187,7 +207,9 @@
                                         </div>
                                         <div class="row">
                                             @foreach($group['permissions'] as $permission)
-                                                <div class="col-md-4 mb-2">
+                                                @php $pages = $permission['pages'] ?? []; @endphp
+                                                <div class="col-md-6 col-xl-4 mb-3 permission-entry"
+                                                     data-search="{{ mb_strtolower($group['label'].' '.$permission['label'].' '.$permission['name'].' '.collect($pages)->pluck('label')->implode(' ')) }}">
                                                     <div class="form-check">
                                                         <input
                                                             class="form-check-input permission-checkbox"
@@ -198,11 +220,36 @@
                                                             id="perm_{{ md5($permission['name']) }}"
                                                             {{ in_array($permission['name'], $selectedPermissions, true) ? 'checked' : '' }}
                                                         >
-                                                        <label class="form-check-label" for="perm_{{ md5($permission['name']) }}">{{ $permission['label'] }}</label>
+                                                        <label class="form-check-label d-block" for="perm_{{ md5($permission['name']) }}">
+                                                            {{ $permission['label'] }}
+                                                            @if(count($pages) > 1)
+                                                                <span class="badge bg-soft-primary text-primary ms-1">{{ count($pages) }} pages</span>
+                                                            @endif
+                                                            {{-- La cle technique distingue deux libelles identiques (permissions multiples d'un meme module). --}}
+                                                            <span class="d-block text-muted" style="font-size:11px;">{{ $permission['name'] }}</span>
+                                                        </label>
+                                                        @if($pages !== [])
+                                                            <ul class="list-unstyled text-muted small mb-0 mt-1 ps-1">
+                                                                @foreach($pages as $page)
+                                                                    <li>&middot; {{ $page['label'] }}</li>
+                                                                @endforeach
+                                                            </ul>
+                                                        @else
+                                                            <div class="text-muted small mt-1">&middot; Accès au module, sans page dédiée</div>
+                                                        @endif
                                                     </div>
                                                 </div>
                                             @endforeach
                                         </div>
+
+                                        @if($groupUnmanaged !== [])
+                                            <div class="border-top pt-2 mt-1">
+                                                <div class="text-muted small fw-semibold mb-1">Pages sans permission dédiée</div>
+                                                @foreach($groupUnmanaged as $page)
+                                                    <div class="text-muted small">&middot; {{ $page['label'] }} — {{ $page['reason'] }}</div>
+                                                @endforeach
+                                            </div>
+                                        @endif
                                     </div>
                                 @endforeach
                             </div>

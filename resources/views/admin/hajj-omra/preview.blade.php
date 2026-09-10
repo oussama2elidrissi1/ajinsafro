@@ -4,6 +4,8 @@
 
 @php
     $isAr = $locale === 'ar';
+    require_once base_path('wp-plugin/ajinsafro-traveler-home/includes/hajj-omra-commercial-table.php');
+    $commercial = app(\App\Services\HajjOmra\HajjOmraCommercialPresenter::class)->package($package);
     // Un helper unique : version arabe si demandee et saisie, sinon repli francais.
     $t = fn ($model, $field) => $model->localized($field, $locale);
     $money = fn ($value) => number_format((float) $value, 2, ',', ' ').' '.$package->currency;
@@ -68,6 +70,14 @@
         elles restent lisibles et ne sont jamais reordonnees par le moteur bidirectionnel.
     --}}
     <div class="ho-preview" @if ($isAr) dir="rtl" lang="ar" @else dir="ltr" lang="fr" @endif>
+        <style>{!! file_get_contents(base_path('wp-plugin/ajinsafro-traveler-home/assets/css/hajj-omra-formulas.css')) !!}</style>
+        @if ($commercial['has_formulas'])
+            <section id="formules">
+                <h2 class="h5">{{ $isAr ? 'الباقات والإقامة' : 'Formules & hébergements' }}</h2>
+                {!! \Ajinsafro\HajjOmra\CommercialTable::render($commercial['formulas'], $locale, $package->currency) !!}
+                @if (!$commercial['formulas'])<p>{{ $isAr ? 'لا توجد باقة مكتملة ومفعّلة.' : 'Aucune formule active et complète.' }}</p>@endif
+            </section>
+        @endif
 
         <div class="card border-0 shadow-sm mb-3">
             <div class="row g-0">

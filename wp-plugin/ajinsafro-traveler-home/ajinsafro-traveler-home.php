@@ -272,9 +272,10 @@ function ajth_enqueue_front_assets()
         );
 
         if ( function_exists( 'ajth_get_current_hajj_omra_package_slug' ) && ajth_get_current_hajj_omra_package_slug() ) {
+            wp_enqueue_style('ajth-hajj-omra-formulas', AJTH_URL . 'assets/css/hajj-omra-formulas.css', [], filemtime(AJTH_DIR . 'assets/css/hajj-omra-formulas.css'));
             wp_enqueue_style(
                 'ajth-hajj-omra-detail-fonts',
-                'https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap',
+                'https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap',
                 [],
                 null
             );

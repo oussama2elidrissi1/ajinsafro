@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../includes/hajj-omra-locale.php';
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -34,7 +36,7 @@ $posted_departure = sanitize_text_field( wp_unslash( $_POST['selected_departure_
 
 $format_price = static function ( $amount, $currency = 'DH' ) {
 	if ( null === $amount || '' === $amount || ! is_numeric( $amount ) ) {
-		return 'Sur demande';
+		return ajth_ho_t('Sur demande');
 	}
 
 	return number_format( (float) $amount, 0, ',', ' ' ) . ' ' . $currency;
@@ -43,7 +45,7 @@ $format_price = static function ( $amount, $currency = 'DH' ) {
 $format_date = static function ( $date_value ) {
 	$date_value = is_string( $date_value ) ? trim( $date_value ) : '';
 	if ( '' === $date_value ) {
-		return 'A confirmer';
+		return ajth_ho_t('A confirmer');
 	}
 
 	$timestamp = strtotime( $date_value );
@@ -57,27 +59,27 @@ $status_badge = static function ( $package ) {
 
 	if ( 'expired' === $status ) {
 		return array(
-			'label' => 'Offre expiree',
+			'label' => ajth_ho_t('Offre expiree'),
 			'class' => 'is-expired',
 		);
 	}
 
 	if ( 'full' === $status || $remaining <= 0 ) {
 		return array(
-			'label' => 'Complet',
+			'label' => ajth_ho_t('Complet'),
 			'class' => 'is-full',
 		);
 	}
 
 	if ( $remaining > 0 && $remaining <= 8 ) {
 		return array(
-			'label' => 'Places limitees',
+			'label' => ajth_ho_t('Places limitees'),
 			'class' => 'is-limited',
 		);
 	}
 
 	return array(
-		'label' => 'Disponible',
+		'label' => ajth_ho_t('Disponible'),
 		'class' => 'is-available',
 	);
 };
@@ -93,7 +95,7 @@ $first_departure_label = static function ( array $package ) use ( $format_date )
 		}
 	}
 
-	return 'Date sur demande';
+	return ajth_ho_t('Date sur demande');
 };
 
 $find_next_departure = static function ( array $package ) {
@@ -107,7 +109,7 @@ $find_next_departure = static function ( array $package ) {
 };
 
 $whatsapp_link = static function ( array $package ) {
-	$title = trim( (string) ( $package['title'] ?? 'Hajj & Omra' ) );
+	$title = trim( (string) ( $package['title'] ?? ajth_ho_t('Hajj & Omra') ) );
 	$url   = trim( (string) ( $package['detail_url'] ?? '' ) );
 
 	return 'https://wa.me/212660683464?text=' . rawurlencode( sprintf( 'Bonjour Ajinsafro, je souhaite recevoir plus d informations sur l offre "%s" %s', $title, $url !== '' ? '(' . $url . ')' : '' ) );
@@ -119,7 +121,7 @@ if ( 'POST' === $_SERVER['REQUEST_METHOD'] && ! empty( $_POST['ajth_hajj_omra_bo
 	$nonce = isset( $_POST['ajth_hajj_omra_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['ajth_hajj_omra_nonce'] ) ) : '';
 
 	if ( ! wp_verify_nonce( $nonce, 'ajth_hajj_omra_booking_request' ) ) {
-		$error_message = 'Votre session a expire. Merci de renvoyer votre demande.';
+		$error_message = ajth_ho_t('Votre session a expire. Merci de renvoyer votre demande.');
 	} else {
 		$payload = array(
 			'full_name'               => sanitize_text_field( wp_unslash( $_POST['full_name'] ?? '' ) ),
@@ -128,12 +130,16 @@ if ( 'POST' === $_SERVER['REQUEST_METHOD'] && ! empty( $_POST['ajth_hajj_omra_bo
 			'adults'                  => max( 1, (int) ( $_POST['adults'] ?? 1 ) ),
 			'children'                => max( 0, (int) ( $_POST['children'] ?? 0 ) ),
 			'room_type'               => $posted_room_type,
+			'formula_id'              => absint( $_POST['formula_id'] ?? 0 ) ?: '',
+			'tariff_id'               => absint( $_POST['tariff_id'] ?? 0 ) ?: '',
+			'departure_id'            => absint( $_POST['departure_id'] ?? 0 ) ?: '',
+			'locale'                  => ajth_ho_locale(),
 			'selected_departure_date' => $posted_departure,
 			'message'                 => sanitize_textarea_field( wp_unslash( $_POST['message'] ?? '' ) ),
 		);
 
 		if ( '' === $payload['full_name'] || '' === $payload['phone'] || '' === $payload['email'] ) {
-			$error_message = 'Merci de renseigner votre nom, telephone et email.';
+			$error_message = ajth_ho_t('Merci de renseigner votre nom, telephone et email.');
 		} else {
 			$result = ajth_submit_hajj_omra_booking_request( $current_slug, $payload );
 			if ( is_wp_error( $result ) ) {
@@ -208,7 +214,7 @@ $filtered_packages = array_values(
 				<section class="ajho-hero ajho-hero--compact">
 					<div class="ajho-container">
 						<nav class="ajho-breadcrumb" aria-label="Fil d Ariane">
-							<a href="<?php echo esc_url( home_url( '/' ) ); ?>">Accueil</a>
+							<a href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php echo esc_html( ajth_ho_t( 'Accueil' ) ); ?></a>
 							<span>/</span>
 							<a href="<?php echo esc_url( $page_url ); ?>">Hajj & Omra</a>
 							<span>/</span>
@@ -231,7 +237,7 @@ $filtered_packages = array_values(
 				<section class="ajho-hero">
 					<div class="ajho-container">
 						<nav class="ajho-breadcrumb ajho-breadcrumb--light" aria-label="Fil d Ariane">
-							<a href="<?php echo esc_url( home_url( '/' ) ); ?>">Accueil</a>
+							<a href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php echo esc_html( ajth_ho_t( 'Accueil' ) ); ?></a>
 							<span>/</span>
 							<span>Hajj & Omra</span>
 						</nav>
@@ -253,7 +259,7 @@ $filtered_packages = array_values(
 
 						<form method="get" action="<?php echo esc_url( $page_url ); ?>" class="ajho-search-panel">
 							<label class="ajho-search-field">
-								<span>Type</span>
+								<span><?php echo esc_html( ajth_ho_t( 'Type' ) ); ?></span>
 								<select name="type">
 									<option value="">Tous les types</option>
 									<?php foreach ( $type_options as $value => $label ) : ?>
@@ -329,8 +335,8 @@ $filtered_packages = array_values(
 								?>
 								<article class="ajho-card">
 									<div class="ajho-card__media">
-										<a href="<?php echo esc_url( $detail_url ); ?>" class="ajho-card__media-link" aria-label="<?php echo esc_attr( $package['title'] ?? 'Hajj & Omra' ); ?>">
-											<img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( $package['title'] ?? 'Hajj & Omra' ); ?>" onerror="this.onerror=null;this.src='<?php echo esc_url( $fallback_image ); ?>';">
+										<a href="<?php echo esc_url( $detail_url ); ?>" class="ajho-card__media-link" aria-label="<?php echo esc_attr( $package['title'] ?? ajth_ho_t('Hajj & Omra') ); ?>">
+											<img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( $package['title'] ?? ajth_ho_t('Hajj & Omra') ); ?>" onerror="this.onerror=null;this.src='<?php echo esc_url( $fallback_image ); ?>';">
 										</a>
 										<div class="ajho-card__badges">
 											<span class="ajho-chip ajho-chip--type"><?php echo esc_html( $package['type_label'] ?? 'Offre' ); ?></span>
@@ -342,12 +348,12 @@ $filtered_packages = array_values(
 										<h3><a href="<?php echo esc_url( $detail_url ); ?>"><?php echo esc_html( $package['title'] ?? '' ); ?></a></h3>
 										<p><?php echo esc_html( $package['short_description'] ?? '' ); ?></p>
 										<ul class="ajho-card__facts">
-											<li><strong>Duree</strong><span><?php echo esc_html( $package['duration_label'] ?? 'A confirmer' ); ?></span></li>
-											<li><strong>Depart</strong><span><?php echo esc_html( $package['departure_city'] ?? 'A confirmer' ); ?></span></li>
-											<li><strong>Date</strong><span><?php echo esc_html( $first_departure_label( $package ) ); ?></span></li>
-											<li><strong>Makkah</strong><span><?php echo esc_html( $package['makkah_hotel'] ?? 'A confirmer' ); ?></span></li>
-											<li><strong>Madinah</strong><span><?php echo esc_html( $package['madinah_hotel'] ?? 'A confirmer' ); ?></span></li>
-											<li><strong>Places</strong><span><?php echo esc_html( (string) ( $package['remaining_places'] ?? 0 ) ); ?> restantes</span></li>
+											<li><strong>Duree</strong><span><?php echo esc_html( $package['duration_label'] ?? ajth_ho_t('A confirmer') ); ?></span></li>
+											<li><strong>Depart</strong><span><?php echo esc_html( $package['departure_city'] ?? ajth_ho_t('A confirmer') ); ?></span></li>
+											<li><strong><?php echo esc_html( ajth_ho_t( 'Date' ) ); ?></strong><span><?php echo esc_html( $first_departure_label( $package ) ); ?></span></li>
+											<li><strong><?php echo esc_html( ajth_ho_t( 'Makkah' ) ); ?></strong><span><?php echo esc_html( $package['makkah_hotel'] ?? ajth_ho_t('A confirmer') ); ?></span></li>
+											<li><strong><?php echo esc_html( ajth_ho_t( 'Madinah' ) ); ?></strong><span><?php echo esc_html( $package['madinah_hotel'] ?? ajth_ho_t('A confirmer') ); ?></span></li>
+											<li><strong><?php echo esc_html( ajth_ho_t( 'Places' ) ); ?></strong><span><?php echo esc_html( (string) ( $package['remaining_places'] ?? 0 ) ); ?> restantes</span></li>
 										</ul>
 									</div>
 

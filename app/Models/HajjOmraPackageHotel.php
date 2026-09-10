@@ -39,12 +39,14 @@ class HajjOmraPackageHotel extends Model
     protected $table = 'hajj_omra_package_hotels';
 
     /** @var list<string> */
-    protected array $bilingual = ['description'];
+    protected array $bilingual = ['name', 'location', 'description'];
 
     protected $fillable = [
         'package_id',
         'city',
         'name',
+        'name_ar',
+        'location_ar',
         'stars',
         'haram_distance',
         'location',

@@ -14,7 +14,15 @@
     var estimate = root.querySelector('[data-estimate]');
     var estimateNote = root.querySelector('[data-estimate-note]');
     var currency = root.dataset.currency || 'DH';
-    var numberFormat = new Intl.NumberFormat('fr-MA', { maximumFractionDigits: 0 });
+    var translations = JSON.parse(root.querySelector('[data-translations-json]')?.textContent || '{}');
+    var t = function (text) { return translations[text] || text; };
+    var formulas = JSON.parse(root.querySelector('[data-formulas-json]')?.textContent || '[]');
+    var formulaSelect = root.querySelector('#ajho-formula');
+    var tariffId = root.querySelector('[name="tariff_id"]');
+    var departureId = root.querySelector('[name="departure_id"]');
+    function currentFormula() { return formulas.find(function (item) { return String(item.id) === formulaSelect?.value; }); }
+    function localized(item, field) { return root.lang === 'ar' ? item[field + '_ar'] || item[field + '_fr'] || item[field] : item[field + '_fr'] || item[field] || item[field + '_ar']; }
+    var numberFormat = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 });
 
     function amount(value) {
       if (value === undefined || value === null || value === '') return null;
@@ -23,40 +31,80 @@
     }
 
     function money(value) {
-      return value === null ? 'Sur demande' : numberFormat.format(value) + ' ' + currency;
+      return value === null ? t('Sur demande') : numberFormat.format(value) + ' ' + currency;
     }
 
     function option(select) {
-      return select.options[select.selectedIndex];
+      return select.options[select.selectedIndex] || { dataset: {} };
     }
 
     function updateEstimate() {
+      if (tariffId) tariffId.value = option(room).dataset.tariffId || '';
       var adultCount = Number(adults.value);
       var childCount = Number(children.value || 0);
       if (!adults.value || !Number.isInteger(adultCount) || adultCount < 1 || adultCount > 20 ||
           !Number.isInteger(childCount) || childCount < 0 || childCount > 20) {
-        estimate.textContent = 'À confirmer';
-        estimateNote.textContent = 'Renseignez de 1 à 20 adultes et de 0 à 20 enfants.';
+        estimate.textContent = t('À confirmer');
+        estimateNote.textContent = t('Renseignez de 1 à 20 adultes et de 0 à 20 enfants.');
         return;
       }
       var rate = amount(option(room).dataset.price);
-      if (rate === null) rate = amount(option(departure).dataset.price);
-      if (rate === null) rate = amount(root.dataset.basePrice);
+      if (!formulaSelect && rate === null) rate = amount(option(departure).dataset.price);
+      if (!formulaSelect && rate === null) rate = amount(root.dataset.basePrice);
+      if (formulaSelect) {
+        room.required = true;
+        room.setCustomValidity(rate === null ? t('Choisissez une formule et un tarif disponibles.') : '');
+        var hasDates = Array.from(departure.options).some(function (item) { return !!item.value; });
+        departure.required = hasDates;
+        departure.setCustomValidity(hasDates && (!departure.value || option(departure).disabled) ? t('Choisir un départ') : '');
+      }
       var childRate = amount(root.dataset.childPrice);
       var total = rate === null ? null : rate * adultCount + (childRate === null ? 0 : childRate * childCount);
       estimate.textContent = money(total);
-      estimateNote.textContent = (childCount > 0 && childRate === null ? 'Tarif enfants à confirmer en complément. ' : '') +
-        'Estimation indicative, confirmée par votre conseiller.';
+      estimateNote.textContent = (childCount > 0 && childRate === null ? t('Tarif enfants à confirmer en complément. ') : '') +
+        t('Estimation indicative, confirmée par votre conseiller.');
     }
 
     function updateDeparture() {
       var selected = option(departure);
+      if (departureId) departureId.value = selected.dataset.id || '';
       choices.forEach(function (choice) { choice.checked = !choice.disabled && !!departure.value && choice.value === departure.value; });
-      root.querySelector('[data-summary-date]').textContent = selected.dataset.label || 'Date sur demande';
+      root.querySelector('[data-summary-date]').textContent = selected.dataset.label || t('Date sur demande');
       root.querySelector('[data-summary-seats]').textContent = selected.dataset.seats || '0';
-      var price = amount(selected.dataset.price);
+      var price = formulaSelect ? amount(root.dataset.basePrice) : amount(selected.dataset.price);
       root.querySelector('[data-summary-price]').textContent = money(price === null ? amount(root.dataset.basePrice) : price);
       updateEstimate();
+    }
+
+    function updateFormula() {
+      var formula = currentFormula();
+      var previous = tariffId?.value;
+      room.replaceChildren(new Option(t('Choisir une chambre'), ''));
+      Object.values(formula?.prices || {}).forEach(function (price) {
+        var item = new Option(localized(price, 'room_type_label') + ' — ' + money(Number(price.price)), price.room_type);
+        item.dataset.price = price.price;
+        item.dataset.tariffId = price.tariff_id;
+        item.disabled = Number(price.stock) <= 0;
+        room.appendChild(item);
+        if (String(price.tariff_id) === previous && !item.disabled) item.selected = true;
+      });
+      if (!room.value) {
+        var cheapest = Array.from(room.options).filter(function (item) { return item.value && !item.disabled; }).sort(function (a, b) { return Number(a.dataset.price) - Number(b.dataset.price); })[0];
+        if (cheapest) cheapest.selected = true;
+      }
+      Array.from(departure.options).forEach(function (item) {
+        item.disabled = !!(formula?.departure_id && String(formula.departure_id) !== item.dataset.id);
+      });
+      if (formula?.departure_id || option(departure).disabled) {
+        var first = Array.from(departure.options).find(function (item) { return item.value && !item.disabled; });
+        departure.value = first?.value || '';
+      }
+      choices.forEach(function (choice) {
+        if (choice.dataset.originalDisabled === undefined) choice.dataset.originalDisabled = String(choice.disabled);
+        var matching = Array.from(departure.options).find(function (item) { return item.value === choice.value; });
+        choice.disabled = choice.dataset.originalDisabled === 'true' || !matching || matching.disabled;
+      });
+      updateDeparture();
     }
 
     choices.forEach(function (choice) {
@@ -72,6 +120,7 @@
     adults.addEventListener('input', updateEstimate);
     children.addEventListener('input', updateEstimate);
     updateDeparture();
+    if (formulaSelect) { formulaSelect.addEventListener('change', updateFormula); updateFormula(); }
 
     root.querySelectorAll('img[data-fallback]').forEach(function (img) {
       function fallback() {
@@ -108,9 +157,9 @@
         }
         try {
           await navigator.clipboard.writeText(url);
-          root.querySelector('[data-share-status]').textContent = 'Lien copié dans le presse-papiers.';
-          button.textContent = 'Lien copié';
-          window.setTimeout(function () { button.textContent = 'Partager'; }, 2000);
+          root.querySelector('[data-share-status]').textContent = t('Lien copié dans le presse-papiers.');
+          button.textContent = t('Lien copié');
+          window.setTimeout(function () { button.textContent = t('Partager'); }, 2000);
         } catch (error) {
           window.prompt('Copiez ce lien :', url);
         }

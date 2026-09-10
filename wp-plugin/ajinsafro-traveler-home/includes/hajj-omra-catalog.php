@@ -5,6 +5,8 @@
  * @package AjinsafroTravelerHome
  */
 
+require_once __DIR__ . '/hajj-omra-locale.php';
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -51,7 +53,7 @@ if ( ! function_exists( 'ajth_get_hajj_omra_detail_url' ) ) {
 			return ajth_get_hajj_omra_page_url();
 		}
 
-		return untrailingslashit( ajth_get_hajj_omra_page_url() ) . '/' . $slug . '/';
+		return untrailingslashit( ajth_get_hajj_omra_page_url() ) . '/' . $slug . '/' . ( ajth_ho_locale() === 'ar' ? '?lang=ar' : '' );
 	}
 }
 
@@ -88,6 +90,11 @@ if ( ! function_exists( 'ajth_prepare_hajj_omra_package_payload' ) ) {
 		$package['gallery']        = $gallery;
 		$package['detail_url']     = ajth_get_hajj_omra_detail_url( $slug );
 		$package['request_url']    = ajth_get_hajj_omra_detail_url( $slug ) . '#reservation-form';
+		foreach ( (array) ( $package['formulas'] ?? array() ) as $i => $formula ) {
+			foreach ( (array) ( $formula['accommodations'] ?? array() ) as $j => $hotel ) {
+				$package['formulas'][$i]['accommodations'][$j]['image_url'] = ajth_hajj_omra_normalize_image_url( $hotel['image_url'] ?? '' );
+			}
+		}
 
 		if ( isset( $package['program_days'] ) && is_array( $package['program_days'] ) ) {
 			$package['program_days'] = array_map(
@@ -104,7 +111,7 @@ if ( ! function_exists( 'ajth_prepare_hajj_omra_package_payload' ) ) {
 			);
 		}
 
-		return $package;
+		return ajth_ho_localize_package( $package );
 	}
 }
 

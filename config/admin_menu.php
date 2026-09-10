@@ -88,7 +88,6 @@ return [
                 ['label' => 'Créer les employés des agences', 'route' => 'admin.agency-employees.index', 'permission' => 'agency_employees.create'],
                 ['label' => 'Modifier les employés des agences', 'route' => 'admin.agency-employees.index', 'permission' => 'agency_employees.edit'],
                 ['label' => 'Supprimer les employés des agences', 'route' => 'admin.agency-employees.index', 'permission' => 'agency_employees.delete'],
-                ['label' => 'Performance agences', 'route' => 'admin.agencies.performance', 'permission' => 'agency_performance.view'],
                 ['label' => 'Commissions agences', 'route' => 'admin.agencies.performance', 'query' => ['tab' => 'commissions'], 'permission' => 'agency_commissions.view'],
             ],
         ],
