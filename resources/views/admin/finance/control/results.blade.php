@@ -1,4 +1,4 @@
-@extends('layouts.admin-v6')
+@extends('layouts.finance-control')
 
 @section('title', 'Resultats & marges')
 
@@ -7,7 +7,7 @@
     $money = fn ($value) => number_format((float) $value, 2, ',', ' ').' DH';
 @endphp
 
-@section('content')
+@section('finance_content')
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
         <div>
@@ -16,8 +16,6 @@
         </div>
         <a href="{{ route('admin.finance.control.exports.index') }}" class="btn btn-sm btn-outline-secondary">Exports</a>
     </div>
-
-    @include('admin.finance.control.partials._flash')
 
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">

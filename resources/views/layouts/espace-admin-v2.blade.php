@@ -9,6 +9,7 @@
      *   @section('core_scripts')   remplace le socle jQuery + Bootstrap (ex. layouts.vendor-scripts)
      *   @section('hidePageFooter') '1' pour masquer le pied de page
      *   @push('styles') / @push('css') / @push('scripts') / @push('body-end')
+     *   @push('page-css')          feuille de style de module, chargee apres la coque
      */
     $eaUser = auth()->user();
     $eaBrandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');
@@ -105,6 +106,8 @@
     @stack('styles')
     {{-- Coque Espace Admin v2 — chargée en dernier pour primer sur les règles de mise en page héritées. --}}
     <link href="{{ URL::asset('css/espace-admin-v2.css') }}?v=2" rel="stylesheet">
+    {{-- Feuilles de style propres a un module, chargees apres la coque pour pouvoir la specialiser. --}}
+    @stack('page-css')
 </head>
 <body class="{{ $eaBodyClass }}">
 

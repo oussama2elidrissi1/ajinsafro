@@ -82,7 +82,7 @@ return new class extends Migration
             }
         });
 
-        // --- Hebergement detaille : remplace les 4 champs plats makkah_*/madinah_* ---
+        // --- Hebergement detaille : remplace les 4 champs plats makkah_... / madinah_... ---
         if (! Schema::hasTable('hajj_omra_package_hotels')) {
             Schema::create('hajj_omra_package_hotels', function (Blueprint $table) {
                 $table->id();

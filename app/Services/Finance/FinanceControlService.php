@@ -204,6 +204,13 @@ class FinanceControlService
 
         $realMargin = round($soldAmount - $realCharges, 2);
 
+        // Un depart sans aucune vente ni charge n'est pas « deficitaire » : il est vide.
+        // La distinction evite de compter comme pertes des projets simplement non renseignes.
+        $isEmpty = $reservationsCount === 0
+            && $chargesCount === 0
+            && $soldAmount === 0.0
+            && $realCharges === 0.0;
+
         return [
             'departure' => $departure,
             'reservations_count' => $reservationsCount,
@@ -221,6 +228,14 @@ class FinanceControlService
             'real_margin' => $realMargin,
             'margin_rate' => $soldAmount > 0 ? round($realMargin / $soldAmount * 100, 2) : 0.0,
             'is_profitable' => $realMargin > 0,
+            'is_empty' => $isEmpty,
+            // Etat de lecture du projet : « empty » signale une donnee absente, pas une perte.
+            'state' => match (true) {
+                $isEmpty => 'empty',
+                $realMargin > 0 => 'profitable',
+                $realMargin < 0 => 'deficit',
+                default => 'neutral',
+            },
         ];
     }
 
@@ -247,7 +262,12 @@ class FinanceControlService
             'real_margin' => $margin,
             'margin_rate' => $sold > 0 ? round($margin / $sold * 100, 2) : 0.0,
             'profitable_count' => $rows->where('is_profitable', true)->count(),
-            'deficit_count' => $rows->where('is_profitable', false)->count(),
+            // Deficitaire = marge negative averee. Un projet sans aucune donnee est compte a part,
+            // sinon les departs non renseignes gonflent artificiellement le nombre de pertes.
+            'deficit_count' => $rows->where('state', 'deficit')->count(),
+            'empty_count' => $rows->where('is_empty', true)->count(),
+            'projects_count' => $rows->count(),
+            'collection_rate' => $sold > 0 ? round((float) $rows->sum('collected_amount') / $sold * 100, 1) : 0.0,
         ];
     }
 

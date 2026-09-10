@@ -1,4 +1,4 @@
-@extends('layouts.admin-v6')
+@extends('layouts.finance-control')
 
 @section('title', 'Justificatifs')
 
@@ -7,14 +7,12 @@
     $money = fn ($value) => number_format((float) $value, 2, ',', ' ').' DH';
 @endphp
 
-@section('content')
+@section('finance_content')
 <div class="container-fluid">
     <div class="mb-3">
         <h4 class="mb-1">Justificatifs</h4>
         <p class="text-muted mb-0 small">Chaque mouvement financier doit porter une piece. Les pieces deja jointes aux paiements et aux charges sont prises en compte.</p>
     </div>
-
-    @include('admin.finance.control.partials._flash')
 
     <ul class="nav nav-tabs mb-0">
         <li class="nav-item">

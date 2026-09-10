@@ -270,6 +270,28 @@ function ajth_enqueue_front_assets()
             ['ajth-home-css'],
             file_exists( $hajj_omra_css_path ) ? filemtime( $hajj_omra_css_path ) : AJTH_VERSION
         );
+
+        if ( function_exists( 'ajth_get_current_hajj_omra_package_slug' ) && ajth_get_current_hajj_omra_package_slug() ) {
+            wp_enqueue_style(
+                'ajth-hajj-omra-detail-fonts',
+                'https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap',
+                [],
+                null
+            );
+            wp_enqueue_style(
+                'ajth-hajj-omra-detail-css',
+                AJTH_URL . 'assets/css/hajj-omra-detail.css',
+                ['ajth-hajj-omra-css', 'ajth-hajj-omra-detail-fonts'],
+                filemtime( AJTH_DIR . 'assets/css/hajj-omra-detail.css' )
+            );
+            wp_enqueue_script(
+                'ajth-hajj-omra-detail-js',
+                AJTH_URL . 'assets/js/hajj-omra-detail.js',
+                [],
+                filemtime( AJTH_DIR . 'assets/js/hajj-omra-detail.js' ),
+                true
+            );
+        }
     }
 
     if ($load_home_sections) {

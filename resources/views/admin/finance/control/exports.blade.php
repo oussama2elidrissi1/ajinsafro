@@ -1,4 +1,4 @@
-@extends('layouts.admin-v6')
+@extends('layouts.finance-control')
 
 @section('title', 'Exports comptables')
 
@@ -11,14 +11,12 @@
     ];
 @endphp
 
-@section('content')
+@section('finance_content')
 <div class="container-fluid">
     <div class="mb-3">
         <h4 class="mb-1">Exports comptables</h4>
         <p class="text-muted mb-0 small">Fichiers CSV (separateur point-virgule, UTF-8) directement exploitables dans Excel et par votre comptable.</p>
     </div>
-
-    @include('admin.finance.control.partials._flash')
 
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">

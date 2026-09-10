@@ -1,4 +1,4 @@
-@extends('layouts.admin-v6')
+@extends('layouts.finance-control')
 
 @section('title', 'Encaissements clients')
 
@@ -7,14 +7,12 @@
     $money = fn ($value) => number_format((float) $value, 2, ',', ' ').' DH';
 @endphp
 
-@section('content')
+@section('finance_content')
 <div class="container-fluid">
     <div class="mb-3">
         <h4 class="mb-1">Encaissements clients</h4>
         <p class="text-muted mb-0 small">Paiements deja enregistres sur les reservations. Consultation seule : aucune ressaisie n'est demandee ici.</p>
     </div>
-
-    @include('admin.finance.control.partials._flash')
 
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">

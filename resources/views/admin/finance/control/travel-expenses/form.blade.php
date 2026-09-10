@@ -1,15 +1,13 @@
-@extends('layouts.admin-v6')
+@extends('layouts.finance-control')
 
 @section('title', $mode === 'create' ? 'Nouvelle charge voyage' : 'Modifier la charge')
 
-@section('content')
+@section('finance_content')
 <div class="container-fluid">
     <div class="mb-3">
         <h4 class="mb-1">{{ $mode === 'create' ? 'Nouvelle charge de voyage' : 'Modifier la charge' }}</h4>
         <p class="text-muted mb-0 small">Le montant prevu sert a la marge previsionnelle, le montant reel a la marge reelle, le montant paye a la tresorerie.</p>
     </div>
-
-    @include('admin.finance.control.partials._flash')
 
     <form method="POST"
           action="{{ $mode === 'create' ? route('admin.finance.control.travel-expenses.store') : route('admin.finance.control.travel-expenses.update', $charge) }}"

@@ -20,6 +20,15 @@ use Illuminate\Support\Collection;
  */
 class TravelProjectController extends FinanceControlController
 {
+    /** Tris proposes sur la liste des projets. */
+    public const SORT_MARGIN = 'marge';
+
+    public const SORT_DATE = 'depart';
+
+    public const SORT_CLIENT_REMAINING = 'reste';
+
+    public const SORTS = [self::SORT_MARGIN, self::SORT_DATE, self::SORT_CLIENT_REMAINING];
+
     public function __construct(private readonly FinanceControlService $finance)
     {
     }
@@ -43,6 +52,15 @@ class TravelProjectController extends FinanceControlController
             $rows = $rows->filter(fn (array $row) => $row['is_profitable'] === $wantProfitable)->values();
         }
 
+        // Tri de lecture : la requete reste ordonnee par date, le tri s'applique aux lignes calculees
+        // (marge et reste client ne sont pas des colonnes SQL).
+        $sort = in_array($request->query('sort'), self::SORTS, true) ? (string) $request->query('sort') : self::SORT_MARGIN;
+        $rows = match ($sort) {
+            self::SORT_DATE => $rows->sortByDesc(fn (array $row) => $row['departure']->start_date?->timestamp ?? 0)->values(),
+            self::SORT_CLIENT_REMAINING => $rows->sortByDesc('client_remaining')->values(),
+            default => $rows->sortByDesc('real_margin')->values(),
+        };
+
         $page = max(1, (int) $request->query('page', 1));
         $perPage = 25;
 
@@ -56,6 +74,7 @@ class TravelProjectController extends FinanceControlController
             ),
             'totals' => $this->finance->totalsFromRows($rows),
             'filters' => $filters,
+            'sort' => $sort,
             'voyages' => $this->voyageOptions(),
             'branches' => $this->branchOptions(),
             'departureStatuses' => Departure::STATUSES,

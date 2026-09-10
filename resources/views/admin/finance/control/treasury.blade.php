@@ -1,4 +1,4 @@
-@extends('layouts.admin-v6')
+@extends('layouts.finance-control')
 
 @section('title', 'Tresorerie')
 
@@ -7,14 +7,12 @@
     $money = fn ($value) => number_format((float) $value, 2, ',', ' ').' DH';
 @endphp
 
-@section('content')
+@section('finance_content')
 <div class="container-fluid">
     <div class="mb-3">
         <h4 class="mb-1">Tresorerie</h4>
         <p class="text-muted mb-0 small">Flux reels : encaissements clients en entree, paiements fournisseurs et charges de structure en sortie.</p>
     </div>
-
-    @include('admin.finance.control.partials._flash')
 
     <div class="row row-cols-2 row-cols-md-5 g-3 mb-3">
         @include('admin.finance.control.partials._kpi', ['label' => 'Encaissements clients', 'value' => $money($summary['inflows']), 'hint' => $summary['inflows_count'].' mouvement(s)'])

@@ -1,15 +1,13 @@
-@extends('layouts.admin-v6')
+@extends('layouts.finance-control')
 
 @section('title', $mode === 'create' ? 'Nouvelle charge de structure' : 'Modifier la charge de structure')
 
-@section('content')
+@section('finance_content')
 <div class="container-fluid">
     <div class="mb-3">
         <h4 class="mb-1">{{ $mode === 'create' ? 'Nouvelle charge de structure' : 'Modifier la charge de structure' }}</h4>
         <p class="text-muted mb-0 small">Ces charges sont rattachees a une agence, jamais a un depart.</p>
     </div>
-
-    @include('admin.finance.control.partials._flash')
 
     <form method="POST"
           action="{{ $mode === 'create' ? route('admin.finance.control.structural-expenses.store') : route('admin.finance.control.structural-expenses.update', $expense) }}"
