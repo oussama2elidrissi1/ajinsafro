@@ -73,6 +73,13 @@ foreach ( $rooms as $room ) {
 	}
 }
 $selected_room = $selected_room ?? $best_room;
+$hero_best_room = $best_room;
+if ( $has_formulas ) {
+    $hero_best_room = null;
+    foreach ( $formulas as $formula ) foreach ( (array) ( $formula['prices'] ?? array() ) as $price ) {
+        if ( null === $hero_best_room || $price['price'] < $hero_best_room['price'] ) $hero_best_room = $price;
+    }
+}
 if ( $has_formulas ) $selected_price = $current_package['price_from'] ?? null;
 $selected_room_type = $selected_room['room_type'] ?? '';
 $included_items = (array) ( $current_package['included_items'] ?? array() );
@@ -111,20 +118,20 @@ if ( null !== $estimate && is_numeric( $child_price ) ) {
 			<div class="ajod-hero__visual">
 				<img class="ajod-hero__image" src="<?php echo esc_url( $hero_image ); ?>" alt="" fetchpriority="high" data-fallback="<?php echo esc_url( $fallback_image ); ?>">
 				<div class="ajod-hero__copy">
-					<div class="ajod-badges"><span class="ajod-badge ajod-badge--accent"><?php echo esc_html( $current_package['type_label'] ?? ajth_ho_t('Hajj & Omra') ); ?></span><span class="ajod-badge <?php echo esc_attr( $detail_status['class'] ); ?>"><?php echo esc_html( $detail_status['label'] ); ?></span></div>
+					<div class="ajod-badges"><span class="ajod-badge ajod-badge--accent"><?php echo esc_html( $current_package['type_label'] ?? ajth_ho_t('Hajj & Omra') ); ?></span><span class="ajod-badge <?php echo esc_attr( $detail_status['class'] ); ?>"><?php echo esc_html( ajth_ho_t( $detail_status['label'] ) ); ?></span></div>
 					<h1 id="ajod-title"><?php echo esc_html( $offer_title ); ?></h1>
 					<p><?php echo esc_html( $current_package['short_description'] ?? '' ); ?></p>
 					<dl class="ajod-hero__facts">
 						<div><dt><?php echo esc_html( ajth_ho_t( 'Départ' ) ); ?></dt><dd><?php echo esc_html( $current_package['departure_city'] ?? ajth_ho_t('À confirmer') ); ?></dd></div>
 						<div><dt><?php echo esc_html( ajth_ho_t( 'Durée' ) ); ?></dt><dd><?php echo esc_html( $current_package['duration_label'] ?? ajth_ho_t('À confirmer') ); ?></dd></div>
-						<div><dt><?php echo esc_html( ajth_ho_t( 'Places' ) ); ?></dt><dd><?php echo esc_html( (string) ( $current_package['remaining_places'] ?? 0 ) ); ?> restantes</dd></div>
+						<div><dt><?php echo esc_html( ajth_ho_t( 'Places' ) ); ?></dt><dd><?php echo esc_html( (string) ( $current_package['remaining_places'] ?? 0 ) ); ?> <?php echo esc_html( ajth_ho_t('restantes') ); ?></dd></div>
 					</dl>
 				</div>
 			</div>
 			<div class="ajod-price-card">
 				<div class="ajod-price-card__top">
-					<div><div class="ajod-eyebrow"><?php echo esc_html( ajth_ho_t( 'Prix à partir de' ) ); ?></div><div class="ajod-price"><?php echo esc_html( $format_price( $current_package['price_from'] ?? null, $currency ) ); ?></div><p class="ajod-price-note"><?php echo esc_html( ajth_ho_t( 'par personne' ) ); ?><?php if ( $best_room ) : ?> · <?php echo esc_html( $best_room['room_type_label'] ?? $best_room['room_type'] ); ?><?php endif; ?></p></div>
-					<?php if ( $best_room ) : ?><span class="ajod-tag ajod-tag--warm"><?php echo esc_html( ajth_ho_t( 'Meilleur prix' ) ); ?></span><?php endif; ?>
+					<div><div class="ajod-eyebrow"><?php echo esc_html( ajth_ho_t( 'Prix à partir de' ) ); ?></div><div class="ajod-price"><?php echo esc_html( $format_price( $current_package['price_from'] ?? null, $currency ) ); ?></div><p class="ajod-price-note"><?php echo esc_html( ajth_ho_t( 'par personne' ) ); ?><?php if ( $hero_best_room ) : ?> · <?php echo esc_html( ajth_ho_localized( $hero_best_room, 'room_type_label' ) ?: $hero_best_room['room_type'] ); ?><?php endif; ?></p></div>
+					<?php if ( $hero_best_room ) : ?><span class="ajod-tag ajod-tag--warm"><?php echo esc_html( ajth_ho_t( 'Meilleur prix' ) ); ?></span><?php endif; ?>
 				</div>
 				<dl class="ajod-kv">
 					<div><dt><?php echo esc_html( ajth_ho_t( 'Prochain départ' ) ); ?></dt><dd class="ajod-mono"><?php echo esc_html( $selected_departure ? $format_date( $selectable_departures[0]['departure_date'] ) : ajth_ho_t('Date sur demande') ); ?></dd></div>
@@ -246,7 +253,7 @@ if ( null !== $estimate && is_numeric( $child_price ) ) {
 					<label for="ajho-full-name"><?php echo esc_html( ajth_ho_t( 'Nom complet' ) ); ?><input id="ajho-full-name" type="text" name="full_name" maxlength="255" autocomplete="name" placeholder="<?php echo esc_attr( ajth_ho_t( 'Votre nom et prénom' ) ); ?>" value="<?php echo esc_attr( wp_unslash( $_POST['full_name'] ?? '' ) ); ?>" required></label>
 					<label for="ajho-phone"><?php echo esc_html( ajth_ho_t( 'Téléphone' ) ); ?><input id="ajho-phone" type="tel" name="phone" maxlength="60" autocomplete="tel" placeholder="+212 6XX XXX XXX" value="<?php echo esc_attr( wp_unslash( $_POST['phone'] ?? '' ) ); ?>" required></label>
 					<label for="ajho-email"><?php echo esc_html( ajth_ho_t( 'Email' ) ); ?><input id="ajho-email" type="email" name="email" maxlength="255" autocomplete="email" placeholder="vous@exemple.com" value="<?php echo esc_attr( wp_unslash( $_POST['email'] ?? '' ) ); ?>" required></label>
-					<label for="ajho-departure"><?php echo esc_html( ajth_ho_t( 'Départ sélectionné' ) ); ?><select id="ajho-departure" name="selected_departure_date">
+					<label for="ajho-departure"><?php echo esc_html( ajth_ho_t( 'Départ sélectionné' ) ); ?><select id="ajho-departure" dir="ltr" name="selected_departure_date">
 						<option value="" data-label="<?php echo esc_attr( ajth_ho_t( 'Date sur demande' ) ); ?>" data-seats="<?php echo esc_attr( $current_package['remaining_places'] ?? 0 ); ?>"><?php echo esc_html( ajth_ho_t( 'Choisir un départ' ) ); ?></option>
 						<?php foreach ( $selectable_departures as $departure ) : ?><option value="<?php echo esc_attr( $departure['departure_date'] ); ?>" data-id="<?php echo esc_attr( $departure['id'] ?? '' ); ?>" data-label="<?php echo esc_attr( $format_date( $departure['departure_date'] ) ); ?>" data-seats="<?php echo esc_attr( $departure['remaining_places'] ?? 0 ); ?>" data-price="<?php echo esc_attr( $departure['price_from'] ?? $current_package['price_from'] ?? '' ); ?>" <?php selected( $selected_date, $departure['departure_date'] ); ?>><?php echo esc_html( $format_date( $departure['departure_date'] ) . ' — ' . $format_price( $departure['price_from'] ?? $current_package['price_from'] ?? null, $currency ) ); ?></option><?php endforeach; ?>
 					</select></label>
@@ -256,7 +263,7 @@ if ( null !== $estimate && is_numeric( $child_price ) ) {
 					<div class="ajod-form__pair"><label for="ajho-adults"><?php echo esc_html( ajth_ho_t( 'Adultes' ) ); ?><input id="ajho-adults" type="number" name="adults" min="1" max="20" value="<?php echo esc_attr( $adults ); ?>" required></label><label for="ajho-children"><?php echo esc_html( ajth_ho_t( 'Enfants' ) ); ?><input id="ajho-children" type="number" name="children" min="0" max="20" value="<?php echo esc_attr( $children ); ?>"></label></div>
 					<label for="ajho-message"><?php echo esc_html( ajth_ho_t( 'Message' ) ); ?><textarea id="ajho-message" name="message" rows="3" maxlength="3000" placeholder="<?php echo esc_attr( ajth_ho_t( 'Vos demandes, préférences, questions…' ) ); ?>"><?php echo esc_textarea( wp_unslash( $_POST['message'] ?? '' ) ); ?></textarea></label>
 					<div class="ajod-estimate" role="status" aria-live="polite"><span><?php echo esc_html( ajth_ho_t( 'Estimation' ) ); ?></span><output class="ajod-mono" for="ajho-adults ajho-children ajho-room-type ajho-departure" data-estimate><?php echo esc_html( $format_price( $estimate, $currency ) ); ?></output></div>
-					<p class="ajod-form__note" data-estimate-note><?php echo $children > 0 && ! is_numeric( $child_price ) ? ajth_ho_t('Tarif enfants à confirmer en complément. ') : ''; ?>Estimation indicative, confirmée par votre conseiller.</p>
+					<p class="ajod-form__note" data-estimate-note><?php echo $children > 0 && ! is_numeric( $child_price ) ? ajth_ho_t('Tarif enfants à confirmer en complément. ') : ''; ?><?php echo esc_html( ajth_ho_t('Estimation indicative, confirmée par votre conseiller.') ); ?></p>
 					<button type="submit" class="ajod-button ajod-button--primary"><?php echo esc_html( ajth_ho_t( 'Envoyer la demande' ) ); ?></button>
 					<p class="ajod-form__note"><?php echo esc_html( ajth_ho_t( 'Vos coordonnées permettent à notre équipe de vous recontacter au sujet de cette demande.' ) ); ?></p>
 				</form>

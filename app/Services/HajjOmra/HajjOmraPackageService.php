@@ -371,7 +371,6 @@ class HajjOmraPackageService
     {
         $existing = $package->images()->get()->keyBy('id');
         $keptIds = [];
-        $references = [];
         $position = 0;
 
         foreach (array_values($rows) as $row) {

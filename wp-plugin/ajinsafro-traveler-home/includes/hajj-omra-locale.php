@@ -53,7 +53,21 @@ function ajth_ho_translations() {
         'Aucune formule disponible pour le moment.' => 'لا توجد باقة متاحة حالياً.',
         'Choisissez une formule et un tarif disponibles.' => 'اختر باقة وسعراً متاحين.',
         'Sans repas' => 'بدون وجبات', 'Petit-déjeuner' => 'الإفطار', 'Demi-pension' => 'نصف إقامة', 'Pension complète' => 'إقامة كاملة',
-        'Petit dejeuner' => 'الإفطار', 'Pension complete' => 'إقامة كاملة', 'Publie' => 'منشور', 'Expire' => 'منتهي', 'Ramadan' => 'رمضان', 'Premium' => 'ممتاز', 'Low Cost' => 'اقتصادي'
+        'Petit dejeuner' => 'الإفطار', 'Pension complete' => 'إقامة كاملة', 'Publie' => 'منشور', 'Expire' => 'منتهي', 'Ramadan' => 'رمضان', 'Premium' => 'ممتاز', 'Low Cost' => 'اقتصادي',
+        'Offre introuvable' => 'العرض غير موجود', 'Offre Hajj & Omra introuvable' => 'عرض الحج والعمرة غير موجود',
+        'Cette offre n est plus disponible ou n a pas encore ete publiee.' => 'هذا العرض لم يعد متاحاً أو لم يُنشر بعد.', 'Retour au catalogue' => 'العودة إلى العروض',
+        'Selection Ajinsafro' => 'اختيارات أجينسافرو',
+        'Retrouvez nos offres Omra, Hajj, Ramadan, Low Cost et Premium avec un affichage clair, des prix dynamiques et des departs mis a jour depuis notre base.' => 'اكتشفوا عروض العمرة والحج ورمضان والباقات الاقتصادية والممتازة بأسعار ومواعيد محدّثة.',
+        'offres dynamiques' => 'عروض محدّثة', 'Catalogue synchronise avec le back-office Ajinsafro.' => 'عروض أجينسافرو المحدّثة.',
+        'Tous les types' => 'جميع الأنواع', 'Ville de depart' => 'مدينة المغادرة', 'Toutes les villes' => 'جميع المدن',
+        'Budget max' => 'الميزانية القصوى', 'Date de depart' => 'تاريخ المغادرة', 'Filtrer' => 'تصفية', 'Reinitialiser' => 'إعادة الضبط',
+        'offres visibles' => 'عروض متاحة', 'offres a la une' => 'عروض مميزة', 'villes de depart' => 'مدن المغادرة',
+        'Catalogue officiel' => 'العروض الرسمية', 'Offres Hajj & Omra disponibles' => 'عروض الحج والعمرة المتاحة',
+        'Des offres Ajinsafro pensees pour une lecture rapide: image, hotels, depart, places restantes, prix et acces direct a la reservation.' => 'تعرفوا على الفنادق والمواعيد والمقاعد والأسعار، واطلبوا حجزكم مباشرة.',
+        'Aucune offre ne correspond a vos filtres' => 'لا توجد عروض تطابق اختياراتكم',
+        'Essayez une autre ville de depart, un autre budget ou reinitialisez vos criteres.' => 'جرّبوا مدينة مغادرة أو ميزانية أخرى، أو أعيدوا ضبط الاختيارات.',
+        'Reinitialiser les filtres' => 'إعادة ضبط التصفية', 'Duree' => 'المدة', 'Depart' => 'المغادرة', 'Prix a partir de' => 'السعر ابتداءً من',
+        'Voir details' => 'عرض التفاصيل', 'Demander reservation' => 'طلب حجز', 'Offre' => 'العرض'
     );
 }
 

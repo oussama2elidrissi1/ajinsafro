@@ -457,5 +457,5 @@
 })();
 </script>
 
-<script src="{{ asset('js/hajj-omra-editor-locale.js') }}"></script>
-<script src="{{ asset('js/hajj-omra-formulas.js') }}"></script>
+<script src="{{ asset('js/hajj-omra-editor-locale.js') }}?v={{ filemtime(public_path('js/hajj-omra-editor-locale.js')) }}"></script>
+<script src="{{ asset('js/hajj-omra-formulas.js') }}?v={{ filemtime(public_path('js/hajj-omra-formulas.js')) }}"></script>

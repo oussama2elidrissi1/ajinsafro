@@ -58,17 +58,6 @@ class PublicHajjOmraPackageController extends Controller
                 'detail_url' => $publicBase.'/hajj-omra/'.$package->slug,
                 'request_url' => $publicBase.'/hajj-omra/'.$package->slug.'#reservation-form',
                 'gallery' => $package->images->map(fn ($image) => $image->image_url)->filter()->values()->all(),
-                'departures' => $package->departures->map(fn ($departure) => [
-                    'id' => $departure->id,
-                    'departure_date' => optional($departure->departure_date)->toDateString(),
-                    'return_date' => optional($departure->return_date)->toDateString(),
-                    'status' => $departure->status,
-                    'status_label' => $departure->status_label,
-                    'available_places' => $departure->available_places,
-                    'reserved_places' => $departure->reserved_places,
-                    'remaining_places' => $departure->remaining_places,
-                    'price_from' => $departure->price_from !== null ? (float) $departure->price_from : null,
-                ])->values()->all(),
             ], app(HajjOmraCommercialPresenter::class)->package($package));
         })->values();
 
@@ -154,30 +143,6 @@ class PublicHajjOmraPackageController extends Controller
                 'meta_description' => $package->meta_description,
                 'detail_url' => $publicBase.'/hajj-omra/'.$package->slug,
                 'booking_endpoint' => rtrim((string) config('app.url'), '/').'/api/public/hajj-omra/packages/'.$package->slug.'/booking-requests',
-                'departures' => $package->departures->map(fn ($departure) => [
-                    'id' => $departure->id,
-                    'departure_date' => optional($departure->departure_date)->toDateString(),
-                    'return_date' => optional($departure->return_date)->toDateString(),
-                    'status' => $departure->status,
-                    'status_label' => $departure->status_label,
-                    'available_places' => $departure->available_places,
-                    'reserved_places' => $departure->reserved_places,
-                    'remaining_places' => $departure->remaining_places,
-                    'price_from' => $departure->price_from !== null ? (float) $departure->price_from : null,
-                ])->values()->all(),
-                'room_prices' => $package->roomPrices->map(fn ($roomPrice) => [
-                    'room_type' => $roomPrice->room_type,
-                    'room_type_label' => $roomPrice->room_type_label,
-                    'price' => (float) $roomPrice->price,
-                    'stock' => $roomPrice->stock,
-                ])->values()->all(),
-                'program_days' => $package->programDays->map(fn ($programDay) => [
-                    'day_number' => $programDay->day_number,
-                    'title' => $programDay->title,
-                    'description' => $programDay->description,
-                    'city' => $programDay->city,
-                    'image_url' => $programDay->image_url,
-                ])->values()->all(),
             ], app(HajjOmraCommercialPresenter::class)->package($package)),
         ]);
     }

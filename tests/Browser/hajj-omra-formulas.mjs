@@ -103,6 +103,7 @@ try {
         check('All same-city hotels retained', editor.querySelectorAll('[data-repeat-list="hotel"] [data-repeat-item]').length === 3);
         editor.querySelector('[data-lang-switch="ar"]').click();
         check('Arabic global UI', editor.dir === 'rtl' && editor.lang === 'ar' && editor.querySelector('[data-step="tarifs"]').textContent.includes('الأسعار'));
+        check('Arabic language toggle selected', editor.querySelector('[data-lang-switch="ar"]').getAttribute('aria-pressed') === 'true' && !editor.querySelector('[data-lang-switch="fr"]').classList.contains('btn-primary'));
         check('Arabic formula name pane', getComputedStyle(cards()[0].querySelector('[data-lang-pane="ar"]')).display !== 'none' && cards()[0].querySelector('[data-f="name_ar"]').value === 'البرنامج السياحي');
         check('French pane hidden in Arabic', getComputedStyle(cards()[0].querySelector('[data-lang-pane="fr"]')).display === 'none');
         check('Arabic preview URL', editor.querySelector('[data-formula-preview]').href.includes('locale=ar'));

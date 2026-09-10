@@ -47,6 +47,12 @@
     function translate() {
         const lang = editor.classList.contains('lang-ar') ? 'ar' : 'fr';
         editor.dir = lang === 'ar' ? 'rtl' : 'ltr'; editor.lang = lang;
+        editor.querySelectorAll('[data-lang-switch]').forEach(button => {
+            const selected = button.dataset.langSwitch === lang;
+            button.classList.toggle('btn-primary', selected);
+            button.classList.toggle('btn-outline-secondary', !selected);
+            button.setAttribute('aria-pressed', String(selected));
+        });
         editor.querySelectorAll('[data-ho-fr]').forEach(node => {
             const value = lang === 'ar' ? node.dataset.hoAr : node.dataset.hoFr;
             if (node.textContent !== value) node.textContent = value;

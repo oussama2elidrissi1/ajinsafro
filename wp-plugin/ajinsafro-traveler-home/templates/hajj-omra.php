@@ -21,6 +21,7 @@ get_header();
 
 $settings         = function_exists( 'ajth_get_settings' ) ? ajth_get_settings() : array();
 $page_url         = function_exists( 'ajth_get_hajj_omra_page_url' ) ? ajth_get_hajj_omra_page_url() : home_url( '/hajj-omra/' );
+if ( ajth_ho_locale() === 'ar' ) $page_url = add_query_arg( 'lang', 'ar', $page_url );
 $fallback_image   = function_exists( 'ajth_hajj_omra_default_image_url' ) ? ajth_hajj_omra_default_image_url() : trailingslashit( AJTH_URL ) . 'assets/images/fallback-hajj-omra.svg';
 $packages         = function_exists( 'ajth_get_hajj_omra_packages' ) ? ajth_get_hajj_omra_packages() : array();
 $current_slug     = function_exists( 'ajth_get_current_hajj_omra_package_slug' ) ? ajth_get_current_hajj_omra_package_slug() : '';
@@ -209,23 +210,23 @@ $filtered_packages = array_values(
 			<?php ajth_render_site_header( $settings ); ?>
 		<?php endif; ?>
 
-		<main class="ajho-page ajinsafro-page-container">
+		<main class="ajho-page ajinsafro-page-container" lang="<?php echo esc_attr( ajth_ho_locale() ); ?>" dir="<?php echo ajth_ho_locale() === 'ar' ? 'rtl' : 'ltr'; ?>">
 			<?php if ( $current_slug && ! $current_package ) : ?>
 				<section class="ajho-hero ajho-hero--compact">
 					<div class="ajho-container">
 						<nav class="ajho-breadcrumb" aria-label="Fil d Ariane">
 							<a href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php echo esc_html( ajth_ho_t( 'Accueil' ) ); ?></a>
 							<span>/</span>
-							<a href="<?php echo esc_url( $page_url ); ?>">Hajj & Omra</a>
+							<a href="<?php echo esc_url( $page_url ); ?>"><?php echo esc_html( ajth_ho_t( 'Hajj & Omra' ) ); ?></a>
 							<span>/</span>
-							<span>Offre introuvable</span>
+							<span><?php echo esc_html( ajth_ho_t( 'Offre introuvable' ) ); ?></span>
 						</nav>
 						<div class="ajho-hero__inner">
 							<div class="ajho-hero__copy">
-								<h1>Offre Hajj & Omra introuvable</h1>
-								<p>Cette offre n est plus disponible ou n a pas encore ete publiee.</p>
+								<h1><?php echo esc_html( ajth_ho_t( 'Offre Hajj & Omra introuvable' ) ); ?></h1>
+								<p><?php echo esc_html( ajth_ho_t( 'Cette offre n est plus disponible ou n a pas encore ete publiee.' ) ); ?></p>
 								<div class="ajho-hero__actions">
-									<a href="<?php echo esc_url( $page_url ); ?>" class="ajho-btn ajho-btn--primary">Retour au catalogue</a>
+									<a href="<?php echo esc_url( $page_url ); ?>" class="ajho-btn ajho-btn--primary"><?php echo esc_html( ajth_ho_t( 'Retour au catalogue' ) ); ?></a>
 								</div>
 							</div>
 						</div>
@@ -234,60 +235,62 @@ $filtered_packages = array_values(
 			<?php elseif ( $current_package ) : ?>
 				<?php include AJTH_DIR . 'templates/partials/hajj-omra-detail.php'; ?>
 			<?php else : ?>
+                <nav class="ajho-container" aria-label="Langue / اللغة" style="display:flex;gap:16px;padding-block:12px"><a href="<?php echo esc_url( add_query_arg( 'lang', 'fr', $page_url ) ); ?>" lang="fr">Français</a><a href="<?php echo esc_url( add_query_arg( 'lang', 'ar', $page_url ) ); ?>" lang="ar">العربية</a></nav>
 				<section class="ajho-hero">
 					<div class="ajho-container">
 						<nav class="ajho-breadcrumb ajho-breadcrumb--light" aria-label="Fil d Ariane">
 							<a href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php echo esc_html( ajth_ho_t( 'Accueil' ) ); ?></a>
 							<span>/</span>
-							<span>Hajj & Omra</span>
+							<span><?php echo esc_html( ajth_ho_t( 'Hajj & Omra' ) ); ?></span>
 						</nav>
 
 						<div class="ajho-hero__inner">
 							<div class="ajho-hero__copy">
-								<span class="ajho-kicker ajho-kicker--light">Selection Ajinsafro</span>
-								<h1>Hajj & Omra avec Ajinsafro</h1>
-								<p>Retrouvez nos offres Omra, Hajj, Ramadan, Low Cost et Premium avec un affichage clair, des prix dynamiques et des departs mis a jour depuis notre base.</p>
+								<span class="ajho-kicker ajho-kicker--light"><?php echo esc_html( ajth_ho_t( 'Selection Ajinsafro' ) ); ?></span>
+								<h1><?php echo esc_html( ajth_ho_t( 'Hajj & Omra avec Ajinsafro' ) ); ?></h1>
+								<p><?php echo esc_html( ajth_ho_t( 'Retrouvez nos offres Omra, Hajj, Ramadan, Low Cost et Premium avec un affichage clair, des prix dynamiques et des departs mis a jour depuis notre base.' ) ); ?></p>
 							</div>
 							<div class="ajho-hero__aside">
 								<div class="ajho-hero-card">
 									<strong><?php echo esc_html( (string) count( $packages ) ); ?></strong>
-									<span>offres dynamiques</span>
-									<p>Catalogue synchronise avec le back-office Ajinsafro.</p>
+									<span><?php echo esc_html( ajth_ho_t( 'offres dynamiques' ) ); ?></span>
+									<p><?php echo esc_html( ajth_ho_t( 'Catalogue synchronise avec le back-office Ajinsafro.' ) ); ?></p>
 								</div>
 							</div>
 						</div>
 
 						<form method="get" action="<?php echo esc_url( $page_url ); ?>" class="ajho-search-panel">
+							<input type="hidden" name="lang" value="<?php echo esc_attr( ajth_ho_locale() ); ?>">
 							<label class="ajho-search-field">
 								<span><?php echo esc_html( ajth_ho_t( 'Type' ) ); ?></span>
 								<select name="type">
-									<option value="">Tous les types</option>
+									<option value=""><?php echo esc_html( ajth_ho_t( 'Tous les types' ) ); ?></option>
 									<?php foreach ( $type_options as $value => $label ) : ?>
 										<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $filter_type, $value ); ?>><?php echo esc_html( $label ); ?></option>
 									<?php endforeach; ?>
 								</select>
 							</label>
 							<label class="ajho-search-field">
-								<span>Ville de depart</span>
+								<span><?php echo esc_html( ajth_ho_t( 'Ville de depart' ) ); ?></span>
 								<select name="departure_city">
-									<option value="">Toutes les villes</option>
+									<option value=""><?php echo esc_html( ajth_ho_t( 'Toutes les villes' ) ); ?></option>
 									<?php foreach ( $city_options as $label ) : ?>
 										<option value="<?php echo esc_attr( $label ); ?>" <?php selected( $filter_city, $label ); ?>><?php echo esc_html( $label ); ?></option>
 									<?php endforeach; ?>
 								</select>
 							</label>
 							<label class="ajho-search-field">
-								<span>Budget max</span>
+								<span><?php echo esc_html( ajth_ho_t( 'Budget max' ) ); ?></span>
 								<input type="number" name="budget" min="0" value="<?php echo esc_attr( $filter_budget > 0 ? $filter_budget : '' ); ?>" placeholder="20000">
 							</label>
 							<label class="ajho-search-field">
-								<span>Date de depart</span>
+								<span><?php echo esc_html( ajth_ho_t( 'Date de depart' ) ); ?></span>
 								<input type="date" name="departure_date" value="<?php echo esc_attr( $filter_date ); ?>">
 							</label>
 							<div class="ajho-search-actions">
-								<button type="submit" class="ajho-btn ajho-btn--primary">Filtrer</button>
+								<button type="submit" class="ajho-btn ajho-btn--primary"><?php echo esc_html( ajth_ho_t( 'Filtrer' ) ); ?></button>
 								<?php if ( $has_active_filters ) : ?>
-									<a href="<?php echo esc_url( $page_url ); ?>" class="ajho-btn ajho-btn--ghost">Reinitialiser</a>
+									<a href="<?php echo esc_url( $page_url ); ?>" class="ajho-btn ajho-btn--ghost"><?php echo esc_html( ajth_ho_t( 'Reinitialiser' ) ); ?></a>
 								<?php endif; ?>
 							</div>
 						</form>
@@ -298,31 +301,31 @@ $filtered_packages = array_values(
 					<section class="ajho-stats">
 						<div>
 							<strong><?php echo esc_html( (string) count( $filtered_packages ) ); ?></strong>
-							<span>offres visibles</span>
+							<span><?php echo esc_html( ajth_ho_t( 'offres visibles' ) ); ?></span>
 						</div>
 						<div>
 							<strong><?php echo esc_html( (string) count( array_filter( $filtered_packages, static function ( $item ) { return ! empty( $item['is_featured'] ); } ) ) ); ?></strong>
-							<span>offres a la une</span>
+							<span><?php echo esc_html( ajth_ho_t( 'offres a la une' ) ); ?></span>
 						</div>
 						<div>
 							<strong><?php echo esc_html( (string) count( $city_options ) ); ?></strong>
-							<span>villes de depart</span>
+							<span><?php echo esc_html( ajth_ho_t( 'villes de depart' ) ); ?></span>
 						</div>
 					</section>
 
 					<section class="ajho-results-head">
 						<div>
-							<span class="ajho-kicker">Catalogue officiel</span>
-							<h2>Offres Hajj & Omra disponibles</h2>
+							<span class="ajho-kicker"><?php echo esc_html( ajth_ho_t( 'Catalogue officiel' ) ); ?></span>
+							<h2><?php echo esc_html( ajth_ho_t( 'Offres Hajj & Omra disponibles' ) ); ?></h2>
 						</div>
-						<p>Des offres Ajinsafro pensees pour une lecture rapide: image, hotels, depart, places restantes, prix et acces direct a la reservation.</p>
+						<p><?php echo esc_html( ajth_ho_t( 'Des offres Ajinsafro pensees pour une lecture rapide: image, hotels, depart, places restantes, prix et acces direct a la reservation.' ) ); ?></p>
 					</section>
 
 					<?php if ( empty( $filtered_packages ) ) : ?>
 						<div class="ajho-empty">
-							<h2>Aucune offre ne correspond a vos filtres</h2>
-							<p>Essayez une autre ville de depart, un autre budget ou reinitialisez vos criteres.</p>
-							<a href="<?php echo esc_url( $page_url ); ?>" class="ajho-btn ajho-btn--primary">Reinitialiser les filtres</a>
+							<h2><?php echo esc_html( ajth_ho_t( 'Aucune offre ne correspond a vos filtres' ) ); ?></h2>
+							<p><?php echo esc_html( ajth_ho_t( 'Essayez une autre ville de depart, un autre budget ou reinitialisez vos criteres.' ) ); ?></p>
+							<a href="<?php echo esc_url( $page_url ); ?>" class="ajho-btn ajho-btn--primary"><?php echo esc_html( ajth_ho_t( 'Reinitialiser les filtres' ) ); ?></a>
 						</div>
 					<?php else : ?>
 						<div class="ajho-grid">
@@ -348,23 +351,23 @@ $filtered_packages = array_values(
 										<h3><a href="<?php echo esc_url( $detail_url ); ?>"><?php echo esc_html( $package['title'] ?? '' ); ?></a></h3>
 										<p><?php echo esc_html( $package['short_description'] ?? '' ); ?></p>
 										<ul class="ajho-card__facts">
-											<li><strong>Duree</strong><span><?php echo esc_html( $package['duration_label'] ?? ajth_ho_t('A confirmer') ); ?></span></li>
-											<li><strong>Depart</strong><span><?php echo esc_html( $package['departure_city'] ?? ajth_ho_t('A confirmer') ); ?></span></li>
+											<li><strong><?php echo esc_html( ajth_ho_t( 'Duree' ) ); ?></strong><span><?php echo esc_html( $package['duration_label'] ?? ajth_ho_t('A confirmer') ); ?></span></li>
+											<li><strong><?php echo esc_html( ajth_ho_t( 'Depart' ) ); ?></strong><span><?php echo esc_html( $package['departure_city'] ?? ajth_ho_t('A confirmer') ); ?></span></li>
 											<li><strong><?php echo esc_html( ajth_ho_t( 'Date' ) ); ?></strong><span><?php echo esc_html( $first_departure_label( $package ) ); ?></span></li>
 											<li><strong><?php echo esc_html( ajth_ho_t( 'Makkah' ) ); ?></strong><span><?php echo esc_html( $package['makkah_hotel'] ?? ajth_ho_t('A confirmer') ); ?></span></li>
 											<li><strong><?php echo esc_html( ajth_ho_t( 'Madinah' ) ); ?></strong><span><?php echo esc_html( $package['madinah_hotel'] ?? ajth_ho_t('A confirmer') ); ?></span></li>
-											<li><strong><?php echo esc_html( ajth_ho_t( 'Places' ) ); ?></strong><span><?php echo esc_html( (string) ( $package['remaining_places'] ?? 0 ) ); ?> restantes</span></li>
+											<li><strong><?php echo esc_html( ajth_ho_t( 'Places' ) ); ?></strong><span><?php echo esc_html( (string) ( $package['remaining_places'] ?? 0 ) ); ?> <?php echo esc_html( ajth_ho_t('restantes') ); ?></span></li>
 										</ul>
 									</div>
 
 									<div class="ajho-card__footer">
 										<div class="ajho-card__price">
-											<small>Prix a partir de</small>
+											<small><?php echo esc_html( ajth_ho_t( 'Prix a partir de' ) ); ?></small>
 											<strong><?php echo esc_html( $format_price( $package['price_from'] ?? null, $package['currency'] ?? 'DH' ) ); ?></strong>
 										</div>
 										<div class="ajho-card__actions">
-											<a href="<?php echo esc_url( $detail_url ); ?>" class="ajho-btn ajho-btn--primary">Voir details</a>
-											<a href="<?php echo esc_url( $request_url ); ?>" class="ajho-btn ajho-btn--secondary">Demander reservation</a>
+											<a href="<?php echo esc_url( $detail_url ); ?>" class="ajho-btn ajho-btn--primary"><?php echo esc_html( ajth_ho_t( 'Voir details' ) ); ?></a>
+											<a href="<?php echo esc_url( $request_url ); ?>" class="ajho-btn ajho-btn--secondary"><?php echo esc_html( ajth_ho_t( 'Demander reservation' ) ); ?></a>
 										</div>
 									</div>
 								</article>

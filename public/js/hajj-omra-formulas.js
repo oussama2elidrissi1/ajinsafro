@@ -39,6 +39,7 @@
         wrap.append(caption(el('span'), fr, arabic));
         const input = el('select', {'data-f': key, 'data-source': source, class: 'form-select form-select-sm mt-1'});
         input.multiple = multiple;
+        if (source === 'departure' || source === 'day') input.dir = 'ltr';
         if (multiple) input.size = 5;
         input._selectedRefs = multiple ? (value || []).map(String) : [String(value ?? '')];
         wrap.append(input); parent.append(wrap); return input;
@@ -89,7 +90,7 @@
             if (!client.value) client.value = window.crypto?.randomUUID ? window.crypto.randomUUID() : 'row_' + Date.now() + '_' + Math.random().toString(36).slice(2);
             const ref = idField.value || 'new:' + client.value;
             let label;
-            if (kind === 'hotel') label = [val('city'), ar() ? val('name_ar') || val('name') : val('name') || val('name_ar')].filter(Boolean).join(' · ');
+            if (kind === 'hotel') label = [row.querySelector('[name$="[city]"]')?.selectedOptions[0]?.textContent || val('city'), ar() ? val('name_ar') || val('name') : val('name') || val('name_ar')].filter(Boolean).join(' · ');
             if (kind === 'room') {
                 const type = row.querySelector('[name$="[room_type]"]');
                 label = (type?.selectedOptions[0]?.textContent || '') + ' · ' + val('price') + ' ' + (editor.querySelector('[name="currency"]')?.value || 'DH');
