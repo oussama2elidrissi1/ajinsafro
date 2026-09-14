@@ -4,6 +4,7 @@ namespace App\Services\Reservations;
 
 use App\Models\Departure;
 use App\Models\DepartureHotelRoom;
+use App\Models\ReservationRoomAllocation;
 use App\Models\TourHotel;
 use App\Models\TravelDate;
 use App\Models\Voyage;
@@ -598,7 +599,13 @@ class ReservationPricingService
         $tourHotelRoomsCount = null;
         $availabilityCount = null;
 
-        if ($rooms->isNotEmpty()) {
+        if ($departure->roomAllocations->isNotEmpty()) {
+            // The explicit configuration per departure is shared with the voyage editor.
+            $roomsPayload = $this->buildDepartureRoomAllocationPayload($departure)['rooms'];
+            $roomsSource = 'departure_room_allocations';
+            $mode = $roomsPayload !== [] ? 'rooms' : 'blocked';
+            $message = $roomsPayload !== [] ? null : 'Aucune chambre disponible pour ce départ.';
+        } elseif ($rooms->isNotEmpty()) {
             $mode = 'rooms';
             $roomsSource = 'departure_hotel_rooms';
             $roomsPayload = $departure->departureHotels
@@ -875,6 +882,13 @@ class ReservationPricingService
             }
         }
 
+        $bookedRooms = ReservationRoomAllocation::query()
+            ->where('room_source_type', 'departure_room_allocation')
+            ->whereIn('room_source_id', $departure->roomAllocations->modelKeys())
+            ->whereHas('reservation', fn ($query) => $query->where('departure_id', $departure->id)
+                ->whereIn('status', app(\App\Services\DepartureManagementService::class)->stockConsumingStatuses()))
+            ->get()->groupBy('room_source_id');
+
         $roomsPayload = [];
         foreach ($departure->roomAllocations as $allocation) {
             $roomType = trim((string) ($allocation->room_type ?? ''));
@@ -886,6 +900,8 @@ class ReservationPricingService
             }
 
             $hotelId = (int) ($allocation->hotel_id ?? 0);
+            $usedRooms = $bookedRooms->get($allocation->id, collect())->sum(fn ($row) => max(1, (int) $row->rooms_total_count));
+            $remainingRooms = max(0, $quantity - $usedRooms);
         $roomsPayload[] = [
             'id' => (int) $allocation->id,
             'room_source_id' => (int) $allocation->id,
@@ -901,13 +917,13 @@ class ReservationPricingService
             'capacity_total' => $capacity,
             'capacity_per_room' => $capacity,
             'total_rooms' => $quantity,
-            'used_rooms' => 0,
-            'available_rooms' => $quantity,
-            'remaining_rooms' => $quantity,
+            'used_rooms' => $usedRooms,
+            'available_rooms' => $remainingRooms,
+            'remaining_rooms' => $remainingRooms,
             'total_places' => $quantity * $capacity,
-            'used_places' => 0,
-            'available_places' => $quantity * $capacity,
-            'remaining_places' => $quantity * $capacity,
+            'used_places' => $usedRooms * $capacity,
+            'available_places' => $remainingRooms * $capacity,
+            'remaining_places' => $remainingRooms * $capacity,
             'unit_supplement' => (float) ($allocation->unit_supplement ?? $allocation->supplement ?? 0),
         ];
         }

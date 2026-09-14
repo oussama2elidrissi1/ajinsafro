@@ -300,6 +300,8 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('reservations/voyage-departures', [ReservationsController::class, 'voyageDepartures'])->name('reservations.voyage-departures');
         Route::get('reservations/extras', [ReservationsController::class, 'extras'])->name('reservations.extras');
         Route::get('reservations/departure-hotels-rooms', [ReservationsController::class, 'departureHotelsRooms'])->name('reservations.departure-hotels-rooms');
+        Route::get('circuits/voyages/{voyage}/departures/{departure}/room-allocations', [\App\Http\Controllers\Admin\DepartureRoomAllocationController::class, 'show'])->name('circuits.voyages.departures.room-allocations.show');
+        Route::put('circuits/voyages/{voyage}/departures/{departure}/room-allocations', [\App\Http\Controllers\Admin\DepartureRoomAllocationController::class, 'update'])->name('circuits.voyages.departures.room-allocations.update');
         Route::post('reservations/pricing-preview', [ReservationsController::class, 'pricingPreview'])->name('reservations.pricing-preview');
         Route::get('reservations/receipt', [ReservationsController::class, 'showReceipt'])->name('reservations.receipt');
         Route::post('reservations', [ReservationsController::class, 'store'])->name('reservations.store');

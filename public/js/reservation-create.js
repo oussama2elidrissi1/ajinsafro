@@ -767,14 +767,14 @@
         return rows;
     }
 
-    function setAvailableRoomTypes(groups) {
+    function setAvailableRoomTypes(groups, preserveAllocations) {
         console.log('[Rooming] setAvailableRoomTypes called', {
             groupsArg: groups,
             groupsLength: groups ? groups.length : 0,
             windowReservationStateAvailableRooms: window.reservationState && window.reservationState.availableRooms ? window.reservationState.availableRooms : undefined
         });
         
-        if ((!groups || !groups.length) && window.reservationState && Array.isArray(window.reservationState.availableRooms)) {
+        if (!Array.isArray(groups) && window.reservationState && Array.isArray(window.reservationState.availableRooms)) {
             groups = window.reservationState.availableRooms;
             console.log('[Rooming] setAvailableRoomTypes - Fallback to window.reservationState.availableRooms', groups);
         }
@@ -792,7 +792,21 @@
         console.log('[Rooming] setAvailableRoomTypes - State updated, now calling renderAvailableRooms and renderRooming');
         
         renderAvailableRooms();
-        if (!maybeAutoRoomingDefault(true)) {
+        if (preserveAllocations) {
+            roomingAllocations.forEach(function (allocation) {
+                var room = availableRoomTypes.find(function (item) {
+                    return String(item.room_source_id) === String(allocation.room_source_id) && item.room_source_type === allocation.room_source_type;
+                });
+                if (!room) return;
+                allocation.room_type = room.room_type;
+                allocation.capacity = room.capacity;
+                allocation.unit_supplement = room.unit_supplement;
+                allocation.supplement_total = room.unit_supplement;
+                normalizeRoomingAllocation(allocation);
+            });
+            renderRooming();
+            syncFinancialSummary();
+        } else if (!maybeAutoRoomingDefault(true)) {
             renderRooming();
         }
     }
@@ -814,7 +828,7 @@
         }
         target.innerHTML = availableRoomTypes.map(function (room) {
             return '<div class="reservation-create__available-room">' +
-                '<strong>' + room.room_type + '</strong>' +
+                '<strong>' + escapeHtml(room.room_type) + '</strong>' +
                 '<span>' + room.available_rooms + ' chambres, capacite ' + room.capacity + ', ' + formatMoney(room.unit_supplement) + '</span>' +
             '</div>';
         }).join('');
@@ -840,11 +854,16 @@
 
         roomingAllocations.forEach(function (allocation) {
             normalizeRoomingAllocation(allocation);
+            if (!availableRoomTypes.some(function (room) { return String(room.room_source_id) === String(allocation.room_source_id) && room.room_source_type === allocation.room_source_type; })) {
+                invalid = true;
+                errors.push('La chambre ' + allocation.room_type + ' n’est plus disponible. Choisissez un autre type.');
+            }
             var key = String(allocation.room_source_id || allocation.room_type || '');
             usedByType[key] = (usedByType[key] || 0) + 1;
             var assignedCount = (allocation.traveler_keys || []).length;
             occupiedBeds += assignedCount;
-            supplement += parseNumber(allocation.unit_supplement);
+            allocation.supplement_total = parseNumber(allocation.unit_supplement) * assignedCount;
+            supplement += allocation.supplement_total;
             if (assignedCount === 0) {
                 invalid = true;
                 errors.push('Cette chambre ne contient aucun voyageur.');
@@ -1191,8 +1210,11 @@
             }).join('');
             var roomOptions = availableRoomTypes.map(function (room) {
                 var selected = String(room.room_source_id) === String(allocation.room_source_id) ? ' selected' : '';
-                return '<option value="' + room.room_source_id + '"' + selected + '>' + room.room_type + ' (' + room.available_rooms + ' dispo)</option>';
+                return '<option value="' + room.room_source_id + '"' + selected + '>' + escapeHtml(room.room_type) + ' (' + room.available_rooms + ' dispo)</option>';
             }).join('');
+            if (!availableRoomTypes.some(function (room) { return String(room.room_source_id) === String(allocation.room_source_id) && room.room_source_type === allocation.room_source_type; })) {
+                roomOptions = '<option value="" selected disabled>' + escapeHtml(allocation.room_type) + ' (indisponible)</option>' + roomOptions;
+            }
             var modeOptions = [
                 ['full', 'Chambre complete'],
                 ['half_male', 'Demi-double homme'],
@@ -1208,7 +1230,7 @@
                 ? '<span class="reservation-create__room-badge reservation-create__room-badge--warn">En attente de jumelage</span>'
                 : '';
             return '<article class="reservation-create__room-card">' +
-                '<div class="reservation-create__room-head"><strong>Chambre ' + (index + 1) + ' - ' + allocation.room_type + '</strong><span>' + modeLabel + '</span>' + waitingBadge + '</div>' +
+                '<div class="reservation-create__room-head"><strong>Chambre ' + (index + 1) + ' - ' + escapeHtml(allocation.room_type) + '</strong><span>' + modeLabel + '</span>' + waitingBadge + '</div>' +
                 '<p>Capacite: ' + allocation.capacity + ' | Occupes: ' + (allocation.traveler_keys || []).length + '/' + allocation.capacity + ' | Statut: ' + allocation.status + '</p>' +
                 '<div class="reservation-create__room-controls"><select class="reservation-create__input" data-rooming-room-type="' + index + '">' + roomOptions + '</select><select class="reservation-create__input" data-rooming-mode="' + index + '">' + modeOptions + '</select></div>' +
                 '<ul>' + travelerList + '</ul>' +
@@ -1228,7 +1250,7 @@
             alerts.classList.toggle('reservation-create__alert--warn', !isInfoOnly);
             alerts.classList.toggle('reservation-create__alert--info', isInfoOnly);
             alerts.classList.toggle('d-none', warnings.length === 0);
-            alerts.innerHTML = warnings.length ? '<strong>' + (isInfoOnly ? 'Information rooming' : 'Alertes rooming') + '</strong><ul><li>' + warnings.join('</li><li>') + '</li></ul>' : '';
+            alerts.innerHTML = warnings.length ? '<strong>' + (isInfoOnly ? 'Information rooming' : 'Alertes rooming') + '</strong><ul><li>' + warnings.map(escapeHtml).join('</li><li>') + '</li></ul>' : '';
         }
         if (hidden) hidden.value = JSON.stringify(roomingAllocations.map(function (allocation) {
             return {
@@ -1253,7 +1275,7 @@
         var unitPrice = getBaseUnitPrice();
         var totalBaseBeforeDiscount = unitPrice * travelerCount;
         var extras = extrasTotal();
-        var effectiveRoomSupplement = rooming.roomSupplementTotal > 0 ? rooming.roomSupplementTotal : room.roomSupplementTotal;
+        var effectiveRoomSupplement = roomingAllocations.length ? rooming.roomSupplementTotal : room.roomSupplementTotal;
         var totalBeforeDiscount = totalBaseBeforeDiscount + effectiveRoomSupplement + extras;
         var discount = discountSummary(totalBeforeDiscount, travelerCount);
         var totalBase = discount.scope === 'total'
@@ -2517,7 +2539,7 @@
         // Register event listener FIRST before any room loading happens
         document.addEventListener('reservation:rooms-loaded', function (event) {
             console.log('[Reservation Create] Event reservation:rooms-loaded received', event.detail);
-            setAvailableRoomTypes(event && event.detail ? event.detail.rooms : []);
+            setAvailableRoomTypes(event && event.detail ? event.detail.rooms : [], !!(event.detail && event.detail.payload && event.detail.payload.inventory_updated));
         });
 
         extrasMap = parseJsonScript('reservation-create-extras-map', {});

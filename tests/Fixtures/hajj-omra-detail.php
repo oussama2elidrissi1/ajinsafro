@@ -15,7 +15,9 @@ function selected($value, $current = true) { if ((string) $value === (string) $c
 function checked($value, $current = true) { if ((string) $value === (string) $current) echo 'checked="checked"'; }
 function disabled($value, $current = true) { if ((string) $value === (string) $current) echo 'disabled="disabled"'; }
 function wp_nonce_field($action, $name) { echo '<input type="hidden" name="'.esc_attr($name).'" value="fixture-nonce">'; }
-function ajth_get_hajj_omra_detail_url($slug) { return '/hajj-omra/'.$slug.'/'; }
+if (!defined('HO_TEST_REAL_CATALOG')) {
+    function ajth_get_hajj_omra_detail_url($slug) { return '/hajj-omra/'.$slug.'/'; }
+}
 
 class HajjOmraDetailFixture
 {

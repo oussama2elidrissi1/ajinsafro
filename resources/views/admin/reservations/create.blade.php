@@ -8,6 +8,7 @@
         <link href="{{ URL::asset('css/agent-dashboard.css') }}" rel="stylesheet" type="text/css" />
     @endif
     <link rel="stylesheet" href="{{ asset('css/reservation-create.css') . '?v=' . @filemtime(public_path('css/reservation-create.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/departure-rooms-modal.css') . '?v=' . @filemtime(public_path('css/departure-rooms-modal.css')) }}">
     @if(request()->attributes->get('agent_reservation_mode', false))
         <style>
             .agent-portal-main .reservation-create {
@@ -377,6 +378,10 @@
             </div>
         </form>
 
+        @if (($fastCreateMode ?? false) && !$agentReservationMode && auth()->user()?->can('circuits.voyages.view'))
+            @include('admin.reservations.create.partials.departure-rooms-modal')
+        @endif
+
         <script type="application/json" id="reservation-create-extras-map">{!! json_encode($extrasByVoyage ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) !!}</script>
         <script type="application/json" id="reservation-create-wp-voyage-map">{!! json_encode(($voyages ?? collect())->filter(fn ($v) => (int) ($v->wp_post_id ?? 0) > 0)->mapWithKeys(fn ($v) => [(string) $v->wp_post_id => (int) $v->id])->all(), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) !!}</script>
         <script>
@@ -393,4 +398,5 @@
 
 @push('scripts')
     <script src="{{ asset('js/reservation-create.js') . '?v=' . @filemtime(public_path('js/reservation-create.js')) }}"></script>
+    <script src="{{ asset('js/departure-rooms-modal.js') . '?v=' . @filemtime(public_path('js/departure-rooms-modal.js')) }}"></script>
 @endpush

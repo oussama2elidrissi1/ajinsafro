@@ -879,6 +879,7 @@
             })
             .then(function (response) {
                 console.log('[Rooming] availableRooms BEFORE renderDepartureRooms', window.reservationState.availableRooms);
+                if (requestSeq !== roomsDebugRequestSeq) return;
                 if (response && response.pricing && parseNumber(response.pricing.unit_price) > 0 && basePriceInput) {
                     basePriceInput.value = parseNumber(response.pricing.unit_price).toFixed(2);
                     if (typeof window.reservationCreateRecomputeTotals === 'function') {
@@ -889,6 +890,7 @@
                 console.log('[Rooming] availableRooms AFTER renderDepartureRooms', window.reservationState.availableRooms);
             })
             .catch(function (error) {
+                if (requestSeq !== roomsDebugRequestSeq) return;
                 console.error('[Rooming] Reload rooms Error', {
                     error: error,
                     message: error && error.message ? error.message : undefined,
@@ -1168,6 +1170,15 @@
     };
     
     window.reservationCreateReloadDepartureRooms = window.reservationReloadRoomsFromState;
+    window.reservationCreateApplyDepartureRooms = function (payload) {
+        if (!payload || String(payload.departure && payload.departure.id) !== String(window.reservationState.selectedDepartureId)) return;
+        // An older availability request must not undo the just-saved inventory.
+        roomsDebugRequestSeq++;
+        renderDepartureRooms(Object.assign({}, payload, {
+            pricing: (window.reservationDepartureRoomsPayload || {}).pricing || window.reservationState.pricing || {},
+            inventory_updated: true
+        }));
+    };
     window.reservationCreateRecomputeTotals = window.reservationCreateRecomputeTotals || syncSummary;
 })();
 </script>

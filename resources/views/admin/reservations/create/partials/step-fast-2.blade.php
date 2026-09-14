@@ -25,6 +25,9 @@
 
             <div class="reservation-create__rooming-panel">
                 <p class="reservation-create__mini-title">Chambres disponibles</p>
+                @if (!request()->attributes->get('agent_reservation_mode', false) && auth()->user()?->can('circuits.voyages.view'))
+                    <button type="button" id="btn-manage-departure-rooms" class="reservation-create__button reservation-create__button--secondary mb-3" aria-haspopup="dialog" aria-controls="departure-rooms-modal">Gérer les chambres du départ</button>
+                @endif
                 <div id="rooming-available-rooms" class="reservation-create__available-rooms">
                     Sélectionnez un départ à l'étape Prestation.
                 </div>
