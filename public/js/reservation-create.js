@@ -423,6 +423,67 @@
             });
     }
 
+    /**
+     * Carte extra du tunnel rapide.
+     *
+     * Le modele de donnees reste celui du serveur (application_scope +
+     * traveler_keys) : la case maitre n'est qu'un raccourci. « Tous les
+     * voyageurs » = scope per_traveler, « Au choix » = traveler_selection.
+     * Un extra decoche n'a aucun voyageur selectionne et collectExtras l'ignore.
+     */
+    function fastExtraCardHtml(extra, sourceType, snapshot, travelers) {
+        var adultPrice = parseNumber(extra.price_adult);
+        var childPrice = parseNumber(extra.price_child);
+        var scopeAll = snapshot.scope === 'per_traveler';
+        var enabled = scopeAll || snapshot.travelers.length > 0;
+        var description = String(extra.description || 'Option supplémentaire pour ce dossier.');
+        var isLong = description.length > 150;
+        var optional = sourceType === 'activity' || extra.extra_type === 'activity_optional';
+
+        var chips = travelers.map(function (traveler) {
+            var unitPrice = traveler.priceType === 'child' && childPrice > 0 ? childPrice : adultPrice;
+            var checked = scopeAll || snapshot.travelers.indexOf(traveler.id) !== -1;
+            return '<label class="reservation-fast-extra__chip">' +
+                '<input type="checkbox" class="reservation-create-extra-cb" data-traveler-id="' + traveler.id + '" data-traveler-type="' + traveler.type + '" data-price="' + unitPrice + '"' + (checked ? ' checked' : '') + '>' +
+                '<span class="reservation-fast-extra__chip-mark" aria-hidden="true"></span>' +
+                '<span class="reservation-fast-extra__chip-name">' + escapeHtml(traveler.label) + '</span>' +
+            '</label>';
+        }).join('');
+
+        return '' +
+            '<input type="hidden" data-extra-scope value="' + (scopeAll ? 'per_traveler' : 'traveler_selection') + '">' +
+            '<div class="reservation-fast-extra__head">' +
+                '<button type="button" class="reservation-fast-extra__check" data-extra-enabled aria-pressed="' + (enabled ? 'true' : 'false') + '" aria-label="Activer ' + escapeHtml(String(extra.name || 'cet extra')) + '"></button>' +
+                '<div class="reservation-fast-extra__main">' +
+                    '<div class="reservation-fast-extra__title-row">' +
+                        '<span class="reservation-fast-extra__title">' + escapeHtml(String(extra.name || 'Extra')) + '</span>' +
+                        (optional ? '<span class="reservation-fast-extra__badge">Activité optionnelle</span>' : '') +
+                    '</div>' +
+                    '<p class="reservation-fast-extra__desc' + (isLong ? ' is-clamped' : '') + '" data-extra-desc>' + escapeHtml(description) + '</p>' +
+                    (isLong ? '<button type="button" class="reservation-fast-extra__more" data-extra-more>Lire la suite</button>' : '') +
+                '</div>' +
+                '<div class="reservation-fast-extra__price">' +
+                    '<div class="reservation-fast-extra__amount">' + formatMoney(adultPrice) + '</div>' +
+                    '<div class="reservation-fast-extra__unit">par voyageur</div>' +
+                    ((childPrice > 0 && childPrice !== adultPrice) ? '<div class="reservation-fast-extra__unit">enfant ' + formatMoney(childPrice) + '</div>' : '') +
+                '</div>' +
+            '</div>' +
+            '<div class="reservation-fast-extra__body"' + (enabled ? '' : ' hidden') + '>' +
+                '<div class="reservation-fast-extra__scope">' +
+                    '<span class="reservation-create__label">Appliquer à</span>' +
+                    '<span class="reservation-fast-extra__seg">' +
+                        '<button type="button" data-extra-scope-set="per_traveler" class="' + (scopeAll ? 'is-active' : '') + '">Tous les voyageurs</button>' +
+                        '<button type="button" data-extra-scope-set="traveler_selection" class="' + (scopeAll ? '' : 'is-active') + '">Au choix</button>' +
+                    '</span>' +
+                '</div>' +
+                '<div class="reservation-fast-extra__travelers">' + chips + '</div>' +
+                '<div class="reservation-fast-extra__foot">' +
+                    '<span><strong data-extra-applied-count>0</strong> voyageur(s) × ' + formatMoney(adultPrice) + '</span>' +
+                    '<strong data-extra-total>0 DH</strong>' +
+                '</div>' +
+            '</div>';
+    }
+
     function renderExtras() {
         var select = document.getElementById('select-tour-id');
         var hiddenTourId = document.getElementById('tour_id_hidden');
@@ -494,7 +555,7 @@
             }).join('');
 
             var card = document.createElement('div');
-            card.className = 'reservation-create__extra-card';
+            card.className = 'reservation-create__extra-card' + (isFastMode ? ' reservation-fast-extra' : '');
             card.setAttribute('data-extra-key', extraKey);
             card.setAttribute('data-extra-source-type', sourceType);
             card.setAttribute('data-extra-source-id', sourceId);
@@ -503,6 +564,13 @@
             card.setAttribute('data-extra-description', String(extra.description || ''));
             card.setAttribute('data-extra-adult-price', String(parseNumber(extra.price_adult)));
             card.setAttribute('data-extra-child-price', String(parseNumber(extra.price_child)));
+
+            if (isFastMode) {
+                card.innerHTML = fastExtraCardHtml(extra, sourceType, snapshot, travelers);
+                container.appendChild(card);
+                return;
+            }
+
             card.innerHTML =
                 '<div class="reservation-create__extra-head">' +
                     '<div>' +
@@ -541,6 +609,26 @@
         syncFinancialSummary();
     }
 
+    /**
+     * Reflete l'etat reel de la carte extra (mode rapide) : case maitre, segment
+     * « Appliquer a » et repli du corps. Un extra est actif des qu'il applique a
+     * au moins un voyageur — c'est exactement ce que collectExtras retiendra.
+     */
+    function syncFastExtraCard(card, scope, appliedCount) {
+        var check = card.querySelector('[data-extra-enabled]');
+        var body = card.querySelector('.reservation-fast-extra__body');
+        // Le depli est pilote par la case maitre : on ne le referme pas sous les
+        // doigts de l'agent qui decoche momentanement tous les voyageurs.
+        var open = !!body && !body.hidden;
+
+        card.classList.toggle('is-on', appliedCount > 0);
+        if (check) check.setAttribute('aria-pressed', open ? 'true' : 'false');
+
+        card.querySelectorAll('[data-extra-scope-set]').forEach(function (button) {
+            button.classList.toggle('is-active', button.getAttribute('data-extra-scope-set') === scope);
+        });
+    }
+
     function bindExtrasEvents() {
         document.querySelectorAll('.reservation-create__extra-card').forEach(function (card) {
             var scope = card.querySelector('[data-extra-scope]');
@@ -564,6 +652,7 @@
                 if (totalEl) {
                     totalEl.textContent = formatMoney(extraCardTotal(card));
                 }
+                if (isFastMode) syncFastExtraCard(card, currentScope, appliedCount);
                 syncFinancialSummary();
             }
 
@@ -824,6 +913,13 @@
         if (!availableRoomTypes.length) {
             target.innerHTML = '<div class="reservation-create__placeholder">Aucune chambre detaillee chargee pour ce depart.</div>' +
                 '<button type="button" class="reservation-create__button reservation-create__button--secondary mt-2" id="btn-reload-rooms">Recharger les chambres</button>';
+            return;
+        }
+        if (isFastMode) {
+            // Inventaire compact, affiche en fin de barre d'actions.
+            target.innerHTML = availableRoomTypes.map(function (room) {
+                return '<b>' + room.available_rooms + ' ' + escapeHtml(String(room.room_type).toLowerCase()) + '</b>';
+            }).join('<span aria-hidden="true"> · </span>');
             return;
         }
         target.innerHTML = availableRoomTypes.map(function (room) {
@@ -1180,6 +1276,163 @@
         syncFinancialSummary();
     }
 
+    /**
+     * Rappel de contexte affiche sous le titre de l'etape 2 (mode rapide).
+     * Les repartitions demi-double dependent du sexe : on le rappelle ici plutot
+     * que dans un encart de statistiques separe.
+     */
+    function renderFastRoomingHint(travelers, bedTravelers) {
+        var hint = document.getElementById('rooming-hint');
+        if (!hint) return;
+
+        var beds = roomingAllocations.reduce(function (sum, allocation) {
+            return sum + (parseInt(allocation.capacity, 10) || 0);
+        }, 0);
+        var males = bedTravelers.filter(function (t) { return t.gender === 'male'; }).length;
+        var females = bedTravelers.filter(function (t) { return t.gender === 'female'; }).length;
+        var unknown = bedTravelers.length - males - females;
+
+        var parts = [
+            bedTravelers.length + ' voyageur(s) avec lit',
+            roomingAllocations.length + ' chambre(s)',
+            beds + ' lit(s)'
+        ];
+        if (males || females) {
+            parts.push(males + 'H / ' + females + 'F' + (unknown ? ' / ' + unknown + ' sans sexe' : ''));
+        } else if (unknown) {
+            parts.push(unknown + ' voyageur(s) sans sexe renseigne');
+        }
+
+        hint.textContent = parts.join(' · ');
+    }
+
+    /**
+     * Carte chambre du tunnel rapide : chaque lit est un controle a part entiere
+     * (selection d'un voyageur ou « Lit libre »), pour conserver l'affectation
+     * manuelle sous l'apparence de la maquette.
+     */
+    function renderFastRoomingBoard(board, allocations, byId, bedTravelers, assigned) {
+        if (!allocations.length) {
+            board.innerHTML = '<div class="reservation-fast-empty">' +
+                '<span class="reservation-fast-empty__icon" aria-hidden="true">+</span>' +
+                '<div class="reservation-fast-empty__body">' +
+                    '<div class="reservation-fast-empty__title">Aucune chambre répartie</div>' +
+                    '<p class="reservation-fast-empty__text">Lancez la répartition automatique ou ajoutez une chambre manuellement.</p>' +
+                '</div>' +
+            '</div>';
+            return;
+        }
+
+        var MODE_LABELS = [
+            ['full', 'Chambre complète'],
+            ['half_male', 'Demi-double homme'],
+            ['half_female', 'Demi-double femme'],
+            ['single', 'Chambre single'],
+            ['family', 'Chambre famille']
+        ];
+
+        board.innerHTML = allocations.map(function (allocation, index) {
+            var keys = allocation.traveler_keys || [];
+            var capacity = Math.max(1, parseInt(allocation.capacity, 10) || 1);
+            var filled = keys.length;
+            var shared = allocation.occupancy_mode === 'half_male' || allocation.occupancy_mode === 'half_female';
+            var partial = filled < capacity;
+
+            var state, stateClass;
+            if (!partial) {
+                state = 'COMPLÈTE';
+                stateClass = 'is-complete';
+            } else if (shared) {
+                state = 'EN ATTENTE DE JUMELAGE';
+                stateClass = 'is-shared';
+            } else {
+                state = 'INCOMPLÈTE';
+                stateClass = 'is-partial';
+            }
+
+            var roomOptions = availableRoomTypes.map(function (room) {
+                var selected = String(room.room_source_id) === String(allocation.room_source_id) ? ' selected' : '';
+                return '<option value="' + room.room_source_id + '"' + selected + '>' + escapeHtml(room.room_type) + ' — ' + room.available_rooms + ' disponible(s)</option>';
+            }).join('');
+            if (!availableRoomTypes.some(function (room) { return String(room.room_source_id) === String(allocation.room_source_id) && room.room_source_type === allocation.room_source_type; })) {
+                roomOptions = '<option value="" selected disabled>' + escapeHtml(allocation.room_type) + ' (indisponible)</option>' + roomOptions;
+            }
+
+            var modeOptions = MODE_LABELS.map(function (mode) {
+                return '<option value="' + mode[0] + '"' + (allocation.occupancy_mode === mode[0] ? ' selected' : '') + '>' + mode[1] + '</option>';
+            }).join('');
+
+            var beds = '';
+            for (var b = 0; b < capacity; b++) {
+                var occupantId = keys[b] || '';
+                var occupant = occupantId ? byId[occupantId] : null;
+                // Le lit propose son occupant actuel plus tous les voyageurs libres.
+                var options = '<option value="">Lit libre</option>' + bedTravelers.filter(function (t) {
+                    return t.id === occupantId || !assigned[t.id];
+                }).map(function (t) {
+                    return '<option value="' + t.id + '"' + (t.id === occupantId ? ' selected' : '') + '>' + escapeHtml(t.label) + '</option>';
+                }).join('');
+
+                beds += '<label class="reservation-fast-bed ' + (occupant ? 'is-filled' : 'is-free') + '">' +
+                    '<span class="reservation-fast-bed__avatar" aria-hidden="true">' + (occupant ? escapeHtml(travelerInitials(occupant.label)) : '+') + '</span>' +
+                    '<span class="reservation-fast-bed__body">' +
+                        '<select class="reservation-fast-bed__select" data-rooming-bed="' + index + '" data-rooming-bed-current="' + occupantId + '" aria-label="Lit ' + (b + 1) + ' de la chambre ' + (index + 1) + '">' + options + '</select>' +
+                        '<span class="reservation-fast-bed__sub">' + (occupant ? escapeHtml(occupant.type) : (shared ? 'ouvert au jumelage' : 'à attribuer')) + '</span>' +
+                    '</span>' +
+                '</label>';
+            }
+
+            // Cible du raccourci « Accepter le jumelage » : demi-double selon le sexe
+            // de l'occupant, sinon on garde la chambre complete.
+            var occupantGender = keys.map(function (id) { return byId[id] && byId[id].gender; }).filter(Boolean)[0];
+            var shareTarget = occupantGender === 'female' ? 'half_female' : (occupantGender === 'male' ? 'half_male' : 'full');
+            var shareNext = shared ? 'single' : shareTarget;
+
+            var shareBlock = partial
+                ? '<button type="button" class="reservation-fast-room__share' + (shared ? ' is-on' : '') + '" data-rooming-share="' + index + '" data-rooming-share-mode="' + shareNext + '" aria-pressed="' + (shared ? 'true' : 'false') + '">' +
+                    '<span class="reservation-fast-room__switch" aria-hidden="true"><span></span></span>' +
+                    '<span class="reservation-fast-room__share-body">' +
+                        '<span class="reservation-fast-room__share-title">Accepter le jumelage</span>' +
+                        '<span class="reservation-fast-room__share-hint">' + (shared
+                            ? 'Le lit libre pourra être attribué à un autre voyageur du départ.'
+                            : 'Chambre privatisée : un supplément single sera facturé.') + '</span>' +
+                    '</span>' +
+                '</button>'
+                : '';
+
+            return '<article class="reservation-fast-room ' + stateClass + '">' +
+                '<div class="reservation-fast-room__head">' +
+                    '<span class="reservation-fast-room__num">' + (index + 1) + '</span>' +
+                    '<span class="reservation-fast-room__ident">' +
+                        '<span class="reservation-fast-room__title">Chambre ' + (index + 1) + ' — ' + escapeHtml(allocation.room_type) + '</span>' +
+                        '<span class="reservation-fast-room__meta">capacité ' + capacity + ' · occupée ' + filled + '/' + capacity + '</span>' +
+                    '</span>' +
+                    '<span class="reservation-fast-room__state">' + state + '</span>' +
+                    '<button type="button" class="reservation-fast-room__remove" data-rooming-remove="' + index + '" aria-label="Retirer la chambre ' + (index + 1) + '">−</button>' +
+                '</div>' +
+                '<div class="reservation-fast-room__body">' +
+                    '<div class="reservation-fast-room__fields">' +
+                        '<label class="reservation-fast-room__field"><span class="reservation-create__label">Type de chambre</span>' +
+                            '<select class="reservation-create__input" data-rooming-room-type="' + index + '">' + roomOptions + '</select></label>' +
+                        '<label class="reservation-fast-room__field"><span class="reservation-create__label">Configuration</span>' +
+                            '<select class="reservation-create__input" data-rooming-mode="' + index + '">' + modeOptions + '</select></label>' +
+                    '</div>' +
+                    '<div class="reservation-fast-room__beds">' +
+                        '<div class="reservation-create__label">Lits (' + filled + ' / ' + capacity + ')</div>' +
+                        '<div class="reservation-fast-room__bedgrid">' + beds + '</div>' +
+                    '</div>' +
+                    shareBlock +
+                '</div>' +
+            '</article>';
+        }).join('');
+    }
+
+    function travelerInitials(label) {
+        return String(label || '').split(/\s+/).filter(Boolean).slice(0, 2).map(function (part) {
+            return part.charAt(0).toUpperCase();
+        }).join('') || '?';
+    }
+
     function renderRooming() {
         syncTravelerStats();
         var board = document.getElementById('rooming-allocation-board');
@@ -1195,10 +1448,26 @@
         var byId = {};
         travelers.forEach(function (t) { byId[t.id] = t; });
         var unassigned = travelers.filter(function (t) { return t.consumesBed && !assigned[t.id]; });
-        pool.innerHTML = unassigned.length ? unassigned.map(function (t) {
-            return '<span class="reservation-create__traveler-chip">' + t.label + ' - ' + (t.gender || '-') + ' - ' + t.type + '</span>';
-        }).join('') : '<span class="reservation-create__muted">Tous les voyageurs avec lit sont affectes.</span>';
+        if (isFastMode) {
+            // Les lits libres portent deja le choix des voyageurs : le vivier ne
+            // s'affiche que s'il reste quelqu'un a placer.
+            pool.innerHTML = unassigned.length
+                ? '<span class="reservation-fast-room-pool__label">À placer</span>' + unassigned.map(function (t) {
+                    return '<span class="reservation-fast-room-pool__chip">' + escapeHtml(t.label) + '</span>';
+                }).join('')
+                : '';
+        } else {
+            pool.innerHTML = unassigned.length ? unassigned.map(function (t) {
+                return '<span class="reservation-create__traveler-chip">' + t.label + ' - ' + (t.gender || '-') + ' - ' + t.type + '</span>';
+            }).join('') : '<span class="reservation-create__muted">Tous les voyageurs avec lit sont affectes.</span>';
+        }
 
+        var bedTravelers = travelers.filter(function (t) { return t.consumesBed; });
+
+        if (isFastMode) {
+            renderFastRoomingBoard(board, roomingAllocations, byId, bedTravelers, assigned);
+            renderFastRoomingHint(travelers, bedTravelers);
+        } else {
         board.innerHTML = roomingAllocations.length ? roomingAllocations.map(function (allocation, index) {
             var travelerList = (allocation.traveler_keys || []).map(function (id) {
                 var t = byId[id] || { label: id, gender: '-', type: '-' };
@@ -1238,11 +1507,25 @@
                 (remaining ? '<p class="reservation-create__room-warning">Place restante: ' + remaining + '</p>' : '') +
             '</article>';
         }).join('') : '<div class="reservation-create__placeholder">Aucune repartition faite. Lancez la repartition automatique ou ajoutez une chambre.</div>';
+        }
 
         var summary = roomingSummary();
         var alerts = document.getElementById('rooming-alerts');
         var pill = document.getElementById('rooming-status-pill');
-        if (pill) pill.textContent = 'Rooming ' + summary.status;
+        if (pill) {
+            if (isFastMode) {
+                var pillLabel = {
+                    pending: 'ROOMING EN ATTENTE',
+                    partial: 'ROOMING PARTIEL',
+                    invalid: 'ROOMING À CORRIGER',
+                    complete: 'ROOMING COMPLET'
+                }[summary.status] || 'ROOMING ' + String(summary.status).toUpperCase();
+                pill.textContent = pillLabel;
+                pill.className = 'reservation-create__pill reservation-fast-room-status is-' + summary.status;
+            } else {
+                pill.textContent = 'Rooming ' + summary.status;
+            }
+        }
         if (alerts) {
             var warnings = summary.errors.slice();
             if (summary.status === 'partial') warnings.push('Cette reservation sera creee en attente de jumelage.');
@@ -2259,6 +2542,25 @@
                     syncFinancialSummary();
                 }
             }
+            if (target.hasAttribute('data-rooming-bed')) {
+                // Un lit = un emplacement : on retire l'ancien occupant avant d'ajouter
+                // le nouveau, pour qu'un voyageur ne soit jamais affecte deux fois.
+                var bedIndex = parseInt(target.getAttribute('data-rooming-bed') || '-1', 10);
+                var bedAllocation = roomingAllocations[bedIndex];
+                if (bedAllocation) {
+                    roomingUserTouched = true;
+                    var previousOccupant = String(target.getAttribute('data-rooming-bed-current') || '');
+                    var bedKeys = (bedAllocation.traveler_keys || []).filter(function (key) {
+                        return key !== previousOccupant && key !== target.value;
+                    });
+                    if (target.value) bedKeys.push(target.value);
+                    bedAllocation.traveler_keys = bedKeys;
+                    bedAllocation.occupied_count = bedKeys.length;
+                    normalizeRoomingAllocation(bedAllocation);
+                    renderRooming();
+                    syncFinancialSummary();
+                }
+            }
             if (target.hasAttribute('data-rooming-mode')) {
                 var modeIndex = parseInt(target.getAttribute('data-rooming-mode') || '-1', 10);
                 if (roomingAllocations[modeIndex]) {
@@ -2353,6 +2655,35 @@
                 console.log('[Rooming] Auto clicked');
                 autoRooming();
                 syncFinancialSummary();
+                return;
+            }
+
+            var removeRoomBtn = target.closest('[data-rooming-remove]');
+            if (removeRoomBtn) {
+                event.preventDefault();
+                var removeIndex = parseInt(removeRoomBtn.getAttribute('data-rooming-remove') || '-1', 10);
+                if (roomingAllocations[removeIndex]) {
+                    roomingUserTouched = true;
+                    roomingAllocations.splice(removeIndex, 1);
+                    window.reservationState.roomAllocations = roomingAllocations;
+                    renderRooming();
+                    syncFinancialSummary();
+                }
+                return;
+            }
+
+            var shareBtn = target.closest('[data-rooming-share]');
+            if (shareBtn) {
+                event.preventDefault();
+                var shareIndex = parseInt(shareBtn.getAttribute('data-rooming-share') || '-1', 10);
+                var shareMode = shareBtn.getAttribute('data-rooming-share-mode') || '';
+                if (roomingAllocations[shareIndex] && shareMode) {
+                    roomingUserTouched = true;
+                    roomingAllocations[shareIndex].occupancy_mode = shareMode;
+                    normalizeRoomingAllocation(roomingAllocations[shareIndex]);
+                    renderRooming();
+                    syncFinancialSummary();
+                }
                 return;
             }
 

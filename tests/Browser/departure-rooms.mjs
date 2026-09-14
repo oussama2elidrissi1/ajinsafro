@@ -70,7 +70,8 @@ try {
             window.roomsTest.fail=false; get('[data-rooms-reload]').click(); await until(()=>!get('#departure-rooms-fields').disabled);
             check('Reload restores last saved values',get('[data-field="quantity"]').value==='6');
             get('#departure-rooms-rows tr:first-child [data-rooms-remove]').click(); await until(()=>get('#departure-rooms-status').textContent.startsWith('Enregistré'));
-            check('Removing allocated inventory keeps travelers and flags invalid room',window.reservationState.roomAllocations[0].traveler_keys.length===2 && get('#rooming-status-pill').textContent.includes('invalid') && get('[data-rooming-room-type] option:checked').textContent.includes('indisponible'));
+            const roomingInvalid=()=>{const pill=get('#rooming-status-pill');return pill.className.includes('is-invalid') || pill.textContent.includes('invalid');};
+            check('Removing allocated inventory keeps travelers and flags invalid room',window.reservationState.roomAllocations[0].traveler_keys.length===2 && roomingInvalid() && get('[data-rooming-room-type] option:checked').textContent.includes('indisponible'));
             change('[data-field="quantity"]','0'); await until(()=>get('#departure-rooms-status').textContent.startsWith('Enregistré'));
             check('Zero inventory clears stale available rooms',window.availableRoomTypes.length===0);
             get('[data-rooms-default]').click(); await until(()=>get('#departure-rooms-status').textContent.startsWith('Enregistré'));

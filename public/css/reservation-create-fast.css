@@ -1217,6 +1217,675 @@
 }
 
 /* --------------------------------------------------------------------------
+   Étape 2 — Répartition des chambres
+   -------------------------------------------------------------------------- */
+
+.reservation-create--fast .reservation-fast-room-status {
+    flex: none;
+    padding: 5px 11px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--rcf-soft);
+    color: var(--rcf-muted-3);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+}
+
+.reservation-create--fast .reservation-fast-room-status.is-complete {
+    background: var(--rcf-green-bg);
+    color: var(--rcf-green);
+}
+
+.reservation-create--fast .reservation-fast-room-status.is-partial {
+    background: var(--ea-orange-bg, #fff5ec);
+    color: var(--ea-orange-text, #b45c09);
+}
+
+.reservation-create--fast .reservation-fast-room-status.is-invalid {
+    background: var(--rcf-danger-bg);
+    color: var(--rcf-danger);
+}
+
+.reservation-create--fast .reservation-fast-room-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.reservation-create--fast .reservation-fast-room-actions button {
+    white-space: nowrap;
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.reservation-create--fast .reservation-fast-room-actions__primary {
+    background: var(--rcf-accent);
+    color: #fff;
+}
+
+.reservation-create--fast .reservation-fast-room-actions__primary:hover {
+    filter: brightness(0.95);
+}
+
+.reservation-create--fast .reservation-fast-room-actions__add {
+    border: 1px solid var(--rcf-outline) !important;
+    padding: 9px 15px !important;
+    background: #fff;
+    color: var(--rcf-blue);
+}
+
+.reservation-create--fast .reservation-fast-room-actions__reset {
+    border: 1px solid var(--rcf-border) !important;
+    padding: 9px 15px !important;
+    background: #fff;
+    color: var(--rcf-muted-2);
+    font-weight: 400 !important;
+}
+
+.reservation-create--fast .reservation-fast-room-actions__add:hover,
+.reservation-create--fast .reservation-fast-room-actions__reset:hover {
+    background: var(--rcf-soft);
+    color: var(--rcf-blue);
+}
+
+.reservation-create--fast .reservation-fast-room-actions__inventory {
+    margin-left: auto;
+    white-space: nowrap;
+    font-size: 12px;
+    color: var(--rcf-muted);
+}
+
+.reservation-create--fast .reservation-fast-room-actions__inventory b {
+    margin-left: 5px;
+    font-family: var(--rcf-mono);
+    font-weight: 500;
+    color: var(--rcf-text);
+}
+
+.reservation-create--fast .reservation-fast-room-pool {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+.reservation-create--fast .reservation-fast-room-pool:empty {
+    display: none;
+}
+
+.reservation-create--fast .reservation-fast-room-pool__label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--ea-orange-text, #b45c09);
+}
+
+.reservation-create--fast .reservation-fast-room-pool__chip {
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: var(--ea-orange-bg, #fff5ec);
+    color: var(--ea-orange-text, #b45c09);
+    font-size: 11.5px;
+}
+
+.reservation-create--fast .reservation-fast-room-board {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.reservation-create--fast .reservation-fast-room {
+    border: 1px solid var(--rcf-border-3);
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.reservation-create--fast .reservation-fast-room.is-shared {
+    border-color: #f0e3cd;
+}
+
+.reservation-create--fast .reservation-fast-room.is-partial {
+    border-color: var(--rcf-danger-border);
+}
+
+.reservation-create--fast .reservation-fast-room__head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px 15px;
+    background: var(--rcf-panel);
+}
+
+.reservation-create--fast .reservation-fast-room.is-shared .reservation-fast-room__head {
+    background: #fffdf8;
+}
+
+.reservation-create--fast .reservation-fast-room.is-partial .reservation-fast-room__head {
+    background: var(--rcf-danger-bg);
+}
+
+.reservation-create--fast .reservation-fast-room__num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex: none;
+    border: 1px solid var(--rcf-border);
+    border-radius: 9px;
+    background: #fff;
+    font-family: var(--rcf-mono);
+    font-size: 12px;
+    color: var(--rcf-muted-2);
+}
+
+.reservation-create--fast .reservation-fast-room__ident {
+    flex: 1 1 170px;
+    min-width: 0;
+}
+
+.reservation-create--fast .reservation-fast-room__title {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--rcf-text);
+}
+
+.reservation-create--fast .reservation-fast-room__meta {
+    display: block;
+    margin-top: 2px;
+    font-family: var(--rcf-mono);
+    font-size: 11px;
+    color: var(--rcf-muted);
+}
+
+.reservation-create--fast .reservation-fast-room__state {
+    flex: none;
+    white-space: nowrap;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--rcf-green-bg);
+    color: var(--rcf-green);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+}
+
+.reservation-create--fast .reservation-fast-room.is-shared .reservation-fast-room__state {
+    background: #fdf7e3;
+    color: #8a6d00;
+}
+
+.reservation-create--fast .reservation-fast-room.is-partial .reservation-fast-room__state {
+    background: var(--rcf-danger-bg);
+    color: var(--rcf-danger);
+}
+
+.reservation-create--fast .reservation-fast-room__remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex: none;
+    padding: 0;
+    border: 1px solid var(--rcf-danger-border);
+    border-radius: 9px;
+    background: #fff;
+    color: var(--rcf-danger);
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.reservation-create--fast .reservation-fast-room__remove:hover {
+    background: var(--rcf-danger-bg);
+}
+
+.reservation-create--fast .reservation-fast-room__body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 15px;
+    background: #fff;
+}
+
+.reservation-create--fast .reservation-fast-room__fields {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.reservation-create--fast .reservation-fast-room__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1 1 170px;
+    min-width: 0;
+}
+
+.reservation-create--fast .reservation-fast-room__field .reservation-create__label,
+.reservation-create--fast .reservation-fast-room__beds .reservation-create__label {
+    font-size: 11.5px;
+    color: var(--rcf-muted);
+}
+
+.reservation-create--fast .reservation-fast-room__field .reservation-create__input {
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+}
+
+.reservation-create--fast .reservation-fast-room__bedgrid {
+    display: flex;
+    gap: 9px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.reservation-create--fast .reservation-fast-bed {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1 1 180px;
+    min-width: 150px;
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid var(--rcf-outline);
+    border-radius: 11px;
+    background: var(--rcf-panel);
+    cursor: pointer;
+}
+
+.reservation-create--fast .reservation-fast-bed.is-free {
+    border-style: dashed;
+    background: #fff;
+}
+
+.reservation-create--fast .reservation-fast-bed__avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--rcf-blue);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.reservation-create--fast .reservation-fast-bed.is-free .reservation-fast-bed__avatar {
+    background: var(--rcf-soft);
+    color: var(--rcf-muted-4);
+}
+
+.reservation-create--fast .reservation-fast-bed__body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+/* Le lit est son propre contrôle : le select porte le nom, sans habillage. */
+.reservation-create--fast .reservation-fast-bed__select {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--rcf-text);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.reservation-create--fast .reservation-fast-bed__select:focus {
+    outline: none;
+    color: var(--rcf-blue);
+}
+
+.reservation-create--fast .reservation-fast-bed.is-free .reservation-fast-bed__select {
+    color: var(--rcf-muted-3);
+    font-weight: 500;
+}
+
+.reservation-create--fast .reservation-fast-bed__sub {
+    margin-top: 1px;
+    font-size: 11px;
+    color: var(--rcf-muted);
+}
+
+.reservation-create--fast .reservation-fast-bed.is-free .reservation-fast-bed__sub {
+    color: var(--rcf-muted-4);
+}
+
+.reservation-create--fast .reservation-fast-room__share {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    width: 100%;
+    padding: 11px 13px;
+    border: 0;
+    border-radius: 11px;
+    background: var(--rcf-panel);
+    text-align: left;
+    cursor: pointer;
+}
+
+.reservation-create--fast .reservation-fast-room__share.is-on {
+    background: #f2fbf7;
+}
+
+.reservation-create--fast .reservation-fast-room__switch {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 38px;
+    height: 22px;
+    flex: none;
+    padding: 2px;
+    border-radius: 999px;
+    background: var(--rcf-border);
+    box-sizing: border-box;
+    transition: background .18s ease, justify-content .18s ease;
+}
+
+.reservation-create--fast .reservation-fast-room__share.is-on .reservation-fast-room__switch {
+    justify-content: flex-end;
+    background: var(--ea-green, #21a179);
+}
+
+.reservation-create--fast .reservation-fast-room__switch > span {
+    display: block;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+}
+
+.reservation-create--fast .reservation-fast-room__share-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.reservation-create--fast .reservation-fast-room__share-title {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--rcf-text);
+}
+
+.reservation-create--fast .reservation-fast-room__share-hint {
+    display: block;
+    margin-top: 2px;
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: var(--rcf-muted);
+}
+
+/* --------------------------------------------------------------------------
+   Étape 2 — Extras & options
+   -------------------------------------------------------------------------- */
+
+.reservation-create--fast .reservation-fast-extras {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.reservation-create--fast .reservation-fast-extras:empty {
+    display: none;
+}
+
+.reservation-create--fast .reservation-fast-extra {
+    padding: 14px 16px;
+    border: 1px solid var(--rcf-border-3);
+    border-radius: 14px;
+    background: #fff;
+}
+
+.reservation-create--fast .reservation-fast-extra.is-on {
+    border-color: #f2d9bd;
+    background: #fffaf4;
+}
+
+.reservation-create--fast .reservation-fast-extra__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 13px;
+    flex-wrap: wrap;
+}
+
+.reservation-create--fast .reservation-fast-extra__check {
+    position: relative;
+    width: 22px;
+    height: 22px;
+    flex: none;
+    margin-top: 2px;
+    padding: 0;
+    border: 1.5px solid var(--rcf-outline);
+    border-radius: 7px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.reservation-create--fast .reservation-fast-extra__check[aria-pressed="true"] {
+    border-color: var(--rcf-accent);
+    background: var(--rcf-accent);
+}
+
+/* Coche dessinée au trait : pas de dépendance à une police d'icônes. */
+.reservation-create--fast .reservation-fast-extra__check[aria-pressed="true"]::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 5px;
+    height: 9px;
+    margin: -6px 0 0 -3px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.reservation-create--fast .reservation-fast-extra__main {
+    flex: 1 1 240px;
+    min-width: 0;
+}
+
+.reservation-create--fast .reservation-fast-extra__title-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.reservation-create--fast .reservation-fast-extra__title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--rcf-text);
+}
+
+.reservation-create--fast .reservation-fast-extra__badge {
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: var(--rcf-border-3);
+    color: var(--rcf-blue);
+    font-size: 10.5px;
+    font-weight: 600;
+}
+
+.reservation-create--fast .reservation-fast-extra__desc {
+    margin: 6px 0 0;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--rcf-muted);
+}
+
+.reservation-create--fast .reservation-fast-extra__desc.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.reservation-create--fast .reservation-fast-extra__more {
+    margin-top: 6px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--rcf-blue);
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.reservation-create--fast .reservation-fast-extra__price {
+    flex: none;
+    min-width: 100px;
+    text-align: right;
+}
+
+.reservation-create--fast .reservation-fast-extra__amount {
+    font-family: var(--rcf-mono);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--rcf-blue);
+}
+
+.reservation-create--fast .reservation-fast-extra__unit {
+    margin-top: 2px;
+    font-size: 10.5px;
+    color: var(--rcf-muted-3);
+}
+
+.reservation-create--fast .reservation-fast-extra__body {
+    margin-top: 13px;
+    padding-top: 13px;
+    border-top: 1px solid var(--rcf-soft);
+}
+
+.reservation-create--fast .reservation-fast-extra__scope {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.reservation-create--fast .reservation-fast-extra__seg {
+    display: flex;
+    gap: 3px;
+    padding: 3px;
+    border-radius: 9px;
+    background: var(--rcf-soft);
+}
+
+.reservation-create--fast .reservation-fast-extra__seg button {
+    white-space: nowrap;
+    padding: 6px 12px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--rcf-muted);
+    font-family: inherit;
+    font-size: 11.5px;
+    cursor: pointer;
+}
+
+.reservation-create--fast .reservation-fast-extra__seg button.is-active {
+    background: #fff;
+    color: var(--rcf-blue);
+    font-weight: 600;
+}
+
+.reservation-create--fast .reservation-fast-extra__travelers {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.reservation-create--fast .reservation-fast-extra__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    margin: 0;
+    padding: 7px 13px;
+    border: 1px solid var(--rcf-border);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--rcf-muted);
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.reservation-create--fast .reservation-fast-extra__chip input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.reservation-create--fast .reservation-fast-extra__chip-mark::before {
+    content: '+';
+}
+
+.reservation-create--fast .reservation-fast-extra__chip:has(input:checked) {
+    border-color: var(--rcf-blue);
+    background: var(--rcf-blue);
+    color: #fff;
+    font-weight: 600;
+}
+
+.reservation-create--fast .reservation-fast-extra__chip:has(input:checked) .reservation-fast-extra__chip-mark::before {
+    content: '✓';
+}
+
+.reservation-create--fast .reservation-fast-extra__foot {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.reservation-create--fast .reservation-fast-extra__foot span {
+    font-size: 12px;
+    color: var(--rcf-muted);
+}
+
+.reservation-create--fast .reservation-fast-extra__foot > strong {
+    font-family: var(--rcf-mono);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--rcf-green);
+}
+
+.reservation-create--fast .reservation-fast-extra__foot strong[data-extra-applied-count] {
+    font-family: var(--rcf-mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--rcf-text);
+}
+
+/* --------------------------------------------------------------------------
    Résumé (colonne de droite)
    -------------------------------------------------------------------------- */
 
@@ -1436,6 +2105,36 @@
     border: 1px solid var(--rcf-danger-border);
     background: var(--rcf-danger-bg);
     color: var(--rcf-danger-text);
+}
+
+.reservation-create--fast .reservation-create__alert--warn {
+    margin-top: 12px;
+    border: 1px solid #f0e3cd;
+    background: var(--ea-orange-bg, #fff5ec);
+    color: var(--ea-orange-text, #b45c09);
+}
+
+.reservation-create--fast .reservation-create__alert--info {
+    margin-top: 12px;
+    border: 1px solid var(--rcf-outline);
+    background: var(--rcf-panel);
+    color: var(--rcf-muted);
+}
+
+.reservation-create--fast .reservation-create__alert strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 12.5px;
+    font-weight: 600;
+}
+
+.reservation-create--fast .reservation-create__alert ul {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.reservation-create--fast .reservation-create__alert li + li {
+    margin-top: 2px;
 }
 
 .reservation-create--fast > .reservation-create__alert--error {

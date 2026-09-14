@@ -1,59 +1,53 @@
+@php($agentReservationMode = (bool) request()->attributes->get('agent_reservation_mode', false))
+
 <section class="reservation-create__panel" data-create-step="2" data-reservation-step="2" hidden>
+    {{-- Répartition des chambres --}}
     <div class="reservation-fast-card">
         <div class="reservation-fast-card__head">
-            <p class="reservation-create__eyebrow">Étape 2</p>
-            <h3 class="reservation-fast-card__title">Chambres</h3>
-            <span class="reservation-create__pill" id="rooming-status-pill">Rooming pending</span>
-        </div>
-
-        <div class="reservation-create__rooming-grid">
-            <div class="reservation-create__rooming-panel">
-                <p class="reservation-create__mini-title">Résumé voyageurs</p>
-                <div class="reservation-create__traveler-stats reservation-create__traveler-stats--stacked">
-                    <span>Total: <strong data-rooming-stat="total">1</strong></span>
-                    <span>Adultes: <strong data-rooming-stat="adult">1</strong></span>
-                    <span>Enfants: <strong data-rooming-stat="child">0</strong></span>
-                    <span>Bébés: <strong data-rooming-stat="infant">0</strong></span>
-                    <span>Hommes: <strong data-rooming-stat="male">0</strong></span>
-                    <span>Femmes: <strong data-rooming-stat="female">0</strong></span>
-                    <span>Lits à couvrir: <strong data-rooming-stat="beds">1</strong></span>
-                </div>
-
-                <p class="reservation-create__mini-title mt-3">Voyageurs à affecter</p>
-                <div id="rooming-unassigned-travelers" class="reservation-create__traveler-pool"></div>
+            <div class="reservation-fast-card__heading">
+                <h2 class="reservation-fast-card__title">Répartition des chambres</h2>
+                <p class="reservation-fast-card__subtitle" id="rooming-hint">Ajoutez une chambre ou lancez la répartition automatique.</p>
             </div>
-
-            <div class="reservation-create__rooming-panel">
-                <p class="reservation-create__mini-title">Chambres disponibles</p>
-                @if (!request()->attributes->get('agent_reservation_mode', false) && auth()->user()?->can('circuits.voyages.view'))
-                    <button type="button" id="btn-manage-departure-rooms" class="reservation-create__button reservation-create__button--secondary mb-3" aria-haspopup="dialog" aria-controls="departure-rooms-modal">Gérer les chambres du départ</button>
-                @endif
-                <div id="rooming-available-rooms" class="reservation-create__available-rooms">
-                    Sélectionnez un départ à l'étape Prestation.
-                </div>
-            </div>
+            <span class="reservation-create__pill reservation-fast-room-status" id="rooming-status-pill">ROOMING EN ATTENTE</span>
         </div>
 
-        <div class="reservation-create__rooming-actions">
-            <button type="button" class="reservation-create__button reservation-create__button--primary" id="btn-auto-rooming">Répartition auto</button>
-            <button type="button" class="reservation-create__button reservation-create__button--ghost" id="btn-add-room-allocation">+ Chambre</button>
-            <button type="button" class="reservation-create__button reservation-create__button--secondary" id="btn-reset-rooming">Réinitialiser</button>
+        <div class="reservation-fast-room-actions">
+            <button type="button" class="reservation-fast-room-actions__primary" id="btn-auto-rooming">Répartition auto</button>
+            <button type="button" class="reservation-fast-room-actions__add" id="btn-add-room-allocation">+ Chambre</button>
+            <button type="button" class="reservation-fast-room-actions__reset" id="btn-reset-rooming">Réinitialiser</button>
+            @if (! $agentReservationMode && auth()->user()?->can('circuits.voyages.view'))
+                <button type="button" class="reservation-fast-room-actions__reset" id="btn-manage-departure-rooms" aria-haspopup="dialog" aria-controls="departure-rooms-modal">Gérer les chambres</button>
+            @endif
+            <span class="reservation-fast-room-actions__inventory">
+                Inventaire départ :
+                <span id="rooming-available-rooms" class="reservation-create__available-rooms">—</span>
+            </span>
         </div>
 
-        <div class="reservation-create__rooming-board" id="rooming-allocation-board"></div>
+        <div id="rooming-unassigned-travelers" class="reservation-fast-room-pool"></div>
+
+        <div class="reservation-fast-room-board" id="rooming-allocation-board"></div>
 
         <div class="reservation-create__alert reservation-create__alert--warn d-none" id="rooming-alerts"></div>
     </div>
 
-    {{-- Extras --}}
-    <div class="reservation-fast-card mt-3">
+    {{-- Extras & options --}}
+    <div class="reservation-fast-card">
         <div class="reservation-fast-card__head">
-            <h3 class="reservation-fast-card__title">Extras</h3>
+            <div class="reservation-fast-card__heading">
+                <h2 class="reservation-fast-card__title">Extras &amp; options</h2>
+                <p class="reservation-fast-card__subtitle">Prix par voyageur sélectionné. Le total se met à jour en direct.</p>
+            </div>
+            <span class="reservation-fast-card__badge">Sélectionnés <strong id="fast-extras-count">0</strong></span>
         </div>
-        <div id="reservation-create-extras-container" class="reservation-create__extras-list"></div>
-        <div id="reservation-create-extras-empty" class="reservation-create__placeholder">
-            <strong>Aucun extra configuré</strong>
-            <p>Ce voyage ne contient pas encore d'extras actifs.</p>
+
+        <div id="reservation-create-extras-container" class="reservation-fast-extras"></div>
+        <div id="reservation-create-extras-empty" class="reservation-fast-empty">
+            <span class="reservation-fast-empty__icon" aria-hidden="true">+</span>
+            <div class="reservation-fast-empty__body">
+                <div class="reservation-fast-empty__title">Aucun extra configuré</div>
+                <p class="reservation-fast-empty__text">Ce voyage ne contient pas encore d'extras actifs.</p>
+            </div>
         </div>
     </div>
 
@@ -69,7 +63,6 @@
 
     {{-- Loader caché pour récupérer les données de chambres du départ --}}
     <div style="display:none">
-        @php($agentReservationMode = (bool) request()->attributes->get('agent_reservation_mode', false))
         @include('admin.reservations.partials._hotel_rooms', [
             'tourHotelsWithRooms' => collect(),
             'reservation' => null,

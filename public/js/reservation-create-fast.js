@@ -375,6 +375,96 @@
         });
     }
 
+    /* ------------------------------------------------- extras (étape 2) ---- */
+
+    function extraCards() {
+        return $$('.reservation-fast-extra');
+    }
+
+    function scopeInput(card) {
+        return card.querySelector('[data-extra-scope]');
+    }
+
+    /** Notifie reservation-create.js, seul responsable des totaux. */
+    function commitScope(card, value, checkAll) {
+        var input = scopeInput(card);
+        if (!input) return;
+        input.value = value;
+        if (checkAll) {
+            card.querySelectorAll('.reservation-create-extra-cb').forEach(function (cb) {
+                cb.checked = true;
+            });
+        }
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    function bindExtras() {
+        document.addEventListener('click', function (event) {
+            var card = event.target.closest && event.target.closest('.reservation-fast-extra');
+            if (!card) return;
+
+            var toggle = event.target.closest('[data-extra-enabled]');
+            if (toggle) {
+                event.preventDefault();
+                var body = card.querySelector('.reservation-fast-extra__body');
+                if (!body) return;
+                var opening = body.hidden;
+                body.hidden = !opening;
+                if (opening) {
+                    // À l'activation, l'extra s'applique à tout le dossier.
+                    commitScope(card, 'per_traveler', true);
+                } else {
+                    // Désactivé : plus aucun voyageur, donc ignoré par collectExtras.
+                    card.querySelectorAll('.reservation-create-extra-cb').forEach(function (cb) {
+                        cb.checked = false;
+                    });
+                    commitScope(card, 'traveler_selection', false);
+                }
+                return;
+            }
+
+            var scopeButton = event.target.closest('[data-extra-scope-set]');
+            if (scopeButton) {
+                event.preventDefault();
+                var next = scopeButton.getAttribute('data-extra-scope-set');
+                commitScope(card, next, next === 'per_traveler');
+                return;
+            }
+
+            var more = event.target.closest('[data-extra-more]');
+            if (more) {
+                event.preventDefault();
+                var desc = card.querySelector('[data-extra-desc]');
+                if (!desc) return;
+                var clamped = desc.classList.toggle('is-clamped');
+                more.textContent = clamped ? 'Lire la suite' : 'Réduire';
+            }
+        });
+
+        // Décocher un voyageur alors que l'extra vise tout le dossier bascule
+        // naturellement en « Au choix ».
+        document.addEventListener('change', function (event) {
+            var cb = event.target;
+            if (!cb || !cb.classList || !cb.classList.contains('reservation-create-extra-cb')) return;
+            var card = cb.closest('.reservation-fast-extra');
+            if (!card) return;
+            var input = scopeInput(card);
+            if (input && input.value === 'per_traveler') {
+                commitScope(card, 'traveler_selection', false);
+            }
+        });
+    }
+
+    function renderExtrasCount() {
+        var count = String(extraCards().filter(function (card) {
+            return card.classList.contains('is-on');
+        }).length);
+        ['fast-extras-count', 'fast-extras-count-summary'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = count;
+        });
+    }
+
     /* ---------------------------------------------------- recherche client  */
 
     function bindClientSearchButton() {
@@ -403,6 +493,7 @@
         renderSummaryBreakdown();
         renderCapacity(state);
         renderCompanions();
+        renderExtrasCount();
         renderDiscountLine();
         renderCta(step, state);
     }
@@ -418,6 +509,7 @@
         bindCta();
         bindDocsDisclosure();
         bindClientSearchButton();
+        bindExtras();
 
         // Les handlers de reservation-create.js s'exécutent d'abord (phase de
         // bouillonnement) : on se resynchronise juste après.

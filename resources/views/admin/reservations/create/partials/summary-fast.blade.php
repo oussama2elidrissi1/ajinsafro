@@ -49,7 +49,7 @@
             <strong id="create-summary-discount">Aucune</strong>
         </div>
         <div class="reservation-fast-summary__item">
-            <span>Extras</span>
+            <span>Extras ×<span id="fast-extras-count-summary">0</span></span>
             <strong id="create-summary-extras">0 DH</strong>
         </div>
     </div>
