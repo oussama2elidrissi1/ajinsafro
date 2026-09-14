@@ -1,0 +1,1549 @@
+/* ==========================================================================
+   Réservation rapide — habillage dédié au tunnel « fast create ».
+   Chargé uniquement quand $fastCreateMode est actif, après reservation-create.css.
+   S'appuie sur les jetons de la coque Espace Admin v2 (--ea-*) avec repli local.
+   ========================================================================== */
+
+.reservation-create--fast {
+    --rcf-navy: var(--ea-primary-dark, #0d3767);
+    --rcf-blue: var(--ea-primary, #144e8c);
+    --rcf-accent: var(--ea-accent, #f5821f);
+    --rcf-text: var(--ea-text, #10263d);
+    --rcf-border: var(--ea-border, #dce7f2);
+    --rcf-border-2: var(--ea-border-2, #e6eef6);
+    --rcf-border-3: var(--ea-border-3, #eef4fa);
+    --rcf-soft: var(--ea-soft, #f1f6fb);
+    --rcf-panel: var(--ea-panel, #f7fafd);
+    --rcf-muted: #4d6a85;
+    --rcf-muted-2: var(--ea-muted-2, #41627f);
+    --rcf-muted-3: #5b7690;
+    --rcf-muted-4: #94adc4;
+    --rcf-outline: #cfe0f0;
+    --rcf-danger: #b4413c;
+    --rcf-danger-bg: #fdf4f4;
+    --rcf-danger-border: #f1d6d5;
+    --rcf-danger-text: #8c3330;
+    --rcf-green: #0f6b52;
+    --rcf-green-bg: #e8f6f1;
+    --rcf-mono: var(--ea-mono, 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace);
+    --rcf-gutter: var(--ea-gutter, clamp(16px, 3vw, 34px));
+    /* Hauteur du header de coque, remesurée par reservation-create-fast.js. */
+    --rcf-header-h: 63px;
+
+    /* width:auto (et non 100%) : ce sont les marges négatives qui étirent le
+       bloc, la coque appliquant déjà une gouttière que l'on neutralise pour que
+       la barre collante et les cartes aillent d'un bord à l'autre du contenu. */
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 calc(var(--rcf-gutter) * -1) !important;
+    padding: 0 0 20px !important;
+    font-family: var(--ea-font, 'Outfit', 'Helvetica Neue', Helvetica, Arial, sans-serif);
+    color: var(--rcf-text);
+}
+
+/* Plusieurs composants de cette feuille imposent un display : on garantit que
+   l'attribut [hidden] reste prioritaire partout dans le tunnel rapide. */
+.reservation-create--fast [hidden] {
+    display: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   Barre collante : fil d'Ariane, titre, retour, stepper
+   -------------------------------------------------------------------------- */
+
+.reservation-create--fast .reservation-fast-header {
+    position: sticky;
+    top: var(--rcf-header-h);
+    z-index: 8;
+    margin: 0;
+    padding: 14px var(--rcf-gutter) 0;
+    background: #fff;
+    border-bottom: 1px solid var(--rcf-border);
+}
+
+.reservation-create--fast .reservation-fast-header__inner {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.reservation-create--fast .reservation-fast-header__top {
+    display: flex;
+    /* flex-direction explicite : reservation-create.css bascule cette barre en
+       colonne sous 720px, ce qui transformerait la base 320px de l'identité en
+       hauteur. Ici c'est flex-wrap qui gère l'empilement. */
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin: 0;
+}
+
+.reservation-create--fast .reservation-fast-header__identity {
+    flex: 1 1 320px;
+    min-width: 0;
+}
+
+.reservation-create--fast .reservation-create__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 0;
+    font-size: 11.5px;
+    color: var(--rcf-muted);
+}
+
+.reservation-create--fast .reservation-create__breadcrumb a {
+    color: var(--rcf-blue);
+    font-weight: 400;
+}
+
+.reservation-create--fast .reservation-create__breadcrumb a:hover {
+    color: var(--rcf-navy);
+}
+
+.reservation-create--fast .reservation-create__breadcrumb-sep {
+    color: #b9cade;
+}
+
+.reservation-create--fast .reservation-create__breadcrumb-current {
+    color: var(--rcf-text);
+}
+
+.reservation-create--fast .reservation-fast-header__title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 7px;
+}
+
+.reservation-create--fast .reservation-fast-header__title {
+    margin: 0;
+    font-size: clamp(19px, 2.1vw, 25px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    color: var(--rcf-text);
+}
+
+.reservation-create--fast .reservation-fast-header__tag {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--rcf-green-bg);
+    color: var(--rcf-green);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+}
+
+.reservation-create--fast .reservation-fast-header__actions {
+    display: flex;
+    gap: 9px;
+    flex-wrap: wrap;
+    flex: none;
+}
+
+.reservation-create--fast .reservation-create__back-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    white-space: nowrap;
+    padding: 9px 15px;
+    border: 1px solid var(--rcf-border);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--rcf-muted-2);
+    font-size: 12.5px;
+    font-weight: 600;
+    box-shadow: none;
+}
+
+.reservation-create--fast .reservation-create__back-link:hover {
+    border-color: var(--rcf-outline);
+    color: var(--rcf-blue);
+    background: var(--rcf-soft);
+}
+
+/* Stepper en chevrons ------------------------------------------------------ */
+
+.reservation-create--fast .reservation-create__workflow {
+    max-width: none !important;
+    margin: 0 !important;
+}
+
+.reservation-create--fast .reservation-create__steps-card--workflow {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.reservation-create--fast .reservation-create__steps--chevrons {
+    display: flex;
+    /* Les chevrons défilent horizontalement plutôt que de passer à la ligne :
+       la découpe clip-path n'a plus de sens une fois les étapes empilées. */
+    flex-wrap: nowrap;
+    align-items: stretch;
+    overflow-x: auto;
+    margin: 16px 0 0;
+    border-radius: 12px 12px 0 0;
+    background: #fff;
+    scrollbar-width: none;
+}
+
+.reservation-create--fast .reservation-create__steps--chevrons::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+.reservation-create--fast .reservation-create__steps--chevrons .reservation-create__step {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    white-space: nowrap;
+    flex: 1 1 0;
+    min-width: 196px;
+    height: 54px;
+    margin: 0 -16px 0 0;
+    padding: 0 20px 0 30px;
+    border: 0;
+    border-radius: 0;
+    background: #f1f5f9;
+    color: var(--rcf-muted-3);
+    text-align: left;
+    cursor: pointer;
+    filter: drop-shadow(-2px 0 0 #fff);
+    clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 50%, calc(100% - 16px) 100%, 0 100%, 16px 50%);
+    box-shadow: none;
+    transition: background .18s ease, color .18s ease;
+}
+
+.reservation-create--fast .reservation-create__steps--chevrons .reservation-create__step:first-child {
+    min-width: 180px;
+    padding-left: 18px;
+    clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 50%, calc(100% - 16px) 100%, 0 100%);
+}
+
+.reservation-create--fast .reservation-create__steps--chevrons .reservation-create__step:last-child {
+    margin-right: 0;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 16px 50%);
+}
+
+.reservation-create--fast .reservation-create__steps--chevrons .reservation-create__step.is-complete {
+    background: #dbe7f2;
+    color: #1f4368;
+}
+
+.reservation-create--fast .reservation-create__steps--chevrons .reservation-create__step.is-active {
+    background: var(--rcf-navy);
+    color: #fff;
+}
+
+.reservation-create--fast .reservation-create__step-index {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    flex: none;
+    border-radius: 50%;
+    background: #ccd9e5;
+    color: var(--rcf-muted);
+    font-family: var(--rcf-mono);
+    font-size: 11.5px;
+    font-weight: 500;
+}
+
+.reservation-create--fast .reservation-create__step.is-complete .reservation-create__step-index {
+    background: var(--rcf-green);
+    color: #fff;
+}
+
+.reservation-create--fast .reservation-create__step.is-active .reservation-create__step-index {
+    background: var(--rcf-accent);
+    color: #fff;
+}
+
+.reservation-create--fast .reservation-create__step-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+    min-width: 0;
+}
+
+.reservation-create--fast .reservation-create__step-kicker {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #9db2c6;
+}
+
+.reservation-create--fast .reservation-create__step.is-complete .reservation-create__step-kicker {
+    color: #5f86ad;
+}
+
+.reservation-create--fast .reservation-create__step.is-active .reservation-create__step-kicker {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.reservation-create--fast .reservation-create__step-label {
+    margin-top: 2px;
+    font-size: 13.5px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.reservation-create--fast .reservation-create__step.is-active .reservation-create__step-label {
+    font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   Grille de contenu
+   -------------------------------------------------------------------------- */
+
+.reservation-create--fast .reservation-create__content-grid {
+    display: flex !important;
+    align-items: flex-start !important;
+    flex-wrap: wrap !important;
+    gap: 18px !important;
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+    padding: 18px var(--rcf-gutter) 0;
+    box-sizing: border-box;
+}
+
+.reservation-create--fast .reservation-create__main {
+    display: flex !important;
+    flex-direction: column;
+    gap: 14px;
+    flex: 3 1 560px !important;
+    min-width: 0 !important;
+    grid-column: auto !important;
+}
+
+.reservation-create--fast .reservation-create__summary {
+    position: sticky;
+    top: calc(var(--rcf-header-h) + 120px);
+    display: flex !important;
+    flex-direction: column;
+    gap: 14px;
+    flex: 1 1 300px !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    grid-column: auto !important;
+    order: 0 !important;
+}
+
+.reservation-create--fast .reservation-create__panel.is-active {
+    display: flex !important;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* --------------------------------------------------------------------------
+   Carte offre (bandeau marine)
+   -------------------------------------------------------------------------- */
+
+.reservation-create--fast .reservation-fast-offer {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 16px 20px;
+    border-radius: 16px;
+    background: var(--rcf-navy);
+    color: #fff;
+}
+
+.reservation-create--fast .reservation-fast-offer__meta {
+    flex: 1 1 300px;
+    min-width: 0;
+}
+
+.reservation-create--fast .reservation-fast-offer .reservation-create__eyebrow {
+    margin: 0;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #a9c8e4;
+}
+
+.reservation-create--fast .reservation-fast-offer__title {
+    margin: 7px 0 0;
+    font-size: clamp(15px, 1.6vw, 18px);
+    font-weight: 600;
+    line-height: 1.35;
+    text-wrap: pretty;
+    color: #fff;
+}
+
+.reservation-create--fast .reservation-fast-offer__chips {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.reservation-create--fast .reservation-fast-offer__chip {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.12);
+    font-family: var(--rcf-mono);
+    font-size: 11.5px;
+    color: #cfe2f4;
+}
+
+.reservation-create--fast .reservation-fast-offer__seats {
+    font-family: inherit;
+    font-weight: 600;
+    background: rgba(33, 161, 121, 0.28);
+    color: #c8f0e0;
+}
+
+.reservation-create--fast .reservation-fast-offer__seats.is-tight {
+    background: rgba(245, 130, 31, 0.28);
+    color: #ffd9b3;
+}
+
+.reservation-create--fast .reservation-fast-offer__seats.is-over {
+    background: rgba(180, 65, 60, 0.28);
+    color: #ffd6d4;
+}
+
+.reservation-create--fast .reservation-fast-offer__action {
+    flex: none;
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.reservation-create--fast .reservation-fast-offer__action:hover {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+}
+
+/* --------------------------------------------------------------------------
+   Cartes de contenu
+   -------------------------------------------------------------------------- */
+
+.reservation-create--fast .reservation-fast-card {
+    margin: 0;
+    padding: 18px clamp(16px, 2vw, 22px);
+    border: 1px solid var(--rcf-border);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: none;
+}
+
+.reservation-create--fast .reservation-fast-card.mt-3 {
+    margin-top: 0 !important;
+}
+
+.reservation-create--fast .reservation-fast-card__head {
+    display: flex;
+    align-items: flex-start;
+    /* Les étapes 2 à 4 posent l'eyebrow et le titre en enfants directs : on aligne
+       à gauche et on repousse les éléments de droite avec margin-left auto plutôt
+       qu'avec space-between, qui les écarterait. */
+    justify-content: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 0 0 14px;
+    padding: 0;
+    border: 0;
+}
+
+/* L'eyebrow « Étape N » occupe sa propre ligne, au-dessus du titre. */
+.reservation-create--fast .reservation-fast-card__head > .reservation-create__eyebrow {
+    flex: 1 1 100%;
+    margin: 0;
+}
+
+.reservation-create--fast .reservation-fast-card__heading {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.reservation-create--fast .reservation-fast-card__head > .reservation-fast-card__title {
+    flex: 1 1 auto;
+}
+
+.reservation-create--fast .reservation-fast-card__head > .reservation-fast-card__badge,
+.reservation-create--fast .reservation-fast-card__head > .reservation-fast-card__action,
+.reservation-create--fast .reservation-fast-card__head > .reservation-fast-tabs,
+.reservation-create--fast .reservation-fast-card__head > .reservation-create__pill {
+    margin-left: auto;
+}
+
+.reservation-create--fast .reservation-fast-card__title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: var(--rcf-text);
+}
+
+.reservation-create--fast .reservation-fast-card__subtitle {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: var(--rcf-muted);
+}
+
+.reservation-create--fast .reservation-fast-card__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--rcf-muted);
+}
+
+.reservation-create--fast .reservation-fast-card__badge strong {
+    font-family: var(--rcf-mono);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--rcf-text);
+}
+
+/* --------------------------------------------------------------------------
+   Compteurs de voyageurs
+   -------------------------------------------------------------------------- */
+
+.reservation-create--fast .reservation-fast-traveler-counters {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin: 0;
+}
+
+@media (min-width: 860px) {
+    .reservation-create--fast .reservation-fast-traveler-counters {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.reservation-create--fast .reservation-fast-counter {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    text-align: left;
+    border: 1px solid var(--rcf-border-3);
+    border-radius: 13px;
+    background: #fff;
+    transition: border-color .18s ease, background .18s ease;
+}
+
+.reservation-create--fast .reservation-fast-counter.is-filled {
+    border-color: var(--rcf-outline);
+    background: var(--rcf-panel);
+}
+
+.reservation-create--fast .reservation-fast-counter__meta {
+    flex: 1;
+    min-width: 0;
+}
+
+.reservation-create--fast .reservation-fast-counter__label {
+    display: block;
+    margin: 0;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--rcf-text);
+}
+
+.reservation-create--fast .reservation-fast-counter__hint {
+    margin: 2px 0 0;
+    font-size: 11px;
+    color: var(--rcf-muted);
+}
+
+.reservation-create--fast .reservation-fast-counter__control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: none;
+    padding: 0;
+    border: 0;
+    background: none;
+}
+
+.reservation-create--fast .reservation-fast-counter__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid var(--rcf-border);
+    border-radius: 9px;
+    background: #fff;
+    color: var(--rcf-muted-2);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+}
+
+.reservation-create--fast .reservation-fast-counter__btn:hover {
+    border-color: var(--rcf-outline);
+    background: var(--rcf-soft);
+    color: var(--rcf-blue);
+}
+
+.reservation-create--fast .reservation-fast-counter__input {
+    /* Un champ de formulaire garde une largeur intrinsèque avec width:auto :
+       on la fixe pour retrouver le compteur compact de la maquette. */
+    width: 34px;
+    min-width: 22px;
+    flex: none;
+    padding: 0;
+    border: 0;
+    background: none;
+    text-align: center;
+    font-family: var(--rcf-mono);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--rcf-text);
+    -moz-appearance: textfield;
+}
+
+.reservation-create--fast .reservation-fast-counter__input::-webkit-outer-spin-button,
+.reservation-create--fast .reservation-fast-counter__input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.reservation-create--fast .reservation-fast-capacity-alert {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--rcf-danger-border);
+    border-radius: 11px;
+    background: var(--rcf-danger-bg);
+    color: var(--rcf-danger-text);
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+
+/* --------------------------------------------------------------------------
+   Onglets segmentés nouveau / existant
+   -------------------------------------------------------------------------- */
+
+.reservation-create--fast .reservation-fast-tabs {
+    display: flex;
+    gap: 3px;
+    flex: none;
+    margin: 0;
+    padding: 3px;
+    border: 0;
+    border-radius: 11px;
+    background: var(--rcf-soft);
+}
+
+.reservation-create--fast .reservation-fast-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    margin: 0;
+    padding: 8px 15px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--rcf-muted);
+    font-size: 12.5px;
+    font-weight: 400;
+    cursor: pointer;
+    box-shadow: none;
+}
+
+.reservation-create--fast .reservation-fast-tab.is-active {
+    background: #fff;
+    color: var(--rcf-blue);
+    font-weight: 600;
+    box-shadow: none;
+}
+
+.reservation-create--fast .reservation-fast-tab:hover {
+    color: var(--rcf-blue);
+    background: rgba(255, 255, 255, 0.6);
+}
+
+.reservation-create--fast .reservation-fast-tab.is-active:hover {
+    background: #fff;
+}
+
+/* --------------------------------------------------------------------------
+   Champs de formulaire
+   -------------------------------------------------------------------------- */
+
+.reservation-create--fast .reservation-fast-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 0;
+}
+
+.reservation-create--fast .reservation-fast-grid + .reservation-fast-grid {
+    margin-top: 12px;
+}
+
+.reservation-create--fast .reservation-fast-grid .reservation-create__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1 1 200px;
+    min-width: 0;
+    margin: 0;
+}
+
+.reservation-create--fast .reservation-fast-grid .reservation-create__field--compact {
+    flex: 1 1 170px;
+}
+
+.reservation-create--fast .reservation-fast-grid .reservation-create__field--full {
+    flex: 1 1 100%;
+}
+
+.reservation-create--fast .reservation-create__label {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    margin: 0;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--rcf-text);
+}
+
+.reservation-create--fast .required-star {
+    color: var(--rcf-accent);
+    font-style: normal;
+}
+
+.reservation-create--fast .reservation-create__input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 11px 13px;
+    border: 1px solid var(--rcf-border);
+    border-radius: 11px;
+    background: var(--rcf-panel);
+    color: var(--rcf-text);
+    font-family: inherit;
+    font-size: 13.5px;
+    box-shadow: none;
+}
+
+.reservation-create--fast .reservation-create__input::placeholder {
+    color: var(--rcf-muted-4);
+}
+
+.reservation-create--fast .reservation-create__input:focus {
+    outline: none;
+    border-color: var(--rcf-accent);
+    box-shadow: 0 0 0 3px rgba(245, 130, 31, 0.16);
+    background: #fff;
+}
+
+.reservation-create--fast .reservation-create__input--mono,
+.reservation-create--fast .reservation-create__input[type="date"],
+.reservation-create--fast .reservation-create__input[type="tel"] {
+    font-family: var(--rcf-mono);
+    font-size: 13px;
+}
+
+.reservation-create--fast .reservation-create__input--textarea {
+    min-height: 0;
+    font-family: inherit;
+    font-size: 13.5px;
+}
+
+.reservation-create--fast .reservation-create__helper {
+    margin: 0;
+    font-size: 11.5px;
+    color: var(--rcf-muted);
+    line-height: 1.5;
+}
+
+/* Remise (étape 3) : la grille d'origine comprime le champ montant dans une
+   colonne étroite ; ici les deux blocs se partagent la largeur et passent à la
+   ligne au besoin. */
+.reservation-create--fast .reservation-fast-discount {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px;
+    margin: 0 0 14px;
+}
+
+.reservation-create--fast .reservation-fast-discount > .reservation-create__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1 1 220px;
+    min-width: 0;
+}
+
+.reservation-create--fast .reservation-fast-discount__preview {
+    display: block;
+    flex: 1 1 200px;
+    min-width: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--rcf-border-3);
+    border-radius: 11px;
+    background: var(--rcf-panel);
+}
+
+.reservation-create--fast .reservation-fast-discount__preview span {
+    font-size: 11.5px;
+    font-weight: 400;
+    color: var(--rcf-muted);
+}
+
+.reservation-create--fast .reservation-fast-discount__preview strong {
+    display: block;
+    margin-top: 3px;
+    font-family: var(--rcf-mono);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--rcf-text);
+}
+
+.reservation-create--fast .reservation-fast-discount__control {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.reservation-create--fast .reservation-fast-discount__control .reservation-create__input {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.reservation-create--fast .reservation-fast-discount__type {
+    flex: 0 0 82px;
+}
+
+/* Bloc pièce d'identité repliable ----------------------------------------- */
+
+.reservation-create--fast .reservation-fast-disclosure {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    margin-top: 16px;
+    padding: 12px 14px;
+    border: 0;
+    border-radius: 11px;
+    background: var(--rcf-panel);
+    text-align: left;
+    cursor: pointer;
+}
+
+.reservation-create--fast .reservation-fast-disclosure:hover {
+    background: var(--rcf-soft);
+}
+
+.reservation-create--fast .reservation-fast-disclosure__title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--rcf-text);
+}
+
+.reservation-create--fast .reservation-fast-disclosure__hint {
+    margin-top: 2px;
+    font-size: 11.5px;
+    color: var(--rcf-muted);
+}
+
+.reservation-create--fast .reservation-fast-disclosure__toggle {
+    flex: none;
+    white-space: nowrap;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--rcf-blue);
+}
+
+.reservation-create--fast .reservation-fast-disclosure__panel {
+    margin-top: 12px;
+}
+
+/* --------------------------------------------------------------------------
+   Recherche client existant
+   -------------------------------------------------------------------------- */
+
+.reservation-create--fast .reservation-fast-search {
+    display: flex;
+    gap: 9px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+
+.reservation-create--fast .reservation-fast-search .reservation-create__input {
+    flex: 1 1 240px;
+    margin-bottom: 0 !important;
+}
+
+.reservation-create--fast .reservation-fast-search__submit {
+    flex: none;
+    padding: 12px 18px;
+    border: 0;
+    border-radius: 11px;
+    background: var(--rcf-blue);
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.reservation-create--fast .reservation-fast-search__submit:hover {
+    background: var(--rcf-navy);
+}
+
+.reservation-create--fast .reservation-create__search-results {
+    position: static;
+    margin-top: 12px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.reservation-create--fast .reservation-create__search-results > * + * {
+    margin-top: 8px;
+}
+
+.reservation-create--fast .reservation-create__search-result {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--rcf-border-3);
+    border-radius: 12px;
+    background: #fff;
+    text-align: left;
+    cursor: pointer;
+}
+
+.reservation-create--fast .reservation-create__search-result:hover {
+    border-color: var(--rcf-outline);
+    background: #fcfdff;
+}
+
+.reservation-create--fast .reservation-create__search-result-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--rcf-border-3);
+    color: var(--rcf-blue);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.reservation-create--fast .reservation-create__search-result-body {
+    flex: 1 1 180px;
+    min-width: 0;
+}
+
+.reservation-create--fast .reservation-create__search-result-name {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--rcf-text);
+}
+
+.reservation-create--fast .reservation-create__search-result-meta {
+    display: block;
+    margin-top: 2px;
+    font-family: var(--rcf-mono);
+    font-size: 11.5px;
+    color: var(--rcf-muted);
+}
+
+.reservation-create--fast .reservation-create__search-result--empty {
+    cursor: default;
+    background: var(--rcf-panel);
+}
+
+.reservation-create--fast .reservation-create__search-result--action {
+    justify-content: space-between;
+    border-style: dashed;
+    border-color: var(--rcf-outline);
+    color: var(--rcf-blue);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.reservation-create--fast .reservation-create__search-result-code {
+    flex: none;
+    font-family: var(--rcf-mono);
+    font-size: 11.5px;
+    color: var(--rcf-muted);
+}
+
+.reservation-create--fast .reservation-create__search-result-cta {
+    flex: none;
+    white-space: nowrap;
+    padding: 7px 14px;
+    border: 1px solid var(--rcf-outline);
+    border-radius: 999px;
+    color: var(--rcf-blue);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.reservation-create--fast .reservation-create__search-selected {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--rcf-outline);
+    border-radius: 12px;
+    background: var(--rcf-panel);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--rcf-text);
+}
+
+.reservation-create--fast .reservation-create__search-selected-clear {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--rcf-danger-border);
+    border-radius: 9px;
+    background: #fff;
+    color: var(--rcf-danger);
+    line-height: 1;
+    cursor: pointer;
+}
+
+/* --------------------------------------------------------------------------
+   Accompagnants
+   -------------------------------------------------------------------------- */
+
+.reservation-create--fast .reservation-fast-card__action {
+    flex: none;
+    white-space: nowrap;
+    padding: 9px 15px;
+    border: 1px solid var(--rcf-outline);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--rcf-blue);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.reservation-create--fast .reservation-fast-card__action:hover {
+    background: var(--rcf-soft);
+    color: var(--rcf-navy);
+}
+
+.reservation-create--fast .reservation-fast-companions {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    margin: 0;
+}
+
+.reservation-create--fast .reservation-fast-companions:empty {
+    display: none;
+}
+
+.reservation-create--fast .reservation-fast-companion {
+    display: flex;
+    align-items: flex-end;
+    gap: 11px;
+    flex-wrap: wrap;
+    padding: 13px 15px;
+    border: 1px solid var(--rcf-border-3);
+    border-radius: 13px;
+    background: #fff;
+}
+
+.reservation-create--fast .reservation-fast-companion__num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    flex: none;
+    margin-bottom: 4px;
+    border-radius: 9px;
+    background: var(--rcf-border-3);
+    color: var(--rcf-blue);
+    font-family: var(--rcf-mono);
+    font-size: 11.5px;
+    font-weight: 500;
+}
+
+.reservation-create--fast .reservation-fast-companion__field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1 1 130px;
+    min-width: 0;
+    margin: 0;
+}
+
+.reservation-create--fast .reservation-fast-companion__field--type {
+    flex: 0 1 120px;
+    min-width: 105px;
+}
+
+.reservation-create--fast .reservation-fast-companion__field--compact {
+    flex: 1 1 145px;
+}
+
+.reservation-create--fast .reservation-fast-companion .reservation-create__input {
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+}
+
+.reservation-create--fast .reservation-fast-companion .reservation-create__label {
+    font-size: 11px;
+    color: var(--rcf-muted);
+}
+
+.reservation-create--fast .reservation-fast-companion__remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    flex: none;
+    margin-bottom: 3px;
+    padding: 0;
+    border: 1px solid var(--rcf-danger-border);
+    border-radius: 9px;
+    background: #fff;
+    color: var(--rcf-danger);
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.reservation-create--fast .reservation-fast-companion__remove:hover {
+    background: var(--rcf-danger-bg);
+}
+
+.reservation-create--fast .reservation-fast-empty {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 20px;
+    border: 1px dashed var(--rcf-outline);
+    border-radius: 13px;
+    background: var(--rcf-panel);
+    color: inherit;
+    text-align: left;
+    font-size: inherit;
+}
+
+.reservation-create--fast .reservation-fast-empty__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border-radius: 11px;
+    background: var(--rcf-border-3);
+    color: var(--rcf-blue);
+    font-size: 16px;
+    line-height: 1;
+}
+
+.reservation-create--fast .reservation-fast-empty__body {
+    flex: 1 1 220px;
+    min-width: 0;
+}
+
+.reservation-create--fast .reservation-fast-empty__title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--rcf-text);
+}
+
+.reservation-create--fast .reservation-fast-empty__text {
+    margin: 3px 0 0;
+    font-size: 12px;
+    color: var(--rcf-muted);
+    line-height: 1.5;
+}
+
+/* --------------------------------------------------------------------------
+   Résumé (colonne de droite)
+   -------------------------------------------------------------------------- */
+
+.reservation-create--fast .reservation-fast-summary {
+    display: block;
+    padding: 0;
+    border: 1px solid var(--rcf-border);
+    border-radius: 16px;
+    background: #fff;
+    overflow: hidden;
+    box-shadow: none;
+}
+
+.reservation-create--fast .reservation-fast-summary__head {
+    padding: 16px 20px 12px;
+}
+
+.reservation-create--fast .reservation-fast-summary .reservation-create__eyebrow {
+    margin: 0;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--rcf-muted-3);
+}
+
+.reservation-create--fast .reservation-fast-summary__offer {
+    margin-top: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1.4;
+    text-wrap: pretty;
+    color: var(--rcf-text);
+}
+
+.reservation-create--fast .reservation-fast-summary__dates {
+    margin-top: 3px;
+    font-family: var(--rcf-mono);
+    font-size: 11.5px;
+    color: var(--rcf-muted);
+}
+
+.reservation-create--fast .reservation-fast-summary__lines {
+    padding: 0 20px;
+}
+
+.reservation-create--fast .reservation-fast-summary__item {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 0;
+    border: 0;
+    border-top: 1px solid var(--rcf-soft);
+    font-size: 12.5px;
+}
+
+.reservation-create--fast .reservation-fast-summary__item[hidden] {
+    display: none;
+}
+
+.reservation-create--fast .reservation-fast-summary__item span {
+    font-size: 12.5px;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--rcf-muted);
+}
+
+.reservation-create--fast .reservation-fast-summary__item strong {
+    font-family: var(--rcf-mono);
+    font-size: 12.5px;
+    font-weight: 500;
+    text-align: right;
+    color: var(--rcf-text);
+}
+
+.reservation-create--fast .reservation-fast-summary__note {
+    font-style: normal;
+    color: var(--rcf-muted-4);
+}
+
+.reservation-create--fast .reservation-fast-summary__totals {
+    margin: 12px 20px 0;
+    padding: 14px;
+    border-radius: 13px;
+    background: var(--ea-bg, #eaf1f8);
+}
+
+.reservation-create--fast .reservation-fast-summary__total-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.reservation-create--fast .reservation-fast-summary__total-row--paid {
+    margin-top: 8px;
+}
+
+.reservation-create--fast .reservation-fast-summary__total-row--remaining {
+    margin-top: 5px;
+}
+
+.reservation-create--fast .reservation-fast-summary__total-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--rcf-text);
+}
+
+.reservation-create--fast .reservation-fast-summary__total-value {
+    font-family: var(--rcf-mono);
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--rcf-blue);
+}
+
+.reservation-create--fast .reservation-fast-summary__total-row span {
+    font-size: 12px;
+    color: var(--rcf-muted);
+}
+
+.reservation-create--fast .reservation-fast-summary__total-row strong {
+    font-family: var(--rcf-mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--rcf-text);
+}
+
+.reservation-create--fast .reservation-fast-summary__total-row--remaining strong {
+    color: var(--rcf-danger);
+}
+
+.reservation-create--fast .reservation-fast-summary__cta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 20px 18px;
+}
+
+.reservation-create--fast .reservation-fast-summary__primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    white-space: nowrap;
+    padding: 14px 18px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--rcf-accent);
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.reservation-create--fast .reservation-fast-summary__primary:hover {
+    filter: brightness(0.95);
+    color: #fff;
+}
+
+.reservation-create--fast .reservation-fast-summary__primary.is-blocked {
+    background: var(--rcf-muted-4);
+}
+
+.reservation-create--fast .reservation-fast-summary__secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    padding: 11px 16px;
+    border: 1px solid var(--rcf-border);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--rcf-muted-2);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.reservation-create--fast .reservation-fast-summary__secondary:hover {
+    border-color: var(--rcf-outline);
+    color: var(--rcf-blue);
+    background: var(--rcf-soft);
+}
+
+.reservation-create--fast .reservation-fast-summary__req {
+    margin: 4px 0 0;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--rcf-muted);
+}
+
+.reservation-create--fast .reservation-fast-summary__req.is-blocking {
+    color: var(--rcf-danger);
+}
+
+/* --------------------------------------------------------------------------
+   Alertes, erreurs, actions d'étape
+   -------------------------------------------------------------------------- */
+
+.reservation-create--fast .reservation-create__alert,
+.reservation-create--fast .reservation-create__step-errors {
+    margin: 0;
+    padding: 12px 14px;
+    border-radius: 11px;
+    font-size: 12.5px;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+.reservation-create--fast .reservation-create__step-errors,
+.reservation-create--fast .reservation-create__alert--error {
+    border: 1px solid var(--rcf-danger-border);
+    background: var(--rcf-danger-bg);
+    color: var(--rcf-danger-text);
+}
+
+.reservation-create--fast > .reservation-create__alert--error {
+    max-width: 1400px;
+    margin: 18px auto 0;
+    box-sizing: border-box;
+}
+
+.reservation-create--fast .reservation-create__actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+/* Les étapes pilotent leur navigation depuis le résumé collant, mais on ne
+   masque les boutons d'origine qu'une fois le relais JS réellement branché :
+   sans JS, la navigation d'étape reste utilisable. */
+.reservation-create--fast.is-cta-proxied .reservation-create__actions {
+    display: none;
+}
+
+.reservation-create--fast .reservation-create__button {
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: none;
+}
+
+.reservation-create--fast .reservation-create__button--primary {
+    border: 0;
+    background: var(--rcf-accent);
+    color: #fff;
+}
+
+.reservation-create--fast .reservation-create__button--secondary,
+.reservation-create--fast .reservation-create__button--ghost {
+    border: 1px solid var(--rcf-border);
+    background: #fff;
+    color: var(--rcf-muted-2);
+}
+
+/* --------------------------------------------------------------------------
+   Responsive
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 1139px) {
+    .reservation-create--fast .reservation-create__summary {
+        position: static;
+        order: -1 !important;
+        flex: 1 1 100% !important;
+    }
+
+    /* Résumé empilé en pleine largeur : les actions passent en ligne pour ne pas
+       étirer le bouton principal sur toute la colonne. */
+    .reservation-create--fast .reservation-fast-summary__cta {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .reservation-create--fast .reservation-fast-summary__primary {
+        flex: 1 1 240px;
+    }
+
+    .reservation-create--fast .reservation-fast-summary__secondary {
+        flex: 0 1 180px;
+    }
+
+    .reservation-create--fast .reservation-fast-summary__req {
+        flex: 1 1 100%;
+    }
+}
+
+@media (max-width: 720px) {
+    .reservation-create--fast .reservation-fast-header {
+        position: static;
+    }
+
+    /* reservation-create.css empile les onglets sous 720px ; le sélecteur
+       segmenté de la maquette reste plus lisible en deux moitiés côte à côte. */
+    .reservation-create--fast .reservation-fast-tabs {
+        flex-direction: row;
+        width: 100%;
+    }
+
+    .reservation-create--fast .reservation-fast-tab {
+        flex: 1 1 0;
+        justify-content: center;
+    }
+
+    .reservation-create--fast .reservation-fast-header__actions,
+    .reservation-create--fast .reservation-fast-header__actions .reservation-create__back-link,
+    .reservation-create--fast .reservation-fast-offer__action {
+        width: 100%;
+    }
+
+    .reservation-create--fast .reservation-fast-summary__cta {
+        flex-direction: column;
+    }
+
+    .reservation-create--fast .reservation-fast-summary__primary,
+    .reservation-create--fast .reservation-fast-summary__secondary {
+        flex: 0 0 auto;
+    }
+}

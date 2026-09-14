@@ -1201,6 +1201,37 @@
     border-radius: 0.45rem;
 }
 
+.reservation-create__search-result-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    flex: none;
+    border-radius: 50%;
+    background: #eff6ff;
+    color: #0e3a5a;
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+
+.reservation-create__search-result-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.reservation-create__search-result-cta {
+    flex: none;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid #cfe0f0;
+    border-radius: 999px;
+    color: #0e3a5a;
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+
 .reservation-create__search-selected {
     display: flex;
     align-items: center;

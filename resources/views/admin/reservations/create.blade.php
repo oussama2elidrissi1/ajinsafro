@@ -9,7 +9,13 @@
     @endif
     <link rel="stylesheet" href="{{ asset('css/reservation-create.css') . '?v=' . @filemtime(public_path('css/reservation-create.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/departure-rooms-modal.css') . '?v=' . @filemtime(public_path('css/departure-rooms-modal.css')) }}">
-    @if(request()->attributes->get('agent_reservation_mode', false))
+    @if($fastCreateMode ?? false)
+        {{-- Habillage « Réservation rapide » : chargé en dernier pour primer sur reservation-create.css. --}}
+        <link rel="stylesheet" href="{{ asset('css/reservation-create-fast.css') . '?v=' . @filemtime(public_path('css/reservation-create-fast.css')) }}">
+    @endif
+    {{-- Les surcharges portail agent ci-dessous ne concernent que le tunnel classique :
+         en mode rapide, reservation-create-fast.css habille les deux coques. --}}
+    @if(request()->attributes->get('agent_reservation_mode', false) && ! ($fastCreateMode ?? false))
         <style>
             .agent-portal-main .reservation-create {
                 width: 100% !important;
@@ -351,13 +357,17 @@
             <input type="hidden" name="extras_total" id="reservation-extras-total-input" value="{{ old('extras_total', 0) }}">
             <input type="hidden" name="total_amount" id="reservation-total-amount-input" value="{{ old('total_amount', 0) }}">
 
-            <div class="reservation-create__workflow">
-                @include('admin.reservations.create.partials.' . (($fastCreateMode ?? false) ? 'workflow-fast' : 'workflow'))
-            </div>
+            @unless ($fastCreateMode ?? false)
+                {{-- En mode rapide, le stepper est rendu dans la barre collante (fast-header). --}}
+                <div class="reservation-create__workflow">
+                    @include('admin.reservations.create.partials.workflow')
+                </div>
+            @endunless
 
             <div class="reservation-create__content-grid">
                 <main class="reservation-create__main">
                     @if ($fastCreateMode ?? false)
+                        @include('admin.reservations.create.partials.fast-offer')
                         @include('admin.reservations.create.partials.step-fast-1')
                         @include('admin.reservations.create.partials.step-fast-2')
                         @include('admin.reservations.create.partials.step-fast-3')
@@ -399,4 +409,7 @@
 @push('scripts')
     <script src="{{ asset('js/reservation-create.js') . '?v=' . @filemtime(public_path('js/reservation-create.js')) }}"></script>
     <script src="{{ asset('js/departure-rooms-modal.js') . '?v=' . @filemtime(public_path('js/departure-rooms-modal.js')) }}"></script>
+    @if($fastCreateMode ?? false)
+        <script src="{{ asset('js/reservation-create-fast.js') . '?v=' . @filemtime(public_path('js/reservation-create-fast.js')) }}"></script>
+    @endif
 @endpush

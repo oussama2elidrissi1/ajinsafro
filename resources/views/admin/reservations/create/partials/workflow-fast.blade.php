@@ -1,22 +1,30 @@
-<div class="reservation-create__steps-card reservation-create__steps-card--workflow">
-    <p class="reservation-create__eyebrow">Workflow rapide</p>
-    <h2 class="reservation-create__sidebar-title">Nouvelle réservation rapide</h2>
-    <div class="reservation-create__steps reservation-create__steps--chevrons" role="tablist" aria-label="Étapes de création">
-        <button type="button" class="reservation-create__step is-active" data-create-step-nav="1">
-            <span class="reservation-create__step-index">1</span>
-            <span class="reservation-create__step-label">Client &amp; voyageurs</span>
-        </button>
-        <button type="button" class="reservation-create__step" data-create-step-nav="2">
-            <span class="reservation-create__step-index">2</span>
-            <span class="reservation-create__step-label">Chambres &amp; extras</span>
-        </button>
-        <button type="button" class="reservation-create__step" data-create-step-nav="3">
-            <span class="reservation-create__step-index">3</span>
-            <span class="reservation-create__step-label">Paiement</span>
-        </button>
-        <button type="button" class="reservation-create__step" data-create-step-nav="4">
-            <span class="reservation-create__step-index">4</span>
-            <span class="reservation-create__step-label">Confirmation</span>
-        </button>
+@php
+    $fastSteps = [
+        1 => 'Client & voyageurs',
+        2 => 'Chambres & extras',
+        3 => 'Paiement',
+        4 => 'Confirmation',
+    ];
+@endphp
+
+<div class="reservation-create__workflow">
+    <div class="reservation-create__steps-card reservation-create__steps-card--workflow">
+        <div class="reservation-create__steps reservation-create__steps--chevrons" role="tablist" aria-label="Étapes de création">
+            @foreach ($fastSteps as $number => $label)
+                <button
+                    type="button"
+                    class="reservation-create__step {{ $number === 1 ? 'is-active' : '' }}"
+                    data-create-step-nav="{{ $number }}"
+                    role="tab"
+                    aria-selected="{{ $number === 1 ? 'true' : 'false' }}"
+                >
+                    <span class="reservation-create__step-index" data-step-index>{{ $number }}</span>
+                    <span class="reservation-create__step-text">
+                        <span class="reservation-create__step-kicker" data-step-kicker>{{ $number === 1 ? 'En cours' : 'Étape ' . $number }}</span>
+                        <span class="reservation-create__step-label">{{ $label }}</span>
+                    </span>
+                </button>
+            @endforeach
+        </div>
     </div>
 </div>

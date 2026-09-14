@@ -1474,13 +1474,22 @@
         container.innerHTML = items.map(function (item) {
             var name = item.full_name || (item.first_name + ' ' + item.last_name).trim();
             var meta = [];
+            // Le code client tenait dans un badge separe ; il rejoint la ligne meta
+            // pour rester visible a cote du telephone et de l'email.
+            if (item.client_code) meta.push(item.client_code);
             if (item.phone) meta.push(item.phone);
             if (item.email) meta.push(item.email);
             if (item.document) meta.push(item.document);
+            var initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map(function (part) {
+                return part.charAt(0).toUpperCase();
+            }).join('') || '?';
             return '<div class="reservation-create__search-result" data-client-id="' + item.id + '" data-client-label="[' + (item.client_code || '') + '] ' + name + '">' +
-                '<span><span class="reservation-create__search-result-name">' + name + '</span>' +
-                '<span class="reservation-create__search-result-meta">' + meta.join(' Â· ') + '</span></span>' +
-                '<span class="reservation-create__search-result-code">' + (item.client_code || '') + '</span>' +
+                '<span class="reservation-create__search-result-avatar" aria-hidden="true">' + escapeHtml(initials) + '</span>' +
+                '<span class="reservation-create__search-result-body">' +
+                    '<span class="reservation-create__search-result-name">' + name + '</span>' +
+                    '<span class="reservation-create__search-result-meta">' + meta.join(' · ') + '</span>' +
+                '</span>' +
+                '<span class="reservation-create__search-result-cta">Sélectionner</span>' +
                 '</div>';
         }).join('');
         container.hidden = false;
@@ -2094,18 +2103,14 @@
             row.setAttribute('data-companion-id', stableId);
             row.setAttribute('data-traveler-key', stableId);
             row.innerHTML =
-                '<div class="reservation-fast-companion__head">' +
-                    '<span class="reservation-fast-companion__num">#' + (index + 1) + '</span>' +
-                    '<button type="button" class="btn-remove-companion reservation-fast-companion__remove" aria-label="Supprimer">×</button>' +
-                '</div>' +
-                '<div class="reservation-fast-grid">' +
-                    '<input type="hidden" name="passengers[' + stableId + '][traveler_key]" value="' + stableId + '">' +
-                    '<div class="reservation-create__field"><label class="reservation-create__label">Prénom <span class="required-star">*</span></label><input type="text" name="passengers[' + stableId + '][first_name]" class="reservation-create__input"></div>' +
-                    '<div class="reservation-create__field"><label class="reservation-create__label">Nom <span class="required-star">*</span></label><input type="text" name="passengers[' + stableId + '][last_name]" class="reservation-create__input"></div>' +
-                    '<div class="reservation-create__field"><label class="reservation-create__label">Sexe</label><select name="passengers[' + stableId + '][gender]" class="reservation-create__input"><option value="">Sélectionner...</option><option value="male">Homme</option><option value="female">Femme</option></select></div>' +
-                    '<div class="reservation-create__field"><label class="reservation-create__label">Date naissance</label><input type="date" name="passengers[' + stableId + '][birth_date]" class="reservation-create__input"></div>' +
-                    '<div class="reservation-create__field"><label class="reservation-create__label">Type voyageur</label><select name="passengers[' + stableId + '][type]" class="reservation-create__input" data-companion-type-select="' + stableId + '"><option value="adult" ' + (typeOverride === 'adult' ? 'selected' : '') + '>Adulte</option><option value="child" ' + (typeOverride === 'child' ? 'selected' : '') + '>Enfant</option><option value="infant" ' + (typeOverride === 'infant' ? 'selected' : '') + '>Bébé</option></select></div>' +
-                '</div>';
+                '<span class="reservation-fast-companion__num">' + (index + 2) + '</span>' +
+                '<input type="hidden" name="passengers[' + stableId + '][traveler_key]" value="' + stableId + '">' +
+                '<label class="reservation-fast-companion__field"><span class="reservation-create__label">Prénom <span class="required-star">*</span></span><input type="text" name="passengers[' + stableId + '][first_name]" class="reservation-create__input" placeholder="Prénom"></label>' +
+                '<label class="reservation-fast-companion__field"><span class="reservation-create__label">Nom <span class="required-star">*</span></span><input type="text" name="passengers[' + stableId + '][last_name]" class="reservation-create__input" placeholder="Nom"></label>' +
+                '<label class="reservation-fast-companion__field reservation-fast-companion__field--type"><span class="reservation-create__label">Type</span><select name="passengers[' + stableId + '][type]" class="reservation-create__input" data-companion-type-select="' + stableId + '"><option value="adult" ' + (typeOverride === 'adult' ? 'selected' : '') + '>Adulte</option><option value="child" ' + (typeOverride === 'child' ? 'selected' : '') + '>Enfant</option><option value="infant" ' + (typeOverride === 'infant' ? 'selected' : '') + '>Bébé</option></select></label>' +
+                '<label class="reservation-fast-companion__field reservation-fast-companion__field--compact"><span class="reservation-create__label">Sexe</span><select name="passengers[' + stableId + '][gender]" class="reservation-create__input"><option value="">Sélectionner…</option><option value="male">Homme</option><option value="female">Femme</option></select></label>' +
+                '<label class="reservation-fast-companion__field reservation-fast-companion__field--compact"><span class="reservation-create__label">Naissance</span><input type="date" name="passengers[' + stableId + '][birth_date]" class="reservation-create__input"></label>' +
+                '<button type="button" class="btn-remove-companion reservation-fast-companion__remove" aria-label="Supprimer l\'accompagnant">−</button>';
         } else {
             row.className = 'companion-row reservation-create__companion';
             row.setAttribute('data-companion-id', stableId);
@@ -2138,9 +2143,17 @@
     }
 
     function syncTravelersEmptyState() {
+        var rows = document.querySelectorAll('#companions-container .companion-row');
+
+        // Le client principal est le voyageur n°1 : les accompagnants suivent a partir de 2.
+        Array.prototype.forEach.call(rows, function (row, index) {
+            var badge = row.querySelector('.reservation-fast-companion__num');
+            if (badge) badge.textContent = String(index + 2);
+        });
+
         var empty = document.getElementById('create-no-companions');
         if (!empty) return;
-        empty.classList.toggle('d-none', document.querySelectorAll('#companions-container .companion-row').length > 0);
+        empty.classList.toggle('d-none', rows.length > 0);
     }
 
     function bindDelegatedEvents() {
@@ -2164,6 +2177,10 @@
                 if (!maybeAutoRoomingDefault(true)) {
                     renderRooming();
                 }
+                // Un accompagnant ne compte comme voyageur qu'une fois nomme
+                // (meme regle que ReservationPricingService::countTravelers) :
+                // saisir son nom change donc le total du dossier.
+                syncFinancialSummary();
             }
             if (target.matches('#client_first_name, #client_last_name, #client_traveler_type, #client_gender')) {
                 if (!maybeAutoRoomingDefault(true)) {
@@ -2198,6 +2215,10 @@
                 if (!maybeAutoRoomingDefault(true)) {
                     renderRooming();
                 }
+                // Un accompagnant ne compte comme voyageur qu'une fois nomme
+                // (meme regle que ReservationPricingService::countTravelers) :
+                // saisir son nom change donc le total du dossier.
+                syncFinancialSummary();
             }
             if (target.matches('#client_traveler_type, #client_gender')) {
                 if (!maybeAutoRoomingDefault(true)) {
