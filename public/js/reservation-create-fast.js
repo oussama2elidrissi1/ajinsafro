@@ -284,10 +284,12 @@
             note.textContent = 'Capacité dépassée : ajustez le groupe pour continuer.';
         } else if (step === 1) {
             note.textContent = 'Champs obligatoires : prénom, nom, téléphone, sexe.';
-        } else if (step >= STEP_COUNT) {
-            note.textContent = 'Vérifiez le dossier avant de confirmer la réservation.';
+        } else if (step === 2) {
+            note.textContent = 'Les chambres partielles partent en attente de jumelage.';
+        } else if (step === 3) {
+            note.textContent = 'Un acompte n’est pas obligatoire pour continuer.';
         } else {
-            note.textContent = '';
+            note.textContent = 'La confirmation génère le numéro de dossier et décompte les places.';
         }
     }
 
@@ -465,6 +467,267 @@
         });
     }
 
+    /* --------------------------------------------- paiement (étape 3) ------ */
+
+    function hiddenAmount(id) {
+        return parseNumber((document.getElementById(id) || {}).value);
+    }
+
+    /**
+     * Le tunnel de création n'enregistre qu'un règlement (payment_amount) ;
+     * « déjà encaissé » vaut donc 0 sur un dossier neuf et la barre distingue
+     * ce qui est en cours de saisie de ce qui restera dû.
+     */
+    function paymentState() {
+        var total = hiddenAmount('reservation-total-amount-input');
+        var paid = 0;
+        var typed = Math.max(0, parseNumber((document.getElementById('payment_amount') || {}).value));
+        var pending = total > 0 ? Math.min(typed, total) : typed;
+        return {
+            total: total,
+            paid: paid,
+            pending: pending,
+            due: Math.max(0, total - paid - pending),
+            over: total > 0 && typed > total
+        };
+    }
+
+    function renderPayment() {
+        var state = paymentState();
+        var pct = function (value) {
+            return state.total > 0 ? Math.min(100, (value / state.total) * 100) + '%' : '0%';
+        };
+
+        var bar = document.getElementById('fast-pay-bar-paid');
+        if (bar) bar.style.width = pct(state.paid);
+        var barPending = document.getElementById('fast-pay-bar-pending');
+        if (barPending) barPending.style.width = pct(state.pending);
+
+        var set = function (id, value) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = value;
+        };
+        set('fast-pay-paid', formatMoney(state.paid));
+        set('fast-pay-pending', formatMoney(state.pending));
+        set('fast-pay-due', formatMoney(state.due));
+        set('fast-pay-after', formatMoney(state.due));
+        set('fast-pay-subtitle', 'Total ' + formatMoney(state.total) + ' · ' + formatMoney(state.pending) + ' en saisie');
+
+        var pill = document.getElementById('fast-pay-state');
+        if (pill) {
+            var label = 'AUCUN RÈGLEMENT';
+            var tone = 'is-none';
+            if (state.total > 0 && state.pending >= state.total) {
+                label = 'SOLDÉ À LA CONFIRMATION';
+                tone = 'is-settled';
+            } else if (state.pending > 0) {
+                label = 'ACOMPTE EN SAISIE';
+                tone = 'is-partial';
+            }
+            pill.textContent = label;
+            pill.className = 'reservation-fast-pay-state ' + tone;
+        }
+
+        $$('[data-pay-preset]').forEach(function (button) {
+            var ratio = button.getAttribute('data-pay-preset');
+            var amountEl = button.querySelector('.reservation-fast-pay-preset__amount');
+            if (ratio === 'free') {
+                var isPreset = ['0.3', '0.5', '1'].some(function (r) {
+                    return Math.round(state.total * parseFloat(r)) === Math.round(state.pending);
+                });
+                button.classList.toggle('is-active', state.pending > 0 && !isPreset);
+                return;
+            }
+            var value = Math.round(state.total * parseFloat(ratio));
+            if (amountEl) amountEl.textContent = state.total > 0 ? formatMoney(value) : '—';
+            button.classList.toggle('is-active', state.total > 0 && Math.round(state.pending) === value);
+        });
+
+        var capHint = document.getElementById('fast-pay-cap-hint');
+        if (capHint) {
+            capHint.textContent = state.over
+                ? 'Le montant saisi dépasse le total du dossier (' + formatMoney(state.total) + ').'
+                : 'Le montant ne peut pas dépasser le total du dossier (' + formatMoney(state.total) + ').';
+            capHint.classList.toggle('is-error', state.over);
+        }
+    }
+
+    function bindPayment() {
+        document.addEventListener('click', function (event) {
+            var preset = event.target.closest && event.target.closest('[data-pay-preset]');
+            if (!preset) return;
+            event.preventDefault();
+            var input = document.getElementById('payment_amount');
+            if (!input) return;
+            var ratio = preset.getAttribute('data-pay-preset');
+            if (ratio === 'free') {
+                input.focus();
+                input.select();
+                return;
+            }
+            var state = paymentState();
+            input.value = String(Math.round(state.total * parseFloat(ratio)));
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+
+        // Nom du fichier choisi, dans la zone de dépôt.
+        document.addEventListener('change', function (event) {
+            var input = event.target;
+            if (!input || !input.classList || !input.classList.contains('reservation-fast-dropzone__input')) return;
+            var zone = input.closest('.reservation-fast-dropzone');
+            var hint = zone && zone.querySelector('[data-dropzone-hint]');
+            if (!hint) return;
+            if (!hint.dataset.defaultHint) hint.dataset.defaultHint = hint.textContent;
+            var files = input.files ? Array.prototype.slice.call(input.files) : [];
+            zone.classList.toggle('is-filled', files.length > 0);
+            hint.textContent = files.length
+                ? files.map(function (file) { return file.name; }).join(' · ')
+                : hint.dataset.defaultHint;
+        });
+    }
+
+    /* ------------------------------------------ vérification (étape 4) ----- */
+
+    function principalName() {
+        var selected = document.getElementById('client-search-selected');
+        var existing = document.getElementById('client_mode_existing');
+        if (existing && existing.checked && selected && !selected.classList.contains('d-none')) {
+            var label = document.getElementById('client-search-selected-label');
+            return (label && label.textContent.trim()) || 'Client existant';
+        }
+        var first = (document.getElementById('client_first_name') || {}).value || '';
+        var last = (document.getElementById('client_last_name') || {}).value || '';
+        return [first, last].map(function (part) { return String(part).trim(); }).filter(Boolean).join(' ');
+    }
+
+    function namedCompanions() {
+        return $$('#companions-container .companion-row').filter(function (row) {
+            var first = row.querySelector('input[name*="[first_name]"]');
+            var last = row.querySelector('input[name*="[last_name]"]');
+            return String((first && first.value) || '').trim() !== ''
+                || String((last && last.value) || '').trim() !== '';
+        }).length;
+    }
+
+    function setReview(key, value, tone) {
+        var el = $('[data-review-line="' + key + '"]');
+        if (!el) return;
+        el.textContent = value;
+        el.classList.remove('is-warn', 'is-ok', 'is-danger');
+        if (tone) el.classList.add(tone);
+    }
+
+    function renderReview() {
+        if (!$('#fast-review')) return;
+
+        var counts = billableCounts();
+        var declared = declaredTotal();
+        var named = namedCompanions();
+        var expected = Math.max(0, declared - 1);
+
+        setReview('client-name', principalName() || 'À renseigner', principalName() ? null : 'is-warn');
+        setReview('travelers', declared + ' (' + counts.adult + 'A / ' + counts.child + 'E / ' + counts.infant + 'B)');
+        setReview('companions', named + ' / ' + expected, named < expected ? 'is-warn' : 'is-ok');
+
+        var allocations = (window.reservationState && window.reservationState.roomAllocations) || [];
+        var beds = allocations.reduce(function (sum, a) { return sum + (parseInt(a.capacity, 10) || 0); }, 0);
+        var occupied = allocations.reduce(function (sum, a) { return sum + ((a.traveler_keys || []).length); }, 0);
+        setReview('rooms-count', allocations.length + ' chambre(s)');
+        setReview('beds', occupied + ' / ' + beds);
+
+        var pill = document.getElementById('rooming-status-pill');
+        var roomingLabel = pill ? pill.textContent.replace(/^ROOMING\s*/i, '').toLowerCase() : '—';
+        var roomingWarn = pill ? !pill.className.includes('is-complete') : true;
+        setReview('rooming', roomingLabel || '—', roomingWarn ? 'is-warn' : 'is-ok');
+
+        var extrasOn = extraCards().filter(function (card) { return card.classList.contains('is-on'); }).length;
+        setReview('extras-count', extrasOn + ' extra(s)');
+        setReview('extras-total', formatMoney(hiddenAmount('reservation-extras-total-input')));
+        setReview('room-supplement', formatMoney(hiddenAmount('reservation-room-supplement-total-input')));
+
+        var pay = paymentState();
+        setReview('total', formatMoney(pay.total));
+        setReview('paid', formatMoney(pay.pending), pay.pending > 0 ? 'is-ok' : null);
+        setReview('due', formatMoney(pay.due), pay.due > 0 ? 'is-danger' : 'is-ok');
+    }
+
+    /**
+     * Contrôles déduits : ils ne créent aucune donnée, ils rendent visible ce qui
+     * manque encore dans ce qui a déjà été saisi.
+     */
+    function derivedChecks() {
+        var docType = (document.getElementById('client_document_type') || {}).value || '';
+        var docNumber = String((document.getElementById('client_document_number') || {}).value || '').trim();
+        var phone = String((document.getElementById('client_phone') || {}).value || '').trim();
+        var email = String((document.getElementById('client_email') || {}).value || '').trim();
+        var usingExisting = (document.getElementById('client_mode_existing') || {}).checked;
+        var declared = declaredTotal();
+        var named = namedCompanions() + 1;
+
+        return {
+            identity: usingExisting
+                ? { ok: true, tag: 'Fiche client', hint: 'Reprise depuis la fiche du client existant.' }
+                : {
+                    ok: !!(docType && docNumber),
+                    tag: docType && docNumber ? 'OK' : 'Manquant',
+                    hint: docType && docNumber
+                        ? 'Document renseigné à l’étape 1.'
+                        : 'Renseignez le type et le numéro à l’étape 1.'
+                },
+            contact: usingExisting
+                ? { ok: true, tag: 'Fiche client', hint: 'Reprise depuis la fiche du client existant.' }
+                : {
+                    // L'email est facultatif côté serveur : seul le téléphone bloque.
+                    ok: !!phone,
+                    tag: phone ? (email ? 'OK' : 'OK · sans email') : 'Manquant',
+                    hint: phone
+                        ? (email ? 'Téléphone et email renseignés.' : 'Téléphone renseigné ; email facultatif, absent.')
+                        : 'Le téléphone du titulaire est obligatoire.'
+                },
+            travelers: {
+                ok: named >= declared,
+                tag: named >= declared ? 'OK' : (declared - named) + ' à nommer',
+                hint: named >= declared
+                    ? declared + ' voyageur(s) nommé(s) sur ' + declared + '.'
+                    : 'Le groupe annonce ' + declared + ' place(s) pour ' + named + ' fiche(s) nommée(s).'
+            }
+        };
+    }
+
+    function renderChecks() {
+        var container = $('.reservation-fast-checks');
+        if (!container) return;
+
+        var results = derivedChecks();
+        var done = 0;
+        var total = 0;
+
+        Object.keys(results).forEach(function (key) {
+            var row = $('[data-derived-check="' + key + '"]');
+            if (!row) return;
+            var result = results[key];
+            total += 1;
+            if (result.ok) done += 1;
+            row.classList.toggle('is-ok', result.ok);
+            var tag = row.querySelector('[data-check-tag]');
+            if (tag) tag.textContent = result.tag;
+            var hint = row.querySelector('[data-check-hint]');
+            if (hint) hint.textContent = result.hint;
+        });
+
+        var visa = document.getElementById('visa_ok');
+        var visaRow = $('[data-check="visa"]');
+        if (visaRow && visa) visaRow.classList.toggle('is-ok', visa.checked);
+
+        var hintEl = document.getElementById('fast-checks-hint');
+        if (hintEl) {
+            hintEl.textContent = done === total
+                ? 'Tous les contrôles déduits du dossier sont au vert.'
+                : done + ' / ' + total + ' contrôles au vert — les points restants n’empêchent pas la confirmation.';
+        }
+    }
+
     /* ---------------------------------------------------- recherche client  */
 
     function bindClientSearchButton() {
@@ -494,6 +757,9 @@
         renderCapacity(state);
         renderCompanions();
         renderExtrasCount();
+        renderPayment();
+        renderReview();
+        renderChecks();
         renderDiscountLine();
         renderCta(step, state);
     }
@@ -510,6 +776,7 @@
         bindDocsDisclosure();
         bindClientSearchButton();
         bindExtras();
+        bindPayment();
 
         // Les handlers de reservation-create.js s'exécutent d'abord (phase de
         // bouillonnement) : on se resynchronise juste après.

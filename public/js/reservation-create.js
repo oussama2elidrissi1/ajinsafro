@@ -170,11 +170,11 @@
     function getSelectedTripLabel() {
         var select = document.getElementById('select-tour-id');
         if (select && select.selectedOptions.length) {
-            return select.selectedOptions[0].textContent || 'Aucune s?lection';
+            return select.selectedOptions[0].textContent || 'Aucune sélection';
         }
         var titleEl = document.querySelector('.reservation-fast-header__title');
         if (titleEl) return titleEl.textContent || 'Voyage';
-        return 'Aucune s?lection';
+        return 'Aucune sélection';
     }
 
     function getSelectedTripOption() {
@@ -1654,8 +1654,8 @@
         var paymentHelp = document.getElementById('create-payment-help');
         if (paymentHelp) {
             paymentHelp.textContent = summary.paidAmount > summary.totalAmount
-                ? 'Le montant pay? d?passe le total du dossier.'
-                : 'Le montant pay? ne peut pas d?passer le total du dossier.';
+                ? 'Le montant payé dépasse le total du dossier.'
+                : 'Le montant payé ne peut pas dépasser le total du dossier.';
             paymentHelp.classList.toggle('is-error', summary.paidAmount > summary.totalAmount);
         }
 
@@ -1741,12 +1741,12 @@
         if (!container) return;
 
         if (!items.length) {
-            var title = isError ? 'Erreur lors de la recherche' : 'Aucun client trouv?';
+            var title = isError ? 'Erreur lors de la recherche' : 'Aucun client trouvé';
             var noResultHtml = '<div class="reservation-create__search-result reservation-create__search-result--empty">' +
                 '<span><strong>' + title + '</strong><br><span class="reservation-create__search-result-meta">Pour "' + escapeHtml(query) + '"</span></span>' +
                 '</div>' +
                 '<div class="reservation-create__search-result reservation-create__search-result--action" id="client-search-create-new">' +
-                '<span>Cr?er un nouveau client avec cette recherche</span>' +
+                '<span>Créer un nouveau client avec cette recherche</span>' +
                 '<span class="reservation-create__search-result-code">+</span>' +
                 '</div>';
             container.innerHTML = noResultHtml;
@@ -1878,7 +1878,7 @@
                     if (typeof callback === 'function') callback(true);
                 } else if (data && data.duplicate) {
                     var dupLabel = data.duplicate.full_name || ('Client #' + data.duplicate.id);
-                    showInlineError('Ce client existe d?j? : ' + dupLabel + '. Veuillez le s?lectionner dans la liste.');
+                    showInlineError('Ce client existe déjà : ' + dupLabel + '. Veuillez le sélectionner dans la liste.');
                     blockContinueButton();
                     if (typeof callback === 'function') callback(false);
                 } else if (data && data.errors) {
@@ -1912,13 +1912,13 @@
                     blockContinueButton();
                     if (typeof callback === 'function') callback(false);
                 } else {
-                    showInlineError('Erreur lors de la cr?ation du client. Veuillez r?essayer.');
+                    showInlineError('Erreur lors de la création du client. Veuillez réessayer.');
                     blockContinueButton();
                     if (typeof callback === 'function') callback(false);
                 }
             })
             .catch(function () {
-                showInlineError('Erreur r?seau lors de la cr?ation du client.');
+                showInlineError('Erreur réseau lors de la création du client.');
                 blockContinueButton();
                 if (typeof callback === 'function') callback(false);
             });
@@ -2235,15 +2235,15 @@
                     result.errors.push({ field: 'reservation-departure-select', message: 'Sélectionnez un départ avant de continuer.' });
                 }
                 if (summary.priceMissing) {
-                    result.errors.push({ field: null, message: 'Aucun prix configur? pour ce voyage/d?part.' });
+                    result.errors.push({ field: null, message: 'Aucun prix configuré pour ce voyage/départ.' });
                 }
                 if (summary.availableDepartureCapacity > 0 && summary.travelerCount > summary.availableDepartureCapacity) {
-                    result.errors.push({ field: null, message: 'Le nombre de voyageurs d?passe le stock disponible sur ce d?part.' });
+                    result.errors.push({ field: null, message: 'Le nombre de voyageurs dépasse le stock disponible sur ce départ.' });
                 }
 
                 if (summary.roomMode === 'places_only') {
                     if (summary.availableDepartureCapacity <= 0) {
-                        result.errors.push({ field: null, message: 'Ce d?part n?a plus de places disponibles.' });
+                        result.errors.push({ field: null, message: 'Ce départ n’a plus de places disponibles.' });
                     }
                     if (summary.travelerCount > summary.availableDepartureCapacity) {
                         result.errors.push({ field: null, message: 'Stock insuffisant : il reste seulement ' + summary.availableDepartureCapacity + ' places.' });
@@ -2267,7 +2267,7 @@
         if (step === 3) {
             if (isFastMode) {
                 if (summary.paidAmount > summary.totalAmount) {
-                    result.errors.push({ field: 'payment_amount', message: 'Le montant pay? ne peut pas d?passer le total du dossier.' });
+                    result.errors.push({ field: 'payment_amount', message: 'Le montant payé ne peut pas dépasser le total du dossier.' });
                     result.valid = false;
                 }
             } else {
@@ -2286,7 +2286,7 @@
 
         if (step === 5) {
             if (!isFastMode && summary.paidAmount > summary.totalAmount) {
-                result.errors.push({ field: 'payment_amount', message: 'Le montant pay? ne peut pas d?passer le total du dossier.' });
+                result.errors.push({ field: 'payment_amount', message: 'Le montant payé ne peut pas dépasser le total du dossier.' });
                 result.valid = false;
             }
         }
