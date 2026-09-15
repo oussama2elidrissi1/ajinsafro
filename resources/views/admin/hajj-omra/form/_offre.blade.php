@@ -84,7 +84,11 @@
                        value="{{ old('adult_price', $package->adult_price) }}" data-role="price-current">
                 <span class="input-group-text" data-role="currency-label">{{ old('currency', $package->currency ?: 'DH') }}</span>
             </div>
-            <p class="form-text" data-from-price-note hidden data-ho-fr="Calculé depuis les tarifs actifs liés aux formules, ou les tarifs actifs de l’offre sans formule." data-ho-ar="يُحسب من الأسعار المفعّلة المرتبطة بالباقات، أو من أسعار العرض المفعّلة عند عدم وجود باقات.">Calculé depuis les tarifs actifs liés aux formules, ou les tarifs actifs de l’offre sans formule.</p>
+            <div data-from-price-note hidden>
+                <p class="form-text mb-1" data-ho-fr="Calculé depuis les tarifs actifs liés aux formules, ou les tarifs actifs de l’offre sans formule." data-ho-ar="يُحسب من الأسعار المفعّلة المرتبطة بالباقات، أو من أسعار العرض المفعّلة عند عدم وجود باقات.">Calculé depuis les tarifs actifs liés aux formules, ou les tarifs actifs de l’offre sans formule.</p>
+                <button type="button" class="btn btn-link btn-sm p-0 align-baseline" data-goto-step="tarifs"
+                        data-ho-fr="Modifier les tarifs →" data-ho-ar="← تعديل الأسعار">Modifier les tarifs →</button>
+            </div>
         </div>
         <div class="col-md-3">
             <label class="form-label" for="old_price">Ancien prix / valeur</label>

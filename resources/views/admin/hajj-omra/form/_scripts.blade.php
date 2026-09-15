@@ -37,6 +37,16 @@
         step.addEventListener('click', function () { showStep(step.dataset.step); });
     });
 
+    // Raccourcis internes : un bouton peut renvoyer vers l'etape ou le champ est reellement editable.
+    editor.querySelectorAll('[data-goto-step]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var target = btn.dataset.gotoStep;
+            showStep(target);
+            var panel = editor.querySelector('[data-panel="' + target + '"]');
+            if (panel && panel.scrollIntoView) { panel.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+        });
+    });
+
     showStep(editor.dataset.activeTab || 'offre');
 
     // Une etape contenant un champ en erreur est signalee et ouverte en priorite.
