@@ -85,7 +85,7 @@
                 <span class="input-group-text" data-role="currency-label">{{ old('currency', $package->currency ?: 'DH') }}</span>
             </div>
             <div data-from-price-note hidden>
-                <p class="form-text mb-1" data-ho-fr="Calculé depuis les tarifs actifs liés aux formules, ou les tarifs actifs de l’offre sans formule." data-ho-ar="يُحسب من الأسعار المفعّلة المرتبطة بالباقات، أو من أسعار العرض المفعّلة عند عدم وجود باقات.">Calculé depuis les tarifs actifs liés aux formules, ou les tarifs actifs de l’offre sans formule.</p>
+                <p class="form-text mb-1" data-ho-fr="Laissez vide pour appliquer automatiquement le tarif actif le plus bas. Une valeur saisie ici s’affiche telle quelle côté client." data-ho-ar="اتركه فارغاً لاستخدام أقل سعر مفعّل تلقائياً. أي قيمة تُدخل هنا تظهر كما هي للعميل.">Laissez vide pour appliquer automatiquement le tarif actif le plus bas. Une valeur saisie ici s’affiche telle quelle côté client.</p>
                 <button type="button" class="btn btn-link btn-sm p-0 align-baseline" data-goto-step="tarifs"
                         data-ho-fr="Modifier les tarifs →" data-ho-ar="← تعديل الأسعار">Modifier les tarifs →</button>
             </div>

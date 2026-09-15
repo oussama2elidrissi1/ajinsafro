@@ -314,6 +314,12 @@ class HajjOmraPackage extends Model
 
     public function getPriceFromValueAttribute(): ?float
     {
+        // Un prix saisi a la main dans l'editeur fait autorite : il remplace le calcul
+        // automatique partout (listes admin, apercu, API publique). Champ vide = calcul.
+        if ($this->adult_price !== null && $this->adult_price !== '') {
+            return (float) $this->adult_price;
+        }
+
         $this->loadMissing(['formulas.tariffs', 'formulas.stays', 'roomPrices', 'departures']);
         if ($this->formulas->isNotEmpty()) {
             $prices = $this->formulas->filter(fn ($formula) => $formula->is_active
@@ -327,7 +333,7 @@ class HajjOmraPackage extends Model
         }
         // Legacy offers without a tariff catalogue retain their fallback prices.
         $prices = $this->departures->where('status', HajjOmraDeparture::STATUS_PUBLISHED)
-            ->pluck('price_from')->push($this->adult_price)->filter(fn ($price) => $price !== null);
+            ->pluck('price_from')->filter(fn ($price) => $price !== null);
         return $prices->isEmpty() ? null : (float) $prices->min();
     }
 

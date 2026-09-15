@@ -8,7 +8,6 @@
     const ar = () => editor.classList.contains('lang-ar');
     const t = (fr, arabic) => ar() ? arabic : fr;
     const basePriceInput = editor.querySelector('[data-role="price-current"]');
-    let legacyBasePrice = basePriceInput?.value || '';
     function el(tag, attrs = {}, text = '') {
         const node = document.createElement(tag);
         Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
@@ -141,14 +140,18 @@
             });
         }
         const prices = tariffs.filter(tariff => tariff.active && tariff.price !== '' && (!linked || linked.has(tariff.ref))).map(tariff => Number(tariff.price)).filter(Number.isFinite);
+        // Le champ reste saisissable : une valeur tapee fait autorite cote client.
+        // Laisse vide, il suit le tarif actif le plus bas, propose ici en indication.
+        const computed = prices.length ? Math.min(...prices) : null;
+        const hasSource = !!(tariffs.length || cards.length);
         if (basePriceInput) {
-            if (!basePriceInput.disabled) legacyBasePrice = basePriceInput.value;
-            basePriceInput.disabled = !!(tariffs.length || cards.length);
-            basePriceInput.value = basePriceInput.disabled ? (prices.length ? Math.min(...prices) : '') : legacyBasePrice;
-            basePriceInput.placeholder = t('Sur demande', 'عند الطلب');
+            basePriceInput.disabled = false;
+            basePriceInput.placeholder = hasSource && computed !== null
+                ? t('Auto : ', 'تلقائي: ') + computed
+                : t('Sur demande', 'عند الطلب');
         }
         const hint = editor.querySelector('[data-from-price-note]');
-        if (hint) hint.hidden = !basePriceInput?.disabled;
+        if (hint) hint.hidden = !hasSource;
     }
     JSON.parse(host.querySelector('[data-formula-initial]').textContent).forEach(addFormula);
     host.querySelector('[data-formula-add]').addEventListener('click', () => { addFormula(); refresh(); });

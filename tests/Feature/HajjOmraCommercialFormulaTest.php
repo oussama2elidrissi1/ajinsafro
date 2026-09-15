@@ -39,7 +39,7 @@ class HajjOmraCommercialFormulaTest extends TestCase
     {
         return [
             'title_fr' => 'Omra Ramadan', 'title_ar' => 'عمرة رمضان', 'type' => 'omra', 'status' => 'published',
-            'duration_days' => 14, 'duration_nights' => 13, 'currency' => 'DH', 'adult_price' => 5,
+            'duration_days' => 14, 'duration_nights' => 13, 'currency' => 'DH',
             'hotels' => [
                 ['client_key' => 'medina', 'city' => 'madinah', 'name' => 'Hôtel Médine', 'name_ar' => 'فندق المدينة', 'nights' => 4, 'haram_distance' => '500 m'],
                 ['client_key' => 'makkah', 'city' => 'makkah', 'name' => 'Hôtel Makkah', 'name_ar' => 'فندق مكة', 'nights' => 9],
@@ -107,6 +107,21 @@ class HajjOmraCommercialFormulaTest extends TestCase
         $this->assertArrayNotHasKey('internal_notes', $data['departures'][0]);
         $this->assertDatabaseCount('hajj_omra_formula_hotels', 2);
         $this->assertDatabaseCount('hajj_omra_formula_prices', 3);
+    }
+
+    /**
+     * Le champ « Prix a partir de » de l'editeur fait autorite quand il est renseigne :
+     * il remplace le calcul automatique, y compris sur une offre a formules.
+     */
+    public function test_manual_base_price_overrides_the_computed_lowest_tariff(): void
+    {
+        $offer = $this->createOffer($this->payload() + ['adult_price' => 12500]);
+
+        $this->assertEquals(12500, $this->api($offer)['price_from']);
+
+        $offer->update(['adult_price' => null]);
+
+        $this->assertEquals(14900, $this->api($offer->fresh())['price_from']);
     }
 
     public function test_multiple_formulas_same_city_hotels_and_single_room_type_are_supported(): void
