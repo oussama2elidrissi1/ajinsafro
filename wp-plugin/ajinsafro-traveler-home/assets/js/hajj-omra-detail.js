@@ -20,7 +20,85 @@
     var formulaSelect = root.querySelector('#ajho-formula');
     var tariffId = root.querySelector('[name="tariff_id"]');
     var departureId = root.querySelector('[name="departure_id"]');
+    var formulaCards = Array.from(root.querySelectorAll('.ajho-formula[data-formula-id]'));
+    var formulaEmpty = root.querySelector('[data-formula-empty]');
+    var formulaDateLabel = root.querySelector('[data-formula-date-label]');
+    var heroPrice = root.querySelector('[data-hero-price]');
+    var heroRoom = root.querySelector('[data-hero-room]');
+    var syncing = false;
     function currentFormula() { return formulas.find(function (item) { return String(item.id) === formulaSelect?.value; }); }
+    function formulaPrices(formula) {
+      return Object.values(formula?.prices || {}).map(function (price) { return amount(price.price); }).filter(function (value) { return value !== null; });
+    }
+    function formulaFrom(formula) {
+      var values = formulaPrices(formula);
+      return values.length ? Math.min.apply(null, values) : null;
+    }
+    function cheapestRoomLabel(formula) {
+      var best = Object.values(formula?.prices || {}).reduce(function (carry, price) {
+        return carry === null || Number(price.price) < Number(carry.price) ? price : carry;
+      }, null);
+      return best ? localized(best, 'room_type_label') || best.room_type : '';
+    }
+
+    // La date pilote les hebergements : une formule sans depart vaut pour toutes les dates,
+    // une formule rattachee a un depart n'apparait que sur ce depart.
+    function servesDeparture(formula, departureRef) {
+      return !formula.departure_id || !departureRef || String(formula.departure_id) === String(departureRef);
+    }
+    function syncFormulasForDeparture() {
+      if (!formulaCards.length || !formulaSelect || syncing) return;
+      var departureRef = option(departure).dataset.id || '';
+      var available = [];
+      formulaCards.forEach(function (card) {
+        var formula = formulas.find(function (item) { return String(item.id) === card.dataset.formulaId; });
+        var visible = !!formula && servesDeparture(formula, departureRef);
+        card.hidden = !visible;
+        if (visible) available.push(formula);
+      });
+      if (formulaEmpty) formulaEmpty.hidden = available.length > 0;
+      Array.from(formulaSelect.options).forEach(function (item) {
+        item.disabled = !available.some(function (formula) { return String(formula.id) === item.value; });
+      });
+      if (!available.some(function (formula) { return String(formula.id) === formulaSelect.value; })) {
+        var cheapest = available.slice().sort(function (a, b) {
+          var left = formulaFrom(a), right = formulaFrom(b);
+          return (left === null ? Infinity : left) - (right === null ? Infinity : right);
+        })[0];
+        if (cheapest) {
+          // updateFormula() rappelle updateDeparture() : le verrou evite une seconde passe inutile.
+          syncing = true;
+          formulaSelect.value = String(cheapest.id);
+          try { updateFormula(); } finally { syncing = false; }
+          return;
+        }
+      }
+      markSelectedFormula();
+      updatePriceFrom();
+    }
+    function markSelectedFormula() {
+      formulaCards.forEach(function (card) {
+        var picked = card.dataset.formulaId === formulaSelect.value;
+        card.classList.toggle('is-selected', picked);
+        var input = card.querySelector('[data-formula-choice]');
+        if (input) { input.checked = picked; input.disabled = card.hidden; }
+      });
+    }
+    // Le « prix a partir de » suit l'hebergement choisi, pas le minimum global de l'offre.
+    function updatePriceFrom() {
+      var formula = currentFormula();
+      var from = formulaSelect ? formulaFrom(formula) : amount(option(departure).dataset.price);
+      if (from === null) from = amount(root.dataset.basePrice);
+      // Sans formules, le bandeau garde le prix d'appel de l'offre : seul le resume suit la date.
+      if (formulaSelect) {
+        if (heroPrice) heroPrice.textContent = money(from);
+        if (heroRoom) {
+          var label = cheapestRoomLabel(formula);
+          heroRoom.textContent = label ? ' · ' + label : '';
+        }
+      }
+      root.querySelector('[data-summary-price]').textContent = money(from);
+    }
     function localized(item, field) { return root.lang === 'ar' ? item[field + '_ar'] || item[field + '_fr'] || item[field] : item[field + '_fr'] || item[field] || item[field + '_ar']; }
     var numberFormat = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 });
 
@@ -71,8 +149,9 @@
       choices.forEach(function (choice) { choice.checked = !choice.disabled && !!departure.value && choice.value === departure.value; });
       root.querySelector('[data-summary-date]').textContent = selected.dataset.label || t('Date sur demande');
       root.querySelector('[data-summary-seats]').textContent = selected.dataset.seats || '0';
-      var price = formulaSelect ? amount(root.dataset.basePrice) : amount(selected.dataset.price);
-      root.querySelector('[data-summary-price]').textContent = money(price === null ? amount(root.dataset.basePrice) : price);
+      if (formulaDateLabel) formulaDateLabel.textContent = selected.dataset.label || t('Date sur demande');
+      syncFormulasForDeparture();
+      updatePriceFrom();
       updateEstimate();
     }
 
@@ -104,8 +183,19 @@
         var matching = Array.from(departure.options).find(function (item) { return item.value === choice.value; });
         choice.disabled = choice.dataset.originalDisabled === 'true' || !matching || matching.disabled;
       });
+      markSelectedFormula();
       updateDeparture();
     }
+
+    formulaCards.forEach(function (card) {
+      var input = card.querySelector('[data-formula-choice]');
+      if (!input || !formulaSelect) return;
+      input.addEventListener('change', function () {
+        if (!input.checked) return;
+        formulaSelect.value = card.dataset.formulaId;
+        updateFormula();
+      });
+    });
 
     choices.forEach(function (choice) {
       choice.addEventListener('change', function () {

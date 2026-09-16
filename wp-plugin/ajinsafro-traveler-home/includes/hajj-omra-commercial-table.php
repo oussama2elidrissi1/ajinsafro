@@ -11,8 +11,15 @@ final class CommercialTable
         return (string) ($locale === 'ar' ? ($ar ?: $fr) : ($fr ?: $ar));
     }
 
-    public static function render(array $formulas, string $locale = 'fr', string $currency = 'DH'): string
+    /**
+     * @param array $options 'selectable' => rend chaque formule choisissable (radio + prix a partir de),
+     *                       'selected' => identifiant de la formule cochee, 'name' => nom du groupe de radios.
+     */
+    public static function render(array $formulas, string $locale = 'fr', string $currency = 'DH', array $options = []): string
     {
+        $selectable = ! empty($options['selectable']);
+        $selectedId = (string) ($options['selected'] ?? '');
+        $groupName = (string) ($options['name'] ?? 'ajod-formula-choice');
         $isAr = $locale === 'ar';
         $e = static fn ($value) => htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $t = static fn ($fr, $ar) => $isAr ? $ar : $fr;
@@ -27,8 +34,22 @@ final class CommercialTable
             $ordered = array_intersect_key($cities, $groups);
             foreach (array_diff_key($groups, $ordered) as $city => $unused) { $ordered[$city] = $city; }
             $prices = $formula['prices'] ?? [];
+            $from = null;
+            foreach ($prices as $price) {
+                if (isset($price['price']) && is_numeric($price['price']) && ($from === null || (float) $price['price'] < $from)) {
+                    $from = (float) $price['price'];
+                }
+            }
+            $isSelected = $selectedId !== '' && (string) $formula['id'] === $selectedId;
         ?>
-            <section class="ajho-formula" data-formula-id="<?= $e($formula['id']) ?>">
+            <section class="ajho-formula<?= $selectable ? ' ajho-formula--pick' : '' ?>" data-formula-id="<?= $e($formula['id']) ?>" data-departure-id="<?= $e($formula['departure_id'] ?? '') ?>" data-price-from="<?= $e($from ?? '') ?>">
+                <?php if ($selectable): ?>
+                <label class="ajho-formula__choice">
+                    <input type="radio" name="<?= $e($groupName) ?>" value="<?= $e($formula['id']) ?>"<?= $isSelected ? ' checked' : '' ?> data-formula-choice>
+                    <span class="ajho-formula__choice-name" dir="auto"><?= $e(self::localized($formula, 'name', $locale)) ?></span>
+                    <span class="ajho-formula__choice-price"><?= $t('À partir de', 'ابتداءً من') ?> <bdi dir="ltr"><?= $from === null ? $t('Sur demande', 'عند الطلب') : $e(number_format($from, 0, ',', ' ').' '.$currency) ?></bdi></span>
+                </label>
+                <?php endif ?>
                 <div class="ajho-formula__heading">
                     <h3 dir="auto"><?= $e(self::localized($formula, 'name', $locale)) ?></h3>
                     <?php if (!empty($formula['departure_date'])): ?><span><?= $t('Départ', 'المغادرة') ?> <bdi dir="ltr"><?= $e($formula['departure_date']) ?></bdi></span><?php endif ?>

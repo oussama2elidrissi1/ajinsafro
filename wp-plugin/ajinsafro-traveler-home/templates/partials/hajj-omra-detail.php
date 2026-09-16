@@ -130,7 +130,7 @@ if ( null !== $estimate && is_numeric( $child_price ) ) {
 			</div>
 			<div class="ajod-price-card">
 				<div class="ajod-price-card__top">
-					<div><div class="ajod-eyebrow"><?php echo esc_html( ajth_ho_t( 'Prix à partir de' ) ); ?></div><div class="ajod-price"><?php echo esc_html( $format_price( $current_package['price_from'] ?? null, $currency ) ); ?></div><p class="ajod-price-note"><?php echo esc_html( ajth_ho_t( 'par personne' ) ); ?><?php if ( $hero_best_room ) : ?> · <?php echo esc_html( ajth_ho_localized( $hero_best_room, 'room_type_label' ) ?: $hero_best_room['room_type'] ); ?><?php endif; ?></p></div>
+					<div><div class="ajod-eyebrow"><?php echo esc_html( ajth_ho_t( 'Prix à partir de' ) ); ?></div><div class="ajod-price" data-hero-price><?php echo esc_html( $format_price( $current_package['price_from'] ?? null, $currency ) ); ?></div><p class="ajod-price-note"><?php echo esc_html( ajth_ho_t( 'par personne' ) ); ?><span data-hero-room><?php if ( $hero_best_room ) : ?> · <?php echo esc_html( ajth_ho_localized( $hero_best_room, 'room_type_label' ) ?: $hero_best_room['room_type'] ); ?><?php endif; ?></span></p></div>
 					<?php if ( $hero_best_room ) : ?><span class="ajod-tag ajod-tag--warm"><?php echo esc_html( ajth_ho_t( 'Meilleur prix' ) ); ?></span><?php endif; ?>
 				</div>
 				<dl class="ajod-kv">
@@ -197,7 +197,9 @@ if ( null !== $estimate && is_numeric( $child_price ) ) {
 			</section>
             <?php if ( $has_formulas ) : ?>
             <section id="tarifs" class="ajod-card"><h2><?php echo esc_html( ajth_ho_t('Formules & hébergements') ); ?></h2>
-                <?php echo \Ajinsafro\HajjOmra\CommercialTable::render( $formulas, $locale, $currency ); ?>
+                <p class="ajod-prose ajod-formula-intro"><?php echo esc_html( ajth_ho_t('Choisissez votre hébergement pour le départ du') ); ?> <strong class="ajod-mono" data-formula-date-label><?php echo esc_html( $selected_date ? $format_date( $selected_date ) : ajth_ho_t('Date sur demande') ); ?></strong><?php echo esc_html( ajth_ho_t('. Le prix à partir de se met à jour selon votre choix.') ); ?></p>
+                <?php echo \Ajinsafro\HajjOmra\CommercialTable::render( $formulas, $locale, $currency, array( 'selectable' => true, 'selected' => $selected_formula['id'] ?? '' ) ); ?>
+                <p class="ajod-prose" data-formula-empty hidden><?php echo esc_html( ajth_ho_t('Aucun hébergement n’est proposé pour cette date. Choisissez une autre date ou contactez-nous.') ); ?></p>
                 <?php if ( ! $formulas ) : ?><p><?php echo esc_html( ajth_ho_t('Aucune formule disponible pour le moment.') ); ?></p><?php endif; ?>
             </section>
             <?php else : ?>
