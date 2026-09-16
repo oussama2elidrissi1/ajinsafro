@@ -110,7 +110,7 @@ class HajjOmraPackageService
         $keys = [
             'title', 'title_ar', 'slug', 'type', 'status',
             'short_description', 'short_description_ar', 'description', 'description_ar',
-            'departure_city', 'destination', 'duration_days', 'duration_nights',
+            'departure_city', 'whatsapp_phone', 'destination', 'duration_days', 'duration_nights',
             'start_date', 'return_date',
             'adult_price', 'old_price', 'discount_amount', 'child_price', 'baby_price', 'currency',
             'available_places', 'reserved_places',

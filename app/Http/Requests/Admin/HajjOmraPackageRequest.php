@@ -96,6 +96,7 @@ class HajjOmraPackageRequest extends FormRequest
             'child_price' => ['nullable', 'numeric', 'min:0', 'max:9999999.99'],
             'baby_price' => ['nullable', 'numeric', 'min:0', 'max:9999999.99'],
             'currency' => ['required', 'string', 'max:10'],
+            'whatsapp_phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+ ().-]+$/'],
             'available_places' => ['nullable', 'integer', 'min:0'],
             'reserved_places' => ['nullable', 'integer', 'min:0'],
             'is_featured' => ['nullable', 'boolean'],

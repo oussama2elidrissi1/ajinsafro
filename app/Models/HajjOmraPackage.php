@@ -66,6 +66,7 @@ class HajjOmraPackage extends Model
         'description',
         'description_ar',
         'departure_city',
+        'whatsapp_phone',
         'destination',
         'duration_days',
         'duration_nights',
@@ -310,6 +311,27 @@ class HajjOmraPackage extends Model
         }
 
         return Storage::disk('public')->url($path);
+    }
+
+    /**
+     * Numero WhatsApp au format international sans separateur, pret pour un lien wa.me.
+     * Un numero local marocain (06..., 00212...) est ramene a l'indicatif pays.
+     */
+    public function getWhatsappNumberAttribute(): ?string
+    {
+        $digits = preg_replace('/[^0-9]+/', '', (string) $this->whatsapp_phone);
+
+        if ($digits === '') {
+            return null;
+        }
+
+        if (str_starts_with($digits, '00')) {
+            $digits = substr($digits, 2);
+        } elseif (str_starts_with($digits, '0')) {
+            $digits = '212'.substr($digits, 1);
+        }
+
+        return $digits;
     }
 
     public function getPriceFromValueAttribute(): ?float

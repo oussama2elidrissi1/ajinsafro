@@ -153,6 +153,22 @@ class HajjOmraCommercialFormulaTest extends TestCase
         $this->assertEquals(25900, $api['formulas'][1]['prices']['quadruple']['price']);
     }
 
+    /**
+     * Chaque offre peut router ses demandes vers un conseiller different : le numero saisi
+     * dans l'editeur ressort normalise pour un lien wa.me, et reste vide si rien n'est saisi.
+     */
+    public function test_each_offer_carries_its_own_whatsapp_number(): void
+    {
+        $offer = $this->createOffer($this->payload() + ['whatsapp_phone' => '06 60 68 34 64']);
+        $this->assertSame('212660683464', $this->api($offer)['whatsapp_phone']);
+
+        $offer->update(['whatsapp_phone' => '00212 539-323874']);
+        $this->assertSame('212539323874', $this->api($offer->fresh())['whatsapp_phone']);
+
+        $offer->update(['whatsapp_phone' => null]);
+        $this->assertNull($this->api($offer->fresh())['whatsapp_phone']);
+    }
+
     public function test_multiple_formulas_same_city_hotels_and_single_room_type_are_supported(): void
     {
         $payload = $this->payload();

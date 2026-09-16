@@ -55,6 +55,18 @@
                                value="{{ old('destination', $package->destination) }}" placeholder="Makkah / Madinah">
                     </div>
 
+                    <div class="col-md-6">
+                        <label class="form-label" for="whatsapp_phone">Numéro WhatsApp de l'offre</label>
+                        <input type="text" id="whatsapp_phone" name="whatsapp_phone" inputmode="tel"
+                               class="form-control ho-mono @error('whatsapp_phone') is-invalid @enderror"
+                               value="{{ old('whatsapp_phone', $package->whatsapp_phone) }}" placeholder="+212 6 00 00 00 00">
+                        <div class="form-text">
+                            Reçoit les demandes WhatsApp de cette offre, sur la fiche publique et le catalogue.
+                            Laissez vide pour utiliser le numéro général de l'agence.
+                        </div>
+                        @error('whatsapp_phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+
                     <div class="col-md-3">
                         <label class="form-label" for="duration_days">Nombre de jours <span class="text-danger">*</span></label>
                         <input type="number" min="1" max="365" id="duration_days" name="duration_days"
