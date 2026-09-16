@@ -15,7 +15,8 @@
 @endphp
 
 <div class="ho-panel" data-panel="medias">
-    <h6 class="text-uppercase text-muted small mb-3">Image principale</h6>
+    <section class="ho-card mb-0">
+    <div class="ho-eyebrow">Image principale</div>
 
     <div class="row g-3 align-items-start mb-4">
         <div class="col-md-5">
@@ -37,10 +38,10 @@
 
     <hr class="my-4">
 
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div class="ho-card__head">
         <div>
-            <h6 class="text-uppercase text-muted small mb-1">Galerie</h6>
-            <p class="text-muted small mb-0">Glissez les vignettes pour les réordonner. La suppression est immédiate à l'enregistrement.</p>
+            <div class="ho-eyebrow mb-0">Galerie</div>
+            <p>Glissez les vignettes pour les réordonner. La suppression est immédiate à l'enregistrement.</p>
         </div>
         <button type="button" class="btn btn-sm btn-outline-primary" data-role="gallery-browse">+ Ajouter des images</button>
         <input type="file" accept="image/*" multiple class="d-none" data-role="gallery-file">
@@ -78,4 +79,5 @@
             <button type="button" class="ho-thumb-remove" data-role="gallery-remove" title="Retirer">&times;</button>
         </div>
     </template>
+</section>
 </div>

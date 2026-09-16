@@ -1,4 +1,4 @@
-{{-- Etape 2 : grille tarifaire par type de chambre. --}}
+{{-- Etape 2 : grille tarifaire par type de chambre, regroupee par hebergement. --}}
 @php
     $roomRows = old('room_prices', $package->roomPrices->map(fn ($r) => [
         'id' => $r->id,
@@ -10,93 +10,80 @@
         'stock' => $r->stock,
         'is_active' => $r->is_active ? 1 : 0,
     ])->values()->all());
+
+    // Le libelle sert de cle de regroupement : c'est lui qui distingue deux lignes
+    // du meme type de chambre appartenant a deux hebergements differents.
+    $roomGroups = [];
+    foreach ($roomRows as $i => $row) {
+        $roomGroups[trim((string) ($row['label'] ?? ''))][] = ['index' => $i, 'row' => $row];
+    }
+    $ungrouped = $roomGroups[''] ?? [];
+    unset($roomGroups['']);
+
+    $activeCount = collect($roomRows)->where('is_active', 1)->count();
 @endphp
 
 <div class="ho-panel" data-panel="tarifs">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-        <div>
-            <h6 class="text-uppercase text-muted small mb-1">Tarifs &amp; chambres</h6>
-            <p class="text-muted small mb-0">Une ligne par hébergement et type de chambre. Le libellé sert à les reconnaître dans les formules ci-dessous.</p>
+    <section class="ho-card">
+        <div class="ho-card__head">
+            <div>
+                <div class="ho-eyebrow mb-0">Grille tarifaire</div>
+                <p>Un tarif par type de chambre et par hébergement. Le libellé regroupe les lignes ci-dessous et les rend reconnaissables dans les formules.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <span class="ho-pill">{{ count($roomRows) }} tarif(s) · <b class="ho-mono">{{ $activeCount }} actif(s)</b></span>
+                <button type="button" class="btn btn-sm btn-outline-primary" data-repeat-add="room">+ Ajouter un tarif</button>
+            </div>
         </div>
-        <button type="button" class="btn btn-sm btn-outline-primary" data-repeat-add="room">+ Ajouter un tarif</button>
-    </div>
 
-    <div class="table-responsive">
-        <table class="table table-sm align-middle mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th style="width:18%">Type de chambre</th>
-                    <th style="width:18%">Hébergement / libellé</th>
-                    <th style="width:13%">Prix</th>
-                    <th style="width:13%">Ancien prix</th>
-                    <th style="width:10%">Capacité</th>
-                    <th style="width:10%">Places</th>
-                    <th style="width:8%">Actif</th>
-                    <th style="width:10%" class="text-end">Action</th>
-                </tr>
-            </thead>
-            <tbody data-repeat-list="room">
-                @forelse ($roomRows as $i => $row)
-                    <tr class="ho-repeat-item" data-repeat-item>
-                        <td>
-                            <input type="hidden" name="room_prices[{{ $i }}][id]" value="{{ $row['id'] ?? '' }}">
-<input type="hidden" name="room_prices[{{ $i }}][client_key]" value="{{ $row['client_key'] ?? '' }}">
-                            <select name="room_prices[{{ $i }}][room_type]" class="form-select form-select-sm">
-                                <option value="">—</option>
-                                @foreach ($roomTypeOptions as $key => $label)
-                                    <option value="{{ $key }}" @selected(($row['room_type'] ?? '') === $key)>{{ $label }}</option>
-                                @endforeach
-                            </select>
-                        </td>
-                        <td><input type="text" maxlength="120" name="room_prices[{{ $i }}][label]" class="form-control form-control-sm" value="{{ $row['label'] ?? '' }}" placeholder="Ex. Swissotel 5★"></td>
-                        <td><input type="number" step="0.01" min="0" name="room_prices[{{ $i }}][price]" class="form-control form-control-sm" value="{{ $row['price'] ?? '' }}"></td>
-                        <td><input type="number" step="0.01" min="0" name="room_prices[{{ $i }}][old_price]" class="form-control form-control-sm" value="{{ $row['old_price'] ?? '' }}"></td>
-                        <td><input type="number" min="1" max="20" name="room_prices[{{ $i }}][capacity]" class="form-control form-control-sm" value="{{ $row['capacity'] ?? '' }}"></td>
-                        <td><input type="number" min="0" name="room_prices[{{ $i }}][stock]" class="form-control form-control-sm" value="{{ $row['stock'] ?? 0 }}"></td>
-                        <td>
-                            <input type="hidden" name="room_prices[{{ $i }}][is_active]" value="0">
-                            <input type="checkbox" class="form-check-input" name="room_prices[{{ $i }}][is_active]" value="1" @checked(($row['is_active'] ?? 1))>
-                        </td>
-                        <td class="text-end">
-                            <button type="button" class="btn btn-sm btn-outline-danger" data-repeat-remove>Retirer</button>
-                        </td>
-                    </tr>
-                @empty
-                    <tr data-repeat-empty><td colspan="8" class="text-center text-muted py-4">Aucun tarif. Ajoutez au moins un type de chambre.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+        <div data-repeat-list="room">
+            @foreach ($roomGroups as $groupLabel => $entries)
+                @php
+                    $prices = collect($entries)->pluck('row.price')->filter(fn ($p) => $p !== null && $p !== '')->map(fn ($p) => (float) $p);
+                @endphp
+                <div @class(['ho-acc', 'is-open' => $loop->first])>
+                    <button type="button" class="ho-acc__head" data-acc-toggle>
+                        <span class="ho-dot" style="background: var(--ho-primary);"></span>
+                        <span class="ho-acc__title">{{ $groupLabel }}</span>
+                        <span class="ho-acc__end">
+                            <span class="form-text">{{ count($entries) }} chambre(s)</span>
+                            <span class="ho-acc__from">dès <b class="ho-mono">{{ $prices->isEmpty() ? '—' : number_format($prices->min(), 0, ',', ' ') }}</b> {{ $package->currency ?: 'DH' }}</span>
+                            <span class="ho-acc__chevron" aria-hidden="true">⌄</span>
+                        </span>
+                    </button>
+                    <div class="ho-acc__body">
+                        @include('admin.hajj-omra.form._tarif-rows', ['entries' => $entries])
+                    </div>
+                </div>
+            @endforeach
 
-    @error('room_prices')<div class="text-danger small mt-2">{{ $message }}</div>@enderror
-    @foreach ($errors->get('room_prices.*') as $messages)
-        @foreach ($messages as $message)<div class="text-danger small mt-1">{{ $message }}</div>@endforeach
-    @endforeach
+            {{-- Accueille les lignes sans libelle et celles ajoutees depuis le bouton. --}}
+            <div class="ho-acc is-open" data-room-loose @if (! $ungrouped) hidden @endif>
+                <button type="button" class="ho-acc__head" data-acc-toggle>
+                    <span class="ho-dot" style="background: var(--ho-accent);"></span>
+                    <span class="ho-acc__title">Sans libellé<span class="ho-acc__sub">Nommez ces lignes pour les regrouper par hébergement.</span></span>
+                    <span class="ho-acc__end"><span class="ho-acc__chevron" aria-hidden="true">⌄</span></span>
+                </button>
+                <div class="ho-acc__body" data-repeat-target>
+                    @include('admin.hajj-omra.form._tarif-rows', ['entries' => $ungrouped])
+                </div>
+            </div>
 
-    {{-- Modele de ligne clone par le JS des repeaters. __INDEX__ est remplace a l'insertion. --}}
-    <template data-repeat-template="room">
-        <tr class="ho-repeat-item" data-repeat-item>
-            <td>
-                <input type="hidden" name="room_prices[__INDEX__][id]" value="">
-<input type="hidden" name="room_prices[__INDEX__][client_key]" value="">
-                <select name="room_prices[__INDEX__][room_type]" class="form-select form-select-sm">
-                    <option value="">—</option>
-                    @foreach ($roomTypeOptions as $key => $label)
-                        <option value="{{ $key }}">{{ $label }}</option>
-                    @endforeach
-                </select>
-            </td>
-            <td><input type="text" maxlength="120" name="room_prices[__INDEX__][label]" class="form-control form-control-sm" placeholder="Ex. Swissotel 5★"></td>
-            <td><input type="number" step="0.01" min="0" name="room_prices[__INDEX__][price]" class="form-control form-control-sm"></td>
-            <td><input type="number" step="0.01" min="0" name="room_prices[__INDEX__][old_price]" class="form-control form-control-sm"></td>
-            <td><input type="number" min="1" max="20" name="room_prices[__INDEX__][capacity]" class="form-control form-control-sm"></td>
-            <td><input type="number" min="0" name="room_prices[__INDEX__][stock]" class="form-control form-control-sm" value="0"></td>
-            <td>
-                <input type="hidden" name="room_prices[__INDEX__][is_active]" value="0">
-                <input type="checkbox" class="form-check-input" name="room_prices[__INDEX__][is_active]" value="1" checked>
-            </td>
-            <td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger" data-repeat-remove>Retirer</button></td>
-        </tr>
-    </template>
+            @if (! $roomRows)
+                <p class="text-muted small mb-0" data-repeat-empty>Aucun tarif. Ajoutez au moins un type de chambre.</p>
+            @endif
+        </div>
+
+        @error('room_prices')<div class="text-danger small mt-2">{{ $message }}</div>@enderror
+        @foreach ($errors->get('room_prices.*') as $messages)
+            @foreach ($messages as $message)<div class="text-danger small mt-1">{{ $message }}</div>@endforeach
+        @endforeach
+
+        {{-- Modele de ligne clone par le JS des repeaters. __INDEX__ est remplace a l'insertion. --}}
+        <template data-repeat-template="room">
+            @include('admin.hajj-omra.form._tarif-rows', ['entries' => [['index' => '__INDEX__', 'row' => []]]])
+        </template>
+    </section>
+
     @include('admin.hajj-omra.form._formulas')
 </div>

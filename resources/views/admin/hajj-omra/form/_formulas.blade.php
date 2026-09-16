@@ -7,14 +7,16 @@
         'hotels' => $formula->stays->map(fn ($stay) => $stay->only(['hotel_id', 'program_day_id', 'nights_override']))->all(),
     ])->values()->all());
 @endphp
-<section class="mt-4 border-top pt-4" data-formula-editor>
+<section class="ho-card" data-formula-editor>
     <style>.ho-formula-field{display:block}.ho-editor[dir=rtl]{text-align:right}.ho-editor [data-formula-editor] input[type=number]{direction:ltr;text-align:start}</style>
     <input type="hidden" name="formulas_present" value="1">
-    <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
-        <h6 class="mb-0" data-ho-fr="Formules commerciales" data-ho-ar="الباقات التجارية">Formules commerciales</h6>
+    <div class="ho-card__head">
+        <div>
+            <div class="ho-eyebrow mb-0" data-ho-fr="Formules commerciales" data-ho-ar="الباقات التجارية">Formules commerciales</div>
+            <p data-ho-fr="Ce que voit le client : une formule = un départ + ses hébergements + les tarifs retenus." data-ho-ar="ما يراه العميل: الباقة = موعد + إقاماتها + الأسعار المختارة.">Ce que voit le client : une formule = un départ + ses hébergements + les tarifs retenus.</p>
+        </div>
         <button type="button" class="btn btn-sm btn-outline-primary" data-formula-add data-ho-fr="+ Ajouter une formule" data-ho-ar="+ إضافة باقة">+ Ajouter une formule</button>
     </div>
-    <p class="text-muted small" data-ho-fr="Sélectionnez les hébergements, tarifs et départs de cette offre. Toute modification des sources se répercute sur les formules." data-ho-ar="اختر فنادق وأسعار ومواعيد هذا العرض. تنعكس تعديلات البيانات الأصلية تلقائياً على الباقات.">Sélectionnez les hébergements, tarifs et départs de cette offre. Toute modification des sources se répercute sur les formules.</p>
     <div data-formula-list></div>
     @foreach ($errors->get('formulas.*') as $messages)
         @foreach ($messages as $message)<p class="text-danger small" role="alert">{{ $message }}</p>@endforeach

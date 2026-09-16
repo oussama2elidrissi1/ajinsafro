@@ -9,6 +9,7 @@ use App\Models\HajjOmraDeparture;
 use App\Models\HajjOmraPackage;
 use App\Models\HajjOmraPackageHotel;
 use App\Models\HajjOmraRoomPrice;
+use App\Services\HajjOmra\HajjOmraEditorSummary;
 use App\Services\HajjOmra\HajjOmraPackageService;
 use App\Services\WpCatalogCacheInvalidator;
 use Illuminate\Http\RedirectResponse;
@@ -204,6 +205,9 @@ class HajjOmraPackageController extends Controller
      */
     private function editorPayload(HajjOmraPackage $package): array
     {
+        $summary = app(HajjOmraEditorSummary::class);
+        $missingArabic = $package->exists ? $package->missingArabicFields() : [];
+
         return [
             'package' => $package,
             'typeOptions' => HajjOmraPackage::typeOptions(),
@@ -212,7 +216,9 @@ class HajjOmraPackageController extends Controller
             'roomTypeOptions' => HajjOmraRoomPrice::roomTypeOptions(),
             'departureStatusOptions' => HajjOmraDeparture::statusOptions(),
             'hotelCityOptions' => HajjOmraPackageHotel::cityOptions(),
-            'missingArabic' => $package->exists ? $package->missingArabicFields() : [],
+            'missingArabic' => $missingArabic,
+            'editorSteps' => $summary->steps($package),
+            'editorTodos' => $summary->todos($package, $missingArabic),
             'activeTab' => request('tab') ?: session('active_tab') ?: 'offre',
         ];
     }

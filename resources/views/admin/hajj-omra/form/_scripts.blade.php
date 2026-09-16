@@ -60,6 +60,15 @@
         }
     }
 
+    // Compteur discret sur les champs limites : evite de decouvrir la coupure au dernier moment.
+    editor.querySelectorAll('textarea[maxlength], input[maxlength]').forEach(function (field) {
+        var counter = field.parentElement.querySelector('[data-role="counter"]');
+        if (!counter) { return; }
+        function refresh() { counter.textContent = field.value.length + ' / ' + field.getAttribute('maxlength'); }
+        field.addEventListener('input', refresh);
+        refresh();
+    });
+
     // ------------------------------------------------------------------
     // Bascule de langue FR / AR
     // ------------------------------------------------------------------
@@ -80,6 +89,16 @@
             editor.querySelector('[data-lang-switch="ar"]')?.click();
         }
     } catch (e) {}
+
+    // ------------------------------------------------------------------
+    // Accordeons (groupes de tarifs, formules)
+    // ------------------------------------------------------------------
+    editor.addEventListener('click', function (event) {
+        var head = event.target.closest('[data-acc-toggle]');
+        if (!head || !editor.contains(head)) { return; }
+        var panel = head.closest('.ho-acc');
+        if (panel) { panel.classList.toggle('is-open'); }
+    });
 
     // ------------------------------------------------------------------
     // Listes repetables
@@ -138,7 +157,12 @@
             var node = holder.firstElementChild;
 
             list.querySelector('[data-repeat-empty]')?.remove();
-            list.appendChild(node);
+
+            // Une liste groupee (grille tarifaire) designe le bloc qui accueille les ajouts ;
+            // sinon la ligne tombe directement dans la liste.
+            var target = list.querySelector('[data-repeat-target]') || list;
+            target.appendChild(node);
+            target.closest('[hidden]')?.removeAttribute('hidden');
 
             if (!isService) { reindex(list, PREFIXES[key]); }
             if (key === 'day') { renumberDays(); }

@@ -20,7 +20,7 @@
     }
     function field(parent, key, fr, arabic, value = '', type = 'text') {
         const wrap = el('label', {class: 'ho-formula-field small mb-3'});
-        wrap.append(caption(el('span'), fr, arabic));
+        wrap.append(caption(el('span', {class: 'form-label mb-0'}), fr, arabic));
         const input = el(type === 'textarea' ? 'textarea' : 'input', {'data-f': key, class: 'form-control form-control-sm mt-1'});
         if (type !== 'textarea') input.type = type;
         input.value = value ?? '';
@@ -35,7 +35,7 @@
     }
     function select(parent, key, source, fr, arabic, value, multiple = false) {
         const wrap = el('label', {class: 'd-block small mb-3'});
-        wrap.append(caption(el('span'), fr, arabic));
+        wrap.append(caption(el('span', {class: 'form-label mb-0'}), fr, arabic));
         const input = el('select', {'data-f': key, 'data-source': source, class: 'form-select form-select-sm mt-1'});
         input.multiple = multiple;
         if (source === 'departure' || source === 'day') input.dir = 'ltr';
@@ -43,41 +43,92 @@
         input._selectedRefs = multiple ? (value || []).map(String) : [String(value ?? '')];
         wrap.append(input); parent.append(wrap); return input;
     }
-    function button(parent, fr, arabic, action) {
-        const btn = caption(el('button', {type: 'button', class: 'btn btn-sm btn-outline-secondary mb-3'}), fr, arabic);
+    function button(parent, fr, arabic, action, variant = 'btn-outline-secondary mb-3') {
+        const btn = caption(el('button', {type: 'button', class: 'btn btn-sm ' + variant}), fr, arabic);
         btn.addEventListener('click', action); parent.append(btn);
     }
     function addStay(parent, row = {}) {
-        const stay = el('div', {class: 'border rounded p-3 mb-2', 'data-formula-stay': ''});
+        const stay = el('div', {class: 'ho-row', 'data-formula-stay': ''});
         select(stay, 'hotel_id', 'hotel', 'Hébergement', 'الإقامة', row.hotel_id);
         const grid = el('div', {class: 'row'}), left = el('div', {class: 'col-md-6'}), right = el('div', {class: 'col-md-6'});
         select(left, 'program_day_id', 'day', 'Début au jour du programme (facultatif)', 'بداية الإقامة من يوم البرنامج (اختياري)', row.program_day_id);
         field(right, 'nights_override', 'Nuits spécifiques (vide = nuits de l’hôtel)', 'ليالي خاصة (فارغ = ليالي الفندق)', row.nights_override, 'number');
         grid.append(left, right); stay.append(grid);
-        button(stay, 'Retirer cet hébergement', 'إزالة هذه الإقامة', () => { stay.remove(); nameFields(); });
+        button(stay, 'Retirer cet hébergement', 'إزالة هذه الإقامة', () => { stay.remove(); nameFields(); refreshPrice(); }, 'btn-link text-danger p-0 mb-0');
         parent.append(stay);
     }
     function addFormula(row = {}) {
-        const card = el('div', {class: 'ho-row', 'data-formula-card': ''});
-        card.append(el('input', {type: 'hidden', 'data-f': 'id', value: row.id || ''}));
-        field(card, 'name_fr', 'Nom de la formule', 'اسم الباقة', row.name_fr);
-        field(card, 'name_ar', 'Nom arabe', 'اسم الباقة', row.name_ar);
-        field(card, 'description_fr', 'Description (facultative)', 'الوصف (اختياري)', row.description_fr, 'textarea');
-        field(card, 'description_ar', 'Description arabe', 'الوصف (اختياري)', row.description_ar, 'textarea');
-        select(card, 'departure_id', 'departure', 'Départ (vide = tous les départs)', 'الموعد (فارغ = جميع المواعيد)', row.departure_id);
-        const stays = el('div', {'data-formula-stays': ''}); card.append(stays);
+        // Carte repliable : l'en-tete resume la formule, le corps porte la saisie.
+        const card = el('div', {class: 'ho-acc is-open', 'data-formula-card': ''});
+        const head = el('button', {type: 'button', class: 'ho-acc__head', 'data-acc-toggle': ''});
+        const tag = el('span', {class: 'ho-acc__tag'});
+        const title = el('span', {class: 'ho-acc__title'});
+        const name = el('span');
+        const subtitle = el('span', {class: 'ho-acc__sub'});
+        const state = el('span', {class: 'ho-badge'});
+        const from = el('span', {class: 'ho-acc__from'});
+        const end = el('span', {class: 'ho-acc__end'});
+        title.append(name, subtitle);
+        end.append(state, from, el('span', {class: 'ho-acc__chevron', 'aria-hidden': 'true'}, '⌄'));
+        head.append(tag, title, end);
+        const body = el('div', {class: 'ho-acc__body'});
+        card.append(head, body);
+        card._head = {tag, name, subtitle, state, from};
+
+        body.append(el('input', {type: 'hidden', 'data-f': 'id', value: row.id || ''}));
+        const identity = el('div', {class: 'row'});
+        const left = el('div', {class: 'col-md-6'});
+        const right = el('div', {class: 'col-md-6'});
+        field(left, 'name_fr', 'Nom de la formule', 'اسم الباقة', row.name_fr);
+        field(left, 'name_ar', 'Nom arabe', 'اسم الباقة', row.name_ar);
+        select(right, 'departure_id', 'departure', 'Départ (vide = tous les départs)', 'الموعد (فارغ = جميع المواعيد)', row.departure_id);
+        field(right, 'sort_order', 'Ordre d’affichage', 'ترتيب العرض', row.sort_order ?? list.children.length, 'number');
+        identity.append(left, right);
+        body.append(identity);
+        field(body, 'description_fr', 'Description (facultative)', 'الوصف (اختياري)', row.description_fr, 'textarea');
+        field(body, 'description_ar', 'Description arabe', 'الوصف (اختياري)', row.description_ar, 'textarea');
+
+        const stays = el('div', {'data-formula-stays': ''}); body.append(stays);
         (row.hotels || []).forEach(stay => addStay(stays, stay));
-        button(card, '+ Lier un hébergement', '+ ربط إقامة', () => { addStay(stays); refresh(); });
-        select(card, 'tariff_ids', 'room', 'Tarifs liés (Ctrl / Cmd pour sélectionner plusieurs)', 'الأسعار المرتبطة (Ctrl / Cmd لاختيار عدة أسعار)', row.tariff_ids, true);
-        field(card, 'sort_order', 'Ordre d’affichage', 'ترتيب العرض', row.sort_order ?? list.children.length, 'number');
-        card.append(el('input', {type: 'hidden', 'data-f': 'is_active', value: '0'}));
-        const activeLabel = el('label', {class: 'd-block small mb-3'});
-        const active = el('input', {type: 'checkbox', 'data-f': 'is_active', value: '1', class: 'form-check-input me-2'});
+        button(body, '+ Lier un hébergement', '+ ربط إقامة', () => { addStay(stays); refresh(); }, 'btn-outline-primary mb-3');
+        select(body, 'tariff_ids', 'room', 'Tarifs liés (Ctrl / Cmd pour sélectionner plusieurs)', 'الأسعار المرتبطة (Ctrl / Cmd لاختيار عدة أسعار)', row.tariff_ids, true);
+
+        const footer = el('div', {class: 'd-flex align-items-center gap-2 flex-wrap border-top pt-3'});
+        footer.append(el('input', {type: 'hidden', 'data-f': 'is_active', value: '0'}));
+        const activeLabel = el('label', {class: 'd-inline-flex align-items-center gap-2 small mb-0', style: 'cursor:pointer'});
+        const active = el('input', {type: 'checkbox', 'data-f': 'is_active', value: '1', class: 'form-check-input mt-0'});
         active.checked = row.is_active === undefined || !!Number(row.is_active);
-        activeLabel.append(active, caption(el('span'), 'Active', 'مفعّلة')); card.append(activeLabel);
-        button(card, 'Dupliquer pour un autre départ', 'نسخ لموعد آخر', () => { addFormula(readFormula(card)); refresh(); });
-        button(card, 'Supprimer cette formule', 'حذف هذه الباقة', () => { card.remove(); nameFields(); });
+        activeLabel.append(active, caption(el('span'), 'Formule active', 'باقة مفعّلة'));
+        footer.append(activeLabel);
+        const actions = el('span', {class: 'ms-auto d-flex gap-2 flex-wrap'});
+        button(actions, 'Dupliquer pour un autre départ', 'نسخ لموعد آخر', () => { addFormula(readFormula(card)); refresh(); }, 'btn-outline-primary');
+        button(actions, 'Supprimer', 'حذف', () => { card.remove(); nameFields(); refreshPrice(); }, 'btn-outline-danger');
+        footer.append(actions);
+        body.append(footer);
         list.append(card);
+    }
+    /** En-tete replie : nom, contexte, etat et prix d'appel de la formule. */
+    function describe(card, index, price) {
+        const head = card._head;
+        if (!head) return;
+        const own = key => Array.from(card.querySelectorAll('[data-f="' + key + '"]')).find(node => !node.closest('[data-formula-stay]'));
+        const label = (ar() ? own('name_ar')?.value || own('name_fr')?.value : own('name_fr')?.value || own('name_ar')?.value) || '';
+        const departure = own('departure_id');
+        const hotels = card.querySelectorAll('[data-formula-stay]').length;
+        const tariffs = card.querySelectorAll('[data-f="tariff_ids"] option:checked').length;
+        const isActive = !!card.querySelector('input[type="checkbox"][data-f="is_active"]')?.checked;
+        head.tag.textContent = String(index + 1);
+        head.name.textContent = label || t('Formule sans nom', 'باقة بلا اسم');
+        head.subtitle.textContent = [
+            departure?.value ? departure.selectedOptions[0]?.textContent : t('Tous les départs', 'جميع المواعيد'),
+            hotels + ' ' + t('hébergement(s)', 'إقامة'),
+            tariffs + ' ' + t('tarif(s)', 'سعر'),
+        ].join(' · ');
+        head.state.textContent = isActive ? t('Active', 'مفعّلة') : t('Inactive', 'معطّلة');
+        head.state.classList.toggle('ho-badge--warm', !isActive);
+        head.from.textContent = price === null
+            ? t('Tarifs à compléter', 'الأسعار غير مكتملة')
+            : t('dès ', 'ابتداءً من ') + price.toLocaleString('fr-FR').replace(/ | /g, ' ') + ' ' + (editor.querySelector('[name="currency"]')?.value || 'DH');
     }
     /** Etat courant d'une carte, sans son identifiant : la copie sera creee comme nouvelle formule. */
     function readFormula(card) {
@@ -171,6 +222,13 @@
         }
         const hint = editor.querySelector('[data-from-price-note]');
         if (hint) hint.hidden = !hasSource;
+        cards.forEach((card, index) => {
+            const picker = Array.from(card.querySelectorAll('[data-f="tariff_ids"]')).find(node => !node.closest('[data-formula-stay]'));
+            const picked = Array.from(picker?.selectedOptions || [])
+                .map(option => Number(tariffs.find(item => item.ref === option.value)?.price))
+                .filter(Number.isFinite);
+            describe(card, index, picked.length ? Math.min(...picked) : null);
+        });
     }
     JSON.parse(host.querySelector('[data-formula-initial]').textContent).forEach(addFormula);
     host.querySelector('[data-formula-add]').addEventListener('click', () => { addFormula(); refresh(); });
@@ -184,7 +242,8 @@
     editor.querySelector('form').addEventListener('submit', refresh);
     Object.keys(sourcePrefixes).forEach(kind => {
         const source = editor.querySelector('[data-repeat-list="' + kind + '"]');
-        if (source) new MutationObserver(refresh).observe(source, {childList: true});
+        // subtree : la grille tarifaire est regroupee, les lignes n'arrivent plus a la racine.
+        if (source) new MutationObserver(refresh).observe(source, {childList: true, subtree: true});
     });
     refresh();
 }());

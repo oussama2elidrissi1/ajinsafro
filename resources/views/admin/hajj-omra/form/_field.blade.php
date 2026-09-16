@@ -52,7 +52,10 @@
                    @if ($required) required @endif>
         @endif
 
-        @if ($hint)<div class="form-text">{{ $hint }}</div>@endif
+        <div class="d-flex justify-content-between gap-3">
+            @if ($hint)<div class="form-text">{{ $hint }}</div>@endif
+            @if ($maxlength)<div class="form-text ho-mono ms-auto" data-role="counter"></div>@endif
+        </div>
         @error($name)<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
     </div>
 

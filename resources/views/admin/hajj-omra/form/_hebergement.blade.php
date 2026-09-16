@@ -10,10 +10,11 @@
 @endphp
 
 <div class="ho-panel" data-panel="hebergement">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <section class="ho-card mb-0">
+    <div class="ho-card__head">
         <div>
-            <h6 class="text-uppercase text-muted small mb-1">Hébergement</h6>
-            <p class="text-muted small mb-0">Un bloc par hébergement. Plusieurs hôtels par ville sont possibles. Un bloc laissé entièrement vide n'est pas enregistré.</p>
+            <div class="ho-eyebrow mb-0">Hébergement</div>
+            <p>Un bloc par hébergement. Plusieurs hôtels par ville sont possibles. Un bloc laissé entièrement vide n'est pas enregistré.</p>
         </div>
         <button type="button" class="btn btn-sm btn-outline-primary" data-repeat-add="hotel">+ Ajouter une étape</button>
     </div>
@@ -163,4 +164,5 @@
             </div>
         </div>
     </template>
+</section>
 </div>

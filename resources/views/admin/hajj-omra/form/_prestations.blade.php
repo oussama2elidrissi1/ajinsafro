@@ -27,6 +27,7 @@
 @endphp
 
 <div class="ho-panel" data-panel="prestations">
+    <section class="ho-card mb-0">
     <div class="row g-4">
         @foreach ([
             ['kind' => 'included', 'title' => 'Ce qui est inclus', 'titleAr' => 'الخدمات المشمولة', 'rows' => $includedRows, 'icon' => '✓', 'class' => 'text-success'],
@@ -142,4 +143,5 @@
             @endforeach
         </div>
     </div>
+</section>
 </div>

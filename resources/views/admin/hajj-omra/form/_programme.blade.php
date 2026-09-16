@@ -13,10 +13,11 @@
 @endphp
 
 <div class="ho-panel" data-panel="programme">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <section class="ho-card mb-0">
+    <div class="ho-card__head">
         <div>
-            <h6 class="text-uppercase text-muted small mb-1">Programme du voyage</h6>
-            <p class="text-muted small mb-0">
+            <div class="ho-eyebrow mb-0">Programme du voyage</div>
+            <p>
                 Les jours sont générés automatiquement selon la durée de l'offre.
                 Glissez un jour pour le déplacer ; la renumérotation est automatique.
             </p>
@@ -158,4 +159,5 @@
             </div>
         </div>
     </template>
+</section>
 </div>

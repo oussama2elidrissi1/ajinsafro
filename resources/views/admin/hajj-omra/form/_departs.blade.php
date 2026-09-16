@@ -14,10 +14,11 @@
 @endphp
 
 <div class="ho-panel" data-panel="departs">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <section class="ho-card mb-0">
+    <div class="ho-card__head">
         <div>
-            <h6 class="text-uppercase text-muted small mb-1">Départs</h6>
-            <p class="text-muted small mb-0">Une offre peut proposer plusieurs dates. Le prochain départ à venir alimente le site public.</p>
+            <div class="ho-eyebrow mb-0">Départs</div>
+            <p>Une offre peut proposer plusieurs dates. Le prochain départ à venir alimente le site public.</p>
         </div>
         <button type="button" class="btn btn-sm btn-outline-primary" data-repeat-add="departure">+ Ajouter un départ</button>
     </div>
@@ -149,4 +150,5 @@
             </div>
         </div>
     </template>
+</section>
 </div>

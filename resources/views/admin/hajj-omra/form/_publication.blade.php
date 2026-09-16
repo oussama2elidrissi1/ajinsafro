@@ -1,14 +1,18 @@
 {{-- Etape 8 : publication, SEO et recapitulatif avant mise en ligne. --}}
 <div class="ho-panel" data-panel="publication">
+    <section class="ho-card mb-0">
     <div class="row g-4">
         <div class="col-lg-7">
-            <h6 class="text-uppercase text-muted small mb-3">Publication</h6>
+            <div class="ho-eyebrow">Publication</div>
 
             <div class="row g-3">
                 <div class="col-md-8">
                     <label class="form-label" for="slug">Slug</label>
-                    <input type="text" id="slug" name="slug" class="form-control @error('slug') is-invalid @enderror"
-                           value="{{ old('slug', $package->slug) }}" placeholder="omra-ramadan-1448">
+                    <div class="input-group">
+                        <span class="input-group-text ho-mono">ajinsafro.ma/hajj-omra/</span>
+                        <input type="text" id="slug" name="slug" class="form-control ho-mono @error('slug') is-invalid @enderror"
+                               value="{{ old('slug', $package->slug) }}" placeholder="omra-ramadan-1448">
+                    </div>
                     <div class="form-text">Laissez vide pour générer automatiquement depuis le titre français.</div>
                     @error('slug')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
@@ -20,7 +24,7 @@
             </div>
 
             <hr class="my-4">
-            <h6 class="text-uppercase text-muted small mb-3">Référencement (SEO)</h6>
+            <div class="ho-eyebrow">Référencement (SEO)</div>
 
             @include('admin.hajj-omra.form._field', [
                 'name' => 'meta_title_fr',
@@ -43,12 +47,18 @@
                 'rows' => 3,
                 'maxlength' => 500,
             ])
+            <div class="ho-serp mt-3">
+                <div class="ho-eyebrow mb-2">Aperçu moteur de recherche</div>
+                <div class="ho-serp__url">ajinsafro.ma › hajj-omra › {{ $package->slug ?: 'slug-a-generer' }}</div>
+                <div class="ho-serp__title">{{ $package->meta_title ?: ($package->title ?: "Titre de l'offre") }}</div>
+                <p class="ho-serp__desc">{{ \Illuminate\Support\Str::limit($package->meta_description ?: $package->short_description, 160) ?: 'Ajoutez une meta description pour contrôler ce texte.' }}</p>
+            </div>
         </div>
 
         <div class="col-lg-5">
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <h6 class="text-uppercase text-muted small mb-3">Récapitulatif avant publication</h6>
+                    <div class="ho-eyebrow">Récapitulatif avant publication</div>
 
                     @if ($package->main_image_url)
                         <img src="{{ $package->main_image_url }}" alt="" class="img-fluid rounded mb-3" style="max-height:150px;object-fit:cover;width:100%;">
@@ -93,4 +103,5 @@
             </div>
         </div>
     </div>
+</section>
 </div>
