@@ -75,8 +75,26 @@
         const active = el('input', {type: 'checkbox', 'data-f': 'is_active', value: '1', class: 'form-check-input me-2'});
         active.checked = row.is_active === undefined || !!Number(row.is_active);
         activeLabel.append(active, caption(el('span'), 'Active', 'مفعّلة')); card.append(activeLabel);
+        button(card, 'Dupliquer pour un autre départ', 'نسخ لموعد آخر', () => { addFormula(readFormula(card)); refresh(); });
         button(card, 'Supprimer cette formule', 'حذف هذه الباقة', () => { card.remove(); nameFields(); });
         list.append(card);
+    }
+    /** Etat courant d'une carte, sans son identifiant : la copie sera creee comme nouvelle formule. */
+    function readFormula(card) {
+        const own = key => Array.from(card.querySelectorAll('[data-f="' + key + '"]')).find(node => !node.closest('[data-formula-stay]'));
+        return {
+            name_fr: own('name_fr')?.value, name_ar: own('name_ar')?.value,
+            description_fr: own('description_fr')?.value, description_ar: own('description_ar')?.value,
+            departure_id: own('departure_id')?.value,
+            sort_order: list.children.length,
+            is_active: card.querySelector('input[type="checkbox"][data-f="is_active"]')?.checked ? 1 : 0,
+            tariff_ids: Array.from(own('tariff_ids')?.selectedOptions || []).map(option => option.value),
+            hotels: Array.from(card.querySelectorAll('[data-formula-stay]')).map(stay => ({
+                hotel_id: stay.querySelector('[data-f="hotel_id"]')?.value,
+                program_day_id: stay.querySelector('[data-f="program_day_id"]')?.value,
+                nights_override: stay.querySelector('[data-f="nights_override"]')?.value,
+            })),
+        };
     }
     const sourcePrefixes = {room: 'room_prices', hotel: 'hotels', departure: 'departures', day: 'program_days'};
     function sources(kind) {
@@ -92,7 +110,8 @@
             if (kind === 'hotel') label = [row.querySelector('[name$="[city]"]')?.selectedOptions[0]?.textContent || val('city'), ar() ? val('name_ar') || val('name') : val('name') || val('name_ar')].filter(Boolean).join(' · ');
             if (kind === 'room') {
                 const type = row.querySelector('[name$="[room_type]"]');
-                label = (type?.selectedOptions[0]?.textContent || '') + ' · ' + val('price') + ' ' + (editor.querySelector('[name="currency"]')?.value || 'DH');
+                label = [val('label'), type?.selectedOptions[0]?.textContent || '', val('price') + ' ' + (editor.querySelector('[name="currency"]')?.value || 'DH')]
+                    .filter(Boolean).join(' · ');
             }
             if (kind === 'departure') label = val('departure_date') + ' → ' + val('return_date');
             if (kind === 'day') label = t('Jour ', 'اليوم ') + val('day_number') + ' · ' + (ar() ? val('title_ar') || val('title') : val('title') || val('title_ar'));

@@ -24,6 +24,7 @@ class HajjOmraRoomPrice extends Model
     protected $fillable = [
         'package_id',
         'room_type',
+        'label',
         'price',
         'old_price',
         'capacity',

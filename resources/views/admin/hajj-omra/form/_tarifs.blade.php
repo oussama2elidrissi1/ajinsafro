@@ -3,6 +3,7 @@
     $roomRows = old('room_prices', $package->roomPrices->map(fn ($r) => [
         'id' => $r->id,
         'room_type' => $r->room_type,
+        'label' => $r->label,
         'price' => $r->price,
         'old_price' => $r->old_price,
         'capacity' => $r->capacity,
@@ -15,7 +16,7 @@
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
         <div>
             <h6 class="text-uppercase text-muted small mb-1">Tarifs &amp; chambres</h6>
-            <p class="text-muted small mb-0">Liez ces tarifs aux formules ci-dessous. Le prix actif le plus bas devient le « à partir de ».</p>
+            <p class="text-muted small mb-0">Une ligne par hébergement et type de chambre. Le libellé sert à les reconnaître dans les formules ci-dessous.</p>
         </div>
         <button type="button" class="btn btn-sm btn-outline-primary" data-repeat-add="room">+ Ajouter un tarif</button>
     </div>
@@ -24,13 +25,14 @@
         <table class="table table-sm align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th style="width:22%">Type de chambre</th>
-                    <th style="width:15%">Prix</th>
-                    <th style="width:15%">Ancien prix</th>
-                    <th style="width:12%">Capacité</th>
-                    <th style="width:12%">Places</th>
-                    <th style="width:10%">Actif</th>
-                    <th style="width:8%" class="text-end">Action</th>
+                    <th style="width:18%">Type de chambre</th>
+                    <th style="width:18%">Hébergement / libellé</th>
+                    <th style="width:13%">Prix</th>
+                    <th style="width:13%">Ancien prix</th>
+                    <th style="width:10%">Capacité</th>
+                    <th style="width:10%">Places</th>
+                    <th style="width:8%">Actif</th>
+                    <th style="width:10%" class="text-end">Action</th>
                 </tr>
             </thead>
             <tbody data-repeat-list="room">
@@ -46,6 +48,7 @@
                                 @endforeach
                             </select>
                         </td>
+                        <td><input type="text" maxlength="120" name="room_prices[{{ $i }}][label]" class="form-control form-control-sm" value="{{ $row['label'] ?? '' }}" placeholder="Ex. Swissotel 5★"></td>
                         <td><input type="number" step="0.01" min="0" name="room_prices[{{ $i }}][price]" class="form-control form-control-sm" value="{{ $row['price'] ?? '' }}"></td>
                         <td><input type="number" step="0.01" min="0" name="room_prices[{{ $i }}][old_price]" class="form-control form-control-sm" value="{{ $row['old_price'] ?? '' }}"></td>
                         <td><input type="number" min="1" max="20" name="room_prices[{{ $i }}][capacity]" class="form-control form-control-sm" value="{{ $row['capacity'] ?? '' }}"></td>
@@ -59,7 +62,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr data-repeat-empty><td colspan="7" class="text-center text-muted py-4">Aucun tarif. Ajoutez au moins un type de chambre.</td></tr>
+                    <tr data-repeat-empty><td colspan="8" class="text-center text-muted py-4">Aucun tarif. Ajoutez au moins un type de chambre.</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -83,6 +86,7 @@
                     @endforeach
                 </select>
             </td>
+            <td><input type="text" maxlength="120" name="room_prices[__INDEX__][label]" class="form-control form-control-sm" placeholder="Ex. Swissotel 5★"></td>
             <td><input type="number" step="0.01" min="0" name="room_prices[__INDEX__][price]" class="form-control form-control-sm"></td>
             <td><input type="number" step="0.01" min="0" name="room_prices[__INDEX__][old_price]" class="form-control form-control-sm"></td>
             <td><input type="number" min="1" max="20" name="room_prices[__INDEX__][capacity]" class="form-control form-control-sm"></td>

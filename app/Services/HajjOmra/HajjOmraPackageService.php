@@ -235,6 +235,7 @@ class HajjOmraPackageService
 
             return [
                 'room_type' => $type,
+                'label' => trim((string) ($row['label'] ?? '')) ?: null,
                 'price' => $price,
                 'old_price' => ($row['old_price'] ?? '') !== '' ? $row['old_price'] : null,
                 'capacity' => ($row['capacity'] ?? '') !== '' ? (int) $row['capacity'] : $this->defaultCapacity($type),

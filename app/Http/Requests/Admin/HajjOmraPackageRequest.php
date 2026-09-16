@@ -106,6 +106,7 @@ class HajjOmraPackageRequest extends FormRequest
             'room_prices.*.id' => ['nullable', 'integer', 'distinct', Rule::exists('hajj_omra_room_prices', 'id')->where('package_id', $packageId ?? 0)],
             'room_prices.*.client_key' => ['nullable', 'string', 'max:80', 'distinct', 'regex:/^[A-Za-z0-9_-]+$/'],
             'room_prices.*.room_type' => ['nullable', Rule::in(HajjOmraRoomPrice::ROOM_TYPES)],
+            'room_prices.*.label' => ['nullable', 'string', 'max:120'],
             'room_prices.*.price' => ['nullable', 'numeric', 'min:0', 'max:9999999.99'],
             'room_prices.*.old_price' => ['nullable', 'numeric', 'min:0', 'max:9999999.99'],
             'room_prices.*.capacity' => ['nullable', 'integer', 'min:1', 'max:20'],

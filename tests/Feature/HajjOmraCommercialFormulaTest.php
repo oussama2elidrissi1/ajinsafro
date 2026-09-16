@@ -124,6 +124,35 @@ class HajjOmraCommercialFormulaTest extends TestCase
         $this->assertEquals(14900, $this->api($offer->fresh())['price_from']);
     }
 
+    /**
+     * Cas metier vise : une meme date propose plusieurs hebergements, chacun avec ses
+     * propres tarifs. Le libelle de tarif permet de les distinguer dans l'editeur.
+     */
+    public function test_one_departure_offers_several_hotels_each_with_its_own_tariffs(): void
+    {
+        $payload = $this->payload();
+        $payload['room_prices'] = [
+            ['client_key' => 'quadA', 'room_type' => 'quadruple', 'label' => 'Emaar Al Khalil', 'price' => 21900, 'stock' => 10, 'is_active' => 1],
+            ['client_key' => 'quadB', 'room_type' => 'quadruple', 'label' => 'Swissotel', 'price' => 25900, 'stock' => 8, 'is_active' => 1],
+        ];
+        $payload['formulas'] = [
+            ['name_fr' => 'Hôtel Emaar Al Khalil', 'is_active' => 1, 'departure_id' => 'new:first',
+                'tariff_ids' => ['new:quadA'], 'hotels' => [['hotel_id' => 'new:makkah']]],
+            ['name_fr' => 'Hôtel Swissotel', 'is_active' => 1, 'departure_id' => 'new:first',
+                'tariff_ids' => ['new:quadB'], 'hotels' => [['hotel_id' => 'new:medina']]],
+        ];
+
+        $offer = $this->createOffer($payload);
+        $api = $this->api($offer);
+
+        $this->assertCount(2, $api['formulas']);
+        $this->assertSame(['Emaar Al Khalil', 'Swissotel'], $offer->roomPrices->pluck('label')->all());
+        $this->assertEquals(21900, $api['departures'][0]['price_from']);
+        $this->assertEquals(21900, $api['price_from']);
+        $this->assertEquals(21900, $api['formulas'][0]['prices']['quadruple']['price']);
+        $this->assertEquals(25900, $api['formulas'][1]['prices']['quadruple']['price']);
+    }
+
     public function test_multiple_formulas_same_city_hotels_and_single_room_type_are_supported(): void
     {
         $payload = $this->payload();
