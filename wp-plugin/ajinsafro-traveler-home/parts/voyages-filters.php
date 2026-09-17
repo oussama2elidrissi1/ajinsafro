@@ -13,7 +13,7 @@ if (! defined('ABSPATH')) {
     <details class="accordion" open>
         <summary>Recherche</summary>
         <div class="filter-body">
-            <input class="filter-search" type="text" name="s" value="<?php echo esc_attr($search_text); ?>" placeholder="Nom, destination...">
+            <input class="filter-search" type="text" name="s" value="<?php echo esc_attr($search_text); ?>" placeholder="Nom ou destination…">
 
             <select name="destination" class="filter-select">
                 <option value="">Toutes les destinations</option>
@@ -39,11 +39,11 @@ if (! defined('ABSPATH')) {
     </details>
 
     <details class="accordion" open>
-        <summary>Duree et voyageurs</summary>
+        <summary>Durée et voyageurs</summary>
         <div class="filter-body">
             <div class="mini-inputs">
-                <input type="number" min="0" name="duration_min" value="<?php echo esc_attr($duration_min > 0 ? (string) $duration_min : ''); ?>" placeholder="Jours min">
-                <input type="number" min="0" name="duration_max" value="<?php echo esc_attr($duration_max > 0 ? (string) $duration_max : ''); ?>" placeholder="Jours max">
+                <input type="number" min="0" name="duration_min" value="<?php echo esc_attr($duration_min > 0 ? (string) $duration_min : ''); ?>" placeholder="Jours min.">
+                <input type="number" min="0" name="duration_max" value="<?php echo esc_attr($duration_max > 0 ? (string) $duration_max : ''); ?>" placeholder="Jours max.">
             </div>
             <input type="number" min="1" name="voyageurs" value="<?php echo esc_attr($guests_min > 0 ? (string) $guests_min : ''); ?>" placeholder="Voyageurs minimum">
         </div>
@@ -51,11 +51,11 @@ if (! defined('ABSPATH')) {
 
     <?php if (! empty($catalog_themes) || ! empty($catalog_tour_types) || ! empty($catalog_tags)) { ?>
         <details class="accordion" open>
-            <summary>Type et themes</summary>
+            <summary>Type et thèmes</summary>
             <div class="filter-body">
                 <?php if (! empty($catalog_themes)) { ?>
                     <select name="cat" class="filter-select">
-                        <option value="">Tous les themes</option>
+                        <option value="">Tous les thèmes</option>
                         <?php foreach ((array) $catalog_themes as $theme_term) { ?>
                             <?php if (! $theme_term instanceof WP_Term) { continue; } ?>
                             <option value="<?php echo esc_attr($theme_term->slug); ?>" <?php selected($category_slug, $theme_term->slug); ?>>
@@ -95,7 +95,7 @@ if (! defined('ABSPATH')) {
     <details class="accordion" open>
         <summary>Note client</summary>
         <div class="filter-body">
-            <?php foreach ([0 => 'Toutes les notes', 8 => 'Tres bien 8+', 9 => 'Excellent 9+'] as $rating_value => $rating_label) { ?>
+            <?php foreach ([0 => 'Toutes les notes', 8 => 'Très bien 8+', 9 => 'Excellent 9+'] as $rating_value => $rating_label) { ?>
                 <label class="radio-row">
                     <input type="radio" name="min_rating" value="<?php echo esc_attr((string) $rating_value); ?>" <?php checked((float) $min_rating, (float) $rating_value); ?>>
                     <span><?php echo esc_html($rating_label); ?></span>
@@ -105,11 +105,11 @@ if (! defined('ABSPATH')) {
     </details>
 
     <details class="accordion" open>
-        <summary>Disponibilite</summary>
+        <summary>Disponibilité</summary>
         <div class="filter-body">
             <label class="check-row">
                 <input type="checkbox" name="featured" value="1" <?php checked($featured_only); ?>>
-                <span>Selection Ajinsafro</span>
+                <span>Sélection Ajinsafro</span>
             </label>
             <label class="check-row">
                 <input type="checkbox" name="promo_only" value="1" <?php checked($promo_only); ?>>
@@ -124,6 +124,6 @@ if (! defined('ABSPATH')) {
 
     <div class="aj-voyages-filter-actions">
         <button type="submit" class="primary-btn">Appliquer les filtres</button>
-        <a class="secondary-btn aj-voyages-filter-actions__reset" href="<?php echo esc_url($voyages_page_url); ?>">Reinitialiser</a>
+        <a class="secondary-btn aj-voyages-filter-actions__reset" href="<?php echo esc_url($voyages_page_url); ?>">Réinitialiser</a>
     </div>
 </form>

@@ -210,7 +210,103 @@ class HotelController extends Controller
             'hotelDetailMeta' => $hotelDetailMeta,
             'logoUrl' => $logoUrl,
             'media' => $this->media,
+            'wpSiteUrl' => rtrim((string) config('wordpress.site_url', config('wordpress.public_site_url', '')), '/'),
+            'editorSteps' => $this->editorSteps($hotel, $stHotel, $meta, $hotelDetailMeta, $featuredUrl, $galleryUrls),
         ]);
+    }
+
+    /** Identifiants des panneaux de l'editeur, dans l'ordre d'affichage. */
+    protected const EDITOR_PANES = [
+        'pane-location',
+        'pane-hotel-detail',
+        'pane-contact',
+        'pane-price',
+        'pane-checkinout',
+        'pane-other',
+        'pane-policy',
+        'pane-inventory',
+    ];
+
+    /**
+     * Étapes de l'éditeur d'hébergement.
+     *
+     * `done` reflète les données réellement enregistrées ; `pending` marque les
+     * étapes dont le formulaire n'existe pas encore (elles sont exclues du
+     * compteur d'avancement plutôt que comptées comme incomplètes).
+     *
+     * @param  array<string, mixed>  $meta
+     * @param  array<string, mixed>  $detail
+     * @param  array<int, string>  $galleryUrls
+     * @return array<int, array<string, mixed>>
+     */
+    protected function editorSteps(
+        WpPost $hotel,
+        StHotel $stHotel,
+        array $meta,
+        array $detail,
+        ?string $featuredUrl,
+        array $galleryUrls,
+    ): array {
+        $filled = static fn ($value): bool => trim((string) $value) !== '';
+
+        return [
+            [
+                'key' => 'location',
+                'label' => 'Général et localisation',
+                'pane' => 'pane-location',
+                'done' => $filled($hotel->post_title) && $filled($stHotel->address),
+                'pending' => false,
+            ],
+            [
+                'key' => 'hotel-detail',
+                'label' => "Détails de l'hôtel",
+                'pane' => 'pane-hotel-detail',
+                'done' => $featuredUrl !== null || $galleryUrls !== [] || $filled($detail['_logo_id'] ?? ''),
+                'pending' => false,
+            ],
+            [
+                'key' => 'contact',
+                'label' => 'Contact',
+                'pane' => 'pane-contact',
+                'done' => $filled($meta['hotel_phone'] ?? '') || $filled($meta['hotel_email'] ?? ''),
+                'pending' => false,
+            ],
+            [
+                'key' => 'price',
+                'label' => 'Tarifs',
+                'pane' => 'pane-price',
+                'done' => (float) ($stHotel->min_price ?? 0) > 0,
+                'pending' => false,
+            ],
+            [
+                'key' => 'checkinout',
+                'label' => 'Arrivée et départ',
+                'pane' => 'pane-checkinout',
+                'done' => false,
+                'pending' => true,
+            ],
+            [
+                'key' => 'other',
+                'label' => 'Équipements et options',
+                'pane' => 'pane-other',
+                'done' => $filled($meta['hotel_amenities'] ?? ''),
+                'pending' => false,
+            ],
+            [
+                'key' => 'policy',
+                'label' => 'Conditions de réservation',
+                'pane' => 'pane-policy',
+                'done' => $filled($meta['hotel_policies'] ?? ''),
+                'pending' => false,
+            ],
+            [
+                'key' => 'inventory',
+                'label' => 'Inventaire et chambres',
+                'pane' => 'pane-inventory',
+                'done' => false,
+                'pending' => true,
+            ],
+        ];
     }
 
     public function update(HotelUpdateRequest $request, WpPost $hotel): RedirectResponse
@@ -294,6 +390,16 @@ class HotelController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
             throw $e;
+        }
+
+        // « Enregistrer et continuer » : retour sur l'editeur, ancre sur l'etape
+        // suivante. Sans ce champ, la redirection reste celle d'avant.
+        $continueTo = (string) $request->input('save_and_continue', '');
+
+        if (in_array($continueTo, self::EDITOR_PANES, true)) {
+            return redirect()
+                ->to(route('admin.wordpress.hotels.edit', $hotel).'#'.$continueTo)
+                ->with('success', 'Hôtel mis à jour avec succès.');
         }
 
         return redirect()

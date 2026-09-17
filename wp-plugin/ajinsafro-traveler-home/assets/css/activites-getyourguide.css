@@ -1089,30 +1089,39 @@ body.aj-mobile-filters-open { overflow: hidden; }
    Body-class overrides — win against any theme/plugin CSS
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* Aplat navy : le degrade et ses halos brouillaient le contraste du bandeau. */
 .page-activites-ajinsafro .aj-hero {
-    background: linear-gradient(135deg, #073B70 0%, #0D5EA8 55%, #1783D3 100%) !important;
+    background: var(--brand-dark, #0d3767) !important;
 }
 
 .page-activites-ajinsafro .aj-search-button {
-    background: linear-gradient(135deg, #F7941D, #E67E00) !important;
+    background: var(--brand, #144e8c) !important;
     color: #fff !important;
 }
 
-.page-activites-ajinsafro .aj-card-primary,
+/* Action principale : blanc sur orange plafonnait a 2,6:1. */
+.page-activites-ajinsafro .aj-card-primary {
+    background: var(--brand, #144e8c) !important;
+    color: #fff !important;
+}
+
 .page-activites-ajinsafro .aj-featured-link {
-    background: linear-gradient(135deg, #F7941D, #E67E00) !important;
-    color: #fff !important;
+    background: #fff !important;
+    color: var(--brand, #144e8c) !important;
 }
 
-.page-activites-ajinsafro .aj-card-primary:hover,
+.page-activites-ajinsafro .aj-card-primary:hover {
+    background: var(--brand-dark, #0d3767) !important;
+}
+
 .page-activites-ajinsafro .aj-featured-link:hover {
-    background: linear-gradient(135deg, #E67E00, #cf7304) !important;
+    background: var(--line-soft, #eef3f9) !important;
 }
 
 .page-activites-ajinsafro .aj-card-secondary {
-    background: #EAF4FF !important;
-    color: #073B70 !important;
-    border-color: rgba(13, 94, 168, 0.2) !important;
+    background: #fff !important;
+    color: var(--brand, #144e8c) !important;
+    border-color: var(--brand, #144e8c) !important;
 }
 
 .page-activites-ajinsafro .aj-card-secondary:hover {
@@ -1121,18 +1130,18 @@ body.aj-mobile-filters-open { overflow: hidden; }
 }
 
 .page-activites-ajinsafro .aj-badge {
-    background: #F7941D !important;
+    background: rgba(9, 30, 52, 0.72) !important;
     color: #fff !important;
 }
 
 .page-activites-ajinsafro .aj-category-badge {
-    background: rgba(13, 94, 168, 0.94) !important;
+    background: rgba(9, 30, 52, 0.72) !important;
     color: #fff !important;
 }
 
 .page-activites-ajinsafro .aj-status-badge {
-    background: #EAF8F1 !important;
-    color: #128553 !important;
+    background: var(--ok, #0f7a44) !important;
+    color: #fff !important;
 }
 
 .page-activites-ajinsafro .aj-card-price strong {
@@ -1164,14 +1173,14 @@ body.aj-mobile-filters-open { overflow: hidden; }
 .page-activites-ajinsafro .aj-mobile-filter-trigger,
 .page-activites-ajinsafro #aj-apply-mobile-filters,
 .page-activites-ajinsafro .aj-empty-state button {
-    background: linear-gradient(135deg, #F7941D, #E67E00) !important;
+    background: var(--brand, #144e8c) !important;
     color: #fff !important;
 }
 
 .page-activites-ajinsafro #aj-reset-mobile-filters {
-    background: #EAF4FF !important;
-    color: #073B70 !important;
-    border: 1.5px solid rgba(13, 94, 168, 0.2) !important;
+    background: #fff !important;
+    color: var(--brand, #144e8c) !important;
+    border: 1.5px solid var(--brand, #144e8c) !important;
 }
 
 @media (max-width: 640px) {

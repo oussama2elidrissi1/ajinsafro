@@ -487,7 +487,7 @@ if ($group_size > 0) {
 if ($featured_only) {
     $args = $current_args;
     unset($args['featured']);
-    $active_chips[] = ['label' => 'Selection Ajinsafro', 'url' => $build_url($args)];
+    $active_chips[] = ['label' => 'Sélection Ajinsafro', 'url' => $build_url($args)];
 }
 if ($promo_only) {
     $args = $current_args;
@@ -497,7 +497,7 @@ if ($promo_only) {
 if ($guaranteed_only) {
     $args = $current_args;
     unset($args['guaranteed']);
-    $active_chips[] = ['label' => 'Departs garantis', 'url' => $build_url($args)];
+    $active_chips[] = ['label' => 'Départs garantis', 'url' => $build_url($args)];
 }
 foreach ($selected_services as $service_slug) {
     if (! isset($available_services[$service_slug])) {
@@ -514,7 +514,7 @@ foreach ($selected_services as $service_slug) {
 $sort_labels = [
     'recommended' => 'Recommandees',
     'price_asc' => 'Prix croissant',
-    'price_desc' => 'Prix decroissant',
+    'price_desc' => 'Prix décroissant',
     'discount_desc' => 'Reduction la plus forte',
     'newest' => 'Plus recentes',
 ];
@@ -605,7 +605,7 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
 
                             <div class="ajgd-card__badges" style="margin-bottom:1rem;">
                                 <span class="ajgd-badge ajgd-badge--<?php echo esc_attr($cd['status_class']); ?>"><?php echo esc_html($cd['status_label']); ?></span>
-                                <?php if (! empty($cd['is_featured'])) { ?><span class="ajgd-badge ajgd-badge--blue">Selection Ajinsafro</span><?php } ?>
+                                <?php if (! empty($cd['is_featured'])) { ?><span class="ajgd-badge ajgd-badge--blue">Sélection Ajinsafro</span><?php } ?>
                                 <?php if ((int) $cd['discount_percent'] > 0) { ?><span class="ajgd-badge ajgd-badge--orange">-<?php echo esc_html((string) $cd['discount_percent']); ?>%</span><?php } ?>
                             </div>
                             <h1 style="font-size:clamp(2rem,4vw,3.2rem);line-height:1.05;margin:0 0 1rem;color:#123b69;"><?php echo esc_html($cd['title']); ?></h1>
@@ -739,17 +739,17 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
                         <div class="ajgd-hero-copy">
                             <span class="ajgd-eyebrow">Offres de voyage en groupe Ajinsafro</span>
                             <h1 class="ajgd-hero-title">Voyagez en groupe et profitez de tarifs avantageux</h1>
-                            <p class="ajgd-hero-sub">Decouvrez nos offres de voyages en groupe soigneusement selectionnees. Rejoignez d'autres voyageurs, beneficiez de tarifs degressifs et profitez d'un depart confirme des que le nombre minimum de participants est atteint.</p>
+                            <p class="ajgd-hero-sub">Découvrez nos offres de voyages en groupe soigneusement sélectionnées. Rejoignez d'autres voyageurs, bénéficiez de tarifs dégressifs et profitez d'un départ confirmé des que le nombre minimum de participants est atteint.</p>
                             <div class="ajgd-hero-actions">
-                                <a class="ajgd-btn ajgd-btn--orange" href="#ajgd-offres">Decouvrir les offres</a>
-                                <a class="ajgd-btn ajgd-btn--ghost" href="#ajgd-comment">Comment ca fonctionne ?</a>
+                                <a class="ajgd-btn ajgd-btn--orange" href="#ajgd-offres">Découvrir les offres</a>
+                                <a class="ajgd-btn ajgd-btn--ghost" href="#ajgd-comment">Comment ça marche ?</a>
                             </div>
                         </div>
                         <div class="ajgd-hero-visual" aria-hidden="true">
                             <div class="ajgd-hero-photo"></div>
                             <div class="ajgd-float-card ajgd-float-card--tl">
                                 <span class="ajgd-fi ajgd-fi--green">%</span>
-                                <div><small>Reduction max</small><strong>Jusqu'a <?php echo esc_html(number_format_i18n($hero_max_discount)); ?>&nbsp;%</strong></div>
+                                <div><small>Réduction max</small><strong>Jusqu'à <?php echo esc_html(number_format_i18n($hero_max_discount)); ?>&nbsp;%</strong></div>
                             </div>
                             <div class="ajgd-float-card ajgd-float-card--tr">
                                 <span class="ajgd-fi ajgd-fi--blue">&#128100;</span>
@@ -817,12 +817,12 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
             <section class="ajgd-how" id="ajgd-comment">
                 <div class="ajgd-container">
                     <div class="ajgd-section-hd">
-                        <h2>Comment ca marche&nbsp;?</h2>
+                        <h2>Comment ça marche&nbsp;?</h2>
                     </div>
                     <div class="ajgd-how-grid">
-                        <article class="ajgd-how-card"><div class="ajgd-how-icon">&#8595;</div><div><h3>Des tarifs degressifs</h3><p>Le prix par personne evolue en fonction du nombre total de participants. Plus le groupe se remplit, plus le tarif devient avantageux.</p></div></article>
-                        <article class="ajgd-how-card"><div class="ajgd-how-icon">&#10003;</div><div><h3>Depart confirme</h3><p>Le voyage est confirme des que le nombre minimum de participants requis est atteint. Vous etes informe a chaque etape.</p></div></article>
-                        <article class="ajgd-how-card"><div class="ajgd-how-icon">&#128200;</div><div><h3>Suivi en temps reel</h3><p>Consultez a tout moment le niveau de remplissage du groupe, les places restantes et l'evolution du tarif propose.</p></div></article>
+                        <article class="ajgd-how-card"><div class="ajgd-how-icon">1</div><div><h3>Des tarifs dégressifs</h3><p>Le prix par personne évolue en fonction du nombre total de participants. Plus le groupe se remplit, plus le tarif devient avantageux.</p></div></article>
+                        <article class="ajgd-how-card"><div class="ajgd-how-icon">2</div><div><h3>Départ confirmé</h3><p>Le voyage est confirmé dès que le nombre minimum de participants requis est atteint. Vous etes informe a chaque etape.</p></div></article>
+                        <article class="ajgd-how-card"><div class="ajgd-how-icon">3</div><div><h3>Suivi en temps réel</h3><p>Consultez à tout moment le niveau de remplissage du groupe, les places restantes et l'evolution du tarif propose.</p></div></article>
                     </div>
                 </div>
             </section>
@@ -836,7 +836,7 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
                     </div>
                     <div class="ajgd-filter-title">
                         <h2>Filtrer par</h2>
-                        <a class="ajgd-clear-link" href="<?php echo esc_url($group_deals_url); ?>">Reinitialiser</a>
+                        <a class="ajgd-clear-link" href="<?php echo esc_url($group_deals_url); ?>">Réinitialiser</a>
                     </div>
                     <?php
                     $group_deals_filter_prefix = 'ajgd-desktop';
@@ -848,10 +848,10 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
                     <div class="ajgd-results-head">
                         <div class="ajgd-results-topline">
                             <div>
-                                <h2><?php echo esc_html(number_format_i18n($found_posts)); ?> offres groupe trouvees</h2>
+                                <h2><?php echo esc_html(number_format_i18n($found_posts)); ?> offres groupe trouvées</h2>
                                 <div class="ajgd-result-count">
                                     <?php echo $min_price_found !== null
-                                        ? esc_html('A partir de ' . number_format_i18n((int) $min_price_found) . ' DH par personne')
+                                        ? esc_html('dès ' . number_format_i18n((int) $min_price_found) . ' DH par personne')
                                         : 'Tarifs disponibles selon l\'offre'; ?>
                                 </div>
                             </div>
@@ -879,8 +879,8 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
                         <div class="ajgd-stat-pills">
                             <span class="ajgd-stat-pill"><?php echo esc_html(number_format_i18n($visible_count)); ?> offres visibles</span>
                             <span class="ajgd-stat-pill"><?php echo esc_html(number_format_i18n($visible_featured)); ?> selections Ajinsafro</span>
-                            <span class="ajgd-stat-pill"><?php echo esc_html(number_format_i18n($visible_promos)); ?> reductions actives</span>
-                            <span class="ajgd-stat-pill"><?php echo esc_html(number_format_i18n($visible_guaranteed)); ?> departs garantis</span>
+                            <span class="ajgd-stat-pill"><?php echo esc_html(number_format_i18n($visible_promos)); ?> réductions actives</span>
+                            <span class="ajgd-stat-pill"><?php echo esc_html(number_format_i18n($visible_guaranteed)); ?> départs garantis</span>
                         </div>
                         <?php if (! empty($active_chips)) { ?>
                             <div class="ajgd-chips">
@@ -892,39 +892,49 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
                     </div>
 
                     <?php if (! $source_available) { ?>
-                        <div class="ajgd-empty-state"><div class="ajgd-empty-icon">&#128274;</div><h3>Acces temporairement indisponible</h3><p>Les informations des offres groupe ne sont pas accessibles pour le moment. Veuillez reessayer dans quelques instants.</p></div>
+                        <div class="ajgd-empty-state"><div class="ajgd-empty-icon">&#128274;</div><h3>Accès temporairement indisponible</h3><p>Les informations des offres groupe ne sont pas accessibles pour le moment. Veuillez réessayer dans quelques instants.</p></div>
                     <?php } elseif (empty($deals)) { ?>
-                        <div class="ajgd-empty-state"><div class="ajgd-empty-icon">&#128269;</div><h3>Aucune offre ne correspond a votre recherche</h3><p>Essayez d'elargir vos criteres de recherche, de modifier le budget ou de supprimer certains filtres pour decouvrir plus d'offres.</p><a class="ajgd-btn ajgd-btn--orange" href="<?php echo esc_url($group_deals_url); ?>">Reinitialiser les filtres</a></div>
+                        <div class="ajgd-empty-state"><div class="ajgd-empty-icon">&#128269;</div><h3>Aucune offre ne correspond à votre recherche</h3><p>Élargissez vos critères, modifiez le budget ou retirez un filtre pour découvrir plus d'offres.</p><a class="ajgd-btn ajgd-btn--orange" href="<?php echo esc_url($group_deals_url); ?>">Réinitialiser les filtres</a></div>
                     <?php } else { ?>
                         <div class="ajgd-deals-grid">
                             <?php foreach ($deals as $deal) { ?>
                                 <article class="ajgd-card" data-url="<?php echo esc_url($deal['url']); ?>">
                                     <div class="ajgd-card__media<?php echo strpos($deal['image_url'], 'fallback-voyage.svg') !== false ? ' is-fallback' : ''; ?>">
-                                        <img src="<?php echo esc_url($deal['image_url']); ?>" alt="<?php echo esc_attr($deal['title']); ?>" loading="lazy">
+                                        <?php // Image injoignable : on bascule sur le substitut plutot que de laisser l'alt et l'icone de fichier casse. ?>
+                                        <img src="<?php echo esc_url($deal['image_url']); ?>" alt="" loading="lazy" onerror="this.onerror=null;this.closest('.ajgd-card__media').classList.add('is-fallback');">
                                         <div class="ajgd-card__badges">
                                             <span class="ajgd-badge ajgd-badge--<?php echo esc_attr($deal['status_class']); ?>"><?php echo esc_html($deal['status_label']); ?></span>
-                                            <?php if ($deal['discount_percent'] > 0) { ?><span class="ajgd-badge ajgd-badge--orange">-<?php echo esc_html((string) $deal['discount_percent']); ?>%</span><?php } ?>
-                                            <?php if ($deal['is_featured']) { ?><span class="ajgd-badge ajgd-badge--blue">Selection Ajinsafro</span><?php } ?>
+                                            <?php if ($deal['discount_percent'] > 0) { ?>
+                                                <span class="ajgd-badge ajgd-badge--orange">&minus;<?php echo esc_html((string) $deal['discount_percent']); ?>&nbsp;%</span>
+                                            <?php } elseif ($deal['is_featured']) { ?>
+                                                <span class="ajgd-badge ajgd-badge--blue">Sélection Ajinsafro</span>
+                                            <?php } ?>
                                         </div>
                                     </div>
                                     <div class="ajgd-card__body">
                                         <?php if ($deal['destination'] !== '') { ?><p class="ajgd-card__dest">&#128205; <?php echo esc_html($deal['destination']); ?></p><?php } ?>
                                         <h3 class="ajgd-card__title"><?php echo esc_html($deal['title']); ?></h3>
+                                        <?php // Le remplissage est deja donne par la jauge : la meta ne le repete pas. ?>
                                         <div class="ajgd-card__meta">
-                                            <?php if ($deal['duration'] !== '') { ?><span>&#9201; <?php echo esc_html($deal['duration']); ?></span><?php } ?>
-                                            <?php if ($deal['max_people'] > 0) { ?><span>&#128100; <?php echo esc_html($deal['current_people'] . '/' . $deal['max_people'] . ' participants inscrits'); ?></span><?php } ?>
+                                            <?php if ($deal['duration'] !== '') { ?><span><?php echo esc_html($deal['duration']); ?></span><?php } ?>
                                         </div>
                                         <?php if ($deal['excerpt'] !== '') { ?><p class="ajgd-card__excerpt"><?php echo esc_html($deal['excerpt']); ?></p><?php } ?>
                                         <?php if (! empty($deal['services'])) { ?>
                                             <div class="ajgd-card__tags">
-                                                <?php foreach ($deal['services'] as $service_name) { ?><span><?php echo esc_html($service_name); ?></span><?php } ?>
+                                                <?php foreach (array_slice($deal['services'], 0, 2) as $service_name) { ?><span><?php echo esc_html($service_name); ?></span><?php } ?>
                                             </div>
                                         <?php } ?>
-                                        <?php if ($deal['max_people'] > 0) { ?>
-                                            <div class="ajgd-card__progress">
+                                        <?php if ($deal['max_people'] > 0) {
+                                            $seats_left = max(0, (int) $deal['max_people'] - (int) $deal['current_people']);
+                                            $fill_tone = $seats_left === 0 ? ' is-full' : ( $seats_left <= 4 ? ' is-warn' : '' );
+                                            $fill_label = $seats_left === 0
+                                                ? 'groupe complet'
+                                                : sprintf('%d place%s', $seats_left, $seats_left > 1 ? 's' : '');
+                                        ?>
+                                            <div class="ajgd-card__progress<?php echo esc_attr($fill_tone); ?>">
                                                 <div class="ajgd-card__progress-top">
-                                                    <span><?php echo esc_html($deal['status_label']); ?></span>
-                                                    <span><?php echo esc_html((string) $deal['current_people']); ?> / <?php echo esc_html((string) $deal['max_people']); ?></span>
+                                                    <span><?php echo esc_html(sprintf('%d inscrits sur %d', (int) $deal['current_people'], (int) $deal['max_people'])); ?></span>
+                                                    <b><?php echo esc_html($fill_label); ?></b>
                                                 </div>
                                                 <div class="ajgd-card__progress-bar"><span style="width:<?php echo esc_attr((string) $deal['progress_percent']); ?>%"></span></div>
                                             </div>
@@ -932,10 +942,9 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
                                         <div class="ajgd-card__footer">
                                             <div class="ajgd-card__price">
                                                 <?php if ($deal['old_price_label'] !== '') { ?><del><?php echo esc_html($deal['old_price_label']); ?> DH</del><?php } ?>
-                                                <small>A partir de</small>
+                                                <small>dès</small>
                                                 <strong><?php echo $deal['price_label'] !== '' ? esc_html($deal['price_label'] . ' DH') : 'Prix sur demande'; ?></strong>
                                                 <span>par personne</span>
-                                                <span class="ajgd-card__group-hint">Offre ideale pour voyager en groupe a tarif optimise.</span>
                                             </div>
                                             <div class="ajgd-card__actions">
                                                 <a class="ajgd-btn ajgd-btn--outline-blue ajgd-btn--sm" href="<?php echo esc_url($deal['url']); ?>">Voir l'offre</a>
@@ -946,9 +955,9 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
                                                 <?php if ($deal_can_participate) { ?>
                                                     <button type="button" class="ajgd-btn ajgd-btn--orange ajgd-btn--sm" data-open-participation data-deal-slug="<?php echo esc_attr($deal['slug']); ?>" data-deal-title="<?php echo esc_attr($deal['title']); ?>">Je participe</button>
                                                 <?php } else { ?>
-                                                    <span class="ajgd-btn ajgd-btn--orange ajgd-btn--sm is-disabled"><?php echo $deal_is_full ? 'Complet' : 'Ferme'; ?></span>
+                                                    <span class="ajgd-btn ajgd-btn--orange ajgd-btn--sm is-disabled"><?php echo $deal_is_full ? 'Complet' : 'Fermé'; ?></span>
                                                 <?php } ?>
-                                                <button type="button" class="ajgd-btn ajgd-btn--outline-blue ajgd-btn--sm" data-share-deal data-share-url="<?php echo esc_attr($deal['url']); ?>" data-share-title="<?php echo esc_attr($deal['title']); ?>">Partager</button>
+                                                <?php // Le partage reste sur la fiche : la carte garde deux actions distinctes. ?>
                                             </div>
                                         </div>
                                     </div>
@@ -978,10 +987,10 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
                 <div class="ajgd-container">
                     <div class="ajgd-section-hd"><h2>Pourquoi choisir Ajinsafro Group Deals&nbsp;?</h2></div>
                     <div class="ajgd-benefits-grid">
-                        <div class="ajgd-benefit"><span class="ajgd-benefit-icon">&#128176;</span><div><h3>Tarifs negocies</h3><p>Profitez de tarifs avantageux grace a la force du voyage en groupe.</p></div></div>
+                        <div class="ajgd-benefit"><span class="ajgd-benefit-icon">&#128176;</span><div><h3>Tarifs négociés</h3><p>Profitez de tarifs avantageux grâce à la force du voyage en groupe.</p></div></div>
                         <div class="ajgd-benefit"><span class="ajgd-benefit-icon">&#128736;</span><div><h3>Accompagnement Ajinsafro</h3><p>Notre equipe vous accompagne avant, pendant et apres votre reservation.</p></div></div>
                         <div class="ajgd-benefit"><span class="ajgd-benefit-icon">&#128100;</span><div><h3>Offres adaptees a chaque profil</h3><p>Familles, amis, couples, groupes prives ou voyageurs individuels : chacun trouve l'offre qui lui convient.</p></div></div>
-                        <div class="ajgd-benefit"><span class="ajgd-benefit-icon">&#128179;</span><div><h3>Reservation simple et flexible</h3><p>Une experience de reservation claire, rapide et pensee pour faciliter votre inscription.</p></div></div>
+                        <div class="ajgd-benefit"><span class="ajgd-benefit-icon">&#128179;</span><div><h3>Réservation simple et flexible</h3><p>Une experience de reservation claire, rapide et pensee pour faciliter votre inscription.</p></div></div>
                     </div>
                 </div>
             </section>
@@ -1003,8 +1012,8 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
                     <div class="ajgd-cta-box">
                         <div class="ajgd-cta-deco" aria-hidden="true"></div>
                         <div class="ajgd-cta-content">
-                            <h2>Pret a organiser votre prochain voyage en groupe ?</h2>
-                            <p>Decouvrez nos offres disponibles ou demandez un accompagnement personnalise pour votre projet de voyage en groupe.</p>
+                            <h2>Prêt à organiser votre prochain voyage en groupe ?</h2>
+                            <p>Découvrez nos offres disponibles ou demandez un accompagnement personnalisé pour votre projet de voyage en groupe.</p>
                         </div>
                         <a class="ajgd-btn ajgd-btn--orange ajgd-btn--lg" href="#ajgd-offres">Voir les offres</a>
                         <a class="ajgd-btn ajgd-btn--outline-blue ajgd-btn--lg" href="<?php echo esc_url($cta_devis_url); ?>" <?php if ($cta_is_external) { echo 'target="_blank" rel="noopener noreferrer"'; } ?>>Demander un devis groupe</a>

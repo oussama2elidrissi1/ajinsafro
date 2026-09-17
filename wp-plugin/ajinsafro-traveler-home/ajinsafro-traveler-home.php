@@ -4,7 +4,7 @@
  * Plugin Name: Ajinsafro Traveler Home
  * Plugin URI:  https://ajinsafro.com
  * Description: Surcharge la page d'accueil (front page) du thème Traveler avec une mise en page personnalisée : Hero, barre de recherche, offres dernière minute, destinations par région et bons coins.
- * Version:     1.1.4
+ * Version:     1.2.1
  * Author:      Ajinsafro
  * Author URI:  https://ajinsafro.com
  * Text Domain: ajinsafro-traveler-home
@@ -19,10 +19,23 @@ if (! defined('ABSPATH')) {
 /* ──────────────────────────────────────────────
  * Constants
  * ────────────────────────────────────────────── */
-define('AJTH_VERSION', '1.2.0');
+define('AJTH_VERSION', '1.2.1');
 define('AJTH_FILE', __FILE__);
 define('AJTH_DIR', plugin_dir_path(__FILE__));
 define('AJTH_URL', plugin_dir_url(__FILE__));
+
+/**
+ * Version d'un asset local : la date de modification du fichier.
+ *
+ * Un numero fige oblige a penser a l'incrementer a chaque correction, et le
+ * navigateur comme les caches de page servent alors l'ancienne feuille.
+ * AJTH_VERSION ne sert plus que de repli et aux ressources externes.
+ */
+function ajth_asset_ver( $relative ) {
+    $path = AJTH_DIR . ltrim( $relative, '/' );
+
+    return file_exists( $path ) ? (string) filemtime( $path ) : AJTH_VERSION;
+}
 
 if (! defined('AJINSAFRO_HOME_DIR')) {
     define('AJINSAFRO_HOME_DIR', AJTH_DIR);
@@ -115,31 +128,30 @@ function ajth_enqueue_front_assets()
         'ajth-home-css',
         AJTH_URL.'assets/css/home.css',
         ['ajth-fontawesome'],
-        AJTH_VERSION
+        ajth_asset_ver( 'assets/css/home.css' )
     );
 
     wp_enqueue_script(
         'ajth-home-js',
         AJTH_URL.'assets/js/home.js',
         [],
-        AJTH_VERSION,
+        ajth_asset_ver( 'assets/js/home.js' ),
         true
     );
 
     if ( function_exists( 'ajth_is_hebergement_context' ) && ajth_is_hebergement_context() ) {
-        $hebergement_css_path = AJTH_DIR . 'assets/css/hebergement-booking.css';
         wp_enqueue_style(
             'ajth-hebergement-booking-css',
             AJTH_URL . 'assets/css/hebergement-booking.css',
             ['ajth-home-css'],
-            file_exists( $hebergement_css_path ) ? filemtime( $hebergement_css_path ) : AJTH_VERSION
+            ajth_asset_ver( 'assets/css/hebergement-booking.css' )
         );
 
         wp_enqueue_script(
             'ajth-hebergement-booking-js',
             AJTH_URL . 'assets/js/hebergement-booking.js',
             [],
-            AJTH_VERSION,
+            ajth_asset_ver( 'assets/js/hebergement-booking.js' ),
             true
         );
 
@@ -183,14 +195,14 @@ function ajth_enqueue_front_assets()
             'ajth-voyages-results-css',
             AJTH_URL . 'assets/css/aj-voyages-results.css',
             ['ajth-home-css'],
-            AJTH_VERSION
+            ajth_asset_ver( 'assets/css/aj-voyages-results.css' )
         );
 
         wp_enqueue_script(
             'ajth-voyages-results-js',
             AJTH_URL . 'assets/js/aj-voyages-results.js',
             [],
-            AJTH_VERSION,
+            ajth_asset_ver( 'assets/js/aj-voyages-results.js' ),
             true
         );
     }
@@ -200,14 +212,14 @@ function ajth_enqueue_front_assets()
             'ajth-activites-getyourguide-css',
             AJTH_URL . 'assets/css/activites-getyourguide.css',
             ['ajth-home-css'],
-            AJTH_VERSION
+            ajth_asset_ver( 'assets/css/activites-getyourguide.css' )
         );
 
         wp_enqueue_script(
             'ajth-activites-getyourguide-js',
             AJTH_URL . 'assets/js/activites-catalog.js',
             [],
-            AJTH_VERSION,
+            ajth_asset_ver( 'assets/js/activites-catalog.js' ),
             true
         );
 
@@ -247,14 +259,14 @@ function ajth_enqueue_front_assets()
             'ajth-group-deals-fusion-css',
             AJTH_URL . 'assets/css/group-deals-fusion.css',
             ['ajth-home-css'],
-            AJTH_VERSION
+            ajth_asset_ver( 'assets/css/group-deals-fusion.css' )
         );
 
         wp_enqueue_script(
             'ajth-group-deals-fusion-js',
             AJTH_URL . 'assets/js/group-deals-fusion.js',
             [],
-            AJTH_VERSION,
+            ajth_asset_ver( 'assets/js/group-deals-fusion.js' ),
             true
         );
     }
@@ -263,16 +275,15 @@ function ajth_enqueue_front_assets()
         ( function_exists( 'ajth_is_hajj_omra_context' ) && ajth_is_hajj_omra_context() )
         || ( function_exists( 'ajth_is_economic_offers_context' ) && ajth_is_economic_offers_context() )
     ) {
-        $hajj_omra_css_path = AJTH_DIR . 'assets/css/hajj-omra.css';
         wp_enqueue_style(
             'ajth-hajj-omra-css',
             AJTH_URL . 'assets/css/hajj-omra.css',
             ['ajth-home-css'],
-            file_exists( $hajj_omra_css_path ) ? filemtime( $hajj_omra_css_path ) : AJTH_VERSION
+            ajth_asset_ver( 'assets/css/hajj-omra.css' )
         );
 
         if ( function_exists( 'ajth_get_current_hajj_omra_package_slug' ) && ajth_get_current_hajj_omra_package_slug() ) {
-            wp_enqueue_style('ajth-hajj-omra-formulas', AJTH_URL . 'assets/css/hajj-omra-formulas.css', [], filemtime(AJTH_DIR . 'assets/css/hajj-omra-formulas.css'));
+            wp_enqueue_style('ajth-hajj-omra-formulas', AJTH_URL . 'assets/css/hajj-omra-formulas.css', [], ajth_asset_ver('assets/css/hajj-omra-formulas.css'));
             wp_enqueue_style(
                 'ajth-hajj-omra-detail-fonts',
                 'https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap',
@@ -283,31 +294,39 @@ function ajth_enqueue_front_assets()
                 'ajth-hajj-omra-detail-css',
                 AJTH_URL . 'assets/css/hajj-omra-detail.css',
                 ['ajth-hajj-omra-css', 'ajth-hajj-omra-detail-fonts'],
-                filemtime( AJTH_DIR . 'assets/css/hajj-omra-detail.css' )
+                ajth_asset_ver( 'assets/css/hajj-omra-detail.css' )
             );
             wp_enqueue_script(
                 'ajth-hajj-omra-detail-js',
                 AJTH_URL . 'assets/js/hajj-omra-detail.js',
                 [],
-                filemtime( AJTH_DIR . 'assets/js/hajj-omra-detail.js' ),
+                ajth_asset_ver( 'assets/js/hajj-omra-detail.js' ),
                 true
             );
         }
     }
+
+    // Corrections de visibilite : chargee en dernier pour primer sur les feuilles de page.
+    wp_enqueue_style(
+        'ajth-public-ui-css',
+        AJTH_URL.'assets/css/aj-public-ui.css',
+        ['ajth-home-css'],
+        ajth_asset_ver('assets/css/aj-public-ui.css')
+    );
 
     if ($load_home_sections) {
         wp_enqueue_style(
             'ajth-home-reference-accordion-css',
             AJTH_URL.'assets/css/home-reference-accordion.css',
             ['ajth-home-css'],
-            AJTH_VERSION
+            ajth_asset_ver( 'assets/css/home-reference-accordion.css' )
         );
 
         wp_enqueue_script(
             'ajth-home-reference-accordion-js',
             AJTH_URL.'assets/js/home-reference-accordion.js',
             [],
-            AJTH_VERSION,
+            ajth_asset_ver( 'assets/js/home-reference-accordion.js' ),
             true
         );
     }
@@ -363,7 +382,7 @@ function ajth_preload_styles()
     if (! $load) {
         return;
     }
-    echo '<link rel="preload" href="'.esc_url(AJTH_URL.'assets/css/home.css').'?ver='.esc_attr(AJTH_VERSION).'" as="style">'."\n";
+    echo '<link rel="preload" href="'.esc_url(AJTH_URL.'assets/css/home.css').'?ver='.esc_attr(ajth_asset_ver('assets/css/home.css')).'" as="style">'."\n";
     echo '<link rel="preload" href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&family=Noto+Sans+Arabic:wght@400;600;700&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" as="style">'."\n";
     echo '<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style">'."\n";
 }

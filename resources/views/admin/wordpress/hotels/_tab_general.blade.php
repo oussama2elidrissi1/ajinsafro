@@ -13,85 +13,129 @@
     $isFeatured = old('is_featured', $stHotel->is_featured ?? 'off');
 @endphp
 
-<h5 class="mb-3">General &amp; Location</h5>
+<div class="aje-stack">
 
-<div class="mb-3">
-    <label for="post_title" class="form-label">Titre <span class="text-danger">*</span></label>
-    <input type="text" class="form-control @error('post_title') is-invalid @enderror" id="post_title" name="post_title" value="{{ $postTitle }}" required maxlength="255">
-    @error('post_title')<div class="invalid-feedback">{{ $message }}</div>@enderror
-</div>
-<div class="mb-3">
-    <label for="post_content" class="form-label">Contenu</label>
-    <textarea class="form-control @error('post_content') is-invalid @enderror" id="post_content" name="post_content" rows="4">{{ $postContent }}</textarea>
-    @error('post_content')<div class="invalid-feedback">{{ $message }}</div>@enderror
-</div>
-<div class="mb-3">
-    <label for="post_status" class="form-label">Statut <span class="text-danger">*</span></label>
-    <select class="form-select @error('post_status') is-invalid @enderror" id="post_status" name="post_status" required>
-        <option value="publish" {{ $postStatus === 'publish' ? 'selected' : '' }}>Publié</option>
-        <option value="draft" {{ $postStatus === 'draft' ? 'selected' : '' }}>Brouillon</option>
-    </select>
-    @error('post_status')<div class="invalid-feedback">{{ $message }}</div>@enderror
-</div>
-<div class="mb-3">
-    <label for="post_name" class="form-label">Slug (optionnel)</label>
-    <input type="text" class="form-control @error('post_name') is-invalid @enderror" id="post_name" name="post_name" value="{{ $postName }}" placeholder="Auto si vide" maxlength="200">
-    @error('post_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
-</div>
-<div class="mb-3">
-    <label for="address" class="form-label">Adresse</label>
-    <input type="text" class="form-control @error('address') is-invalid @enderror" id="address" name="address" value="{{ $address }}">
-    @error('address')<div class="invalid-feedback">{{ $message }}</div>@enderror
-</div>
-<div class="row">
-    <div class="col-md-6 mb-3">
-        <label for="hotel_star" class="form-label">?toiles (1?5)</label>
-        <select class="form-select @error('hotel_star') is-invalid @enderror" id="hotel_star" name="hotel_star">
-            <option value="">?</option>
-            @for ($i = 1; $i <= 5; $i++)
-                <option value="{{ $i }}" {{ (string)$i === (string)$hotelStar ? 'selected' : '' }}>{{ $i }} étoile(s)</option>
-            @endfor
-        </select>
-        @error('hotel_star')<div class="invalid-feedback">{{ $message }}</div>@enderror
+    <div>
+        <label for="post_title" class="aje-label">Titre <span class="aje-req">*</span></label>
+        <input type="text" class="form-control @error('post_title') is-invalid @enderror" id="post_title" name="post_title" value="{{ $postTitle }}" required maxlength="255" style="max-width:640px;">
+        @error('post_title')
+            <div class="invalid-feedback d-block">{{ $message }}</div>
+        @else
+            <span class="aje-help">Tel qu'il apparaîtra dans les résultats de recherche et sur la facture.</span>
+        @enderror
     </div>
-    <div class="col-md-6 mb-3">
-        <label for="min_price" class="form-label">Prix minimum</label>
-        <input type="number" step="0.01" min="0" class="form-control @error('min_price') is-invalid @enderror" id="min_price" name="min_price" value="{{ $minPrice }}">
-        @error('min_price')<div class="invalid-feedback">{{ $message }}</div>@enderror
+
+    <div>
+        <label for="post_content" class="aje-label">Description</label>
+        <textarea class="form-control @error('post_content') is-invalid @enderror" id="post_content" name="post_content" rows="7">{{ $postContent }}</textarea>
+        @error('post_content')
+            <div class="invalid-feedback d-block">{{ $message }}</div>
+        @else
+            <span class="aje-help">Rédigez en français. Deux à quatre phrases suffisent : la fiche publique n'affiche que les deux premières lignes.</span>
+        @enderror
     </div>
-</div>
-<div class="row">
-    <div class="col-md-6 mb-3">
-        <label for="map_lat" class="form-label">Latitude</label>
-        <input type="text" class="form-control @error('map_lat') is-invalid @enderror" id="map_lat" name="map_lat" value="{{ $mapLat }}">
-        @error('map_lat')<div class="invalid-feedback">{{ $message }}</div>@enderror
-    </div>
-    <div class="col-md-6 mb-3">
-        <label for="map_lng" class="form-label">Longitude</label>
-        <input type="text" class="form-control @error('map_lng') is-invalid @enderror" id="map_lng" name="map_lng" value="{{ $mapLng }}">
-        @error('map_lng')<div class="invalid-feedback">{{ $message }}</div>@enderror
-    </div>
-</div>
-<div class="mb-3">
-    <div class="form-check form-switch">
-        <input type="hidden" name="is_featured" value="off">
-        <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured" value="on" {{ $isFeatured === 'on' ? 'checked' : '' }}>
-        <label class="form-check-label" for="is_featured">? la une (st_hotel)</label>
-    </div>
-</div>
-<div class="mb-3">
-    <label for="featured_image" class="form-label">Image à la une (thumbnail)</label>
-    @if($featuredUrl)
-        <div class="mb-2 position-relative d-inline-block">
-            <img src="{{ $featuredUrl }}" alt="Image à la une" class="img-thumbnail featured-img" style="max-height: 120px;" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('d-none');">
-            <div class="d-none featured-placeholder img-thumbnail bg-light text-muted small d-flex align-items-center justify-content-center text-center" style="max-height: 120px; min-width: 120px;">Image introuvable</div>
-            <span class="text-muted small d-block">Remplacer en choisissant un nouveau fichier.</span>
+
+    <div class="aje-grid">
+        <div style="min-width:0;">
+            <label for="post_status" class="aje-label">Statut <span class="aje-req">*</span></label>
+            <select class="form-select @error('post_status') is-invalid @enderror" id="post_status" name="post_status" required>
+                <option value="publish" {{ $postStatus === 'publish' ? 'selected' : '' }}>Publié</option>
+                <option value="draft" {{ $postStatus === 'draft' ? 'selected' : '' }}>Brouillon</option>
+            </select>
+            @error('post_status')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
         </div>
-    @else
-        <div class="bg-light border rounded d-inline-block p-2 text-muted small mb-2">Aucune image à la une</div>
-    @endif
-    <input type="file" class="form-control @error('featured_image') is-invalid @enderror" id="featured_image" name="featured_image" accept="image/jpeg,image/png,image/webp">
-    <small class="text-muted">JPG, PNG, WebP. Max 5 Mo.</small>
-    @error('featured_image')<div class="invalid-feedback">{{ $message }}</div>@enderror
-</div>
+        <div style="min-width:0;">
+            <label for="post_name" class="aje-label">Slug</label>
+            <input type="text" class="form-control aje-mono @error('post_name') is-invalid @enderror" id="post_name" name="post_name" value="{{ $postName }}" placeholder="parian-holiday-villas" maxlength="200">
+            @error('post_name')
+                <div class="invalid-feedback d-block">{{ $message }}</div>
+            @else
+                <span class="aje-help">Laissez vide pour le générer depuis le titre.</span>
+            @enderror
+        </div>
+    </div>
 
+    <hr class="aje-rule">
+
+    <div class="aje-grid">
+        <div style="min-width:0;">
+            <label for="address" class="aje-label">Adresse</label>
+            <input type="text" class="form-control @error('address') is-invalid @enderror" id="address" name="address" value="{{ $address }}" placeholder="Boulevard du 20 Août, quartier Founty">
+            @error('address')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+        </div>
+        <div style="min-width:0;">
+            <label for="hotel_star" class="aje-label">Catégorie</label>
+            <select class="form-select @error('hotel_star') is-invalid @enderror" id="hotel_star" name="hotel_star">
+                <option value="">Non renseignée</option>
+                @for ($i = 1; $i <= 5; $i++)
+                    <option value="{{ $i }}" {{ (string) $i === (string) $hotelStar ? 'selected' : '' }}>{{ $i }} étoile{{ $i > 1 ? 's' : '' }}</option>
+                @endfor
+            </select>
+            @error('hotel_star')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+        </div>
+    </div>
+
+    <div class="aje-grid -narrow">
+        <div style="min-width:0;">
+            <label for="min_price" class="aje-label">Prix minimum</label>
+            <span class="aje-suffix">
+                <input type="number" step="0.01" min="0" class="form-control @error('min_price') is-invalid @enderror" id="min_price" name="min_price" value="{{ $minPrice }}" placeholder="185">
+                <span>DH</span>
+            </span>
+            @error('min_price')
+                <div class="invalid-feedback d-block">{{ $message }}</div>
+            @else
+                <span class="aje-help">Par nuit, pour la chambre la moins chère.</span>
+            @enderror
+        </div>
+        <div style="min-width:0;">
+            <span class="aje-label">Mise en avant</span>
+            <input type="hidden" name="is_featured" value="off">
+            <label class="aje-checkfield" for="is_featured">
+                <input type="checkbox" id="is_featured" name="is_featured" value="on" {{ $isFeatured === 'on' ? 'checked' : '' }}>
+                Afficher à la une
+            </label>
+        </div>
+    </div>
+
+    <div class="aje-subcard">
+        <div class="aje-subcard-head">
+            <span>Coordonnées GPS</span>
+        </div>
+        <div class="aje-grid" style="gap:14px;">
+            <div style="min-width:0;">
+                <label for="map_lat" class="aje-label">Latitude</label>
+                <input type="text" class="form-control aje-mono @error('map_lat') is-invalid @enderror" id="map_lat" name="map_lat" value="{{ $mapLat }}" placeholder="30.401200">
+                @error('map_lat')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+            </div>
+            <div style="min-width:0;">
+                <label for="map_lng" class="aje-label">Longitude</label>
+                <input type="text" class="form-control aje-mono @error('map_lng') is-invalid @enderror" id="map_lng" name="map_lng" value="{{ $mapLng }}" placeholder="-9.562800">
+                @error('map_lng')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+            </div>
+        </div>
+    </div>
+
+    <hr class="aje-rule">
+
+    <div>
+        <span class="aje-label">Image à la une</span>
+        <div class="aje-media">
+            <div class="aje-media-current">
+                @if($featuredUrl)
+                    {{-- Visuel injoignable : on retombe sur la trame plutot que sur une icone cassee. --}}
+                    <img src="{{ $featuredUrl }}" alt="" onerror="this.remove();">
+                @else
+                    <span class="aje-media-tag">AUCUNE IMAGE</span>
+                @endif
+            </div>
+            <div class="aje-dropzone">
+                <span class="aje-dropzone-title">{{ $featuredUrl ? "Remplacer l'image" : 'Ajouter une image' }}</span>
+                <span class="aje-dropzone-note">JPG, PNG ou WebP, 5 Mo maximum, 1600 × 1000 px recommandé.</span>
+                <input type="file" class="form-control @error('featured_image') is-invalid @enderror" id="featured_image" name="featured_image" accept="image/jpeg,image/png,image/webp">
+                @error('featured_image')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+            </div>
+        </div>
+    </div>
+
+</div>

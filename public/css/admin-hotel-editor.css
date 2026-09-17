@@ -1,0 +1,620 @@
+/*
+ * Éditeur d'hébergement — mise en page en étapes.
+ *
+ * Tout est portée par `.aj-hotel-editor` : aucune règle ne fuit vers le reste
+ * de l'administration. Les jetons reprennent ceux du catalogue public.
+ */
+
+.aj-hotel-editor {
+    --aje-ink: #0d2137;
+    --aje-body: #41627f;
+    --aje-meta: #5b7690;
+    --aje-line: #dce7f2;
+    --aje-line-soft: #eef3f9;
+    --aje-surface: #fff;
+    --aje-canvas: #f6f9fc;
+    --aje-brand: #144e8c;
+    --aje-brand-dark: #0d3767;
+    --aje-ok: #0f7a44;
+    --aje-ok-soft: #e6f4ec;
+    --aje-warn: #a8401f;
+    --aje-field: #cfdcea;
+
+    color: var(--aje-ink);
+    /* Un formulaire ne gagne rien a s'etaler sur les 1560 px de la coque. */
+    width: 100%;
+    max-width: 1240px;
+    margin: 0 auto;
+}
+
+/* ── En-tête de page ───────────────────────────────────────────────────── */
+
+.aj-hotel-editor .aje-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-bottom: clamp(14px, 2vw, 20px);
+}
+
+.aj-hotel-editor .aje-crumbs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 12.5px;
+    color: var(--aje-body);
+}
+
+.aj-hotel-editor .aje-crumbs a {
+    color: var(--aje-brand);
+    text-decoration: none;
+}
+
+.aj-hotel-editor .aje-crumbs a:hover {
+    color: var(--aje-brand-dark);
+}
+
+.aj-hotel-editor .aje-crumbs .aje-sep {
+    color: #b9cade;
+}
+
+.aj-hotel-editor .aje-title {
+    margin: 8px 0 0;
+    font-size: clamp(22px, 2.6vw, 30px);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    color: var(--aje-ink);
+}
+
+.aj-hotel-editor .aje-head-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    font-size: 12.5px;
+    color: var(--aje-body);
+}
+
+.aj-hotel-editor .aje-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border-radius: 7px;
+    padding: 5px 11px;
+    font-size: 12.5px;
+    font-weight: 600;
+}
+
+.aj-hotel-editor .aje-chip.-published {
+    background: var(--aje-ok-soft);
+    color: var(--aje-ok);
+}
+
+.aj-hotel-editor .aje-chip.-draft {
+    background: #fdf0e8;
+    color: var(--aje-warn);
+}
+
+.aj-hotel-editor .aje-head-actions {
+    display: flex;
+    gap: 9px;
+    flex-wrap: wrap;
+    flex: none;
+}
+
+/* ── Boutons ───────────────────────────────────────────────────────────── */
+
+.aj-hotel-editor .aje-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 10px;
+    padding: 11px 16px;
+    font-size: 13.5px;
+    font-weight: 600;
+    min-height: 44px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.aj-hotel-editor .aje-btn.-ghost {
+    background: var(--aje-surface);
+    border: 1px solid var(--aje-field);
+    color: #2e4c66;
+}
+
+.aj-hotel-editor .aje-btn.-ghost:hover {
+    background: #f1f6fb;
+    color: var(--aje-ink);
+}
+
+.aj-hotel-editor .aje-btn.-primary {
+    background: var(--aje-brand);
+    border: 0;
+    color: #fff;
+    padding: 12px 20px;
+    font-size: 14px;
+}
+
+.aj-hotel-editor .aje-btn.-primary:hover {
+    background: var(--aje-brand-dark);
+    color: #fff;
+}
+
+.aj-hotel-editor .aje-btn.-quiet {
+    background: none;
+    border: 0;
+    color: var(--aje-body);
+    padding: 0;
+    min-height: 0;
+    font-size: 13.5px;
+}
+
+.aj-hotel-editor .aje-btn.-quiet:hover {
+    color: var(--aje-ink);
+}
+
+/* ── Colonnes ──────────────────────────────────────────────────────────── */
+
+.aj-hotel-editor .aje-layout {
+    display: flex;
+    gap: clamp(14px, 2vw, 22px);
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.aj-hotel-editor .aje-steps {
+    flex: 1 1 230px;
+    max-width: 272px;
+    background: var(--aje-surface);
+    border: 1px solid var(--aje-line);
+    border-radius: 16px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    box-sizing: border-box;
+    position: sticky;
+    top: 82px;
+}
+
+.aj-hotel-editor .aje-panels {
+    flex: 3 1 520px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(14px, 2vw, 20px);
+}
+
+/* ── Navigation par étapes ─────────────────────────────────────────────── */
+
+.aj-hotel-editor .aje-step {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 12px 13px;
+    border-radius: 11px;
+    color: #2e4c66;
+    font-size: 14px;
+    text-decoration: none;
+    min-height: 46px;
+    box-sizing: border-box;
+}
+
+.aj-hotel-editor .aje-step:hover {
+    background: #f1f6fb;
+    color: var(--aje-ink);
+}
+
+.aj-hotel-editor .aje-step.active {
+    background: var(--aje-brand);
+    color: #fff;
+    font-weight: 600;
+}
+
+.aj-hotel-editor .aje-step-num {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+    background: #f1f6fb;
+    color: var(--aje-body);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+.aj-hotel-editor .aje-step.active .aje-step-num {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+.aj-hotel-editor .aje-step-label {
+    min-width: 0;
+    flex: 1;
+}
+
+/* Pastille d'état : renseignée, ou étape encore à construire. */
+.aj-hotel-editor .aje-step-state {
+    flex: none;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.aj-hotel-editor .aje-step-state.-done {
+    color: var(--aje-ok);
+}
+
+.aj-hotel-editor .aje-step.active .aje-step-state.-done {
+    color: #a6e5c4;
+}
+
+.aj-hotel-editor .aje-step-state.-pending {
+    color: var(--aje-meta);
+    font-weight: 500;
+}
+
+.aj-hotel-editor .aje-step.active .aje-step-state.-pending {
+    color: #c6dcf0;
+}
+
+/* ── Avancement ────────────────────────────────────────────────────────── */
+
+.aj-hotel-editor .aje-progress {
+    margin: 8px 3px 3px;
+    padding: 13px;
+    background: var(--aje-canvas);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.aj-hotel-editor .aje-progress-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 12.5px;
+    color: #2e4c66;
+}
+
+.aj-hotel-editor .aje-progress-top b {
+    font-weight: 600;
+    color: var(--aje-ink);
+}
+
+.aj-hotel-editor .aje-progress-bar {
+    height: 7px;
+    border-radius: 999px;
+    background: #e2ecf5;
+    overflow: hidden;
+}
+
+.aj-hotel-editor .aje-progress-bar span {
+    display: block;
+    height: 100%;
+    background: var(--aje-brand);
+}
+
+.aj-hotel-editor .aje-progress-note {
+    font-size: 12px;
+    color: var(--aje-body);
+    line-height: 1.5;
+}
+
+/* ── Panneaux ──────────────────────────────────────────────────────────── */
+
+.aj-hotel-editor .aje-panel {
+    background: var(--aje-surface);
+    border: 1px solid var(--aje-line);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.aj-hotel-editor .aje-panel-head {
+    padding: clamp(16px, 2vw, 22px) clamp(16px, 2.2vw, 26px);
+    border-bottom: 1px solid var(--aje-line-soft);
+}
+
+.aj-hotel-editor .aje-panel-head h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--aje-ink);
+}
+
+.aj-hotel-editor .aje-panel-head p {
+    margin: 6px 0 0;
+    font-size: 13.5px;
+    color: var(--aje-body);
+    line-height: 1.55;
+    max-width: 70ch;
+}
+
+.aj-hotel-editor .aje-panel-body {
+    padding: clamp(16px, 2.2vw, 26px);
+}
+
+/* ── Champs ────────────────────────────────────────────────────────────── */
+
+.aj-hotel-editor .aje-panel-body .form-label,
+.aj-hotel-editor .aje-label {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #2e4c66;
+}
+
+.aj-hotel-editor .aje-req {
+    color: var(--aje-warn);
+}
+
+.aj-hotel-editor .aje-panel-body .form-control,
+.aj-hotel-editor .aje-panel-body .form-select {
+    border: 1px solid var(--aje-field);
+    border-radius: 10px;
+    padding: 12px 13px;
+    font-size: 14.5px;
+    font-weight: 400;
+    color: var(--aje-ink);
+    background-color: var(--aje-surface);
+    min-height: 46px;
+    box-shadow: none;
+}
+
+.aj-hotel-editor .aje-panel-body .form-control:focus,
+.aj-hotel-editor .aje-panel-body .form-select:focus {
+    border-color: var(--aje-brand);
+    box-shadow: 0 0 0 3px rgba(20, 78, 140, 0.16);
+}
+
+.aj-hotel-editor .aje-panel-body textarea.form-control {
+    min-height: 150px;
+    line-height: 1.6;
+    resize: vertical;
+}
+
+.aj-hotel-editor .aje-panel-body .form-control::placeholder {
+    color: #7f9ab3;
+}
+
+.aj-hotel-editor .aje-help {
+    display: block;
+    margin-top: 7px;
+    font-size: 12.5px;
+    color: var(--aje-body);
+    line-height: 1.5;
+}
+
+.aj-hotel-editor .aje-mono {
+    font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
+    font-size: 13.5px;
+}
+
+/* Champ avec unité accolée (« 185 DH »). */
+.aj-hotel-editor .aje-suffix {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.aj-hotel-editor .aje-suffix .form-control {
+    padding-right: 52px;
+}
+
+.aj-hotel-editor .aje-suffix span {
+    position: absolute;
+    right: 13px;
+    font-size: 13px;
+    color: var(--aje-body);
+    pointer-events: none;
+}
+
+/* Grille de champs : une colonne dès que la place manque. */
+.aj-hotel-editor .aje-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    gap: 18px;
+}
+
+.aj-hotel-editor .aje-grid.-narrow {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+    align-items: start;
+}
+
+.aj-hotel-editor .aje-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.aj-hotel-editor .aje-rule {
+    height: 1px;
+    background: var(--aje-line-soft);
+    border: 0;
+    margin: 0;
+    opacity: 1;
+}
+
+/* Case à cocher présentée comme un champ, cible tactile de 46 px. */
+.aj-hotel-editor .aje-checkfield {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-height: 46px;
+    padding: 0 13px;
+    border: 1px solid var(--aje-field);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--aje-ink);
+    margin: 0;
+}
+
+.aj-hotel-editor .aje-checkfield input {
+    width: 18px;
+    height: 18px;
+    min-height: 0;
+    margin: 0;
+    flex: none;
+    accent-color: var(--aje-brand);
+}
+
+/* Bloc secondaire (coordonnées GPS). */
+.aj-hotel-editor .aje-subcard {
+    background: var(--aje-canvas);
+    border: 1px solid #e2ecf5;
+    border-radius: 13px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.aj-hotel-editor .aje-subcard-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--aje-ink);
+}
+
+.aj-hotel-editor .aje-subcard .form-control {
+    background-color: var(--aje-surface);
+}
+
+/* ── Image à la une ────────────────────────────────────────────────────── */
+
+.aj-hotel-editor .aje-media {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+.aj-hotel-editor .aje-media-current {
+    flex: none;
+    width: 168px;
+    aspect-ratio: 16 / 10;
+    max-width: 100%;
+    border-radius: 12px;
+    border: 1px solid var(--aje-line);
+    overflow: hidden;
+    background: repeating-linear-gradient(135deg, #cfe0ee 0 11px, #e2ecf5 11px 22px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.aj-hotel-editor .aje-media-current img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.aj-hotel-editor .aje-media-tag {
+    font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    color: #2e4c66;
+    background: rgba(255, 255, 255, 0.88);
+    border-radius: 7px;
+    padding: 5px 9px;
+    text-align: center;
+}
+
+.aj-hotel-editor .aje-dropzone {
+    flex: 1 1 240px;
+    min-width: 0;
+    border: 1.5px dashed #b9cfe6;
+    border-radius: 12px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+    background: var(--aje-canvas);
+}
+
+.aj-hotel-editor .aje-dropzone-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--aje-ink);
+}
+
+.aj-hotel-editor .aje-dropzone-note {
+    font-size: 13px;
+    color: var(--aje-body);
+    line-height: 1.55;
+}
+
+.aj-hotel-editor .aje-dropzone .form-control {
+    width: 100%;
+}
+
+/* ── Barre d'actions ───────────────────────────────────────────────────── */
+
+.aj-hotel-editor .aje-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: var(--aje-surface);
+    border-top: 1px solid var(--aje-line-soft);
+    padding: 14px clamp(16px, 2.2vw, 26px);
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    flex-wrap: wrap;
+}
+
+.aj-hotel-editor .aje-actions .aje-btn.-quiet {
+    margin-left: auto;
+}
+
+/* ── État vide d'une étape non encore construite ───────────────────────── */
+
+.aj-hotel-editor .aje-todo {
+    border: 1px dashed #b9cfe6;
+    border-radius: 13px;
+    padding: 20px;
+    background: var(--aje-canvas);
+}
+
+.aj-hotel-editor .aje-todo h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--aje-ink);
+}
+
+.aj-hotel-editor .aje-todo p {
+    margin: 7px 0 0;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--aje-body);
+}
+
+/* ── Reflux ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 860px) {
+    .aj-hotel-editor .aje-steps {
+        position: static;
+        max-width: none;
+        flex-basis: 100%;
+    }
+}

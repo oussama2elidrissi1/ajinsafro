@@ -103,13 +103,14 @@
 
 .aj-groupdeals-fusion .ajgd-btn--orange {
     background: var(--aj-orange);
-    color: var(--aj-white);
-    box-shadow: 0 10px 24px rgba(247, 148, 29, .30);
+    color: #2a1400;
+    box-shadow: none;
 }
 
 .aj-groupdeals-fusion .ajgd-btn--orange:hover {
     background: var(--aj-orange-dark);
-    box-shadow: 0 14px 30px rgba(247, 148, 29, .38);
+    color: #2a1400;
+    box-shadow: none;
 }
 
 .aj-groupdeals-fusion .ajgd-btn--ghost {
@@ -376,7 +377,7 @@
 
 .aj-groupdeals-fusion .ajgd-search-btn {
     border: 0;
-    background: linear-gradient(135deg, var(--aj-orange), var(--aj-orange-dark));
+    background: var(--aj-blue);
     color: var(--aj-white);
     padding: 0 30px;
     min-height: 80px;

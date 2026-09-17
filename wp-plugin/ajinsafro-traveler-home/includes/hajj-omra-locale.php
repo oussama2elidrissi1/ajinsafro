@@ -8,6 +8,7 @@ function ajth_ho_locale() {
 
 function ajth_ho_translations() {
     return array(
+        'dès' => 'ابتداءً من',
         'Places limitées' => 'مقاعد محدودة',
         'Offre expirée' => 'عرض منتهي',
         // Catalogue public (maquette 2026).
@@ -99,6 +100,11 @@ function ajth_ho_translations() {
         'Reinitialiser les filtres' => 'إعادة ضبط التصفية', 'Duree' => 'المدة', 'Depart' => 'المغادرة', 'Prix a partir de' => 'السعر ابتداءً من',
         'Voir details' => 'عرض التفاصيل', 'Demander reservation' => 'طلب حجز', 'Offre' => 'العرض'
     );
+}
+
+/** Un texte en ecriture arabe est isole dans un bloc dir=rtl, jamais melange au francais. */
+function ajth_ho_is_arabic($text) {
+    return (bool) preg_match('/[\x{0600}-\x{06FF}]/u', (string) $text);
 }
 
 function ajth_ho_t($text) {

@@ -472,7 +472,7 @@ $filter_link   = static function ( array $args ) use ( $page_url, $base_filters 
 									?>
 									<article class="ajho-card <?php echo $is_full ? 'is-sold-out' : ''; ?>">
 										<a class="ajho-card__media" href="<?php echo esc_url( $detail_url ); ?>" tabindex="-1" aria-hidden="true">
-											<img src="<?php echo esc_url( $image_url ); ?>" alt="" loading="lazy" onerror="this.onerror=null;this.src='<?php echo esc_url( $fallback_image ); ?>';">
+											<img src="<?php echo esc_url( $image_url ); ?>" alt="" loading="lazy" onerror="this.onerror=null;this.closest('.ajho-card__media').classList.add('is-empty');">
 											<span class="ajho-card__badges">
 												<span class="ajho-chip ajho-chip--type"><?php echo esc_html( $package['type_label'] ?? ajth_ho_t( 'Offre' ) ); ?></span>
 												<span class="ajho-chip <?php echo esc_attr( $badge['class'] ); ?>"><?php echo esc_html( $badge['label'] ); ?></span>
@@ -480,8 +480,9 @@ $filter_link   = static function ( array $args ) use ( $page_url, $base_filters 
 										</a>
 
 										<div class="ajho-card__body">
-											<h3><a href="<?php echo esc_url( $detail_url ); ?>" dir="auto"><?php echo esc_html( $package['title'] ?? '' ); ?></a></h3>
-											<p dir="auto"><?php echo esc_html( $package['short_description'] ?? '' ); ?></p>
+											<?php $title_ar = ajth_ho_is_arabic( $package['title'] ?? '' ); $desc_ar = ajth_ho_is_arabic( $package['short_description'] ?? '' ); ?>
+											<h3><a href="<?php echo esc_url( $detail_url ); ?>"<?php echo $title_ar ? ' class="ajho-ar" dir="rtl" lang="ar"' : ''; ?>><?php echo esc_html( $package['title'] ?? '' ); ?></a></h3>
+											<p<?php echo $desc_ar ? ' class="ajho-ar" dir="rtl" lang="ar"' : ''; ?>><?php echo esc_html( $package['short_description'] ?? '' ); ?></p>
 
 											<div class="ajho-card__facts">
 												<div>
@@ -501,11 +502,11 @@ $filter_link   = static function ( array $args ) use ( $page_url, $base_filters 
 											<dl class="ajho-card__hotels">
 												<div>
 													<dt><?php echo esc_html( ajth_ho_t( 'Makkah' ) ); ?></dt>
-													<dd dir="auto"><?php echo esc_html( $package['makkah_hotel'] ?? ajth_ho_t( 'À confirmer' ) ); ?></dd>
+													<dd<?php echo ajth_ho_is_arabic( $package['makkah_hotel'] ?? '' ) ? ' class="ajho-ar" dir="rtl" lang="ar"' : ''; ?>><?php echo esc_html( $package['makkah_hotel'] ?? ajth_ho_t( 'À confirmer' ) ); ?></dd>
 												</div>
 												<div>
 													<dt><?php echo esc_html( ajth_ho_t( 'Madinah' ) ); ?></dt>
-													<dd dir="auto"><?php echo esc_html( $package['madinah_hotel'] ?? ajth_ho_t( 'À confirmer' ) ); ?></dd>
+													<dd<?php echo ajth_ho_is_arabic( $package['madinah_hotel'] ?? '' ) ? ' class="ajho-ar" dir="rtl" lang="ar"' : ''; ?>><?php echo esc_html( $package['madinah_hotel'] ?? ajth_ho_t( 'À confirmer' ) ); ?></dd>
 												</div>
 											</dl>
 
@@ -523,7 +524,7 @@ $filter_link   = static function ( array $args ) use ( $page_url, $base_filters 
 
 											<div class="ajho-card__footer">
 												<div class="ajho-card__price">
-													<small><?php echo esc_html( ajth_ho_t( 'À partir de' ) ); ?></small>
+													<small><?php echo esc_html( ajth_ho_t( 'dès' ) ); ?></small>
 													<strong><?php echo esc_html( $format_price( $package['price_from'] ?? null, $package['currency'] ?? 'DH' ) ); ?></strong>
 												</div>
 												<div class="ajho-card__actions">

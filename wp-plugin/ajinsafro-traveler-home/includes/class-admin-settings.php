@@ -72,14 +72,14 @@ class AJTH_Admin_Settings {
             'ajth-admin-css',
             AJTH_URL . 'assets/css/admin.css',
             array(),
-            AJTH_VERSION
+            ajth_asset_ver( 'assets/css/admin.css' )
         );
 
         wp_enqueue_script(
             'ajth-admin-js',
             AJTH_URL . 'assets/js/admin.js',
             array( 'jquery' ),
-            AJTH_VERSION,
+            ajth_asset_ver( 'assets/js/admin.js' ),
             true
         );
     }

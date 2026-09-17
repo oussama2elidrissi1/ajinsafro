@@ -170,7 +170,7 @@
 
 .aj-field input,
 .aj-field select,
-.aj-filter-group input,
+.aj-filter-group input:not([type="checkbox"]):not([type="radio"]),
 .aj-filter-group select {
     width: 100%;
     min-height: 52px;
@@ -1909,32 +1909,41 @@ body.aj-mobile-filters-open { overflow: hidden; }
    Body-class overrides — win against any theme/plugin CSS
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* Aplat navy : le degrade et ses halos brouillaient le contraste du bandeau. */
 .page-hebergement-ajinsafro .aj-hero {
-    background: linear-gradient(135deg, #073B70 0%, #0D5EA8 55%, #1783D3 100%) !important;
+    background: var(--brand-dark, #0d3767) !important;
 }
 
 .page-hebergement-ajinsafro .aj-search-button {
-    background: linear-gradient(135deg, #F7941D, #E67E00) !important;
+    background: var(--brand, #144e8c) !important;
     color: #fff !important;
 }
 
+/* Action principale : blanc sur orange plafonnait a 2,6:1. */
 .page-hebergement-ajinsafro .aj-card-primary,
-.page-hebergement-ajinsafro .aj-result-btn,
-.page-hebergement-ajinsafro .aj-featured-link {
-    background: linear-gradient(135deg, #F7941D, #E67E00) !important;
+.page-hebergement-ajinsafro .aj-result-btn {
+    background: var(--brand, #144e8c) !important;
     color: #fff !important;
+}
+
+.page-hebergement-ajinsafro .aj-featured-link {
+    background: #fff !important;
+    color: var(--brand, #144e8c) !important;
 }
 
 .page-hebergement-ajinsafro .aj-card-primary:hover,
-.page-hebergement-ajinsafro .aj-result-btn:hover,
+.page-hebergement-ajinsafro .aj-result-btn:hover {
+    background: var(--brand-dark, #0d3767) !important;
+}
+
 .page-hebergement-ajinsafro .aj-featured-link:hover {
-    background: linear-gradient(135deg, #E67E00, #cf7304) !important;
+    background: var(--line-soft, #eef3f9) !important;
 }
 
 .page-hebergement-ajinsafro .aj-card-secondary {
-    background: #EAF4FF !important;
-    color: #073B70 !important;
-    border-color: rgba(13, 94, 168, 0.2) !important;
+    background: #fff !important;
+    color: var(--brand, #144e8c) !important;
+    border-color: var(--brand, #144e8c) !important;
 }
 
 .page-hebergement-ajinsafro .aj-card-secondary:hover {
@@ -1943,22 +1952,30 @@ body.aj-mobile-filters-open { overflow: hidden; }
 }
 
 .page-hebergement-ajinsafro .aj-badge {
-    background: #F7941D !important;
+    background: rgba(9, 30, 52, 0.72) !important;
     color: #fff !important;
 }
 
 .page-hebergement-ajinsafro .aj-category-badge {
-    background: rgba(13, 94, 168, 0.94) !important;
+    background: rgba(9, 30, 52, 0.72) !important;
     color: #fff !important;
 }
 
 .page-hebergement-ajinsafro .aj-status-badge {
-    background: #EAF8F1 !important;
-    color: #128553 !important;
+    background: var(--ok, #0f7a44) !important;
+    color: #fff !important;
+}
+
+.page-hebergement-ajinsafro .aj-status-badge--limited {
+    background: var(--warn, #a8401f) !important;
+}
+
+.page-hebergement-ajinsafro .aj-status-badge--unavailable {
+    background: var(--neutral, #3d5a75) !important;
 }
 
 .page-hebergement-ajinsafro .aj-result-price strong {
-    color: #073B70 !important;
+    color: var(--ink, #0d2137) !important;
     font-weight: 900 !important;
 }
 
@@ -1972,14 +1989,14 @@ body.aj-mobile-filters-open { overflow: hidden; }
 }
 
 .page-hebergement-ajinsafro .aj-view-btn.is-active {
-    background: linear-gradient(135deg, #F7941D, #E67E00) !important;
+    background: var(--brand, #144e8c) !important;
     color: #fff !important;
     border-color: transparent !important;
 }
 
 .page-hebergement-ajinsafro .aj-result-card:hover,
 .page-hebergement-ajinsafro .aj-featured-card:hover {
-    border-color: rgba(247, 148, 29, 0.3) !important;
+    border-color: #b9cfe6 !important;
 }
 
 .page-hebergement-ajinsafro .aj-hero-search {
@@ -1991,20 +2008,20 @@ body.aj-mobile-filters-open { overflow: hidden; }
 }
 
 .page-hebergement-ajinsafro .aj-section-head h2 {
-    color: #073B70 !important;
+    color: #0d2137 !important;
 }
 
 .page-hebergement-ajinsafro .aj-mobile-filter-trigger,
 .page-hebergement-ajinsafro #ajhb-apply-mobile-filters,
 .page-hebergement-ajinsafro .aj-empty-state button {
-    background: linear-gradient(135deg, #F7941D, #E67E00) !important;
+    background: var(--brand, #144e8c) !important;
     color: #fff !important;
 }
 
 .page-hebergement-ajinsafro #ajhb-reset-mobile-filters {
-    background: #EAF4FF !important;
-    color: #073B70 !important;
-    border: 1.5px solid rgba(13, 94, 168, 0.2) !important;
+    background: #fff !important;
+    color: var(--brand, #144e8c) !important;
+    border: 1.5px solid var(--brand, #144e8c) !important;
 }
 
 .aj-pack-page-shell {

@@ -187,7 +187,7 @@
     fillSelect(els.filterCountry, countries, 'Tous les pays');
     fillSelect(els.mobileCountry, countries, 'Tous les pays');
 
-    fillSelect(els.heroCategory, categories, 'Toutes les categories');
+    fillSelect(els.heroCategory, categories, 'Toutes les catégories');
     renderCategoryCheckboxes(els.filterCategories, 'aj-filter-cat');
     renderCategoryCheckboxes(els.mobileCategories, 'aj-mobile-cat');
 
@@ -601,7 +601,7 @@
             <strong>${activity.rating.toFixed(1)}</strong>
             <span>${escapeHtml(activity.reviews.toLocaleString('fr-FR'))} avis</span>
           </div>
-          <a class="aj-featured-link" href="${escapeHtml(activity.url)}">Voir l activite</a>
+          <a class="aj-featured-link" href="${escapeHtml(activity.url)}">Voir l\u2019activit\u00e9</a>
         </div>
       </article>
     `;
@@ -611,7 +611,7 @@
     return `
       <article class="aj-activity-card">
         <a class="aj-card-media aj-activity-visual-link" href="${escapeHtml(activity.url)}">
-          <img src="${escapeHtml(activity.image)}" alt="${escapeHtml(activity.title)}" loading="lazy">
+          <img src="${escapeHtml(activity.image)}" alt="" loading="lazy" onerror="this.onerror=null;this.insertAdjacentHTML('afterend', '<div class=&quot;aj-media-empty&quot;><span>VISUEL \u00c0 VENIR</span></div>');this.remove();">
           <div class="aj-card-badges">
             <span class="aj-category-badge">${escapeHtml(activity.category)}</span>
             <span class="aj-status-badge">${escapeHtml(activity.availability)}</span>
@@ -625,16 +625,15 @@
           </div>
           <h3><a class="aj-featured-title-link" href="${escapeHtml(activity.url)}">${escapeHtml(activity.title)}</a></h3>
           <div class="aj-card-facts">
-            ${activity.includes.slice(0, 4).map((item) => `<span class="aj-card-fact">${escapeHtml(item)}</span>`).join('')}
+            ${activity.includes.slice(0, 2).map((item) => `<span class="aj-card-fact">${escapeHtml(item)}</span>`).join('')}
           </div>
           <div class="aj-card-footer">
             <div class="aj-card-price">
-              <small>A partir de</small>
+              <small>d\u00e8s</small>
               <strong>${escapeHtml(formatPrice(activity.price))}</strong>
             </div>
             <div class="aj-card-actions">
-              <a class="aj-card-primary" href="${escapeHtml(activity.url)}">Voir l activite</a>
-              <a class="aj-card-secondary" href="${escapeHtml(activity.bookingUrl)}">Reserver</a>
+              <a class="aj-card-primary" href="${escapeHtml(activity.url)}">R\u00e9server</a>
             </div>
           </div>
         </div>
@@ -654,8 +653,8 @@
     if (state.maxPrice) chips.push(`Max ${state.maxPrice} DH`);
     if (state.duration) chips.push(durationLabel(state.duration));
     if (state.promoOnly) chips.push('Promotions');
-    if (state.availableToday) chips.push('Disponible aujourd hui');
-    if (state.instantBooking) chips.push('Reservation instantanee');
+    if (state.availableToday) chips.push('Disponible aujourd’hui');
+    if (state.instantBooking) chips.push('Réservation instantanée');
     if (state.withGuide) chips.push('Avec guide');
     if (state.transportIncluded) chips.push('Transport inclus');
 

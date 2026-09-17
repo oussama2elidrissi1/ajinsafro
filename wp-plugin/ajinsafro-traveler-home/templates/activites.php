@@ -83,7 +83,7 @@ if ( $offer ) {
 					<nav class="aj-activities-breadcrumb" aria-label="Fil d Ariane">
 						<a href="<?php echo esc_url( home_url( '/' ) ); ?>">Accueil</a>
 						<span>/</span>
-						<a href="<?php echo esc_url( $page_url ); ?>">Activites</a>
+						<a href="<?php echo esc_url( $page_url ); ?>">Activités</a>
 						<span>/</span>
 						<span><?php echo esc_html( $title ); ?></span>
 					</nav>
@@ -252,14 +252,14 @@ if ( $offer ) {
 					<nav class="aj-activities-breadcrumb" aria-label="Fil d Ariane">
 						<a href="<?php echo esc_url( home_url( '/' ) ); ?>">Accueil</a>
 						<span>/</span>
-						<span>Activites</span>
+						<span>Activités</span>
 					</nav>
 
 					<section class="aj-hero">
 						<div class="aj-hero-copy">
-							<span class="aj-eyebrow">Marketplace d experiences Ajinsafro</span>
-							<h1>Activites et experiences dans le monde</h1>
-							<p>Decouvrez les meilleures activites selectionnees par Ajinsafro au Maroc et a l international.</p>
+							<span class="aj-eyebrow">Marketplace d’expériences Ajinsafro</span>
+							<h1>Activités et expériences dans le monde</h1>
+							<p>Découvrez les meilleures activités sélectionnées par Ajinsafro au Maroc et à l’international.</p>
 						</div>
 
 						<form class="aj-hero-search" id="aj-activity-search-form">
@@ -283,9 +283,9 @@ if ( $offer ) {
 							</label>
 
 							<label class="aj-field">
-								<span>Categorie</span>
+								<span>Catégorie</span>
 								<select id="aj-hero-category" name="category">
-									<option value="">Toutes les categories</option>
+									<option value="">Toutes les catégories</option>
 								</select>
 							</label>
 
@@ -307,10 +307,10 @@ if ( $offer ) {
 					<section class="aj-featured" aria-labelledby="aj-featured-title">
 						<div class="aj-section-head">
 							<div>
-								<span class="aj-section-kicker">Selection Ajinsafro</span>
-								<h2 id="aj-featured-title">Activites a la une</h2>
+								<span class="aj-section-kicker">Sélection Ajinsafro</span>
+								<h2 id="aj-featured-title">Activités à la une</h2>
 							</div>
-							<p>Des experiences premium mises en avant pour inspirer le prochain depart.</p>
+							<p>Des expériences premium mises en avant pour inspirer le prochain départ.</p>
 						</div>
 						<div class="aj-featured-grid" id="aj-featured-grid"></div>
 					</section>
@@ -319,31 +319,31 @@ if ( $offer ) {
 						<div class="aj-section-head aj-section-head--catalog">
 							<div>
 								<span class="aj-section-kicker">Catalogue mondial</span>
-								<h2 id="aj-catalog-title">Toutes les activites</h2>
+								<h2 id="aj-catalog-title">Toutes les activités</h2>
 							</div>
 							<div class="aj-results-meta">
-								<strong><span id="aj-results-count">0</span> activites</strong>
-								<select id="aj-sort-select" class="aj-sort-select" aria-label="Trier les activites">
-									<option value="featured">A la une</option>
+								<strong><span id="aj-results-count">0</span> activités</strong>
+								<select id="aj-sort-select" class="aj-sort-select" aria-label="Trier les activités">
+									<option value="featured">À la une</option>
 									<option value="price-asc">Prix croissant</option>
-									<option value="price-desc">Prix decroissant</option>
+									<option value="price-desc">Prix décroissant</option>
 									<option value="rating-desc">Meilleure note</option>
-									<option value="duration-asc">Duree la plus courte</option>
+									<option value="duration-asc">Durée la plus courte</option>
 								</select>
 							</div>
 						</div>
 
 						<div class="aj-catalog-layout">
-							<aside class="aj-filters" aria-label="Filtres activites">
+							<aside class="aj-filters" aria-label="Filtres activités">
 								<div class="aj-filter-card">
 									<div class="aj-filter-head">
 										<h3>Filtrer</h3>
-										<button id="aj-reset-filters" type="button">Reinitialiser</button>
+										<button id="aj-reset-filters" type="button">Réinitialiser</button>
 									</div>
 
 									<div class="aj-filter-group">
 										<label class="aj-filter-label" for="aj-filter-name">Rechercher par nom</label>
-										<input id="aj-filter-name" type="text" placeholder="ex: quad, desert, Fes...">
+										<input id="aj-filter-name" type="text" placeholder="ex : quad, désert, Fès…">
 									</div>
 
 									<div class="aj-filter-group">
@@ -361,7 +361,7 @@ if ( $offer ) {
 									</div>
 
 									<div class="aj-filter-group">
-										<span class="aj-filter-label">Categorie</span>
+										<span class="aj-filter-label">Catégorie</span>
 										<div id="aj-filter-categories"></div>
 									</div>
 
@@ -377,9 +377,9 @@ if ( $offer ) {
 									</div>
 
 									<div class="aj-filter-group">
-										<label class="aj-filter-label" for="aj-filter-duration">Duree</label>
+										<label class="aj-filter-label" for="aj-filter-duration">Durée</label>
 										<select id="aj-filter-duration">
-											<option value="">Toutes les durees</option>
+											<option value="">Toutes les durées</option>
 											<option value="lt2">Moins de 2h</option>
 											<option value="half">Demi-journee</option>
 											<option value="full">Journee complete</option>
@@ -390,8 +390,8 @@ if ( $offer ) {
 									<div class="aj-filter-group">
 										<span class="aj-filter-label">Options</span>
 										<label class="aj-check"><input id="aj-filter-promo" type="checkbox"> Promotions uniquement</label>
-										<label class="aj-check"><input id="aj-filter-available-today" type="checkbox"> Disponible aujourd hui</label>
-										<label class="aj-check"><input id="aj-filter-instant-booking" type="checkbox"> Reservation instantanee</label>
+										<label class="aj-check"><input id="aj-filter-available-today" type="checkbox"> Disponible aujourd’hui</label>
+										<label class="aj-check"><input id="aj-filter-instant-booking" type="checkbox"> Réservation instantanée</label>
 										<label class="aj-check"><input id="aj-filter-with-guide" type="checkbox"> Avec guide</label>
 										<label class="aj-check"><input id="aj-filter-transport" type="checkbox"> Transport inclus</label>
 									</div>
@@ -402,9 +402,9 @@ if ( $offer ) {
 								<div class="aj-active-filters" id="aj-active-filters"></div>
 								<div class="aj-activities-grid" id="aj-activities-grid"></div>
 								<div class="aj-empty-state" id="aj-empty-state" hidden>
-									<h3>Aucune activite ne correspond a votre recherche</h3>
-									<p>Essayez un autre pays, une autre ville ou elargissez votre budget.</p>
-									<button id="aj-empty-reset" type="button">Voir toutes les activites</button>
+									<h3>Aucune activité ne correspond à votre recherche</h3>
+									<p>Essayez un autre pays, une autre ville ou élargissez votre budget.</p>
+									<button id="aj-empty-reset" type="button">Voir toutes les activités</button>
 								</div>
 							</div>
 						</div>
@@ -417,14 +417,14 @@ if ( $offer ) {
 			<div class="aj-mobile-backdrop" id="aj-mobile-backdrop"></div>
 			<aside class="aj-mobile-panel" id="aj-mobile-panel" aria-label="Filtres mobile">
 				<div class="aj-mobile-panel-head">
-					<h3>Filtres des activites</h3>
+					<h3>Filtres des activités</h3>
 					<button id="aj-close-mobile-filters" type="button" aria-label="Fermer">x</button>
 				</div>
 
 				<div class="aj-mobile-panel-body">
 					<div class="aj-filter-group">
 						<label class="aj-filter-label" for="aj-mobile-name">Rechercher par nom</label>
-						<input id="aj-mobile-name" type="text" placeholder="ex: quad, desert, Fes...">
+						<input id="aj-mobile-name" type="text" placeholder="ex : quad, désert, Fès…">
 					</div>
 
 					<div class="aj-filter-group">
@@ -442,7 +442,7 @@ if ( $offer ) {
 					</div>
 
 					<div class="aj-filter-group">
-						<span class="aj-filter-label">Categorie</span>
+						<span class="aj-filter-label">Catégorie</span>
 						<div id="aj-mobile-categories"></div>
 					</div>
 
@@ -458,9 +458,9 @@ if ( $offer ) {
 					</div>
 
 					<div class="aj-filter-group">
-						<label class="aj-filter-label" for="aj-mobile-duration">Duree</label>
+						<label class="aj-filter-label" for="aj-mobile-duration">Durée</label>
 						<select id="aj-mobile-duration">
-							<option value="">Toutes les durees</option>
+							<option value="">Toutes les durées</option>
 							<option value="lt2">Moins de 2h</option>
 							<option value="half">Demi-journee</option>
 							<option value="full">Journee complete</option>
@@ -471,8 +471,8 @@ if ( $offer ) {
 					<div class="aj-filter-group">
 						<span class="aj-filter-label">Options</span>
 						<label class="aj-check"><input id="aj-mobile-promo" type="checkbox"> Promotions uniquement</label>
-						<label class="aj-check"><input id="aj-mobile-available-today" type="checkbox"> Disponible aujourd hui</label>
-						<label class="aj-check"><input id="aj-mobile-instant-booking" type="checkbox"> Reservation instantanee</label>
+						<label class="aj-check"><input id="aj-mobile-available-today" type="checkbox"> Disponible aujourd’hui</label>
+						<label class="aj-check"><input id="aj-mobile-instant-booking" type="checkbox"> Réservation instantanée</label>
 						<label class="aj-check"><input id="aj-mobile-with-guide" type="checkbox"> Avec guide</label>
 						<label class="aj-check"><input id="aj-mobile-transport" type="checkbox"> Transport inclus</label>
 					</div>
@@ -480,7 +480,7 @@ if ( $offer ) {
 
 				<div class="aj-mobile-panel-actions">
 					<button id="aj-apply-mobile-filters" type="button">Appliquer</button>
-					<button id="aj-reset-mobile-filters" type="button">Reinitialiser</button>
+					<button id="aj-reset-mobile-filters" type="button">Réinitialiser</button>
 				</div>
 			</aside>
 		</div>

@@ -1084,80 +1084,94 @@ body.aj-voyages-drawer-open { overflow: hidden; }
    Body-class overrides — win against any theme/plugin CSS
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* Le bandeau devient une carte navy posee sur le fond : l'aplat est porte par
+   .hero .container, le conteneur exterieur ne peint plus rien. */
 .page-voyages-ajinsafro .aj-voyages-booking .hero {
-    background: linear-gradient(135deg, #073B70 0%, #0D5EA8 55%, #1783D3 100%) !important;
+    background: none !important;
 }
 
+/* Action principale : blanc sur orange plafonnait a 2,6:1, on passe au bleu de
+   marque (8,3:1). L'orange reste la couleur des promotions et des badges. */
 .page-voyages-ajinsafro .aj-voyages-booking .search-btn {
-    background: linear-gradient(135deg, #F7941D, #E67E00) !important;
+    background: var(--brand, #144e8c) !important;
     color: #fff !important;
 }
 
 .page-voyages-ajinsafro .aj-voyages-booking .primary-btn {
-    background: linear-gradient(135deg, #F7941D, #E67E00) !important;
+    background: var(--brand, #144e8c) !important;
     color: #fff !important;
 }
 
 .page-voyages-ajinsafro .aj-voyages-booking .primary-btn:hover {
-    background: linear-gradient(135deg, #E67E00, #cf7304) !important;
+    background: var(--brand-dark, #0d3767) !important;
 }
 
+/* Deux badges au maximum, un par coin, lisibles sur n'importe quelle photo. */
 .page-voyages-ajinsafro .aj-voyages-booking .photo-badge {
-    background: rgba(247, 148, 29, 0.94) !important;
+    background: rgba(9, 30, 52, 0.72) !important;
     color: #fff !important;
 }
 
 .page-voyages-ajinsafro .aj-voyages-booking .photo-badge--type {
-    background: rgba(13, 94, 168, 0.94) !important;
+    background: rgba(9, 30, 52, 0.72) !important;
 }
 
 .page-voyages-ajinsafro .aj-voyages-booking .photo-badge--stock {
-    background: rgba(32, 168, 107, 0.94) !important;
+    background: var(--ok, #0f7a44) !important;
+}
+
+.page-voyages-ajinsafro .aj-voyages-booking .photo-badge--stock.is-warn {
+    background: var(--warn, #a8401f) !important;
+}
+
+.page-voyages-ajinsafro .aj-voyages-booking .photo-badge--stock.is-full {
+    background: var(--neutral, #3d5a75) !important;
 }
 
 .page-voyages-ajinsafro .aj-voyages-booking .photo-badge--promo {
-    background: rgba(247, 148, 29, 0.96) !important;
+    background: var(--accent, #f5821f) !important;
+    color: var(--accent-ink, #2a1400) !important;
 }
 
 .page-voyages-ajinsafro .aj-voyages-booking .price {
-    color: #073B70 !important;
-    font-weight: 900 !important;
-    font-size: 1.55rem !important;
+    color: var(--ink, #0d2137) !important;
+    font-weight: 600 !important;
+    font-size: 19px !important;
 }
 
 .page-voyages-ajinsafro .aj-voyages-booking .hotel-card:hover {
-    border-color: rgba(247, 148, 29, 0.35) !important;
-    box-shadow: 0 16px 40px rgba(7, 59, 112, 0.12) !important;
+    border-color: #b9cfe6 !important;
+    box-shadow: none !important;
 }
 
 .page-voyages-ajinsafro .aj-voyages-booking .filter-title h2 {
-    color: #073B70 !important;
+    color: var(--ink, #0d2137) !important;
 }
 
 .page-voyages-ajinsafro .aj-voyages-booking .accordion summary {
-    color: #073B70 !important;
+    color: #2e4c66 !important;
 }
 
 .page-voyages-ajinsafro .aj-voyages-booking .deal-strip {
-    background: linear-gradient(135deg, #073B70, #0D5EA8) !important;
+    background: var(--brand, #144e8c) !important;
 }
 
 .page-voyages-ajinsafro .aj-voyages-booking .deal-strip__link {
-    background: linear-gradient(135deg, #F7941D, #E67E00) !important;
-    color: #fff !important;
+    background: #fff !important;
+    color: var(--brand, #144e8c) !important;
 }
 
 .page-voyages-ajinsafro .aj-voyages-booking .rating-score {
-    background: #20A86B !important;
+    background: var(--ok, #0f7a44) !important;
 }
 
 .page-voyages-ajinsafro .aj-voyages-booking .search-panel {
-    border-color: rgba(247, 148, 29, 0.45) !important;
+    border-color: transparent !important;
 }
 
 .page-voyages-ajinsafro .aj-voyages-booking .aj-voyages-pagination .current {
-    background: #F7941D !important;
-    border-color: #F7941D !important;
+    background: var(--brand, #144e8c) !important;
+    border-color: var(--brand, #144e8c) !important;
     color: #fff !important;
 }
 
@@ -1172,7 +1186,7 @@ body.aj-voyages-drawer-open { overflow: hidden; }
         width: calc(100% - 32px);
     }
     .aj-voyages-booking .hotel-list {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
     .aj-voyages-booking .search-panel {
         grid-template-columns: 1fr;

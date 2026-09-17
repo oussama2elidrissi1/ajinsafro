@@ -824,9 +824,6 @@ if ($current_pack) {
                                                         <div class="aj-pack-hero-fallback">Ajinsafro</div>
                                                     <?php } ?>
                                                     <span class="aj-badge">Pack</span>
-                                                    <?php if ($row_price !== null) { ?>
-                                                        <div class="aj-featured-price"><small>À partir de</small><?php echo esc_html(number_format($row_price, 0, ',', ' ') . ' DH'); ?></div>
-                                                    <?php } ?>
                                                 </a>
                                                 <div class="aj-featured-content">
                                                     <div class="aj-inline-meta">
@@ -835,7 +832,12 @@ if ($current_pack) {
                                                     </div>
                                                     <h3><a class="aj-featured-title-link" href="<?php echo esc_url($row_url); ?>"><?php echo esc_html($row_title); ?></a></h3>
                                                     <p style="margin:0;color:var(--aj-muted);font-size:13px;line-height:1.5;"><?php echo esc_html((string) ($pack_row['short_description'] ?? $pack_row['description'] ?? '')); ?></p>
-                                                    <a class="aj-featured-link" href="<?php echo esc_url($row_url); ?>">Voir le pack</a>
+                                                    <div class="aj-featured-footer" style="display:flex;justify-content:space-between;">
+                                                        <?php if ($row_price !== null) { ?>
+                                                            <div class="aj-featured-price"><small>dès</small> <?php echo esc_html(number_format($row_price, 0, ',', ' ') . ' DH'); ?></div>
+                                                        <?php } ?>
+                                                        <a class="aj-featured-link" href="<?php echo esc_url($row_url); ?>">Voir le pack</a>
+                                                    </div>
                                                 </div>
                                             </article>
                                         <?php } ?>
@@ -1050,9 +1052,12 @@ if ($current_pack) {
                                 <div class="aj-active-filters" id="ajhb-active-filters"></div>
                                 <div class="aj-hebergements-grid" id="ajhb-results-grid"></div>
                                 <div class="aj-empty-state" id="ajhb-empty-state" hidden>
-                                    <h3>Aucun hébergement trouvé pour ces critères.</h3>
-                                    <p>Essayez une autre destination, un autre type d'hébergement ou réinitialisez les filtres.</p>
-                                    <button id="ajhb-empty-reset" type="button">Réinitialiser les filtres</button>
+                                    <h3>Aucun hébergement ne correspond à ces filtres</h3>
+                                    <p>Élargissez la destination ou le budget, ou laissez-nous votre demande : un conseiller vous répond sous 24&nbsp;h.</p>
+                                    <div style="display:flex;gap:9px;flex-wrap:wrap;">
+                                        <button id="ajhb-empty-reset" type="button">Réinitialiser les filtres</button>
+                                        <a class="aj-card-secondary" href="<?php echo esc_url('https://wa.me/212660683464?text=' . rawurlencode('Bonjour Ajinsafro, je souhaite être rappelé au sujet d’un hébergement.')); ?>" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:9px;">Être rappelé</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>

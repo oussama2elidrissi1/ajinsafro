@@ -537,9 +537,12 @@
   }
 
   function renderFeaturedCard(item) {
+    // Pas d'alt visible ni d'icone de fichier casse : on bascule sur le substitut.
+    var mediaEmpty = '<div class="aj-media-empty"><span>VISUEL \u00c0 VENIR</span></div>';
     var image = item.image
-      ? '<img src="' + escapeHtml(item.image) + '" alt="' + escapeHtml(item.title) + '" loading="lazy">'
-      : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#d9e9ff,#f4f8ff);color:#67809a;font-size:13px;font-weight:600;">Ajinsafro</div>';
+      ? '<img src="' + escapeHtml(item.image) + '" alt="" loading="lazy" ' +
+        'onerror="this.onerror=null;this.insertAdjacentHTML(\'afterend\', \'<div class=&quot;aj-media-empty&quot;><span>VISUEL \u00c0 VENIR</span></div>\');this.remove();">'
+      : mediaEmpty;
 
     var priceHtml = item.price !== null
       ? '<div class="aj-featured-price"><small>A partir de</small>' + escapeHtml(formatPrice(item.price)) + '</div>'
@@ -707,7 +710,7 @@
       : '';
 
     var priceHtml = item.price !== null
-      ? '<div class="aj-result-price"><small>A partir de</small><div>' +
+      ? '<div class="aj-result-price"><small>d\u00e8s</small><div>' +
           (item.oldPrice ? '<span class="aj-old-price">' + escapeHtml(formatPrice(item.oldPrice)) + '</span>' : '') +
           '<strong>' + escapeHtml(formatPrice(item.price)) + '</strong>' +
         '</div></div>'
@@ -718,7 +721,7 @@
         '<div class="aj-result-media">' +
           image +
           '<div class="aj-card-badges">' +
-            '<span class="aj-category-badge">' + escapeHtml(item.typeLabel || item.category || 'Hebergement') + '</span>' +
+            '<span class="aj-category-badge">' + escapeHtml(item.typeLabel || item.category || 'H\u00e9bergement') + '</span>' +
             '<span class="aj-status-badge' + (item.available ? '' : ' aj-status-badge--unavailable') + '">' + escapeHtml(item.availabilityLabel) + '</span>' +
           '</div>' +
         '</div>' +
@@ -733,7 +736,7 @@
           factsHtml +
           '<div class="aj-result-footer">' +
             priceHtml +
-            '<a class="aj-result-btn" href="' + escapeHtml(item.url) + '">Voir l\'hebergement</a>' +
+            '<a class="aj-result-btn" href="' + escapeHtml(item.url) + '">Voir l\'h\u00e9bergement</a>' +
           '</div>' +
         '</div>' +
       '</article>';
@@ -751,11 +754,11 @@
     if (state.filterDestination) chips.push(state.filterDestination);
     if (state.filterType) chips.push(state.filterType);
     state.stars.forEach(function (star) {
-      chips.push(star + ' etoile' + (star === '1' ? '' : 's'));
+      chips.push(star + ' \u00e9toile' + (star === '1' ? '' : 's'));
     });
     if (state.minPrice) chips.push('Min ' + state.minPrice + ' ' + currency);
     if (state.maxPrice) chips.push('Max ' + state.maxPrice + ' ' + currency);
-    if (state.popularOnly) chips.push('Selection Ajinsafro');
+    if (state.popularOnly) chips.push('S\u00e9lection Ajinsafro');
     if (state.availableOnly) chips.push('Disponible');
     if (state.promoOnly) chips.push('Promotions');
     state.services.forEach(function (service) {
