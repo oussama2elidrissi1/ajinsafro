@@ -1,0 +1,628 @@
+/*
+ * Formule economique (admin) — /admin/products-services/economic-offers
+ * Compteurs, filtres, alerte fiches incompletes et tableau des offres.
+ *
+ * Les composants sont prefixes par `.aeo-page` : dans cette coque, une regle
+ * generique sur `a` suffirait sinon a repeindre les boutons.
+ */
+
+.aeo-page {
+    --aeo-ink: #0d2137;
+    --aeo-body: #41627f;
+    --aeo-meta: #8aa6bf;
+    --aeo-line: #dce7f2;
+    --aeo-line-soft: #eef3f9;
+    --aeo-field-line: #cfdcea;
+    --aeo-brand: #144e8c;
+    --aeo-brand-dark: #0d3767;
+    --aeo-ok: #0f7a44;
+    --aeo-todo: #a8401f;
+    --aeo-accent: #f5821f;
+
+    color: var(--aeo-ink);
+}
+
+.aeo-page input:focus,
+.aeo-page select:focus {
+    outline: none;
+    border-color: var(--aeo-brand);
+    box-shadow: 0 0 0 3px rgba(20, 78, 140, 0.16);
+}
+
+.aeo-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.aeo-alert {
+    margin-bottom: clamp(14px, 1.8vw, 18px);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    border: 1px solid;
+}
+
+.aeo-alert--ok {
+    background: #e4f5ec;
+    border-color: #bde3cf;
+    color: #146b45;
+}
+
+/* ── Compteurs ────────────────────────────────────────────────────────── */
+.aeo-stats {
+    background: #fff;
+    border: 1px solid var(--aeo-line);
+    border-radius: 14px;
+    padding: clamp(13px, 1.6vw, 18px);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+    gap: clamp(12px, 1.6vw, 20px);
+}
+
+.aeo-stat {
+    min-width: 0;
+    padding-left: 14px;
+    border-left: 3px solid var(--aeo-body);
+}
+
+.aeo-stat--results {
+    border-left-color: var(--aeo-brand);
+}
+
+.aeo-stat--published {
+    border-left-color: var(--aeo-ok);
+}
+
+.aeo-stat--drafts {
+    border-left-color: var(--aeo-meta);
+}
+
+.aeo-stat--featured {
+    border-left-color: var(--aeo-accent);
+}
+
+.aeo-stat__label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--aeo-body);
+}
+
+.aeo-stat__value {
+    display: block;
+    margin-top: 4px;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    color: var(--aeo-ink);
+}
+
+.aeo-stat__hint {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--aeo-body);
+}
+
+/* ── Filtres ──────────────────────────────────────────────────────────── */
+.aeo-filters {
+    margin-top: clamp(14px, 1.8vw, 20px);
+    background: #fff;
+    border: 1px solid var(--aeo-line);
+    border-radius: 14px;
+    padding: clamp(14px, 1.8vw, 20px);
+}
+
+.aeo-filters__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 186px), 1fr));
+    gap: 13px;
+}
+
+.aeo-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+}
+
+.aeo-field__label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #2e4c66;
+    white-space: nowrap;
+}
+
+.aeo-field input,
+.aeo-field select {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--aeo-field-line);
+    border-radius: 10px;
+    padding: 11px 12px;
+    font-size: 13.5px;
+    font-family: inherit;
+    color: var(--aeo-ink);
+    background: #fff;
+}
+
+.aeo-filters__row {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--aeo-line-soft);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.aeo-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 44px;
+    cursor: pointer;
+    font-size: 13.5px;
+    color: #2e4c66;
+    min-width: 0;
+    margin: 0;
+}
+
+.aeo-check input {
+    width: 17px;
+    height: 17px;
+    flex: none;
+    margin: 0;
+    accent-color: var(--aeo-brand);
+    cursor: pointer;
+}
+
+.aeo-filters__actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ── Boutons ──────────────────────────────────────────────────────────── */
+.aeo-page .aeo-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    padding: 11px 18px;
+    font-size: 13.5px;
+    font-weight: 600;
+    font-family: inherit;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+    text-decoration: none;
+    border: 1px solid transparent;
+    box-sizing: border-box;
+}
+
+.aeo-page .aeo-btn--primary {
+    background: var(--aeo-brand);
+    border-color: var(--aeo-brand);
+    color: #fff;
+}
+
+.aeo-page .aeo-btn--primary:hover {
+    background: var(--aeo-brand-dark);
+    border-color: var(--aeo-brand-dark);
+    color: #fff;
+}
+
+.aeo-page .aeo-btn--ghost {
+    background: #fff;
+    border-color: var(--aeo-field-line);
+    color: var(--aeo-brand);
+}
+
+.aeo-page .aeo-btn--ghost:hover {
+    border-color: var(--aeo-brand);
+    background: #f6fafd;
+    color: var(--aeo-brand);
+}
+
+.aeo-page .aeo-btn--warn {
+    background: #fff;
+    border-color: #d99a55;
+    color: #8a3d06;
+    border-radius: 9px;
+    padding: 10px 15px;
+    font-size: 13px;
+}
+
+.aeo-page .aeo-btn--warn:hover {
+    background: #fff1e2;
+    color: #8a3d06;
+}
+
+/* ── Alerte fiches incompletes ────────────────────────────────────────── */
+.aeo-warning {
+    margin-top: clamp(14px, 1.8vw, 20px);
+    background: #fff7f0;
+    border: 1px solid #f6d6b0;
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.aeo-warning__text {
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: #8a3d06;
+    min-width: 0;
+    flex: 1 1 320px;
+}
+
+.aeo-warning .aeo-btn {
+    margin-left: auto;
+}
+
+/* ── Tableau ──────────────────────────────────────────────────────────── */
+.aeo-card {
+    margin-top: clamp(14px, 1.8vw, 20px);
+    background: #fff;
+    border: 1px solid var(--aeo-line);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.aeo-scroll {
+    overflow-x: auto;
+}
+
+.aeo-scroll::-webkit-scrollbar {
+    height: 7px;
+}
+
+.aeo-scroll::-webkit-scrollbar-thumb {
+    background: var(--aeo-field-line);
+    border-radius: 7px;
+}
+
+.aeo-table {
+    min-width: 1060px;
+}
+
+.aeo-row {
+    display: grid;
+    grid-template-columns: minmax(250px, 1fr) 118px 176px 150px 132px 150px 120px;
+    gap: 14px;
+    align-items: center;
+    padding: 13px clamp(13px, 1.6vw, 18px);
+    border-bottom: 1px solid #f1f6fb;
+    background: #fff;
+}
+
+.aeo-row--head {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    background: #f6fafd;
+    border-bottom: 1px solid var(--aeo-line);
+}
+
+.aeo-row--head .aeo-cell {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--aeo-body);
+}
+
+/* Une fiche non publiable se repere a la volee. */
+.aeo-row.is-incomplete {
+    background: #fffaf6;
+}
+
+.aeo-row:not(.aeo-row--head):hover {
+    background: #f9fcfe;
+}
+
+.aeo-cell {
+    min-width: 0;
+}
+
+.aeo-cell--end {
+    display: flex;
+    justify-content: flex-end;
+    text-align: right;
+}
+
+/* Colonne offre */
+.aeo-offer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.aeo-offer__thumb {
+    width: 46px;
+    height: 46px;
+    flex: none;
+    border-radius: 10px;
+    object-fit: cover;
+    display: block;
+}
+
+.aeo-offer__thumb--empty {
+    background: #f1f6fb;
+    border: 1px dashed var(--aeo-field-line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    color: #5b7690;
+    box-sizing: border-box;
+}
+
+.aeo-offer__copy {
+    min-width: 0;
+}
+
+.aeo-page .aeo-offer__title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.35;
+    color: var(--aeo-ink);
+    text-decoration: none;
+}
+
+.aeo-page .aeo-offer__title:hover {
+    color: var(--aeo-brand);
+}
+
+.aeo-offer__ref {
+    display: block;
+    margin-top: 3px;
+    font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    color: var(--aeo-body);
+}
+
+.aeo-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #eef5fc;
+    color: var(--aeo-brand);
+    border: 1px solid #d6e6f6;
+    border-radius: 999px;
+    padding: 5px 11px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.aeo-strong {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--aeo-ink);
+}
+
+.aeo-sub {
+    display: block;
+    margin-top: 3px;
+    font-size: 12px;
+    color: var(--aeo-body);
+}
+
+.aeo-price {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--aeo-ink);
+}
+
+.aeo-offer__ref.is-missing,
+.aeo-strong.is-missing,
+.aeo-sub.is-missing,
+.aeo-price.is-missing {
+    color: var(--aeo-todo);
+}
+
+/* Colonne etat */
+.aeo-state {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.aeo-state form {
+    margin: 0;
+}
+
+.aeo-page .aeo-status {
+    border-radius: 999px;
+    padding: 5px 11px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    white-space: nowrap;
+    cursor: pointer;
+    border: 1px solid var(--aeo-field-line);
+    background: var(--aeo-line-soft);
+    color: var(--aeo-body);
+}
+
+.aeo-page .aeo-status.is-published {
+    background: #e4f5ec;
+    border-color: #bde3cf;
+    color: #0f6b43;
+}
+
+.aeo-page .aeo-status:hover {
+    filter: brightness(0.97);
+}
+
+.aeo-page .aeo-star {
+    width: 30px;
+    height: 30px;
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    border: 1px solid var(--aeo-field-line);
+    background: #fff;
+    color: var(--aeo-meta);
+}
+
+.aeo-page .aeo-star.is-on {
+    background: #fff1e2;
+    border-color: #f6d6b0;
+    color: #a24c07;
+}
+
+.aeo-page .aeo-star:hover {
+    filter: brightness(0.96);
+}
+
+/* Colonne actions */
+.aeo-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.aeo-actions form {
+    margin: 0;
+}
+
+.aeo-page .aeo-icon {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--aeo-field-line);
+    border-radius: 9px;
+    background: #fff;
+    font-size: 15px;
+    color: var(--aeo-brand);
+    cursor: pointer;
+    text-decoration: none;
+    box-sizing: border-box;
+}
+
+.aeo-page .aeo-icon:hover {
+    border-color: var(--aeo-brand);
+    background: #f6fafd;
+    color: var(--aeo-brand);
+}
+
+.aeo-page .aeo-icon--danger {
+    border-color: #f0cdc9;
+    color: var(--aeo-todo);
+}
+
+.aeo-page .aeo-icon--danger:hover {
+    background: #fdeceb;
+    border-color: #dc9b92;
+    color: var(--aeo-todo);
+}
+
+/* ── Aucun resultat ───────────────────────────────────────────────────── */
+.aeo-empty {
+    padding: clamp(28px, 4vw, 52px);
+    text-align: center;
+}
+
+.aeo-empty h3 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--aeo-ink);
+}
+
+.aeo-empty p {
+    margin: 9px auto 0;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--aeo-body);
+    max-width: 44ch;
+}
+
+.aeo-empty .aeo-btn {
+    margin-top: 16px;
+}
+
+/* ── Pied de tableau ──────────────────────────────────────────────────── */
+.aeo-foot {
+    padding: 12px clamp(13px, 1.6vw, 18px);
+    border-top: 1px solid var(--aeo-line-soft);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.aeo-foot__label {
+    font-size: 12.5px;
+    color: var(--aeo-body);
+    min-width: 0;
+}
+
+.aeo-pager {
+    display: flex;
+    gap: 7px;
+    flex: none;
+}
+
+.aeo-page .aeo-pager__btn {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--aeo-field-line);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--aeo-brand);
+    padding: 8px 13px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.aeo-page .aeo-pager__btn:hover {
+    border-color: var(--aeo-brand);
+}
+
+.aeo-page .aeo-pager__btn.is-disabled {
+    color: var(--aeo-meta);
+    cursor: not-allowed;
+    font-weight: 400;
+}
+
+@media (max-width: 640px) {
+    .aeo-filters__actions,
+    .aeo-warning .aeo-btn {
+        margin-left: 0;
+    }
+}

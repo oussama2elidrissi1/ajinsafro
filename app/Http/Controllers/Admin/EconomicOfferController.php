@@ -17,6 +17,59 @@ use Illuminate\View\View;
 
 class EconomicOfferController extends Controller
 {
+    /**
+     * Une fiche est incomplete tant qu'il manque de quoi la publier :
+     * reference interne, destination, ville de depart, tarif ou date.
+     */
+    private function scopeIncomplete($builder)
+    {
+        return $builder
+            ->whereNull('internal_reference')
+            ->orWhere('internal_reference', '')
+            ->orWhereNull('destination')
+            ->orWhere('destination', '')
+            ->orWhereNull('departure_city')
+            ->orWhere('departure_city', '')
+            ->orWhere(function ($noPrice) {
+                $noPrice
+                    ->whereNull('price_from')
+                    ->whereDoesntHave('departures', fn ($d) => $d->whereNotNull('price_from'))
+                    ->whereDoesntHave('prices');
+            })
+            ->orWhere(function ($noDate) {
+                $noDate
+                    ->whereNull('departure_date')
+                    ->whereDoesntHave('departures', fn ($d) => $d->whereNotNull('departure_date'));
+            });
+    }
+
+    /**
+     * Basculer publie / brouillon depuis la liste.
+     */
+    public function toggleStatus(EconomicOffer $economicOffer): RedirectResponse
+    {
+        $wasPublished = EconomicOffer::STATUS_PUBLISHED === $economicOffer->status;
+        $economicOffer->update([
+            'status' => $wasPublished ? EconomicOffer::STATUS_DRAFT : EconomicOffer::STATUS_PUBLISHED,
+        ]);
+
+        return back()->with('success', $wasPublished
+            ? 'Offre repassée en brouillon.'
+            : 'Offre publiée.');
+    }
+
+    /**
+     * Basculer la mise en avant depuis la liste.
+     */
+    public function toggleFeatured(EconomicOffer $economicOffer): RedirectResponse
+    {
+        $economicOffer->update(['is_featured' => ! $economicOffer->is_featured]);
+
+        return back()->with('success', $economicOffer->is_featured
+            ? 'Offre mise en avant.'
+            : 'Mise en avant retirée.');
+    }
+
     public function index(Request $request): View
     {
         $filters = [
@@ -28,6 +81,7 @@ class EconomicOfferController extends Controller
             'status' => trim((string) $request->input('status', '')),
             'departure_date' => trim((string) $request->input('departure_date', '')),
             'featured' => trim((string) $request->input('featured', '')),
+            'incomplete' => trim((string) $request->input('incomplete', '')),
         ];
 
         $query = EconomicOffer::query()
@@ -74,8 +128,14 @@ class EconomicOfferController extends Controller
             });
         }
 
-        if ($filters['featured'] === '1') {
+        if (in_array($filters['featured'], ['1', 'oui'], true)) {
             $query->where('is_featured', true);
+        } elseif ('non' === $filters['featured']) {
+            $query->where('is_featured', false);
+        }
+
+        if (in_array($filters['incomplete'], ['1', 'oui'], true)) {
+            $query->where(fn ($builder) => $this->scopeIncomplete($builder));
         }
 
         $offers = $query
@@ -85,15 +145,26 @@ class EconomicOfferController extends Controller
             ->paginate(15)
             ->withQueryString();
 
+        // Seul « resultats » suit les filtres : les autres comptent le catalogue.
         return view('admin.economic-offers.index', [
             'offers' => $offers,
             'filters' => $filters,
             'totals' => [
-                'offers' => (clone $query)->count(),
-                'featured' => (clone $query)->where('is_featured', true)->count(),
-                'published' => (clone $query)->where('status', EconomicOffer::STATUS_PUBLISHED)->count(),
+                'results' => $offers->total(),
+                'offers' => EconomicOffer::query()->count(),
+                'published' => EconomicOffer::query()->where('status', EconomicOffer::STATUS_PUBLISHED)->count(),
+                'drafts' => EconomicOffer::query()->where('status', EconomicOffer::STATUS_DRAFT)->count(),
+                'featured' => EconomicOffer::query()->where('is_featured', true)->count(),
                 'requests' => EconomicOfferRequest::query()->count(),
+                'incomplete' => EconomicOffer::query()->where(fn ($builder) => $this->scopeIncomplete($builder))->count(),
             ],
+            'cityOptions' => EconomicOffer::query()
+                ->whereNotNull('departure_city')
+                ->where('departure_city', '!=', '')
+                ->distinct()
+                ->orderBy('departure_city')
+                ->pluck('departure_city')
+                ->all(),
             'typeOptions' => EconomicOffer::typeOptions(),
             'statusOptions' => EconomicOffer::statusOptions(),
         ]);

@@ -513,6 +513,8 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
             Route::get('requests', [EconomicOfferRequestController::class, 'index'])->name('requests.index');
             Route::get('requests/{requestItem}', [EconomicOfferRequestController::class, 'show'])->name('requests.show')->whereNumber('requestItem');
             Route::match(['put', 'patch'], 'requests/{requestItem}', [EconomicOfferRequestController::class, 'update'])->name('requests.update')->whereNumber('requestItem');
+            Route::post('{economicOffer}/toggle-status', [EconomicOfferController::class, 'toggleStatus'])->name('toggle-status')->whereNumber('economicOffer');
+            Route::post('{economicOffer}/toggle-featured', [EconomicOfferController::class, 'toggleFeatured'])->name('toggle-featured')->whereNumber('economicOffer');
             Route::get('{economicOffer}', [EconomicOfferController::class, 'show'])->name('show')->whereNumber('economicOffer');
             Route::get('{economicOffer}/edit', [EconomicOfferController::class, 'edit'])->name('edit')->whereNumber('economicOffer');
             Route::match(['put', 'patch'], '{economicOffer}', [EconomicOfferController::class, 'update'])->name('update')->whereNumber('economicOffer');
