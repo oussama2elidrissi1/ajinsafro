@@ -242,10 +242,53 @@ class EconomicOfferController extends Controller
             ->with('success', 'Offre economique supprimee.');
     }
 
+    /**
+     * Ce qui manque a l'offre pour etre publiable, et le taux d'avancement.
+     *
+     * @return array{issues: array<int, string>, completion: int}
+     */
+    private function completionReport(EconomicOffer $offer): array
+    {
+        $issues = [];
+        if (blank($offer->cancellation_conditions)) {
+            $issues[] = 'Conditions d’annulation vides';
+        }
+        if (blank($offer->hotel_name)) {
+            $issues[] = 'Nom de l’hôtel non renseigné';
+        }
+        if (blank($offer->meta_title)) {
+            $issues[] = 'Meta title vide';
+        }
+        if (blank($offer->internal_reference)) {
+            $issues[] = 'Référence interne manquante';
+        }
+
+        $required = [
+            $offer->title,
+            $offer->offer_type,
+            $offer->category,
+            $offer->status,
+            $offer->price_from,
+            $offer->departure_date,
+            $offer->departure_city,
+            $offer->destination,
+            $offer->cancellation_conditions,
+            $offer->hotel_name,
+            $offer->meta_title,
+        ];
+        $filled = count(array_filter($required, static fn ($value) => ! blank($value)));
+
+        return [
+            'issues' => $issues,
+            'completion' => (int) round(($filled / count($required)) * 100),
+        ];
+    }
+
     private function formViewData(EconomicOffer $offer): array
     {
         return [
             'offer' => $offer,
+            'report' => $this->completionReport($offer),
             'typeOptions' => EconomicOffer::typeOptions(),
             'categoryOptions' => EconomicOffer::categoryOptions(),
             'statusOptions' => EconomicOffer::statusOptions(),
@@ -275,6 +318,7 @@ class EconomicOfferController extends Controller
             'offer_type' => $validated['offer_type'],
             'category' => $validated['category'],
             'status' => $validated['status'],
+            'availability_status' => $validated['availability_status'] ?? $offer->availability_status,
             'main_image' => $offer->main_image,
             'fallback_image' => $offer->fallback_image,
             'video_url' => $validated['video_url'] ?? null,
@@ -319,7 +363,7 @@ class EconomicOfferController extends Controller
             'meta_title' => $validated['meta_title'] ?? null,
             'meta_description' => $validated['meta_description'] ?? null,
             'seo_image' => $offer->seo_image,
-            'seo_keywords' => $this->normalizeTextareaList($validated['seo_keywords_text'] ?? null),
+            'seo_keywords' => $this->normalizeKeywordList($validated['seo_keywords_text'] ?? null),
             'sort_order' => $validated['sort_order'] ?? 0,
             'is_featured' => $request->boolean('is_featured'),
         ];
@@ -454,6 +498,23 @@ class EconomicOfferController extends Controller
         WpCatalogCacheInvalidator::invalidate(array_values(array_unique($keys)));
     }
 
+    /**
+     * Mots-cles : retours a la ligne et virgules font office de separateurs.
+     */
+    private function normalizeKeywordList(?string $value): ?array
+    {
+        if ($value === null || trim($value) === '') {
+            return null;
+        }
+
+        $parts = preg_split('/[\r\n,]+/', $value) ?: [];
+        $items = array_values(array_unique(array_filter(
+            array_map(static fn ($item) => trim((string) $item), $parts)
+        )));
+
+        return $items !== [] ? $items : null;
+    }
+
     private function normalizeTextareaList(?string $value): ?array
     {
         if ($value === null || trim($value) === '') {
@@ -528,6 +589,8 @@ class EconomicOfferController extends Controller
             'remove_main_image' => ['nullable', 'boolean'],
             'remove_fallback_image' => ['nullable', 'boolean'],
             'remove_seo_image' => ['nullable', 'boolean'],
+
+            'availability_status' => ['nullable', Rule::in(EconomicOffer::AVAILABILITY_STATUSES)],
 
             'prices' => ['nullable', 'array'],
             'prices.*.label' => ['nullable', 'string', 'max:120'],

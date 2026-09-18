@@ -1,0 +1,776 @@
+/*
+ * Formulaire d'offre Formule economique (creation et modification).
+ * Navigation laterale collante, sections numerotees, repetiteurs et barre
+ * d'enregistrement collante.
+ *
+ * Les composants interactifs sont prefixes par `.oef-layout` : une regle
+ * generique sur `a` ou `button` dans la coque suffirait sinon a les repeindre.
+ */
+
+.oef-layout {
+    --oef-ink: #0d2137;
+    --oef-body: #41627f;
+    --oef-meta: #8aa6bf;
+    --oef-line: #dce7f2;
+    --oef-line-soft: #eef3f9;
+    --oef-field-line: #cfdcea;
+    --oef-brand: #144e8c;
+    --oef-brand-dark: #0d3767;
+    --oef-ok: #0f7a44;
+    --oef-todo: #a8401f;
+    --oef-star: #c2570a;
+
+    display: flex;
+    align-items: flex-start;
+    gap: clamp(14px, 2vw, 22px);
+    flex-wrap: wrap;
+    color: var(--oef-ink);
+}
+
+.oef-layout input:focus,
+.oef-layout select:focus,
+.oef-layout textarea:focus {
+    outline: none;
+    border-color: var(--oef-brand);
+    box-shadow: 0 0 0 3px rgba(20, 78, 140, 0.16);
+}
+
+.oef-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
+/* ── Colonne laterale ─────────────────────────────────────────────────── */
+.oef-aside {
+    flex: 0 1 214px;
+    min-width: 200px;
+    position: sticky;
+    top: 74px;
+}
+
+.oef-nav {
+    background: #fff;
+    border: 1px solid var(--oef-line);
+    border-radius: 14px;
+    padding: 10px;
+}
+
+.oef-layout .oef-nav__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 11px 12px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    color: var(--oef-ink);
+    text-decoration: none;
+}
+
+.oef-layout .oef-nav__item:hover {
+    background: #f1f6fb;
+    color: var(--oef-ink);
+}
+
+.oef-nav__label {
+    min-width: 0;
+}
+
+.oef-nav__hint {
+    flex: none;
+    font-size: 12px;
+    color: var(--oef-body);
+}
+
+.oef-nav__hint.is-ok {
+    color: var(--oef-ok);
+}
+
+.oef-nav__hint.is-todo {
+    color: var(--oef-todo);
+}
+
+.oef-issues {
+    margin-top: 12px;
+    background: #fff7f0;
+    border: 1px solid #f6d6b0;
+    border-radius: 12px;
+    padding: 13px;
+}
+
+.oef-issues__title {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #8a3d06;
+}
+
+.oef-issues ul {
+    margin: 9px 0 0;
+    padding-left: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.oef-issues li {
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: #8a3d06;
+}
+
+.oef-completion {
+    margin: 12px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-wrap: wrap;
+    background: #fff;
+    border: 1px solid var(--oef-line);
+    border-radius: 10px;
+    padding: 9px 12px;
+    font-size: 12.5px;
+    color: var(--oef-body);
+}
+
+.oef-gauge {
+    width: 74px;
+    height: 8px;
+    flex: none;
+    border-radius: 999px;
+    background: #e2ecf5;
+    overflow: hidden;
+}
+
+.oef-gauge__fill {
+    display: block;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--oef-todo);
+}
+
+.oef-gauge__fill.is-mid {
+    background: #f5821f;
+}
+
+.oef-gauge__fill.is-full {
+    background: var(--oef-ok);
+}
+
+/* ── Colonne principale ───────────────────────────────────────────────── */
+.oef-main {
+    flex: 1 1 560px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(14px, 1.8vw, 20px);
+}
+
+.oef-section {
+    background: #fff;
+    border: 1px solid var(--oef-line);
+    border-radius: 16px;
+    overflow: hidden;
+    scroll-margin-top: 80px;
+}
+
+.oef-section__head {
+    padding: 15px clamp(14px, 1.8vw, 22px);
+    border-bottom: 1px solid var(--oef-line-soft);
+    background: #f6fafd;
+}
+
+.oef-section__title {
+    display: block;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--oef-ink);
+}
+
+.oef-section__sub {
+    display: block;
+    margin-top: 3px;
+    font-size: 12.5px;
+    color: var(--oef-body);
+}
+
+.oef-section__body {
+    padding: clamp(14px, 1.8vw, 22px);
+}
+
+/* ── Grilles et champs ────────────────────────────────────────────────── */
+.oef-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 14px;
+}
+
+.oef-grid--narrow {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+}
+
+.oef-grid--tight {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
+    gap: 11px;
+}
+
+.oef-grid--wide {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+}
+
+.oef-grid--media {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+}
+
+.oef-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    margin: 0;
+}
+
+.oef-field--full {
+    grid-column: 1 / -1;
+}
+
+.oef-field--half {
+    margin-top: 12px;
+    max-width: 320px;
+}
+
+.oef-field[hidden] {
+    display: none !important;
+}
+
+.oef-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #2e4c66;
+}
+
+.oef-label b {
+    color: var(--oef-star);
+    font-weight: 600;
+}
+
+.oef-layout .oef-field input,
+.oef-layout .oef-field select,
+.oef-layout .oef-field textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--oef-field-line);
+    border-radius: 10px;
+    padding: 11px 12px;
+    font-size: 13.5px;
+    font-family: inherit;
+    line-height: 1.55;
+    color: var(--oef-ink);
+    background: #fff;
+}
+
+.oef-layout .oef-field textarea {
+    resize: vertical;
+}
+
+.oef-layout .oef-field textarea.is-todo {
+    border-color: #e0a97c;
+}
+
+.oef-layout .oef-field input.oef-mono {
+    font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+}
+
+.oef-layout .oef-field input.oef-readonly {
+    background: #f6fafd;
+    border-color: #e6eef6;
+    color: var(--oef-body);
+}
+
+.oef-layout .oef-field input[type="file"] {
+    padding: 9px 12px;
+    font-size: 12.5px;
+}
+
+.oef-hint {
+    font-size: 12px;
+    color: var(--oef-body);
+}
+
+.oef-hint.is-over {
+    color: var(--oef-todo);
+}
+
+.oef-error {
+    font-size: 12px;
+    color: var(--oef-todo);
+}
+
+.oef-block {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--oef-line-soft);
+}
+
+/* ── Interrupteur de mise en avant ────────────────────────────────────── */
+.oef-switch {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--oef-field-line);
+    background: #fff;
+    border-radius: 10px;
+    padding: 9px 12px;
+    min-height: 43px;
+    cursor: pointer;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+/* Specificite alignee sur `.oef-layout .oef-field input`, sinon la case
+   reprend `width: 100%` et deborde la page. */
+.oef-layout .oef-switch input {
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.oef-switch__track {
+    width: 38px;
+    height: 21px;
+    flex: none;
+    border-radius: 999px;
+    background: #c3d4e4;
+    position: relative;
+    transition: background 0.15s;
+}
+
+.oef-switch__knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    background: #fff;
+    transition: left 0.15s;
+}
+
+.oef-switch__label {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--oef-body);
+}
+
+.oef-switch:has(input:checked) {
+    background: #eef5fc;
+    border-color: #b9d3ee;
+}
+
+.oef-switch:has(input:checked) .oef-switch__track {
+    background: var(--oef-brand);
+}
+
+.oef-switch:has(input:checked) .oef-switch__knob {
+    left: 19px;
+}
+
+.oef-switch:has(input:checked) .oef-switch__label {
+    color: var(--oef-brand-dark);
+}
+
+.oef-switch:has(input:focus-visible) {
+    box-shadow: 0 0 0 3px rgba(20, 78, 140, 0.16);
+}
+
+/* ── Services inclus ──────────────────────────────────────────────────── */
+.oef-services {
+    margin-top: 11px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 178px), 1fr));
+    gap: 9px;
+}
+
+.oef-service {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    border: 1px solid var(--oef-field-line);
+    background: #fff;
+    border-radius: 10px;
+    padding: 0 12px;
+    cursor: pointer;
+    font-size: 13.5px;
+    color: var(--oef-ink);
+    box-sizing: border-box;
+    margin: 0;
+}
+
+.oef-service input {
+    width: 17px;
+    height: 17px;
+    flex: none;
+    margin: 0;
+    accent-color: var(--oef-brand);
+    cursor: pointer;
+}
+
+.oef-service span {
+    min-width: 0;
+}
+
+.oef-service.is-on {
+    background: #f6fafd;
+    border-color: #b9d3ee;
+}
+
+/* ── Prestations en pastilles ─────────────────────────────────────────── */
+.oef-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    min-height: 1px;
+}
+
+.oef-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 999px;
+    padding: 6px 10px 6px 12px;
+    font-size: 12.5px;
+}
+
+.oef-chips--ok .oef-chip {
+    background: #e4f5ec;
+    border: 1px solid #bde3cf;
+    color: #0f6b43;
+}
+
+.oef-chips--no .oef-chip {
+    background: #fdeceb;
+    border: 1px solid #f4c7c3;
+    color: #8c2018;
+}
+
+.oef-layout .oef-chip button {
+    border: none;
+    background: transparent;
+    color: inherit;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+}
+
+/* ── Repetiteurs ──────────────────────────────────────────────────────── */
+.oef-repeater__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.oef-repeater__title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--oef-ink);
+}
+
+.oef-repeater__rows {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+}
+
+.oef-row {
+    border: 1px solid #e6eef6;
+    background: #f9fcfe;
+    border-radius: 12px;
+    padding: 13px;
+}
+
+.oef-row__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 11px;
+}
+
+.oef-row__title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--oef-ink);
+    min-width: 0;
+}
+
+.oef-row__fill {
+    font-size: 12.5px;
+    color: var(--oef-body);
+}
+
+.oef-row__fill.is-full {
+    color: var(--oef-todo);
+}
+
+.oef-row__actions {
+    margin-top: 11px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* ── Medias ───────────────────────────────────────────────────────────── */
+.oef-drop {
+    margin-top: 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    aspect-ratio: 16 / 10;
+    border: 1px dashed #b9cfe6;
+    background: #f6fafd;
+    border-radius: 12px;
+    cursor: pointer;
+    text-align: center;
+    padding: 14px;
+    box-sizing: border-box;
+    overflow: hidden;
+    position: relative;
+}
+
+.oef-drop:hover {
+    border-color: var(--oef-brand);
+    background: #f1f6fb;
+}
+
+.oef-drop img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.oef-drop__title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--oef-brand);
+}
+
+.oef-drop__hint {
+    font-size: 12px;
+    color: var(--oef-body);
+}
+
+.oef-drop input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.oef-inline-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin: 10px 0 0;
+    min-height: 40px;
+    font-size: 12.5px;
+    color: var(--oef-body);
+    cursor: pointer;
+}
+
+.oef-inline-check input {
+    width: 17px;
+    height: 17px;
+    flex: none;
+    margin: 0;
+    accent-color: var(--oef-brand);
+}
+
+.oef-gallery {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 132px), 1fr));
+    gap: 11px;
+}
+
+.oef-gallery__item {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    border: 1px solid #e6eef6;
+    background: #f1f6fb;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    margin: 0;
+}
+
+.oef-gallery__item img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.oef-gallery__ph {
+    font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    color: #5b7690;
+}
+
+.oef-gallery__add {
+    aspect-ratio: 4 / 3;
+    border: 1px dashed #b9cfe6;
+    background: #f6fafd;
+    border-radius: 11px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+    text-align: center;
+    padding: 10px;
+    box-sizing: border-box;
+    position: relative;
+    margin: 0;
+}
+
+.oef-gallery__add:hover {
+    border-color: var(--oef-brand);
+}
+
+.oef-gallery__plus {
+    font-size: 19px;
+    line-height: 1;
+    color: var(--oef-brand);
+}
+
+.oef-gallery__add input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* ── Barre d'enregistrement ───────────────────────────────────────────── */
+.oef-savebar {
+    position: sticky;
+    bottom: 12px;
+    background: #fff;
+    border: 1px solid var(--oef-line);
+    border-radius: 14px;
+    padding: 13px clamp(14px, 1.8vw, 20px);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    box-shadow: 0 16px 34px -22px rgba(13, 55, 103, 0.45);
+}
+
+.oef-savebar__state {
+    font-size: 13px;
+    color: var(--oef-body);
+    min-width: 0;
+}
+
+.oef-savebar__state.is-dirty {
+    color: var(--oef-todo);
+}
+
+.oef-savebar__actions {
+    margin-left: auto;
+    display: flex;
+    gap: 9px;
+    flex-wrap: wrap;
+}
+
+/* ── Boutons ──────────────────────────────────────────────────────────── */
+.oef-layout .oef-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    padding: 11px 18px;
+    font-size: 13.5px;
+    font-weight: 600;
+    font-family: inherit;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+    text-decoration: none;
+    border: 1px solid transparent;
+    box-sizing: border-box;
+}
+
+.oef-layout .oef-btn--primary {
+    background: var(--oef-brand);
+    border-color: var(--oef-brand);
+    color: #fff;
+}
+
+.oef-layout .oef-btn--primary:hover {
+    background: var(--oef-brand-dark);
+    border-color: var(--oef-brand-dark);
+    color: #fff;
+}
+
+.oef-layout .oef-btn--ghost {
+    background: #fff;
+    border-color: var(--oef-field-line);
+    color: var(--oef-brand);
+    border-radius: 9px;
+    padding: 9px 15px;
+    font-size: 13px;
+}
+
+.oef-layout .oef-btn--ghost:hover {
+    border-color: var(--oef-brand);
+    background: #f6fafd;
+    color: var(--oef-brand);
+}
+
+.oef-layout .oef-btn--danger {
+    background: #fff;
+    border-color: #f0cdc9;
+    color: var(--oef-todo);
+    border-radius: 9px;
+    padding: 9px 14px;
+    font-size: 13px;
+}
+
+.oef-layout .oef-btn--danger:hover {
+    background: #fdeceb;
+    border-color: #dc9b92;
+    color: var(--oef-todo);
+}
+
+@media (max-width: 900px) {
+    .oef-aside {
+        position: static;
+        flex: 1 1 100%;
+    }
+}

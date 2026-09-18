@@ -279,8 +279,8 @@ class EconomicOffer extends Model
     public static function categoryOptions(): array
     {
         return [
-            self::CATEGORY_ECONOMIC => 'Economique',
-            self::CATEGORY_LAST_MINUTE => 'Derniere minute',
+            self::CATEGORY_ECONOMIC => 'Économique',
+            self::CATEGORY_LAST_MINUTE => 'Dernière minute',
             self::CATEGORY_PROMOTION => 'Promotion',
             self::CATEGORY_FAMILY => 'Famille',
             self::CATEGORY_GROUP => 'Groupe',
@@ -301,9 +301,9 @@ class EconomicOffer extends Model
     {
         return [
             self::AVAILABILITY_AVAILABLE => 'Disponible',
-            self::AVAILABILITY_LIMITED => 'Places limitees',
+            self::AVAILABILITY_LIMITED => 'Places limitées',
             self::AVAILABILITY_FULL => 'Complet',
-            self::AVAILABILITY_EXPIRED => 'Offre expiree',
+            self::AVAILABILITY_EXPIRED => 'Offre expirée',
         ];
     }
 
@@ -321,9 +321,9 @@ class EconomicOffer extends Model
     {
         return [
             'none' => 'Sans repas',
-            'breakfast' => 'Petit dejeuner',
+            'breakfast' => 'Petit déjeuner',
             'half_board' => 'Demi-pension',
-            'full_board' => 'Pension complete',
+            'full_board' => 'Pension complète',
         ];
     }
 
