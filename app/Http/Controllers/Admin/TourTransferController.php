@@ -23,10 +23,26 @@ class TourTransferController extends Controller
                 ->orderByDesc('ID')
                 ->paginate(20);
 
-            $tourIds = $tours->pluck('ID')->toArray();
+            $tourIds = $tours->pluck('ID')->all();
+
+            // Une requete pour toute la page, puis le premier transfert de
+            // chaque sens : la vue affiche une ligne par circuit.
+            $rows = TourTransfer::query()
+                ->whereIn('tour_id', $tourIds)
+                ->orderByRaw('COALESCE(day_number, 1) ASC')
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->get()
+                ->groupBy('tour_id');
+
             $transfersByTour = [];
             foreach ($tourIds as $tid) {
-                $transfersByTour[$tid] = TourTransfer::getForTour($tid);
+                $forTour = $rows->get($tid, collect());
+                $transfersByTour[$tid] = [
+                    'arrival' => $forTour->firstWhere('direction', TourTransfer::DIRECTION_ARRIVAL),
+                    'departure' => $forTour->firstWhere('direction', TourTransfer::DIRECTION_DEPARTURE),
+                    'total' => $forTour->count(),
+                ];
             }
         } catch (\Throwable $e) {
             \Log::warning('TourTransferController@index: WP connection failed', ['error' => $e->getMessage()]);
@@ -45,8 +61,10 @@ class TourTransferController extends Controller
     {
         $tour = WpPost::tours()->where('ID', $tourId)->firstOrFail();
         $transfers = TourTransfer::getForTour($tourId);
-        $arrival = $transfers['arrival'];
-        $departure = $transfers['departure'];
+        // getForTour renvoie deux collections : ce formulaire edite le premier
+        // transfert de chaque sens, comme l'onglet transferts du voyage.
+        $arrival = $transfers['arrival']->first();
+        $departure = $transfers['departure']->first();
 
         return view('admin.circuits.tour-transfers.edit', compact('tour', 'arrival', 'departure'));
     }
@@ -91,9 +109,11 @@ class TourTransferController extends Controller
         ];
 
         $transfers = TourTransfer::getForTour($tourId);
+        $arrival = $transfers['arrival']->first();
+        $departure = $transfers['departure']->first();
 
-        if ($transfers['arrival']) {
-            $transfers['arrival']->update($arrivalData);
+        if ($arrival) {
+            $arrival->update($arrivalData);
         } else {
             TourTransfer::create(array_merge($arrivalData, [
                 'tour_id' => $tourId,
@@ -101,8 +121,8 @@ class TourTransferController extends Controller
             ]));
         }
 
-        if ($transfers['departure']) {
-            $transfers['departure']->update($departureData);
+        if ($departure) {
+            $departure->update($departureData);
         } else {
             TourTransfer::create(array_merge($departureData, [
                 'tour_id' => $tourId,

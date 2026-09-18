@@ -37,10 +37,10 @@
             <div class="card">
                 <div class="card-body">
                     <p class="text-muted mb-3">
-                        Transfert aller (Jour 1) : Aéroport ?' Hôtel. Transfert retour (dernier jour) : Hôtel ?' Aéroport.
+                        Transfert aller (jour 1) : aéroport &rarr; hôtel. Transfert retour (dernier jour) : hôtel &rarr; aéroport.
                     </p>
                     @if($tours->isEmpty())
-                        <p class="text-muted mb-0">Aucun tour. <a href="{{ route('admin.circuits.voyages.create') }}">Créer un tour</a> puis revenir ici pour définir les transferts.</p>
+                        <p class="text-muted mb-0">Aucun circuit. <a href="{{ route('admin.circuits.voyages.create') }}">Créer un circuit</a> puis revenir ici pour définir les transferts.</p>
                     @else
                         <div class="table-responsive">
                             <table class="table table-hover table-centered mb-0">
@@ -55,28 +55,42 @@
                                 </thead>
                                 <tbody>
                                     @foreach($tours as $tour)
-                                        @php $tr = $transfersByTour[$tour->ID] ?? ['arrival' => null, 'departure' => null]; @endphp
+                                        @php
+                                            $tr = $transfersByTour[$tour->ID] ?? ['arrival' => null, 'departure' => null, 'total' => 0];
+                                            $arrival = $tr['arrival'];
+                                            $departure = $tr['departure'];
+                                            $isSet = $arrival || $departure;
+                                        @endphp
                                         <tr>
                                             <td><strong>{{ $tour->ID }}</strong></td>
                                             <td>
                                                 <a href="{{ route('admin.circuits.voyages.edit', $tour->ID) }}" class="text-body">{{ $tour->post_title }}</a>
-                                            </td>
-                                            <td>
-                                                @if($tr['arrival'] && ($tr['arrival']->from_label || $tr['arrival']->to_label))
-                                                    {{ $tr['arrival']->from_label ?? '?' }} ?' {{ $tr['arrival']->to_label ?? '?' }}
-                                                @else
-                                                    <span class="text-muted">?</span>
+                                                @if(($tr['total'] ?? 0) > 2)
+                                                    {{-- Cette page n'edite que le premier transfert de chaque sens. --}}
+                                                    <div class="text-muted font-size-12">
+                                                        {{ $tr['total'] }} transferts enregistrés &middot;
+                                                        <a href="{{ route('admin.circuits.voyages.edit', $tour->ID) }}?tab=flights">tout gérer dans le circuit</a>
+                                                    </div>
                                                 @endif
                                             </td>
-                                            <td>
-                                                @if($tr['departure'] && ($tr['departure']->from_label || $tr['departure']->to_label))
-                                                    {{ $tr['departure']->from_label ?? '?' }} ?' {{ $tr['departure']->to_label ?? '?' }}
-                                                @else
-                                                    <span class="text-muted">?</span>
-                                                @endif
-                                            </td>
+                                            @foreach ([$arrival, $departure] as $leg)
+                                                <td>
+                                                    @if($leg && ($leg->from_label || $leg->to_label))
+                                                        {{ $leg->from_label ?: 'Départ à préciser' }}
+                                                        <span class="text-muted">&rarr;</span>
+                                                        {{ $leg->to_label ?: 'Arrivée à préciser' }}
+                                                        @if($leg->pickup_time)
+                                                            <div class="text-muted font-size-12">Prise en charge {{ $leg->pickup_time }}</div>
+                                                        @endif
+                                                    @else
+                                                        <span class="text-muted">&mdash;</span>
+                                                    @endif
+                                                </td>
+                                            @endforeach
                                             <td class="text-end">
-                                                <a href="{{ route('admin.circuits.voyages.edit', $tour->ID) }}?tab=flights" class="btn btn-sm btn-soft-primary waves-effect waves-light">Gérer (dans le voyage)</a>
+                                                <a href="{{ route('admin.circuits.tour-transfers.edit', $tour->ID) }}" class="btn btn-sm btn-soft-primary waves-effect waves-light">
+                                                    {{ $isSet ? 'Modifier' : 'Définir' }}
+                                                </a>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -92,5 +106,3 @@
         </div>
     </div>
 @endsection
-
-
