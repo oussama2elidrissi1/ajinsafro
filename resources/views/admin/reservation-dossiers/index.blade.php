@@ -1,19 +1,20 @@
 @extends('layouts.admin-v6')
 
-@section('title', 'Dossiers de réservation')
-@section('page_title', 'Dossiers de réservation')
+@section('title', 'Réservations par départ')
+@section('page_title', 'Réservations par départ')
 @section('hide_admin_footer', '1')
 @section('header_primary_action')
     <a href="{{ route('admin.reservations.create') }}" class="aj-v6-primary-btn">
         <i class="bx bx-plus"></i>
-        <span>Créer un dossier</span>
+        <span>Nouvelle réservation</span>
     </a>
 @endsection
 
 @php
     $breadcrumbs = [
         ['label' => 'Accueil', 'url' => \Illuminate\Support\Facades\Route::has('admin.dashboard.v6') ? route('admin.dashboard.v6') : route('admin.dashboard')],
-        ['label' => 'Réservations'],
+        ['label' => 'Réservations', 'url' => route('admin.reservation-dossiers.index')],
+        ['label' => 'Par départ'],
     ];
 @endphp
 
@@ -36,18 +37,18 @@
         }
         return match ((string) $reservation->status) {
             Reservation::STATUS_PENDING, Reservation::STATUS_OPTION, Reservation::STATUS_SHARED_ROOM_PENDING => ['label' => 'En attente', 'class' => 'is-pending'],
-            Reservation::STATUS_CONFIRMED, Reservation::STATUS_SHARED_ROOM_PAIRED, Reservation::STATUS_PARTIALLY_PAID => ['label' => 'Confirmee', 'class' => 'is-confirmed'],
-            Reservation::STATUS_PAID => ['label' => 'Payee', 'class' => 'is-paid'],
-            Reservation::STATUS_CANCELLED => ['label' => 'Annulee', 'class' => 'is-cancelled'],
+            Reservation::STATUS_CONFIRMED, Reservation::STATUS_SHARED_ROOM_PAIRED, Reservation::STATUS_PARTIALLY_PAID => ['label' => 'Confirmée', 'class' => 'is-confirmed'],
+            Reservation::STATUS_PAID => ['label' => 'Payée', 'class' => 'is-paid'],
+            Reservation::STATUS_CANCELLED => ['label' => 'Annulée', 'class' => 'is-cancelled'],
             default => ['label' => $reservation->statusLabelFr(), 'class' => 'is-neutral'],
         };
     };
 
     $paymentBadge = function ($reservation) {
         return match ((string) $reservation->payment_status) {
-            Reservation::PAYMENT_STATUS_PAID => ['label' => 'Payee', 'class' => 'is-paid'],
-            Reservation::PAYMENT_STATUS_PARTIAL, Reservation::PAYMENT_STATUS_DEPOSIT => ['label' => 'A suivre', 'class' => 'is-follow-up'],
-            default => ['label' => 'Non payee', 'class' => 'is-unpaid'],
+            Reservation::PAYMENT_STATUS_PAID => ['label' => 'Payée', 'class' => 'is-paid'],
+            Reservation::PAYMENT_STATUS_PARTIAL, Reservation::PAYMENT_STATUS_DEPOSIT => ['label' => 'À suivre', 'class' => 'is-follow-up'],
+            default => ['label' => 'Non payée', 'class' => 'is-unpaid'],
         };
     };
 @endphp
@@ -101,47 +102,145 @@
 
     .reservation-dossiers-page .rd-page-kpis {
         display: grid;
-        grid-template-columns: repeat(6, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
         gap: 14px;
         margin-bottom: 24px;
     }
 
     .reservation-dossiers-page .rd-page-kpi {
         background: #fff;
-        border: 1px solid #e5edf6;
-        border-radius: 16px;
-        box-shadow: 0 4px 12px rgba(16, 42, 67, 0.04);
-        padding: 18px;
+        border: 1px solid #dce7f2;
+        border-radius: 15px;
+        box-shadow: none;
+        padding: 17px 18px;
         display: flex;
-        gap: 12px;
-        align-items: center;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
     }
 
-    .reservation-dossiers-page .rd-page-kpi__icon {
-        width: 46px;
-        height: 46px;
-        display: grid;
-        place-items: center;
-        border-radius: 14px;
-        font-size: 20px;
-        flex-shrink: 0;
+    /* Indicateur de tete : aplat navy, c'est la valeur sur laquelle on agit. */
+    .reservation-dossiers-page .rd-page-kpi--lead {
+        background: #0d3767;
+        border-color: #0d3767;
+        color: #fff;
     }
 
     .reservation-dossiers-page .rd-page-kpi__label {
         display: block;
-        color: #6b7a90;
+        color: #41627f;
         font-size: 12px;
-        font-weight: 700;
-        text-transform: uppercase;
-        margin-bottom: 4px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        margin: 0;
+    }
+
+    .reservation-dossiers-page .rd-page-kpi--lead .rd-page-kpi__label {
+        color: #a9c5de;
+    }
+
+    .reservation-dossiers-page .rd-page-kpi--warn .rd-page-kpi__label,
+    .reservation-dossiers-page .rd-page-kpi--warn .rd-page-kpi__value {
+        color: #a8401f;
     }
 
     .reservation-dossiers-page .rd-page-kpi__value {
         display: block;
-        color: #102a43;
-        font-size: 20px;
-        font-weight: 900;
+        color: #0d2137;
+        font-size: clamp(24px, 2.6vw, 30px);
+        font-weight: 600;
+        letter-spacing: -0.02em;
         line-height: 1.1;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .reservation-dossiers-page .rd-page-kpi--lead .rd-page-kpi__value {
+        color: #fff;
+    }
+
+    .reservation-dossiers-page .rd-page-kpi__note {
+        display: block;
+        font-size: 12.5px;
+        color: #41627f;
+        line-height: 1.45;
+    }
+
+    .reservation-dossiers-page .rd-page-kpi--lead .rd-page-kpi__note {
+        color: #c6dcf0;
+    }
+
+    /* Jauge d'encaissement d'un depart. */
+    .reservation-dossiers-page .rd-gauge {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 12px;
+    }
+
+    .reservation-dossiers-page .rd-gauge__top {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: 12.5px;
+        color: #41627f;
+    }
+
+    .reservation-dossiers-page .rd-gauge__top strong {
+        font-weight: 600;
+        color: #2e4c66;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .reservation-dossiers-page .rd-gauge__bar {
+        height: 7px;
+        border-radius: 999px;
+        background: #e2ecf5;
+        overflow: hidden;
+    }
+
+    .reservation-dossiers-page .rd-gauge__bar span {
+        display: block;
+        height: 100%;
+        background: #144e8c;
+    }
+
+    /* Pied de totaux, sous la liste des departs. */
+    .reservation-dossiers-page .rd-totals {
+        background: #fff;
+        border: 1px solid #dce7f2;
+        border-radius: 15px;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+    }
+
+    .reservation-dossiers-page .rd-totals__title {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: #0d2137;
+    }
+
+    .reservation-dossiers-page .rd-totals__list {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-left: auto;
+        font-size: 13.5px;
+        color: #41627f;
+    }
+
+    .reservation-dossiers-page .rd-totals__list strong {
+        color: #0d2137;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .reservation-dossiers-page .rd-totals__list strong.is-warn {
+        color: #a8401f;
     }
 
     .reservation-dossiers-page .rd-panel {
@@ -237,6 +336,8 @@
     }
 
     .reservation-dossiers-page .rd-card__placeholder {
+        background: repeating-linear-gradient(135deg, #cfe0ee 0 10px, #e2ecf5 10px 20px);
+        color: #2e4c66;
         width: 100%;
         height: 100%;
         display: grid;
@@ -531,54 +632,56 @@
 <div class="reservation-dossiers-page">
     <div class="rd-hero">
         <div>
-            <h1>Dossiers de reservation</h1>
-            <p>Vue V3 orientee departs: identifiez d'abord les departs qui bougent, puis ouvrez au clic toutes les reservations qui demandent une action.</p>
+            <h1>Réservations par départ</h1>
+            <p>Repérez d'abord les départs qui bougent, puis ouvrez au clic les réservations qui demandent une action.</p>
         </div>
         <a href="{{ route('admin.reservations.create') }}" class="rd-btn rd-btn-primary">
             <i class="bx bx-plus"></i>
-            <span>Creer un dossier</span>
+            <span>Nouvelle réservation</span>
         </a>
     </div>
 
     <div class="rd-page-kpis">
-        <div class="rd-page-kpi">
-            <div class="rd-page-kpi__icon" style="background:#eaf5ff;color:#0877bd;"><i class="bx bx-map"></i></div>
-            <div><span class="rd-page-kpi__label">Departs actifs</span><strong class="rd-page-kpi__value">{{ $stats['voyages'] ?? 0 }}</strong></div>
+        {{-- Le restant ouvre la serie : c'est la seule valeur sur laquelle on agit. --}}
+        <div class="rd-page-kpi rd-page-kpi--lead">
+            <span class="rd-page-kpi__label">RESTANT À ENCAISSER</span>
+            <strong class="rd-page-kpi__value">{{ number_format((float) ($stats['remaining_amount'] ?? 0), 0, ',', ' ') }} DH</strong>
+            <span class="rd-page-kpi__note">sur {{ number_format((float) ($stats['total_amount'] ?? 0), 0, ',', ' ') }} DH générés</span>
         </div>
         <div class="rd-page-kpi">
-            <div class="rd-page-kpi__icon" style="background:#eaf5ff;color:#0877bd;"><i class="bx bx-collection"></i></div>
-            <div><span class="rd-page-kpi__label">Reservations</span><strong class="rd-page-kpi__value">{{ $stats['reservations'] ?? 0 }}</strong></div>
+            <span class="rd-page-kpi__label">DÉPARTS ACTIFS</span>
+            <strong class="rd-page-kpi__value">{{ $stats['voyages'] ?? 0 }}</strong>
+            <span class="rd-page-kpi__note">avec au moins une réservation</span>
         </div>
         <div class="rd-page-kpi">
-            <div class="rd-page-kpi__icon" style="background:#fff2e8;color:#f97316;"><i class="bx bx-time-five"></i></div>
-            <div><span class="rd-page-kpi__label">En attente</span><strong class="rd-page-kpi__value">{{ $stats['pending'] ?? 0 }}</strong></div>
+            <span class="rd-page-kpi__label">RÉSERVATIONS</span>
+            <strong class="rd-page-kpi__value">{{ $stats['reservations'] ?? 0 }}</strong>
+            <span class="rd-page-kpi__note">{{ $stats['confirmed'] ?? 0 }} confirmées · {{ $stats['pending'] ?? 0 }} en attente</span>
+        </div>
+        <div class="rd-page-kpi rd-page-kpi--warn">
+            <span class="rd-page-kpi__label">À SUIVRE</span>
+            <strong class="rd-page-kpi__value">{{ $stats['follow_up'] ?? 0 }}</strong>
+            <span class="rd-page-kpi__note">relance ou solde à réclamer</span>
         </div>
         <div class="rd-page-kpi">
-            <div class="rd-page-kpi__icon" style="background:#f3edff;color:#7c3aed;"><i class="bx bx-bell"></i></div>
-            <div><span class="rd-page-kpi__label">A suivre</span><strong class="rd-page-kpi__value">{{ $stats['follow_up'] ?? 0 }}</strong></div>
-        </div>
-        <div class="rd-page-kpi">
-            <div class="rd-page-kpi__icon" style="background:#e8fff4;color:#12b76a;"><i class="bx bx-check-circle"></i></div>
-            <div><span class="rd-page-kpi__label">Payees</span><strong class="rd-page-kpi__value">{{ $stats['paid'] ?? 0 }}</strong></div>
-        </div>
-        <div class="rd-page-kpi">
-            <div class="rd-page-kpi__icon" style="background:#ffe8e8;color:#ef4444;"><i class="bx bx-wallet"></i></div>
-            <div><span class="rd-page-kpi__label">Restant DH</span><strong class="rd-page-kpi__value">{{ number_format((float) ($stats['remaining_amount'] ?? 0), 0, ',', ' ') }}</strong></div>
+            <span class="rd-page-kpi__label">PAYÉES</span>
+            <strong class="rd-page-kpi__value">{{ $stats['paid'] ?? 0 }}</strong>
+            <span class="rd-page-kpi__note">soldées intégralement</span>
         </div>
     </div>
 
     <div class="rd-panel">
         <div class="rd-toolbar">
             <div class="rd-tabs">
-                <a href="{{ route('admin.reservation-dossiers.index', array_merge($scopeBaseQuery, ['scope' => 'all'])) }}" class="rd-tab {{ $currentScope === 'all' ? 'active' : '' }}">Toutes les reservations</a>
-                <a href="{{ route('admin.reservation-dossiers.index', array_merge($scopeBaseQuery, ['scope' => 'agents'])) }}" class="rd-tab {{ $currentScope === 'agents' ? 'active' : '' }}">Reservations agents Ajinsafro</a>
-                <a href="{{ route('admin.reservation-dossiers.index', array_merge($scopeBaseQuery, ['scope' => 'partners'])) }}" class="rd-tab {{ $currentScope === 'partners' ? 'active' : '' }}">Reservations partenaires</a>
+                <a href="{{ route('admin.reservation-dossiers.index', array_merge($scopeBaseQuery, ['scope' => 'all'])) }}" class="rd-tab {{ $currentScope === 'all' ? 'active' : '' }}">Toutes les réservations</a>
+                <a href="{{ route('admin.reservation-dossiers.index', array_merge($scopeBaseQuery, ['scope' => 'agents'])) }}" class="rd-tab {{ $currentScope === 'agents' ? 'active' : '' }}">Réservations agents Ajinsafro</a>
+                <a href="{{ route('admin.reservation-dossiers.index', array_merge($scopeBaseQuery, ['scope' => 'partners'])) }}" class="rd-tab {{ $currentScope === 'partners' ? 'active' : '' }}">Réservations partenaires</a>
             </div>
             <div class="rd-tabs">
                 <a href="{{ route('admin.reservation-dossiers.index', array_merge(request()->except('status'), ['status' => 'all'])) }}" class="rd-tab {{ $currentStatus === 'all' ? 'active' : '' }}">Tous</a>
                 <a href="{{ route('admin.reservation-dossiers.index', array_merge(request()->except('status'), ['status' => 'pending'])) }}" class="rd-tab {{ $currentStatus === 'pending' ? 'active' : '' }}">En attente</a>
-                <a href="{{ route('admin.reservation-dossiers.index', array_merge(request()->except('status'), ['status' => 'paid'])) }}" class="rd-tab {{ $currentStatus === 'paid' ? 'active' : '' }}">Payees</a>
-                <a href="{{ route('admin.reservation-dossiers.index', array_merge(request()->except('status'), ['status' => 'follow_up'])) }}" class="rd-tab {{ $currentStatus === 'follow_up' ? 'active' : '' }}">A suivre</a>
+                <a href="{{ route('admin.reservation-dossiers.index', array_merge(request()->except('status'), ['status' => 'paid'])) }}" class="rd-tab {{ $currentStatus === 'paid' ? 'active' : '' }}">Payées</a>
+                <a href="{{ route('admin.reservation-dossiers.index', array_merge(request()->except('status'), ['status' => 'follow_up'])) }}" class="rd-tab {{ $currentStatus === 'follow_up' ? 'active' : '' }}">À suivre</a>
             </div>
 
             <form method="GET" action="{{ route('admin.reservation-dossiers.index') }}" class="rd-filter-grid">
@@ -589,7 +692,7 @@
                     <input type="hidden" name="scope" value="{{ $currentScope }}">
                 @endif
                 <div class="full">
-                    <label class="form-label">Recherche voyage / client / dossier</label>
+                    <label class="form-label">Recherche voyage, client ou dossier</label>
                     <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" class="form-control" placeholder="Ex. Dakhla, Oussama, RES-2026-000038">
                 </div>
                 <div>
@@ -620,27 +723,27 @@
                     </select>
                 </div>
                 <div>
-                    <label class="form-label">Statut reservation</label>
+                    <label class="form-label">Statut réservation</label>
                     <select name="reservation_status" class="form-select">
                         <option value="">Tous</option>
                         <option value="pending" @selected(($filters['reservation_status'] ?? '') === 'pending')>En attente</option>
-                        <option value="confirmed" @selected(($filters['reservation_status'] ?? '') === 'confirmed')>Confirmee</option>
-                        <option value="paid" @selected(($filters['reservation_status'] ?? '') === 'paid')>Payee</option>
-                        <option value="cancelled" @selected(($filters['reservation_status'] ?? '') === 'cancelled')>Annulee</option>
+                        <option value="confirmed" @selected(($filters['reservation_status'] ?? '') === 'confirmed')>Confirmée</option>
+                        <option value="paid" @selected(($filters['reservation_status'] ?? '') === 'paid')>Payée</option>
+                        <option value="cancelled" @selected(($filters['reservation_status'] ?? '') === 'cancelled')>Annulée</option>
                     </select>
                 </div>
                 <div>
-                    <label class="form-label">Periode</label>
+                    <label class="form-label">Période de départ</label>
                     <select name="period" class="form-select" onchange="this.form.submit()">
                         <option value="7d" @selected(($filters['period'] ?? 'all') === '7d')>7 derniers jours</option>
                         <option value="30d" @selected(($filters['period'] ?? '') === '30d')>30 derniers jours</option>
                         <option value="90d" @selected(($filters['period'] ?? '') === '90d')>90 derniers jours</option>
-                        <option value="all" @selected(($filters['period'] ?? '') === 'all')>Toutes les periodes</option>
+                        <option value="all" @selected(($filters['period'] ?? '') === 'all')>Toutes les périodes</option>
                     </select>
                 </div>
                 <div class="rd-filter-actions">
                     <button type="submit" class="rd-btn rd-btn-primary"><i class="bx bx-filter-alt"></i><span>Filtrer</span></button>
-                    <a href="{{ route('admin.reservation-dossiers.index', ['scope' => $currentScope]) }}" class="rd-mini-btn"><i class="bx bx-reset"></i><span>Reinitialiser</span></a>
+                    <a href="{{ route('admin.reservation-dossiers.index', ['scope' => $currentScope]) }}" class="rd-mini-btn"><i class="bx bx-reset"></i><span>Réinitialiser</span></a>
                 </div>
             </form>
         </div>
@@ -673,19 +776,36 @@
                                 </div>
 
                                 <div class="rd-mini-kpis">
-                                    <div class="rd-mini-kpi"><span>Reservations</span> <strong>{{ $voyageCard->reservations_count }}</strong></div>
+                                    <div class="rd-mini-kpi"><span>Réservations</span> <strong>{{ $voyageCard->reservations_count }}</strong></div>
                                     <div class="rd-mini-kpi"><span>En attente</span> <strong>{{ $voyageCard->pending_count }}</strong></div>
-                                    <div class="rd-mini-kpi"><span>Confirmees</span> <strong>{{ $voyageCard->confirmed_count }}</strong></div>
-                                    <div class="rd-mini-kpi"><span>A suivre</span> <strong>{{ $voyageCard->follow_up_count }}</strong></div>
-                                    <div class="rd-mini-kpi"><span>Total genere</span> <strong>{{ number_format($voyageCard->total_amount, 0, ',', ' ') }} DH</strong></div>
+                                    <div class="rd-mini-kpi"><span>Confirmées</span> <strong>{{ $voyageCard->confirmed_count }}</strong></div>
+                                    <div class="rd-mini-kpi"><span>À suivre</span> <strong>{{ $voyageCard->follow_up_count }}</strong></div>
+                                    <div class="rd-mini-kpi"><span>Total généré</span> <strong>{{ number_format($voyageCard->total_amount, 0, ',', ' ') }} DH</strong></div>
                                     <div class="rd-mini-kpi"><span>Restant</span> <strong>{{ number_format($voyageCard->remaining_amount, 0, ',', ' ') }} DH</strong></div>
                                 </div>
+
+                                @php
+                                    $cardTotal = (float) $voyageCard->total_amount;
+                                    $cardPaid = (float) $voyageCard->paid_amount;
+                                    $cardPercent = $cardTotal > 0 ? (int) round($cardPaid / $cardTotal * 100) : 0;
+                                @endphp
+                                @if($cardTotal > 0)
+                                    <div class="rd-gauge">
+                                        <div class="rd-gauge__top">
+                                            <span>Encaissé {{ number_format($cardPaid, 0, ',', ' ') }} DH sur {{ number_format($cardTotal, 0, ',', ' ') }} DH</span>
+                                            <strong>{{ $cardPercent }}{{ ' ' }}%</strong>
+                                        </div>
+                                        <div class="rd-gauge__bar" role="progressbar" aria-valuenow="{{ $cardPercent }}" aria-valuemin="0" aria-valuemax="100">
+                                            <span style="width:{{ min(100, $cardPercent) }}%"></span>
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
 
                             <div class="rd-card__actions">
                                 <button class="rd-btn rd-btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#voyage-{{ \Illuminate\Support\Str::slug($voyageCard->key) }}" aria-expanded="false">
                                     <i class="bx bx-list-ul"></i>
-                                    <span>Voir les reservations</span>
+                                    <span>Voir les réservations</span>
                                 </button>
                             </div>
                         </div>
@@ -693,7 +813,7 @@
                         <div class="collapse" id="voyage-{{ \Illuminate\Support\Str::slug($voyageCard->key) }}">
                             <div class="rd-card__detail">
                                 <p class="mb-3" style="color:#6b7a90;font-size:13px;font-weight:600;">
-                                    {{ $voyageCard->departure ? 'Reservations de ce depart uniquement.' : 'Reservations sans depart rattache.' }}
+                                    {{ $voyageCard->departure ? 'Réservations de ce départ uniquement.' : 'Réservations sans départ rattaché.' }}
                                 </p>
                                 <div class="rd-table-wrap">
                                     <table class="table rd-table align-middle">
@@ -701,14 +821,14 @@
                                             <tr>
                                                 <th>Dossier</th>
                                                 <th>Client</th>
-                                                <th>Telephone</th>
-                                                <th>Depart</th>
-                                                <th>Reservation</th>
+                                                <th>Téléphone</th>
+                                                <th>Départ</th>
+                                                <th>Réservation</th>
                                                 <th>{{ $agentColumnLabel }}</th>
                                                 <th>Statut</th>
                                                 <th>Paiement</th>
                                                 <th>Total</th>
-                                                <th>Paye</th>
+                                                <th>Payé</th>
                                                 <th>Restant</th>
                                                 <th>Actions</th>
                                             </tr>
@@ -754,7 +874,7 @@
                                                     <td>
                                                         {{ number_format((float) $reservation->effective_remaining_amount, 2, ',', ' ') }} DH
                                                         @if((float) $reservation->effective_remaining_amount > 0)
-                                                            <div class="mt-1"><span class="rd-badge is-follow-up-light">Restant a solder</span></div>
+                                                            <div class="mt-1"><span class="rd-badge is-follow-up-light">Restant à solder</span></div>
                                                         @endif
                                                     </td>
                                                     <td>
@@ -795,7 +915,7 @@
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="12" class="text-center py-4 text-muted">Aucune reservation pour ce depart</td>
+                                                    <td colspan="12" class="text-center py-4 text-muted">Aucune réservation pour ce départ</td>
                                                 </tr>
                                             @endforelse
                                         </tbody>
@@ -807,9 +927,20 @@
                 @endforeach
             </div>
 
+            <div class="rd-totals">
+                <span class="rd-totals__title">Total, {{ $stats['voyages'] ?? 0 }} départ{{ ($stats['voyages'] ?? 0) > 1 ? 's' : '' }}</span>
+                <div class="rd-totals__list">
+                    <span>{{ $stats['reservations'] ?? 0 }} réservation{{ ($stats['reservations'] ?? 0) > 1 ? 's' : '' }}</span>
+                    <span>{{ $stats['pending'] ?? 0 }} en attente</span>
+                    <span>{{ $stats['confirmed'] ?? 0 }} confirmée{{ ($stats['confirmed'] ?? 0) > 1 ? 's' : '' }}</span>
+                    <span>Généré <strong>{{ number_format((float) ($stats['total_amount'] ?? 0), 0, ',', ' ') }} DH</strong></span>
+                    <span>Restant <strong class="is-warn">{{ number_format((float) ($stats['remaining_amount'] ?? 0), 0, ',', ' ') }} DH</strong></span>
+                </div>
+            </div>
+
             <div class="rd-pagination">
                 <div>
-                    Affichage de {{ $voyages->firstItem() ?? 0 }} a {{ $voyages->lastItem() ?? 0 }} sur {{ $voyages->total() }} departs avec reservations
+                    Affichage de {{ $voyages->firstItem() ?? 0 }} à {{ $voyages->lastItem() ?? 0 }} sur {{ $voyages->total() }} départs avec réservations
                 </div>
                 <div>{{ $voyages->links() }}</div>
             </div>
@@ -817,8 +948,8 @@
             <div class="rd-empty">
                 <div>
                     <i class="bx bx-map"></i>
-                    <h3 class="h5 mb-2">Aucun dossier de reservation trouve</h3>
-                    <p class="mb-0">Aucun depart ne correspond aux filtres actuels. Ajustez la periode ou les statuts pour retrouver l'activite reservation.</p>
+                    <h3 class="h5 mb-2">Aucun départ ne correspond aux filtres</h3>
+                    <p class="mb-0">Élargissez la période ou changez les statuts pour retrouver l'activité réservation.</p>
                 </div>
             </div>
         @endif
@@ -854,7 +985,7 @@
         form.addEventListener('submit', function (e) {
             e.preventDefault();
             var message = form.querySelector('[data-confirm-delete]')?.dataset.confirmDelete
-                || 'Voulez-vous vraiment supprimer cette reservation ?';
+                || 'Voulez-vous vraiment supprimer cette réservation\u00a0?';
             if (confirm(message)) {
                 form.submit();
             }

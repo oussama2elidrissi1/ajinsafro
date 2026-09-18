@@ -2,237 +2,271 @@
 @section('title', 'Catalogue voyages')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/reservation-workspace.css') }}?v=partner-catalogue-v1">
-    <style>
-        .partner-catalogue-grid .ws-offer-card--compact {
-            display: flex;
-            flex-direction: column;
-        }
-        .partner-catalogue-card-media {
-            flex: 0 0 auto;
-            width: 100%;
-            height: 150px;
-            min-height: 150px;
-            overflow: hidden;
-            background: #e6f3fa;
-        }
-        .partner-catalogue-card-media img,
-        .partner-catalogue-card-media .partner-catalogue-card-placeholder {
-            display: block;
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/partner-catalogue.css') }}?v=1">
 @endpush
 
 @section('content')
 @php
     $rows = $workspaceRows ?? collect();
+
+    /**
+     * Etat commercial d'une offre, deduit des donnees reelles :
+     *   open = au moins un depart futur avec des places
+     *   full = des departs, mais plus de place
+     *   req  = aucune date programmee, vente sur demande
+     */
+    $statusOf = static function ($row): string {
+        $departures = collect(data_get($row, 'modal_detail.departures', []));
+        if ($departures->isEmpty()) {
+            return 'req';
+        }
+        $capacity = data_get($departures->first(), 'available_capacity');
+
+        return $capacity === null || (int) $capacity > 0 ? 'open' : 'full';
+    };
+
+    $statusCounts = ['all' => $rows->count(), 'open' => 0, 'full' => 0, 'req' => 0];
+    foreach ($rows as $row) {
+        $statusCounts[$statusOf($row)]++;
+    }
+
+    $openSeats = 0;
+    foreach ($rows as $row) {
+        if ($statusOf($row) !== 'open') {
+            continue;
+        }
+        $openSeats += (int) data_get(collect(data_get($row, 'modal_detail.departures', []))->first(), 'available_capacity', 0);
+    }
+
+    $chips = [
+        ['key' => 'all', 'label' => 'Tout le catalogue'],
+        ['key' => 'open', 'label' => 'Départs ouverts'],
+        ['key' => 'full', 'label' => 'Complets'],
+        ['key' => 'req', 'label' => 'Sur demande'],
+    ];
 @endphp
 
-<div class="mb-6">
-    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-        <div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-[#0e3a5a]">Catalogue des voyages & départs</h1>
-            <p class="text-sm text-gray-500 mt-1">Même présentation que le back-office : sélection rapide du départ puis réservation.</p>
-        </div>
-        <div class="flex items-center gap-2">
-            <input id="partner-catalog-search" type="search" class="w-full sm:w-[320px] rounded-xl border border-gray-200 px-4 py-2 text-sm"
-                   placeholder="Rechercher…" autocomplete="off">
-        </div>
-    </div>
-</div>
+<div class="pc-catalogue">
 
-{{-- Barre filtres (comme admin vente/catalogue) --}}
-<div class="bg-white rounded-2xl border border-gray-100 shadow-custom p-4 mb-6">
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-3 items-end">
-        <div>
-            <div class="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider mb-1">Type</div>
-            <select id="partner-filter-type" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm font-bold">
-                <option value="all">Tous</option>
-                <option value="package" selected>Circuit</option>
-            </select>
-        </div>
-        <div>
-            <div class="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider mb-1">Destination</div>
-            <select id="partner-filter-destination" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm font-bold">
-                <option value="">Toutes</option>
-                @foreach(($destinationOptions ?? []) as $d)
-                    <option value="{{ $d }}">{{ $d }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div>
-            <div class="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider mb-1">Date départ du</div>
-            <input id="partner-filter-date-from" type="date" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm font-bold">
-        </div>
-        <div>
-            <div class="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider mb-1">Date départ au</div>
-            <input id="partner-filter-date-to" type="date" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm font-bold">
-        </div>
-        <div class="xl:col-span-1">
-            <div class="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider mb-1">Segment budget</div>
-            <div class="flex items-center gap-3">
-                <input id="partner-filter-budget" type="range" min="0" max="30000" step="500" value="30000" class="w-full">
-                <div class="text-xs font-black text-[#0e3a5a]" id="partner-filter-budget-label">MAX 30000</div>
+    <div class="pc-head">
+        <div style="min-width:0;">
+            <div class="pc-crumbs">
+                <a href="{{ route('partner.dashboard') }}">Portail partenaire</a>
+                <span class="pc-sep">/</span>
+                <span>Catalogue</span>
             </div>
+            <h1 class="pc-title">Voyages &amp; départs à la vente</h1>
+            <p class="pc-lead">Choisissez un départ programmé pour réserver immédiatement, ou demandez une date pour les offres sur devis.</p>
         </div>
-        <div class="flex items-center gap-2 justify-end xl:col-span-1">
-            <button type="button" id="partner-filter-apply" class="bg-[#0083c4] hover:bg-[#0e3a5a] text-white px-4 py-2 rounded-xl text-sm font-black transition-colors">
-                <i class="fa-solid fa-filter mr-2"></i> Filtrer
-            </button>
-            <button type="button" id="partner-filter-reset" class="px-4 py-2 rounded-xl text-sm font-black border border-gray-200 hover:bg-white">
-                Réinitialiser
-            </button>
+        <div class="pc-head-actions">
+            @if(Route::has('partner.reservations-a-la-carte'))
+                <a href="{{ route('partner.reservations-a-la-carte') }}" class="pc-btn -outline">Demande à la carte</a>
+            @endif
+            @if(Route::has('partner.reservations.create'))
+                <a href="{{ route('partner.reservations.create') }}" class="pc-btn -accent">Nouvelle réservation</a>
+            @endif
         </div>
     </div>
-</div>
 
-<div class="partner-catalogue-grid ws-catalog-grid ws-catalog-grid--compact grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6" id="partner-catalog-grid">
-    @forelse($rows as $row)
-        @php
-            $departures = collect(data_get($row, 'modal_detail.departures', []))->values();
-            $extraCount = max(0, (int) data_get($row, 'ws_future_count', 0) - $departures->count());
-            $imageUrl = data_get($row, 'image_url');
-            $firstDeparture = $departures->first();
-            $firstDateIso = data_get($firstDeparture, 'date_iso');
-            $isNear = false;
-            try {
-                if ($firstDateIso) {
-                    $depDay = \Carbon\Carbon::parse($firstDateIso)->startOfDay();
-                    $today = \Carbon\Carbon::today();
-                    $isNear = $depDay->gte($today) && $depDay->lte($today->copy()->addDays(30));
-                }
-            } catch (\Throwable $e) {}
-            $firstCap = data_get($firstDeparture, 'available_capacity');
-            $firstPrice = (float) data_get($firstDeparture, 'unit_price', 0);
-        @endphp
-        <article class="ws-offer-card ws-offer-card--compact bg-white rounded-2xl shadow-custom border border-gray-100 overflow-hidden"
-                 data-type="{{ $row['type'] ?? 'package' }}"
-                 data-destination="{{ e((string) ($row['voyage_destination'] ?? '')) }}"
-                 data-price="{{ (float) ($row['price_value'] ?? 0) }}"
-                 data-next-date="{{ e((string) data_get($firstDeparture, 'date_iso', '')) }}"
-                 data-search="{{ Str::lower(trim(($row['name'] ?? '').' '.($row['voyage_destination'] ?? ''))) }}">
-            {{-- Image header (comme admin vente/catalogue) --}}
-            <div class="partner-catalogue-card-media relative">
-                @if($imageUrl)
-                    <img src="{{ $imageUrl }}" alt="">
-                @else
-                    <div class="partner-catalogue-card-placeholder bg-gradient-to-r from-[#e6f3fa] to-white"></div>
-                @endif
-                <div class="absolute inset-0 bg-gradient-to-t from-black/35 via-black/0 to-black/0"></div>
-                <div class="absolute top-3 left-3 flex items-center gap-2">
-                    @if($isNear)
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-black bg-[#e6f3fa] text-[#0e3a5a] border border-[#cfe9f7]">DÉPART PROCHE</span>
+    <section class="pc-filters">
+        <div class="pc-filters-top">
+            <div class="pc-search">
+                <span class="pc-search-dot" aria-hidden="true"></span>
+                <label for="partner-catalog-search" class="visually-hidden" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Rechercher une offre</label>
+                <input id="partner-catalog-search" type="search" autocomplete="off"
+                       placeholder="Nom du voyage, référence, destination…">
+            </div>
+            <button type="button" class="pc-toggle" id="pc-toggle-filters" aria-expanded="false" aria-controls="pc-advanced">Filtres avancés</button>
+            <label class="pc-sort">
+                <span>Trier</span>
+                <select id="pc-sort">
+                    <option value="dep">Départs programmés d'abord</option>
+                    <option value="price">Prix croissant</option>
+                    <option value="az">Ordre alphabétique</option>
+                </select>
+            </label>
+        </div>
+
+        <div class="pc-advanced" id="pc-advanced" hidden>
+            <label class="pc-field">
+                <span>Type</span>
+                <select id="partner-filter-type">
+                    <option value="all">Tous</option>
+                    <option value="package" selected>Circuit</option>
+                </select>
+            </label>
+            <label class="pc-field">
+                <span>Destination</span>
+                <select id="partner-filter-destination">
+                    <option value="">Toutes</option>
+                    @foreach(($destinationOptions ?? []) as $d)
+                        <option value="{{ $d }}">{{ $d }}</option>
+                    @endforeach
+                </select>
+            </label>
+            <label class="pc-field">
+                <span>Départ du</span>
+                <input id="partner-filter-date-from" type="date" class="pc-mono">
+            </label>
+            <label class="pc-field">
+                <span>Départ au</span>
+                <input id="partner-filter-date-to" type="date" class="pc-mono">
+            </label>
+            <label class="pc-field pc-field-range">
+                <span>Budget par personne <b class="pc-mono" id="partner-filter-budget-label">jusqu'à 30 000 DH</b></span>
+                <input id="partner-filter-budget" type="range" min="0" max="30000" step="500" value="30000">
+            </label>
+            <button type="button" id="partner-filter-apply" class="pc-btn -brand">Filtrer</button>
+            <button type="button" id="partner-filter-reset" class="pc-btn -outline">Réinitialiser</button>
+        </div>
+
+        <div class="pc-chips" role="group" aria-label="Filtrer par état du départ">
+            @foreach($chips as $chip)
+                <button type="button" class="pc-chip" data-chip="{{ $chip['key'] }}"
+                        aria-pressed="{{ $chip['key'] === 'all' ? 'true' : 'false' }}">
+                    {{ $chip['label'] }}<b class="pc-mono">{{ $statusCounts[$chip['key']] }}</b>
+                </button>
+            @endforeach
+        </div>
+    </section>
+
+    <div class="pc-resultline">
+        <span><b class="pc-mono" id="pc-shown-count">{{ $rows->count() }}</b> offre{{ $rows->count() > 1 ? 's' : '' }} affichée{{ $rows->count() > 1 ? 's' : '' }}
+            @if($statusCounts['open'] > 0)
+                · {{ $openSeats }} place{{ $openSeats > 1 ? 's' : '' }} réservable{{ $openSeats > 1 ? 's' : '' }} sur {{ $statusCounts['open'] }} départ{{ $statusCounts['open'] > 1 ? 's' : '' }}
+            @else
+                · aucune place réservable dans cette sélection
+            @endif
+        </span>
+        <span class="pc-note">Prix nets partenaire, par personne</span>
+    </div>
+
+    <div class="pc-grid" id="partner-catalog-grid">
+        @forelse($rows as $row)
+            @php
+                $departures = collect(data_get($row, 'modal_detail.departures', []))->values();
+                $firstDeparture = $departures->first();
+                $imageUrl = data_get($row, 'image_url');
+                $status = $statusOf($row);
+                $capacity = data_get($firstDeparture, 'available_capacity');
+                $futureCount = (int) data_get($row, 'ws_future_count', 0);
+                $reference = (int) ($row['wp_post_id'] ?? 0) ?: (int) ($row['voyage_id'] ?? 0);
+
+                $flagLabel = match ($status) {
+                    'open' => 'RÉSERVABLE',
+                    'full' => 'COMPLET',
+                    default => 'SUR DEMANDE',
+                };
+                $seatLabel = match ($status) {
+                    'open' => $capacity === null ? 'Places à confirmer' : (int) $capacity.' place'.((int) $capacity > 1 ? 's' : ''),
+                    'full' => "Liste d'attente",
+                    default => 'Capacité à définir',
+                };
+            @endphp
+            <article class="pc-card{{ $status === 'open' ? ' is-open' : '' }}"
+                     data-type="{{ $row['type'] ?? 'package' }}"
+                     data-destination="{{ e((string) ($row['voyage_destination'] ?? '')) }}"
+                     data-price="{{ (float) ($row['price_value'] ?? 0) }}"
+                     data-next-date="{{ e((string) data_get($firstDeparture, 'date_iso', '')) }}"
+                     data-status="{{ $status }}"
+                     data-title="{{ e((string) ($row['name'] ?? '')) }}"
+                     data-search="{{ Str::lower(trim(($row['name'] ?? '').' '.($row['voyage_destination'] ?? ''))) }}">
+
+                <div class="pc-card-media">
+                    @if($imageUrl)
+                        {{-- Visuel injoignable : on retombe sur la trame plutot que sur une icone cassee. --}}
+                        <img src="{{ $imageUrl }}" alt="" loading="lazy" onerror="this.remove();">
+                    @else
+                        <span class="pc-media-tag pc-mono">VISUEL À VENIR</span>
+                    @endif
+                    <span class="pc-flag -{{ $status }}">{{ $flagLabel }}</span>
+                    @if($reference > 0)
+                        <span class="pc-ref pc-mono">#{{ $reference }}</span>
                     @endif
                 </div>
-            </div>
 
-            <div class="ws-offer-card__body ws-offer-card__body--compact p-5 flex flex-col gap-4">
-                <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                        <div class="flex items-center gap-2">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-black bg-white text-[#0e3a5a] border border-gray-100 shadow-sm">CIRCUIT</span>
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-black bg-white text-gray-600 border border-gray-100 shadow-sm">
-                                #{{ (int) ($row['wp_post_id'] ?? 0) ?: (int) ($row['voyage_id'] ?? 0) }}
-                            </span>
+                <div class="pc-card-body">
+                    <div>
+                        <div class="pc-card-meta">
+                            <span class="pc-type">CIRCUIT</span>
+                            @if(!empty($row['voyage_destination']))
+                                <span class="pc-place">{{ $row['voyage_destination'] }}</span>
+                            @endif
                         </div>
-                        <h3 class="mt-2 font-extrabold text-[#0e3a5a] text-[15px] leading-snug line-clamp-2">{{ $row['name'] ?? 'Voyage' }}</h3>
-                        <p class="text-xs text-gray-500 mt-1">
-                            WP #{{ (int) ($row['wp_post_id'] ?? 0) }} · Laravel #{{ (int) ($row['voyage_id'] ?? 0) }}
-                        </p>
-                        @if(!empty($row['voyage_destination']))
-                            <p class="text-sm text-[#0e3a5a] font-bold mt-2 flex items-center gap-2">
-                                <i class="fa-solid fa-location-dot text-[#0083c4]"></i>
-                                <span class="truncate">{{ $row['voyage_destination'] }}</span>
-                            </p>
+                        <h2 class="pc-card-title">{{ $row['name'] ?? 'Voyage' }}</h2>
+                    </div>
+
+                    <div class="pc-price-row">
+                        <div style="min-width:0;">
+                            <div class="pc-price-label">À partir de</div>
+                            @php
+                                // « 8 600 DH » : le montant en chiffres tabulaires, l'unite plus discrete.
+                                $priceLabel = trim((string) ($row['price_label'] ?? '—'));
+                                $priceParts = preg_split('/\s+(?=\S+$)/u', $priceLabel);
+                                // On ne detache le dernier mot que s'il ne contient aucun chiffre :
+                                // « 8 600 DH » se scinde, « 8 600 » (devise absente) reste entier.
+                                $hasUnit = count($priceParts) > 1 && ! preg_match('/\d/', $priceParts[1]);
+                                $priceAmount = $hasUnit ? $priceParts[0] : $priceLabel;
+                                $priceUnit = $hasUnit ? $priceParts[1] : '';
+                            @endphp
+                            <div class="pc-price">
+                                <strong class="pc-mono">{{ $priceAmount }}</strong>
+                                @if($priceUnit !== '')<span>{{ $priceUnit }}</span>@endif
+                            </div>
+                        </div>
+                        <span class="pc-seats -{{ $status }}">{{ $seatLabel }}</span>
+                    </div>
+
+                    <div class="pc-card-foot">
+                        @if($firstDeparture)
+                            <div class="pc-foot-top">
+                                <span>Prochain départ</span>
+                                <span>{{ $futureCount > 1 ? $futureCount.' dates' : '1 date' }}</span>
+                            </div>
+                            <div class="pc-foot-date pc-mono">{{ data_get($firstDeparture, 'label') }}</div>
+                            <div class="pc-foot-actions">
+                                @if(data_get($firstDeparture, 'routes.reserve') && $status === 'open')
+                                    <a href="{{ data_get($firstDeparture, 'routes.reserve') }}" class="pc-btn -accent">Réserver ce départ</a>
+                                @elseif(data_get($firstDeparture, 'routes.reserve'))
+                                    <a href="{{ data_get($firstDeparture, 'routes.reserve') }}" class="pc-btn -brand">Rejoindre la liste d'attente</a>
+                                @endif
+                                <button type="button" class="pc-link js-open-departures"
+                                        data-tour-id="{{ (int) ($row['voyage_id'] ?? 0) }}"
+                                        data-tour-name="{{ e($row['name'] ?? 'Voyage') }}">Tous les départs →</button>
+                            </div>
+                        @else
+                            <div class="pc-foot-note">Aucune date programmée pour le moment.</div>
+                            <div class="pc-foot-actions">
+                                @if(Route::has('partner.reservations.create'))
+                                    <a href="{{ route('partner.reservations.create') }}" class="pc-btn -outline">Demander une date</a>
+                                @endif
+                                <button type="button" class="pc-link js-open-departures"
+                                        data-tour-id="{{ (int) ($row['voyage_id'] ?? 0) }}"
+                                        data-tour-name="{{ e($row['name'] ?? 'Voyage') }}">Voir l'offre →</button>
+                            </div>
                         @endif
                     </div>
                 </div>
-
-                {{-- Prix & capacité (style admin) --}}
-                <div class="grid grid-cols-1 gap-2">
-                    <div class="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
-                        <div class="flex items-center gap-2 text-xs font-extrabold text-[#0e3a5a] uppercase tracking-wider">
-                            <i class="fa-solid fa-coins text-[#0083c4]"></i>
-                            <span>Prix à partir de</span>
-                        </div>
-                        <div class="font-black text-[#0e3a5a]">{{ $row['price_label'] ?? '—' }}</div>
-                    </div>
-                    <div class="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
-                        <div class="flex items-center gap-2 text-xs font-extrabold text-[#0e3a5a] uppercase tracking-wider">
-                            <i class="fa-solid fa-users text-[#0083c4]"></i>
-                            <span>Capacité</span>
-                        </div>
-                        <div class="font-black text-[#0e3a5a]">
-                            {{ $firstCap !== null ? ((int) $firstCap . ' restantes') : 'À configurer' }}
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Stats (simplifiées) --}}
-                <div class="rounded-xl border border-gray-100 bg-white px-4 py-3">
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="font-black text-[#0e3a5a]">0 vendues</span>
-                        <span class="font-black text-green-700">{{ $firstCap !== null ? (int) $firstCap : 0 }} restantes</span>
-                    </div>
-                    <div class="mt-2 h-2 rounded-full bg-gray-100 overflow-hidden">
-                        <div class="h-2 bg-[#e6f3fa]" style="width: 0%"></div>
-                    </div>
-                    <div class="mt-1 text-right text-xs text-gray-400 font-bold">0%</div>
-                </div>
-
-                {{-- Prochain départ (comme admin) --}}
-                <div class="rounded-2xl border border-gray-100 bg-gray-50/60 p-4">
-                    <div class="text-xs font-extrabold uppercase tracking-wider text-[#0e3a5a]">Prochain départ</div>
-                    @if($firstDeparture)
-                        <div class="mt-2 flex items-center justify-between gap-3">
-                            <div class="min-w-0">
-                                <div class="font-extrabold text-[#0e3a5a] text-sm truncate">{{ data_get($firstDeparture, 'label') }}</div>
-                                <div class="mt-2 flex items-center gap-2 text-xs text-gray-500">
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-green-100 text-green-800 font-black">
-                                        {{ $firstCap !== null ? ((int) $firstCap . ' places') : '—' }}
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="text-right shrink-0">
-                                <div class="text-xs text-gray-500">Prix / pers</div>
-                                <div class="font-black text-[#0e3a5a]">{{ $firstPrice > 0 ? number_format($firstPrice, 0, ',', ' ') . ' MAD' : '—' }}</div>
-                            </div>
-                        </div>
-
-                        <div class="mt-3 flex items-center justify-between">
-                            <button type="button"
-                                    class="text-sm font-extrabold text-[#0083c4] hover:text-[#0e3a5a] js-open-departures"
-                                    data-tour-id="{{ (int) ($row['voyage_id'] ?? 0) }}"
-                                    data-tour-name="{{ e($row['name'] ?? 'Voyage') }}">
-                                Voir tous les départs ({{ (int) data_get($row, 'ws_future_count', 0) }})
-                            </button>
-                            @if(data_get($firstDeparture, 'routes.reserve'))
-                                <a href="{{ data_get($firstDeparture, 'routes.reserve') }}"
-                                   class="inline-flex items-center justify-center bg-[#0083c4] hover:bg-[#0e3a5a] text-white px-4 py-2 rounded-xl text-xs font-black transition-colors">
-                                    Réserver
-                                </a>
-                            @endif
-                        </div>
-                    @else
-                        <div class="mt-2 text-sm text-gray-500">Aucun départ futur disponible.</div>
-                    @endif
+            </article>
+        @empty
+            <div style="grid-column:1/-1;">
+                <div class="pc-empty">
+                    <h2>Aucune offre au catalogue</h2>
+                    <p>Aucun voyage n'est ouvert à la vente pour le moment. Revenez plus tard ou contactez votre conseiller Ajinsafro.</p>
                 </div>
             </div>
-        </article>
-    @empty
-        <div class="col-span-full">
-            <div class="bg-white rounded-2xl shadow-custom border border-gray-100 p-6 text-gray-600">
-                Aucun voyage disponible pour le moment.
-            </div>
-        </div>
-    @endforelse
-</div>
+        @endforelse
+    </div>
 
-<div class="mt-6">
-    {{ $voyages->links("pagination::tailwind") }}
+    {{-- Etat vide du filtrage cote client, affiche par le script. --}}
+    <div class="pc-empty" id="pc-empty-filtered" hidden>
+        <h2>Aucune offre pour ce filtre</h2>
+        <p>Élargissez le budget ou revenez à l'ensemble du catalogue.</p>
+        <button type="button" class="pc-btn -brand" id="pc-clear-filters">Voir tout le catalogue</button>
+    </div>
+
+    <div>{{ $voyages->links('pagination::bootstrap-5') }}</div>
+
 </div>
 
 {{-- Modal liste départs (identique concept admin : "voir tous les départs") --}}
@@ -263,24 +297,11 @@
 @push('scripts')
 <script>
 (function () {
-    var input = document.getElementById('partner-catalog-search');
-    var grid = document.getElementById('partner-catalog-grid');
-    if (!input || !grid) return;
-    function norm(v){ return String(v||'').toLowerCase().trim(); }
-    input.addEventListener('input', function () {
-        var q = norm(input.value);
-        grid.querySelectorAll('[data-search]').forEach(function (card) {
-            var blob = norm(card.getAttribute('data-search'));
-            card.style.display = (q === '' || blob.indexOf(q) !== -1) ? '' : 'none';
-        });
-    });
-})();
-</script>
-<script>
-(function () {
     var grid = document.getElementById('partner-catalog-grid');
     if (!grid) return;
 
+    var cards = Array.prototype.slice.call(grid.querySelectorAll('.pc-card'));
+    var searchEl = document.getElementById('partner-catalog-search');
     var typeEl = document.getElementById('partner-filter-type');
     var destEl = document.getElementById('partner-filter-destination');
     var fromEl = document.getElementById('partner-filter-date-from');
@@ -289,13 +310,16 @@
     var budgetLabel = document.getElementById('partner-filter-budget-label');
     var applyBtn = document.getElementById('partner-filter-apply');
     var resetBtn = document.getElementById('partner-filter-reset');
+    var sortEl = document.getElementById('pc-sort');
+    var toggleBtn = document.getElementById('pc-toggle-filters');
+    var advanced = document.getElementById('pc-advanced');
+    var chipBtns = Array.prototype.slice.call(document.querySelectorAll('.pc-chip'));
+    var shownCount = document.getElementById('pc-shown-count');
+    var emptyBox = document.getElementById('pc-empty-filtered');
+    var clearBtn = document.getElementById('pc-clear-filters');
+    var chip = 'all';
 
     function norm(v) { return String(v || '').toLowerCase().trim(); }
-
-    function refreshBudgetLabel() {
-        if (!budgetEl || !budgetLabel) return;
-        budgetLabel.textContent = 'MAX ' + String(budgetEl.value || '0');
-    }
 
     function asDate(value) {
         if (!value) return null;
@@ -303,53 +327,121 @@
         return isNaN(d.getTime()) ? null : d;
     }
 
-    function applyFilters() {
+    function refreshBudgetLabel() {
+        if (!budgetEl || !budgetLabel) return;
+        var n = Number(budgetEl.value || 0);
+        // Espace insecable fin remplace par une espace simple : meme rendu partout.
+        budgetLabel.textContent = 'jusqu’à ' + n.toLocaleString('fr-FR').replace(/ | /g, ' ') + ' DH';
+    }
+
+    function apply() {
+        var q = searchEl ? norm(searchEl.value) : '';
         var typeVal = typeEl ? String(typeEl.value || 'all') : 'all';
         var destVal = destEl ? String(destEl.value || '') : '';
         var dateFrom = fromEl ? asDate(fromEl.value) : null;
         var dateTo = toEl ? asDate(toEl.value) : null;
         var maxBudget = budgetEl ? parseFloat(budgetEl.value || '0') : null;
+        var visible = 0;
 
-        grid.querySelectorAll('[data-type]').forEach(function (card) {
+        cards.forEach(function (card) {
             var show = true;
+
+            if (q) {
+                show = show && norm(card.getAttribute('data-search')).indexOf(q) !== -1;
+            }
+            if (chip !== 'all') {
+                show = show && String(card.getAttribute('data-status') || '') === chip;
+            }
             if (typeVal !== 'all') {
-                show = show && (String(card.getAttribute('data-type') || 'package') === typeVal);
+                show = show && String(card.getAttribute('data-type') || 'package') === typeVal;
             }
             if (destVal) {
-                show = show && (String(card.getAttribute('data-destination') || '') === destVal);
+                show = show && String(card.getAttribute('data-destination') || '') === destVal;
             }
             if (maxBudget !== null && maxBudget > 0) {
                 var price = parseFloat(card.getAttribute('data-price') || '0') || 0;
-                show = show && (price <= maxBudget);
+                show = show && price <= maxBudget;
             }
-            var nextDateStr = String(card.getAttribute('data-next-date') || '');
             if (dateFrom || dateTo) {
-                var next = nextDateStr ? new Date(nextDateStr + 'T00:00:00') : null;
-                if (!next || isNaN(next.getTime())) {
+                var next = asDate(String(card.getAttribute('data-next-date') || ''));
+                if (!next) {
                     show = false;
                 } else {
-                    if (dateFrom) show = show && (next.getTime() >= dateFrom.getTime());
-                    if (dateTo) show = show && (next.getTime() <= dateTo.getTime());
+                    if (dateFrom) show = show && next.getTime() >= dateFrom.getTime();
+                    if (dateTo) show = show && next.getTime() <= dateTo.getTime();
                 }
             }
-            card.style.display = show ? '' : 'none';
+
+            card.hidden = !show;
+            if (show) visible++;
         });
+
+        if (shownCount) shownCount.textContent = String(visible);
+        if (emptyBox) emptyBox.hidden = visible !== 0 || cards.length === 0;
     }
 
-    function resetFilters() {
+    function sortCards() {
+        var mode = sortEl ? String(sortEl.value || 'dep') : 'dep';
+        var rank = { open: 0, full: 1, req: 2 };
+        var sorted = cards.slice().sort(function (a, b) {
+            if (mode === 'price') {
+                return (parseFloat(a.getAttribute('data-price')) || 0) - (parseFloat(b.getAttribute('data-price')) || 0);
+            }
+            if (mode === 'az') {
+                return String(a.getAttribute('data-title') || '')
+                    .localeCompare(String(b.getAttribute('data-title') || ''), 'fr');
+            }
+            var byStatus = (rank[a.getAttribute('data-status')] ?? 3) - (rank[b.getAttribute('data-status')] ?? 3);
+            if (byStatus !== 0) return byStatus;
+            return (parseFloat(a.getAttribute('data-price')) || 0) - (parseFloat(b.getAttribute('data-price')) || 0);
+        });
+        sorted.forEach(function (card) { grid.appendChild(card); });
+    }
+
+    function reset() {
+        if (searchEl) searchEl.value = '';
         if (typeEl) typeEl.value = 'package';
         if (destEl) destEl.value = '';
         if (fromEl) fromEl.value = '';
         if (toEl) toEl.value = '';
         if (budgetEl) budgetEl.value = '30000';
+        chip = 'all';
+        chipBtns.forEach(function (b) {
+            b.setAttribute('aria-pressed', b.getAttribute('data-chip') === 'all' ? 'true' : 'false');
+        });
         refreshBudgetLabel();
-        applyFilters();
+        apply();
     }
 
-    if (budgetEl) budgetEl.addEventListener('input', refreshBudgetLabel);
-    if (applyBtn) applyBtn.addEventListener('click', applyFilters);
-    if (resetBtn) resetBtn.addEventListener('click', resetFilters);
+    if (searchEl) searchEl.addEventListener('input', apply);
+    if (budgetEl) budgetEl.addEventListener('input', function () { refreshBudgetLabel(); apply(); });
+    [typeEl, destEl, fromEl, toEl].forEach(function (el) {
+        if (el) el.addEventListener('change', apply);
+    });
+    if (applyBtn) applyBtn.addEventListener('click', apply);
+    if (resetBtn) resetBtn.addEventListener('click', reset);
+    if (clearBtn) clearBtn.addEventListener('click', reset);
+    if (sortEl) sortEl.addEventListener('change', function () { sortCards(); apply(); });
+
+    if (toggleBtn && advanced) {
+        toggleBtn.addEventListener('click', function () {
+            var open = toggleBtn.getAttribute('aria-expanded') === 'true';
+            toggleBtn.setAttribute('aria-expanded', open ? 'false' : 'true');
+            advanced.hidden = open;
+        });
+    }
+
+    chipBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            chip = btn.getAttribute('data-chip') || 'all';
+            chipBtns.forEach(function (b) { b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'); });
+            apply();
+        });
+    });
+
     refreshBudgetLabel();
+    sortCards();
+    apply();
 })();
 </script>
 <script>

@@ -1,0 +1,660 @@
+/*
+ * Catalogue du portail partenaire.
+ *
+ * Tout est porté par `.pc-catalogue` : la coque Tailwind du portail v2 n'est
+ * pas touchée. Les jetons reprennent ceux des autres écrans de la refonte.
+ */
+
+.pc-catalogue {
+    --pc-ink: #10263d;
+    --pc-body: #4d6a85;
+    --pc-meta: #5b7690;
+    --pc-line: #dce7f2;
+    --pc-line-soft: #f1f6fb;
+    --pc-surface: #fff;
+    --pc-canvas: #f7fafd;
+    --pc-brand: #144e8c;
+    --pc-brand-dark: #0d3767;
+    --pc-brand-soft: #eef4fa;
+    --pc-accent: #f5821f;
+    --pc-ok: #0f6b52;
+    --pc-ok-soft: #e8f6f1;
+    --pc-warn-ink: #8a5209;
+    --pc-warn-soft: #fff5ec;
+
+    color: var(--pc-ink);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.pc-catalogue .pc-mono {
+    font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
+}
+
+/* ── En-tête ───────────────────────────────────────────────────────────── */
+
+.pc-catalogue .pc-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+.pc-catalogue .pc-crumbs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 11.5px;
+    color: var(--pc-body);
+}
+
+.pc-catalogue .pc-crumbs a {
+    color: var(--pc-brand);
+    text-decoration: none;
+}
+
+.pc-catalogue .pc-crumbs .pc-sep {
+    color: #b9cade;
+}
+
+.pc-catalogue .pc-title {
+    margin: 7px 0 0;
+    font-size: clamp(22px, 2.5vw, 30px);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    color: var(--pc-ink);
+}
+
+.pc-catalogue .pc-lead {
+    margin: 7px 0 0;
+    font-size: 13.5px;
+    color: var(--pc-body);
+    max-width: 62ch;
+    line-height: 1.55;
+}
+
+.pc-catalogue .pc-head-actions {
+    display: flex;
+    gap: 9px;
+    flex-wrap: wrap;
+    flex: none;
+}
+
+/* ── Boutons ───────────────────────────────────────────────────────────── */
+
+.pc-catalogue .pc-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    white-space: nowrap;
+    border-radius: 999px;
+    min-height: 44px;
+    padding: 10px 18px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    border: 1px solid transparent;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.pc-catalogue .pc-btn.-outline {
+    background: var(--pc-surface);
+    border-color: #cfe0f0;
+    color: var(--pc-brand);
+}
+
+.pc-catalogue .pc-btn.-outline:hover {
+    background: var(--pc-line-soft);
+    color: var(--pc-brand-dark);
+}
+
+/* L'orange ne porte que du brun tres fonce : jamais de blanc dessus. */
+.pc-catalogue .pc-btn.-accent {
+    background: var(--pc-accent);
+    color: #2a1400;
+    font-weight: 700;
+}
+
+.pc-catalogue .pc-btn.-accent:hover {
+    background: #e07310;
+    color: #2a1400;
+}
+
+.pc-catalogue .pc-btn.-brand {
+    background: var(--pc-brand);
+    color: #fff;
+}
+
+.pc-catalogue .pc-btn.-brand:hover {
+    background: var(--pc-brand-dark);
+    color: #fff;
+}
+
+/* ── Barre de recherche et filtres ─────────────────────────────────────── */
+
+.pc-catalogue .pc-filters {
+    background: var(--pc-surface);
+    border: 1px solid var(--pc-line);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.pc-catalogue .pc-filters-top {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.pc-catalogue .pc-search {
+    flex: 1 1 260px;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    border: 1px solid var(--pc-line);
+    border-radius: 11px;
+    background: var(--pc-canvas);
+    padding: 0 14px;
+    min-height: 44px;
+}
+
+.pc-catalogue .pc-search input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    font-size: 13.5px;
+    color: var(--pc-ink);
+    padding: 11px 0;
+}
+
+.pc-catalogue .pc-search input:focus {
+    outline: none;
+}
+
+.pc-catalogue .pc-search-dot {
+    width: 14px;
+    height: 14px;
+    border: 1.6px solid #8aa6bf;
+    border-radius: 50%;
+    flex: none;
+}
+
+.pc-catalogue .pc-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    flex: none;
+    border: 1px solid var(--pc-line);
+    background: var(--pc-surface);
+    color: #41627f;
+    border-radius: 11px;
+    padding: 11px 17px;
+    min-height: 44px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.pc-catalogue .pc-toggle[aria-expanded="true"] {
+    border-color: var(--pc-brand);
+    background: var(--pc-brand-soft);
+    color: var(--pc-brand);
+}
+
+.pc-catalogue .pc-sort {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: none;
+    font-size: 12.5px;
+    color: var(--pc-body);
+}
+
+.pc-catalogue .pc-advanced {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--pc-line-soft);
+}
+
+.pc-catalogue .pc-field {
+    flex: 1 1 150px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.pc-catalogue .pc-field > span {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--pc-body);
+}
+
+.pc-catalogue .pc-field-range {
+    flex-basis: 200px;
+}
+
+.pc-catalogue .pc-field-range > span {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.pc-catalogue .pc-field-range b {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--pc-ink);
+}
+
+.pc-catalogue select,
+.pc-catalogue input[type="date"],
+.pc-catalogue input[type="email"] {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    min-height: 44px;
+    border: 1px solid var(--pc-line);
+    border-radius: 10px;
+    background: var(--pc-canvas);
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--pc-ink);
+}
+
+.pc-catalogue .pc-sort select {
+    width: auto;
+    background: var(--pc-surface);
+    border-radius: 11px;
+    padding: 11px 12px;
+    font-size: 12.5px;
+}
+
+.pc-catalogue input[type="range"] {
+    width: 100%;
+    accent-color: var(--pc-brand);
+}
+
+/* Pastilles d'état, defilables sur petit ecran. */
+.pc-catalogue .pc-chips {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.pc-catalogue .pc-chips::-webkit-scrollbar {
+    height: 0;
+}
+
+.pc-catalogue .pc-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+    flex: none;
+    padding: 9px 13px;
+    min-height: 40px;
+    border-radius: 999px;
+    border: 1px solid var(--pc-line);
+    background: var(--pc-surface);
+    color: #41627f;
+    font-size: 12.5px;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.pc-catalogue .pc-chip b {
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0.72;
+}
+
+.pc-catalogue .pc-chip[aria-pressed="true"] {
+    background: var(--pc-brand);
+    border-color: var(--pc-brand);
+    color: #fff;
+    font-weight: 600;
+}
+
+/* ── Ligne de résultats ────────────────────────────────────────────────── */
+
+.pc-catalogue .pc-resultline {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: var(--pc-body);
+}
+
+.pc-catalogue .pc-resultline b {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--pc-ink);
+}
+
+.pc-catalogue .pc-resultline .pc-note {
+    margin-left: auto;
+    font-size: 12.5px;
+}
+
+/* ── Grille et cartes ──────────────────────────────────────────────────── */
+
+.pc-catalogue .pc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
+    gap: 14px;
+    align-items: stretch;
+}
+
+.pc-catalogue .pc-card {
+    background: var(--pc-surface);
+    border: 1px solid #eef4fa;
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: border-color 0.15s ease;
+}
+
+.pc-catalogue .pc-card.is-open {
+    border-color: #cfe6dd;
+}
+
+.pc-catalogue .pc-card:hover {
+    border-color: #cfe0f0;
+}
+
+.pc-catalogue .pc-card-media {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: repeating-linear-gradient(135deg, #cfe0ee 0 11px, #e2ecf5 11px 22px);
+    display: flex;
+    align-items: flex-end;
+    padding: 10px;
+}
+
+.pc-catalogue .pc-card-media img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Voile en haut du visuel : les étiquettes restent lisibles sur toute photo. */
+.pc-catalogue .pc-card-media::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(9, 30, 52, 0.42), rgba(9, 30, 52, 0) 52%);
+    pointer-events: none;
+}
+
+.pc-catalogue .pc-flag {
+    position: absolute;
+    z-index: 1;
+    top: 10px;
+    left: 10px;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    color: #fff;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+}
+
+.pc-catalogue .pc-flag.-open { background: var(--pc-ok); }
+.pc-catalogue .pc-flag.-full { background: var(--pc-brand); }
+/* Orange : seul cas ou il porte du texte, en brun tres fonce. */
+.pc-catalogue .pc-flag.-req { background: var(--pc-accent); color: #2a1400; }
+
+.pc-catalogue .pc-ref {
+    position: absolute;
+    z-index: 1;
+    top: 10px;
+    right: 10px;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    background: rgba(255, 255, 255, 0.94);
+    color: #41627f;
+    border-radius: 7px;
+    padding: 3px 8px;
+    font-size: 10.5px;
+}
+
+.pc-catalogue .pc-media-tag {
+    position: relative;
+    z-index: 1;
+    font-size: 10.5px;
+    color: #2e4c66;
+    background: rgba(255, 255, 255, 0.88);
+    border-radius: 6px;
+    padding: 3px 7px;
+}
+
+.pc-catalogue .pc-card-body {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+}
+
+.pc-catalogue .pc-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.pc-catalogue .pc-type {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--pc-brand);
+    background: var(--pc-brand-soft);
+    border-radius: 6px;
+    padding: 3px 8px;
+}
+
+.pc-catalogue .pc-place {
+    font-size: 11.5px;
+    color: var(--pc-body);
+    min-width: 0;
+}
+
+.pc-catalogue .pc-card-title {
+    margin: 8px 0 0;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+    color: var(--pc-ink);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.pc-catalogue .pc-price-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.pc-catalogue .pc-price-label {
+    font-size: 10px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--pc-meta);
+}
+
+.pc-catalogue .pc-price {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.pc-catalogue .pc-price strong {
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--pc-brand);
+}
+
+.pc-catalogue .pc-price span {
+    font-size: 11.5px;
+    color: var(--pc-body);
+}
+
+.pc-catalogue .pc-seats {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    flex: none;
+    font-size: 11.5px;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 5px 11px;
+}
+
+.pc-catalogue .pc-seats.-open { color: var(--pc-ok); background: var(--pc-ok-soft); }
+.pc-catalogue .pc-seats.-full { color: var(--pc-brand); background: var(--pc-brand-soft); }
+.pc-catalogue .pc-seats.-req { color: var(--pc-warn-ink); background: var(--pc-warn-soft); }
+
+/* Pied de carte : bloc départ ou bloc « sur demande ». */
+.pc-catalogue .pc-card-foot {
+    margin-top: auto;
+    border-radius: 13px;
+    border: 1px solid #eef4fa;
+    background: #fbfdff;
+    padding: 12px 13px;
+}
+
+.pc-catalogue .pc-card.is-open .pc-card-foot {
+    border-color: #dcece6;
+    background: #f6fbf9;
+}
+
+.pc-catalogue .pc-foot-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.pc-catalogue .pc-foot-top span:first-child {
+    font-size: 10px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--pc-meta);
+}
+
+.pc-catalogue .pc-foot-top span:last-child {
+    font-size: 11.5px;
+    color: var(--pc-body);
+}
+
+.pc-catalogue .pc-foot-date {
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--pc-ink);
+}
+
+.pc-catalogue .pc-foot-note {
+    font-size: 12.5px;
+    color: var(--pc-body);
+    line-height: 1.5;
+}
+
+.pc-catalogue .pc-foot-actions {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-wrap: wrap;
+    margin-top: 11px;
+}
+
+.pc-catalogue .pc-foot-actions .pc-btn {
+    flex: 1 1 120px;
+    border-radius: 11px;
+    padding: 11px 14px;
+}
+
+.pc-catalogue .pc-link {
+    flex: none;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--pc-brand);
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.pc-catalogue .pc-link:hover {
+    color: var(--pc-brand-dark);
+}
+
+/* ── État vide ─────────────────────────────────────────────────────────── */
+
+.pc-catalogue .pc-empty {
+    border: 1px dashed #cfe0f0;
+    border-radius: 16px;
+    background: var(--pc-canvas);
+    padding: clamp(26px, 4vw, 44px) 24px;
+    text-align: center;
+}
+
+.pc-catalogue .pc-empty h2 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--pc-ink);
+}
+
+.pc-catalogue .pc-empty p {
+    margin: 8px auto 0;
+    font-size: 13px;
+    color: var(--pc-body);
+    max-width: 46ch;
+    line-height: 1.55;
+}
+
+.pc-catalogue .pc-empty .pc-btn {
+    margin-top: 14px;
+}
+
+/* Masquage : [hidden] doit primer sur les display: flex ci-dessus. */
+.pc-catalogue .pc-card[hidden],
+.pc-catalogue .pc-advanced[hidden],
+.pc-catalogue .pc-empty[hidden] {
+    display: none !important;
+}

@@ -197,6 +197,9 @@ class ReservationDossierController extends Controller
             'pending' => 0,
             'follow_up' => 0,
             'paid' => 0,
+            'confirmed' => 0,
+            'total_amount' => 0.0,
+            'paid_amount' => 0.0,
             'remaining_amount' => 0.0,
         ];
 
@@ -370,6 +373,11 @@ class ReservationDossierController extends Controller
         $stats['pending'] = (int) $departureCards->sum('pending_count');
         $stats['follow_up'] = (int) $departureCards->sum('follow_up_count');
         $stats['paid'] = (int) $departureCards->sum('paid_count');
+        $stats['confirmed'] = (int) $departureCards->sum('confirmed_count');
+        // Montants agreges sur la meme source que les cartes : total genere et
+        // deja encaisse, pour situer le restant sans nouveau calcul.
+        $stats['total_amount'] = round((float) $departureCards->sum('total_amount'), 2);
+        $stats['paid_amount'] = round((float) $departureCards->sum('paid_amount'), 2);
         $stats['remaining_amount'] = round((float) $departureCards->sum('remaining_amount'), 2);
 
         $perPage = max(1, min(24, (int) $request->query('per_page', 9)));
