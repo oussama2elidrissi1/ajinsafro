@@ -9,6 +9,11 @@
     $ppBrandName = \App\Models\Setting::getValue('brand_name', 'Ajinsafro');
     $ppBrandLogo = \App\Models\Setting::brandLogoUrl('dark');
 
+    // Marque affichee : celle de l'agence si elle a depose son logo, Ajinsafro sinon.
+    $ppPartnerLogo = $ppPartner?->custom_logo_url;
+    $ppHeaderLogo = $ppPartnerLogo ?: $ppBrandLogo;
+    $ppHeaderLogoAlt = $ppPartnerLogo ? ($ppPartner?->display_name ?: $ppBrandName) : $ppBrandName;
+
     // Coordonnées : mêmes réglages que l'en-tête public.
     $ppDefaults = ['email' => 'contact@ajinsafro.ma', 'phone' => '+212 539 323 874'];
     $ppRaw = \App\Models\Setting::getValue('wp_header');
@@ -84,8 +89,10 @@
 
 {{-- En-tête --}}
 <header class="pp-header" data-pp-header>
-    <a href="{{ $ppHomeUrl }}" class="pp-brand" aria-label="{{ $ppBrandName }}">
-        <img src="{{ $ppBrandLogo }}" alt="{{ $ppBrandName }}">
+    <a href="{{ $ppHomeUrl }}" class="pp-brand" aria-label="{{ $ppHeaderLogoAlt }}">
+        {{-- Fichier introuvable : on retombe sur la marque Ajinsafro plutot que sur un visuel casse. --}}
+        <img src="{{ $ppHeaderLogo }}" alt="{{ $ppHeaderLogoAlt }}"
+             @if($ppPartnerLogo) onerror="this.onerror=null;this.src='{{ $ppBrandLogo }}';" @endif>
     </a>
     <span class="pp-badge">Portail partenaire</span>
 
@@ -98,8 +105,9 @@
     <div class="pp-user">
         <span class="pp-avatar" aria-hidden="true">
             <span>{{ $ppInitials }}</span>
-            @if($ppPartner?->logo_url)
-                <img src="{{ $ppPartner->logo_url }}" alt="" onerror="this.remove();">
+            {{-- Sans logo depose, l'avatar garde les initiales : pas de logo Ajinsafro ici. --}}
+            @if($ppPartnerLogo)
+                <img src="{{ $ppPartnerLogo }}" alt="" onerror="this.remove();">
             @endif
         </span>
         <span class="pp-user__meta">

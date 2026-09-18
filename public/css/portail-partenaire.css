@@ -137,7 +137,16 @@ body.pp-body.partner-v2 { background-color: var(--pp-bg) !important; }
   z-index: 9;
 }
 .pp-brand { flex: none; display: block; margin: 13px 0; }
-.pp-brand img { height: 32px; width: auto; display: block; }
+/* Le logo peut venir de l'agence : on borne la largeur pour qu'un visuel
+   tres allonge ne repousse pas la navigation. */
+.pp-brand img {
+  height: 32px;
+  width: auto;
+  max-width: clamp(96px, 16vw, 190px);
+  object-fit: contain;
+  object-position: left center;
+  display: block;
+}
 .pp-badge {
   display: inline-flex;
   align-items: center;

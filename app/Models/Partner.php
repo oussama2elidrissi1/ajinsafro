@@ -155,13 +155,34 @@ class Partner extends Model
         return $this->nom_commercial ?: ($this->name ?: $this->raison_sociale);
     }
 
+    /**
+     * URL du logo, avec repli sur celui d'Ajinsafro.
+     *
+     * Ce repli empeche de savoir si l'agence a depose son propre logo :
+     * utiliser `custom_logo_url` / `has_custom_logo` quand la distinction
+     * compte (en-tete du portail, avatar).
+     */
     public function getLogoUrlAttribute(): string
     {
-        if ($this->logo_path) {
-            return Storage::disk('public')->url($this->logo_path);
+        return $this->custom_logo_url ?? asset('build/images/logo-dark.png');
+    }
+
+    /** Vrai uniquement si l'agence a televerse son propre logo. */
+    public function getHasCustomLogoAttribute(): bool
+    {
+        return $this->custom_logo_url !== null;
+    }
+
+    /** URL du logo depose par l'agence, ou null si elle n'en a pas. */
+    public function getCustomLogoUrlAttribute(): ?string
+    {
+        $path = trim((string) $this->logo_path);
+
+        if ($path === '') {
+            return null;
         }
 
-        return asset('build/images/logo-dark.png');
+        return Storage::disk('public')->url($path);
     }
 
     public function getResponsibleNameAttribute(): ?string

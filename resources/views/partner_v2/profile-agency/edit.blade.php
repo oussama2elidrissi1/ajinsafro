@@ -20,8 +20,23 @@
             <div class="bg-gray-50 border border-gray-100 rounded-2xl p-5 text-center">
                 <img src="{{ $partner->logo_url }}" alt="{{ $partner->display_name }}" class="w-28 h-28 object-contain bg-white rounded-xl border border-gray-100 mx-auto mb-4">
                 <label class="text-xs font-bold text-gray-500 uppercase">Logo agence</label>
+                <p class="text-xs text-gray-500 mt-2 leading-relaxed">
+                    @if($partner->has_custom_logo)
+                        Votre logo s'affiche en haut du portail. Choisissez un fichier pour le remplacer.
+                    @else
+                        Le logo Ajinsafro s'affiche par défaut. Déposez le vôtre pour qu'il le remplace en haut du portail.
+                    @endif
+                </p>
                 <input type="file" name="logo" accept=".jpg,.jpeg,.png,.webp" class="mt-2 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm">
+                <p class="text-[11px] text-gray-400 mt-1">JPG, PNG ou WebP, 2 Mo maximum.</p>
                 @error('logo')<p class="text-xs text-red-600 mt-1">{{ $message }}</p>@enderror
+
+                @if($partner->has_custom_logo)
+                    <label class="mt-3 flex items-center justify-center gap-2 text-xs text-gray-600 cursor-pointer">
+                        <input type="checkbox" name="remove_logo" value="1" class="rounded border-gray-300">
+                        Revenir au logo Ajinsafro
+                    </label>
+                @endif
             </div>
         </div>
 

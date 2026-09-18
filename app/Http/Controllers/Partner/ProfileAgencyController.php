@@ -39,6 +39,7 @@ class ProfileAgencyController extends Controller
             'adresse' => ['nullable', 'string', 'max:500'],
             'ville' => ['nullable', 'string', 'max:100'],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'remove_logo' => ['nullable', 'boolean'],
         ]);
 
         if ($request->hasFile('logo')) {
@@ -46,6 +47,12 @@ class ProfileAgencyController extends Controller
                 Storage::disk('public')->delete($partner->logo_path);
             }
             $data['logo_path'] = $request->file('logo')->store('partner-logos', 'public');
+        } elseif ($request->boolean('remove_logo')) {
+            // Retour au logo Ajinsafro : on efface le fichier et le chemin.
+            if ($partner->logo_path) {
+                Storage::disk('public')->delete($partner->logo_path);
+            }
+            $data['logo_path'] = null;
         }
 
         $partner->update([
@@ -61,7 +68,7 @@ class ProfileAgencyController extends Controller
             'address' => $data['adresse'] ?? null,
             'ville' => $data['ville'] ?? null,
             'city' => $data['ville'] ?? null,
-            'logo_path' => $data['logo_path'] ?? $partner->logo_path,
+            'logo_path' => array_key_exists('logo_path', $data) ? $data['logo_path'] : $partner->logo_path,
         ]);
 
         $request->user()->forceFill([
