@@ -81,6 +81,57 @@ function ajth_first_valid_gallery_attachment_id( $post_id, $meta_key ) {
 }
 
 /**
+ * Toutes les images valides de la galerie d’un post catalogue, dans l’ordre.
+ *
+ * L’admin Laravel ecrit les memes IDs (separes par des virgules) dans
+ * st_gallery, gallery et _gallery : on prend la premiere cle renseignee et on
+ * ne garde que les attachments reellement presents sur le disque.
+ *
+ * @param int    $post_id ID du post (st_hotel, st_activity…).
+ * @param string $size    Taille WordPress demandee.
+ * @return array<int, string> URLs, tableau vide si aucune image exploitable.
+ */
+function ajth_gallery_attachment_urls( $post_id, $size = 'large' ) {
+	static $cache = array();
+
+	$post_id = (int) $post_id;
+	if ( $post_id <= 0 ) {
+		return array();
+	}
+
+	$cache_key = $post_id . '|' . $size;
+	if ( isset( $cache[ $cache_key ] ) ) {
+		return $cache[ $cache_key ];
+	}
+
+	$urls = array();
+	foreach ( array( 'st_gallery', 'gallery', '_gallery' ) as $meta_key ) {
+		$raw = get_post_meta( $post_id, $meta_key, true );
+		if ( ! is_string( $raw ) || trim( $raw ) === '' ) {
+			continue;
+		}
+
+		foreach ( array_filter( array_map( 'intval', explode( ',', $raw ) ) ) as $attachment_id ) {
+			if ( ! ajth_attachment_image_is_displayable( $attachment_id ) ) {
+				continue;
+			}
+			$url = wp_get_attachment_image_url( $attachment_id, $size );
+			if ( is_string( $url ) && $url !== '' ) {
+				$urls[ $attachment_id ] = $url;
+			}
+		}
+
+		if ( ! empty( $urls ) ) {
+			break;
+		}
+	}
+
+	$cache[ $cache_key ] = array_values( $urls );
+
+	return $cache[ $cache_key ];
+}
+
+/**
  * Affiche l’image de carte catalogue : une à la une WP si valide, sinon première image de galerie, sinon fallback CSS.
  *
  * @param int $post_id ID du post (st_hotel, st_activity, st_cars…).

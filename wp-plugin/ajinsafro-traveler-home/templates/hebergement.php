@@ -128,8 +128,17 @@ if (is_singular('st_hotel')) {
             'sea view' => 'Vue mer',
         );
         $lower = strtolower($label);
+        if (isset($map[$lower])) {
+            return $map[$lower];
+        }
 
-        return $map[$lower] ?? mb_convert_case($label, MB_CASE_TITLE, 'UTF-8');
+        // Cle machine (air_conditioning, sea-view) : on la met en forme.
+        // Libelle deja redige : on ne touche qu'a l'initiale.
+        if (preg_match('/[_-]/', $value)) {
+            return mb_convert_case($label, MB_CASE_TITLE, 'UTF-8');
+        }
+
+        return mb_strtoupper(mb_substr($label, 0, 1, 'UTF-8'), 'UTF-8') . mb_substr($label, 1, null, 'UTF-8');
     };
 
     $format_price = static function ($amount, string $suffix = 'MAD'): string {
@@ -184,6 +193,10 @@ if (is_singular('st_hotel')) {
     $external_booking_enabled = $meta_first($hotel_id, array('_external_booking'), '0') === '1';
     $external_booking_link = trim((string) $meta_first($hotel_id, array('_external_booking_link')));
     $reserve_url = $external_booking_enabled && $external_booking_link !== '' ? $external_booking_link : $hotel_permalink;
+    // Bornes de saisie : pas de sejour dans le passe, depart au moins le lendemain.
+    $today_value = current_time('Y-m-d');
+    $tomorrow_value = date('Y-m-d', strtotime($today_value . ' +1 day'));
+    $price_currency = 'MAD';
     $check_in_value = sanitize_text_field((string) ($_GET['check_in'] ?? ''));
     $check_out_value = sanitize_text_field((string) ($_GET['check_out'] ?? ''));
     $guest_value = max(1, (int) ($_GET['guests'] ?? 2));
@@ -198,14 +211,27 @@ if (is_singular('st_hotel')) {
         : $fallback_image;
     $featured_image = $featured_image !== '' ? $featured_image : $fallback_image;
     $gallery_items = array();
-    $gallery_urls = function_exists('get_gallery_urls') ? get_gallery_urls($hotel_id) : array();
     if ($featured_image !== '') {
         $gallery_items[] = $featured_image;
     }
-    foreach ($gallery_urls as $gallery_row) {
-        $gallery_url = trim((string) ($gallery_row['url'] ?? ''));
-        if ($gallery_url !== '') {
-            $gallery_items[] = $gallery_url;
+
+    // Galerie saisie dans l'admin (etape « Details de l'hotel »).
+    if (function_exists('ajth_gallery_attachment_urls')) {
+        foreach (ajth_gallery_attachment_urls($hotel_id, 'large') as $gallery_url) {
+            $gallery_url = trim((string) $gallery_url);
+            if ($gallery_url !== '') {
+                $gallery_items[] = $gallery_url;
+            }
+        }
+    }
+
+    // Repli pour les installations ou le theme expose sa propre galerie.
+    if (count($gallery_items) < 2 && function_exists('get_gallery_urls')) {
+        foreach ((array) get_gallery_urls($hotel_id) as $gallery_row) {
+            $gallery_url = trim((string) (is_array($gallery_row) ? ($gallery_row['url'] ?? '') : $gallery_row));
+            if ($gallery_url !== '') {
+                $gallery_items[] = $gallery_url;
+            }
         }
     }
     $gallery_items = array_values(
@@ -225,7 +251,7 @@ if (is_singular('st_hotel')) {
         $gallery_items = array($fallback_image);
     }
     $gallery_count = count($gallery_items);
-    $gallery_side_items = array_slice($gallery_items, 1, 4);
+    $gallery_side_items = array_slice($gallery_items, 1, 2);
     $hotel_description_html = '';
     if ($hotel_content !== '') {
         $hotel_description_html = apply_filters('the_content', $hotel_content);
@@ -315,7 +341,8 @@ if (is_singular('st_hotel')) {
     }
     wp_reset_postdata();
 
-    $map_query = $hotel_lat !== '' && $hotel_lng !== ''
+    $has_map_coordinates = $hotel_lat !== '' && $hotel_lng !== '';
+    $map_query = $has_map_coordinates
         ? rawurlencode($hotel_lat . ',' . $hotel_lng)
         : rawurlencode($hotel_address !== '' ? $hotel_address : $hotel_location);
     $map_embed_url = 'https://www.google.com/maps?q=' . $map_query . '&z=14&output=embed';
@@ -369,27 +396,26 @@ if (is_singular('st_hotel')) {
                         </div>
                     </section>
 
-                    <section class="aj-hotel-gallery<?php echo $gallery_count < 2 ? ' aj-hotel-gallery--single' : ''; ?>" aria-label="Galerie photos">
+                    <?php // Mosaique constante : les emplacements manquants prennent un substitut. ?>
+                    <section class="aj-hotel-gallery" aria-label="Galerie photos">
                         <div class="aj-hotel-gallery-main">
                             <img src="<?php echo esc_url($gallery_items[0]); ?>" alt="<?php echo esc_attr($hotel_title); ?>" onerror="this.onerror=null;this.src='<?php echo esc_url($fallback_image); ?>';">
                         </div>
-                        <?php if ($gallery_count > 1) { ?>
                         <div class="aj-hotel-gallery-side">
                             <?php foreach ($gallery_side_items as $index => $image_url) { ?>
                                 <figure class="aj-hotel-gallery-thumb">
                                     <img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr($hotel_title . ' photo ' . ($index + 2)); ?>" loading="lazy" onerror="this.onerror=null;this.src='<?php echo esc_url($fallback_image); ?>';">
                                 </figure>
                             <?php } ?>
-                            <?php for ($placeholder_index = count($gallery_side_items); $placeholder_index < 4; $placeholder_index++) { ?>
+                            <?php for ($placeholder_index = count($gallery_side_items); $placeholder_index < 2; $placeholder_index++) { ?>
                                 <figure class="aj-hotel-gallery-thumb aj-hotel-gallery-thumb--placeholder" aria-hidden="true">
-                                    <span>Ajinsafro</span>
+                                    <span>VISUEL À VENIR</span>
                                     <small>Photos sur demande</small>
                                 </figure>
                             <?php } ?>
                         </div>
-                        <?php } ?>
                         <?php if ($gallery_count > 1) { ?>
-                        <button type="button" class="aj-hotel-gallery-open" data-aj-gallery-open>Voir toutes les photos</button>
+                            <button type="button" class="aj-hotel-gallery-open" data-aj-gallery-open>Voir toutes les photos</button>
                         <?php } ?>
                     </section>
 
@@ -455,8 +481,12 @@ if (is_singular('st_hotel')) {
                                 <div class="aj-section-head">
                                     <div>
                                         <span class="aj-section-kicker">Séjour</span>
-                                        <h2>Chambres disponibles</h2>
+                                        <h2 id="chambres-et-tarifs">Chambres et tarifs</h2>
                                     </div>
+                                    <?php // L etat suit le catalogue : sur demande tant qu aucune chambre n est publiee. ?>
+                                    <span class="aj-hotel-rooms-badge<?php echo empty($room_cards) ? ' aj-hotel-rooms-badge--request' : ' aj-hotel-rooms-badge--open'; ?>">
+                                        <?php echo empty($room_cards) ? 'Sur demande' : 'Disponible'; ?>
+                                    </span>
                                 </div>
                                 <?php if (!empty($room_cards)) { ?>
                                     <div class="aj-hotel-room-list">
@@ -530,9 +560,17 @@ if (is_singular('st_hotel')) {
                                         <?php if ($hotel_address !== '') { ?>
                                             <p><?php echo esc_html($hotel_address); ?></p>
                                         <?php } ?>
-                                        <div class="aj-hotel-map-embed">
-                                            <iframe src="<?php echo esc_url($map_embed_url); ?>" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Carte <?php echo esc_attr($hotel_title); ?>"></iframe>
-                                        </div>
+                                        <?php if ($has_map_coordinates) { ?>
+                                            <div class="aj-hotel-map-embed">
+                                                <iframe src="<?php echo esc_url($map_embed_url); ?>" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Carte <?php echo esc_attr($hotel_title); ?>"></iframe>
+                                            </div>
+                                        <?php } else { ?>
+                                            <?php // Sans coordonnees, Google recadrait sur une ville sans rapport. ?>
+                                            <div class="aj-hotel-map-placeholder">
+                                                <span>CARTE</span>
+                                                <small>La carte s'affiche ici une fois les coordonnées de l'établissement renseignées.</small>
+                                            </div>
+                                        <?php } ?>
                                     </div>
                                 </section>
                             <?php } ?>
@@ -558,49 +596,80 @@ if (is_singular('st_hotel')) {
                         </div>
 
                         <aside class="aj-hotel-sidebar">
+                          <div class="aj-hotel-sidebar-inner">
                             <div class="aj-hotel-booking-card">
                                 <span class="aj-section-kicker">Réservation</span>
-                                <h3><?php echo esc_html($hotel_title); ?></h3>
                                 <div class="aj-hotel-booking-price">
                                     <small>À partir de</small>
-                                    <strong><?php echo esc_html($format_price($hotel_price, 'DH')); ?></strong>
+                                    <strong><?php echo esc_html($format_price($hotel_price)); ?></strong>
                                     <span>/ nuit</span>
                                 </div>
-                                <form class="aj-hotel-booking-form" action="<?php echo esc_url($hotel_permalink); ?>#chambres-disponibles" method="get">
-                                    <label>
-                                        <span>Check-in</span>
-                                        <input type="date" name="check_in" value="<?php echo esc_attr($check_in_value); ?>">
-                                    </label>
-                                    <label>
-                                        <span>Check-out</span>
-                                        <input type="date" name="check_out" value="<?php echo esc_attr($check_out_value); ?>">
-                                    </label>
+                                <form class="aj-hotel-booking-form" action="<?php echo esc_url($hotel_permalink); ?>#chambres-et-tarifs" method="get" data-aj-booking-form>
                                     <div class="aj-hotel-booking-grid">
                                         <label>
-                                            <span>Voyageurs</span>
-                                            <input type="number" min="1" max="12" name="guests" value="<?php echo esc_attr((string) $guest_value); ?>">
+                                            <span>Arrivée <b class="aj-hotel-required" aria-hidden="true">*</b></span>
+                                            <input type="date" name="check_in" required
+                                                   min="<?php echo esc_attr($today_value); ?>"
+                                                   value="<?php echo esc_attr($check_in_value); ?>"
+                                                   data-aj-check-in>
                                         </label>
                                         <label>
-                                            <span>Chambres</span>
-                                            <input type="number" min="1" max="6" name="rooms" value="<?php echo esc_attr((string) $room_value); ?>">
+                                            <span>Départ <b class="aj-hotel-required" aria-hidden="true">*</b></span>
+                                            <input type="date" name="check_out" required
+                                                   min="<?php echo esc_attr($tomorrow_value); ?>"
+                                                   value="<?php echo esc_attr($check_out_value); ?>"
+                                                   data-aj-check-out>
                                         </label>
                                     </div>
-                                    <button type="submit" class="aj-pack-reserve aj-pack-reserve--block">Vérifier la disponibilité</button>
+
+                                    <p class="aj-hotel-date-error" data-aj-date-error hidden>La date de départ doit être postérieure à la date d'arrivée.</p>
+
+                                    <?php
+                                        // Compteurs plutot que champs libres : les bornes restent portees
+                                        // par l'input, qui seul est transmis au serveur.
+                                        $counters = array(
+                                            array('guests', 'Voyageurs', 1, 12, (int) $guest_value),
+                                            array('rooms', 'Chambres', 1, 8, (int) $room_value),
+                                        );
+                                    ?>
+                                    <?php foreach ($counters as $counter) { ?>
+                                        <div class="aj-hotel-counter" data-aj-counter>
+                                            <span class="aj-hotel-counter__label"><?php echo esc_html($counter[1]); ?></span>
+                                            <span class="aj-hotel-counter__controls">
+                                                <button type="button" class="aj-hotel-counter__btn" data-aj-counter-step="-1"
+                                                        aria-label="Diminuer : <?php echo esc_attr($counter[1]); ?>">&minus;</button>
+                                                <output class="aj-hotel-counter__value" data-aj-counter-output><?php echo esc_html((string) $counter[4]); ?></output>
+                                                <button type="button" class="aj-hotel-counter__btn" data-aj-counter-step="1"
+                                                        aria-label="Augmenter : <?php echo esc_attr($counter[1]); ?>">+</button>
+                                            </span>
+                                            <input type="hidden" name="<?php echo esc_attr($counter[0]); ?>"
+                                                   value="<?php echo esc_attr((string) $counter[4]); ?>"
+                                                   data-aj-counter-input
+                                                   data-min="<?php echo esc_attr((string) $counter[2]); ?>"
+                                                   data-max="<?php echo esc_attr((string) $counter[3]); ?>">
+                                        </div>
+                                    <?php } ?>
+
+                                    <?php // Estimation indicative : le tarif ferme reste celui du conseiller. ?>
+                                    <div class="aj-hotel-estimate" data-aj-estimate
+                                         data-night-price="<?php echo esc_attr((string) (float) $hotel_price); ?>"
+                                         data-currency="<?php echo esc_attr($price_currency); ?>">
+                                        <div class="aj-hotel-estimate-row">
+                                            <span data-aj-estimate-detail>Sélectionnez vos dates</span>
+                                            <b data-aj-estimate-subtotal>&mdash;</b>
+                                        </div>
+                                        <div class="aj-hotel-estimate-row aj-hotel-estimate-total">
+                                            <span>Total estimé</span>
+                                            <b data-aj-estimate-total>&mdash;</b>
+                                        </div>
+                                        <small>Estimation indicative. Le tarif final est confirmé par votre conseiller.</small>
+                                    </div>
+
+                                    <button type="submit" class="aj-pack-reserve aj-pack-reserve--block" data-aj-submit>Vérifier la disponibilité</button>
                                 </form>
 
-                                <?php // Estimation indicative : le tarif ferme reste celui du conseiller. ?>
-                                <div class="aj-hotel-estimate" data-aj-estimate data-night-price="<?php echo esc_attr((string) (float) $hotel_price); ?>">
-                                    <div class="aj-hotel-estimate-row">
-                                        <span data-aj-estimate-detail>Sélectionnez vos dates</span>
-                                        <b data-aj-estimate-subtotal>&mdash;</b>
-                                    </div>
-                                    <div class="aj-hotel-estimate-row aj-hotel-estimate-total">
-                                        <span>Total estimé</span>
-                                        <b data-aj-estimate-total>&mdash;</b>
-                                    </div>
-                                    <small>Estimation indicative. Le tarif final est confirmé par votre conseiller.</small>
-                                </div>
                                 <a class="aj-pack-secondary aj-pack-secondary--block" href="<?php echo esc_url($whatsapp_url); ?>" target="_blank" rel="noopener">Demander un devis</a>
+
                                 <?php if ($hotel_phone !== '' || $hotel_email !== '') { ?>
                                     <div class="aj-hotel-contact-quick">
                                         <?php if ($hotel_phone !== '') { ?><span>Tél. <?php echo esc_html($hotel_phone); ?></span><?php } ?>
@@ -617,6 +686,7 @@ if (is_singular('st_hotel')) {
                                     <li>Tarifs négociés, sans frais de dossier</li>
                                 </ul>
                             </div>
+                          </div>
                         </aside>
                     </div>
                 </div>

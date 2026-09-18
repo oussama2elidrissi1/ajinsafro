@@ -1025,61 +1025,131 @@
   })();
 })();
 
-/* Estimation du séjour sur la fiche hébergement.
-   Le montant n'engage rien : le tarif ferme reste celui du conseiller. */
+/* Carte de réservation de la fiche hébergement : compteurs, bornes de dates
+   et estimation. Le montant n'engage rien : le tarif ferme reste celui du
+   conseiller. */
 (function () {
-    var box = document.querySelector('[data-aj-estimate]');
-    if (!box) { return; }
-
-    var form = document.querySelector('.aj-hotel-booking-form');
+    var form = document.querySelector('[data-aj-booking-form]');
     if (!form) { return; }
 
-    var nightPrice = parseFloat(box.getAttribute('data-night-price') || '0') || 0;
-    var detailEl = box.querySelector('[data-aj-estimate-detail]');
-    var subtotalEl = box.querySelector('[data-aj-estimate-subtotal]');
-    var totalEl = box.querySelector('[data-aj-estimate-total]');
+    var box = form.querySelector('[data-aj-estimate]');
+    var checkIn = form.querySelector('[data-aj-check-in]');
+    var checkOut = form.querySelector('[data-aj-check-out]');
+    var errorEl = form.querySelector('[data-aj-date-error]');
+    var submit = form.querySelector('[data-aj-submit]');
 
-    var checkIn = form.querySelector('input[name="check_in"]');
-    var checkOut = form.querySelector('input[name="check_out"]');
-    var roomsInput = form.querySelector('input[name="rooms"]');
+    var nightPrice = box ? parseFloat(box.getAttribute('data-night-price') || '0') || 0 : 0;
+    var currency = (box && box.getAttribute('data-currency')) || 'MAD';
+    var detailEl = box && box.querySelector('[data-aj-estimate-detail]');
+    var subtotalEl = box && box.querySelector('[data-aj-estimate-subtotal]');
+    var totalEl = box && box.querySelector('[data-aj-estimate-total]');
 
     function money(value) {
-        return Math.round(value).toLocaleString('fr-FR').replace(/ | /g, ' ') + ' DH';
+        // Espace fine insecable ramenee a une espace simple : meme rendu partout.
+        return Math.round(value).toLocaleString('fr-FR').replace(/ | /g, ' ') + ' ' + currency;
+    }
+
+    function addDay(value) {
+        var d = new Date(value + 'T00:00:00');
+        if (isNaN(d.getTime())) { return ''; }
+        d.setDate(d.getDate() + 1);
+        return d.toISOString().slice(0, 10);
+    }
+
+    function rooms() {
+        var input = form.querySelector('[data-aj-counter-input][name="rooms"]');
+        return Math.max(1, parseInt(input && input.value, 10) || 1);
     }
 
     function nights() {
         if (!checkIn || !checkOut || !checkIn.value || !checkOut.value) { return 0; }
-        var start = new Date(checkIn.value + 'T00:00:00');
-        var end = new Date(checkOut.value + 'T00:00:00');
-        if (isNaN(start.getTime()) || isNaN(end.getTime())) { return 0; }
-        return Math.max(0, Math.round((end - start) / 86400000));
+        var a = new Date(checkIn.value + 'T00:00:00');
+        var b = new Date(checkOut.value + 'T00:00:00');
+        if (isNaN(a.getTime()) || isNaN(b.getTime())) { return 0; }
+        return Math.max(0, Math.round((b - a) / 86400000));
     }
 
     function refresh() {
         var n = nights();
-        var rooms = Math.max(1, parseInt(roomsInput && roomsInput.value, 10) || 1);
 
-        if (n <= 0 || nightPrice <= 0) {
-            if (detailEl) { detailEl.textContent = 'Sélectionnez vos dates'; }
-            if (subtotalEl) { subtotalEl.textContent = '—'; }
-            if (totalEl) { totalEl.textContent = '—'; }
-            return;
+        if (box) {
+            if (n <= 0 || nightPrice <= 0) {
+                if (detailEl) { detailEl.textContent = 'Sélectionnez vos dates'; }
+                if (subtotalEl) { subtotalEl.textContent = '—'; }
+                if (totalEl) { totalEl.textContent = '—'; }
+            } else {
+                var r = rooms();
+                var subtotal = nightPrice * n * r;
+                if (detailEl) {
+                    detailEl.textContent = money(nightPrice) + ' × ' + n + (n > 1 ? ' nuits' : ' nuit')
+                        + ' × ' + r + (r > 1 ? ' chambres' : ' chambre');
+                }
+                if (subtotalEl) { subtotalEl.textContent = money(subtotal); }
+                if (totalEl) { totalEl.textContent = money(subtotal); }
+            }
         }
 
-        var subtotal = nightPrice * n * rooms;
-        if (detailEl) {
-            detailEl.textContent = money(nightPrice) + ' × ' + n + (n > 1 ? ' nuits' : ' nuit')
-                + ' × ' + rooms + (rooms > 1 ? ' chambres' : ' chambre');
+        if (submit) {
+            var blocked = n <= 0;
+            submit.disabled = blocked;
+            submit.setAttribute('aria-disabled', blocked ? 'true' : 'false');
         }
-        if (subtotalEl) { subtotalEl.textContent = money(subtotal); }
-        if (totalEl) { totalEl.textContent = money(subtotal); }
     }
 
-    [checkIn, checkOut, roomsInput].forEach(function (el) {
+    // Le depart ne peut pas preceder l'arrivee : on repousse sa borne basse.
+    function syncDateBounds() {
+        if (!checkIn || !checkOut) { return; }
+
+        if (checkIn.value) {
+            checkOut.min = addDay(checkIn.value);
+        }
+
+        var invalid = checkIn.value && checkOut.value && checkOut.value <= checkIn.value;
+        if (invalid) {
+            checkOut.value = '';
+        }
+        if (errorEl) {
+            errorEl.hidden = !invalid;
+        }
+    }
+
+    [checkIn, checkOut].forEach(function (el) {
         if (!el) { return; }
-        el.addEventListener('change', refresh);
-        el.addEventListener('input', refresh);
+        el.addEventListener('change', function () { syncDateBounds(); refresh(); });
     });
 
+    // Compteurs : la valeur transmise reste celle de l'input cache.
+    Array.prototype.forEach.call(form.querySelectorAll('[data-aj-counter]'), function (counter) {
+        var input = counter.querySelector('[data-aj-counter-input]');
+        var output = counter.querySelector('[data-aj-counter-output]');
+        var buttons = counter.querySelectorAll('[data-aj-counter-step]');
+        if (!input || !output) { return; }
+
+        var min = parseInt(input.getAttribute('data-min'), 10) || 1;
+        var max = parseInt(input.getAttribute('data-max'), 10) || 12;
+
+        function paint() {
+            var value = Math.min(max, Math.max(min, parseInt(input.value, 10) || min));
+            input.value = String(value);
+            output.textContent = String(value);
+            Array.prototype.forEach.call(buttons, function (btn) {
+                var step = parseInt(btn.getAttribute('data-aj-counter-step'), 10) || 0;
+                btn.disabled = (step < 0 && value <= min) || (step > 0 && value >= max);
+            });
+            refresh();
+        }
+
+        Array.prototype.forEach.call(buttons, function (btn) {
+            btn.addEventListener('click', function () {
+                var step = parseInt(btn.getAttribute('data-aj-counter-step'), 10) || 0;
+                input.value = String((parseInt(input.value, 10) || min) + step);
+                paint();
+            });
+        });
+
+        paint();
+    });
+
+    syncDateBounds();
     refresh();
 })();

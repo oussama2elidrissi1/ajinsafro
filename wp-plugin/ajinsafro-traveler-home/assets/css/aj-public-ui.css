@@ -2345,3 +2345,310 @@
   border-radius: 999px;
   background: #f5b06a;
 }
+
+/* ── §5d Hebergement : corrections de la fiche detaillee ───────────────── */
+
+/* 1. Colonne collante.
+   `align-self: start` reduisait l'aside a la hauteur de son contenu : le
+   `position: sticky` n'avait alors aucune course. On laisse la colonne
+   s'etirer et c'est le conteneur interieur qui colle. */
+.page-hebergement-ajinsafro .aj-hotel-sidebar {
+  position: static;
+  align-self: stretch;
+  min-width: 0;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-sidebar-inner {
+  position: sticky;
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .page-hebergement-ajinsafro .aj-hotel-sidebar-inner {
+    position: static;
+  }
+}
+
+/* 2. Dates : l'asterisque signale le champ requis. */
+.page-hebergement-ajinsafro .aj-hotel-required {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-date-error {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #b4413c;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-date-error[hidden] {
+  display: none !important;
+}
+
+/* 3. Compteurs. */
+.page-hebergement-ajinsafro .aj-hotel-counter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #cfdcea;
+  border-radius: 10px;
+  padding: 9px 11px;
+  flex-wrap: wrap;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-counter__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2e4c66;
+  min-width: 0;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-counter__controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-counter__btn {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border: 1px solid #cfdcea;
+  background: var(--surface);
+  border-radius: 8px;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--brand);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-counter__btn:hover:not(:disabled) {
+  border-color: var(--brand);
+  background: #f6fafd;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-counter__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-counter__value {
+  min-width: 18px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* 4. Le bouton principal s'eteint tant que les dates manquent. */
+.page-hebergement-ajinsafro .aj-pack-reserve[disabled],
+.page-hebergement-ajinsafro .aj-pack-reserve[aria-disabled="true"] {
+  background: #9fb6cc;
+  cursor: not-allowed;
+}
+
+/* 6. Galerie en mosaique, substituts compris. */
+.page-hebergement-ajinsafro .aj-hotel-gallery {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 12px;
+  height: auto;
+  max-height: none;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-gallery-main {
+  aspect-ratio: 16 / 10;
+  height: auto;
+  min-height: 0;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-gallery-side {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 1fr 1fr;
+  gap: 12px;
+  min-height: 0;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-gallery-thumb {
+  border-radius: 16px;
+  overflow: hidden;
+  min-height: 0;
+  margin: 0;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-gallery-main img,
+.page-hebergement-ajinsafro .aj-hotel-gallery-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-gallery-thumb--placeholder {
+  background: #f6fafd;
+  border: 1px dashed #b9cfe6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  text-align: center;
+  padding: 14px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 767px) {
+  .page-hebergement-ajinsafro .aj-hotel-gallery {
+    grid-template-columns: 1fr;
+  }
+
+  /* Le plafond de hauteur commandait la largeur via l'aspect-ratio. */
+  .page-hebergement-ajinsafro .aj-hotel-gallery-main {
+    max-height: none;
+  }
+
+  .page-hebergement-ajinsafro .aj-hotel-gallery-side {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto;
+  }
+
+  .page-hebergement-ajinsafro .aj-hotel-gallery-thumb {
+    aspect-ratio: 4 / 3;
+  }
+}
+
+/* 7. Substitut de carte, aux dimensions de la carte reelle. */
+.page-hebergement-ajinsafro .aj-hotel-map-placeholder {
+  /* La largeur commande, la hauteur suit : l'inverse imposait un plancher de
+     761 px a la page entiere (min-height 290 x 21/8). */
+  width: 100%;
+  min-height: 0;
+  aspect-ratio: 21 / 8;
+  border: 1px dashed #b9cfe6;
+  background: #f6fafd;
+  border-radius: 13px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-map-placeholder span {
+  font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  color: var(--meta);
+}
+
+.page-hebergement-ajinsafro .aj-hotel-map-placeholder small {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--body);
+  max-width: 38ch;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-map-embed {
+  width: 100%;
+  min-height: 0;
+  aspect-ratio: 21 / 8;
+  border-radius: 13px;
+  overflow: hidden;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-map-embed iframe {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  display: block;
+}
+
+/* 8. Etat du catalogue de chambres. */
+.page-hebergement-ajinsafro .aj-hotel-rooms-badge {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  flex: none;
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-rooms-badge--request {
+  background: #fff5e8;
+  color: #a24c07;
+  border: 1px solid #f6d6b0;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-rooms-badge--open {
+  background: #e4f5ec;
+  color: var(--ok);
+  border: 1px solid #bde3cf;
+}
+
+/* 9. Puce des equipements, au diametre de la maquette. */
+.page-hebergement-ajinsafro .aj-hotel-amenity-icon {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 999px;
+  background: #2f8ed6;
+  font-size: 0;
+  overflow: hidden;
+}
+
+/* 12. Bandeau : la colonne de texte et l'encart de prix se replient.
+   `display: flex` sans `flex-wrap` plus `min-width: 200px` sur le prix
+   ecrasait le titre et le resume des ~700 px vers le bas. */
+.page-hebergement-ajinsafro .aj-hotel-hero-card {
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-hero-copy {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-hero-price {
+  flex: 0 1 auto;
+  min-width: 0;
+  padding: 14px 18px;
+}
+
+@media (max-width: 767px) {
+  .page-hebergement-ajinsafro .aj-hotel-hero-price {
+    flex: 1 1 100%;
+    text-align: left;
+  }
+}
+
+/* 13. Plancher de lisibilite : aucun texte sous 12 px sur la fiche. */
+.page-hebergement-ajinsafro .aj-section-kicker,
+.page-hebergement-ajinsafro .aj-hotel-status,
+.page-hebergement-ajinsafro .aj-hotel-rooms-badge,
+.page-hebergement-ajinsafro .aj-hotel-map-placeholder span,
+.page-hebergement-ajinsafro .aj-hotel-gallery-thumb--placeholder span,
+.page-hebergement-ajinsafro .aj-hotel-booking-form label > span,
+.page-hebergement-ajinsafro .aj-hotel-estimate small {
+  font-size: 12px;
+}

@@ -36,12 +36,19 @@ $legal_lines = ! empty( $footer_settings['legal_text'] )
     ? $footer_settings['legal_text']
     : "Licence N° 489117 | RC: 18989\nPatente: 50411316 | I.C.E: 001585417000035\nAjinSafro Recreation SARL AU";
 
+/*
+ * Les logos etaient charges depuis upload.wikimedia.org : quatre des cinq
+ * adresses ne repondent plus (400 sur les largeurs de vignette non
+ * standard, 404 sur le chemin Western Union) et le navigateur n'affichait
+ * plus que le texte alternatif. Les fichiers sont desormais servis par le
+ * plugin. Un moyen de paiement sans fichier tombe sur une pastille texte.
+ */
 $payment_images = array(
-    array( 'name' => 'Mastercard', 'url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/1280px-Mastercard-logo.svg.png', 'h' => '24px' ),
-    array( 'name' => 'Visa', 'url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/2560px-Visa_Inc._logo.svg.png', 'h' => '20px' ),
-    array( 'name' => 'PayPal', 'url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/PayPal.svg/2560px-PayPal.svg.png', 'h' => '20px' ),
-    array( 'name' => 'Western Union', 'url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Western_Union_logo.svg/1280px-Western_Union_logo.svg.png', 'h' => '20px' ),
-    array( 'name' => 'Wafacash', 'url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Wafacash_logo.svg/2560px-Wafacash_logo.svg.png', 'h' => '16px' ),
+    array( 'name' => 'Mastercard', 'file' => 'assets/img/payments/mastercard.svg', 'h' => '24px' ),
+    array( 'name' => 'Visa', 'file' => 'assets/img/payments/visa.svg', 'h' => '20px' ),
+    array( 'name' => 'PayPal', 'file' => 'assets/img/payments/paypal.svg', 'h' => '20px' ),
+    array( 'name' => 'Western Union', 'file' => 'assets/img/payments/western-union.svg', 'h' => '20px' ),
+    array( 'name' => 'Wafacash', 'file' => '', 'h' => '16px' ),
 );
 ?>
 
@@ -91,7 +98,18 @@ $payment_images = array(
         <p class="aj-payments-v2__label"><?php esc_html_e( 'Moyens de paiement acceptés', 'ajinsafro-traveler-home' ); ?></p>
         <div class="aj-payments-v2__icons">
             <?php foreach ( $payment_images as $pm ) : ?>
-                <img src="<?php echo esc_url( $pm['url'] ); ?>" alt="<?php echo esc_attr( $pm['name'] ); ?>" style="height:<?php echo esc_attr( $pm['h'] ); ?>;" loading="lazy">
+                <?php $pm_exists = $pm['file'] !== '' && file_exists( AJTH_DIR . $pm['file'] ); ?>
+                <?php if ( $pm_exists ) : ?>
+                    <?php // Filet de securite si le fichier disparait d'un deploiement a l'autre. ?>
+                    <?php $pm_fallback = '<span class="aj-payments-v2__fallback">' . esc_html( $pm['name'] ) . '</span>'; ?>
+                    <img src="<?php echo esc_url( AJTH_URL . $pm['file'] ); ?>"
+                         alt="<?php echo esc_attr( $pm['name'] ); ?>"
+                         style="height:<?php echo esc_attr( $pm['h'] ); ?>;"
+                         loading="lazy"
+                         onerror="this.onerror=null;this.insertAdjacentHTML('afterend', <?php echo esc_attr( wp_json_encode( $pm_fallback ) ); ?>);this.remove();">
+                <?php else : ?>
+                    <span class="aj-payments-v2__fallback"><?php echo esc_html( $pm['name'] ); ?></span>
+                <?php endif; ?>
             <?php endforeach; ?>
             <span class="aj-payments-v2__text-badge">CASH PLUS</span>
         </div>

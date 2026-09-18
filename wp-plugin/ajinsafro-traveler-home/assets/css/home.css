@@ -3049,7 +3049,8 @@ body.aj-has-bg-pattern::after {
     z-index: 10;
 }
 .aj-payments-v2__label {
-    font-size: 11px;
+    /* Plancher de lisibilite du front public : jamais sous 12 px. */
+    font-size: 12px;
     font-weight: 600;
     color: #6b7280;
     text-transform: uppercase;
@@ -3084,6 +3085,22 @@ body.aj-has-bg-pattern::after {
     transition: transform .2s;
 }
 .aj-payments-v2__text-badge:hover { transform: scale(1.1); }
+
+/* Repli d'un moyen de paiement sans visuel : lisible, jamais une icone cassee. */
+.aj-payments-v2__fallback {
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid var(--line, #dce7f2);
+    border-radius: 6px;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    color: var(--ink, #0d2137);
+}
 
 /* ==========================================================================
    16. SECTION HEADERS — Arrows + title row
