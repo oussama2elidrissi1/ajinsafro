@@ -3338,3 +3338,353 @@
     flex: 1 1 auto;
   }
 }
+
+/* ── §8 Connexion ──────────────────────────────────────────────────────── */
+
+.page-connexion-ajinsafro .aj-login {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: clamp(20px, 3vw, 44px) clamp(14px, 3vw, 30px) clamp(24px, 3.4vw, 52px);
+  box-sizing: border-box;
+}
+
+.page-connexion-ajinsafro .aj-login__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr));
+  gap: clamp(16px, 2.2vw, 26px);
+  align-items: stretch;
+}
+
+/* ── Carte de connexion ───────────────────────────────────────────────── */
+.page-connexion-ajinsafro .aj-login__card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: clamp(20px, 3vw, 38px);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.page-connexion-ajinsafro .aj-login__card h1 {
+  margin: 0;
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+
+.page-connexion-ajinsafro .aj-login__lead {
+  margin: 10px 0 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--body);
+  max-width: 46ch;
+}
+
+.page-connexion-ajinsafro .aj-login__alert {
+  margin: 18px 0 0;
+  border-radius: 11px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  border: 1px solid;
+}
+
+.page-connexion-ajinsafro .aj-login__alert--error {
+  background: #fdeceb;
+  border-color: #f4c7c3;
+  color: #8c2018;
+}
+
+.page-connexion-ajinsafro .aj-login__alert--warn {
+  background: #fff5e8;
+  border-color: #f6d6b0;
+  color: #a24c07;
+}
+
+/* ── Champs ───────────────────────────────────────────────────────────── */
+.page-connexion-ajinsafro .aj-login__form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.page-connexion-ajinsafro .aj-login__field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+  margin: 0;
+}
+
+.page-connexion-ajinsafro .aj-login__labelrow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.page-connexion-ajinsafro .aj-login__label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #2e4c66;
+}
+
+.page-connexion-ajinsafro .aj-login__label b {
+  color: #c2570a;
+  font-weight: 600;
+}
+
+.page-connexion-ajinsafro .aj-login__forgot {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--brand);
+}
+
+.page-connexion-ajinsafro .aj-login__field input[type="text"],
+.page-connexion-ajinsafro .aj-login__field input[type="password"],
+.page-connexion-ajinsafro .aj-login__field input[type="email"] {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #cfdcea;
+  border-radius: 11px;
+  padding: 13px 14px;
+  font-size: 14.5px;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--surface);
+}
+
+/* Le bouton d'affichage se superpose : on lui reserve la place a droite. */
+.page-connexion-ajinsafro .aj-login__password {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+
+.page-connexion-ajinsafro .aj-login__field .aj-login__password input {
+  padding-right: 96px;
+}
+
+.page-connexion-ajinsafro .aj-login__reveal {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  border: 1px solid #cfdcea;
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 7px 11px;
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--brand);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.page-connexion-ajinsafro .aj-login__reveal:hover {
+  border-color: var(--brand);
+  background: #f6fafd;
+}
+
+.page-connexion-ajinsafro .aj-login__remember {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  cursor: pointer;
+  font-size: 13.5px;
+  color: #2e4c66;
+  min-width: 0;
+  margin: 0;
+}
+
+.page-connexion-ajinsafro .aj-login__remember input {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  margin: 0;
+  accent-color: var(--brand);
+  cursor: pointer;
+}
+
+.page-connexion-ajinsafro .aj-login__submit {
+  width: 100%;
+  box-sizing: border-box;
+  border: none;
+  border-radius: 12px;
+  background: var(--brand);
+  color: #fff;
+  padding: 15px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.page-connexion-ajinsafro .aj-login__submit:hover {
+  background: var(--brand-dark);
+}
+
+/* Formulaire encore vide : le bouton s'attenue sans jamais etre desactive. */
+.page-connexion-ajinsafro .aj-login__submit.is-idle {
+  background: #9fb6cc;
+}
+
+/* ── Pied de carte ────────────────────────────────────────────────────── */
+.page-connexion-ajinsafro .aj-login__signup {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line-soft);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 13.5px;
+  color: var(--body);
+}
+
+.page-connexion-ajinsafro .aj-login__ghost {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #cfdcea;
+  border-radius: 10px;
+  padding: 11px 18px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--brand);
+}
+
+.page-connexion-ajinsafro .aj-login__ghost:hover {
+  border-color: var(--brand);
+  background: #f6fafd;
+}
+
+.page-connexion-ajinsafro .aj-login__partner {
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--brand);
+}
+
+/* ── Panneau des avantages ────────────────────────────────────────────── */
+.page-connexion-ajinsafro .aj-login__aside {
+  background: var(--brand-dark);
+  border-radius: 18px;
+  padding: clamp(20px, 3vw, 38px);
+  color: #c6dcf0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.page-connexion-ajinsafro .aj-login__kicker {
+  display: block;
+  font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: #f5b06a;
+}
+
+.page-connexion-ajinsafro .aj-login__aside h2 {
+  margin: 12px 0 0;
+  font-size: clamp(20px, 2.4vw, 26px);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  color: #fff;
+  max-width: 22ch;
+}
+
+.page-connexion-ajinsafro .aj-login__perks {
+  margin: clamp(18px, 2.4vw, 26px) 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.page-connexion-ajinsafro .aj-login__perks li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border-top: 1px solid #1d5490;
+  padding-top: 14px;
+}
+
+.page-connexion-ajinsafro .aj-login__dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  margin-top: 7px;
+  border-radius: 999px;
+  background: #f5b06a;
+}
+
+.page-connexion-ajinsafro .aj-login__perk {
+  min-width: 0;
+}
+
+.page-connexion-ajinsafro .aj-login__perk strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.page-connexion-ajinsafro .aj-login__perk span {
+  display: block;
+  margin-top: 4px;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.page-connexion-ajinsafro .aj-login__help {
+  margin-top: auto;
+  background: #0b2e56;
+  border: 1px solid #1d5490;
+  border-radius: 13px;
+  padding: 16px;
+}
+
+.page-connexion-ajinsafro .aj-login__help strong {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.page-connexion-ajinsafro .aj-login__help > span {
+  display: block;
+  margin-top: 7px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.page-connexion-ajinsafro .aj-login__help a {
+  color: #f5b06a;
+}
+
+.page-connexion-ajinsafro .aj-login__help a:hover {
+  color: #fff;
+}
+
+/* Le panneau garde de l'air au-dessus du bloc d'aide quand il est seul. */
+@media (max-width: 767px) {
+  .page-connexion-ajinsafro .aj-login__help {
+    margin-top: clamp(20px, 2.6vw, 28px);
+  }
+}
