@@ -20,7 +20,23 @@ class WalletController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('partner_v2.wallet.index', compact('partner', 'transactions'));
+        // Agregats du bandeau : une requete par indicateur, sur la meme table.
+        $walletStats = [
+            'pending_amount' => (float) $partner->walletTransactions()
+                ->where('type', PartnerWalletTransaction::TYPE_RECHARGE)
+                ->where('status', PartnerWalletTransaction::STATUS_PENDING)
+                ->sum('amount'),
+            'pending_count' => (int) $partner->walletTransactions()
+                ->where('type', PartnerWalletTransaction::TYPE_RECHARGE)
+                ->where('status', PartnerWalletTransaction::STATUS_PENDING)
+                ->count(),
+            'recharged_amount' => (float) $partner->walletTransactions()
+                ->where('type', PartnerWalletTransaction::TYPE_RECHARGE)
+                ->where('status', PartnerWalletTransaction::STATUS_APPROVED)
+                ->sum('amount'),
+        ];
+
+        return view('partner_v2.wallet.index', compact('partner', 'transactions', 'walletStats'));
     }
 
     public function rechargeRequest(Request $request): RedirectResponse
@@ -50,6 +66,6 @@ class WalletController extends Controller
         ]);
 
         return redirect()->route('partner.wallet.index')
-            ->with('success', 'Demande de recharge envoyee. Elle reste en attente de validation Ajinsafro.');
+            ->with('success', 'Demande de recharge envoyée. Elle reste en attente de validation Ajinsafro.');
     }
 }
