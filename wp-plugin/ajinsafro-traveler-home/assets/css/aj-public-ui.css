@@ -2462,6 +2462,10 @@
   gap: 12px;
   height: auto;
   max-height: none;
+  /* 2 colonnes 2fr/1fr avec la principale en 16/10 : la hauteur vaut
+     largeur x 2/3 x 10/16, soit largeur / 2,4. La poser ici rend la mosaique
+     insensible aux dimensions des photos. */
+  aspect-ratio: 12 / 5;
   padding: 0;
   border: 0;
   background: none;
@@ -2478,7 +2482,7 @@
 .page-hebergement-ajinsafro .aj-hotel-gallery-side {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: 1fr 1fr;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
   gap: 12px;
   min-height: 0;
 }
@@ -2490,8 +2494,15 @@
   margin: 0;
 }
 
+.page-hebergement-ajinsafro .aj-hotel-gallery-main,
+.page-hebergement-ajinsafro .aj-hotel-gallery-thumb {
+  position: relative;
+}
+
 .page-hebergement-ajinsafro .aj-hotel-gallery-main img,
 .page-hebergement-ajinsafro .aj-hotel-gallery-thumb img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -2514,6 +2525,7 @@
 @media (max-width: 767px) {
   .page-hebergement-ajinsafro .aj-hotel-gallery {
     grid-template-columns: 1fr;
+    aspect-ratio: auto;
   }
 
   /* Le plafond de hauteur commandait la largeur via l'aspect-ratio. */
@@ -2528,6 +2540,13 @@
 
   .page-hebergement-ajinsafro .aj-hotel-gallery-thumb {
     aspect-ratio: 4 / 3;
+  }
+
+  .page-hebergement-ajinsafro .aj-hotel-gallery-open {
+    position: static;
+    grid-column: 1 / -1;
+    width: 100%;
+    margin: 0;
   }
 }
 
