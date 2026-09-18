@@ -28,6 +28,12 @@ $filter_city     = isset( $_GET['departure_city'] ) ? sanitize_text_field( wp_un
 $filter_budget   = isset( $_GET['budget'] ) ? absint( $_GET['budget'] ) : 0;
 $filter_date     = isset( $_GET['departure_date'] ) ? sanitize_text_field( wp_unslash( $_GET['departure_date'] ) ) : '';
 $filter_dest     = isset( $_GET['destination'] ) ? sanitize_text_field( wp_unslash( $_GET['destination'] ) ) : '';
+$filter_sort     = isset( $_GET['sort'] ) ? sanitize_key( wp_unslash( $_GET['sort'] ) ) : 'prix';
+$filter_sort     = in_array( $filter_sort, array( 'prix', 'date', 'places' ), true ) ? $filter_sort : 'prix';
+// Une case decochee n'envoie rien : le marqueur distingue « premiere visite »
+// (on masque les expirees par defaut) de « case volontairement decochee ».
+$filters_posted  = isset( $_GET['filtres'] );
+$hide_expired    = $filters_posted ? ! empty( $_GET['masquer_expirees'] ) : true;
 $posted_departure = sanitize_text_field( wp_unslash( $_POST['selected_departure_date'] ?? '' ) );
 
 $format_price = static function ( $amount, $currency = 'DH' ) {
@@ -54,16 +60,16 @@ $status_badge = static function ( array $offer ) {
 	$remaining = (int) ( $offer['remaining_places'] ?? 0 );
 
 	if ( in_array( $status, array( 'expired' ), true ) ) {
-		return array( 'label' => 'Offre expiree', 'class' => 'is-expired' );
+		return array( 'label' => 'Offre expirée', 'class' => 'is-expired', 'state' => 'expired' );
 	}
 	if ( in_array( $status, array( 'full' ), true ) || $remaining <= 0 ) {
-		return array( 'label' => 'Complet', 'class' => 'is-full' );
+		return array( 'label' => 'Complet', 'class' => 'is-full', 'state' => 'full' );
 	}
 	if ( in_array( $status, array( 'limited' ), true ) || $remaining <= 5 ) {
-		return array( 'label' => 'Places limitees', 'class' => 'is-limited' );
+		return array( 'label' => 'Places limitées', 'class' => 'is-limited', 'state' => 'limited' );
 	}
 
-	return array( 'label' => 'Disponible', 'class' => 'is-available' );
+	return array( 'label' => 'Disponible', 'class' => 'is-available', 'state' => 'available' );
 };
 
 $first_departure_label = static function ( array $offer ) use ( $format_date ) {
@@ -164,14 +170,25 @@ $filtered_offers = array_values(
 				return false;
 			}
 			if ( '' !== $filter_date ) {
-				$matches = false;
+				// « Depart a partir du » : au moins un depart a cette date ou apres.
+				$dates = array();
 				foreach ( (array) ( $offer['departures'] ?? array() ) as $departure ) {
-					if ( ! empty( $departure['departure_date'] ) && (string) $departure['departure_date'] === $filter_date ) {
+					if ( ! empty( $departure['departure_date'] ) ) {
+						$dates[] = (string) $departure['departure_date'];
+					}
+				}
+				if ( ! empty( $offer['departure_date'] ) ) {
+					$dates[] = (string) $offer['departure_date'];
+				}
+
+				$matches = false;
+				foreach ( $dates as $candidate ) {
+					if ( $candidate >= $filter_date ) {
 						$matches = true;
 						break;
 					}
 				}
-				if ( ! $matches && (string) ( $offer['departure_date'] ?? '' ) !== $filter_date ) {
+				if ( ! $matches ) {
 					return false;
 				}
 			}
@@ -180,6 +197,130 @@ $filtered_offers = array_values(
 		}
 	)
 );
+
+if ( $hide_expired ) {
+	$filtered_offers = array_values(
+		array_filter(
+			$filtered_offers,
+			static function ( $offer ) use ( $status_badge ) {
+				return 'expired' !== $status_badge( $offer )['state'];
+			}
+		)
+	);
+}
+
+$sort_date_key = static function ( array $offer ) {
+	$dates = array();
+	foreach ( (array) ( $offer['departures'] ?? array() ) as $departure ) {
+		if ( ! empty( $departure['departure_date'] ) ) {
+			$dates[] = (string) $departure['departure_date'];
+		}
+	}
+	if ( ! empty( $offer['departure_date'] ) ) {
+		$dates[] = (string) $offer['departure_date'];
+	}
+	sort( $dates );
+
+	// Sans date connue, l'offre part en fin de liste plutot qu'en tete.
+	return ! empty( $dates[0] ) ? $dates[0] : '9999-12-31';
+};
+
+usort(
+	$filtered_offers,
+	static function ( $a, $b ) use ( $filter_sort, $sort_date_key ) {
+		if ( 'places' === $filter_sort ) {
+			return (int) ( $a['remaining_places'] ?? 0 ) <=> (int) ( $b['remaining_places'] ?? 0 );
+		}
+		if ( 'date' === $filter_sort ) {
+			return strcmp( $sort_date_key( $a ), $sort_date_key( $b ) );
+		}
+
+		// Prix croissant : « sur demande » ne doit pas passer devant un vrai tarif.
+		$pa = isset( $a['price_from'] ) && is_numeric( $a['price_from'] ) ? (float) $a['price_from'] : INF;
+		$pb = isset( $b['price_from'] ) && is_numeric( $b['price_from'] ) ? (float) $b['price_from'] : INF;
+
+		return $pa <=> $pb;
+	}
+);
+
+/**
+ * Tout ce dont la carte a besoin, calcule une fois par offre.
+ */
+$card_presentation = static function ( array $offer ) use ( $status_badge, $find_next_departure, $format_price, $first_departure_label, $page_url ) {
+	$badge      = $status_badge( $offer );
+	$state      = $badge['state'];
+	$is_expired = 'expired' === $state;
+
+	$departure = $find_next_departure( $offer );
+	$capacity  = (int) ( $departure['total_places'] ?? 0 );
+	$remaining = null !== ( $departure['remaining_places'] ?? null )
+		? (int) $departure['remaining_places']
+		: (int) ( $offer['remaining_places'] ?? 0 );
+	$remaining = max( 0, $remaining );
+
+	// Jauge seulement si la capacite est connue : sinon la barre mentirait.
+	$fill_pct = $capacity > 0 ? (int) round( ( max( 0, $capacity - $remaining ) / $capacity ) * 100 ) : null;
+
+	if ( $is_expired ) {
+		$seats_label = 'Départ passé';
+	} elseif ( $remaining > 1 ) {
+		$seats_label = $remaining . ' places restantes';
+	} elseif ( 1 === $remaining ) {
+		$seats_label = '1 place restante';
+	} else {
+		$seats_label = 'Complet';
+	}
+
+	$detail_url  = ! empty( $offer['detail_url'] ) ? (string) $offer['detail_url'] : ajth_get_economic_offer_detail_url( $offer['slug'] ?? '' );
+	$image_url   = ! empty( $offer['main_image_url'] ) ? (string) $offer['main_image_url'] : '';
+
+	return array(
+		'state'       => $state,
+		'state_label' => $badge['label'],
+		'expired'     => $is_expired,
+		'fill_pct'    => $fill_pct,
+		'seats_label' => $seats_label,
+		'detail_url'  => $detail_url,
+		'image_url'   => $image_url,
+		'date_label'  => $first_departure_label( $offer ),
+		'price_label' => $format_price( $offer['price_from'] ?? null, $offer['currency'] ?? 'DH' ),
+		'cta_label'   => $is_expired ? 'Offre similaire' : 'Voir l’offre',
+		'cta_url'     => $is_expired ? $page_url : $detail_url,
+	);
+};
+
+$visible_count  = count( $filtered_offers );
+$promo_count    = count(
+	array_filter(
+		$filtered_offers,
+		static function ( $offer ) {
+			return ! empty( $offer['is_promoted'] );
+		}
+	)
+);
+
+if ( 0 === $visible_count ) {
+	$count_label = 'Aucune offre visible avec ces filtres';
+} else {
+	$count_label = $visible_count . ( $visible_count > 1 ? ' offres visibles' : ' offre visible' );
+	if ( $promo_count > 0 ) {
+		$count_label .= ' · ' . $promo_count . ( $promo_count > 1 ? ' promotions' : ' promotion' );
+	}
+}
+
+// Raccourcis de destination : les plus representees dans le catalogue.
+$quick_tags = array();
+$destination_counts = array();
+foreach ( $offers as $offer ) {
+	$destination = trim( (string) ( $offer['destination'] ?? '' ) );
+	if ( '' !== $destination ) {
+		$destination_counts[ $destination ] = ( $destination_counts[ $destination ] ?? 0 ) + 1;
+	}
+}
+arsort( $destination_counts );
+$quick_tags = array_slice( array_keys( $destination_counts ), 0, 4 );
+
+$conseil_url = 'https://wa.me/212660683464?text=' . rawurlencode( 'Bonjour Ajinsafro, je cherche une offre Formule Économique.' );
 ?>
 
 <div class="aj-home-wrap">
@@ -523,146 +664,185 @@ $filtered_offers = array_values(
 					</section>
 				</div>
 			<?php else : ?>
-				<section class="ajho-hero">
-					<div class="ajho-container">
-						<nav class="ajho-breadcrumb ajho-breadcrumb--light" aria-label="Fil d Ariane">
+				<section class="aj-eco-hero">
+					<div class="aj-eco-hero__card">
+						<nav class="aj-eco-breadcrumb" aria-label="Fil d’Ariane">
 							<a href="<?php echo esc_url( home_url( '/' ) ); ?>">Accueil</a>
-							<span>/</span>
-							<span>Formule Economique</span>
+							<span aria-hidden="true">/</span>
+							<span class="is-current">Formule Économique</span>
 						</nav>
-						<div class="ajho-hero__inner">
-							<div class="ajho-hero__copy">
-								<div class="ajho-kicker ajho-kicker--light">Offres petit budget Ajinsafro</div>
-								<h1>Formule Economique Ajinsafro</h1>
-								<p>Des offres de voyage accessibles, selectionnees pour profiter au meilleur prix.</p>
-								<div class="ajho-hero__actions">
-									<a href="#offers-grid" class="ajho-btn ajho-btn--primary">Voir les offres</a>
-									<a href="<?php echo esc_url( 'https://wa.me/212660683464' ); ?>" target="_blank" rel="noopener" class="ajho-btn ajho-btn--secondary">Demander conseil</a>
+
+						<div class="aj-eco-hero__inner">
+							<div class="aj-eco-hero__copy">
+								<span class="aj-eco-kicker aj-eco-kicker--hero">Offres petit budget Ajinsafro</span>
+								<h1>Formule Économique Ajinsafro</h1>
+								<p>Des offres de voyage accessibles, sélectionnées pour profiter au meilleur prix.</p>
+								<div class="aj-eco-hero__actions">
+									<a href="#offres" class="aj-eco-btn aj-eco-btn--accent">Voir les offres</a>
+									<a href="<?php echo esc_url( $conseil_url ); ?>" target="_blank" rel="noopener" class="aj-eco-btn aj-eco-btn--outline-light">Demander conseil</a>
 								</div>
 							</div>
-							<div class="ajho-hero-card">
-								<strong>Formule Economique</strong>
-								<span><?php echo esc_html( number_format( count( $offers ), 0, ',', ' ' ) ); ?> offres dynamiques</span>
-								<p>Voyages, omra, hebergement, activites et derniere minute, mis a jour depuis la base Laravel.</p>
-							</div>
+
+							<form class="aj-eco-quick" method="get" action="<?php echo esc_url( $page_url ); ?>">
+								<span class="aj-eco-quick__title">Recherche rapide</span>
+								<label class="aj-eco-quick__field">
+									<span>Où voulez-vous partir ?</span>
+									<input type="text" name="destination" value="<?php echo esc_attr( $filter_dest ); ?>" placeholder="Agadir, Dakhla, Istanbul…">
+								</label>
+								<input type="hidden" name="filtres" value="1">
+								<?php if ( $hide_expired ) : ?>
+									<input type="hidden" name="masquer_expirees" value="1">
+								<?php endif; ?>
+								<?php if ( ! empty( $quick_tags ) ) : ?>
+									<div class="aj-eco-quick__tags">
+										<?php foreach ( $quick_tags as $tag ) : ?>
+											<a class="aj-eco-tag" href="<?php echo esc_url( add_query_arg( array( 'destination' => $tag, 'filtres' => '1' ) + ( $hide_expired ? array( 'masquer_expirees' => '1' ) : array() ), $page_url ) ); ?>#offres"><?php echo esc_html( $tag ); ?></a>
+										<?php endforeach; ?>
+									</div>
+								<?php endif; ?>
+							</form>
 						</div>
 					</div>
 				</section>
 
-				<div class="ajho-container ajho-content">
-					<section class="ajho-search-panel-wrap">
-						<form method="get" action="<?php echo esc_url( $page_url ); ?>" class="ajho-search-panel">
-							<label class="ajho-search-field">
-								<span>Type</span>
-								<select name="offer_type">
-									<option value="">Tous</option>
+				<section id="offres" class="aj-eco-section">
+					<form class="aj-eco-filters" method="get" action="<?php echo esc_url( $page_url ); ?>" data-aj-eco-filters>
+						<input type="hidden" name="filtres" value="1">
+
+						<div class="aj-eco-filters__grid">
+							<label class="aj-eco-field">
+								<span class="aj-eco-field__label">Type d’offre</span>
+								<select name="offer_type" data-aj-eco-auto>
+									<option value="">Tous les types</option>
 									<?php foreach ( $type_options as $value => $label ) : ?>
 										<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $filter_type, $value ); ?>><?php echo esc_html( $label ); ?></option>
 									<?php endforeach; ?>
 								</select>
 							</label>
-							<label class="ajho-search-field">
-								<span>Destination</span>
-								<input type="text" name="destination" value="<?php echo esc_attr( $filter_dest ); ?>" placeholder="Marrakech, Dakhla, Istanbul">
+							<label class="aj-eco-field">
+								<span class="aj-eco-field__label">Destination</span>
+								<input type="text" name="destination" value="<?php echo esc_attr( $filter_dest ); ?>" placeholder="Marrakech, Dakhla, Istanbul…">
 							</label>
-							<label class="ajho-search-field">
-								<span>Budget max</span>
-								<input type="number" name="budget" value="<?php echo esc_attr( $filter_budget ?: '' ); ?>" placeholder="4500">
+							<label class="aj-eco-field">
+								<span class="aj-eco-field__label">Budget max (DH)</span>
+								<input type="number" name="budget" min="0" step="100" value="<?php echo esc_attr( $filter_budget > 0 ? (string) $filter_budget : '' ); ?>" placeholder="4500">
 							</label>
-							<label class="ajho-search-field">
-								<span>Date</span>
-								<input type="date" name="departure_date" value="<?php echo esc_attr( $filter_date ); ?>">
+							<label class="aj-eco-field">
+								<span class="aj-eco-field__label">Départ à partir du</span>
+								<input type="date" name="departure_date" value="<?php echo esc_attr( $filter_date ); ?>" data-aj-eco-auto>
 							</label>
-							<label class="ajho-search-field">
-								<span>Ville de depart</span>
-								<select name="departure_city">
+							<label class="aj-eco-field">
+								<span class="aj-eco-field__label">Ville de départ</span>
+								<select name="departure_city" data-aj-eco-auto>
 									<option value="">Toutes</option>
 									<?php foreach ( $city_options as $city ) : ?>
 										<option value="<?php echo esc_attr( $city ); ?>" <?php selected( $filter_city, $city ); ?>><?php echo esc_html( $city ); ?></option>
 									<?php endforeach; ?>
 								</select>
 							</label>
-							<div class="ajho-search-actions">
-								<button type="submit" class="ajho-btn ajho-btn--primary">Filtrer</button>
-								<?php if ( $has_active_filters ) : ?>
-									<a href="<?php echo esc_url( $page_url ); ?>" class="ajho-btn ajho-btn--ghost">Reinitialiser</a>
-								<?php endif; ?>
-							</div>
-						</form>
-					</section>
-
-					<section class="ajho-stats">
-						<div><strong><?php echo esc_html( number_format( count( $filtered_offers ), 0, ',', ' ' ) ); ?></strong><span>offres visibles</span></div>
-						<div><strong><?php echo esc_html( number_format( count( array_filter( $filtered_offers, static fn( $offer ) => ! empty( $offer['is_promoted'] ) ) ), 0, ',', ' ' ) ); ?></strong><span>promotions</span></div>
-						<div><strong><?php echo esc_html( number_format( count( array_filter( $filtered_offers, static fn( $offer ) => ! empty( $offer['is_featured'] ) ) ), 0, ',', ' ' ) ); ?></strong><span>mises en avant</span></div>
-					</section>
-
-					<section class="ajho-results-head">
-						<div>
-							<div class="ajho-section-label">Catalogue</div>
-							<h2>Offres Formule Economique</h2>
-							<p>Des offres dynamiques, connectees a votre base Laravel, sans contenu statique.</p>
 						</div>
-					</section>
+
+						<div class="aj-eco-filters__row">
+							<label class="aj-eco-check">
+								<input type="checkbox" name="masquer_expirees" value="1" <?php checked( $hide_expired ); ?> data-aj-eco-auto>
+								<span>Masquer les offres expirées</span>
+							</label>
+
+							<label class="aj-eco-sort">
+								<span class="aj-eco-sort__label">Trier par</span>
+								<select name="sort" data-aj-eco-auto>
+									<option value="prix" <?php selected( $filter_sort, 'prix' ); ?>>Prix croissant</option>
+									<option value="date" <?php selected( $filter_sort, 'date' ); ?>>Date de départ</option>
+									<option value="places" <?php selected( $filter_sort, 'places' ); ?>>Places restantes</option>
+								</select>
+							</label>
+
+							<div class="aj-eco-filters__actions">
+								<button type="submit" class="aj-eco-btn aj-eco-btn--primary">Filtrer</button>
+								<a href="<?php echo esc_url( $page_url ); ?>#offres" class="aj-eco-reset">Réinitialiser</a>
+							</div>
+						</div>
+					</form>
+
+					<div class="aj-eco-results-head">
+						<div class="aj-eco-results-head__copy">
+							<span class="aj-eco-kicker">Catalogue</span>
+							<h2>Offres Formule Économique</h2>
+						</div>
+						<p class="aj-eco-count"><?php echo esc_html( $count_label ); ?></p>
+					</div>
 
 					<?php if ( empty( $filtered_offers ) ) : ?>
-						<div class="ajho-empty">
-							<h3>Aucune offre ne correspond a vos filtres</h3>
-							<p>Essayez une autre ville de depart, une autre date ou un budget plus large.</p>
+						<div class="aj-eco-empty">
+							<h3>Aucune offre ne correspond à ces filtres</h3>
+							<p>Élargissez le budget ou la ville de départ, ou laissez-nous vos critères : un conseiller vous rappelle avec les offres à venir.</p>
+							<div class="aj-eco-empty__actions">
+								<a href="<?php echo esc_url( $page_url ); ?>#offres" class="aj-eco-btn aj-eco-btn--primary">Réinitialiser les filtres</a>
+								<a href="<?php echo esc_url( $conseil_url ); ?>" target="_blank" rel="noopener" class="aj-eco-btn aj-eco-btn--outline">Être rappelé</a>
+							</div>
 						</div>
 					<?php else : ?>
-						<section id="offers-grid" class="ajho-grid">
+						<div class="aj-eco-grid">
 							<?php foreach ( $filtered_offers as $offer ) : ?>
-								<?php
-								$card_status  = $status_badge( $offer );
-								$detail_url   = ! empty( $offer['detail_url'] ) ? (string) $offer['detail_url'] : ajth_get_economic_offer_detail_url( $offer['slug'] ?? '' );
-								$request_url  = ! empty( $offer['request_url'] ) ? (string) $offer['request_url'] : $detail_url . '#reservation-form';
-								$image_url    = ! empty( $offer['main_image_url'] ) ? (string) $offer['main_image_url'] : $fallback_image;
-								?>
-								<article class="ajho-card">
-									<div class="ajho-card__media">
-										<a href="<?php echo esc_url( $detail_url ); ?>" class="ajho-card__media-link">
-											<img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( $offer['title'] ?? 'Offre economique' ); ?>" loading="lazy" onerror="this.onerror=null;this.src='<?php echo esc_url( $fallback_image ); ?>';">
-										</a>
-										<div class="ajho-card__badges">
-											<span class="ajho-chip ajho-chip--type"><?php echo esc_html( $offer['type_label'] ?? 'Offre' ); ?></span>
-											<?php if ( ! empty( $offer['is_promoted'] ) ) : ?>
-												<span class="ajho-chip is-limited">Promotion</span>
-											<?php else : ?>
-												<span class="ajho-chip ajho-chip--type"><?php echo esc_html( $offer['category_label'] ?? 'Economique' ); ?></span>
+								<?php $card = $card_presentation( $offer ); ?>
+								<article class="aj-eco-card aj-eco-card--<?php echo esc_attr( $card['state'] ); ?><?php echo $card['expired'] ? ' is-expired' : ''; ?>">
+									<div class="aj-eco-card__media">
+										<?php if ( '' !== $card['image_url'] ) : ?>
+											<img src="<?php echo esc_url( $card['image_url'] ); ?>" alt="<?php echo esc_attr( $offer['title'] ?? 'Offre Formule Économique' ); ?>" loading="lazy">
+										<?php else : ?>
+											<span class="aj-eco-card__placeholder">Visuel à venir</span>
+										<?php endif; ?>
+										<span class="aj-eco-card__kind"><?php echo esc_html( $offer['type_label'] ?? 'Offre' ); ?></span>
+										<span class="aj-eco-state aj-eco-state--<?php echo esc_attr( $card['state'] ); ?>"><?php echo esc_html( $card['state_label'] ); ?></span>
+									</div>
+
+									<div class="aj-eco-card__body">
+										<h3><a href="<?php echo esc_url( $card['detail_url'] ); ?>"><?php echo esc_html( $offer['title'] ?? 'Offre Formule Économique' ); ?></a></h3>
+										<?php if ( ! empty( $offer['short_description'] ) ) : ?>
+											<p><?php echo esc_html( $offer['short_description'] ); ?></p>
+										<?php endif; ?>
+
+										<dl class="aj-eco-card__facts">
+											<div>
+												<dt>Destination</dt>
+												<dd><?php echo esc_html( $offer['destination'] ?? 'À confirmer' ); ?></dd>
+											</div>
+											<div>
+												<dt>Durée</dt>
+												<dd><?php echo esc_html( $offer['duration_label'] ?? 'À confirmer' ); ?></dd>
+											</div>
+											<div>
+												<dt>Départ de</dt>
+												<dd><?php echo esc_html( $offer['departure_city'] ?? 'À confirmer' ); ?></dd>
+											</div>
+											<div>
+												<dt>Date</dt>
+												<dd><?php echo esc_html( $card['date_label'] ); ?></dd>
+											</div>
+										</dl>
+
+										<div class="aj-eco-card__seats">
+											<?php if ( null !== $card['fill_pct'] ) : ?>
+												<span class="aj-eco-gauge" role="img" aria-label="<?php echo esc_attr( $card['seats_label'] ); ?>">
+													<span class="aj-eco-gauge__fill" style="width:<?php echo esc_attr( (string) $card['fill_pct'] ); ?>%;"></span>
+												</span>
 											<?php endif; ?>
-											<span class="ajho-chip <?php echo esc_attr( $card_status['class'] ); ?>"><?php echo esc_html( $card_status['label'] ); ?></span>
+											<span class="aj-eco-card__seats-label"><?php echo esc_html( $card['seats_label'] ); ?></span>
 										</div>
 									</div>
-									<div class="ajho-card__body">
-										<h3><a href="<?php echo esc_url( $detail_url ); ?>"><?php echo esc_html( $offer['title'] ?? 'Offre economique' ); ?></a></h3>
-										<p><?php echo esc_html( $offer['short_description'] ?? 'Offre Ajinsafro avec prix et disponibilites dynamiques.' ); ?></p>
-										<ul class="ajho-card__facts">
-											<li><strong>Destination</strong><span><?php echo esc_html( $offer['destination'] ?? 'A confirmer' ); ?></span></li>
-											<li><strong>Duree</strong><span><?php echo esc_html( $offer['duration_label'] ?? 'A confirmer' ); ?></span></li>
-											<li><strong>Ville de depart</strong><span><?php echo esc_html( $offer['departure_city'] ?? 'A confirmer' ); ?></span></li>
-											<li><strong>Date</strong><span><?php echo esc_html( $first_departure_label( $offer ) ); ?></span></li>
-											<li><strong>Places restantes</strong><span><?php echo esc_html( (string) ( $offer['remaining_places'] ?? 0 ) ); ?></span></li>
-											<li><strong>Prix</strong><span class="ajho-card__price"><?php echo esc_html( $format_price( $offer['price_from'] ?? null, $offer['currency'] ?? 'DH' ) ); ?></span></li>
-										</ul>
-									</div>
-									<div class="ajho-card__footer">
-										<div>
-											<?php if ( ! empty( $offer['old_price'] ) && is_numeric( $offer['old_price'] ) ) : ?>
-												<div class="ajho-card__old-price"><?php echo esc_html( $format_price( $offer['old_price'], $offer['currency'] ?? 'DH' ) ); ?></div>
-											<?php endif; ?>
-											<div class="ajho-card__price"><?php echo esc_html( $format_price( $offer['price_from'] ?? null, $offer['currency'] ?? 'DH' ) ); ?></div>
-										</div>
-										<div class="ajho-card__actions">
-											<a href="<?php echo esc_url( $detail_url ); ?>" class="ajho-btn ajho-btn--primary">Voir details</a>
-											<a href="<?php echo esc_url( $request_url ); ?>" class="ajho-btn ajho-btn--secondary">Demander reservation</a>
-										</div>
+
+									<div class="aj-eco-card__footer">
+										<span class="aj-eco-card__price">
+											<small>dès</small>
+											<strong><?php echo esc_html( $card['price_label'] ); ?></strong>
+										</span>
+										<a href="<?php echo esc_url( $card['cta_url'] ); ?>" class="aj-eco-btn aj-eco-btn--<?php echo $card['expired'] ? 'outline' : 'primary'; ?> aj-eco-card__cta"><?php echo esc_html( $card['cta_label'] ); ?></a>
 									</div>
 								</article>
 							<?php endforeach; ?>
-						</section>
+						</div>
 					<?php endif; ?>
-				</div>
+				</section>
 			<?php endif; ?>
 		</main>
 
@@ -673,6 +853,18 @@ $filtered_offers = array_values(
 </div>
 
 <script>
+// Les controles a choix ferme relancent la recherche sans passer par le bouton.
+document.addEventListener('change', function (event) {
+    const control = event.target.closest('[data-aj-eco-auto]');
+    if (!control) {
+        return;
+    }
+    const form = control.closest('[data-aj-eco-filters]');
+    if (form) {
+        form.submit();
+    }
+});
+
 document.addEventListener('click', function (event) {
     const shareButton = event.target.closest('[data-ajho-share]');
     if (!shareButton) {

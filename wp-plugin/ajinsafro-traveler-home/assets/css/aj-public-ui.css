@@ -2671,3 +2671,670 @@
 .page-hebergement-ajinsafro .aj-hotel-estimate small {
   font-size: 12px;
 }
+
+/* ── §7 Formule Economique : catalogue ─────────────────────────────────── */
+
+.page-economic-offers-ajinsafro .aj-eco-hero,
+.page-economic-offers-ajinsafro .aj-eco-section {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding-left: clamp(14px, 3vw, 30px);
+  padding-right: clamp(14px, 3vw, 30px);
+  box-sizing: border-box;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-hero {
+  padding-top: clamp(14px, 2vw, 22px);
+}
+
+.page-economic-offers-ajinsafro .aj-eco-section {
+  padding-top: clamp(20px, 2.6vw, 30px);
+  padding-bottom: clamp(28px, 4vw, 56px);
+}
+
+/* Bandeau */
+.page-economic-offers-ajinsafro .aj-eco-hero__card {
+  background: var(--brand-dark);
+  border-radius: 20px;
+  padding: clamp(22px, 3.4vw, 44px);
+  color: #fff;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-breadcrumb a {
+  color: #c6dcf0;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-breadcrumb a:hover {
+  color: #fff;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-breadcrumb span {
+  color: #4d7ba8;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-breadcrumb .is-current {
+  color: #fff;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-hero__inner {
+  margin-top: clamp(16px, 2.4vw, 26px);
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(20px, 3vw, 44px);
+  flex-wrap: wrap;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-hero__copy {
+  flex: 1 1 440px;
+  min-width: 0;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-kicker {
+  display: block;
+  font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: #c2570a;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-kicker--hero {
+  color: #f5b06a;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-hero__copy h1 {
+  margin: 14px 0 0;
+  font-size: clamp(28px, 3.8vw, 46px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  color: #fff;
+  max-width: 22ch;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-hero__copy p {
+  margin: 14px 0 0;
+  font-size: clamp(14.5px, 1.4vw, 16.5px);
+  line-height: 1.6;
+  color: #c6dcf0;
+  max-width: 56ch;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-hero__actions {
+  margin-top: clamp(18px, 2.4vw, 26px);
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Boutons */
+.page-economic-offers-ajinsafro .aj-eco-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+  border: 1px solid transparent;
+  box-sizing: border-box;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-btn--accent {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-btn--accent:hover {
+  background: #e07310;
+  color: var(--accent-ink);
+}
+
+.page-economic-offers-ajinsafro .aj-eco-btn--outline-light {
+  border-color: #4d7ba8;
+  color: #fff;
+  background: transparent;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-btn--outline-light:hover {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-btn--primary {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-btn--primary:hover {
+  background: var(--brand-dark);
+  border-color: var(--brand-dark);
+  color: #fff;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-btn--outline {
+  background: var(--surface);
+  border-color: #cfdcea;
+  color: var(--brand);
+}
+
+.page-economic-offers-ajinsafro .aj-eco-btn--outline:hover {
+  border-color: var(--brand);
+  background: #f6fafd;
+  color: var(--brand);
+}
+
+/* Recherche rapide */
+.page-economic-offers-ajinsafro .aj-eco-quick {
+  flex: 0 1 330px;
+  min-width: 0;
+  background: #0b2e56;
+  border: 1px solid #1d5490;
+  border-radius: 15px;
+  padding: clamp(14px, 1.6vw, 18px);
+  box-sizing: border-box;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-quick__title {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #c6dcf0;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-quick__field {
+  display: block;
+  margin-top: 11px;
+  min-width: 0;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-quick__field span {
+  display: block;
+  font-size: 12px;
+  color: #c6dcf0;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-quick__field input {
+  margin-top: 6px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #1d5490;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--ink);
+  background: #fff;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-quick__tags {
+  margin-top: 12px;
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-tag {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #1d5490;
+  background: var(--brand-dark);
+  color: #c6dcf0;
+  border-radius: 999px;
+  padding: 7px 13px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-tag:hover {
+  background: var(--brand);
+  color: #fff;
+}
+
+/* Barre de filtres */
+.page-economic-offers-ajinsafro .aj-eco-filters {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: clamp(14px, 1.8vw, 20px);
+}
+
+.page-economic-offers-ajinsafro .aj-eco-filters__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 178px), 1fr));
+  gap: 13px;
+  align-items: end;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-field__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2e4c66;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-field input,
+.page-economic-offers-ajinsafro .aj-eco-field select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #cfdcea;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--surface);
+}
+
+.page-economic-offers-ajinsafro .aj-eco-filters__row {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  cursor: pointer;
+  font-size: 13.5px;
+  color: #2e4c66;
+  min-width: 0;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-check input {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  accent-color: var(--brand);
+  cursor: pointer;
+  margin: 0;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13.5px;
+  color: #2e4c66;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-sort__label {
+  font-weight: 600;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-sort select {
+  border: 1px solid #cfdcea;
+  border-radius: 9px;
+  padding: 9px 11px;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  min-width: 0;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-filters__actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-reset {
+  display: inline-flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid #cfdcea;
+  border-radius: 10px;
+  padding: 11px 18px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--brand);
+}
+
+.page-economic-offers-ajinsafro .aj-eco-reset:hover {
+  border-color: var(--brand);
+  background: #f6fafd;
+}
+
+/* Tete de resultats */
+.page-economic-offers-ajinsafro .aj-eco-results-head {
+  margin-top: clamp(18px, 2.2vw, 26px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-results-head__copy {
+  min-width: 0;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-results-head h2 {
+  margin: 11px 0 0;
+  font-size: clamp(20px, 2.4vw, 28px);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+}
+
+.page-economic-offers-ajinsafro .aj-eco-count {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--body);
+  min-width: 0;
+}
+
+/* Grille */
+.page-economic-offers-ajinsafro .aj-eco-grid {
+  margin-top: clamp(14px, 1.8vw, 20px);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: clamp(14px, 1.8vw, 20px);
+  align-items: stretch;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card:hover {
+  border-color: #b9cfe6;
+}
+
+/* Une offre passee reste lisible : on baisse l'image, pas le texte. */
+.page-economic-offers-ajinsafro .aj-eco-card.is-expired .aj-eco-card__media {
+  opacity: 0.72;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card__media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: #f6fafd;
+  border-bottom: 1px solid var(--line-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card__media img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card__placeholder {
+  font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--meta);
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card__kind {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  max-width: calc(100% - 20px);
+  background: rgba(13, 33, 55, 0.82);
+  color: #fff;
+  border-radius: 7px;
+  padding: 5px 10px;
+  font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-state {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-state--available {
+  background: #e4f5ec;
+  color: #146b45;
+  border: 1px solid #bde3cf;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-state--limited {
+  background: #fff5e8;
+  color: #a24c07;
+  border: 1px solid #f6d6b0;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-state--full,
+.page-economic-offers-ajinsafro .aj-eco-state--expired {
+  background: var(--line-soft);
+  color: var(--body);
+  border: 1px solid #cfdcea;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card__body {
+  padding: 16px 17px 0;
+  min-width: 0;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card__body h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card__body h3 a {
+  color: inherit;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card__body h3 a:hover {
+  color: var(--brand);
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card__body p {
+  margin: 8px 0 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--body);
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card__facts {
+  margin: 14px 0 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px 14px;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card__facts > div {
+  min-width: 0;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card__facts dt {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--meta);
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card__facts dd {
+  display: block;
+  margin: 3px 0 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card__seats {
+  margin-top: 13px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-gauge {
+  flex: 1 1 auto;
+  min-width: 60px;
+  height: 8px;
+  border-radius: 999px;
+  background: #e2ecf5;
+  overflow: hidden;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-gauge__fill {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--ok);
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card--limited .aj-eco-gauge__fill {
+  background: var(--warn);
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card--full .aj-eco-gauge__fill {
+  background: var(--neutral);
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card.is-expired .aj-eco-gauge__fill {
+  background: #9fb6cc;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card__seats-label {
+  flex: none;
+  font-size: 12.5px;
+  color: var(--body);
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card__footer {
+  margin-top: auto;
+  padding: 14px 17px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card__price {
+  min-width: 0;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card__price small {
+  font-size: 13px;
+  color: var(--body);
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card__price strong {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.page-economic-offers-ajinsafro .aj-eco-card__cta {
+  flex: none;
+  padding: 11px 17px;
+  font-size: 13px;
+}
+
+/* Aucun resultat */
+.page-economic-offers-ajinsafro .aj-eco-empty {
+  margin-top: clamp(14px, 1.8vw, 20px);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: clamp(24px, 3.4vw, 44px);
+  text-align: center;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-empty h3 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.page-economic-offers-ajinsafro .aj-eco-empty p {
+  margin: 10px auto 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--body);
+  max-width: 46ch;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-empty__actions {
+  margin-top: 18px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  .page-economic-offers-ajinsafro .aj-eco-filters__actions {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .page-economic-offers-ajinsafro .aj-eco-filters__actions > * {
+    flex: 1 1 auto;
+  }
+}

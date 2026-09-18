@@ -1,0 +1,578 @@
+/*
+ * Transferts des circuits — /admin/circuits/tour-transfers
+ * Liste, edition en ligne et definition en lot.
+ */
+
+.att-page {
+    --att-ink: #0d2137;
+    --att-body: #41627f;
+    --att-meta: #8aa6bf;
+    --att-line: #dce7f2;
+    --att-line-soft: #eef3f9;
+    --att-field-line: #cfdcea;
+    --att-brand: #144e8c;
+    --att-brand-dark: #0d3767;
+    --att-ok: #0f7a44;
+    --att-todo: #a8401f;
+
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 0 46px;
+    color: var(--att-ink);
+    font-size: 14px;
+}
+
+.att-page a {
+    color: var(--att-brand);
+    text-decoration: none;
+}
+
+.att-page a:hover {
+    color: var(--att-brand-dark);
+}
+
+.att-page input:focus,
+.att-page select:focus {
+    outline: none;
+    border-color: var(--att-brand);
+    box-shadow: 0 0 0 3px rgba(20, 78, 140, 0.16);
+}
+
+/* ── En-tete de page ──────────────────────────────────────────────────── */
+.att-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.att-head__copy {
+    min-width: 0;
+}
+
+.att-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 12.5px;
+    color: var(--att-body);
+}
+
+.att-breadcrumb span {
+    color: var(--att-meta);
+}
+
+.att-breadcrumb .is-current {
+    color: var(--att-ink);
+}
+
+.att-head h1 {
+    margin: 11px 0 0;
+    font-size: clamp(22px, 2.6vw, 29px);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    color: var(--att-ink);
+}
+
+.att-head p {
+    margin: 9px 0 0;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--att-body);
+    max-width: 72ch;
+}
+
+.att-stats {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.att-stat {
+    background: #fff;
+    border: 1px solid var(--att-line);
+    border-radius: 12px;
+    padding: 11px 16px;
+    min-width: 112px;
+    box-sizing: border-box;
+}
+
+.att-stat__label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--att-body);
+}
+
+.att-stat__value {
+    display: block;
+    margin-top: 3px;
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--att-ink);
+}
+
+.att-stat__value--ok {
+    color: var(--att-ok);
+}
+
+.att-stat__value--todo {
+    color: var(--att-todo);
+}
+
+/* ── Messages ─────────────────────────────────────────────────────────── */
+.att-alert {
+    margin-top: clamp(14px, 1.8vw, 18px);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    border: 1px solid;
+}
+
+.att-alert ul {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.att-alert--ok {
+    background: #e4f5ec;
+    border-color: #bde3cf;
+    color: #146b45;
+}
+
+.att-alert--error {
+    background: #fdecea;
+    border-color: #f5c6c2;
+    color: #8f2f22;
+}
+
+.att-alert--warn {
+    background: #fff5e8;
+    border-color: #f6d6b0;
+    color: #a24c07;
+}
+
+/* ── Carte principale ─────────────────────────────────────────────────── */
+.att-card {
+    margin-top: clamp(16px, 2vw, 22px);
+    background: #fff;
+    border: 1px solid var(--att-line);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+/* ── Barre d'outils ───────────────────────────────────────────────────── */
+.att-toolbar {
+    padding: clamp(13px, 1.6vw, 18px);
+    border-bottom: 1px solid var(--att-line-soft);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.att-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 260px;
+    min-width: 0;
+    border: 1px solid var(--att-field-line);
+    border-radius: 10px;
+    padding: 10px 13px;
+    box-sizing: border-box;
+}
+
+.att-search:focus-within {
+    border-color: var(--att-brand);
+    box-shadow: 0 0 0 3px rgba(20, 78, 140, 0.16);
+}
+
+.att-search__icon {
+    width: 13px;
+    height: 13px;
+    border: 1.6px solid var(--att-meta);
+    border-radius: 50%;
+    flex: none;
+}
+
+.att-search input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    font-size: 13.5px;
+    font-family: inherit;
+    color: var(--att-ink);
+    background: transparent;
+}
+
+.att-search input:focus {
+    box-shadow: none;
+}
+
+.att-filter {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 13.5px;
+    color: var(--att-body);
+    min-width: 0;
+}
+
+.att-filter__label {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.att-filter select {
+    border: 1px solid var(--att-field-line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13.5px;
+    font-family: inherit;
+    color: var(--att-ink);
+    background: #fff;
+    min-width: 0;
+}
+
+.att-count {
+    font-size: 13px;
+    color: var(--att-body);
+    white-space: nowrap;
+    margin-left: auto;
+}
+
+/* ── Boutons ──────────────────────────────────────────────────────────── */
+.att-page .att-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+    border: 1px solid transparent;
+    box-sizing: border-box;
+}
+
+.att-page .att-btn--primary {
+    background: var(--att-brand);
+    border-color: var(--att-brand);
+    color: #fff;
+}
+
+.att-page .att-btn--primary:hover {
+    background: var(--att-brand-dark);
+    border-color: var(--att-brand-dark);
+    color: #fff;
+}
+
+.att-page .att-btn--ghost {
+    background: #fff;
+    border-color: var(--att-field-line);
+    color: var(--att-brand);
+}
+
+.att-page .att-btn--ghost:hover {
+    border-color: var(--att-brand);
+    color: var(--att-brand);
+}
+
+/* ── Selection multiple ───────────────────────────────────────────────── */
+.att-bulk {
+    background: #eef5fc;
+    border-bottom: 1px solid var(--att-line);
+}
+
+.att-bulk[hidden] {
+    display: none !important;
+}
+
+.att-bulk__bar {
+    padding: 12px clamp(13px, 1.6vw, 18px);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.att-bulk__count {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--att-brand-dark);
+    min-width: 0;
+}
+
+.att-bulk__panel {
+    padding: 0 clamp(13px, 1.6vw, 18px) clamp(14px, 1.8vw, 18px);
+}
+
+.att-bulk__panel[hidden] {
+    display: none !important;
+}
+
+/* ── Tableau ──────────────────────────────────────────────────────────── */
+.att-scroll {
+    overflow-x: auto;
+}
+
+.att-scroll::-webkit-scrollbar {
+    height: 6px;
+}
+
+.att-scroll::-webkit-scrollbar-thumb {
+    background: var(--att-field-line);
+    border-radius: 6px;
+}
+
+.att-table {
+    min-width: 900px;
+}
+
+.att-row {
+    display: grid;
+    grid-template-columns: 44px 84px minmax(240px, 1fr) 190px 190px 132px;
+    gap: 14px;
+    align-items: center;
+    padding: 13px clamp(13px, 1.6vw, 18px);
+    border-bottom: 1px solid #f1f6fb;
+    background: #fff;
+}
+
+.att-row--head {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    background: #f6fafd;
+    border-bottom: 1px solid var(--att-line);
+}
+
+.att-row--head .att-cell {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--att-body);
+}
+
+/* Un circuit sans aucun transfert se repere a la volee. */
+.att-row--manquant {
+    background: #fffaf6;
+}
+
+.att-row:not(.att-row--head):hover {
+    background: #f9fcfe;
+}
+
+.att-cell {
+    min-width: 0;
+}
+
+.att-cell--check {
+    display: flex;
+    align-items: center;
+}
+
+.att-cell--check input {
+    width: 17px;
+    height: 17px;
+    margin: 0;
+    accent-color: var(--att-brand);
+    cursor: pointer;
+}
+
+.att-cell--id {
+    font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+    color: var(--att-body);
+}
+
+.att-cell--end {
+    display: flex;
+    justify-content: flex-end;
+    text-align: right;
+}
+
+.att-page .att-title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--att-ink);
+}
+
+.att-page .att-title:hover {
+    color: var(--att-brand);
+}
+
+.att-meta {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--att-body);
+}
+
+.att-leg {
+    font-size: 13px;
+    color: var(--att-ink);
+}
+
+.att-leg.is-missing {
+    color: var(--att-todo);
+}
+
+/* ── Edition en ligne ─────────────────────────────────────────────────── */
+.att-edit {
+    padding: clamp(14px, 1.8vw, 20px) clamp(13px, 1.6vw, 18px);
+    background: #f6fafd;
+    border-bottom: 1px solid var(--att-line);
+}
+
+.att-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 14px;
+}
+
+.att-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.att-field__label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #2e4c66;
+}
+
+.att-field__label b {
+    color: #f5821f;
+}
+
+.att-field input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--att-field-line);
+    border-radius: 10px;
+    padding: 11px;
+    font-size: 13.5px;
+    font-family: inherit;
+    color: var(--att-ink);
+    background: #fff;
+}
+
+.att-actions {
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.att-page .att-actions .att-btn {
+    padding: 11px 18px;
+    font-size: 13.5px;
+}
+
+.att-hint {
+    font-size: 12.5px;
+    color: var(--att-body);
+    min-width: 0;
+}
+
+/* ── Aucun resultat ───────────────────────────────────────────────────── */
+.att-empty {
+    padding: clamp(28px, 4vw, 52px);
+    text-align: center;
+}
+
+.att-empty h3 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--att-ink);
+}
+
+.att-empty p {
+    margin: 9px auto 0;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--att-body);
+    max-width: 44ch;
+}
+
+.att-page .att-empty .att-btn {
+    margin-top: 16px;
+    padding: 11px 18px;
+    font-size: 13.5px;
+}
+
+/* ── Pied de tableau ──────────────────────────────────────────────────── */
+.att-foot {
+    padding: 12px clamp(13px, 1.6vw, 18px);
+    border-top: 1px solid var(--att-line-soft);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.att-foot__label {
+    font-size: 12.5px;
+    color: var(--att-body);
+    min-width: 0;
+}
+
+.att-pager {
+    display: flex;
+    gap: 7px;
+    flex: none;
+}
+
+.att-page .att-pager__btn {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--att-field-line);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--att-brand);
+    padding: 8px 13px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.att-page .att-pager__btn:hover {
+    border-color: var(--att-brand);
+}
+
+.att-page .att-pager__btn.is-disabled {
+    color: var(--att-meta);
+    cursor: not-allowed;
+    font-weight: 400;
+}
+
+@media (max-width: 640px) {
+    .att-count {
+        margin-left: 0;
+    }
+
+    .att-foot {
+        justify-content: flex-start;
+    }
+}
