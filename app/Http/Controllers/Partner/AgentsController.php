@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -20,6 +21,13 @@ class AgentsController extends Controller
         $agents = User::query()
             ->where('partner_id', $partner->id)
             ->whereHas('roles', fn ($query) => $query->where('name', 'partner_agent'))
+            ->select('users.*')
+            ->selectSub(
+                DB::table('reservations')
+                    ->selectRaw('count(*)')
+                    ->whereColumn('reservations.partner_agent_id', 'users.id'),
+                'reservations_count'
+            )
             ->orderBy('name')
             ->paginate(15)
             ->withQueryString();
@@ -98,7 +106,15 @@ class AgentsController extends Controller
         $this->abortUnlessOwnAgent($request, $user);
         $user->forceFill(['is_active' => false])->save();
 
-        return redirect()->route('partner.agents.index')->with('success', 'Agent partenaire desactive.');
+        return redirect()->route('partner.agents.index')->with('success', 'Agent partenaire désactivé.');
+    }
+
+    public function enable(Request $request, User $user): RedirectResponse
+    {
+        $this->abortUnlessOwnAgent($request, $user);
+        $user->forceFill(['is_active' => true])->save();
+
+        return redirect()->route('partner.agents.index')->with('success', 'Agent partenaire réactivé.');
     }
 
     public function resetPassword(Request $request, User $user): RedirectResponse

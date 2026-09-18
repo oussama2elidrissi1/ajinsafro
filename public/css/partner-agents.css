@@ -1,0 +1,559 @@
+/*
+ * Portail partenaire — Mes agents.
+ *
+ * Tout est porté par `.pa-agents` : la coque Tailwind du portail v2 n'est pas
+ * touchée. Mêmes jetons que le catalogue partenaire.
+ */
+
+.pa-agents {
+    --pa-ink: #10263d;
+    --pa-body: #4d6a85;
+    --pa-meta: #5b7690;
+    --pa-line: #dce7f2;
+    --pa-line-soft: #f1f6fb;
+    --pa-surface: #fff;
+    --pa-canvas: #f7fafd;
+    --pa-brand: #144e8c;
+    --pa-brand-dark: #0d3767;
+    --pa-brand-soft: #eef4fa;
+    --pa-accent: #f5821f;
+    --pa-ok: #0f6b52;
+    --pa-ok-soft: #e8f6f1;
+    --pa-ok-dot: #21a179;
+    --pa-danger: #b4413c;
+    --pa-danger-line: #f1d6d5;
+
+    color: var(--pa-ink);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.pa-agents .pa-mono {
+    font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
+}
+
+/* ── En-tête ───────────────────────────────────────────────────────────── */
+
+.pa-agents .pa-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+.pa-agents .pa-crumbs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 11.5px;
+    color: var(--pa-body);
+}
+
+.pa-agents .pa-crumbs a {
+    color: var(--pa-brand);
+    text-decoration: none;
+}
+
+.pa-agents .pa-crumbs .pa-sep {
+    color: #b9cade;
+}
+
+.pa-agents .pa-title {
+    margin: 7px 0 0;
+    font-size: clamp(22px, 2.5vw, 30px);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    color: var(--pa-ink);
+}
+
+.pa-agents .pa-lead {
+    margin: 7px 0 0;
+    font-size: 13.5px;
+    color: var(--pa-body);
+    line-height: 1.55;
+    max-width: 66ch;
+}
+
+.pa-agents .pa-head-actions {
+    display: flex;
+    gap: 9px;
+    flex-wrap: wrap;
+    flex: none;
+}
+
+/* ── Boutons ───────────────────────────────────────────────────────────── */
+
+.pa-agents .pa-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    white-space: nowrap;
+    border-radius: 999px;
+    min-height: 44px;
+    padding: 10px 18px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    border: 1px solid transparent;
+    font-family: inherit;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+/* L'orange ne porte que du brun tres fonce : jamais de blanc dessus. */
+.pa-agents .pa-btn.-accent {
+    background: var(--pa-accent);
+    color: #2a1400;
+    font-weight: 700;
+}
+
+.pa-agents .pa-btn.-accent:hover {
+    background: #e07310;
+    color: #2a1400;
+}
+
+.pa-agents .pa-btn.-brand {
+    background: var(--pa-brand);
+    color: #fff;
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 14px;
+}
+
+.pa-agents .pa-btn.-brand:hover {
+    background: var(--pa-brand-dark);
+    color: #fff;
+}
+
+/* Actions de ligne, plus compactes mais toujours cliquables au doigt. */
+.pa-agents .pa-rowbtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    border: 1px solid var(--pa-line);
+    background: var(--pa-surface);
+    color: #41627f;
+    border-radius: 999px;
+    padding: 9px 13px;
+    min-height: 38px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: inherit;
+}
+
+.pa-agents .pa-rowbtn:hover {
+    background: var(--pa-canvas);
+    color: var(--pa-brand);
+}
+
+.pa-agents .pa-rowbtn.-danger {
+    border-color: var(--pa-danger-line);
+    color: var(--pa-danger);
+}
+
+.pa-agents .pa-rowbtn.-danger:hover {
+    background: #fdf4f4;
+    color: var(--pa-danger);
+}
+
+.pa-agents .pa-rowbtn.-ok {
+    border-color: #cfe6dd;
+    color: var(--pa-ok);
+}
+
+.pa-agents .pa-rowbtn.-ok:hover {
+    background: var(--pa-ok-soft);
+    color: var(--pa-ok);
+}
+
+/* ── Colonnes ──────────────────────────────────────────────────────────── */
+
+.pa-agents .pa-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+}
+
+@media (max-width: 1060px) {
+    .pa-agents .pa-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.pa-agents .pa-panel {
+    background: var(--pa-surface);
+    border: 1px solid var(--pa-line);
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+/* ── En-tête de la liste ───────────────────────────────────────────────── */
+
+.pa-agents .pa-panel-head {
+    padding: 18px clamp(16px, 2vw, 22px) 14px;
+    border-bottom: 1px solid var(--pa-line-soft);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.pa-agents .pa-panel-head h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--pa-ink);
+}
+
+.pa-agents .pa-panel-head p {
+    margin: 5px 0 0;
+    font-size: 12.5px;
+    color: var(--pa-body);
+}
+
+.pa-agents .pa-head-tools {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-wrap: wrap;
+    flex: none;
+}
+
+.pa-agents .pa-search {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    border: 1px solid var(--pa-line);
+    border-radius: 11px;
+    background: var(--pa-canvas);
+    padding: 0 13px;
+    min-height: 44px;
+}
+
+.pa-agents .pa-search input {
+    width: 150px;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    font-size: 13px;
+    color: var(--pa-ink);
+    padding: 10px 0;
+}
+
+.pa-agents .pa-search input:focus {
+    outline: none;
+}
+
+.pa-agents .pa-search-dot {
+    width: 13px;
+    height: 13px;
+    border: 1.6px solid #8aa6bf;
+    border-radius: 50%;
+    flex: none;
+}
+
+.pa-agents .pa-tabs {
+    display: flex;
+    gap: 3px;
+    background: var(--pa-line-soft);
+    border-radius: 11px;
+    padding: 3px;
+    flex: none;
+}
+
+.pa-agents .pa-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    padding: 9px 13px;
+    min-height: 38px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--pa-body);
+    font-size: 12.5px;
+    font-weight: 400;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.pa-agents .pa-tab b {
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0.7;
+}
+
+.pa-agents .pa-tab[aria-pressed="true"] {
+    background: var(--pa-surface);
+    color: var(--pa-brand);
+    font-weight: 600;
+}
+
+/* ── Lignes ────────────────────────────────────────────────────────────── */
+
+.pa-agents .pa-thead {
+    display: flex;
+    gap: 14px;
+    padding: 11px clamp(16px, 2vw, 22px);
+    background: var(--pa-canvas);
+    border-bottom: 1px solid var(--pa-brand-soft);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--pa-meta);
+}
+
+@media (max-width: 820px) {
+    .pa-agents .pa-thead {
+        display: none;
+    }
+}
+
+.pa-agents .pa-row {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 14px clamp(16px, 2vw, 22px);
+    border-bottom: 1px solid #f4f7fa;
+}
+
+.pa-agents .pa-row:hover {
+    background: #fcfdff;
+}
+
+.pa-agents .pa-col-agent { flex: 2 1 200px; min-width: 0; }
+.pa-agents .pa-col-seen { flex: 1 1 120px; min-width: 0; }
+.pa-agents .pa-col-status { flex: 0 1 96px; min-width: 88px; }
+.pa-agents .pa-col-actions {
+    flex: 0 1 190px;
+    min-width: 170px;
+    display: flex;
+    gap: 7px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.pa-agents .pa-thead .pa-col-actions {
+    display: block;
+    text-align: right;
+}
+
+.pa-agents .pa-identity {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.pa-agents .pa-avatar {
+    width: 38px;
+    height: 38px;
+    flex: none;
+    border-radius: 12px;
+    background: var(--pa-brand-soft);
+    color: var(--pa-brand);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.pa-agents .pa-name {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--pa-ink);
+}
+
+.pa-agents .pa-email {
+    font-size: 12.5px;
+    color: var(--pa-body);
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pa-agents .pa-seen {
+    font-size: 12.5px;
+    color: #41627f;
+}
+
+.pa-agents .pa-bookings {
+    font-size: 11.5px;
+    color: var(--pa-meta);
+    margin-top: 2px;
+}
+
+.pa-agents .pa-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    font-size: 11.5px;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 5px 11px;
+}
+
+.pa-agents .pa-status b {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex: none;
+}
+
+.pa-agents .pa-status.-on {
+    color: var(--pa-ok);
+    background: var(--pa-ok-soft);
+}
+
+.pa-agents .pa-status.-on b { background: var(--pa-ok-dot); }
+
+.pa-agents .pa-status.-off {
+    color: var(--pa-meta);
+    background: var(--pa-line-soft);
+}
+
+.pa-agents .pa-status.-off b { background: #94adc4; }
+
+/* ── Pieds de liste et états vides ─────────────────────────────────────── */
+
+.pa-agents .pa-panel-foot {
+    padding: 13px clamp(16px, 2vw, 22px);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--pa-body);
+}
+
+.pa-agents .pa-empty {
+    padding: clamp(26px, 4vw, 40px) 24px;
+    text-align: center;
+}
+
+.pa-agents .pa-empty strong {
+    display: block;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--pa-ink);
+}
+
+.pa-agents .pa-empty p {
+    margin: 7px auto 0;
+    font-size: 12.5px;
+    color: var(--pa-body);
+    max-width: 40ch;
+    line-height: 1.55;
+}
+
+/* ── Formulaire ────────────────────────────────────────────────────────── */
+
+.pa-agents .pa-form {
+    padding: 18px clamp(16px, 2vw, 22px) 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.pa-agents .pa-form h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--pa-ink);
+}
+
+.pa-agents .pa-form-intro {
+    margin: 6px 0 0;
+    font-size: 12.5px;
+    color: var(--pa-body);
+    line-height: 1.55;
+}
+
+.pa-agents .pa-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.pa-agents .pa-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.pa-agents .pa-field > span {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #2e4c66;
+}
+
+.pa-agents .pa-field input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--pa-line);
+    border-radius: 11px;
+    background: var(--pa-canvas);
+    padding: 12px 13px;
+    min-height: 46px;
+    font-size: 13.5px;
+    font-weight: 400;
+    color: var(--pa-ink);
+    font-family: inherit;
+}
+
+.pa-agents .pa-field input:focus {
+    outline: none;
+    border-color: var(--pa-brand);
+    box-shadow: 0 0 0 3px rgba(20, 78, 140, 0.16);
+}
+
+.pa-agents .pa-field input.pa-mono {
+    font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+}
+
+.pa-agents .pa-field-pair {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+    gap: 12px;
+}
+
+.pa-agents .pa-error {
+    font-size: 12px;
+    color: #b4413c;
+}
+
+/* ── Message de confirmation ───────────────────────────────────────────── */
+
+.pa-agents .pa-flash {
+    border: 1px solid #cfe6dd;
+    background: var(--pa-ok-soft);
+    color: var(--pa-ok);
+    border-radius: 13px;
+    padding: 13px 16px;
+    font-size: 13.5px;
+    font-weight: 600;
+}
+
+/* Masquage par la recherche ou les onglets. */
+.pa-agents .pa-row[hidden] {
+    display: none !important;
+}

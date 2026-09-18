@@ -60,6 +60,7 @@ Route::middleware(['auth', 'partner'])->group(function () {
             Route::get('agents/{user}/edit', [PartnerAgentsController::class, 'edit'])->name('partner.agents.edit');
             Route::put('agents/{user}', [PartnerAgentsController::class, 'update'])->name('partner.agents.update');
             Route::post('agents/{user}/disable', [PartnerAgentsController::class, 'disable'])->name('partner.agents.disable');
+            Route::post('agents/{user}/enable', [PartnerAgentsController::class, 'enable'])->name('partner.agents.enable');
             Route::post('agents/{user}/reset-password', [PartnerAgentsController::class, 'resetPassword'])->name('partner.agents.reset-password');
 
             Route::get('wallet', [PartnerWalletController::class, 'index'])->name('partner.wallet.index');
