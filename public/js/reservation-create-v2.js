@@ -292,6 +292,13 @@
         document.querySelectorAll('.v2-stepper__step').forEach(function (btn) {
             var btnStep = parseInt(btn.getAttribute('data-v2-step-nav'), 10);
             btn.classList.toggle('is-active', btnStep === step);
+            // Sous-ligne d'etat : en cours, terminee ou a venir.
+            var state = btn.querySelector('.v2-stepper__state');
+            if (state) {
+                state.textContent = btnStep === step
+                    ? 'En cours'
+                    : (btnStep < step ? 'Terminée' : 'À venir');
+            }
         });
         var progressPct = Math.round((step / 4) * 100);
         var bar = document.getElementById('v2-progress-bar');

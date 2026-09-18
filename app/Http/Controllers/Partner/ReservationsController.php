@@ -164,6 +164,7 @@ class ReservationsController extends Controller
             'preselectedTourId' => $preselectedTourId,
             'extrasByVoyage' => $extrasByVoyage,
             'selectedUnitPrice' => null,
+            'partner' => $partner,
         ]);
     }
 

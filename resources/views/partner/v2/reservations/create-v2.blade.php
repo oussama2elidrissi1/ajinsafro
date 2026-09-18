@@ -59,19 +59,31 @@
                 <div class="v2-stepper" role="tablist" aria-label="Étapes de création">
                     <button type="button" class="v2-stepper__step is-active" data-v2-step-nav="1">
                         <span class="v2-stepper__badge">1</span>
-                        <span class="v2-stepper__label">Tour + départ</span>
+                        <span class="v2-stepper__text">
+                            <span class="v2-stepper__label">Tour + départ</span>
+                            <span class="v2-stepper__state">En cours</span>
+                        </span>
                     </button>
                     <button type="button" class="v2-stepper__step" data-v2-step-nav="2">
                         <span class="v2-stepper__badge">2</span>
-                        <span class="v2-stepper__label">Client & voyageurs</span>
+                        <span class="v2-stepper__text">
+                            <span class="v2-stepper__label">Client & voyageurs</span>
+                            <span class="v2-stepper__state">À venir</span>
+                        </span>
                     </button>
                     <button type="button" class="v2-stepper__step" data-v2-step-nav="3">
                         <span class="v2-stepper__badge">3</span>
-                        <span class="v2-stepper__label">Chambres + extras</span>
+                        <span class="v2-stepper__text">
+                            <span class="v2-stepper__label">Chambres + extras</span>
+                            <span class="v2-stepper__state">À venir</span>
+                        </span>
                     </button>
                     <button type="button" class="v2-stepper__step" data-v2-step-nav="4">
                         <span class="v2-stepper__badge">4</span>
-                        <span class="v2-stepper__label">Paiement & validation</span>
+                        <span class="v2-stepper__text">
+                            <span class="v2-stepper__label">Paiement & validation</span>
+                            <span class="v2-stepper__state">À venir</span>
+                        </span>
                     </button>
                 </div>
 
@@ -274,6 +286,7 @@
 
                     <div class="v2-actions">
                         <button type="button" class="v2-btn v2-btn--secondary" data-v2-prev="1"><i class="bx bx-left-arrow-alt"></i> Précédent</button>
+                        <span class="v2-actions__count">Étape 2 sur 4</span>
                         <button type="button" class="v2-btn v2-btn--primary" data-v2-next="3">Continuer <i class="bx bx-right-arrow-alt"></i></button>
                     </div>
                 </section>
@@ -343,6 +356,7 @@
 
                     <div class="v2-actions">
                         <button type="button" class="v2-btn v2-btn--secondary" data-v2-prev="2"><i class="bx bx-left-arrow-alt"></i> Précédent</button>
+                        <span class="v2-actions__count">Étape 3 sur 4</span>
                         <button type="button" class="v2-btn v2-btn--primary" data-v2-next="4">Continuer <i class="bx bx-right-arrow-alt"></i></button>
                     </div>
                 </section>
@@ -451,6 +465,7 @@
 
                     <div class="v2-actions v2-actions--final">
                         <button type="button" class="v2-btn v2-btn--secondary" data-v2-prev="3"><i class="bx bx-left-arrow-alt"></i> Précédent</button>
+                        <span class="v2-actions__count">Étape 4 sur 4</span>
                         <div class="v2-actions__group">
                             <a href="{{ route('partner.reservations.index') }}" class="v2-btn v2-btn--ghost">Annuler</a>
                             <button type="submit" class="v2-btn v2-btn--primary v2-btn--lg">
@@ -524,6 +539,27 @@
                         </div>
                     </div>
                 </div>
+
+                @if(isset($partner))
+                    @php($walletBalance = (float) ($partner->wallet_balance ?? 0))
+                    <div class="v2-wallet">
+                        <div class="v2-wallet__title">Solde wallet</div>
+                        <div class="v2-wallet__value">
+                            <strong>{{ number_format($walletBalance, 2, ',', ' ') }}</strong>
+                            <span>DH</span>
+                        </div>
+                        <p class="v2-wallet__note">
+                            @if($walletBalance > 0)
+                                Utilisable pour régler tout ou partie du dossier à l'étape 4.
+                            @else
+                                Solde nul. Vous pourrez choisir un autre mode de paiement à l'étape 4.
+                            @endif
+                        </p>
+                        @if(Route::has('partner.wallet.index'))
+                            <a class="v2-wallet__link" href="{{ route('partner.wallet.index') }}">Demander une recharge &rarr;</a>
+                        @endif
+                    </div>
+                @endif
             </aside>
         </div>
     </form>

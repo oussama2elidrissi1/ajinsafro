@@ -4,25 +4,32 @@
    ======================================== */
 
 .reservation-create-v2 {
-    --v2-blue: #1e40af;
-    --v2-blue-dark: #1e3a8a;
-    --v2-blue-light: #dbeafe;
-    --v2-orange: #f97316;
-    --v2-orange-light: #ffedd5;
-    --v2-text: #0f172a;
-    --v2-text-secondary: #64748b;
-    --v2-border: #e2e8f0;
+    /* Jetons communs au portail partenaire (catalogue, agents, wallet). */
+    --v2-blue: #144e8c;
+    --v2-blue-dark: #0d3767;
+    --v2-blue-light: #eef4fa;
+    --v2-orange: #f5821f;
+    --v2-orange-light: #fff5ec;
+    --v2-orange-ink: #2a1400;
+    --v2-text: #10263d;
+    --v2-text-secondary: #4d6a85;
+    --v2-muted: #5b7690;
+    --v2-border: #dce7f2;
+    --v2-border-soft: #f1f6fb;
     --v2-surface: #ffffff;
-    --v2-surface-alt: #f8fafc;
-    --v2-success: #16a34a;
-    --v2-warning: #d97706;
-    --v2-danger: #dc2626;
-    --v2-radius: 12px;
-    --v2-radius-sm: 8px;
-    --v2-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
-    --v2-shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
-    --v2-shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.03);
-    --v2-shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -4px rgba(0,0,0,0.03);
+    --v2-surface-alt: #f7fafd;
+    --v2-success: #0f6b52;
+    --v2-success-soft: #e8f6f1;
+    --v2-warning: #8a5209;
+    --v2-danger: #b4413c;
+    --v2-radius: 16px;
+    --v2-radius-sm: 11px;
+    /* Les ombres portees disparaissent : les cartes sont delimitees par un filet. */
+    --v2-shadow: none;
+    --v2-shadow-sm: none;
+    --v2-shadow-md: none;
+    --v2-shadow-lg: none;
+    --v2-mono: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
     padding-bottom: 2rem;
 }
 
@@ -55,23 +62,26 @@
     display: flex;
     gap: 0.5rem;
 }
+/* Le titre vit sur le fond de page : pas de bandeau, comme les autres ecrans. */
 .v2-header__main {
-    background: linear-gradient(135deg, var(--v2-blue-dark) 0%, var(--v2-blue) 100%);
-    color: #fff;
-    padding: 1.5rem 2rem;
-    border-radius: var(--v2-radius);
-    box-shadow: var(--v2-shadow-md);
+    background: none;
+    color: inherit;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
 }
 .v2-header__title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 0 0 0.25rem;
-    letter-spacing: -0.02em;
+    font-size: clamp(21px, 2.4vw, 28px);
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.025em;
+    color: var(--v2-text);
 }
 .v2-header__subtitle {
-    font-size: 0.9375rem;
-    opacity: 0.9;
-    margin: 0;
+    font-size: 13.5px;
+    color: var(--v2-text-secondary);
+    opacity: 1;
+    margin: 6px 0 0;
     font-weight: 400;
 }
 
@@ -128,7 +138,6 @@
 .v2-stepper__step.is-active {
     background: var(--v2-blue);
     color: #fff;
-    box-shadow: 0 2px 8px rgba(30,64,175,0.25);
 }
 .v2-stepper__step.is-active .v2-stepper__badge {
     background: rgba(255,255,255,0.2);
@@ -159,8 +168,17 @@
     white-space: nowrap;
 }
 @media (max-width: 767px) {
+    /* Le nom de l'etape reste : c'est lui qui situe l'utilisateur.
+       C'est la sous-ligne d'etat qui disparait, la pastille la porte deja. */
     .v2-stepper__label {
+        font-size: 12px;
+        white-space: normal;
+    }
+    .v2-stepper__state {
         display: none;
+    }
+    .v2-stepper__step {
+        flex: 1 1 140px;
     }
 }
 
@@ -197,7 +215,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--v2-orange);
+    color: #c2570a;
     margin: 0 0 0.25rem;
 }
 .v2-card__title {
@@ -387,7 +405,7 @@ select.v2-input {
 }
 .v2-sidebar__progress-bar {
     height: 100%;
-    background: linear-gradient(90deg, var(--v2-blue), var(--v2-orange));
+    background: var(--v2-blue);
     border-radius: 3px;
     transition: width 0.4s ease;
 }
@@ -489,7 +507,7 @@ select.v2-input {
     padding: 0.15rem 0.5rem;
     border-radius: 999px;
     background: var(--v2-orange-light);
-    color: var(--v2-orange);
+    color: var(--v2-warning);
     font-weight: 600;
     white-space: nowrap;
 }
@@ -1043,7 +1061,7 @@ select.v2-input {
     align-items: center;
     padding: 0.25rem 0.625rem;
     background: var(--v2-orange-light);
-    color: var(--v2-orange);
+    color: var(--v2-warning);
     border-radius: 999px;
     font-size: 0.75rem;
     font-weight: 600;
@@ -1094,4 +1112,98 @@ select.v2-input {
 .admin-v6-content .reservation-create-v2 {
     max-width: 1400px;
     margin: 0 auto;
+}
+
+/* ── Sous-ligne d'état dans le fil des étapes ──────────────────────────── */
+
+.reservation-create-v2 .v2-stepper__step {
+    justify-content: flex-start;
+    text-align: left;
+    min-height: 48px;
+}
+
+.reservation-create-v2 .v2-stepper__text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+    min-width: 0;
+}
+
+.reservation-create-v2 .v2-stepper__state {
+    font-size: 10.5px;
+    font-weight: 400;
+    color: var(--v2-muted);
+}
+
+.reservation-create-v2 .v2-stepper__step.is-active .v2-stepper__state { color: #a9c8e4; }
+.reservation-create-v2 .v2-stepper__step.is-completed .v2-stepper__state { color: var(--v2-text-secondary); }
+
+/* ── Compteur d'étape au pied du panneau ───────────────────────────────── */
+
+.reservation-create-v2 .v2-actions__count {
+    font-size: 12px;
+    color: var(--v2-muted);
+    white-space: nowrap;
+}
+
+/* La derniere action reste calee a droite, quel que soit le nombre d'elements. */
+.reservation-create-v2 .v2-actions > :last-child { margin-left: auto; }
+
+/* ── Carte wallet de la colonne de résumé ──────────────────────────────── */
+
+.reservation-create-v2 .v2-wallet {
+    border: 1px solid var(--v2-border-soft);
+    border-radius: var(--v2-radius);
+    background: var(--v2-surface);
+    padding: 15px 17px;
+    margin-top: 12px;
+}
+
+.reservation-create-v2 .v2-wallet__title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--v2-text);
+}
+
+.reservation-create-v2 .v2-wallet__value {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-top: 7px;
+}
+
+.reservation-create-v2 .v2-wallet__value strong {
+    font-family: var(--v2-mono);
+    font-size: 19px;
+    font-weight: 500;
+    color: var(--v2-text);
+}
+
+.reservation-create-v2 .v2-wallet__value span {
+    font-size: 12px;
+    color: var(--v2-text-secondary);
+}
+
+.reservation-create-v2 .v2-wallet__note {
+    margin: 9px 0 0;
+    font-size: 12.5px;
+    color: var(--v2-text-secondary);
+    line-height: 1.5;
+}
+
+.reservation-create-v2 .v2-wallet__link {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--v2-blue);
+    text-decoration: none;
+}
+
+.reservation-create-v2 .v2-wallet__link:hover { color: var(--v2-blue-dark); }
+
+/* Chiffres alignes partout ou ils se comparent. */
+.reservation-create-v2 .v2-sidebar__item strong,
+.reservation-create-v2 .v2-departure-summary__value {
+    font-variant-numeric: tabular-nums;
 }
