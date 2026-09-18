@@ -1024,3 +1024,62 @@
     }
   })();
 })();
+
+/* Estimation du séjour sur la fiche hébergement.
+   Le montant n'engage rien : le tarif ferme reste celui du conseiller. */
+(function () {
+    var box = document.querySelector('[data-aj-estimate]');
+    if (!box) { return; }
+
+    var form = document.querySelector('.aj-hotel-booking-form');
+    if (!form) { return; }
+
+    var nightPrice = parseFloat(box.getAttribute('data-night-price') || '0') || 0;
+    var detailEl = box.querySelector('[data-aj-estimate-detail]');
+    var subtotalEl = box.querySelector('[data-aj-estimate-subtotal]');
+    var totalEl = box.querySelector('[data-aj-estimate-total]');
+
+    var checkIn = form.querySelector('input[name="check_in"]');
+    var checkOut = form.querySelector('input[name="check_out"]');
+    var roomsInput = form.querySelector('input[name="rooms"]');
+
+    function money(value) {
+        return Math.round(value).toLocaleString('fr-FR').replace(/ | /g, ' ') + ' DH';
+    }
+
+    function nights() {
+        if (!checkIn || !checkOut || !checkIn.value || !checkOut.value) { return 0; }
+        var start = new Date(checkIn.value + 'T00:00:00');
+        var end = new Date(checkOut.value + 'T00:00:00');
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) { return 0; }
+        return Math.max(0, Math.round((end - start) / 86400000));
+    }
+
+    function refresh() {
+        var n = nights();
+        var rooms = Math.max(1, parseInt(roomsInput && roomsInput.value, 10) || 1);
+
+        if (n <= 0 || nightPrice <= 0) {
+            if (detailEl) { detailEl.textContent = 'Sélectionnez vos dates'; }
+            if (subtotalEl) { subtotalEl.textContent = '—'; }
+            if (totalEl) { totalEl.textContent = '—'; }
+            return;
+        }
+
+        var subtotal = nightPrice * n * rooms;
+        if (detailEl) {
+            detailEl.textContent = money(nightPrice) + ' × ' + n + (n > 1 ? ' nuits' : ' nuit')
+                + ' × ' + rooms + (rooms > 1 ? ' chambres' : ' chambre');
+        }
+        if (subtotalEl) { subtotalEl.textContent = money(subtotal); }
+        if (totalEl) { totalEl.textContent = money(subtotal); }
+    }
+
+    [checkIn, checkOut, roomsInput].forEach(function (el) {
+        if (!el) { return; }
+        el.addEventListener('change', refresh);
+        el.addEventListener('input', refresh);
+    });
+
+    refresh();
+})();

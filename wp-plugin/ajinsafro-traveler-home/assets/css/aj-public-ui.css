@@ -1796,6 +1796,15 @@
   box-sizing: border-box;
 }
 
+/* Le theme redefinit `.container` apres cette feuille et remet l'encoche a
+   zero : le titre et le panneau de recherche se collent alors au bord du
+   bandeau. On la verrouille sur un selecteur porte par la page. */
+.page-voyages-ajinsafro .aj-voyages-booking .hero > .container {
+  padding: clamp(22px, 3.4vw, 44px) !important;
+  box-sizing: border-box !important;
+  max-width: 1320px;
+}
+
 .aj-voyages-booking .hero-title {
   font-size: clamp(28px, 3.8vw, 46px);
   font-weight: 600;
@@ -1998,4 +2007,341 @@
   font-size: 14px;
   font-weight: 600;
   color: #2e4c66;
+}
+
+/* ── §5c Hebergement : fiche detaillee ─────────────────────────────────── */
+
+/* Cartes : filet de la charte, pas d'ombre portee. */
+.page-hebergement-ajinsafro .aj-hotel-hero-card,
+.page-hebergement-ajinsafro .aj-hotel-section,
+.page-hebergement-ajinsafro .aj-hotel-booking-card,
+.page-hebergement-ajinsafro .aj-hotel-map-card,
+.page-hebergement-ajinsafro .aj-hotel-empty-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: none;
+}
+
+/* Bandeau de la fiche. */
+.page-hebergement-ajinsafro .aj-hotel-hero-card h1 {
+  font-size: clamp(26px, 3.6vw, 42px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  color: var(--ink);
+}
+
+.page-hebergement-ajinsafro .aj-hotel-hero-location,
+.page-hebergement-ajinsafro .aj-hotel-hero-summary {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--body);
+}
+
+.page-hebergement-ajinsafro .aj-hotel-stars {
+  color: var(--accent);
+  letter-spacing: 0.14em;
+  font-size: 13px;
+}
+
+/* Ligne de reperes du bandeau : localisation | etoiles | type. */
+.page-hebergement-ajinsafro .aj-hotel-hero-location {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-hero-sep {
+  color: var(--line);
+}
+
+.page-hebergement-ajinsafro .aj-hotel-status {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 5px 12px;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-status--available {
+  color: var(--ok);
+  background: #e4f5ec;
+  border: 1px solid #bde3cf;
+}
+
+/* Encart de prix du bandeau. */
+.page-hebergement-ajinsafro .aj-hotel-hero-price {
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: var(--surface);
+  box-shadow: none;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-hero-price strong {
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--brand-dark);
+}
+
+.page-hebergement-ajinsafro .aj-hotel-hero-price span,
+.page-hebergement-ajinsafro .aj-hotel-hero-price small {
+  font-size: 12.5px;
+  color: var(--body);
+}
+
+/* Galerie : substitut en trame, jamais de vide gris. */
+.page-hebergement-ajinsafro .aj-hotel-gallery-thumb--placeholder {
+  background: var(--aj-hatch);
+  border: 1px dashed #b9cfe6;
+  color: #2e4c66;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-gallery-thumb--placeholder span {
+  font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-gallery-thumb--placeholder small {
+  font-size: 12px;
+  color: var(--body);
+}
+
+/* Titres de section. */
+.page-hebergement-ajinsafro .aj-hotel-section h2 {
+  font-size: clamp(19px, 2.2vw, 25px);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+}
+
+.page-hebergement-ajinsafro .aj-hotel-richtext {
+  font-size: 14.5px;
+  line-height: 1.68;
+  color: #2e4c66;
+  max-width: 72ch;
+}
+
+/* Equipements et regles. */
+.page-hebergement-ajinsafro .aj-hotel-amenity {
+  background: #f6fafd;
+  border: 1px solid #e6eef7;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #2e4c66;
+  min-height: 44px;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-rule-row {
+  border-top: 1px solid var(--line-soft);
+  padding: 13px 0;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-rule-row strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.page-hebergement-ajinsafro .aj-hotel-rule-row span {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--body);
+}
+
+/* Chambres a confirmer : parcours en trois temps. */
+.page-hebergement-ajinsafro .aj-hotel-empty-card strong {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.page-hebergement-ajinsafro .aj-hotel-empty-card p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--body);
+  max-width: 64ch;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+  gap: 12px;
+  margin: 18px 0 0;
+  /* La carte parente peut etre un contexte flex : sans largeur explicite,
+     auto-fit retombe sur une seule colonne. */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-step {
+  border: 1px solid #e6eef7;
+  background: #f6fafd;
+  border-radius: 12px;
+  padding: 15px;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-step b {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--brand-dark);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-step strong {
+  display: block;
+  margin-top: 11px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.page-hebergement-ajinsafro .aj-hotel-step span {
+  display: block;
+  margin-top: 5px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--body);
+}
+
+/* Carte de reservation. */
+.page-hebergement-ajinsafro .aj-hotel-booking-card h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.page-hebergement-ajinsafro .aj-hotel-booking-price strong {
+  font-size: 27px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--brand-dark);
+}
+
+.page-hebergement-ajinsafro .aj-hotel-booking-price small,
+.page-hebergement-ajinsafro .aj-hotel-booking-price span {
+  font-size: 13px;
+  color: var(--body);
+}
+
+.page-hebergement-ajinsafro .aj-hotel-booking-form label > span {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #2e4c66;
+  letter-spacing: 0.02em;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-booking-form input {
+  border: 1px solid #cfdcea;
+  border-radius: 10px;
+  padding: 11px;
+  min-height: 44px;
+  font-size: 13.5px;
+  font-weight: 400;
+  color: var(--ink);
+  background: var(--surface);
+}
+
+/* Estimation : le tarif final reste celui du conseiller. */
+.page-hebergement-ajinsafro .aj-hotel-estimate {
+  margin-top: 14px;
+  background: #f6fafd;
+  border: 1px solid #e6eef7;
+  border-radius: 12px;
+  padding: 13px;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-estimate-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--body);
+}
+
+.page-hebergement-ajinsafro .aj-hotel-estimate-row b {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.page-hebergement-ajinsafro .aj-hotel-estimate-total {
+  margin-top: 9px;
+  padding-top: 11px;
+  border-top: 1px solid var(--line);
+}
+
+.page-hebergement-ajinsafro .aj-hotel-estimate-total span {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.page-hebergement-ajinsafro .aj-hotel-estimate-total b {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--brand-dark);
+}
+
+.page-hebergement-ajinsafro .aj-hotel-estimate small {
+  display: block;
+  margin-top: 7px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--meta);
+}
+
+.page-hebergement-ajinsafro .aj-hotel-contact-quick span {
+  font-size: 13px;
+  color: var(--body);
+}
+
+/* Avantages Ajinsafro : aplat navy, comme les bandeaux des catalogues. */
+.page-hebergement-ajinsafro .aj-hotel-perks {
+  background: var(--brand-dark);
+  border-radius: 16px;
+  padding: clamp(16px, 1.8vw, 20px);
+  color: #c6dcf0;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-perks strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-perks ul {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-perks li {
+  position: relative;
+  padding-left: 15px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.page-hebergement-ajinsafro .aj-hotel-perks li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 7px;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #f5b06a;
 }

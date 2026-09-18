@@ -1220,14 +1220,46 @@ function ajth_get_transfert_page_url()
     return home_url('/transfert/');
 }
 
+/**
+ * La page demandee correspond-elle a ce slug ?
+ *
+ * `is_page()` suffit en temps normal. Mais quand la requete porte un `s` non
+ * vide, WordPress bascule la requete principale en recherche : `is_page()`
+ * devient faux et la page de catalogue se transforme en 404. On retombe alors
+ * sur le chemin demande.
+ *
+ * @param string $slug Slug de la page de catalogue.
+ */
+function ajth_is_catalog_page( $slug )
+{
+    if ( is_page( $slug ) ) {
+        return true;
+    }
+
+    if ( ! is_search() ) {
+        return false;
+    }
+
+    $path = wp_parse_url( home_url( add_query_arg( [] ) ), PHP_URL_PATH );
+    $path = trim( (string) $path, '/' );
+
+    if ( $path === '' ) {
+        return false;
+    }
+
+    $segments = explode( '/', $path );
+
+    return end( $segments ) === $slug;
+}
+
 function ajth_is_voyages_context()
 {
-    return is_page('voyages') || is_post_type_archive('st_tours') || (is_search() && get_query_var('post_type') === 'st_tours');
+    return ajth_is_catalog_page('voyages') || is_post_type_archive('st_tours') || (is_search() && get_query_var('post_type') === 'st_tours');
 }
 
 function ajth_is_hebergement_context()
 {
-    return is_page('hebergement')
+    return ajth_is_catalog_page('hebergement')
         || get_query_var('ajth_hebergement_pack')
         || is_singular('st_hotel')
         || is_post_type_archive('st_hotel')
@@ -1236,7 +1268,7 @@ function ajth_is_hebergement_context()
 
 function ajth_is_activites_context()
 {
-    return is_page('activites')
+    return ajth_is_catalog_page('activites')
         || get_query_var('ajth_activite_offer')
         || is_post_type_archive('st_activity')
         || (is_search() && get_query_var('post_type') === 'st_activity');
@@ -1244,12 +1276,12 @@ function ajth_is_activites_context()
 
 function ajth_is_transfert_context()
 {
-    return is_page('transfert') || is_post_type_archive('st_cars') || (is_search() && get_query_var('post_type') === 'st_cars');
+    return ajth_is_catalog_page('transfert') || is_post_type_archive('st_cars') || (is_search() && get_query_var('post_type') === 'st_cars');
 }
 
 function ajth_is_group_deals_context()
 {
-    return is_page('group-deals') || get_query_var('ajth_group_deal_offer');
+    return ajth_is_catalog_page('group-deals') || get_query_var('ajth_group_deal_offer');
 }
 
 function ajth_is_catalog_context()

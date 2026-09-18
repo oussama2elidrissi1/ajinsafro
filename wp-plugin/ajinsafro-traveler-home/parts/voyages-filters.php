@@ -13,7 +13,7 @@ if (! defined('ABSPATH')) {
     <details class="accordion" open>
         <summary>Recherche</summary>
         <div class="filter-body">
-            <input class="filter-search" type="text" name="s" value="<?php echo esc_attr($search_text); ?>" placeholder="Nom ou destination…">
+            <input class="filter-search" type="text" name="q" value="<?php echo esc_attr($search_text); ?>" placeholder="Nom ou destination…">
 
             <select name="destination" class="filter-select">
                 <option value="">Toutes les destinations</option>

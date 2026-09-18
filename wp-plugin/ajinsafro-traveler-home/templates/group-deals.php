@@ -33,7 +33,10 @@ if (! in_array($sort, $allowed_sorts, true)) {
     $sort = 'recommended';
 }
 
-$search_text = isset($_GET['s']) ? sanitize_text_field(wp_unslash($_GET['s'])) : '';
+// `q` et non `s` : ce dernier bascule WordPress en recherche native.
+$search_text = isset($_GET['q'])
+    ? sanitize_text_field(wp_unslash($_GET['q']))
+    : (isset($_GET['s']) ? sanitize_text_field(wp_unslash($_GET['s'])) : '');
 $dest = isset($_GET['dest']) ? sanitize_text_field(wp_unslash($_GET['dest'])) : '';
 $selected_category = isset($_GET['category']) ? sanitize_key(wp_unslash($_GET['category'])) : '';
 $price_min = isset($_GET['price_min']) ? absint($_GET['price_min']) : 0;
@@ -67,7 +70,7 @@ $build_url = static function (array $args) use ($group_deals_url): string {
 };
 
 $current_args = array_filter([
-    's' => $search_text,
+    'q' => $search_text,
     'dest' => $dest,
     'category' => $selected_category,
     'price_min' => $price_min > 0 ? (string) $price_min : '',
@@ -781,7 +784,7 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
                         <?php } ?>
                         <div class="ajgd-sf ajgd-sf--wide">
                             <label for="ajgd-s">Destination ou theme</label>
-                            <input id="ajgd-s" name="s" type="text" value="<?php echo esc_attr($search_text); ?>" placeholder="Marrakech, Istanbul, Andalousie...">
+                            <input id="ajgd-s" name="q" type="text" value="<?php echo esc_attr($search_text); ?>" placeholder="Marrakech, Istanbul, Andalousie...">
                         </div>
                         <div class="ajgd-sf">
                             <label for="ajgd-dest">Destination</label>
