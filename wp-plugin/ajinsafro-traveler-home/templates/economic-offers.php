@@ -16,6 +16,8 @@ add_filter(
 get_header();
 
 $settings        = function_exists( 'ajth_get_settings' ) ? ajth_get_settings() : array();
+// Banniere image pilotee depuis l'admin ; sans elle, le bandeau d'origine reste.
+$page_banner = function_exists('ajth_get_page_banner') ? ajth_get_page_banner('formule-economique') : null;
 $page_url        = function_exists( 'ajth_get_economic_offers_page_url' ) ? ajth_get_economic_offers_page_url() : home_url( '/formule-economique/' );
 $fallback_image  = function_exists( 'ajth_economic_offers_default_image_url' ) ? ajth_economic_offers_default_image_url() : trailingslashit( AJTH_URL ) . 'assets/images/fallback-hajj-omra.svg';
 $offers          = function_exists( 'ajth_get_economic_offers' ) ? ajth_get_economic_offers() : array();
@@ -664,7 +666,18 @@ $conseil_url = 'https://wa.me/212660683464?text=' . rawurlencode( 'Bonjour Ajins
 					</section>
 				</div>
 			<?php else : ?>
-				<section class="aj-eco-hero">
+				<section class="aj-eco-hero<?php echo $page_banner ? ' aj-eco-hero--banner' : ''; ?>">
+					<?php if ( $page_banner ) : ?>
+						<?php if ('' !== $page_banner['link_url']) { ?>
+						    <a class="aj-page-banner" href="<?php echo esc_url($page_banner['link_url']); ?>">
+						        <img src="<?php echo esc_url($page_banner['image_url']); ?>" alt="<?php echo esc_attr($page_banner['alt_text']); ?>" width="2073" height="758" fetchpriority="high" decoding="async">
+						    </a>
+						<?php } else { ?>
+						    <div class="aj-page-banner">
+						        <img src="<?php echo esc_url($page_banner['image_url']); ?>" alt="<?php echo esc_attr($page_banner['alt_text']); ?>" width="2073" height="758" fetchpriority="high" decoding="async">
+						    </div>
+						<?php } ?>
+					<?php else : ?>
 					<div class="aj-eco-hero__card">
 						<nav class="aj-eco-breadcrumb" aria-label="Fil d’Ariane">
 							<a href="<?php echo esc_url( home_url( '/' ) ); ?>">Accueil</a>
@@ -703,9 +716,10 @@ $conseil_url = 'https://wa.me/212660683464?text=' . rawurlencode( 'Bonjour Ajins
 							</form>
 						</div>
 					</div>
+					<?php endif; ?>
 				</section>
 
-				<section id="offres" class="aj-eco-section">
+				<section id="offres" class="aj-eco-section<?php echo $page_banner ? ' aj-eco-section--under-banner' : ''; ?>">
 					<form class="aj-eco-filters" method="get" action="<?php echo esc_url( $page_url ); ?>" data-aj-eco-filters>
 						<input type="hidden" name="filtres" value="1">
 

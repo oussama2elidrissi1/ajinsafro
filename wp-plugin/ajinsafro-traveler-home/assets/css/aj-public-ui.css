@@ -3728,3 +3728,106 @@
     margin-top: clamp(20px, 2.6vw, 28px);
   }
 }
+
+/* ── §9 Bannieres de pages : image entiere en tete de catalogue ────────── */
+
+/* Le visuel : carte arrondie, ombre douce, image jamais recadree.
+   Partage par Hebergement, Activites, Group Deals, Hajj & Omra et Formule
+   economique ; Voyages garde son §3c, de meme geometrie. */
+.aj-page-banner {
+  display: block;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 40px -24px rgba(13, 55, 103, 0.35);
+  line-height: 0;
+}
+
+.aj-page-banner img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ── Hebergement et Activites : le bandeau perd son aplat navy ; le panneau
+   de recherche, deja dans la section, vient chevaucher le bas de l'image. */
+.page-hebergement-ajinsafro .aj-hero--banner,
+.page-activites-ajinsafro .aj-hero--banner {
+  /* `!important` : repond a celui de hebergement-booking.css (aplat navy). */
+  background: none !important;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.page-hebergement-ajinsafro .aj-hero--banner .aj-hero-search,
+.page-activites-ajinsafro .aj-hero--banner .aj-hero-search {
+  position: relative;
+  z-index: 1;
+  margin: -26px clamp(14px, 3vw, 30px) 0;
+  box-shadow: 0 14px 34px -20px rgba(13, 55, 103, 0.4);
+}
+
+/* ── Group Deals : la grille navy est remplacee ; le bloc recherche qui suit
+   remonte deja de 36 px (group-deals-fusion.css), on le ramene a 26. */
+.aj-groupdeals-fusion .ajgd-hero--banner + .ajgd-search-wrap {
+  margin-top: -26px;
+}
+
+.aj-groupdeals-fusion .ajgd-hero--banner .aj-page-banner {
+  margin: 0;
+}
+
+/* ── Hajj & Omra : le bandeau navy pleine largeur devient neutre ; le fil
+   d'Ariane et le choix de langue restent au-dessus de l'image. */
+.page-hajj-omra-ajinsafro .ajho-hero--banner {
+  background: none;
+  color: inherit;
+  padding-bottom: 0;
+  overflow: visible;
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero--banner::before {
+  display: none;
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero--banner .ajho-breadcrumb--light,
+.page-hajj-omra-ajinsafro .ajho-hero--banner .ajho-breadcrumb--light a {
+  color: var(--body);
+}
+
+.page-hajj-omra-ajinsafro .ajho-hero--banner .ajho-breadcrumb--light [aria-current="page"] {
+  color: var(--ink);
+}
+
+/* La barre de filtres est collante et pleine largeur : on ne la fait pas
+   chevaucher, on garde une respiration constante sous l'image. */
+.page-hajj-omra-ajinsafro .ajho-hero--banner .aj-page-banner {
+  margin-bottom: clamp(16px, 2.2vw, 24px);
+}
+
+/* ── Formule economique : la carte navy disparait ; la barre de filtres
+   blanche de la section suivante chevauche l'image. */
+.page-economic-offers-ajinsafro .aj-eco-hero--banner .aj-page-banner {
+  margin: 0;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-section--under-banner {
+  padding-top: 0;
+}
+
+.page-economic-offers-ajinsafro .aj-eco-section--under-banner .aj-eco-filters {
+  position: relative;
+  z-index: 1;
+  margin: -26px clamp(14px, 3vw, 30px) 0;
+  box-shadow: 0 14px 34px -20px rgba(13, 55, 103, 0.4);
+}
+
+@media (max-width: 540px) {
+  .page-hebergement-ajinsafro .aj-hero--banner .aj-hero-search,
+  .page-activites-ajinsafro .aj-hero--banner .aj-hero-search,
+  .page-economic-offers-ajinsafro .aj-eco-section--under-banner .aj-eco-filters {
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+}

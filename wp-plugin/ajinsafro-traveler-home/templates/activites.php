@@ -11,6 +11,8 @@ add_filter( 'body_class', function ( $classes ) {
 get_header();
 
 $settings  = ajth_get_settings();
+// Banniere image pilotee depuis l'admin ; sans elle, le bandeau d'origine reste.
+$page_banner = function_exists('ajth_get_page_banner') ? ajth_get_page_banner('activites') : null;
 $page_url  = function_exists( 'ajth_get_activites_page_url' ) ? ajth_get_activites_page_url() : home_url( '/activites/' );
 $offer_slug = function_exists( 'ajth_get_current_activity_offer_slug' ) ? ajth_get_current_activity_offer_slug() : '';
 $offer      = $offer_slug && function_exists( 'ajth_get_activity_offer_by_slug' ) ? ajth_get_activity_offer_by_slug( $offer_slug ) : null;
@@ -255,12 +257,24 @@ if ( $offer ) {
 						<span>Activités</span>
 					</nav>
 
-					<section class="aj-hero">
+					<section class="aj-hero<?php echo $page_banner ? ' aj-hero--banner' : ''; ?>">
+						<?php if ( $page_banner ) { ?>
+							<?php if ('' !== $page_banner['link_url']) { ?>
+							    <a class="aj-page-banner" href="<?php echo esc_url($page_banner['link_url']); ?>">
+							        <img src="<?php echo esc_url($page_banner['image_url']); ?>" alt="<?php echo esc_attr($page_banner['alt_text']); ?>" width="2073" height="758" fetchpriority="high" decoding="async">
+							    </a>
+							<?php } else { ?>
+							    <div class="aj-page-banner">
+							        <img src="<?php echo esc_url($page_banner['image_url']); ?>" alt="<?php echo esc_attr($page_banner['alt_text']); ?>" width="2073" height="758" fetchpriority="high" decoding="async">
+							    </div>
+							<?php } ?>
+						<?php } else { ?>
 						<div class="aj-hero-copy">
 							<span class="aj-eyebrow">Marketplace d’expériences Ajinsafro</span>
 							<h1>Activités et expériences dans le monde</h1>
 							<p>Découvrez les meilleures activités sélectionnées par Ajinsafro au Maroc et à l’international.</p>
 						</div>
+						<?php } ?>
 
 						<form class="aj-hero-search" id="aj-activity-search-form">
 							<label class="aj-field">

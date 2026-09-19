@@ -6,15 +6,25 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Banniere image d'une page publique (Voyages, ...), pilotee depuis l'admin
+ * Banniere image d'une page publique du catalogue, pilotee depuis l'admin
  * et servie au front WordPress via l'API publique.
  */
 class PageBanner extends Model
 {
     public const PAGE_VOYAGES = 'voyages';
+    public const PAGE_HEBERGEMENT = 'hebergement';
+    public const PAGE_ACTIVITES = 'activites';
+    public const PAGE_GROUP_DEALS = 'group-deals';
+    public const PAGE_HAJJ_OMRA = 'hajj-omra';
+    public const PAGE_FORMULE_ECONOMIQUE = 'formule-economique';
 
     public const PAGES = [
         self::PAGE_VOYAGES,
+        self::PAGE_HEBERGEMENT,
+        self::PAGE_ACTIVITES,
+        self::PAGE_GROUP_DEALS,
+        self::PAGE_HAJJ_OMRA,
+        self::PAGE_FORMULE_ECONOMIQUE,
     ];
 
     /** Dossier du disque public qui recoit les fichiers televerses. */
@@ -31,6 +41,28 @@ class PageBanner extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    /**
+     * Libelle et chemin public de chaque page, pour l'ecran d'administration.
+     *
+     * @return array<string, array{label: string, path: string}>
+     */
+    public static function catalogue(): array
+    {
+        return [
+            self::PAGE_VOYAGES => ['label' => 'Voyages', 'path' => '/voyages/'],
+            self::PAGE_HEBERGEMENT => ['label' => 'Hébergement', 'path' => '/hebergement/'],
+            self::PAGE_ACTIVITES => ['label' => 'Activités', 'path' => '/activites/'],
+            self::PAGE_GROUP_DEALS => ['label' => 'Group Deals', 'path' => '/group-deals/'],
+            self::PAGE_HAJJ_OMRA => ['label' => 'Hajj & Omra', 'path' => '/hajj-omra/'],
+            self::PAGE_FORMULE_ECONOMIQUE => ['label' => 'Formule économique', 'path' => '/formule-economique/'],
+        ];
+    }
+
+    public static function isKnownPage(string $pageKey): bool
+    {
+        return in_array($pageKey, self::PAGES, true);
+    }
 
     public static function forPage(string $pageKey): ?self
     {

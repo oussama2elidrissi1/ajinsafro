@@ -693,9 +693,9 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::get('settings/home-page', [HomePageSettingsController::class, 'edit'])->name('settings.home-page.edit');
         Route::post('settings/home-page', [HomePageSettingsController::class, 'update'])->name('settings.home-page.update');
         Route::post('settings/home-page/header', [HomePageSettingsController::class, 'updateHeader'])->name('settings.home-page.update-header');
-        Route::get('settings/page-banners/voyages', [PageBannerController::class, 'edit'])->name('settings.page-banners.voyages.edit');
-        Route::post('settings/page-banners/voyages', [PageBannerController::class, 'update'])->name('settings.page-banners.voyages.update');
-        Route::delete('settings/page-banners/voyages/image', [PageBannerController::class, 'destroyImage'])->name('settings.page-banners.voyages.destroy-image');
+        Route::get('settings/page-banners', [PageBannerController::class, 'index'])->name('settings.page-banners.index');
+        Route::post('settings/page-banners/{page}', [PageBannerController::class, 'update'])->name('settings.page-banners.update')->where('page', '[a-z0-9-]+');
+        Route::delete('settings/page-banners/{page}/image', [PageBannerController::class, 'destroyImage'])->name('settings.page-banners.destroy-image')->where('page', '[a-z0-9-]+');
         Route::get('settings/referentiels-metier', [BusinessReferenceController::class, 'index'])->name('settings.referentiels-metier');
         Route::post('settings/referentiels-metier/import-legacy', [BusinessReferenceController::class, 'importLegacy'])->name('settings.referentiels-metier.import-legacy');
         Route::get('settings/referentiels-metier/{groupKey}', [BusinessReferenceController::class, 'showGroup'])->name('settings.referentiels-metier.group');

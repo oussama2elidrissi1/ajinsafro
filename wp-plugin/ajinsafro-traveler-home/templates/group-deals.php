@@ -14,6 +14,8 @@ get_header();
 global $wpdb;
 
 $settings = ajth_get_settings();
+// Banniere image pilotee depuis l'admin ; sans elle, le bandeau d'origine reste.
+$page_banner = function_exists('ajth_get_page_banner') ? ajth_get_page_banner('group-deals') : null;
 $group_deals_url = function_exists('ajth_get_group_deals_url')
     ? ajth_get_group_deals_url()
     : home_url('/group-deals/');
@@ -736,8 +738,19 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
                     </section>
                 </main>
             <?php } else { ?>
-            <section class="ajgd-hero">
+            <section class="ajgd-hero<?php echo $page_banner ? ' ajgd-hero--banner' : ''; ?>">
                 <div class="ajgd-container">
+                    <?php if ($page_banner) { ?>
+                        <?php if ('' !== $page_banner['link_url']) { ?>
+                            <a class="aj-page-banner" href="<?php echo esc_url($page_banner['link_url']); ?>">
+                                <img src="<?php echo esc_url($page_banner['image_url']); ?>" alt="<?php echo esc_attr($page_banner['alt_text']); ?>" width="2073" height="758" fetchpriority="high" decoding="async">
+                            </a>
+                        <?php } else { ?>
+                            <div class="aj-page-banner">
+                                <img src="<?php echo esc_url($page_banner['image_url']); ?>" alt="<?php echo esc_attr($page_banner['alt_text']); ?>" width="2073" height="758" fetchpriority="high" decoding="async">
+                            </div>
+                        <?php } ?>
+                    <?php } else { ?>
                     <div class="ajgd-hero-grid">
                         <div class="ajgd-hero-copy">
                             <span class="ajgd-eyebrow">Offres de voyage en groupe Ajinsafro</span>
@@ -764,6 +777,7 @@ if ($current_group_deal_slug !== '' && ! empty($all_deals)) {
                             </div>
                         </div>
                     </div>
+                    <?php } ?>
                 </div>
             </section>
 

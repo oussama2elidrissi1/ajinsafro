@@ -20,6 +20,8 @@ add_filter(
 get_header();
 
 $settings         = function_exists( 'ajth_get_settings' ) ? ajth_get_settings() : array();
+// Banniere image pilotee depuis l'admin ; sans elle, le bandeau d'origine reste.
+$page_banner = function_exists('ajth_get_page_banner') ? ajth_get_page_banner('hajj-omra') : null;
 $page_url         = function_exists( 'ajth_get_hajj_omra_page_url' ) ? ajth_get_hajj_omra_page_url() : home_url( '/hajj-omra/' );
 if ( ajth_ho_locale() === 'ar' ) $page_url = add_query_arg( 'lang', 'ar', $page_url );
 $fallback_image   = function_exists( 'ajth_hajj_omra_default_image_url' ) ? ajth_hajj_omra_default_image_url() : trailingslashit( AJTH_URL ) . 'assets/images/fallback-hajj-omra.svg';
@@ -328,7 +330,7 @@ $filter_link   = static function ( array $args ) use ( $page_url, $base_filters 
 			<?php elseif ( $current_package ) : ?>
 				<?php include AJTH_DIR . 'templates/partials/hajj-omra-detail.php'; ?>
 			<?php else : ?>
-				<section class="ajho-hero">
+				<section class="ajho-hero<?php echo $page_banner ? ' ajho-hero--banner' : ''; ?>">
 					<div class="ajho-container">
 						<nav class="ajho-breadcrumb ajho-breadcrumb--light" aria-label="<?php echo esc_attr( ajth_ho_t( 'Fil d’Ariane' ) ); ?>">
 							<a href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php echo esc_html( ajth_ho_t( 'Accueil' ) ); ?></a>
@@ -340,6 +342,17 @@ $filter_link   = static function ( array $args ) use ( $page_url, $base_filters 
 							</span>
 						</nav>
 
+						<?php if ( $page_banner ) : ?>
+							<?php if ('' !== $page_banner['link_url']) { ?>
+							    <a class="aj-page-banner" href="<?php echo esc_url($page_banner['link_url']); ?>">
+							        <img src="<?php echo esc_url($page_banner['image_url']); ?>" alt="<?php echo esc_attr($page_banner['alt_text']); ?>" width="2073" height="758" fetchpriority="high" decoding="async">
+							    </a>
+							<?php } else { ?>
+							    <div class="aj-page-banner">
+							        <img src="<?php echo esc_url($page_banner['image_url']); ?>" alt="<?php echo esc_attr($page_banner['alt_text']); ?>" width="2073" height="758" fetchpriority="high" decoding="async">
+							    </div>
+							<?php } ?>
+						<?php else : ?>
 						<div class="ajho-hero__inner">
 							<div class="ajho-hero__copy">
 								<h1><?php echo esc_html( ajth_ho_t( 'Hajj & Omra avec Ajinsafro' ) ); ?></h1>
@@ -360,6 +373,7 @@ $filter_link   = static function ( array $args ) use ( $page_url, $base_filters 
 								</div>
 							</dl>
 						</div>
+						<?php endif; ?>
 					</div>
 				</section>
 

@@ -11,6 +11,8 @@ add_filter('body_class', function ($classes) {
 get_header();
 
 $settings = ajth_get_settings();
+// Banniere image pilotee depuis l'admin ; sans elle, le bandeau d'origine reste.
+$page_banner = function_exists('ajth_get_page_banner') ? ajth_get_page_banner('hebergement') : null;
 
 $page_url = function_exists('ajth_get_hebergement_page_url')
     ? ajth_get_hebergement_page_url()
@@ -1004,12 +1006,24 @@ if ($current_pack) {
                         <span>Hébergement</span>
                     </nav>
 
-                    <section class="aj-hero">
+                    <section class="aj-hero<?php echo $page_banner ? ' aj-hero--banner' : ''; ?>">
+                        <?php if ($page_banner) { ?>
+                            <?php if ('' !== $page_banner['link_url']) { ?>
+                                <a class="aj-page-banner" href="<?php echo esc_url($page_banner['link_url']); ?>">
+                                    <img src="<?php echo esc_url($page_banner['image_url']); ?>" alt="<?php echo esc_attr($page_banner['alt_text']); ?>" width="2073" height="758" fetchpriority="high" decoding="async">
+                                </a>
+                            <?php } else { ?>
+                                <div class="aj-page-banner">
+                                    <img src="<?php echo esc_url($page_banner['image_url']); ?>" alt="<?php echo esc_attr($page_banner['alt_text']); ?>" width="2073" height="758" fetchpriority="high" decoding="async">
+                                </div>
+                            <?php } ?>
+                        <?php } else { ?>
                         <div class="aj-hero-copy">
                             <span class="aj-eyebrow">Sélection Ajinsafro</span>
                             <h1>Trouvez l'hébergement idéal</h1>
                             <p>Comparez les hôtels, riads, appartements et villas disponibles avec des filtres avancés et des prix clairs.</p>
                         </div>
+                        <?php } ?>
 
                         <form class="aj-hero-search" id="ajhb-search-form" method="get" action="<?php echo esc_url($page_url); ?>">
                             <label class="aj-field">
