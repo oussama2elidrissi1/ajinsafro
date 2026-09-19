@@ -254,6 +254,7 @@ class User extends Authenticatable
     public const DEV_ADMIN_EMAILS = [
         'dev@ajinsafro.ma',
         'dev-hiba@ajinsafro.ma',
+        'dev-amine@ajinsafro.ma',
     ];
 
     public function isDevAdmin(): bool

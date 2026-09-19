@@ -23,8 +23,7 @@ class SuperAdminAccountsSeeder extends Seeder
 {
     /**
      * Comptes promus. La liste reprend App\Models\User::DEV_ADMIN_EMAILS
-     * (dev@ajinsafro.ma et dev-hiba@ajinsafro.ma) : ce sont les comptes
-     * d'administration principale de la plateforme.
+     * pour suivre les comptes d'administration principale de la plateforme.
      *
      * @return list<string>
      */
