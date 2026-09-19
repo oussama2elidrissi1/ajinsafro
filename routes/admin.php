@@ -694,6 +694,8 @@ Route::middleware(['auth', 'admin', 'ensure.not.locked', 'route.permission'])
         Route::post('settings/home-page', [HomePageSettingsController::class, 'update'])->name('settings.home-page.update');
         Route::post('settings/home-page/header', [HomePageSettingsController::class, 'updateHeader'])->name('settings.home-page.update-header');
         Route::get('settings/page-banners', [PageBannerController::class, 'index'])->name('settings.page-banners.index');
+        // L'ancienne adresse par page a vecu en production : on la renvoie sur sa carte.
+        Route::get('settings/page-banners/{page}', [PageBannerController::class, 'redirectToPage'])->name('settings.page-banners.show')->where('page', '[a-z0-9-]+');
         Route::post('settings/page-banners/{page}', [PageBannerController::class, 'update'])->name('settings.page-banners.update')->where('page', '[a-z0-9-]+');
         Route::delete('settings/page-banners/{page}/image', [PageBannerController::class, 'destroyImage'])->name('settings.page-banners.destroy-image')->where('page', '[a-z0-9-]+');
         Route::get('settings/referentiels-metier', [BusinessReferenceController::class, 'index'])->name('settings.referentiels-metier');

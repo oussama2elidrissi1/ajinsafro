@@ -43,6 +43,13 @@ class PageBannerController extends Controller
         ]);
     }
 
+    public function redirectToPage(string $page): RedirectResponse
+    {
+        abort_unless(PageBanner::isKnownPage($page), 404);
+
+        return redirect()->to(route('admin.settings.page-banners.index') . '#banner-' . $page);
+    }
+
     public function update(Request $request, string $page): RedirectResponse
     {
         abort_unless(PageBanner::isKnownPage($page), 404);
