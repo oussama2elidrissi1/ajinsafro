@@ -76,6 +76,10 @@ return [
 
     'public_url' => env('PUBLIC_URL', 'https://ajinsafro.net'),
 
+    // Partage avec le plugin WordPress (AJTH_LARAVEL_INVALIDATE_SECRET) pour
+    // purger ses caches a l'enregistrement. Vide : aucune purge envoyee.
+    'wp_invalidate_secret' => env('WP_INVALIDATE_SECRET', ''),
+
     'frontend_url' => env('FRONTEND_URL', 'https://ajinsafro.net'),
 
     /** Base URL absolue du dossier wp-content/uploads (même source que la fiche voyage front). */

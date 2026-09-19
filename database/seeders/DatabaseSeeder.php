@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             ClientSeeder::class,
             ReservationDemoSeeder::class,
             AccommodationPackageSeeder::class,
+            PageBannerSeeder::class,
             ActivityOfferSeeder::class,
             GroupDealsSeeder::class,
             HajjOmraSeeder::class,

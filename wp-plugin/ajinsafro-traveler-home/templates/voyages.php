@@ -286,6 +286,8 @@ add_filter('body_class', function ($classes) {
 get_header();
 
 $settings = ajth_get_settings();
+// Banniere image pilotee depuis l'admin ; sans elle, le bandeau bleu reste.
+$page_banner = function_exists('ajth_get_page_banner') ? ajth_get_page_banner('voyages') : null;
 $paged = max(1, absint(get_query_var('paged')), absint(get_query_var('page')), isset($_GET['paged']) ? absint($_GET['paged']) : 0);
 $per_page = 12;
 $today = current_time('Y-m-d');
@@ -1298,11 +1300,24 @@ $rating_label = static function (float $rating): string {
         <?php ajth_render_site_header($settings); ?>
 
         <div class="aj-voyages-booking ajinsafro-page-container" id="aj-voyages-booking">
-            <section class="hero">
+            <section class="hero<?php echo $page_banner ? ' hero--banner' : ''; ?>">
                 <div class="container">
-                    <span class="hero-eyebrow">Sélection Ajinsafro</span>
-                    <h1 class="hero-title">Voyages, séjours et circuits</h1>
-                    <p class="hero-subtitle">Comparez nos offres, choisissez votre destination et réservez votre prochain départ avec un conseiller Ajinsafro.</p>
+                    <?php if ($page_banner) { ?>
+                        <?php // Image entiere, jamais recadree : largeur 100 %, hauteur auto. ?>
+                        <?php if ('' !== $page_banner['link_url']) { ?>
+                            <a class="hero-banner" href="<?php echo esc_url($page_banner['link_url']); ?>">
+                                <img src="<?php echo esc_url($page_banner['image_url']); ?>" alt="<?php echo esc_attr($page_banner['alt_text']); ?>" width="2073" height="758" fetchpriority="high" decoding="async">
+                            </a>
+                        <?php } else { ?>
+                            <div class="hero-banner">
+                                <img src="<?php echo esc_url($page_banner['image_url']); ?>" alt="<?php echo esc_attr($page_banner['alt_text']); ?>" width="2073" height="758" fetchpriority="high" decoding="async">
+                            </div>
+                        <?php } ?>
+                    <?php } else { ?>
+                        <span class="hero-eyebrow">Sélection Ajinsafro</span>
+                        <h1 class="hero-title">Voyages, séjours et circuits</h1>
+                        <p class="hero-subtitle">Comparez nos offres, choisissez votre destination et réservez votre prochain départ avec un conseiller Ajinsafro.</p>
+                    <?php } ?>
 
                     <form class="search-panel" method="get" action="<?php echo esc_url($voyages_page_url); ?>">
                         <input type="hidden" name="sort" value="<?php echo esc_attr($sort); ?>">

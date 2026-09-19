@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\PublicPackageController;
 use App\Http\Controllers\Api\PublicHajjOmraBookingRequestController;
 use App\Http\Controllers\Api\PublicHajjOmraPackageController;
 use App\Http\Controllers\Api\PublicEconomicOfferController;
+use App\Http\Controllers\Api\PublicPageBannerController;
 use App\Http\Controllers\Api\PublicEconomicOfferRequestController;
 use App\Http\Controllers\Api\PublicToursListController;
 use App\Http\Controllers\Api\AccommodationPackageController;
@@ -55,6 +56,8 @@ Route::prefix('public')->name('api.public.')->group(function () {
         ->name('hajj-omra.packages.show');
     Route::post('hajj-omra/packages/{slug}/booking-requests', [PublicHajjOmraBookingRequestController::class, 'store'])
         ->name('hajj-omra.packages.booking-requests.store');
+    Route::get('page-banners/{page}', [PublicPageBannerController::class, 'show'])
+        ->name('page-banners.show');
     Route::get('economic-offers', [PublicEconomicOfferController::class, 'index'])
         ->name('economic-offers.index');
     Route::get('economic-offers/{slug}', [PublicEconomicOfferController::class, 'show'])

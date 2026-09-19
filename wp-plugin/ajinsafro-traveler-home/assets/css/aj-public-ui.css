@@ -2009,6 +2009,46 @@
   color: #2e4c66;
 }
 
+/* ── §3c Voyages : banniere image en tete de page ──────────────────────── */
+
+/* Le conteneur cesse d'etre une carte navy : la banniere prend sa place.
+   Le `!important` repond a celui du verrou d'encoche de §3b. */
+.page-voyages-ajinsafro .aj-voyages-booking .hero--banner > .container {
+  background: none;
+  padding: 0 !important;
+  border-radius: 0;
+}
+
+.aj-voyages-booking .hero-banner {
+  display: block;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 40px -24px rgba(13, 55, 103, 0.35);
+  line-height: 0;
+}
+
+/* Entiere, sans recadrage : la hauteur suit le ratio d'origine (~2073 x 758). */
+.aj-voyages-booking .hero-banner img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Le panneau de recherche chevauche le bas de l'image. */
+.aj-voyages-booking .hero--banner .search-panel {
+  position: relative;
+  z-index: 1;
+  margin: -26px clamp(14px, 3vw, 30px) 0;
+  box-shadow: 0 14px 34px -20px rgba(13, 55, 103, 0.4);
+}
+
+@media (max-width: 540px) {
+  .aj-voyages-booking .hero--banner .search-panel {
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+}
+
 /* ── §5c Hebergement : fiche detaillee ─────────────────────────────────── */
 
 /* Cartes : filet de la charte, pas d'ombre portee. */
