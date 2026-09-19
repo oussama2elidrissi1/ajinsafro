@@ -48,7 +48,7 @@ if ( ! function_exists( 'ajth_get_page_banner' ) ) {
 		);
 
 		$banner = null;
-		$ttl    = MINUTE_IN_SECONDS; // Echec ou vide : on reessaie vite.
+		$ttl    = MINUTE_IN_SECONDS; // Echec ou vide : on reverifie vite.
 
 		if ( ! is_wp_error( $response ) && 200 === (int) wp_remote_retrieve_response_code( $response ) ) {
 			$payload = json_decode( (string) wp_remote_retrieve_body( $response ), true );
@@ -63,8 +63,11 @@ if ( ! function_exists( 'ajth_get_page_banner' ) ) {
 				);
 			}
 
-			// Reponse valide : le cache tient jusqu'a l'invalidation par Laravel.
-			$ttl = 5 * MINUTE_IN_SECONDS;
+			// Seule une banniere presente merite le cache long : un vide est
+			// reverifie a la minute, meme sans purge configuree.
+			if ( null !== $banner ) {
+				$ttl = 5 * MINUTE_IN_SECONDS;
+			}
 		}
 
 		set_transient( $cache_key, $banner ?? array( 'image_url' => '' ), $ttl );
