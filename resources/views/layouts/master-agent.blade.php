@@ -6,7 +6,7 @@
     <title>@yield('title') | AJINSAFRO</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="shortcut icon" href="{{ URL::asset('build/images/favicon.ico') }}">
+    @include('layouts.partials.favicon')
     @include('layouts.head-css')
 </head>
 

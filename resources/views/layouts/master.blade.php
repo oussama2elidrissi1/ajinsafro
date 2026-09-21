@@ -8,7 +8,7 @@
     <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
     <meta content="Themesdesign" name="author" />
     <!-- App favicon -->
-    <link rel="shortcut icon" href="{{ URL::asset('build/images/favicon.ico') }}">
+    @include('layouts.partials.favicon')
 
     @include('layouts.head-css')
     <link href="{{ URL::asset('css/admin-premium.css') }}" rel="stylesheet" type="text/css" />

@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@yield('title', 'Espace client') · Ajinsafro</title>
-    <link rel="shortcut icon" href="{{ URL::asset('build/images/favicon.ico') }}">
+    @include('layouts.partials.favicon')
     <link href="{{ URL::asset('build/css/bootstrap.min.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ URL::asset('build/css/icons.min.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ URL::asset('build/css/app.min.css') }}" rel="stylesheet" type="text/css" />

@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'AjiNsafro.ma – Let the journey begin')</title>
     <meta name="description" content="Get the best prices on 2,000,000+ properties, worldwide.">
-    <link rel="icon" href="{{ asset('favicon.ico') }}">
+    @include('layouts.partials.favicon')
     {{-- Tailwind CSS CDN – front only, no admin assets --}}
     <script src="https://cdn.tailwindcss.com"></script>
     <script>

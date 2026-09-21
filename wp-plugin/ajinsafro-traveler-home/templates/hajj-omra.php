@@ -483,6 +483,8 @@ $filter_link   = static function ( array $args ) use ( $page_url, $base_filters 
 									$is_full     = $remaining <= 0;
 									$is_last     = ! $is_full && $remaining <= 8;
 									$fill        = $total > 0 ? max( 3, (int) round( ( $total - $remaining ) / $total * 100 ) ) : 100;
+									$makkah_hotel  = trim( (string) ( $package['makkah_hotel'] ?? '' ) ) ?: ajth_ho_t( 'À confirmer' );
+									$madinah_hotel = trim( (string) ( $package['madinah_hotel'] ?? '' ) ) ?: ajth_ho_t( 'À confirmer' );
 									?>
 									<article class="ajho-card <?php echo $is_full ? 'is-sold-out' : ''; ?>">
 										<a class="ajho-card__media" href="<?php echo esc_url( $detail_url ); ?>" tabindex="-1" aria-hidden="true">
@@ -516,11 +518,11 @@ $filter_link   = static function ( array $args ) use ( $page_url, $base_filters 
 											<dl class="ajho-card__hotels">
 												<div>
 													<dt><?php echo esc_html( ajth_ho_t( 'Makkah' ) ); ?></dt>
-													<dd<?php echo ajth_ho_is_arabic( $package['makkah_hotel'] ?? '' ) ? ' class="ajho-ar" dir="rtl" lang="ar"' : ''; ?>><?php echo esc_html( $package['makkah_hotel'] ?? ajth_ho_t( 'À confirmer' ) ); ?></dd>
+													<dd title="<?php echo esc_attr( $makkah_hotel ); ?>"<?php echo ajth_ho_is_arabic( $makkah_hotel ) ? ' class="ajho-ar" dir="rtl" lang="ar"' : ''; ?>><?php echo esc_html( $makkah_hotel ); ?></dd>
 												</div>
 												<div>
 													<dt><?php echo esc_html( ajth_ho_t( 'Madinah' ) ); ?></dt>
-													<dd<?php echo ajth_ho_is_arabic( $package['madinah_hotel'] ?? '' ) ? ' class="ajho-ar" dir="rtl" lang="ar"' : ''; ?>><?php echo esc_html( $package['madinah_hotel'] ?? ajth_ho_t( 'À confirmer' ) ); ?></dd>
+													<dd title="<?php echo esc_attr( $madinah_hotel ); ?>"<?php echo ajth_ho_is_arabic( $madinah_hotel ) ? ' class="ajho-ar" dir="rtl" lang="ar"' : ''; ?>><?php echo esc_html( $madinah_hotel ); ?></dd>
 												</div>
 											</dl>
 

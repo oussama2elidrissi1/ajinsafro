@@ -3831,3 +3831,88 @@
     margin-right: 10px;
   }
 }
+
+/* ── §6b Hajj & Omra : cartes de dimensions identiques ─────────────────── */
+/* La grille etire chaque rangee et chaque zone de texte reserve une hauteur
+   fixe : titre et description sur deux lignes, reperes sur deux lignes, un
+   hotel par ligne, une ligne de places. Le surplus est coupe par des points
+   de suspension ; aucune carte ne depasse ses voisines. */
+/* Etirement seul : la carte est en content-box, une hauteur 100 % lui
+   ajouterait ses 48 px de marge interne et la ferait deborder de sa rangee. */
+.page-hajj-omra-ajinsafro .ajho-grid { align-items: stretch; }
+
+.page-hajj-omra-ajinsafro .ajho-card__body h3 {
+  --ajho-line: 22px;
+  line-height: var(--ajho-line);
+  height: calc(2 * var(--ajho-line));
+}
+
+.page-hajj-omra-ajinsafro .ajho-card__body > p {
+  --ajho-line: 20px;
+  line-height: var(--ajho-line);
+  height: calc(2 * var(--ajho-line));
+}
+
+.page-hajj-omra-ajinsafro .ajho-card__facts b {
+  --ajho-line: 18px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: var(--ajho-line);
+  height: calc(2 * var(--ajho-line));
+}
+
+.page-hajj-omra-ajinsafro .ajho-card__hotels dd {
+  --ajho-line: 20px;
+  display: block;
+  line-height: var(--ajho-line);
+  height: var(--ajho-line);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.page-hajj-omra-ajinsafro .ajho-card__seats {
+  --ajho-line: 20px;
+  flex-wrap: nowrap;
+  line-height: var(--ajho-line);
+  height: var(--ajho-line);
+}
+
+.page-hajj-omra-ajinsafro .ajho-card__seats span {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.page-hajj-omra-ajinsafro .ajho-card__seats span:first-child { flex: none; }
+
+/* Textes arabes dans la carte : meme boite que le francais, sans encart. */
+.page-hajj-omra-ajinsafro .ajho-card__body h3 .ajho-ar,
+.page-hajj-omra-ajinsafro .ajho-card__body > p.ajho-ar,
+.page-hajj-omra-ajinsafro .ajho-card__hotels dd.ajho-ar {
+  line-height: var(--ajho-line);
+  padding: 0;
+  background: none;
+  border-radius: 0;
+}
+
+.page-hajj-omra-ajinsafro .ajho-card__body h3 .ajho-ar { font-size: 16px; }
+.page-hajj-omra-ajinsafro .ajho-card__body > p.ajho-ar { font-size: 14px; }
+
+/* Pied : prix et boutons sur une seule ligne ; empiles a l'identique quand
+   la carte est trop etroite pour les deux. */
+.page-hajj-omra-ajinsafro .ajho-card__footer { flex-wrap: nowrap; }
+.page-hajj-omra-ajinsafro .ajho-card__price { flex: 1 1 auto; min-width: 0; white-space: nowrap; }
+
+@media (max-width: 899px) and (min-width: 768px) {
+  .page-hajj-omra-ajinsafro .ajho-card__footer { flex-direction: column; align-items: stretch; }
+  .page-hajj-omra-ajinsafro .ajho-card__actions .ajho-btn { flex: 1 1 0; text-align: center; }
+}
+
+/* La photo suit le gabarit 16/9 de son conteneur, y compris sur mobile. */
+@media (max-width: 767px) {
+  .page-hajj-omra-ajinsafro .ajho-card__media img { height: 100%; }
+}

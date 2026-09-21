@@ -401,6 +401,7 @@ return [
         'admin.settings.home-page.edit' => 'settings.general.manage',
         'admin.settings.home-page.update' => 'settings.general.manage',
         'admin.settings.page-banners.index' => 'settings.general.manage',
+        'admin.settings.page-banners.show' => 'settings.general.manage',
         'admin.settings.page-banners.update' => 'settings.general.manage',
         'admin.settings.page-banners.destroy-image' => 'settings.general.manage',
         'admin.settings.utilisateurs.create' => 'settings.users.manage',
