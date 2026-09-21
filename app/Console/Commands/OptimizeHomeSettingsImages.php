@@ -92,6 +92,8 @@ class OptimizeHomeSettingsImages extends Command
             }
         }
 
+        $this->buildPosterVariants($optimizer, $disk, $prefix, $dryRun);
+
         if ($dryRun) {
             $this->info('Simulation terminée, rien n’a été écrit.');
         } else {
@@ -99,5 +101,58 @@ class OptimizeHomeSettingsImages extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Le poster du hero est l'element LCP : sans declinaisons, le mobile
+     * recevrait l'image bureau entiere.
+     */
+    private function buildPosterVariants(UploadedImageOptimizer $optimizer, $disk, string $prefix, bool $dryRun): void
+    {
+        $raw = DB::connection('wp')->table('options')->where('option_name', 'aj_home_settings')->value('option_value');
+        $settings = is_string($raw) ? json_decode($raw, true) : null;
+        if (! is_array($settings)) {
+            return;
+        }
+
+        $poster = (string) ($settings['hero']['poster_url'] ?? '');
+        if (! str_starts_with($poster, $prefix)) {
+            return;
+        }
+        if (! empty($settings['hero']['poster_variants'])) {
+            $this->line('Poster du hero : déclinaisons déjà présentes.');
+
+            return;
+        }
+
+        $path = urldecode(substr($poster, strlen($prefix)));
+        if (! $disk->exists($path)) {
+            $this->warn("Poster du hero introuvable sur le disque : {$path}");
+
+            return;
+        }
+        if ($dryRun) {
+            $this->line("  poster du hero : déclinaisons 768x900 / 1280x720 / bureau à générer depuis {$path}");
+
+            return;
+        }
+
+        $variants = [];
+        foreach ($optimizer->storeResponsiveSet($disk->path($path), dirname($path)) as $variant) {
+            $variants[] = ['url' => $prefix . $variant['path'], 'width' => $variant['width'], 'height' => $variant['height']];
+            $this->line(sprintf('  poster %dx%d → %s (%s Ko)', $variant['width'], $variant['height'], $variant['path'], number_format($disk->size($variant['path']) / 1024, 0, ',', ' ')));
+        }
+        if ($variants === []) {
+            $this->warn('Poster du hero : aucune déclinaison générée (extension GD absente ?).');
+
+            return;
+        }
+
+        $settings['hero']['poster_variants'] = $variants;
+        DB::connection('wp')->table('options')->updateOrInsert(
+            ['option_name' => 'aj_home_settings'],
+            ['option_value' => json_encode($settings, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), 'autoload' => 'no']
+        );
+        $this->info('Poster du hero : déclinaisons enregistrées.');
     }
 }

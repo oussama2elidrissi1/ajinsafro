@@ -181,9 +181,15 @@ class HomePageSettingsController extends Controller
 			$path = $this->storeOptimizedImage($request, 'hero.poster_file', 'front/home/hero', 1920);
 			if (is_string($path) && $path !== '') {
 				$settings['hero']['poster_url'] = $this->publicStorageUrl($path);
+				// Declinaisons mobile/tablette/bureau : le navigateur ne telecharge que celle de son ecran.
+				$settings['hero']['poster_variants'] = $this->posterVariants($path);
 			}
 		} else {
-			$settings['hero']['poster_url'] = $this->cleanUrl($hero['poster_url'] ?? $settings['hero']['poster_url'], $settings['hero']['poster_url']);
+			$previousPoster = (string) ($settings['hero']['poster_url'] ?? '');
+			$settings['hero']['poster_url'] = $this->cleanUrl($hero['poster_url'] ?? $previousPoster, $previousPoster);
+			if ($settings['hero']['poster_url'] !== $previousPoster) {
+				$settings['hero']['poster_variants'] = [];
+			}
 		}
 
 		$sections = is_array($request->input('sections', [])) ? $request->input('sections', []) : [];
@@ -526,6 +532,7 @@ class HomePageSettingsController extends Controller
 				'image_url' => '',
 				'video_url' => '',
 				'poster_url' => '',
+				'poster_variants' => [],
 				'title' => 'Partir en vacances au meilleur prix !',
 				'subtitle' => '',
 				'cta_text' => '',
@@ -744,6 +751,24 @@ class HomePageSettingsController extends Controller
 		}
 
 		return app(UploadedImageOptimizer::class)->storeUploaded($file, $directory, $maxWidth);
+	}
+
+	/**
+	 * @return list<array{url: string, width: int, height: int}>
+	 */
+	private function posterVariants(string $storedPath): array
+	{
+		$absolute = Storage::disk('public')->path($storedPath);
+		$variants = [];
+		foreach (app(UploadedImageOptimizer::class)->storeResponsiveSet($absolute, dirname($storedPath)) as $variant) {
+			$variants[] = [
+				'url' => $this->publicStorageUrl($variant['path']),
+				'width' => $variant['width'],
+				'height' => $variant['height'],
+			];
+		}
+
+		return $variants;
 	}
 
 	private function publicStorageUrl(string $path): string

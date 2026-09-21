@@ -286,7 +286,7 @@ if ( empty( $GLOBALS['ajth_header_hide_transfert_nav_filter'] ) ) {
             </button>
 
             <!-- Drawer (Mobile) / Menu (Desktop) -->
-            <div class="aj-drawer aj-header__drawer" id="aj-drawer" aria-hidden="true">
+            <div class="aj-drawer aj-header__drawer" id="aj-drawer">
                 <div class="aj-drawer__header">
                     <span class="aj-drawer__title"><?php esc_html_e( 'Menu', 'ajinsafro-traveler-home' ); ?></span>
                     <button type="button" class="aj-drawer__close" id="aj-drawer-close" aria-label="<?php esc_attr_e( 'Fermer', 'ajinsafro-traveler-home' ); ?>">

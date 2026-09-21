@@ -19,7 +19,7 @@
                 document.body.style.overflow = 'hidden';
             }
             drawer.classList.add('aj-menu-open');
-            drawer.setAttribute('aria-hidden', 'false');
+            drawer.removeAttribute('aria-hidden');
             burger.setAttribute('aria-expanded', 'true');
         }
 
@@ -29,9 +29,21 @@
                 document.body.style.overflow = '';
             }
             drawer.classList.remove('aj-menu-open');
-            drawer.setAttribute('aria-hidden', 'true');
             burger.setAttribute('aria-expanded', 'false');
+            syncDrawerAria();
         }
+
+        /* Le tiroir n'est masque que sous 1025 px : au-dela il est le menu visible,
+           il ne doit donc pas etre aria-hidden (ses liens seraient focusables mais muets). */
+        function syncDrawerAria() {
+            var isMobileNav = window.matchMedia && window.matchMedia('(max-width: 1024px)').matches;
+            if (isMobileNav && !document.body.classList.contains('menu-open')) {
+                drawer.setAttribute('aria-hidden', 'true');
+            } else {
+                drawer.removeAttribute('aria-hidden');
+            }
+        }
+        syncDrawerAria();
 
         burger.addEventListener('click', function (e) {
             e.preventDefault();
@@ -51,6 +63,7 @@
             if (window.innerWidth >= 1280 && document.body.classList.contains('menu-open')) {
                 closeDrawer();
             }
+            syncDrawerAria();
         });
 
         if (navMenu) {
@@ -341,9 +354,10 @@
         function start() {
             if (started) return;
             started = true;
-            video.setAttribute('autoplay', '');
+            // La video n'apparait qu'une fois une image reelle disponible : le poster reste
+            // affiche en dessous jusque-la (fondu gere en CSS par .is-playing).
+            video.addEventListener('playing', function () { video.classList.add('is-playing'); }, { once: true });
             video.muted = true;
-            try { video.load(); } catch (e) {}
             var playing = video.play();
             if (playing && typeof playing.catch === 'function') playing.catch(function () {});
         }

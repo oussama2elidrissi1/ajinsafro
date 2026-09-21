@@ -153,6 +153,87 @@ class UploadedImageOptimizer
         return $binary === '' ? null : [$binary, $extension];
     }
 
+    /**
+     * Declinaisons responsive du poster du hero, calees sur l'affichage reel :
+     * mobile recadre en portrait (768x900), tablette 1280x720, bureau a la
+     * taille source (plafond 1920). Retourne les fichiers ecrits avec leurs
+     * dimensions, du plus petit au plus grand, ou [] sans GD.
+     *
+     * @return list<array{path: string, width: int, height: int}>
+     */
+    public function storeResponsiveSet(string $absolutePath, string $directory, string $disk = 'public'): array
+    {
+        if (! function_exists('imagecreatefromstring') || ! is_file($absolutePath)) {
+            return [];
+        }
+
+        $info = @getimagesize($absolutePath);
+        if (! is_array($info) || ! in_array($info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP], true)) {
+            return [];
+        }
+        if ($info[2] === IMAGETYPE_WEBP && ! function_exists('imagecreatefromwebp')) {
+            return [];
+        }
+
+        $source = @imagecreatefromstring((string) file_get_contents($absolutePath));
+        if ($source === false) {
+            return [];
+        }
+        if ($info[2] === IMAGETYPE_JPEG) {
+            $source = $this->applyExifOrientation($source, $absolutePath);
+        }
+
+        $srcWidth = imagesx($source);
+        $srcHeight = imagesy($source);
+        $storage = Storage::disk($disk);
+        $base = trim($directory, '/') . '/' . Str::random(40);
+        $extension = function_exists('imagewebp') ? 'webp' : 'jpg';
+
+        $specs = [
+            ['mobile', 768, 900, true],
+            ['tablet', 1280, 720, true],
+            ['desktop', min($srcWidth, 1920), (int) round($srcHeight * min($srcWidth, 1920) / $srcWidth), false],
+        ];
+
+        $written = [];
+        foreach ($specs as [$label, $width, $height, $crop]) {
+            if ($crop && ($width > $srcWidth * 1.5 || $height > $srcHeight * 1.5)) {
+                continue; // source trop petite pour un recadrage propre
+            }
+
+            $canvas = imagecreatetruecolor($width, $height);
+            if ($crop) {
+                // Recadrage "cover" centre, comme object-fit: cover a l'affichage.
+                $ratio = max($width / $srcWidth, $height / $srcHeight);
+                $cropWidth = (int) round($width / $ratio);
+                $cropHeight = (int) round($height / $ratio);
+                $left = (int) floor(($srcWidth - $cropWidth) / 2);
+                $top = (int) floor(($srcHeight - $cropHeight) / 2);
+                imagecopyresampled($canvas, $source, 0, 0, $left, $top, $width, $height, $cropWidth, $cropHeight);
+            } else {
+                imagecopyresampled($canvas, $source, 0, 0, 0, 0, $width, $height, $srcWidth, $srcHeight);
+            }
+
+            ob_start();
+            $extension === 'webp' ? imagewebp($canvas, null, 78) : imagejpeg($canvas, null, 80);
+            $binary = (string) ob_get_clean();
+            imagedestroy($canvas);
+
+            if ($binary === '') {
+                continue;
+            }
+
+            $path = sprintf('%s-%s-%dx%d.%s', $base, $label, $width, $height, $extension);
+            if ($storage->put($path, $binary)) {
+                $written[] = ['path' => $path, 'width' => $width, 'height' => $height];
+            }
+        }
+
+        imagedestroy($source);
+
+        return $written;
+    }
+
     /** Lit le type de couleur IHDR et la presence d'un chunk tRNS, sans parcourir les pixels. */
     private function pngHasAlpha(string $raw): bool
     {

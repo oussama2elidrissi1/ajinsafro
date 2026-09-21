@@ -47,11 +47,24 @@ if ( ! empty( $hero_video_url ) && ! $is_mp4_video ) {
         <div class="aj-hero__media" aria-hidden="true">
             <?php if ( $is_mp4_video ) : ?>
                 <?php
-                // La video (20 Mo) ne part qu'apres l'evenement load, via home.js ; en attendant le
-                // poster est peint immediatement et sert d'element LCP.
-                $hero_poster_url = function_exists( 'ajth_hero_media' ) ? ajth_hero_media( $settings )['poster'] : '';
+                // Le poster est un vrai <img> responsive peint des le HTML : c'est lui l'element LCP.
+                // La video reste transparente (opacity 0) et ne part qu'apres l'evenement load, via
+                // home.js ; un poster en attribut <video poster> laisserait la premiere image de la
+                // video devenir un candidat LCP plus tardif.
+                $hero_media       = function_exists( 'ajth_hero_media' ) ? ajth_hero_media( $settings ) : array( 'poster' => '', 'poster_variants' => array() );
+                $hero_poster_url  = $hero_media['poster'];
+                $hero_poster_set  = $hero_media['poster_variants'];
+                $hero_poster_last = $hero_poster_set ? $hero_poster_set[ count( $hero_poster_set ) - 1 ] : null;
                 ?>
-                <video class="aj-hero__video" muted loop playsinline preload="none" data-aj-hero-video<?php echo $hero_poster_url !== '' ? ' poster="' . esc_url( $hero_poster_url ) . '"' : ''; ?>>
+                <?php if ( $hero_poster_url !== '' ) : ?>
+                    <img class="aj-hero__poster" src="<?php echo esc_url( $hero_poster_url ); ?>"<?php
+                        if ( $hero_poster_set ) {
+                            echo ' srcset="' . esc_attr( ajth_hero_poster_srcset( $hero_media ) ) . '" sizes="100vw"';
+                            echo ' width="' . (int) $hero_poster_last['width'] . '" height="' . (int) $hero_poster_last['height'] . '"';
+                        }
+                    ?> alt="" loading="eager" fetchpriority="high" decoding="async">
+                <?php endif; ?>
+                <video class="aj-hero__video" muted loop playsinline preload="none" data-aj-hero-video>
                     <source src="<?php echo esc_url( $hero_video_url ); ?>" type="video/mp4">
                 </video>
             <?php elseif ( $embed_video_url ) : ?>

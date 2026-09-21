@@ -124,7 +124,7 @@ $autoplay = ! empty( $accordion['autoplay'] );
 							<img
 								class="ajha-ref-accordion__img"
 								src="<?php echo esc_url( $image ); ?>"
-								alt="<?php echo esc_attr( $title ); ?>"
+								alt=""
 								loading="<?php echo 0 === $index ? 'eager' : 'lazy'; ?>"
 								decoding="async"
 							>

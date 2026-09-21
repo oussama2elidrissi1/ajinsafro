@@ -423,9 +423,24 @@ function ajth_preload_styles()
         $media = ajth_hero_media(ajth_get_settings());
         $lcp = $media['mode'] === 'video' ? $media['poster'] : $media['image'];
         if ($lcp !== '') {
-            echo '<link rel="preload" as="image" href="'.esc_url($lcp).'" fetchpriority="high">'."\n";
+            // imagesrcset/imagesizes : le preload vise exactement la declinaison que <img srcset> choisira.
+            $srcset = $media['mode'] === 'video' ? ajth_hero_poster_srcset($media) : '';
+            echo '<link rel="preload" as="image" href="'.esc_url($lcp).'"'
+                .($srcset !== '' ? ' imagesrcset="'.esc_attr($srcset).'" imagesizes="100vw"' : '')
+                .' fetchpriority="high">'."\n";
         }
     }
+}
+
+/** Chaine srcset des declinaisons du poster (vide sans declinaison). */
+function ajth_hero_poster_srcset(array $media): string
+{
+    $parts = [];
+    foreach ($media['poster_variants'] as $variant) {
+        $parts[] = $variant['url'].' '.$variant['width'].'w';
+    }
+
+    return implode(', ', $parts);
 }
 add_action('wp_head', 'ajth_preload_styles', 0);
 
@@ -456,7 +471,24 @@ function ajth_hero_media(array $settings): array
         $poster = $image;
     }
 
-    return ['mode' => $mode, 'image' => $image, 'video' => $video, 'poster' => $poster];
+    // Declinaisons responsive du poster, triees par largeur ; la plus large sert de src.
+    $variants = [];
+    if ($poster !== '' && $poster === $norm($hero['poster_url'] ?? '') && is_array($hero['poster_variants'] ?? null)) {
+        foreach ($hero['poster_variants'] as $variant) {
+            $url = $norm(is_array($variant) ? ($variant['url'] ?? '') : '');
+            $w = (int) ($variant['width'] ?? 0);
+            $h = (int) ($variant['height'] ?? 0);
+            if ($url !== '' && $w > 0 && $h > 0) {
+                $variants[] = ['url' => $url, 'width' => $w, 'height' => $h];
+            }
+        }
+        usort($variants, static fn (array $a, array $b): int => $a['width'] <=> $b['width']);
+    }
+    if ($variants !== []) {
+        $poster = $variants[count($variants) - 1]['url'];
+    }
+
+    return ['mode' => $mode, 'image' => $image, 'video' => $video, 'poster' => $poster, 'poster_variants' => $variants];
 }
 
 /* ──────────────────────────────────────────────
@@ -500,7 +532,15 @@ add_action('wp_enqueue_scripts', 'ajth_front_asset_tuning', 100);
 /* Feuilles du theme sans effet sur le premier ecran des pages du plugin : chargees sans bloquer le rendu. */
 function ajth_deferred_style_handles(): array
 {
-    return ['sweetalert2-css', 'daterangepicker', 'rangeSlider', 'rangeSlider-skinHTML5', 'magnific-css', 'woocommerce-smallscreen', 'awesome-line-awesome-css'];
+    return [
+        // Widgets pilotes par JavaScript, jamais visibles au premier ecran.
+        'sweetalert2-css', 'daterangepicker', 'rangeSlider', 'rangeSlider-skinHTML5', 'magnific-css', 'awesome-line-awesome-css',
+        // WooCommerce : aucun element boutique sur les pages du plugin.
+        'woocommerce-layout', 'woocommerce-general', 'woocommerce-smallscreen', 'wc-blocks-style', 'woocommerce-currency-switcher',
+        // Elementor et gabarits Traveler : uniquement les sections en bas de page et le header/footer masques du theme.
+        'layout-hotelv2-main', 'elementor-widget-style', 'elementor-frontend', 'elementor-post-7', 'elementor-post-71', 'elementor-post-97',
+        'widget-heading', 'widget-image', 'widget-social-icons', 'widget-divider', 'swiper', 'e-swiper', 'e-apple-webkit',
+    ];
 }
 
 function ajth_style_loader_tag($tag, $handle, $href, $media)
@@ -567,12 +607,18 @@ add_action('template_redirect', 'ajth_relax_viewport_meta_start', 1);
 
 function ajth_relax_viewport_meta($html)
 {
-    return preg_replace_callback('#<meta\s+name=["\']viewport["\'][^>]*>#i', static function ($m) {
+    $html = preg_replace_callback('#<meta\s+name=["\']viewport["\'][^>]*>#i', static function ($m) {
         $tag = preg_replace('/,?\s*user-scalable\s*=\s*(0|no)\b/i', '', $m[0]);
         $tag = preg_replace('/,?\s*maximum-scale\s*=\s*[0-9.]+/i', '', $tag);
 
         return $tag;
     }, $html, 1);
+
+    // Icones sociales Elementor sans lien dans le footer masque du theme : des ancres
+    // sans href ne sont pas explorables ; rendues en <span>, sans changement visible.
+    return preg_replace_callback('#<a(\s+(?![^>]*\bhref=)[^>]*\belementor-social-icon\b[^>]*)>(.*?)</a>#is', static function ($m) {
+        return '<span'.$m[1].'>'.$m[2].'</span>';
+    }, $html);
 }
 
 /* Nouveaux medias WordPress generes en WebP (JPEG/PNG), les originaux restent conserves. */

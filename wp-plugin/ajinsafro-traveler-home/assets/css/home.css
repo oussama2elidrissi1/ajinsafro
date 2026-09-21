@@ -1028,6 +1028,19 @@ body.aj-custom-header #masthead {
 .aj-hero__media { z-index: 0; overflow: hidden; }
 .aj-hero__video { object-fit: cover; }
 
+/* Poster = element LCP peint des le HTML ; la video passe au-dessus en fondu
+   une fois qu'elle joue reellement (classe posee par home.js). */
+.aj-hero__poster {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+}
+.aj-hero__video { z-index: 1; opacity: 0; transition: opacity .4s ease; }
+.aj-hero__video.is-playing { opacity: 1; }
+
 .aj-hero__iframe {
     border: 0;
     pointer-events: none;
