@@ -81,7 +81,7 @@ $payment_images = array(
                 <div class="aj-footer-v2__nl-header">
                     <i class="far fa-envelope"></i>
                     <div>
-                        <h4 class="aj-footer-v2__nl-title"><?php esc_html_e( 'Recevez en avant-première :', 'ajinsafro-traveler-home' ); ?></h3>
+                        <h4 class="aj-footer-v2__nl-title"><?php esc_html_e( 'Recevez en avant-première :', 'ajinsafro-traveler-home' ); ?></h4>
                         <p class="aj-footer-v2__nl-desc"><?php esc_html_e( 'Réductions, codes promo, offres exclusives ...', 'ajinsafro-traveler-home' ); ?></p>
                     </div>
                 </div>
@@ -102,10 +102,9 @@ $payment_images = array(
                 <?php if ( $pm_exists ) : ?>
                     <?php // Filet de securite si le fichier disparait d'un deploiement a l'autre. ?>
                     <?php $pm_fallback = '<span class="aj-payments-v2__fallback">' . esc_html( $pm['name'] ) . '</span>'; ?>
-                    <img loading="lazy" decoding="async" src="<?php echo esc_url( AJTH_URL . $pm['file'] ); ?>"
+                    <img loading="lazy" decoding="async" width="96" height="32" src="<?php echo esc_url( AJTH_URL . $pm['file'] ); ?>"
                          alt="<?php echo esc_attr( $pm['name'] ); ?>"
                          style="height:<?php echo esc_attr( $pm['h'] ); ?>;"
-                         loading="lazy"
                          onerror="this.onerror=null;this.insertAdjacentHTML('afterend', <?php echo esc_attr( wp_json_encode( $pm_fallback ) ); ?>);this.remove();">
                 <?php else : ?>
                     <span class="aj-payments-v2__fallback"><?php echo esc_html( $pm['name'] ); ?></span>

@@ -48,7 +48,7 @@ $section_title = ! empty( $settings['good_spots_title'] )
             ?>
             <a href="<?php echo esc_url( $u ); ?>" class="aj-spot2 aj-hover-glass">
                 <?php if ( $img ) : ?>
-                    <img loading="lazy" decoding="async" src="<?php echo esc_url( $img ); ?>" alt="<?php echo esc_attr( $t ); ?>" loading="lazy">
+                    <img loading="lazy" decoding="async" width="800" height="600" src="<?php echo esc_url( $img ); ?>" alt="<?php echo esc_attr( $t ); ?>">
                 <?php else : ?>
                     <div style="width:100%;height:100%;background:linear-gradient(135deg,#d4a574,#a67c52);"></div>
                 <?php endif; ?>

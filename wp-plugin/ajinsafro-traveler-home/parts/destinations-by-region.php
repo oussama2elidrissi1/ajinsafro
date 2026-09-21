@@ -52,10 +52,10 @@ $country_flags = array(
         <div class="aj-dest-new">
             <!-- Featured destination -->
             <a href="<?php echo esc_url( $featured_url ); ?>" class="aj-dest-featured">
-                <img loading="lazy" decoding="async" src="<?php echo esc_url( $featured_img ); ?>" alt="" loading="lazy">
+                <img loading="lazy" decoding="async" width="800" height="600" src="<?php echo esc_url( $featured_img ); ?>" alt="">
                 <div class="aj-dest-featured__overlay">
                     <div class="aj-dest-featured__info">
-                        <img loading="lazy" decoding="async" src="<?php echo esc_url( $featured_flag ); ?>" alt="" class="aj-dest-featured__flag">
+                        <img loading="lazy" decoding="async" width="40" height="30" src="<?php echo esc_url( $featured_flag ); ?>" alt="" class="aj-dest-featured__flag">
                         <span class="aj-dest-featured__name"><?php echo esc_html( $featured_label ); ?></span>
                     </div>
                 </div>
@@ -79,14 +79,14 @@ $country_flags = array(
                     ?>
                     <a href="<?php echo esc_url( $url ); ?>" class="aj-dest-tile">
                         <?php if ( $img ) : ?>
-                            <img loading="lazy" decoding="async" src="<?php echo esc_url( $img ); ?>" alt="" loading="lazy">
+                            <img loading="lazy" decoding="async" width="800" height="600" src="<?php echo esc_url( $img ); ?>" alt="">
                         <?php else : ?>
                             <div style="width:100%;height:100%;background:linear-gradient(135deg,#b0c4de,#7a9cc6);"></div>
                         <?php endif; ?>
                         <div class="aj-dest-tile__overlay">
                             <div class="aj-dest-tile__info">
                                 <?php if ( $flag ) : ?>
-                                    <img loading="lazy" decoding="async" src="<?php echo esc_url( $flag ); ?>" alt="" class="aj-dest-tile__flag">
+                                    <img loading="lazy" decoding="async" width="40" height="30" src="<?php echo esc_url( $flag ); ?>" alt="" class="aj-dest-tile__flag">
                                 <?php endif; ?>
                                 <span class="aj-dest-tile__name"><?php echo esc_html( $label ); ?></span>
                             </div>

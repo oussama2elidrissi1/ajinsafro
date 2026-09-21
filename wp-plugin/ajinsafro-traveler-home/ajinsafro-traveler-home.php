@@ -384,6 +384,11 @@ function ajth_critical_header_css()
         echo '<style id="ajth-critical-header">'.$css.'</style>'."\n";
     }
 
+    if ($on_home) {
+        $home_css = '.aj-home,.aj-home *,.aj-home *:before,.aj-home *:after{box-sizing:border-box}.aj-home{--aj-blue:#0083c4;--aj-orange:#f37a1f;--aj-dark:#1f2937;--aj-gray:#6b7280;--aj-radius:15px;font-family:\'Poppins\',\'Segoe UI\',Roboto,Arial,sans-serif;color:var(--aj-dark);line-height:1.55;overflow-x:hidden}.aj-home img{max-width:100%;display:block;height:auto}.aj-home a{text-decoration:none;color:inherit}.aj-hero{position:relative;min-height:clamp(520px,72vh,760px);overflow:hidden;display:flex;align-items:center;justify-content:center;background:#0e3a5a;color:#fff}.aj-hero__media,.aj-hero__poster,.aj-hero__video,.aj-hero__iframe{position:absolute;inset:0;width:100%;height:100%}.aj-hero__poster,.aj-hero__video{object-fit:cover}.aj-hero__video{opacity:0;transition:opacity .35s ease}.aj-hero__video.is-playing{opacity:1}.aj-hero__overlay{position:absolute;inset:0;z-index:1}.aj-hero__center{position:relative;z-index:2;text-align:center;padding:0 20px;max-width:980px;margin:0 auto}.aj-hero__title{margin:0;color:#fff;font-size:clamp(38px,7vw,88px);font-weight:800;line-height:1.04;letter-spacing:0;text-shadow:0 4px 24px rgba(0,0,0,.32)}.aj-hero__sub{margin:18px auto 0;max-width:680px;color:rgba(255,255,255,.92);font-size:clamp(16px,2.2vw,24px);line-height:1.45}.aj-search-float{position:relative;z-index:3;max-width:1180px;margin:-76px auto 36px;padding:0 20px}.aj-search-card{background:#fff;border-radius:15px;box-shadow:0 22px 60px rgba(15,23,42,.14);overflow:visible}.aj-search-tabs{display:flex;align-items:center;gap:0;border-bottom:1px solid #eef2f7;overflow-x:auto}.aj-search-tab{appearance:none;border:0;background:#fff;color:#5b6472;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:58px;padding:0 22px;font:inherit;font-size:14px;font-weight:700;white-space:nowrap;cursor:pointer}.aj-search-tab--active{color:#0083c4;box-shadow:inset 0 -3px 0 #0083c4}.aj-search-forms{padding:20px}.aj-search-form{display:none}.aj-search-form--active{display:block}.aj-search-form__row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:14px;align-items:stretch}.aj-search-field{position:relative;display:flex;align-items:center;gap:12px;min-height:68px;padding:12px 14px;border:1px solid #e5e7eb;border-radius:13px;background:#fff;min-width:0}.aj-search-field__icon{width:38px;height:38px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;flex:none;background:#eef6ff;color:#0083c4}.aj-search-field__icon--orange{background:#fff3e8;color:#f37a1f}.aj-search-field__icon--blue{background:#e8f5ff;color:#0083c4}.aj-search-field__icon--purple{background:#f3e8ff;color:#7c3aed}.aj-search-field__content{min-width:0;flex:1}.aj-search-field__label{display:block;margin:0 0 2px;color:#6b7280;font-size:12px;font-weight:700;line-height:1.2}.aj-search-field__input,.aj-search-field__text{width:100%;border:0;background:transparent;color:#111827;font:inherit;font-size:14px;font-weight:600;line-height:1.35;padding:0;text-align:left}.aj-search-field__text{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer}.aj-search-submit__btn{height:100%;min-height:68px;border:0;border-radius:13px;background:#f37a1f;color:#fff;padding:0 24px;font:inherit;font-size:14px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;cursor:pointer}.aj-search-popover{position:absolute;top:calc(100% + 10px);left:0;z-index:20;width:min(320px,90vw);padding:14px;border:1px solid #e5e7eb;border-radius:14px;background:#fff;box-shadow:0 18px 48px rgba(15,23,42,.16)}@media(max-width:1024px){.aj-topbar{display:none}.aj-navbar__inner{min-height:68px}.aj-navbar__burger{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border:0;border-radius:10px;background:#f3f4f6;color:#0e3a5a}.aj-drawer{position:fixed;top:0;right:0;bottom:0;width:min(360px,86vw);display:block;background:#fff;z-index:1001;transform:translateX(100%);transition:transform .25s ease;box-shadow:-22px 0 60px rgba(15,23,42,.18);overflow:auto}.menu-open .aj-drawer,.aj-drawer.aj-menu-open{transform:translateX(0)}.aj-drawer__header,.aj-drawer__auth,.aj-drawer__lowcost{display:flex}.aj-navbar__menu{display:block}.aj-nav-list{display:block;padding:18px}.aj-nav-list>li>a{padding:13px 8px}.aj-header__lowcost--desktop{display:none}.aj-search-form__row{grid-template-columns:1fr 1fr}.aj-search-submit{grid-column:1/-1}.aj-search-submit__btn{width:100%;min-height:56px}}@media(max-width:767px){.aj-hero{min-height:560px}.aj-search-float{margin:-58px auto 28px;padding:0 12px}.aj-search-tabs{padding:0 4px}.aj-search-tab{min-height:52px;padding:0 14px;font-size:13px}.aj-search-forms{padding:14px}.aj-search-form__row{grid-template-columns:1fr;gap:10px}.aj-search-field{min-height:62px}.aj-search-submit__btn{min-height:54px;width:100%}}';
+        echo '<style id="ajth-critical-home">'.$home_css.'</style>'."\n";
+    }
+
     $footer_selectors = '#footer,#footer-outer,.site-footer,.footer-wrapper,.footer-widget-area,#colophon,.footer,.st-footer,.footer-top,.footer-bottom,#main-footer,.footer-area,.st-footer-wrap,.footer-wrap,.content-footer,.footer-outer';
     if ($render_footer) {
         $footer_css = 'body.aj-custom-footer '.implode(',body.aj-custom-footer ', explode(',', $footer_selectors)).',body.aj-custom-footer footer:not(.aj-footer-v2):not(.aj-footer-sitewide footer){display:none!important}';
@@ -529,10 +534,82 @@ function ajth_front_asset_tuning()
 }
 add_action('wp_enqueue_scripts', 'ajth_front_asset_tuning', 100);
 
+function ajth_is_plugin_home_context(): bool
+{
+    if (is_front_page() || is_home()) {
+        return true;
+    }
+    if (is_singular()) {
+        global $post;
+
+        return $post && has_shortcode($post->post_content, 'ajth_homepage');
+    }
+
+    return false;
+}
+
+function ajth_dequeue_public_asset(array $handles, string $type): void
+{
+    foreach ($handles as $handle) {
+        if ($type === 'style') {
+            wp_dequeue_style($handle);
+            wp_deregister_style($handle);
+        } else {
+            wp_dequeue_script($handle);
+            wp_deregister_script($handle);
+        }
+    }
+}
+
+function ajth_dequeue_unused_front_assets(): void
+{
+    if (! ajth_is_plugin_front_context()) {
+        return;
+    }
+
+    $unused_styles = [
+        'contact-form-7',
+        'woocommerce-layout', 'woocommerce-general', 'woocommerce-smallscreen', 'wc-blocks-style', 'woocommerce-currency-switcher',
+        'elementor-frontend', 'elementor-post-7', 'elementor-post-71', 'elementor-post-97', 'elementor-widget-style',
+        'widget-heading', 'widget-image', 'widget-social-icons', 'widget-divider', 'swiper', 'e-swiper', 'e-apple-webkit',
+        'elementor-gf-dmsans', 'elementor-gf-robotoslab', 'elementor-gf-roboto',
+        'layout-hotelv2-main', 'magnific-css', 'awesome-line-awesome-css',
+    ];
+
+    $unused_scripts = [
+        'swv', 'contact-form-7',
+        'wc-jquery-blockui', 'wc-add-to-cart', 'wc-js-cookie', 'woocommerce', 'sourcebuster-js', 'wc-order-attribution',
+        'map', 'custom-google-map', 'layout-hotelv2-marker', 'layout-hotelv2-main', 'magnific-js',
+        'elementor-js', 'elementor-webpack-runtime', 'elementor-frontend-modules', 'elementor-frontend',
+        'swiper', 'st-library-slider', 'st-custom',
+    ];
+
+    if (ajth_is_plugin_home_context()) {
+        $unused_styles = array_merge($unused_styles, [
+            'bootstrap', 'main', 'layout-font-icon',
+            'sweetalert2-css', 'daterangepicker', 'rangeSlider', 'rangeSlider-skinHTML5',
+            'st-google-fonts',
+        ]);
+        $unused_scripts = array_merge($unused_scripts, [
+            'jquery-migrate',
+            'popper', 'bootstrap', 'sweetalert2.min-js', 'nicescroll', 'match-height', 'ion-rangeslider',
+            'moment', 'daterangepicker-js', 'form-search', 'main', 'jquery-sticky',
+            'jquery-ui-core', 'jquery-ui-mouse', 'jquery-ui-slider', 'wc-jquery-ui-touchpunch',
+            'wc-price-slider_33', 'woocs-real-active-filters', 'woocs-price-filter-frontend', 'jquery.ddslick.min', 'woocommerce-currency-switcher',
+        ]);
+    }
+
+    ajth_dequeue_public_asset(array_unique($unused_styles), 'style');
+    ajth_dequeue_public_asset(array_unique($unused_scripts), 'script');
+}
+add_action('wp_enqueue_scripts', 'ajth_dequeue_unused_front_assets', 1000);
+
 /* Feuilles du theme sans effet sur le premier ecran des pages du plugin : chargees sans bloquer le rendu. */
 function ajth_deferred_style_handles(): array
 {
     return [
+        'ajth-home-css', 'ajth-public-ui-css', 'ajth-home-reference-accordion-css',
+        'ajth-agent-css', 'ajth-fontawesome', 'fontawesome', 'ajth-google-fonts',
         // Widgets pilotes par JavaScript, jamais visibles au premier ecran.
         'sweetalert2-css', 'daterangepicker', 'rangeSlider', 'rangeSlider-skinHTML5', 'magnific-css', 'awesome-line-awesome-css',
         // WooCommerce : aucun element boutique sur les pages du plugin.
@@ -540,6 +617,7 @@ function ajth_deferred_style_handles(): array
         // Elementor et gabarits Traveler : uniquement les sections en bas de page et le header/footer masques du theme.
         'layout-hotelv2-main', 'elementor-widget-style', 'elementor-frontend', 'elementor-post-7', 'elementor-post-71', 'elementor-post-97',
         'widget-heading', 'widget-image', 'widget-social-icons', 'widget-divider', 'swiper', 'e-swiper', 'e-apple-webkit',
+        'bootstrap', 'main', 'layout-font-icon', 'st-google-fonts', 'elementor-gf-dmsans', 'elementor-gf-robotoslab', 'elementor-gf-roboto',
     ];
 }
 
@@ -579,7 +657,12 @@ add_filter('style_loader_src', 'ajth_google_fonts_display_swap', 20);
 /* Google Maps et ses dependants, Magnific : differes sur les pages sans carte du theme. */
 function ajth_deferred_script_handles(): array
 {
-    return ['map', 'custom-google-map', 'layout-hotelv2-marker', 'layout-hotelv2-main', 'magnific-js'];
+    return [
+        'ajth-home-js', 'ajth-home-reference-accordion-js', 'ajth-agent-js', 'ajinsafro-booking-redirect',
+        'map', 'custom-google-map', 'layout-hotelv2-marker', 'layout-hotelv2-main', 'magnific-js',
+        'popper', 'bootstrap', 'sweetalert2.min-js', 'nicescroll', 'match-height', 'ion-rangeslider',
+        'daterangepicker-js', 'form-search', 'elementor-js', 'main', 'jquery-sticky',
+    ];
 }
 
 function ajth_script_loader_tag($tag, $handle, $src)
@@ -614,11 +697,31 @@ function ajth_relax_viewport_meta($html)
         return $tag;
     }, $html, 1);
 
+    if (ajth_is_plugin_home_context()) {
+        $html = ajth_strip_hidden_traveler_auth_markup($html);
+    }
+
     // Icones sociales Elementor sans lien dans le footer masque du theme : des ancres
     // sans href ne sont pas explorables ; rendues en <span>, sans changement visible.
     return preg_replace_callback('#<a(\s+(?![^>]*\bhref=)[^>]*\belementor-social-icon\b[^>]*)>(.*?)</a>#is', static function ($m) {
         return '<span'.$m[1].'>'.$m[2].'</span>';
     }, $html);
+}
+
+function ajth_strip_hidden_traveler_auth_markup(string $html): string
+{
+    $patterns = [
+        '#<div\s+class=["\'][^"\']*\bmodal\b[^"\']*\blogin-regiter-popup\b[^"\']*["\'][^>]*id=["\']st-login-form["\'][\s\S]*?(?=<div\s+class=["\'][^"\']*\bmodal\b[^"\']*["\'][^>]*id=["\']st-register-form["\'])#i',
+        '#<div\s+class=["\'][^"\']*\bmodal\b[^"\']*\blogin-regiter-popup\b[^"\']*["\'][^>]*id=["\']st-register-form["\'][\s\S]*?(?=<div\s+class=["\'][^"\']*\bmodal\b[^"\']*["\'][^>]*id=["\']st-forgot-form["\'])#i',
+        '#<div\s+class=["\'][^"\']*\bmodal\b[^"\']*["\'][^>]*id=["\']st-forgot-form["\'][\s\S]*?</div>\s*</div>\s*</div>#i',
+        '#<script\b[^>]*src=["\']https://apis\.google\.com/js/platform\.js["\'][^>]*>\s*</script>#i',
+    ];
+
+    foreach ($patterns as $pattern) {
+        $html = preg_replace($pattern, '', $html);
+    }
+
+    return $html;
 }
 
 /* Nouveaux medias WordPress generes en WebP (JPEG/PNG), les originaux restent conserves. */

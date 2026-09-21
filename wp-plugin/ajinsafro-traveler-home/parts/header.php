@@ -271,7 +271,7 @@ if ( empty( $GLOBALS['ajth_header_hide_transfert_nav_filter'] ) ) {
             <div class="aj-navbar__logo">
                 <?php if ( ! empty( $hdr['logo_url'] ) ) : ?>
                     <a href="<?php echo esc_url( home_url( '/' ) ); ?>">
-                        <img decoding="async" src="<?php echo esc_url( $hdr['logo_url'] ); ?>" alt="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>" class="aj-navbar__logo-img" loading="eager" fetchpriority="high">
+                        <img decoding="async" width="191" height="32" src="<?php echo esc_url( $hdr['logo_url'] ); ?>" alt="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>" class="aj-navbar__logo-img" loading="eager">
                     </a>
                 <?php else : ?>
                     <a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="aj-navbar__brand">
