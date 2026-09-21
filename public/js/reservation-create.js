@@ -56,10 +56,7 @@
     }
 
     function removeFastAutoRoomingControls() {
-        if (!isFastMode) return;
-        document.querySelectorAll('#btn-auto-rooming, #btn-rooming-auto').forEach(function (button) {
-            button.remove();
-        });
+        return;
     }
 
     function prepareFastRoomingFirstEntry() {
@@ -2706,11 +2703,6 @@
             var autoBtn = target.closest('#btn-rooming-auto, #btn-auto-rooming');
             if (autoBtn) {
                 event.preventDefault();
-                if (isFastMode) {
-                    removeFastAutoRoomingControls();
-                    resetRooming();
-                    return;
-                }
                 console.log('[Rooming] Auto clicked');
                 autoRooming();
                 syncFinancialSummary();

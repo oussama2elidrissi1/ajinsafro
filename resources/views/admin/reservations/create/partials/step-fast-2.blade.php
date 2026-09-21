@@ -12,6 +12,7 @@
         </div>
 
         <div class="reservation-fast-room-actions">
+            <button type="button" class="reservation-fast-room-actions__primary" id="btn-auto-rooming">Répartition automatique</button>
             <button type="button" class="reservation-fast-room-actions__add" id="btn-add-room-allocation">+ Chambre</button>
             <button type="button" class="reservation-fast-room-actions__reset" id="btn-reset-rooming">Réinitialiser</button>
             @if (! $agentReservationMode && auth()->user()?->can('circuits.voyages.view'))

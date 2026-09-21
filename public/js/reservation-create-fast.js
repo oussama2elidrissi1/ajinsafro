@@ -748,9 +748,7 @@
     var firstRoomingEntryCleared = false;
 
     function disableFastAutoRooming() {
-        document.querySelectorAll('#btn-auto-rooming, #btn-rooming-auto').forEach(function (button) {
-            button.remove();
-        });
+        return;
     }
 
     function clearAutoRoomingOnFirstEntry() {

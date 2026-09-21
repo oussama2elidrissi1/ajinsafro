@@ -16,9 +16,7 @@
     }
 
     function removeAutoRoomingControls() {
-        document.querySelectorAll('#btn-auto-rooming, #btn-rooming-auto').forEach(function (button) {
-            button.remove();
-        });
+        return;
     }
 
     function setHiddenAllocationsEmpty() {
