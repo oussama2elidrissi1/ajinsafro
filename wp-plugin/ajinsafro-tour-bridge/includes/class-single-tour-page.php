@@ -742,7 +742,7 @@ class AJTB_Single_Tour_Page
                 'room_type' => isset($row['room_type']) ? (string) $row['room_type'] : '',
                 'quantity' => isset($row['quantity']) ? max(0, (int) $row['quantity']) : 0,
                 'capacity_per_room' => isset($row['capacity_per_room']) ? max(1, (int) $row['capacity_per_room']) : 1,
-                'supplement' => isset($row['supplement']) ? max(0, (float) $row['supplement']) : 0.0,
+                'supplement' => isset($row['supplement']) ? (float) $row['supplement'] : 0.0,
             ];
         }
         $reservations_table = 'reservations';
@@ -1536,7 +1536,7 @@ class AJTB_Single_Tour_Page
                 'capacity_per_room' => $cap,
                 'available_rooms' => $qty,
                 'available_places' => max(0, $qty) * max(1, $cap),
-                'supplement' => isset($row['supplement']) ? max(0, (float) $row['supplement']) : 0.0,
+                'supplement' => isset($row['supplement']) ? (float) $row['supplement'] : 0.0,
             ];
         }
 

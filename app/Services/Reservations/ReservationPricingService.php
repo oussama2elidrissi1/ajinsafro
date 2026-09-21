@@ -47,7 +47,7 @@ class ReservationPricingService
 
         $discountScope = $this->normalizeDiscountScope($payload['discount_scope'] ?? null);
         $grossTotalBase = round($unitPriceBeforeDiscount * $travelersCount, 2);
-        $grossTotalAmount = round($grossTotalBase + $roomSummary['room_supplement_total'] + $extrasSummary['extras_total'], 2);
+        $grossTotalAmount = round(max(0, $grossTotalBase + $roomSummary['room_supplement_total'] + $extrasSummary['extras_total']), 2);
         $discount = $this->resolveDiscount(
             $payload,
             $discountScope === 'total' ? $grossTotalAmount : $unitPriceBeforeDiscount,
@@ -62,7 +62,7 @@ class ReservationPricingService
         } else {
             $basePrice = $discount['unit_price_after_discount'];
             $totalBase = round($basePrice * $travelersCount, 2);
-            $totalAmount = round($totalBase + $roomSummary['room_supplement_total'] + $extrasSummary['extras_total'], 2);
+            $totalAmount = round(max(0, $totalBase + $roomSummary['room_supplement_total'] + $extrasSummary['extras_total']), 2);
         }
 
         if ($paidAmount > $totalAmount + 0.009) {
@@ -1213,7 +1213,7 @@ class ReservationPricingService
 
                 $capacity = max(0, (int) ($allocation['capacity'] ?? 0));
                 $occupied = max(0, (int) ($allocation['occupied_count'] ?? count($allocation['traveler_keys'] ?? [])));
-                $supplement = round(max(0, (float) ($allocation['supplement_total'] ?? 0)), 2);
+                $supplement = round((float) ($allocation['supplement_total'] ?? 0), 2);
                 if ($capacity <= 0 || $occupied <= 0) {
                     throw ValidationException::withMessages([
                         "room_allocations.$index.capacity" => ['Allocation chambre invalide.'],
@@ -1362,7 +1362,7 @@ class ReservationPricingService
             $availableRooms = max(0, (int) data_get($room, 'available_rooms', 0));
             $availablePlaces = max(0, (int) data_get($room, 'available_places', 0));
             $capacity = max(1, (int) data_get($room, 'capacity_total', 1));
-            $supplement = round(max(0, (float) data_get($room, 'supplement', 0)), 2);
+            $supplement = round((float) data_get($room, 'supplement', 0), 2);
 
             if ($roomCount > $availableRooms) {
                 throw ValidationException::withMessages([

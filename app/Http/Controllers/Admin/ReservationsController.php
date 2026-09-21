@@ -1984,7 +1984,7 @@ class ReservationsController extends Controller
             'discount_type' => 'nullable|in:percentage,fixed',
             'discount_value' => 'nullable|numeric|min:0',
             'total_base' => 'nullable|numeric|min:0',
-            'room_supplement_total' => 'nullable|numeric|min:0',
+            'room_supplement_total' => 'nullable|numeric',
             'extras_total' => 'nullable|numeric|min:0',
             'total_amount' => 'nullable|numeric|min:0',
             'payment_amount' => 'nullable|numeric|min:0',

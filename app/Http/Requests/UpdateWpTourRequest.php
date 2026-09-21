@@ -630,7 +630,7 @@ class UpdateWpTourRequest extends FormRequest
             'tour_hotels.*.rooms.*.capacity_adults' => 'nullable|integer|min:0',
             'tour_hotels.*.rooms.*.capacity_children' => 'nullable|integer|min:0',
             'tour_hotels.*.rooms.*.capacity_total' => 'nullable|integer|min:0',
-            'tour_hotels.*.rooms.*.supplement' => 'nullable|numeric|min:0',
+            'tour_hotels.*.rooms.*.supplement' => 'nullable|numeric',
             'tour_hotels.*.rooms.*.description' => 'nullable|string|max:1000',
             'tour_hotels.*.rooms.*.notes' => 'nullable|string|max:2000',
             'tour_hotels.*.rooms.*.is_active' => 'nullable',
@@ -642,7 +642,7 @@ class UpdateWpTourRequest extends FormRequest
             'tour_hotels.*.rooms.*.date_availabilities.*.available_rooms' => 'nullable|integer|min:0',
             'tour_hotels.*.rooms.*.date_availabilities.*.available_places' => 'nullable|integer|min:0',
             'tour_hotels.*.rooms.*.date_availabilities.*.status' => 'nullable|in:available,limited,full,closed',
-            'tour_hotels.*.rooms.*.date_availabilities.*.supplement' => 'nullable|numeric|min:0',
+            'tour_hotels.*.rooms.*.date_availabilities.*.supplement' => 'nullable|numeric',
             'tour_transfer_arrival' => 'nullable|array',
             'tour_transfer_arrival.from_label' => 'nullable|string|max:255',
             'tour_transfer_arrival.to_label' => 'nullable|string|max:255',
@@ -717,7 +717,7 @@ class UpdateWpTourRequest extends FormRequest
             'departure_allocations.*.rooms.*.room_type' => 'nullable|string|max:100',
             'departure_allocations.*.rooms.*.quantity' => 'nullable|integer|min:0',
             'departure_allocations.*.rooms.*.capacity_per_room' => 'nullable|integer|min:1',
-            'departure_allocations.*.rooms.*.supplement' => 'nullable|numeric|min:0',
+            'departure_allocations.*.rooms.*.supplement' => 'nullable|numeric',
 
             // Extras réservation (Laravel voyage_extras)
             'voyage_extras' => 'nullable|array',

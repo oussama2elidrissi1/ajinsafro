@@ -72,7 +72,7 @@
                     </td>
                     <td class="text-center" style="max-width:100px">
                         <label class="form-label small text-muted mb-0 d-md-none">Supp.</label>
-                        <input type="number" name="supplement" form="room-update-form-{{ $r->id }}" class="form-control form-control-sm text-center" value="{{ $r->supplement }}" min="0" step="0.01">
+                        <input type="number" name="supplement" form="room-update-form-{{ $r->id }}" class="form-control form-control-sm text-center" value="{{ $r->supplement }}" min="-9999999" step="0.01">
                     </td>
                     <td style="min-width:130px">
                         <label class="form-label small text-muted mb-0 d-md-none">Statut</label>
@@ -125,7 +125,7 @@
             </div>
             <div class="col-md-1">
                 <label class="form-label small mb-0">Supp.</label>
-                <input type="number" name="supplement" class="form-control form-control-sm" min="0" step="0.01" value="0">
+                <input type="number" name="supplement" class="form-control form-control-sm" min="-9999999" step="0.01" value="0">
             </div>
             <div class="col-md-2">
                 <label class="form-label small mb-0">Statut</label>

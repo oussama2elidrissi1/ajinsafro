@@ -47,7 +47,7 @@
             function input(field, type, min, max, step) {
                 return '<input data-field="' + field + '" aria-label="' + ({room_type:'Type de chambre',quantity:'Quantité',capacity_per_room:'Capacité par chambre',supplement:'Supplément par personne'}[field]) + '" type="' + type + '" required value="' + escape(room[field]) + '"' + (type === 'number' ? ' min="' + min + '" max="' + max + '" step="' + step + '"' : ' maxlength="100" list="departure-room-types"') + '>';
             }
-            return '<tr data-room-id="' + (room.id || '') + '"><td>' + input('room_type', 'text') + '</td><td>' + input('quantity','number',0,10000,1) + '</td><td>' + input('capacity_per_room','number',1,50,1) + '</td><td>' + input('supplement','number',0,9999999,'.01') + '</td><td><select aria-label="Application" data-field="hotel_id">' + options + '</select></td><td data-room-coverage></td><td><button type="button" data-rooms-remove aria-label="Supprimer ce type de chambre">×</button></td></tr>';
+            return '<tr data-room-id="' + (room.id || '') + '"><td>' + input('room_type', 'text') + '</td><td>' + input('quantity','number',0,10000,1) + '</td><td>' + input('capacity_per_room','number',1,50,1) + '</td><td>' + input('supplement','number',-9999999,9999999,'.01') + '</td><td><select aria-label="Application" data-field="hotel_id">' + options + '</select></td><td data-room-coverage></td><td><button type="button" data-rooms-remove aria-label="Supprimer ce type de chambre">×</button></td></tr>';
         }
         function collect() {
             return Array.from(rows.children).map(function (row) {

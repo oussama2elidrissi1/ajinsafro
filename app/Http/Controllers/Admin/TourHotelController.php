@@ -261,7 +261,7 @@ class TourHotelController extends Controller
                 'capacity_adults' => max(0, (int) ($r['capacity_adults'] ?? 0)),
                 'capacity_children' => max(0, (int) ($r['capacity_children'] ?? 0)),
                 'capacity_total' => max(1, (int) ($r['capacity_total'] ?? 1)),
-                'supplement' => max(0, (float) ($r['supplement'] ?? 0)),
+                'supplement' => (float) ($r['supplement'] ?? 0),
                 'description' => $r['description'] ?? null,
                 'is_active' => !empty($r['is_active']),
                 'sort_order' => $sortOrder++,

@@ -30,7 +30,7 @@ class DepartureRoomAllocationController extends Controller
             'rooms.*.room_type' => ['required', 'string', 'max:100'],
             'rooms.*.quantity' => ['required', 'integer', 'min:0', 'max:10000'],
             'rooms.*.capacity_per_room' => ['required', 'integer', 'min:1', 'max:50'],
-            'rooms.*.supplement' => ['required', 'numeric', 'min:0', 'max:9999999'],
+            'rooms.*.supplement' => ['required', 'numeric', 'min:-9999999', 'max:9999999'],
             'rooms.*.hotel_id' => ['nullable', 'integer', 'min:1'],
         ]);
         return DB::transaction(function () use ($editor, $departure, $data, $pricing, $voyage) {

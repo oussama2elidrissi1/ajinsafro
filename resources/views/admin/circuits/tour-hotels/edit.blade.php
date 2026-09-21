@@ -131,7 +131,7 @@
                                             </div>
                                             <div class="col-md-2">
                                                 <label class="form-label small">Suppl. (DH)</label>
-                                                <input type="number" class="form-control form-control-sm" name="rooms[{{ $ri }}][supplement]" value="{{ $supplementVal }}" min="0" step="0.01">
+                                                <input type="number" class="form-control form-control-sm" name="rooms[{{ $ri }}][supplement]" value="{{ $supplementVal }}" min="-9999999" step="0.01">
                                             </div>
                                             <div class="col-md-1">
                                                 <div class="form-check">
@@ -248,5 +248,4 @@
     })();
     </script>
 @endsection
-
 

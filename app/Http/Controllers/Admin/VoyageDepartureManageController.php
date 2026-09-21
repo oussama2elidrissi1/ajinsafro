@@ -396,7 +396,7 @@ class VoyageDepartureManageController extends Controller
             'capacity_total' => 'required|integer|min:1',
             'total_rooms' => 'required|integer|min:0',
             'available_places' => 'nullable|integer|min:0',
-            'supplement' => 'nullable|numeric|min:0',
+            'supplement' => 'nullable|numeric',
             'status' => 'required|string|in:'.implode(',', DepartureHotelRoom::STATUSES),
         ]);
 
@@ -448,7 +448,7 @@ class VoyageDepartureManageController extends Controller
             'capacity_total' => 'required|integer|min:1',
             'total_rooms' => 'required|integer|min:0',
             'available_places' => 'nullable|integer|min:0',
-            'supplement' => 'nullable|numeric|min:0',
+            'supplement' => 'nullable|numeric',
             'status' => 'required|string|in:'.implode(',', DepartureHotelRoom::STATUSES),
         ]);
 

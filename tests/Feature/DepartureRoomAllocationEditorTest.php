@@ -138,11 +138,28 @@ class DepartureRoomAllocationEditorTest extends TestCase
     public function test_empty_or_invalid_values_are_rejected_and_zero_quantity_blocks_availability(): void
     {
         $departure = $this->departure(); $data = $this->getJson($this->url($departure))->json();
-        foreach ([[], [$this->room(['quantity' => -1])], [$this->room(['capacity_per_room' => 0])], [$this->room(['supplement' => -1])]] as $rows) {
+        foreach ([[], [$this->room(['quantity' => -1])], [$this->room(['capacity_per_room' => 0])]] as $rows) {
             $this->putJson($this->url($departure), array_replace($data, ['rooms' => $rows]))->assertUnprocessable();
         }
         $data['rooms'][0]['quantity'] = 0;
         $this->putJson($this->url($departure), $data)->assertOk()->assertJsonPath('availability.mode', 'blocked')->assertJsonCount(0, 'availability.rooms');
+    }
+
+    public function test_room_supplement_can_be_negative_for_discounts(): void
+    {
+        $departure = $this->departure();
+        $data = $this->getJson($this->url($departure))->json();
+        $data['rooms'][0]['room_type'] = 'Triple';
+        $data['rooms'][0]['quantity'] = 2;
+        $data['rooms'][0]['capacity_per_room'] = 3;
+        $data['rooms'][0]['supplement'] = -500;
+
+        $this->putJson($this->url($departure), $data)
+            ->assertOk()
+            ->assertJsonPath('rooms.0.supplement', '-500.00')
+            ->assertJsonPath('availability.rooms.0.unit_supplement', -500);
+
+        $this->assertSame('-500.00', $departure->roomAllocations()->first()->supplement);
     }
 
     public function test_voyage_permission_is_required_for_read_and_write(): void

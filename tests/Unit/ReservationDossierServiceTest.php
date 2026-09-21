@@ -18,7 +18,7 @@ class ReservationDossierServiceTest extends TestCase
         $this->assertSame(1200.0, $summary['total_amount']);
         $this->assertSame(0.0, $summary['paid_amount']);
         $this->assertSame(1200.0, $summary['remaining_amount']);
-        $this->assertSame(ReservationDossierService::PAYMENT_UNPAID, $summary['payment_status']);
+        $this->assertSame(ReservationDossierService::PAYMENT_NON_PAID, $summary['payment_status']);
     }
 
     public function test_it_computes_total_for_two_travelers_with_double_room_supplement(): void
@@ -30,6 +30,16 @@ class ReservationDossierServiceTest extends TestCase
         $this->assertSame(2400.0, $summary['total_base']);
         $this->assertSame(300.0, $summary['room_supplement_total']);
         $this->assertSame(2700.0, $summary['total_amount']);
+    }
+
+    public function test_it_computes_total_with_negative_room_supplement_discount(): void
+    {
+        $service = new ReservationDossierService;
+
+        $summary = $service->computeFinancialSummary(30000, -1500, 0, 0);
+
+        $this->assertSame(-1500.0, $summary['room_supplement_total']);
+        $this->assertSame(28500.0, $summary['total_amount']);
     }
 
     public function test_it_computes_extras_total_for_dossier_and_traveler_selection(): void
@@ -62,7 +72,7 @@ class ReservationDossierServiceTest extends TestCase
         $this->assertSame(2400.0, $summary['total_amount']);
         $this->assertSame(600.0, $summary['paid_amount']);
         $this->assertSame(1800.0, $summary['remaining_amount']);
-        $this->assertSame(ReservationDossierService::PAYMENT_DEPOSIT, $summary['payment_status']);
+        $this->assertSame(ReservationDossierService::PAYMENT_PARTIAL, $summary['payment_status']);
     }
 
     public function test_it_marks_paid_when_payment_matches_total(): void

@@ -812,7 +812,7 @@ class ReservationService
             $sourceType = (string) ($row['room_source_type'] ?? 'tour_hotel_room');
             $sourceId = (int) ($row['room_source_id'] ?? 0);
             $status = (string) ($row['status'] ?? ($occupied >= $capacity ? 'complete' : 'partial'));
-            $supplementTotal = round(max(0, (float) ($row['supplement_total'] ?? 0)), 2);
+            $supplementTotal = round((float) ($row['supplement_total'] ?? 0), 2);
             $totalSupplement += $supplementTotal;
             $hasAny = true;
             if ($status === 'partial') {

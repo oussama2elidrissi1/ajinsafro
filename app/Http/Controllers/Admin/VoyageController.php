@@ -764,7 +764,7 @@ class VoyageController extends Controller
                 'tour_hotels.*.rooms.*.capacity_adults' => 'nullable|integer|min:0',
                 'tour_hotels.*.rooms.*.capacity_children' => 'nullable|integer|min:0',
                 'tour_hotels.*.rooms.*.capacity_total' => 'nullable|integer|min:0',
-                'tour_hotels.*.rooms.*.supplement' => 'nullable|numeric|min:0',
+                'tour_hotels.*.rooms.*.supplement' => 'nullable|numeric',
                 'tour_hotels.*.rooms.*.is_active' => 'nullable',
                 'tour_hotels.*.rooms.*.is_default' => 'nullable',
                 'departure_allocations' => 'nullable|array',
@@ -2526,7 +2526,7 @@ class VoyageController extends Controller
                     'capacity_adults' => $adults,
                     'capacity_children' => $children,
                     'capacity_total' => $capTotalStored,
-                    'supplement' => max(0, (float) ($r['supplement'] ?? 0)),
+                    'supplement' => (float) ($r['supplement'] ?? 0),
                     'description' => $r['description'] ?? null,
                     'is_active' => (int) ($r['is_active'] ?? 0) === 1,
                     'sort_order' => $sortOrder++,
@@ -2973,7 +2973,7 @@ class VoyageController extends Controller
                         'available_places' => $availablePlaces,
                         'status' => $status,
                         'supplement' => isset($availabilityInput['supplement']) && $availabilityInput['supplement'] !== ''
-                            ? max(0, (float) $availabilityInput['supplement'])
+                            ? (float) $availabilityInput['supplement']
                             : $defaults['supplement'],
                     ]);
                     $availability->save();
@@ -3015,7 +3015,7 @@ class VoyageController extends Controller
             'capacity_per_room' => $capacityPerRoom,
             'available_places' => max(0, $availableRooms * $capacityPerRoom),
             'status' => $availableRooms > 0 ? TourHotelRoomAvailability::STATUS_AVAILABLE : TourHotelRoomAvailability::STATUS_FULL,
-            'supplement' => max(0, (float) ($room->supplement ?? 0)),
+            'supplement' => (float) ($room->supplement ?? 0),
         ];
     }
     private function normalizeRoomAvailabilityStatus(mixed $status): string
@@ -3165,7 +3165,7 @@ class VoyageController extends Controller
                 'room_type' => $roomType,
                 'quantity' => max(0, (int) ($row['quantity'] ?? 0)),
                 'capacity_per_room' => max(1, (int) ($row['capacity_per_room'] ?? 1)),
-                'supplement' => max(0, (float) ($row['supplement'] ?? 0)),
+                'supplement' => (float) ($row['supplement'] ?? 0),
                 'sort_order' => $sortOrder++,
             ];
         }
@@ -3184,7 +3184,7 @@ class VoyageController extends Controller
                 'room_type' => (string) $row['room_type'],
                 'quantity' => max(0, (int) ($row['quantity'] ?? 0)),
                 'capacity_per_room' => max(1, (int) ($row['capacity_per_room'] ?? 1)),
-                'supplement' => max(0, (float) ($row['supplement'] ?? 0)),
+                'supplement' => (float) ($row['supplement'] ?? 0),
                 'sort_order' => max(0, (int) ($row['sort_order'] ?? 0)),
             ]);
         }

@@ -283,7 +283,7 @@
                 '    </div>' +
                 '    <div class="col-6 col-md-2">' +
                 '      <label class="form-label small">Suppl. (DH)</label>' +
-                '      <input type="number" min="0" step="0.01" class="form-control form-control-sm hotels-room-supplement" value="' + escHtml(r.supplement) + '" />' +
+                '      <input type="number" min="-9999999" step="0.01" class="form-control form-control-sm hotels-room-supplement" value="' + escHtml(r.supplement) + '" />' +
                 '    </div>' +
                 '    <div class="col-4 col-md-2">' +
                 '      <label class="form-label small">Cap. ad.</label>' +

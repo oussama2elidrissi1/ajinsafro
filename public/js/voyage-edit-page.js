@@ -116,7 +116,7 @@
             room_type: roomType,
             quantity: isNaN(quantity) ? 0 : Math.max(0, quantity),
             capacity_per_room: isNaN(capacityPerRoom) ? 1 : Math.max(1, capacityPerRoom),
-            supplement: isNaN(supplement) ? 0 : Math.max(0, supplement),
+            supplement: isNaN(supplement) ? 0 : supplement,
             hotel_id: row.hotel_id || '',
             hotel_index: row.hotel_index === '' || row.hotel_index == null ? '' : String(row.hotel_index)
         };
@@ -737,7 +737,7 @@
                 (invalidQty ? ('<div class="invalid-feedback">Max ' + escapeHtml(String(availableRooms)) + ' chambre(s) disponible(s).</div>') : '') +
                 '  </td>' +
                 '  <td><input type="number" class="form-control form-control-sm" min="1" name="departure_allocations[' + cardIndex + '][rooms][' + roomIndex + '][capacity_per_room]" value="' + capacityPerRoom + '"></td>' +
-                '  <td><input type="number" class="form-control form-control-sm" min="0" step="0.01" name="departure_allocations[' + cardIndex + '][rooms][' + roomIndex + '][supplement]" value="' + escapeAttr(String(supplement)) + '" placeholder="0"></td>' +
+                '  <td><input type="number" class="form-control form-control-sm" min="-9999999" step="0.01" name="departure_allocations[' + cardIndex + '][rooms][' + roomIndex + '][supplement]" value="' + escapeAttr(String(supplement)) + '" placeholder="0"></td>' +
                 '  <td>' +
                 '    <input type="hidden" name="departure_allocations[' + cardIndex + '][rooms][' + roomIndex + '][hotel_id]" value="' + escapeAttr(hotelId) + '">' +
                 '    <select class="form-select form-select-sm" name="departure_allocations[' + cardIndex + '][rooms][' + roomIndex + '][hotel_index]">' + hotelOptions.html + '</select>' +

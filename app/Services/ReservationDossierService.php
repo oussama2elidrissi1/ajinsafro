@@ -173,7 +173,7 @@ class ReservationDossierService
         float $paidAmount,
         bool $strict = true,
     ): array {
-        $totalAmount = round(max(0, $totalBase) + max(0, $roomSupplementTotal) + max(0, $extrasTotal), 2);
+        $totalAmount = round(max(0, $totalBase + $roomSupplementTotal + max(0, $extrasTotal)), 2);
         $paidAmount = round(max(0, $paidAmount), 2);
 
         if ($strict && $paidAmount > $totalAmount + 0.009) {
@@ -186,7 +186,7 @@ class ReservationDossierService
 
         return [
             'total_base' => round(max(0, $totalBase), 2),
-            'room_supplement_total' => round(max(0, $roomSupplementTotal), 2),
+            'room_supplement_total' => round($roomSupplementTotal, 2),
             'extras_total' => round(max(0, $extrasTotal), 2),
             'total_amount' => $totalAmount,
             'paid_amount' => $paidAmount,
