@@ -187,7 +187,7 @@ class AJTH_Ajinsafro_Agent
         wp_enqueue_style(
             'ajth-agent-css',
             ajth_asset_uri( 'assets/css/ajinsafro-agent.css' ),
-            ['ajth-fontawesome', 'ajth-google-fonts'],
+            [],
             ajth_asset_ver( 'assets/css/ajinsafro-agent.css' )
         );
 
