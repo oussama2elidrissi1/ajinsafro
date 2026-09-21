@@ -354,11 +354,6 @@
         function start() {
             if (started) return;
             started = true;
-            var source = video.querySelector('source[data-src]');
-            if (source && !source.src) {
-                source.src = source.getAttribute('data-src') || '';
-                video.load();
-            }
             // La video n'apparait qu'une fois une image reelle disponible : le poster reste
             // affiche en dessous jusque-la (fondu gere en CSS par .is-playing).
             video.addEventListener('playing', function () { video.classList.add('is-playing'); }, { once: true });
@@ -367,14 +362,10 @@
             if (playing && typeof playing.catch === 'function') playing.catch(function () {});
         }
 
-        function scheduleStart() {
-            window.setTimeout(start, 9000);
-        }
-
         if (document.readyState === 'complete') {
-            scheduleStart();
+            setTimeout(start, 0);
         } else {
-            window.addEventListener('load', scheduleStart, { once: true });
+            window.addEventListener('load', function () { setTimeout(start, 0); }, { once: true });
         }
     }
 
