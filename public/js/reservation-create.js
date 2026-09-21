@@ -1041,6 +1041,7 @@
 
     function makeAllocation(room, travelers, mode) {
         var occupied = travelers.filter(function (t) { return t.consumesBed; }).length;
+        var unitSupplement = parseNumber(room.unit_supplement);
         return {
             local_id: 'room_' + Date.now() + '_' + Math.random().toString(16).slice(2),
             room_source_type: room.room_source_type,
@@ -1051,8 +1052,8 @@
             traveler_keys: travelers.filter(function (t) { return t.consumesBed; }).map(function (t) { return t.id; }),
             occupied_count: occupied,
             status: occupied >= room.capacity || mode === 'single' || mode === 'family' || mode === 'full' ? 'complete' : 'partial',
-            unit_supplement: room.unit_supplement,
-            supplement_total: room.unit_supplement
+            unit_supplement: unitSupplement,
+            supplement_total: unitSupplement * occupied
         };
     }
 
@@ -1105,13 +1106,6 @@
         }
         if (!roomPool.length) {
             showRoomingAlert('Aucune chambre disponible chargee pour ce depart.');
-            return;
-        }
-        if (stats.genderUnknownAdults > 0) {
-            roomingAllocations = [];
-            window.reservationState.roomAllocations = [];
-            renderRooming();
-            showRoomingAlert('Veuillez renseigner le sexe des adultes pour faire la repartition des chambres.');
             return;
         }
         var result = [];
@@ -1191,7 +1185,8 @@
 
             if (double) {
                 if (isAdultTraveler(traveler)) {
-                    result.push(makeAllocation(double, [traveler], traveler.gender === 'female' ? 'half_female' : 'half_male'));
+                    var soloMode = traveler.gender === 'female' ? 'half_female' : (traveler.gender === 'male' ? 'half_male' : 'full');
+                    result.push(makeAllocation(double, [traveler], soloMode));
                 } else {
                     // child/infant alone: never force half_male/half_female
                     result.push(makeAllocation(double, [traveler], 'full'));
@@ -1203,6 +1198,7 @@
         roomingAllocations = result;
         window.reservationState.roomAllocations = roomingAllocations;
         renderRooming();
+        syncFinancialSummary();
     }
 
     function roomingStepNumber() {
@@ -1766,7 +1762,15 @@
             var initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map(function (part) {
                 return part.charAt(0).toUpperCase();
             }).join('') || '?';
-            return '<div class="reservation-create__search-result" data-client-id="' + item.id + '" data-client-label="[' + (item.client_code || '') + '] ' + name + '">' +
+            return '<div class="reservation-create__search-result" data-client-id="' + item.id + '" data-client-label="[' + (item.client_code || '') + '] ' + name + '"' +
+                ' data-client-first-name="' + escapeHtml(item.first_name || '') + '"' +
+                ' data-client-last-name="' + escapeHtml(item.last_name || '') + '"' +
+                ' data-client-gender="' + escapeHtml(item.gender || '') + '"' +
+                ' data-client-phone="' + escapeHtml(item.phone || '') + '"' +
+                ' data-client-email="' + escapeHtml(item.email || '') + '"' +
+                ' data-client-nationality="' + escapeHtml(item.nationality || '') + '"' +
+                ' data-client-birth-date="' + escapeHtml(item.date_of_birth || '') + '"' +
+                ' data-client-document="' + escapeHtml(item.document || '') + '">' +
                 '<span class="reservation-create__search-result-avatar" aria-hidden="true">' + escapeHtml(initials) + '</span>' +
                 '<span class="reservation-create__search-result-body">' +
                     '<span class="reservation-create__search-result-name">' + name + '</span>' +
@@ -1778,7 +1782,15 @@
         container.hidden = false;
     }
 
-    function selectClient(id, label) {
+    function setFieldValue(id, value, overwrite) {
+        var field = document.getElementById(id);
+        if (!field) return;
+        if (!overwrite && String(field.value || '').trim() !== '') return;
+        field.value = value || '';
+    }
+
+    function selectClient(id, label, details) {
+        details = details || {};
         var hidden = document.getElementById('client_external_id');
         var selectedWrap = document.getElementById('client-search-selected');
         var selectedLabel = document.getElementById('client-search-selected-label');
@@ -1796,6 +1808,18 @@
             results.innerHTML = '';
             results.hidden = true;
         }
+        setFieldValue('client_first_name', details.firstName, true);
+        setFieldValue('client_last_name', details.lastName, true);
+        setFieldValue('client_phone', details.phone, true);
+        setFieldValue('client_email', details.email, true);
+        setFieldValue('client_nationality', details.nationality, true);
+        setFieldValue('client_birth_date', details.birthDate, true);
+        setFieldValue('client_document_number', details.document, true);
+        var normalizedGender = normalizeGender(details.gender || '');
+        if (normalizedGender === 'male' || normalizedGender === 'female') {
+            setFieldValue('client_gender', normalizedGender, true);
+        }
+        setFieldValue('client_traveler_type', 'adult', false);
         maybeAutoRoomingDefault(true);
         syncFinancialSummary();
     }
@@ -2340,6 +2364,7 @@
             });
             setAvailableRoomTypes(window.reservationState.availableRooms || window.reservationAvailableRooms || []);
             renderRooming();
+            syncFinancialSummary();
         }
     }
 
@@ -2585,7 +2610,17 @@
                 event.preventDefault();
                 selectClient(
                     searchResult.getAttribute('data-client-id'),
-                    searchResult.getAttribute('data-client-label')
+                    searchResult.getAttribute('data-client-label'),
+                    {
+                        firstName: searchResult.getAttribute('data-client-first-name') || '',
+                        lastName: searchResult.getAttribute('data-client-last-name') || '',
+                        gender: searchResult.getAttribute('data-client-gender') || '',
+                        phone: searchResult.getAttribute('data-client-phone') || '',
+                        email: searchResult.getAttribute('data-client-email') || '',
+                        nationality: searchResult.getAttribute('data-client-nationality') || '',
+                        birthDate: searchResult.getAttribute('data-client-birth-date') || '',
+                        document: searchResult.getAttribute('data-client-document') || ''
+                    }
                 );
                 return;
             }
