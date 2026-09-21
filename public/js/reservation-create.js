@@ -2112,11 +2112,6 @@
             var errors = [];
             var rooming = roomingSummary();
             var summary = financialSummary();
-            var stats = travelerStats();
-
-            if (stats.genderUnknownAdults > 0) {
-                errors.push({ field: null, message: 'Veuillez renseigner le sexe des adultes pour faire la répartition des chambres.' });
-            }
             if (rooming.status === 'pending') {
                 errors.push({ field: null, message: 'Lancez une répartition automatique ou ajoutez une répartition manuelle.' });
             }
