@@ -745,9 +745,33 @@
     /* ------------------------------------------------------------- refresh  */
 
     var scheduled = false;
+    var firstRoomingEntryCleared = false;
+
+    function disableFastAutoRooming() {
+        document.querySelectorAll('#btn-auto-rooming, #btn-rooming-auto').forEach(function (button) {
+            button.remove();
+        });
+    }
+
+    function clearAutoRoomingOnFirstEntry() {
+        if (firstRoomingEntryCleared || activeStep() !== 2) return;
+        firstRoomingEntryCleared = true;
+        disableFastAutoRooming();
+        if (typeof window.resetReservationDownstream === 'function') {
+            window.resetReservationDownstream({});
+            return;
+        }
+        if (window.reservationState) {
+            window.reservationState.roomAllocations = [];
+        }
+        var hidden = document.getElementById('reservation-room-allocations-json');
+        if (hidden) hidden.value = '[]';
+    }
 
     function refresh() {
         scheduled = false;
+        disableFastAutoRooming();
+        clearAutoRoomingOnFirstEntry();
         var step = activeStep();
         var state = capacityState();
 

@@ -6,13 +6,12 @@
         <div class="reservation-fast-card__head">
             <div class="reservation-fast-card__heading">
                 <h2 class="reservation-fast-card__title">Répartition des chambres</h2>
-                <p class="reservation-fast-card__subtitle" id="rooming-hint">Ajoutez une chambre ou lancez la répartition automatique.</p>
+                <p class="reservation-fast-card__subtitle" id="rooming-hint">Ajoutez une chambre, puis choisissez le type et les voyageurs.</p>
             </div>
             <span class="reservation-create__pill reservation-fast-room-status" id="rooming-status-pill">ROOMING EN ATTENTE</span>
         </div>
 
         <div class="reservation-fast-room-actions">
-            <button type="button" class="reservation-fast-room-actions__primary" id="btn-auto-rooming">Répartition auto</button>
             <button type="button" class="reservation-fast-room-actions__add" id="btn-add-room-allocation">+ Chambre</button>
             <button type="button" class="reservation-fast-room-actions__reset" id="btn-reset-rooming">Réinitialiser</button>
             @if (! $agentReservationMode && auth()->user()?->can('circuits.voyages.view'))
