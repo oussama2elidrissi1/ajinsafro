@@ -1312,7 +1312,7 @@
                 '<span class="reservation-fast-empty__icon" aria-hidden="true">+</span>' +
                 '<div class="reservation-fast-empty__body">' +
                     '<div class="reservation-fast-empty__title">Aucune chambre répartie</div>' +
-                    '<p class="reservation-fast-empty__text">Lancez la répartition automatique ou ajoutez une chambre manuellement.</p>' +
+                    '<p class="reservation-fast-empty__text">Ajoutez une chambre, puis choisissez son type et ses voyageurs.</p>' +
                 '</div>' +
             '</div>';
             return;
@@ -1505,7 +1505,7 @@
                 '<div class="reservation-create__room-travelers">' + travelerControls + '</div>' +
                 (remaining ? '<p class="reservation-create__room-warning">Place restante: ' + remaining + '</p>' : '') +
             '</article>';
-        }).join('') : '<div class="reservation-create__placeholder">Aucune repartition faite. Lancez la repartition automatique ou ajoutez une chambre.</div>';
+        }).join('') : '<div class="reservation-create__placeholder">Aucune chambre repartie. Ajoutez une chambre, puis choisissez son type et ses voyageurs.</div>';
         }
 
         var summary = roomingSummary();
@@ -2116,7 +2116,7 @@
             var rooming = roomingSummary();
             var summary = financialSummary();
             if (rooming.status === 'pending') {
-                errors.push({ field: null, message: 'Lancez une répartition automatique ou ajoutez une répartition manuelle.' });
+                errors.push({ field: null, message: 'Ajoutez une chambre, puis choisissez son type et ses voyageurs.' });
             }
             if (rooming.status === 'invalid') {
                 (rooming.errors || ['Répartition chambres invalide.']).forEach(function (msg) {
