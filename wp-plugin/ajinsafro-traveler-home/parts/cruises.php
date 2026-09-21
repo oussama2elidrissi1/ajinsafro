@@ -34,7 +34,7 @@ $button_url = ! empty( $cruises['button_url'] ) ? $cruises['button_url'] : '#';
 		<div class="aj-cruises__inner">
 			<?php if ( $image_url ) : ?>
 			<div class="aj-cruises__image">
-				<img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( $title ); ?>">
+				<img loading="lazy" decoding="async" src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( $title ); ?>">
 			</div>
 			<?php endif; ?>
 			<div class="aj-cruises__content">

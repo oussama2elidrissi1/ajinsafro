@@ -332,7 +332,31 @@
         syncBodyLock();
     }
 
+    /* Video du hero : lancee une fois la page chargee, le poster tient lieu de premier ecran. */
+    function initHeroVideo() {
+        var video = document.querySelector('[data-aj-hero-video]');
+        if (!video) return;
+
+        var started = false;
+        function start() {
+            if (started) return;
+            started = true;
+            video.setAttribute('autoplay', '');
+            video.muted = true;
+            try { video.load(); } catch (e) {}
+            var playing = video.play();
+            if (playing && typeof playing.catch === 'function') playing.catch(function () {});
+        }
+
+        if (document.readyState === 'complete') {
+            setTimeout(start, 0);
+        } else {
+            window.addEventListener('load', function () { setTimeout(start, 0); }, { once: true });
+        }
+    }
+
     function init() {
+        initHeroVideo();
         initDrawer();
         initSearchTabs();
         initSearchPopovers();

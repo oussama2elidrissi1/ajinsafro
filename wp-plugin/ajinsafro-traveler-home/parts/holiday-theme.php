@@ -95,7 +95,7 @@ if ( function_exists( 'ajth_normalize_storage_url' ) ) {
 			<aside class="aj-theme__left">
 				<?php if ( $left_img ) : ?>
 					<div class="aj-theme__left-media">
-						<img src="<?php echo esc_url( $left_img ); ?>" alt="<?php echo esc_attr( $eyebrow ); ?>" loading="lazy" onerror="this.closest('.aj-theme__left-media').classList.add('is-missing');this.remove();">
+						<img loading="lazy" decoding="async" src="<?php echo esc_url( $left_img ); ?>" alt="<?php echo esc_attr( $eyebrow ); ?>" loading="lazy" onerror="this.closest('.aj-theme__left-media').classList.add('is-missing');this.remove();">
 					</div>
 				<?php else : ?>
 					<div class="aj-theme__left-media is-missing"></div>
@@ -117,7 +117,7 @@ if ( function_exists( 'ajth_normalize_storage_url' ) ) {
 					<?php endif; ?>
 				</div>
 				<?php if ( $deco_img ) : ?>
-					<img class="aj-theme__deco" src="<?php echo esc_url( $deco_img ); ?>" alt="" loading="lazy" aria-hidden="true" onerror="this.style.display='none';">
+					<img loading="lazy" decoding="async" class="aj-theme__deco" src="<?php echo esc_url( $deco_img ); ?>" alt="" loading="lazy" aria-hidden="true" onerror="this.style.display='none';">
 				<?php endif; ?>
 			</aside>
 
@@ -167,7 +167,7 @@ if ( function_exists( 'ajth_normalize_storage_url' ) ) {
 					<article class="aj-slider-v2__item aj-theme-card">
 						<div class="aj-theme-card__media">
 							<?php if ( $img ) : ?>
-								<img src="<?php echo esc_url( $img ); ?>" alt="<?php echo esc_attr( $title ); ?>" loading="lazy" onerror="this.style.display='none';var p=this.nextElementSibling;if(p){p.classList.remove('aj-theme-card__placeholder--hidden');p.style.background='<?php echo esc_attr( $fallback_gradient ); ?>';}">
+								<img loading="lazy" decoding="async" src="<?php echo esc_url( $img ); ?>" alt="<?php echo esc_attr( $title ); ?>" loading="lazy" onerror="this.style.display='none';var p=this.nextElementSibling;if(p){p.classList.remove('aj-theme-card__placeholder--hidden');p.style.background='<?php echo esc_attr( $fallback_gradient ); ?>';}">
 								<div class="aj-theme-card__placeholder aj-theme-card__placeholder--hidden" style="background:<?php echo esc_attr( $fallback_gradient ); ?>;">
 									<i class="fas fa-image aj-theme-card__placeholder-icon"></i>
 								</div>

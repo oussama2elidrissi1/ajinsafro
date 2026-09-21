@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\UploadedImageOptimizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -75,7 +76,7 @@ class HomePageSettingsController extends Controller
 		];
 
 		if ($request->hasFile('header.logo_file')) {
-			$path = $request->file('header.logo_file')?->store('front/header', 'public');
+			$path = $this->storeOptimizedImage($request, 'header.logo_file', 'front/header', 800);
 			if (is_string($path) && $path !== '') {
 				$header['logo_url'] = $this->publicStorageUrl($path);
 			}
@@ -158,7 +159,7 @@ class HomePageSettingsController extends Controller
 		$settings['hero']['overlay'] = $this->clampFloat($hero['overlay'] ?? $settings['hero']['overlay'], 0.0, 1.0, 0.4);
 
 		if ($request->hasFile('hero.image_file')) {
-			$path = $request->file('hero.image_file')?->store('front/home/hero', 'public');
+			$path = $this->storeOptimizedImage($request, 'hero.image_file', 'front/home/hero', 1920);
 			if (is_string($path) && $path !== '') {
 				$settings['hero']['image_url'] = $this->publicStorageUrl($path);
 			}
@@ -173,6 +174,16 @@ class HomePageSettingsController extends Controller
 			}
 		} else {
 			$settings['hero']['video_url'] = $this->cleanUrl($hero['video_url'] ?? $settings['hero']['video_url'], $settings['hero']['video_url']);
+		}
+
+		// Image d'attente du hero video : affichee tout de suite (LCP) pendant que la video se charge.
+		if ($request->hasFile('hero.poster_file')) {
+			$path = $this->storeOptimizedImage($request, 'hero.poster_file', 'front/home/hero', 1920);
+			if (is_string($path) && $path !== '') {
+				$settings['hero']['poster_url'] = $this->publicStorageUrl($path);
+			}
+		} else {
+			$settings['hero']['poster_url'] = $this->cleanUrl($hero['poster_url'] ?? $settings['hero']['poster_url'], $settings['hero']['poster_url']);
 		}
 
 		$sections = is_array($request->input('sections', [])) ? $request->input('sections', []) : [];
@@ -211,13 +222,13 @@ class HomePageSettingsController extends Controller
 		$settings['holiday_theme']['deco_image_url'] = $this->cleanUrl($holiday['deco_image_url'] ?? $settings['holiday_theme']['deco_image_url'], $settings['holiday_theme']['deco_image_url']);
 
 		if ($request->hasFile('holiday_theme_left_image_file')) {
-			$path = $request->file('holiday_theme_left_image_file')?->store('front/home/holiday-theme', 'public');
+			$path = $this->storeOptimizedImage($request, 'holiday_theme_left_image_file', 'front/home/holiday-theme', 1600);
 			if (is_string($path) && $path !== '') {
 				$settings['holiday_theme']['left_image_url'] = $this->publicStorageUrl($path);
 			}
 		}
 		if ($request->hasFile('holiday_theme_deco_image_file')) {
-			$path = $request->file('holiday_theme_deco_image_file')?->store('front/home/holiday-theme', 'public');
+			$path = $this->storeOptimizedImage($request, 'holiday_theme_deco_image_file', 'front/home/holiday-theme', 1600);
 			if (is_string($path) && $path !== '') {
 				$settings['holiday_theme']['deco_image_url'] = $this->publicStorageUrl($path);
 			}
@@ -234,7 +245,7 @@ class HomePageSettingsController extends Controller
 			}
 			$imageUrl = $this->cleanUrl($item['image_url'] ?? '', '');
 			if ($request->hasFile('holiday_theme_item_files.' . $idx)) {
-				$path = $request->file('holiday_theme_item_files.' . $idx)?->store('front/home/holiday-theme/items', 'public');
+				$path = $this->storeOptimizedImage($request, 'holiday_theme_item_files.' . $idx, 'front/home/holiday-theme/items', 1600);
 				if (is_string($path) && $path !== '') {
 					$imageUrl = $this->publicStorageUrl($path);
 				}
@@ -278,7 +289,7 @@ class HomePageSettingsController extends Controller
 			}
 			$imageUrl = $this->cleanUrl($item['image_url'] ?? '', '');
 			if ($request->hasFile('destinations_by_region_files.' . $idx)) {
-				$path = $request->file('destinations_by_region_files.' . $idx)?->store('front/home/destinations-by-region', 'public');
+				$path = $this->storeOptimizedImage($request, 'destinations_by_region_files.' . $idx, 'front/home/destinations-by-region', 1600);
 				if (is_string($path) && $path !== '') {
 					$imageUrl = $this->publicStorageUrl($path);
 				}
@@ -304,7 +315,7 @@ class HomePageSettingsController extends Controller
 			}
 			$imageUrl = $this->cleanUrl($spot['image_url'] ?? '', '');
 			if ($request->hasFile('good_spots_files.' . $idx)) {
-				$path = $request->file('good_spots_files.' . $idx)?->store('front/home/good-spots', 'public');
+				$path = $this->storeOptimizedImage($request, 'good_spots_files.' . $idx, 'front/home/good-spots', 1200);
 				if (is_string($path) && $path !== '') {
 					$imageUrl = $this->publicStorageUrl($path);
 				}
@@ -338,7 +349,7 @@ class HomePageSettingsController extends Controller
 
 			$imageUrl = $this->cleanUrl($slide['image'] ?? '', '');
 			if ($request->hasFile('accordion_slider_files.' . $idx)) {
-				$path = $request->file('accordion_slider_files.' . $idx)?->store('front/home/accordion-slider', 'public');
+				$path = $this->storeOptimizedImage($request, 'accordion_slider_files.' . $idx, 'front/home/accordion-slider', 1600);
 				if (is_string($path) && $path !== '') {
 					$imageUrl = $this->publicStorageUrl($path);
 				}
@@ -367,7 +378,7 @@ class HomePageSettingsController extends Controller
 		$settings['whatsapp_banner']['features'] = array_values(array_filter(array_map(fn ($feature) => $this->cleanText((string) $feature, 80), $features)));
 		$settings['whatsapp_banner']['qr_code_url'] = $this->cleanUrl($whatsapp['qr_code_url'] ?? $settings['whatsapp_banner']['qr_code_url'], $settings['whatsapp_banner']['qr_code_url']);
 		if ($request->hasFile('whatsapp_banner_qr_file')) {
-			$path = $request->file('whatsapp_banner_qr_file')?->store('front/home/whatsapp', 'public');
+			$path = $this->storeOptimizedImage($request, 'whatsapp_banner_qr_file', 'front/home/whatsapp', 600);
 			if (is_string($path) && $path !== '') {
 				$settings['whatsapp_banner']['qr_code_url'] = $this->publicStorageUrl($path);
 			}
@@ -380,7 +391,7 @@ class HomePageSettingsController extends Controller
 		$settings['cruises']['button_url'] = $this->cleanUrl($cruises['button_url'] ?? '#', '#');
 		$settings['cruises']['image_url'] = $this->cleanUrl($cruises['image_url'] ?? $settings['cruises']['image_url'], $settings['cruises']['image_url']);
 		if ($request->hasFile('cruises_image_file')) {
-			$path = $request->file('cruises_image_file')?->store('front/home/cruises', 'public');
+			$path = $this->storeOptimizedImage($request, 'cruises_image_file', 'front/home/cruises', 1600);
 			if (is_string($path) && $path !== '') {
 				$settings['cruises']['image_url'] = $this->publicStorageUrl($path);
 			}
@@ -514,6 +525,7 @@ class HomePageSettingsController extends Controller
 				'type' => 'image',
 				'image_url' => '',
 				'video_url' => '',
+				'poster_url' => '',
 				'title' => 'Partir en vacances au meilleur prix !',
 				'subtitle' => '',
 				'cta_text' => '',
@@ -718,6 +730,20 @@ class HomePageSettingsController extends Controller
 				'order' => 5,
 			],
 		];
+	}
+
+	/**
+	 * Stocke une image televersee apres redimensionnement et encodage WebP.
+	 * Retourne le chemin relatif au disque public, ou null sans fichier.
+	 */
+	private function storeOptimizedImage(Request $request, string $field, string $directory, int $maxWidth): ?string
+	{
+		$file = $request->file($field);
+		if (! $file instanceof \Illuminate\Http\UploadedFile) {
+			return null;
+		}
+
+		return app(UploadedImageOptimizer::class)->storeUploaded($file, $directory, $maxWidth);
 	}
 
 	private function publicStorageUrl(string $path): string

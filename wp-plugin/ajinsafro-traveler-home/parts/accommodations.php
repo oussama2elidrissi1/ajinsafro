@@ -34,7 +34,7 @@ if ( empty( $hebergements ) ) return;
             <div class="aj-slider-v2__item">
                 <a href="<?php echo esc_url( $hebergement['url'] ); ?>" class="aj-card2 aj-hover-glass" style="text-decoration:none;" aria-label="<?php echo esc_attr( $hebergement['title'] ); ?>">
                     <div class="aj-card2__image">
-                        <img src="<?php echo esc_url( $hebergement['image_url'] ); ?>" alt="<?php echo esc_attr( $hebergement['title'] ); ?>" loading="lazy">
+                        <img loading="lazy" decoding="async" src="<?php echo esc_url( $hebergement['image_url'] ); ?>" alt="<?php echo esc_attr( $hebergement['title'] ); ?>" loading="lazy">
                         <?php if ( ! empty( $hebergement['category'] ) ) : ?>
                         <span class="aj-card2__badge aj-card2__badge--info"><?php echo esc_html( $hebergement['category'] ); ?></span>
                         <?php endif; ?>

@@ -127,7 +127,6 @@ $autoplay = ! empty( $accordion['autoplay'] );
 								alt="<?php echo esc_attr( $title ); ?>"
 								loading="<?php echo 0 === $index ? 'eager' : 'lazy'; ?>"
 								decoding="async"
-								<?php echo 0 === $index ? 'fetchpriority="high"' : ''; ?>
 							>
 						<?php else : ?>
 							<div class="ajha-ref-accordion__placeholder" aria-hidden="true">800x800</div>

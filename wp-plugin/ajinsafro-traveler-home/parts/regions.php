@@ -22,7 +22,7 @@ if ( empty( $regions ) ) return;
                 $u   = ! empty($r['link_url'])   ? $r['link_url']   : '#';
             ?>
             <a href="<?php echo esc_url($u); ?>" class="aj-reg">
-                <?php if ($img) : ?><img src="<?php echo esc_url($img); ?>" alt="<?php echo esc_attr($t); ?>" loading="lazy" class="aj-reg__img"><?php else : ?><div class="aj-reg__ph"></div><?php endif; ?>
+                <?php if ($img) : ?><img loading="lazy" decoding="async" src="<?php echo esc_url($img); ?>" alt="<?php echo esc_attr($t); ?>" loading="lazy" class="aj-reg__img"><?php else : ?><div class="aj-reg__ph"></div><?php endif; ?>
                 <span class="aj-reg__label"><?php echo esc_html( mb_strtoupper($t) ); ?></span>
             </a>
             <?php endforeach; ?>

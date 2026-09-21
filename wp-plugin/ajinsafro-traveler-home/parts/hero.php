@@ -46,7 +46,12 @@ if ( ! empty( $hero_video_url ) && ! $is_mp4_video ) {
     <?php if ( $hero_mode === 'video' && $hero_video_url ) : ?>
         <div class="aj-hero__media" aria-hidden="true">
             <?php if ( $is_mp4_video ) : ?>
-                <video class="aj-hero__video" autoplay muted loop playsinline>
+                <?php
+                // La video (20 Mo) ne part qu'apres l'evenement load, via home.js ; en attendant le
+                // poster est peint immediatement et sert d'element LCP.
+                $hero_poster_url = function_exists( 'ajth_hero_media' ) ? ajth_hero_media( $settings )['poster'] : '';
+                ?>
+                <video class="aj-hero__video" muted loop playsinline preload="none" data-aj-hero-video<?php echo $hero_poster_url !== '' ? ' poster="' . esc_url( $hero_poster_url ) . '"' : ''; ?>>
                     <source src="<?php echo esc_url( $hero_video_url ); ?>" type="video/mp4">
                 </video>
             <?php elseif ( $embed_video_url ) : ?>

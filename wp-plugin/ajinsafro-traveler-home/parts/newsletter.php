@@ -57,7 +57,7 @@ $payment_images = array(
         <div class="aj-footer-v2__cols" style="position:relative;z-index:10;">
             <?php foreach ( $footer_cols as $col ) : ?>
             <div>
-                <h4 class="aj-footer-v2__heading"><?php echo esc_html( $col['heading'] ); ?></h4>
+                <h3 class="aj-footer-v2__heading"><?php echo esc_html( $col['heading'] ); ?></h3>
                 <ul class="aj-footer-v2__list">
                     <?php foreach ( $col['links'] as $link ) : ?>
                     <li><a href="<?php echo esc_url( $link['url'] ); ?>"><?php echo esc_html( $link['label'] ); ?></a></li>
@@ -68,7 +68,7 @@ $payment_images = array(
 
             <!-- Legal -->
             <div>
-                <h4 class="aj-footer-v2__heading"><?php esc_html_e( 'Mentions Légales', 'ajinsafro-traveler-home' ); ?></h4>
+                <h3 class="aj-footer-v2__heading"><?php esc_html_e( 'Mentions Légales', 'ajinsafro-traveler-home' ); ?></h3>
                 <div class="aj-footer-v2__legal">
                     <?php foreach ( explode( "\n", $legal_lines ) as $line ) : ?>
                         <p style="margin:0 0 8px;"><?php echo esc_html( trim( $line ) ); ?></p>
@@ -81,7 +81,7 @@ $payment_images = array(
                 <div class="aj-footer-v2__nl-header">
                     <i class="far fa-envelope"></i>
                     <div>
-                        <h4 class="aj-footer-v2__nl-title"><?php esc_html_e( 'Recevez en avant-première :', 'ajinsafro-traveler-home' ); ?></h4>
+                        <h4 class="aj-footer-v2__nl-title"><?php esc_html_e( 'Recevez en avant-première :', 'ajinsafro-traveler-home' ); ?></h3>
                         <p class="aj-footer-v2__nl-desc"><?php esc_html_e( 'Réductions, codes promo, offres exclusives ...', 'ajinsafro-traveler-home' ); ?></p>
                     </div>
                 </div>
@@ -102,7 +102,7 @@ $payment_images = array(
                 <?php if ( $pm_exists ) : ?>
                     <?php // Filet de securite si le fichier disparait d'un deploiement a l'autre. ?>
                     <?php $pm_fallback = '<span class="aj-payments-v2__fallback">' . esc_html( $pm['name'] ) . '</span>'; ?>
-                    <img src="<?php echo esc_url( AJTH_URL . $pm['file'] ); ?>"
+                    <img loading="lazy" decoding="async" src="<?php echo esc_url( AJTH_URL . $pm['file'] ); ?>"
                          alt="<?php echo esc_attr( $pm['name'] ); ?>"
                          style="height:<?php echo esc_attr( $pm['h'] ); ?>;"
                          loading="lazy"

@@ -31,8 +31,36 @@ define('AJTH_URL', plugin_dir_url(__FILE__));
  * navigateur comme les caches de page servent alors l'ancienne feuille.
  * AJTH_VERSION ne sert plus que de repli et aux ressources externes.
  */
+/**
+ * Chemin reellement servi : la variante .min (generee par tools/minify-assets.py)
+ * remplace la source tant qu'elle n'est pas plus ancienne qu'elle.
+ */
+function ajth_asset_relative( $relative ) {
+    $relative = ltrim( $relative, '/' );
+    $min = preg_replace( '/\.(css|js)$/', '.min.$1', $relative );
+
+    if ( $min === $relative || ! file_exists( AJTH_DIR . $min ) || ! file_exists( AJTH_DIR . $relative ) ) {
+        return $relative;
+    }
+
+    // Empreinte de la source ecrite en tete de la .min : un git checkout ne conserve
+    // pas les dates, seule l'empreinte prouve que la .min correspond a la source.
+    static $cache = [];
+    $key = $relative . '|' . filemtime( AJTH_DIR . $relative ) . '|' . filesize( AJTH_DIR . $relative );
+    if ( ! isset( $cache[ $key ] ) ) {
+        $head = (string) file_get_contents( AJTH_DIR . $min, false, null, 0, 64 );
+        $cache[ $key ] = preg_match( '/src-md5:([a-f0-9]{32})/', $head, $m ) && $m[1] === md5_file( AJTH_DIR . $relative );
+    }
+
+    return $cache[ $key ] ? $min : $relative;
+}
+
+function ajth_asset_uri( $relative ) {
+    return AJTH_URL . ajth_asset_relative( $relative );
+}
+
 function ajth_asset_ver( $relative ) {
-    $path = AJTH_DIR . ltrim( $relative, '/' );
+    $path = AJTH_DIR . ajth_asset_relative( $relative );
 
     return file_exists( $path ) ? (string) filemtime( $path ) : AJTH_VERSION;
 }
@@ -127,14 +155,14 @@ function ajth_enqueue_front_assets()
 
     wp_enqueue_style(
         'ajth-home-css',
-        AJTH_URL.'assets/css/home.css',
-        ['ajth-fontawesome'],
+        ajth_asset_uri('assets/css/home.css'),
+        [],
         ajth_asset_ver( 'assets/css/home.css' )
     );
 
     wp_enqueue_script(
         'ajth-home-js',
-        AJTH_URL.'assets/js/home.js',
+        ajth_asset_uri('assets/js/home.js'),
         [],
         ajth_asset_ver( 'assets/js/home.js' ),
         true
@@ -143,14 +171,14 @@ function ajth_enqueue_front_assets()
     if ( function_exists( 'ajth_is_hebergement_context' ) && ajth_is_hebergement_context() ) {
         wp_enqueue_style(
             'ajth-hebergement-booking-css',
-            AJTH_URL . 'assets/css/hebergement-booking.css',
+            ajth_asset_uri('assets/css/hebergement-booking.css'),
             ['ajth-home-css'],
             ajth_asset_ver( 'assets/css/hebergement-booking.css' )
         );
 
         wp_enqueue_script(
             'ajth-hebergement-booking-js',
-            AJTH_URL . 'assets/js/hebergement-booking.js',
+            ajth_asset_uri('assets/js/hebergement-booking.js'),
             [],
             ajth_asset_ver( 'assets/js/hebergement-booking.js' ),
             true
@@ -194,14 +222,14 @@ function ajth_enqueue_front_assets()
     if ( function_exists( 'ajth_is_voyages_context' ) && ajth_is_voyages_context() ) {
         wp_enqueue_style(
             'ajth-voyages-results-css',
-            AJTH_URL . 'assets/css/aj-voyages-results.css',
+            ajth_asset_uri('assets/css/aj-voyages-results.css'),
             ['ajth-home-css'],
             ajth_asset_ver( 'assets/css/aj-voyages-results.css' )
         );
 
         wp_enqueue_script(
             'ajth-voyages-results-js',
-            AJTH_URL . 'assets/js/aj-voyages-results.js',
+            ajth_asset_uri('assets/js/aj-voyages-results.js'),
             [],
             ajth_asset_ver( 'assets/js/aj-voyages-results.js' ),
             true
@@ -211,14 +239,14 @@ function ajth_enqueue_front_assets()
     if ( function_exists( 'ajth_is_activites_context' ) && ajth_is_activites_context() ) {
         wp_enqueue_style(
             'ajth-activites-getyourguide-css',
-            AJTH_URL . 'assets/css/activites-getyourguide.css',
+            ajth_asset_uri('assets/css/activites-getyourguide.css'),
             ['ajth-home-css'],
             ajth_asset_ver( 'assets/css/activites-getyourguide.css' )
         );
 
         wp_enqueue_script(
             'ajth-activites-getyourguide-js',
-            AJTH_URL . 'assets/js/activites-catalog.js',
+            ajth_asset_uri('assets/js/activites-catalog.js'),
             [],
             ajth_asset_ver( 'assets/js/activites-catalog.js' ),
             true
@@ -258,14 +286,14 @@ function ajth_enqueue_front_assets()
     if ( function_exists( 'ajth_is_group_deals_context' ) && ajth_is_group_deals_context() ) {
         wp_enqueue_style(
             'ajth-group-deals-fusion-css',
-            AJTH_URL . 'assets/css/group-deals-fusion.css',
+            ajth_asset_uri('assets/css/group-deals-fusion.css'),
             ['ajth-home-css'],
             ajth_asset_ver( 'assets/css/group-deals-fusion.css' )
         );
 
         wp_enqueue_script(
             'ajth-group-deals-fusion-js',
-            AJTH_URL . 'assets/js/group-deals-fusion.js',
+            ajth_asset_uri('assets/js/group-deals-fusion.js'),
             [],
             ajth_asset_ver( 'assets/js/group-deals-fusion.js' ),
             true
@@ -278,13 +306,13 @@ function ajth_enqueue_front_assets()
     ) {
         wp_enqueue_style(
             'ajth-hajj-omra-css',
-            AJTH_URL . 'assets/css/hajj-omra.css',
+            ajth_asset_uri('assets/css/hajj-omra.css'),
             ['ajth-home-css'],
             ajth_asset_ver( 'assets/css/hajj-omra.css' )
         );
 
         if ( function_exists( 'ajth_get_current_hajj_omra_package_slug' ) && ajth_get_current_hajj_omra_package_slug() ) {
-            wp_enqueue_style('ajth-hajj-omra-formulas', AJTH_URL . 'assets/css/hajj-omra-formulas.css', [], ajth_asset_ver('assets/css/hajj-omra-formulas.css'));
+            wp_enqueue_style('ajth-hajj-omra-formulas', ajth_asset_uri('assets/css/hajj-omra-formulas.css'), [], ajth_asset_ver('assets/css/hajj-omra-formulas.css'));
             wp_enqueue_style(
                 'ajth-hajj-omra-detail-fonts',
                 'https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap',
@@ -293,13 +321,13 @@ function ajth_enqueue_front_assets()
             );
             wp_enqueue_style(
                 'ajth-hajj-omra-detail-css',
-                AJTH_URL . 'assets/css/hajj-omra-detail.css',
+                ajth_asset_uri('assets/css/hajj-omra-detail.css'),
                 ['ajth-hajj-omra-css', 'ajth-hajj-omra-detail-fonts'],
                 ajth_asset_ver( 'assets/css/hajj-omra-detail.css' )
             );
             wp_enqueue_script(
                 'ajth-hajj-omra-detail-js',
-                AJTH_URL . 'assets/js/hajj-omra-detail.js',
+                ajth_asset_uri('assets/js/hajj-omra-detail.js'),
                 [],
                 ajth_asset_ver( 'assets/js/hajj-omra-detail.js' ),
                 true
@@ -310,7 +338,7 @@ function ajth_enqueue_front_assets()
     // Corrections de visibilite : chargee en dernier pour primer sur les feuilles de page.
     wp_enqueue_style(
         'ajth-public-ui-css',
-        AJTH_URL.'assets/css/aj-public-ui.css',
+        ajth_asset_uri('assets/css/aj-public-ui.css'),
         ['ajth-home-css'],
         ajth_asset_ver('assets/css/aj-public-ui.css')
     );
@@ -318,14 +346,14 @@ function ajth_enqueue_front_assets()
     if ($load_home_sections) {
         wp_enqueue_style(
             'ajth-home-reference-accordion-css',
-            AJTH_URL.'assets/css/home-reference-accordion.css',
+            ajth_asset_uri('assets/css/home-reference-accordion.css'),
             ['ajth-home-css'],
             ajth_asset_ver( 'assets/css/home-reference-accordion.css' )
         );
 
         wp_enqueue_script(
             'ajth-home-reference-accordion-js',
-            AJTH_URL.'assets/js/home-reference-accordion.js',
+            ajth_asset_uri('assets/js/home-reference-accordion.js'),
             [],
             ajth_asset_ver( 'assets/js/home-reference-accordion.js' ),
             true
@@ -364,14 +392,16 @@ function ajth_critical_header_css()
 }
 add_action('wp_head', 'ajth_critical_header_css', 1);
 
-/* Preload main stylesheet and critical fonts so header renders correctly on first paint */
+/* Premier ecran : preconnexions aux origines critiques et image LCP du hero. */
 function ajth_preload_styles()
 {
     $load = is_front_page() || is_home() || ajth_is_catalog_context();
+    $on_home = is_front_page() || is_home();
     if (! $load && is_singular()) {
         global $post;
         if ($post && has_shortcode($post->post_content, 'ajth_homepage')) {
             $load = true;
+            $on_home = true;
         }
     }
     if (! $load) {
@@ -383,11 +413,178 @@ function ajth_preload_styles()
     if (! $load) {
         return;
     }
-    echo '<link rel="preload" href="'.esc_url(AJTH_URL.'assets/css/home.css').'?ver='.esc_attr(ajth_asset_ver('assets/css/home.css')).'" as="style">'."\n";
-    echo '<link rel="preload" href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&family=Noto+Sans+Arabic:wght@400;600;700&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" as="style">'."\n";
-    echo '<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style">'."\n";
+
+    echo '<link rel="preconnect" href="https://fonts.googleapis.com">'."\n";
+    echo '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'."\n";
+    // Logo, visuels et video de la home sont servis par l'admin Laravel.
+    echo '<link rel="preconnect" href="https://booking.ajinsafro.net">'."\n";
+
+    if ($on_home) {
+        $media = ajth_hero_media(ajth_get_settings());
+        $lcp = $media['mode'] === 'video' ? $media['poster'] : $media['image'];
+        if ($lcp !== '') {
+            echo '<link rel="preload" as="image" href="'.esc_url($lcp).'" fetchpriority="high">'."\n";
+        }
+    }
 }
 add_action('wp_head', 'ajth_preload_styles', 0);
+
+/**
+ * Sources du hero, normalisees : mode (image|video), image de fond, video et
+ * poster (image d'attente de la video, a defaut l'image du hero).
+ */
+function ajth_hero_media(array $settings): array
+{
+    $hero = isset($settings['hero']) && is_array($settings['hero']) ? $settings['hero'] : [];
+    $norm = static function ($url): string {
+        $url = is_string($url) ? trim($url) : '';
+
+        return $url !== '' && function_exists('ajth_normalize_storage_url') ? ajth_normalize_storage_url($url) : $url;
+    };
+
+    $image = $norm($hero['image_url'] ?? '');
+    $video = $norm($hero['video_url'] ?? '');
+    $poster = $norm($hero['poster_url'] ?? '');
+    $mode = (($hero['type'] ?? 'image') === 'video' && $video !== '') ? 'video' : 'image';
+
+    if ($image === '') {
+        $default = function_exists('get_header_image') ? (string) get_header_image() : '';
+        $image = $default !== '' ? $default : 'https://images.unsplash.com/photo-1514890547357-a9ee288728e0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80';
+    }
+
+    if ($poster === '' && $norm($hero['image_url'] ?? '') !== '') {
+        $poster = $image;
+    }
+
+    return ['mode' => $mode, 'image' => $image, 'video' => $video, 'poster' => $poster];
+}
+
+/* ──────────────────────────────────────────────
+ * Allegement du premier affichage sur les pages du plugin
+ * (accueil et catalogues) : doublons de polices, feuilles
+ * non critiques, scripts tiers bloquants, viewport zoomable.
+ * ────────────────────────────────────────────── */
+function ajth_is_plugin_front_context(): bool
+{
+    if (is_front_page() || is_home() || ajth_is_catalog_context()) {
+        return true;
+    }
+    if (is_singular()) {
+        global $post;
+
+        return $post && has_shortcode($post->post_content, 'ajth_homepage');
+    }
+
+    return false;
+}
+
+function ajth_front_asset_tuning()
+{
+    // FontAwesome : le theme charge la 6.7 sur tout le front, le CDN n'est qu'un secours.
+    if (! wp_style_is('fontawesome', 'enqueued') && ! wp_style_is('fontawesome', 'done')) {
+        if (wp_style_is('ajth-home-css', 'enqueued')) {
+            wp_enqueue_style('ajth-fontawesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css', [], '6.4.0');
+        }
+    } else {
+        wp_dequeue_style('ajth-fontawesome');
+        wp_deregister_style('ajth-fontawesome');
+    }
+
+    // Poppins du theme (400/500/600) : deja couvert par la requete du plugin (300 a 900).
+    if (wp_style_is('ajth-google-fonts', 'enqueued') && wp_style_is('google-font-css', 'enqueued')) {
+        wp_dequeue_style('google-font-css');
+    }
+}
+add_action('wp_enqueue_scripts', 'ajth_front_asset_tuning', 100);
+
+/* Feuilles du theme sans effet sur le premier ecran des pages du plugin : chargees sans bloquer le rendu. */
+function ajth_deferred_style_handles(): array
+{
+    return ['sweetalert2-css', 'daterangepicker', 'rangeSlider', 'rangeSlider-skinHTML5', 'magnific-css', 'woocommerce-smallscreen', 'awesome-line-awesome-css'];
+}
+
+function ajth_style_loader_tag($tag, $handle, $href, $media)
+{
+    if (! in_array($handle, ajth_deferred_style_handles(), true) || ! ajth_is_plugin_front_context()) {
+        return $tag;
+    }
+    if (strpos($tag, 'onload=') !== false) {
+        return $tag;
+    }
+
+    $target = $media && $media !== 'all' ? $media : 'all';
+    $deferred = str_replace("media='".$media."'", "media='print' onload=\"this.onload=null;this.media='".esc_attr($target)."'\"", $tag);
+    if ($deferred === $tag) {
+        $deferred = str_replace('media="'.$media.'"', 'media="print" onload="this.onload=null;this.media=\''.esc_attr($target).'\'"', $tag);
+    }
+    if ($deferred === $tag) {
+        return $tag;
+    }
+
+    return $deferred.'<noscript>'.$tag.'</noscript>'."\n";
+}
+add_filter('style_loader_tag', 'ajth_style_loader_tag', 20, 4);
+
+/* Google Fonts : texte visible pendant le chargement (font-display: swap) pour toutes les requetes. */
+function ajth_google_fonts_display_swap($src)
+{
+    if (is_string($src) && strpos($src, 'fonts.googleapis.com/css') !== false && stripos($src, 'display=') === false) {
+        $src .= (strpos($src, '?') === false ? '?' : '&') . 'display=swap';
+    }
+
+    return $src;
+}
+add_filter('style_loader_src', 'ajth_google_fonts_display_swap', 20);
+
+/* Google Maps et ses dependants, Magnific : differes sur les pages sans carte du theme. */
+function ajth_deferred_script_handles(): array
+{
+    return ['map', 'custom-google-map', 'layout-hotelv2-marker', 'layout-hotelv2-main', 'magnific-js'];
+}
+
+function ajth_script_loader_tag($tag, $handle, $src)
+{
+    if (! in_array($handle, ajth_deferred_script_handles(), true) || ! ajth_is_plugin_front_context()) {
+        return $tag;
+    }
+    if (preg_match('/\s(defer|async)(\s|=|>)/', $tag)) {
+        return $tag;
+    }
+
+    return str_replace('<script ', '<script defer ', $tag);
+}
+add_filter('script_loader_tag', 'ajth_script_loader_tag', 20, 3);
+
+/* Le theme imprime un viewport non zoomable (user-scalable=0) : rendu zoomable sur les pages du plugin. */
+function ajth_relax_viewport_meta_start()
+{
+    if (! ajth_is_plugin_front_context()) {
+        return;
+    }
+    ob_start('ajth_relax_viewport_meta');
+}
+add_action('template_redirect', 'ajth_relax_viewport_meta_start', 1);
+
+function ajth_relax_viewport_meta($html)
+{
+    return preg_replace_callback('#<meta\s+name=["\']viewport["\'][^>]*>#i', static function ($m) {
+        $tag = preg_replace('/,?\s*user-scalable\s*=\s*(0|no)\b/i', '', $m[0]);
+        $tag = preg_replace('/,?\s*maximum-scale\s*=\s*[0-9.]+/i', '', $tag);
+
+        return $tag;
+    }, $html, 1);
+}
+
+/* Nouveaux medias WordPress generes en WebP (JPEG/PNG), les originaux restent conserves. */
+function ajth_webp_output_format($formats)
+{
+    $formats = is_array($formats) ? $formats : [];
+    $formats['image/jpeg'] = 'image/webp';
+    $formats['image/png'] = 'image/webp';
+
+    return $formats;
+}
+add_filter('image_editor_output_format', 'ajth_webp_output_format');
 
 /* ──────────────────────────────────────────────
  * Shortcode: [ajth_homepage]

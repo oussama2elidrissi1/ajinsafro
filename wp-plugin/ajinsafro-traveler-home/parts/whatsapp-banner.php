@@ -60,7 +60,7 @@ $qr_hint = apply_filters( 'ajth_whatsapp_banner_qr_hint', 'Scannez pour rejoindr
 				<?php if ( $qr_code_url ) : ?>
 				<div class="aj-whatsapp-banner__qr-aside">
 					<div class="aj-whatsapp-banner__qr-card">
-						<img src="<?php echo esc_url( $qr_code_url ); ?>" alt="<?php echo esc_attr( 'QR code WhatsApp' ); ?>" class="aj-whatsapp-banner__qr-img" width="96" height="96" loading="lazy" decoding="async">
+						<img loading="lazy" decoding="async" src="<?php echo esc_url( $qr_code_url ); ?>" alt="<?php echo esc_attr( 'QR code WhatsApp' ); ?>" class="aj-whatsapp-banner__qr-img" width="96" height="96" loading="lazy" decoding="async">
 					</div>
 					<?php if ( $qr_hint !== '' ) : ?>
 					<p class="aj-whatsapp-banner__qr-hint"><?php echo esc_html( $qr_hint ); ?></p>

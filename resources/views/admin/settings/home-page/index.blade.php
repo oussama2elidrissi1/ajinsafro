@@ -345,6 +345,18 @@
                             <small class="text-muted d-block mt-1">Max 50MB. Si l'upload ?choue, utilisez un lien vid?o.</small>
                             @error('hero_video_file') <small class="text-danger d-block mt-1">{{ $message }}</small> @enderror
                         </div>
+                        <div class="col-md-6" id="hero_video_poster_url_wrap">
+                            <label class="form-label">Image d'attente (poster) URL</label>
+                            <input type="url" class="form-control" name="hero[poster_url]" value="{{ old('hero.poster_url', data_get($settings, 'hero.poster_url')) }}" placeholder="https://...">
+                            <small class="text-muted d-block mt-1">Affichée instantanément à la place de la vidéo pendant son chargement (améliore le LCP mobile). Idéalement la première image de la vidéo, 1920 × 1080.</small>
+                        </div>
+                        <div class="col-md-6" id="hero_video_poster_file_wrap">
+                            <label class="form-label">Upload image d'attente</label>
+                            <input type="file" class="form-control" name="hero[poster_file]" accept="image/*">
+                            @if (data_get($settings, 'hero.poster_url'))
+                                <img src="{{ data_get($settings, 'hero.poster_url') }}" alt="" class="mt-2 rounded border" style="max-height:80px;width:auto;display:block;">
+                            @endif
+                        </div>
                         <div class="col-md-6">
                             <label class="form-label">CTA texte</label>
                             <input type="text" class="form-control" name="hero[cta_text]" value="{{ old('hero.cta_text', data_get($settings, 'hero.cta_text')) }}">
@@ -1118,7 +1130,7 @@
     /* â???,?â???,? Content tab JS (existing) â???,?â???,?â???,?â???,?â???,?â???,?â???,?â???,?â???,?â???,?â???,?â???,?â???,?â???,? */
     var heroType = document.getElementById('hero_type');
     var imageWraps = [document.getElementById('hero_image_url_wrap'), document.getElementById('hero_image_file_wrap')];
-    var videoWraps = [document.getElementById('hero_video_url_wrap'), document.getElementById('hero_video_file_wrap')];
+    var videoWraps = [document.getElementById('hero_video_url_wrap'), document.getElementById('hero_video_file_wrap'), document.getElementById('hero_video_poster_url_wrap'), document.getElementById('hero_video_poster_file_wrap')];
     var overlay = document.getElementById('hero_overlay');
     var overlayValue = document.getElementById('hero_overlay_value');
     var form = document.getElementById('home-page-settings-form');
