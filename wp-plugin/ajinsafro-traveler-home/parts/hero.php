@@ -65,7 +65,7 @@ if ( ! empty( $hero_video_url ) && ! $is_mp4_video ) {
                     ?> alt="" loading="eager" fetchpriority="high" decoding="async">
                 <?php endif; ?>
                 <video class="aj-hero__video" muted loop playsinline preload="none" data-aj-hero-video>
-                    <source src="<?php echo esc_url( $hero_video_url ); ?>" type="video/mp4">
+                    <source data-src="<?php echo esc_url( $hero_video_url ); ?>" type="video/mp4">
                 </video>
             <?php elseif ( $embed_video_url ) : ?>
                 <iframe class="aj-hero__iframe" src="<?php echo esc_url( $embed_video_url ); ?>" frameborder="0" allow="autoplay; fullscreen; picture-in-picture"></iframe>
