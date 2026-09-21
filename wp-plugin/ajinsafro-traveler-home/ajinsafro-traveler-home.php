@@ -510,6 +510,34 @@ function ajth_is_plugin_front_context(): bool
     return false;
 }
 
+function ajth_allow_plugin_pages_indexing($robots): array
+{
+    $robots = is_array($robots) ? $robots : [];
+
+    if (! ajth_is_plugin_front_context()) {
+        return $robots;
+    }
+
+    unset($robots['noindex'], $robots['nofollow']);
+    $robots['index'] = true;
+    $robots['follow'] = true;
+
+    return $robots;
+}
+add_filter('wp_robots', 'ajth_allow_plugin_pages_indexing', 100);
+add_filter('rank_math/frontend/robots', 'ajth_allow_plugin_pages_indexing', 100);
+
+function ajth_public_robots_txt($output, $public): string
+{
+    $home = home_url('/');
+
+    return "User-agent: *\n"
+        ."Disallow: /wp-admin/\n"
+        ."Allow: /wp-admin/admin-ajax.php\n\n"
+        ."Sitemap: ".esc_url_raw(trailingslashit($home).'sitemap_index.xml')."\n";
+}
+add_filter('robots_txt', 'ajth_public_robots_txt', 100, 2);
+
 function ajth_front_asset_tuning()
 {
     // FontAwesome : le theme charge la 6.7 sur tout le front, le CDN n'est qu'un secours.
