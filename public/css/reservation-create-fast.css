@@ -47,6 +47,11 @@
     display: none !important;
 }
 
+.reservation-create--fast #btn-auto-rooming,
+.reservation-create--fast #btn-rooming-auto {
+    display: none !important;
+}
+
 /* --------------------------------------------------------------------------
    Barre collante : fil d'Ariane, titre, retour, stepper
    -------------------------------------------------------------------------- */

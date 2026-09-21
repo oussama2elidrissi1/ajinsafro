@@ -411,5 +411,6 @@
     <script src="{{ asset('js/departure-rooms-modal.js') . '?v=' . @filemtime(public_path('js/departure-rooms-modal.js')) }}"></script>
     @if($fastCreateMode ?? false)
         <script src="{{ asset('js/reservation-create-fast.js') . '?v=' . @filemtime(public_path('js/reservation-create-fast.js')) }}"></script>
+        <script src="{{ asset('js/reservation-rooming-manual-guard.js') . '?v=' . @filemtime(public_path('js/reservation-rooming-manual-guard.js')) }}"></script>
     @endif
 @endpush
