@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use App\Models\TravelProgramDay;
 use App\Models\Voyage;
 use App\Models\VoyageTheme;
-use App\Models\WpPostmeta;
+use App\Models\Wp\WpPostMeta;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -455,7 +455,9 @@ class LegacyProgramsSeeder extends Seeder
     private function findWpPostId(int $legacyId): ?int
     {
         try {
-            $postId = (int) WpPostmeta::query()
+            // Connexion 'wp' : c'est l'accès utilisé par le catalogue admin, donc celui qui
+            // fonctionne réellement sur les environnements déployés.
+            $postId = (int) WpPostMeta::query()
                 ->where('meta_key', self::WP_LEGACY_ID_META)
                 ->where('meta_value', (string) $legacyId)
                 ->value('post_id');

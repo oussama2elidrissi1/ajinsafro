@@ -3,17 +3,25 @@
 namespace App\Console\Commands;
 
 use App\Models\Voyage;
-use App\Models\WpPostmeta;
-use App\Services\WpTourSyncService;
+use App\Models\Wp\WpPost;
+use App\Models\Wp\WpPostMeta;
+use App\Services\Wp\WpPostPayloadBuilder;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Str;
 
 /**
  * Publie les programmes historiques importés par {@see \Database\Seeders\LegacyProgramsSeeder}
- * vers WordPress, afin qu'ils apparaissent dans le catalogue admin (piloté par WP) et que
- * l'URL publique existe.
+ * vers WordPress, afin qu'ils apparaissent dans le catalogue admin (piloté par WP).
  *
- * Le post WordPress est créé en `draft` avec `post_name` = slug Laravel, c'est-à-dire le slug
- * historique : l'URL publique reste identique à celle de l'ancien site, seul le domaine change.
+ * Le tour est créé en `draft` avec `post_name` = slug Laravel, c'est-à-dire le slug historique :
+ * l'URL publique reste celle de l'ancien site, seul le domaine change.
+ *
+ * Passe par la connexion `wp` ({@see WpPost}), le même accès que le catalogue admin.
+ *
+ * Protection anti-doublon : un programme dont un tour WordPress porte déjà le même slug « de base »
+ * (suffixe numérique retiré : `...-8900-dhs-2` ≡ `...-8900-dhs-466`) n'est jamais recréé. Il est
+ * signalé, et `--adopt` permet de rattacher le voyage Laravel au tour existant.
  *
  * Dry-run par défaut ; `--execute` écrit réellement.
  */
@@ -21,19 +29,16 @@ class LegacyPushToWpCommand extends Command
 {
     protected $signature = 'legacy:push-wp
         {--execute : Écrit réellement dans WordPress (sinon simulation)}
+        {--adopt : Rattache au tour WordPress existant quand un slug proche est trouvé}
         {--limit=0 : Nombre maximum de programmes traités}
         {--id=* : Ne traiter que ces identifiants historiques}';
 
-    protected $description = 'Crée les tours WordPress manquants pour les programmes du catalogue historique.';
-
-    public function __construct(private readonly WpTourSyncService $sync)
-    {
-        parent::__construct();
-    }
+    protected $description = 'Crée (ou rattache) les tours WordPress des programmes du catalogue historique.';
 
     public function handle(): int
     {
         $execute = (bool) $this->option('execute');
+        $adopt = (bool) $this->option('adopt');
         $limit = max(0, (int) $this->option('limit'));
         $onlyIds = array_map('intval', (array) $this->option('id'));
 
@@ -51,7 +56,20 @@ class LegacyPushToWpCommand extends Command
             return self::SUCCESS;
         }
 
-        $stats = ['created' => 0, 'relinked' => 0, 'already' => 0, 'failed' => 0];
+        try {
+            $tours = WpPost::query()->tours()->get(['ID', 'post_name', 'post_title', 'post_status']);
+        } catch (\Throwable $e) {
+            $this->error('Lecture des tours WordPress impossible : '.$e->getMessage());
+            $this->line('Lancez `php artisan legacy:check` pour diagnostiquer l\'accès WordPress.');
+
+            return self::FAILURE;
+        }
+
+        $byExactName = $tours->keyBy(fn ($t) => (string) $t->post_name);
+        $byBaseName = $tours->groupBy(fn ($t) => LegacyCheckCommand::slugBase((string) $t->post_name));
+        $linkedPostIds = Voyage::query()->whereNotNull('wp_post_id')->pluck('wp_post_id')->map(fn ($id) => (int) $id)->all();
+
+        $stats = ['created' => 0, 'linked' => 0, 'already' => 0, 'conflict' => 0, 'failed' => 0];
         $processed = 0;
 
         foreach ($voyages as $voyage) {
@@ -67,16 +85,42 @@ class LegacyPushToWpCommand extends Command
                 continue;
             }
 
-            // Le plugin WordPress a peut-être déjà importé ce programme : on se rattache au post
-            // existant plutôt que d'en créer un second.
-            $existingWpId = $this->findWpPostId($legacyId);
-            if ($existingWpId) {
-                $stats['relinked']++;
+            $match = $byExactName->get($voyage->slug)
+                ?? ($byBaseName->get(LegacyCheckCommand::slugBase($voyage->slug)) ?? collect())->first();
+
+            if ($match) {
                 $processed++;
-                $this->line(sprintf('  #%d %s -> rattaché au post WP %d', $legacyId, $voyage->slug, $existingWpId));
+                $takenByAnother = in_array((int) $match->ID, $linkedPostIds, true);
+
+                if (! $adopt) {
+                    $stats['conflict']++;
+                    $this->line(sprintf(
+                        '  <fg=yellow>doublon</>  legacy %-4d %s -> tour WP existant %d (%s)%s',
+                        $legacyId,
+                        Str::limit($voyage->slug, 50),
+                        $match->ID,
+                        $match->post_name,
+                        $takenByAnother ? ' [déjà lié à un autre voyage]' : ''
+                    ));
+
+                    continue;
+                }
+
+                if ($takenByAnother) {
+                    $stats['conflict']++;
+                    $this->line(sprintf('  <fg=yellow>ignoré</>   legacy %-4d : tour WP %d déjà lié à un autre voyage Laravel', $legacyId, $match->ID));
+
+                    continue;
+                }
+
+                $stats['linked']++;
+                $this->line(sprintf('  <fg=green>rattaché</> legacy %-4d -> tour WP %d (%s)', $legacyId, $match->ID, $match->post_name));
+
                 if ($execute) {
-                    $voyage->update(['wp_post_id' => $existingWpId]);
-                    $this->sync->updateWpTourFromLaravel($voyage->id, true);
+                    $voyage->update(['wp_post_id' => (int) $match->ID]);
+                    $this->writeMeta((int) $match->ID, Voyage::WP_LEGACY_ID_META, (string) $legacyId);
+                    $this->writeMeta((int) $match->ID, '_aj_laravel_voyage_id', (string) $voyage->id);
+                    $linkedPostIds[] = (int) $match->ID;
                 }
 
                 continue;
@@ -86,52 +130,107 @@ class LegacyPushToWpCommand extends Command
 
             if (! $execute) {
                 $stats['created']++;
-                $this->line(sprintf('  #%d %s -> création WP (draft)', $legacyId, $voyage->slug));
+                $this->line(sprintf('  <fg=green>création</> legacy %-4d %s (draft)', $legacyId, Str::limit($voyage->slug, 60)));
 
                 continue;
             }
 
             try {
-                $result = $this->sync->createWpTourFromLaravel($voyage->id);
-                WpPostmeta::setMeta((int) $result['wp_post_id'], Voyage::WP_LEGACY_ID_META, (string) $legacyId);
+                $postId = $this->createTour($voyage, $legacyId);
                 $stats['created']++;
-                $this->line(sprintf('  #%d %s -> post WP %d', $legacyId, $voyage->slug, $result['wp_post_id']));
+                $linkedPostIds[] = $postId;
+                $this->line(sprintf('  <fg=green>créé</>     legacy %-4d -> tour WP %d', $legacyId, $postId));
             } catch (\Throwable $e) {
                 $stats['failed']++;
-                $this->error(sprintf('  #%d %s -> échec : %s', $legacyId, $voyage->slug, $e->getMessage()));
+                $this->error(sprintf('  legacy %-4d %s -> échec : %s', $legacyId, $voyage->slug, $e->getMessage()));
             }
         }
 
         $this->newLine();
         $this->info(sprintf(
-            '%s : %d créés, %d rattachés à un post existant, %d déjà liés, %d en échec.',
+            '%s : %d créés, %d rattachés, %d déjà liés, %d doublons non traités, %d en échec.',
             $execute ? 'Publication WordPress' : 'Simulation (relancez avec --execute)',
             $stats['created'],
-            $stats['relinked'],
+            $stats['linked'],
             $stats['already'],
+            $stats['conflict'],
             $stats['failed']
         ));
+
+        if ($stats['conflict'] > 0 && ! $adopt) {
+            $this->warn('Doublons détectés : relancez avec --adopt pour rattacher le voyage Laravel au tour WordPress existant.');
+        }
 
         return $stats['failed'] > 0 ? self::FAILURE : self::SUCCESS;
     }
 
-    private function findWpPostId(int $legacyId): ?int
+    /**
+     * Crée le tour WordPress en brouillon et pose les métas commerciales et de liaison.
+     */
+    private function createTour(Voyage $voyage, int $legacyId): int
     {
-        try {
-            $postId = (int) WpPostmeta::query()
-                ->where('meta_key', Voyage::WP_LEGACY_ID_META)
-                ->where('meta_value', (string) $legacyId)
-                ->value('post_id');
-        } catch (\Throwable $e) {
-            return null;
+        $now = Carbon::now();
+        $nowGmt = Carbon::now('GMT');
+
+        $post = WpPost::create(WpPostPayloadBuilder::buildWpPostPayload([
+            'post_type' => 'st_tours',
+            'post_title' => (string) $voyage->name,
+            'post_name' => (string) $voyage->slug,
+            'post_content' => (string) ($voyage->description ?? ''),
+            'post_excerpt' => (string) ($voyage->accroche ?? ''),
+            // Brouillon : la fiche historique n'est pas vendable tant qu'elle est « À compléter ».
+            'post_status' => 'draft',
+        ], [
+            'post_author' => 0,
+            'post_date' => $now->toDateTimeString(),
+            'post_date_gmt' => $nowGmt->toDateTimeString(),
+            'post_modified' => $now->toDateTimeString(),
+            'post_modified_gmt' => $nowGmt->toDateTimeString(),
+            'comment_status' => 'closed',
+            'ping_status' => 'closed',
+        ]));
+
+        $postId = (int) $post->ID;
+
+        $voyage->update(['wp_post_id' => $postId]);
+
+        $metas = [
+            '_aj_laravel_voyage_id' => (string) $voyage->id,
+            Voyage::WP_LEGACY_ID_META => (string) $legacyId,
+            'tour_price_by' => (string) ($voyage->tour_price_by ?: 'person'),
+            'tours_include' => implode("\n", (array) ($voyage->tours_include ?? [])),
+            'tours_exclude' => implode("\n", (array) ($voyage->tours_exclude ?? [])),
+        ];
+
+        if ($voyage->price_from !== null && (int) $voyage->price_from > 0) {
+            $metas['adult_price'] = (string) (int) $voyage->price_from;
+            $metas['min_price'] = (string) (int) $voyage->price_from;
+        }
+        if (preg_match('/(\d+)/', (string) $voyage->duration_text, $m) && (int) $m[1] > 0) {
+            $metas['duration_day'] = (string) (int) $m[1];
+        }
+        if (! empty($voyage->destination)) {
+            $metas['address'] = (string) $voyage->destination;
         }
 
-        if ($postId <= 0) {
-            return null;
+        foreach ($metas as $key => $value) {
+            $this->writeMeta($postId, $key, (string) $value);
         }
 
-        $taken = Voyage::query()->where('wp_post_id', $postId)->exists();
+        return $postId;
+    }
 
-        return $taken ? null : $postId;
+    private function writeMeta(int $postId, string $key, string $value): void
+    {
+        $existing = WpPostMeta::query()->where('post_id', $postId)->where('meta_key', $key)->first();
+
+        if ($existing) {
+            $existing->meta_value = $value;
+            $existing->save();
+
+            return;
+        }
+
+        WpPostMeta::create(['post_id' => $postId, 'meta_key' => $key, 'meta_value' => $value]);
     }
 }

@@ -41,22 +41,56 @@ en l'état — c'est voulu.
 ## Les rendre visibles dans le catalogue admin
 
 `Circuits > Voyages` est alimenté par WordPress : un voyage Laravel sans `wp_post_id` n'y apparaît
-pas. Après le seed, pousser les programmes vers WordPress :
+pas.
+
+### 1. Diagnostic obligatoire
 
 ```bash
-php artisan legacy:push-wp              # simulation
-php artisan legacy:push-wp --execute    # écrit réellement
-php artisan legacy:push-wp --execute --limit=5   # par lots
+php artisan legacy:check          # lecture seule
+php artisan legacy:check --full   # liste aussi les programmes sans équivalent WP
+```
+
+La commande vérifie quel accès WordPress fonctionne sur l'environnement, puis cherche pour chaque
+programme un tour déjà présent côté WordPress :
+
+| Correspondance | Signification |
+|---|---|
+| `meta` | le tour porte déjà `_ajinsafro_legacy_id` |
+| `slug exact` | même `post_name` que le slug historique |
+| `slug proche` | **doublon probable** : même slug au suffixe numérique près |
+| `aucun` | à créer |
+
+Le cas `slug proche` est réel : plusieurs programmes historiques existent déjà dans WordPress sous
+un slug dédoublonné, par exemple `…-a-partir-de-8900-dhs-2` au lieu de `…-a-partir-de-8900-dhs-466`
+(Barcelone, programme 466). Les publier sans précaution créerait deux tours pour la même offre.
+
+### 2. Publication
+
+```bash
+php artisan legacy:push-wp                       # simulation
+php artisan legacy:push-wp --execute --limit=5    # premier lot
+php artisan legacy:push-wp --execute              # le reste
+php artisan legacy:push-wp --execute --adopt      # rattache aussi les doublons probables
 php artisan legacy:push-wp --execute --id=43 --id=46
 ```
 
-La commande crée le tour `st_tours` en **brouillon**, avec `post_name` = slug historique (l'URL
-publique est donc celle de l'ancien site, seul le domaine change), et pose `_aj_laravel_voyage_id`
-et `_ajinsafro_legacy_id`. Si le plugin WordPress a déjà importé le programme, elle se rattache au
-post existant au lieu d'en créer un second. Elle ne touche jamais un voyage déjà lié.
+Sans `--adopt`, un programme dont le slug est proche d'un tour existant est **signalé et laissé de
+côté** — aucun doublon n'est créé. Avec `--adopt`, le voyage Laravel est rattaché au tour WordPress
+existant (`wp_post_id`, `_aj_laravel_voyage_id`, `_ajinsafro_legacy_id`) sans en créer un second, et
+le slug WordPress en place est conservé. Un tour déjà lié à un autre voyage Laravel n'est jamais
+repris.
 
-Les métas `adult_price`, `min_price`, `duration_day` et `address` sont écrites depuis Laravel
-(quand elles sont renseignées) pour que la liste admin affiche prix et durée.
+Les tours créés le sont en **brouillon**, avec `post_name` = slug historique (l'URL publique est
+celle de l'ancien site, seul le domaine change) et les métas `adult_price`, `min_price`,
+`duration_day`, `address`, `tours_include`, `tours_exclude` renseignées depuis Laravel.
+
+### Note sur l'accès WordPress
+
+`legacy:check` teste aussi `App\Repositories\WpRepository`. Celui-ci préfixe les tables lui-même
+alors que la connexion `wp` applique déjà son propre préfixe : si la sonde renvoie `KO ... no such
+table: cFdgeZ_cFdgeZ_posts`, tout ce qui passe par `WpRepository` / `WpTourSyncService` est inopérant
+sur l'environnement. C'est pourquoi `legacy:push-wp` écrit via `App\Models\Wp\WpPost`, le même
+accès que le catalogue admin.
 
 ## La marque « À compléter »
 
@@ -96,9 +130,13 @@ nouveau : https://ajinsafro.net/voyage-national/circuit-ifrane-michlifen-azrou-m
 (`/team/buy.php?id=...`) : leur chemin public reste à arbitrer et `url_publique` figure dans
 leur liste `missing`.
 
-Comme `WpTourSyncService` recopie `voyage.slug` dans `post_name`, `legacy:push-wp` et la
-synchronisation Laravel → WP posent le bon slug WordPress. Reste à vérifier côté WordPress que la structure de permalien des
-`st_tours` rejoue bien les préfixes `voyage-national` et `voyages-international`.
+`legacy:push-wp` recopie `voyage.slug` dans `post_name` : les tours qu'il crée portent donc le slug
+historique. Attention, les tours **adoptés** (`--adopt`) gardent leur slug WordPress actuel — si vous
+voulez restaurer l'URL d'origine sur ceux-là, il faut renommer le `post_name` et poser une 301 depuis
+l'ancien, car ces pages sont déjà en ligne.
+
+Reste à vérifier côté WordPress que la structure de permalien des `st_tours` rejoue bien les
+préfixes `voyage-national` et `voyages-international`.
 
 ### Table de correspondance / redirections
 
