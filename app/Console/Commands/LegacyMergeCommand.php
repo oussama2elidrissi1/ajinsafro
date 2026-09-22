@@ -115,7 +115,7 @@ class LegacyMergeCommand extends Command
                 $voyage->delete();
             });
 
-            $this->writeLegacyMeta((int) $target->wp_post_id, $legacyId);
+            $this->writeLegacyMeta((int) $target->wp_post_id, $legacyId, (string) data_get($target->logistics_meta, 'seo.legacy_path_prefix', ''));
         }
 
         $this->newLine();
@@ -160,26 +160,35 @@ class LegacyMergeCommand extends Command
         }
     }
 
-    private function writeLegacyMeta(int $postId, int $legacyId): void
+    private function writeLegacyMeta(int $postId, int $legacyId, string $pathPrefix): void
     {
+        $metas = [Voyage::WP_LEGACY_ID_META => (string) $legacyId];
+
+        // Lu par le plugin WordPress pour servir la fiche sous son ancienne URL.
+        if ($pathPrefix !== '') {
+            $metas['_aj_legacy_path_prefix'] = $pathPrefix;
+        }
+
         try {
-            $existing = WpPostMeta::query()
-                ->where('post_id', $postId)
-                ->where('meta_key', Voyage::WP_LEGACY_ID_META)
-                ->first();
+            foreach ($metas as $key => $value) {
+                $existing = WpPostMeta::query()
+                    ->where('post_id', $postId)
+                    ->where('meta_key', $key)
+                    ->first();
 
-            if ($existing) {
-                $existing->meta_value = (string) $legacyId;
-                $existing->save();
+                if ($existing) {
+                    $existing->meta_value = $value;
+                    $existing->save();
 
-                return;
+                    continue;
+                }
+
+                WpPostMeta::create([
+                    'post_id' => $postId,
+                    'meta_key' => $key,
+                    'meta_value' => $value,
+                ]);
             }
-
-            WpPostMeta::create([
-                'post_id' => $postId,
-                'meta_key' => Voyage::WP_LEGACY_ID_META,
-                'meta_value' => (string) $legacyId,
-            ]);
         } catch (\Throwable $e) {
             $this->warn(sprintf('  meta WordPress non posée sur le post %d : %s', $postId, $e->getMessage()));
         }

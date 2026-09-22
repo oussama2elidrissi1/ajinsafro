@@ -29,14 +29,19 @@ require_once AJTB_PLUGIN_DIR . 'includes/class-laravel-repository.php';
 require_once AJTB_PLUGIN_DIR . 'includes/class-activity-selections.php';
 require_once AJTB_PLUGIN_DIR . 'includes/class-v1-data-provider.php';
 require_once AJTB_PLUGIN_DIR . 'includes/class-single-tour-page.php';
+require_once AJTB_PLUGIN_DIR . 'includes/class-legacy-permalinks.php';
 
 add_action('plugins_loaded', static function () {
     AJTB_Single_Tour_Page::boot();
+    AJTB_Legacy_Permalinks::boot();
 }, 20);
 
 register_activation_hook(__FILE__, static function (): void {
     if (class_exists('AJTB_Single_Tour_Page')) {
         AJTB_Single_Tour_Page::register_recap_endpoint();
+    }
+    if (class_exists('AJTB_Legacy_Permalinks')) {
+        AJTB_Legacy_Permalinks::register_rewrite_rules();
     }
     flush_rewrite_rules();
 });

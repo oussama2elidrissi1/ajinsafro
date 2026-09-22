@@ -137,6 +137,7 @@ class LegacyPushToWpCommand extends Command
                     $voyage->update(['wp_post_id' => (int) $match->ID]);
                     $this->writeMeta((int) $match->ID, Voyage::WP_LEGACY_ID_META, (string) $legacyId);
                     $this->writeMeta((int) $match->ID, '_aj_laravel_voyage_id', (string) $voyage->id);
+                    $this->writeLegacyPathPrefix((int) $match->ID, $voyage);
                     $linkedPostIds[] = (int) $match->ID;
                 }
 
@@ -234,7 +235,22 @@ class LegacyPushToWpCommand extends Command
             $this->writeMeta($postId, $key, (string) $value);
         }
 
+        $this->writeLegacyPathPrefix($postId, $voyage);
+
         return $postId;
+    }
+
+    /**
+     * Préfixe de chemin historique lu par le plugin WordPress (AJTB_Legacy_Permalinks) pour
+     * servir la fiche sous son ancienne URL `/voyage-national/...` ou `/voyages-international/...`.
+     */
+    private function writeLegacyPathPrefix(int $postId, Voyage $voyage): void
+    {
+        $prefix = (string) data_get($voyage->logistics_meta, 'seo.legacy_path_prefix', '');
+
+        if ($prefix !== '') {
+            $this->writeMeta($postId, '_aj_legacy_path_prefix', $prefix);
+        }
     }
 
     private function writeMeta(int $postId, string $key, string $value): void

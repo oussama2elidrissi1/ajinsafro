@@ -156,8 +156,34 @@ historique. Attention, les tours **adoptés** (`--adopt`) gardent leur slug Word
 voulez restaurer l'URL d'origine sur ceux-là, il faut renommer le `post_name` et poser une 301 depuis
 l'ancien, car ces pages sont déjà en ligne.
 
-Reste à vérifier côté WordPress que la structure de permalien des `st_tours` rejoue bien les
-préfixes `voyage-national` et `voyages-international`.
+### Le préfixe de chemin, côté WordPress
+
+Le slug ne suffit pas : le post type `st_tours` est servi sous son rewrite natif (`/voyages/<slug>`),
+alors que l'ancien site utilisait `/voyage-national/` et `/voyages-international/`.
+
+`AJTB_Legacy_Permalinks` (plugin **ajinsafro-tour-bridge**) rejoue les deux anciens préfixes :
+
+- une règle de réécriture résout `/voyage-national/<slug>` et `/voyages-international/<slug>` vers le
+  tour correspondant ;
+- `post_type_link` renvoie l'ancien chemin comme permalien du tour ;
+- la redirection canonique de WordPress est neutralisée sur ces URLs, sinon elle renverrait vers
+  `/voyages/<slug>`.
+
+Le préfixe à utiliser est porté par le post, dans la meta `_aj_legacy_path_prefix`, écrite par
+`legacy:push-wp` et `legacy:merge` depuis `logistics_meta.seo.legacy_path_prefix`. Un tour sans cette
+meta garde le permalien natif : la réécriture ne change rien au reste du catalogue.
+
+**Après déploiement du plugin, réactivez-le** (ou visitez Réglages > Permaliens) pour que les règles
+de réécriture soient régénérées.
+
+Sur les 89 programmes, 84 portent un préfixe historique (39 `voyage-national`,
+45 `voyages-international`) ; les 5 sans URL SEO d'origine gardent le permalien natif.
+
+### Une fiche importée renvoie 404 en public
+
+C'est normal : les tours créés sont en **brouillon**. WordPress renvoie 404 à un visiteur non
+connecté sur un brouillon. Pour prévisualiser, soyez connecté à l'admin WordPress ; la page ne
+devient publique qu'une fois la fiche complétée et publiée.
 
 ### Table de correspondance / redirections
 
