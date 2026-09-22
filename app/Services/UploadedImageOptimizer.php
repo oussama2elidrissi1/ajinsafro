@@ -119,6 +119,12 @@ class UploadedImageOptimizer
             $height = imagesy($source);
         }
 
+        // Un PNG/GIF indexe donne une image a palette, qu'imagewebp() refuse
+        // (« Paletter image not supported by webp »). La conversion garde l'alpha.
+        if (! imageistruecolor($source)) {
+            imagepalettetotruecolor($source);
+        }
+
         $targetWidth = max(1, min($width, $maxWidth));
         $targetHeight = max(1, (int) round($height * $targetWidth / $width));
 
@@ -137,15 +143,28 @@ class UploadedImageOptimizer
         }
 
         ob_start();
-        if (function_exists('imagewebp')) {
-            imagewebp($source, null, self::QUALITY);
-            $extension = 'webp';
-        } elseif ($hasAlpha) {
-            imagepng($source, null, 8);
-            $extension = 'png';
-        } else {
-            imagejpeg($source, null, self::QUALITY);
-            $extension = 'jpg';
+        try {
+            if (function_exists('imagewebp')) {
+                imagewebp($source, null, self::QUALITY);
+                $extension = 'webp';
+            } elseif ($hasAlpha) {
+                imagepng($source, null, 8);
+                $extension = 'png';
+            } else {
+                imagejpeg($source, null, self::QUALITY);
+                $extension = 'jpg';
+            }
+        } catch (\Throwable $e) {
+            // Laravel transforme les avertissements GD en exception : une image
+            // exotique est ignoree, elle n'interrompt pas la commande de rattrapage.
+            ob_end_clean();
+            imagedestroy($source);
+            \Log::warning('UploadedImageOptimizer: encodage impossible', [
+                'path' => $absolutePath,
+                'message' => $e->getMessage(),
+            ]);
+
+            return null;
         }
         $binary = (string) ob_get_clean();
         imagedestroy($source);

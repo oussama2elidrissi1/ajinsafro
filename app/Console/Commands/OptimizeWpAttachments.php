@@ -74,7 +74,15 @@ class OptimizeWpAttachments extends Command
                 continue;
             }
 
-            $result = $service->optimizeExistingAttachment($attachmentId, $maxWidth);
+            try {
+                $result = $service->optimizeExistingAttachment($attachmentId, $maxWidth);
+            } catch (\Throwable $e) {
+                // Un fichier illisible ne doit jamais arreter le lot en cours.
+                $skipped++;
+                $this->warn(sprintf('  #%d %s : ignoré (%s)', $attachmentId, $row->attached_file, $e->getMessage()));
+                continue;
+            }
+
             if ($result === null) {
                 $skipped++;
                 $this->line(sprintf('  #%d %s : inchangé (gain insuffisant ou GD absent)', $attachmentId, $row->attached_file));
