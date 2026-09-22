@@ -85,8 +85,25 @@ class LegacyPushToWpCommand extends Command
                 continue;
             }
 
-            $match = $byExactName->get($voyage->slug)
-                ?? ($byBaseName->get(LegacyCheckCommand::slugBase($voyage->slug)) ?? collect())->first();
+            $exact = $byExactName->get($voyage->slug);
+            $candidates = $exact
+                ? collect([$exact])
+                : ($byBaseName->get(LegacyCheckCommand::slugBase($voyage->slug)) ?? collect());
+
+            // Plusieurs tours WordPress portent le même slug de base : impossible de trancher
+            // automatiquement sans risquer de rattacher la fiche au mauvais tour.
+            if ($candidates->count() > 1) {
+                $processed++;
+                $stats['conflict']++;
+                $this->line(sprintf('  <fg=yellow>ambigu</>   legacy %-4d %s : %d tours WP candidats', $legacyId, Str::limit($voyage->slug, 45), $candidates->count()));
+                foreach ($candidates as $c) {
+                    $this->line(sprintf('                 -> WP %d (%s)', $c->ID, $c->post_name));
+                }
+
+                continue;
+            }
+
+            $match = $candidates->first();
 
             if ($match) {
                 $processed++;

@@ -64,7 +64,27 @@ Le cas `slug proche` est réel : plusieurs programmes historiques existent déj�
 un slug dédoublonné, par exemple `…-a-partir-de-8900-dhs-2` au lieu de `…-a-partir-de-8900-dhs-466`
 (Barcelone, programme 466). Les publier sans précaution créerait deux tours pour la même offre.
 
-### 2. Publication
+### 2. Fusionner les doublons
+
+Quand l'offre existe **déjà** au catalogue (tour WordPress + voyage Laravel rattaché), il ne faut
+pas créer un second tour : on reporte l'identité historique sur la fiche existante et on supprime
+la fiche importée en double.
+
+```bash
+php artisan legacy:merge                                  # simulation
+php artisan legacy:merge --execute                        # les cas sans ambiguïté
+php artisan legacy:merge --execute --map=91:57 --map=466:80   # les cas à arbitrer
+```
+
+La fusion copie `legacy_import` et `seo` sur le voyage conservé, pose `_ajinsafro_legacy_id` sur son
+tour WordPress, puis supprime la fiche importée. Elle **ne touche ni au contenu, ni au prix, ni au
+slug** du voyage conservé, et ne pose pas de marque « À compléter » dessus : ce n'est pas un
+brouillon. Une fiche importée portant des réservations n'est jamais supprimée.
+
+Quand plusieurs voyages peuvent recevoir l'identité historique, la commande les liste avec le
+`--map=<legacyId>:<voyageId>` à rejouer : c'est à l'agence de désigner la fiche de référence.
+
+### 3. Publication
 
 ```bash
 php artisan legacy:push-wp                       # simulation
@@ -75,10 +95,11 @@ php artisan legacy:push-wp --execute --id=43 --id=46
 ```
 
 Sans `--adopt`, un programme dont le slug est proche d'un tour existant est **signalé et laissé de
-côté** — aucun doublon n'est créé. Avec `--adopt`, le voyage Laravel est rattaché au tour WordPress
-existant (`wp_post_id`, `_aj_laravel_voyage_id`, `_ajinsafro_legacy_id`) sans en créer un second, et
-le slug WordPress en place est conservé. Un tour déjà lié à un autre voyage Laravel n'est jamais
-repris.
+côté** — aucun doublon n'est créé. Plusieurs tours candidats pour un même programme : la commande
+refuse toujours, avec ou sans `--adopt`, plutôt que de choisir au hasard. Avec `--adopt`, le voyage
+Laravel est rattaché au tour WordPress existant (`wp_post_id`, `_aj_laravel_voyage_id`,
+`_ajinsafro_legacy_id`) sans en créer un second, et le slug WordPress en place est conservé. Un tour
+déjà lié à un autre voyage Laravel n'est jamais repris — ce cas relève de `legacy:merge`.
 
 Les tours créés le sont en **brouillon**, avec `post_name` = slug historique (l'URL publique est
 celle de l'ancien site, seul le domaine change) et les métas `adult_price`, `min_price`,
