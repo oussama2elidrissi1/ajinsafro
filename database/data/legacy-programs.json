@@ -1,0 +1,2895 @@
+[
+  {
+    "price": 6900,
+    "value": 9530,
+    "source_expired_at": "2022-10-07",
+    "duration": "8 jours",
+    "summary": "Circuit historique en Andalousie reliant Séville, Cordoue, Grenade et la Costa del Sol, avec traversées maritimes et hébergements.",
+    "itinerary": [
+      "Départ Maroc et traversée vers l’Espagne",
+      "Séville",
+      "Cordoue",
+      "Grenade",
+      "Costa del Sol / Fuengirola",
+      "Retour au Maroc"
+    ],
+    "included": [
+      "Transport touristique",
+      "Traversées maritimes aller-retour",
+      "6 nuits en hôtels 3★ avec petits-déjeuners",
+      "Visites prévues au programme",
+      "Accompagnement"
+    ],
+    "excluded": [
+      "Visa Schengen",
+      "Repas et boissons non mentionnés",
+      "Dépenses personnelles",
+      "Pourboires et extras"
+    ],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 14,
+    "category": "Voyage international",
+    "title": "Andalousie – 8 jours",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/special-andalousie-8-jours-aller-par-vol-retour-par-bateau-a-6900-dhs-14",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/special-andalousie-8-jours-aller-par-vol-retour-par-bateau-a-6900-dhs-14"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 250,
+    "value": 500,
+    "source_expired_at": "2020-02-29",
+    "duration": "1 jour",
+    "summary": "Excursion historique depuis Tanger/Larache vers Ifrane, Michlifen, Azrou puis Meknès.",
+    "itinerary": [
+      "Départ de Tanger et Larache",
+      "Ifrane et statue du Lion",
+      "Aïn Vittel",
+      "Station de Michlifen",
+      "Azrou",
+      "Meknès et place Lahdim"
+    ],
+    "included": [
+      "Transport touristique",
+      "Petit-déjeuner",
+      "Visite guidée",
+      "Assurance transport"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 43,
+    "category": "Voyage national",
+    "title": "Ifrane – Michlifen – Azrou – Meknès",
+    "source_url": "https://ajinsafro.ma/voyage-national/circuit-ifrane-michlifen-azrou-meknes-04-mars-2018-43",
+    "legacy_urls": [
+      "https://ajinsafro.ma/voyage-national/circuit-ifrane-michlifen-azrou-meknes-04-mars-2018-43"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 22800,
+    "value": null,
+    "source_expired_at": "2025-12-31",
+    "duration": "14 jours / 12 nuits",
+    "summary": "Combiné Malaisie–Vietnam avec Kuala Lumpur, Da Nang et Hô Chi Minh-Ville; la fiche historique a été réutilisée avec des tarifs plus récents.",
+    "itinerary": [
+      "Kuala Lumpur",
+      "Da Nang",
+      "Hô Chi Minh-Ville"
+    ],
+    "included": [
+      "Vols internationaux et régionaux",
+      "12 nuits en hôtels 4★",
+      "Transferts"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Fiche réutilisée au fil du temps; vérifier le tarif/date avant réactivation.",
+    "legacy_id": 46,
+    "category": "Voyage international",
+    "title": "Malaisie + Vietnam – 14j/12n",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/combine-malaisie-et-vietnam-14-jours-12-nuits-a-partir-de-21800-dhs-46",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/combine-malaisie-et-vietnam-14-jours-12-nuits-a-partir-de-21800-dhs-46"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 390,
+    "value": 580,
+    "source_expired_at": "2023-03-19",
+    "duration": "1 jour",
+    "summary": "Excursion Oukaïmeden, Marrakech et vallée de l’Ourika au départ de Rabat/Casablanca.",
+    "itinerary": [
+      "Oukaïmeden",
+      "Vallée de l’Ourika",
+      "Marrakech : Koutoubia et Jemaa el-Fna"
+    ],
+    "included": [
+      "Transport",
+      "Accompagnement",
+      "Assurance transport"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 60,
+    "category": "Voyage national",
+    "title": "Oukaïmeden – Marrakech – Ourika",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/marrakech-oukaimden-ourika-04-mars-2018-60",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/marrakech-oukaimden-ourika-04-mars-2018-60"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 349,
+    "value": 550,
+    "source_expired_at": "2022-12-31",
+    "duration": null,
+    "summary": "Week-end nature vers Akchour et Chefchaouen avec départ nocturne depuis Casablanca/Rabat.",
+    "itinerary": [
+      "Départ Casablanca/Rabat",
+      "Akchour et randonnée",
+      "Chefchaouen"
+    ],
+    "included": [
+      "Transport",
+      "Petit-déjeuner",
+      "Guide",
+      "Assurance transport"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 64,
+    "category": "Voyage national",
+    "title": "Akchour – Chefchaouen",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/circuit-akchour-chefchaouen-16-avril-64",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/circuit-akchour-chefchaouen-16-avril-64"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 860,
+    "value": 1100,
+    "source_expired_at": "2023-07-30",
+    "duration": "2 jours",
+    "summary": "Week-end historique à Asilah et Tanger avec hébergement et visites.",
+    "itinerary": [
+      "Asilah",
+      "Tanger"
+    ],
+    "included": [
+      "Transport",
+      "Hôtel 3★",
+      "Petit-déjeuner",
+      "Guide",
+      "Assurance transport"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 66,
+    "category": "Voyage national",
+    "title": "Week-end Asilah – Tanger",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/weekend-asilah-tanger-a-seulement-860-dhs-plusieurs-departs-disponibles-66",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/weekend-asilah-tanger-a-seulement-860-dhs-plusieurs-departs-disponibles-66"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 1650,
+    "value": 2000,
+    "source_expired_at": "2026-06-24",
+    "duration": "3 jours / 2 nuits",
+    "summary": "Séjour autour du Festival Gnaoua d’Essaouira, combiné dans la version récente avec Marrakech.",
+    "itinerary": [
+      "Essaouira et Festival Gnaoua",
+      "Marrakech"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Fiche historique réutilisée/actualisée; contrôler le contenu avant réactivation.",
+    "legacy_id": 75,
+    "category": "Voyage national",
+    "title": "Festival Gnaoua Essaouira",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/celebrez-le-festival-gnaoua-a-essaouira-du-20-juin-au-23-juin-2019-75",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/celebrez-le-festival-gnaoua-a-essaouira-du-20-juin-au-23-juin-2019-75"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 21900,
+    "value": 34600,
+    "source_expired_at": null,
+    "duration": "14 jours / 12 nuits",
+    "summary": "Combiné Kuala Lumpur et Bali, avec séjours en hôtels 4★ et plusieurs excursions proposées en option.",
+    "itinerary": [
+      "Casablanca → Kuala Lumpur",
+      "Séjour Kuala Lumpur",
+      "Vol vers Bali",
+      "Séjour Bali",
+      "Retour Kuala Lumpur",
+      "Retour Casablanca"
+    ],
+    "included": [
+      "Vols internationaux Casablanca–Kuala Lumpur",
+      "Vols Kuala Lumpur–Bali–Kuala Lumpur",
+      "12 nuits en hôtels 4★ avec petit-déjeuner",
+      "Transferts aéroport/hôtel"
+    ],
+    "excluded": [
+      "Excursions optionnelles",
+      "Repas non mentionnés",
+      "Assurance voyage",
+      "Dépenses personnelles",
+      "Visa Bali à l’arrivée"
+    ],
+    "recovery": "rich",
+    "source_note": "Page actuellement réutilisée; import forcé en expiré.",
+    "legacy_id": 79,
+    "category": "Voyage international",
+    "title": "Kuala Lumpur + Bali – 14j/12n",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/voyage-de-14-jours-12-nuits-a-kuala-lumpur-and-bali-sejour-exotique-entre-modernite-et-paradis-a-partir-de-21900-dhs-79",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/voyage-de-14-jours-12-nuits-a-kuala-lumpur-and-bali-sejour-exotique-entre-modernite-et-paradis-a-partir-de-21900-dhs-79"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 970,
+    "value": 1090,
+    "source_expired_at": "2024-09-13",
+    "duration": "2 jours",
+    "summary": "Week-end à Al Hoceima incluant plages, corniche, port et activités maritimes optionnelles.",
+    "itinerary": [
+      "Quemado / Calabonita",
+      "Corniche et port d’Al Hoceima",
+      "Temps libre et activités nautiques"
+    ],
+    "included": [
+      "1 nuit d’hôtel",
+      "Petit-déjeuner",
+      "Visite guidée",
+      "Transport",
+      "Assurance"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 83,
+    "category": "Voyage national",
+    "title": "Week-end Al Hoceima",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/weekend-a-al-hoceima-la-perle-de-la-mediterrane-plusieurs-departs-disponibles-83",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/weekend-a-al-hoceima-la-perle-de-la-mediterrane-plusieurs-departs-disponibles-83"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 3980,
+    "value": 4500,
+    "source_expired_at": null,
+    "duration": "4 jours",
+    "summary": "Séjour par avion à Dakhla avec excursions autour de la Dune Blanche, Asmaa, ferme d’autruches et activités optionnelles.",
+    "itinerary": [
+      "Casablanca → Dakhla",
+      "Dune Blanche / Asmaa",
+      "Ferme d’autruches et PK25",
+      "Journée libre / options",
+      "Retour"
+    ],
+    "included": [
+      "Vol Royal Air Maroc A/R",
+      "Transferts aéroport",
+      "Hébergement",
+      "Petits-déjeuners",
+      "Deux journées d’excursions",
+      "Accompagnement"
+    ],
+    "excluded": [
+      "Excursion Imlili/Porto Rico",
+      "Sortie bateau Dragon Island",
+      "Quad",
+      "Dépenses personnelles"
+    ],
+    "recovery": "rich",
+    "source_note": "Page encore active/réutilisée; le seed la marque expirée.",
+    "legacy_id": 89,
+    "category": "Voyage national",
+    "title": "Dakhla – séjour 4 jours",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/sejour-4-jours-a-dakhla-depart-de-casablanca-a-partir-de-3980-dhs-89",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/sejour-4-jours-a-dakhla-depart-de-casablanca-a-partir-de-3980-dhs-89",
+      "https://www.ajinsafro.ma/team/buy.php?id=89"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 15900,
+    "value": 19230,
+    "source_expired_at": "2026-08-22",
+    "duration": "8 jours / 7 nuits",
+    "summary": "Combiné Istanbul et Antalya avec vols, transferts, séjour balnéaire et excursions optionnelles.",
+    "itinerary": [
+      "Istanbul",
+      "Excursions optionnelles Sapanca / Îles des Princes",
+      "Vol intérieur vers Antalya",
+      "Séjour Antalya",
+      "Retour"
+    ],
+    "included": [
+      "Vol Casablanca–Istanbul",
+      "Bagage",
+      "Vol intérieur",
+      "Transferts",
+      "3 nuits Istanbul + 4 nuits Antalya en 4★ avec petit-déjeuner"
+    ],
+    "excluded": [
+      "Dépenses personnelles",
+      "Taxes touristiques et prestations non mentionnées"
+    ],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 91,
+    "category": "Voyage international",
+    "title": "Antalya + Istanbul – 8j/7n",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/sejours-a-antalya-et-istanbul-pour-8-jours-7nuits-a-partir-de-14450-dhs-91",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/sejours-a-antalya-et-istanbul-pour-8-jours-7nuits-a-partir-de-14450-dhs-91"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 1970,
+    "value": 2700,
+    "source_expired_at": "2026-05-24",
+    "duration": "4 jours",
+    "summary": "Circuit dans le nord du Maroc : Oued Laou, Chefchaouen, Fnideq, M’diq, Tétouan, Tanger et Assilah.",
+    "itinerary": [
+      "Oued Laou",
+      "Chefchaouen",
+      "Fnideq / M’diq",
+      "Tétouan",
+      "Tanger",
+      "Assilah"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 97,
+    "category": "Voyage national",
+    "title": "Oued Laou – Chefchaouen – Fnideq – M’diq – Tétouan – Tanger – Assilah",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/circuit-4-jours-a-ouedlaou-chefchaouen-fnideq-mdiq-tetouan-tanger-assilah-a-seulement-1870-dhs-97",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/circuit-4-jours-a-ouedlaou-chefchaouen-fnideq-mdiq-tetouan-tanger-assilah-a-seulement-1870-dhs-97"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 2500,
+    "value": 2900,
+    "source_expired_at": "2026-07-01",
+    "duration": "4 jours / 3 nuits",
+    "summary": "Circuit Agadir, Essaouira et Marrakech combinant visites urbaines, plages et temps libre.",
+    "itinerary": [
+      "Agadir : Oufella, Souk, Marina",
+      "Essaouira : Skala et port",
+      "Marrakech"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 101,
+    "category": "Voyage national (ancienne route international)",
+    "title": "Agadir – Essaouira – Marrakech – 4j/3n",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/circuit-4-jours-3-nuits-a-agadir-essaouira-et-marrakech-a-seulement-2200-dhs-101",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/circuit-4-jours-3-nuits-a-agadir-essaouira-et-marrakech-a-seulement-2200-dhs-101"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 1680,
+    "value": 2490,
+    "source_expired_at": "2026-08-20",
+    "duration": "3 jours",
+    "summary": "Circuit Akchour, Chefchaouen, M’diq, Tétouan et Tanger avec découverte du nord marocain.",
+    "itinerary": [
+      "Akchour",
+      "Chefchaouen",
+      "M’diq",
+      "Tétouan",
+      "Tanger"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 104,
+    "category": "Voyage national",
+    "title": "Akchour – Chefchaouen – Fnideq – M’diq – Tétouan – Tanger",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/circuit-3-jours-au-nord-akchour-chefchaouen-finideq-mdiq-tetouan-tanger-a-seulement-1190-dh-104",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/circuit-3-jours-au-nord-akchour-chefchaouen-finideq-mdiq-tetouan-tanger-a-seulement-1190-dh-104",
+      "https://www.ajinsafro.ma/team/buy.php?id=104"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 1350,
+    "value": 2000,
+    "source_expired_at": "2018-08-10",
+    "duration": "3 jours",
+    "summary": "Ancien circuit Agadir, Marrakech et Terre d’Amanar avec hébergement et activités.",
+    "itinerary": [
+      "Agadir",
+      "Marrakech",
+      "Terre d’Amanar"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 108,
+    "category": "Voyage national",
+    "title": "Agadir – Marrakech – Terre d’Amanar",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/circuit-3-jours-agadir-marrakech-terre-damanar-du-070809-avril-108",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/circuit-3-jours-agadir-marrakech-terre-damanar-du-070809-avril-108"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 15700,
+    "value": 17200,
+    "source_expired_at": "2023-08-03",
+    "duration": "10 à 11 jours",
+    "summary": "Combiné Dubaï et Istanbul avec vols, hôtels et transferts, excursions en option.",
+    "itinerary": [
+      "Dubaï",
+      "Istanbul"
+    ],
+    "included": [
+      "Vols",
+      "6 nuits à Dubaï",
+      "4 nuits à Istanbul",
+      "Transferts",
+      "Accompagnement"
+    ],
+    "excluded": [
+      "Visa et extras"
+    ],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 114,
+    "category": "Voyage international",
+    "title": "Dubaï + Istanbul",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/sejour-10-jours-9-nuits-a-dubai-et-istanbul-a-partir-de-15700-dhs--114",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/sejour-10-jours-9-nuits-a-dubai-et-istanbul-a-partir-de-15700-dhs--114"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 21900,
+    "value": 24500,
+    "source_expired_at": "2026-09-20",
+    "duration": "13 jours",
+    "summary": "Omra historique avec vol direct Royal Air Maroc vers Médine, séjour à Médine puis à La Mecque et accompagnement agence.",
+    "itinerary": [
+      "Vol vers Médine",
+      "4 nuits à Médine",
+      "Transfert vers La Mecque",
+      "8 nuits à La Mecque",
+      "Visites religieuses et retour"
+    ],
+    "included": [
+      "Vol direct",
+      "Hôtels",
+      "Transferts",
+      "Visites",
+      "Assistance agence"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 119,
+    "category": "Omra",
+    "title": "Omra septembre 2026 – 13 jours",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/omra-septembre-2026-de-13-jours-a-partir-de-21900-dhs-par-personne-119",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/omra-septembre-2026-de-13-jours-a-partir-de-21900-dhs-par-personne-119"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 28000,
+    "value": 36150,
+    "source_expired_at": null,
+    "duration": "16 jours / 14 nuits",
+    "summary": "Grand combiné Kuala Lumpur, Bali, Abu Dhabi et Dubaï; fiche historique ayant reçu des mises à jour.",
+    "itinerary": [
+      "Kuala Lumpur",
+      "Bali",
+      "Abu Dhabi",
+      "Dubaï"
+    ],
+    "included": [
+      "Vols",
+      "Hôtels",
+      "Transferts"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Fiche réutilisée; contrôler prix, durée et dates.",
+    "legacy_id": 123,
+    "category": "Voyage international",
+    "title": "Kuala Lumpur + Bali + Abu Dhabi + Dubaï",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/combine-4-en-1-kuala-lumpur-bali-abu-dhabi-dubai-16-jours-14-nuits-a-partir-de-32000-dhs-123",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/combine-4-en-1-kuala-lumpur-bali-abu-dhabi-dubai-16-jours-14-nuits-a-partir-de-32000-dhs-123"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 1750,
+    "value": 2360,
+    "source_expired_at": "2026-08-20",
+    "duration": "3 jours",
+    "summary": "Circuit désert et sud-est marocain : Errachidia/Ziz, Erfoud, Rissani, Merzouga, Todgha, Kelâat M’Gouna, Ouarzazate et Aït Ben Haddou.",
+    "itinerary": [
+      "Vallée du Ziz",
+      "Erfoud / Rissani",
+      "Merzouga / Khamlia",
+      "Gorges du Todgha",
+      "Kelâat M’Gouna",
+      "Ouarzazate / Aït Ben Haddou"
+    ],
+    "included": [
+      "Bivouac",
+      "Hôtel",
+      "Dromadaire ou 4x4",
+      "Dîners et petits-déjeuners",
+      "Guide/transport"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 137,
+    "category": "Voyage national",
+    "title": "Merzouga – Gorges Todgha – Kelâat M’Gouna – Ouarzazate (3 jours)",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/circuit-3-jours-a-merzouga-les-gorges-todgha-kelaat-mgouna-ouarzazate-plusieurs-departs-disponibles-137",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/circuit-3-jours-a-merzouga-les-gorges-todgha-kelaat-mgouna-ouarzazate-plusieurs-departs-disponibles-137"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 1980,
+    "value": 2680,
+    "source_expired_at": null,
+    "duration": "4 jours",
+    "summary": "Circuit Merzouga, gorges du Toudra, Kelâat M’Gouna, Ouarzazate et Marrakech avec bivouac et expérience désert.",
+    "itinerary": [
+      "Merzouga",
+      "Gorges du Toudra",
+      "Kelâat M’Gouna",
+      "Ouarzazate",
+      "Marrakech"
+    ],
+    "included": [
+      "Transport",
+      "Bivouac",
+      "Balade dromadaire/4x4",
+      "Repas prévus",
+      "Hôtel"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Page encore active/réutilisée; import forcé en expiré.",
+    "legacy_id": 138,
+    "category": "Voyage national",
+    "title": "Merzouga – Gorges du Toudra – Kelâat M’Gouna – Ouarzazate – Marrakech",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/circuit-4-jrs-a-merzouga-gorges-du-toudra-kelaat-mgouna-ouarzazate-marrakech-a-seulement-1980-dhs-138",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/circuit-4-jrs-a-merzouga-gorges-du-toudra-kelaat-mgouna-ouarzazate-marrakech-a-seulement-1980-dhs-138",
+      "https://www.ajinsafro.ma/voyage-national/circuit-4-jrs-a-merzouga-gorges-du-toudra-kelaat-mgouna-ouarzazate-marrakech-a-seulement-1890-mad-138",
+      "https://www.ajinsafro.ma/voyage-national/4-jours-merzouga-gorges-du-toudra-kelaat-mgouna-ouarzazate-marrakech-a-seulement-1700-mad--138"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 3200,
+    "value": 3800,
+    "source_expired_at": "2026-08-18",
+    "duration": "5 jours",
+    "summary": "Grand circuit du nord-est : Martil, Tétouan, M’diq, Oued Laou, Jebha, Al Hoceima, Nador, Saïdia et Oujda.",
+    "itinerary": [
+      "Martil / Tétouan / M’diq",
+      "Oued Laou / Jebha",
+      "Al Hoceima / Nador",
+      "Cap de l’Eau / Saïdia",
+      "Oujda"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 143,
+    "category": "Voyage national",
+    "title": "Martil – Tétouan – M’diq – Oued Laou – Al Hoceima – Nador – Saïdia – Oujda",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/offre-speciale-ete-martil-tetouan-mdiq-oued-laou-al-hoceima-nador-saidia-oujda-du-2907-au-0308-143",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/offre-speciale-ete-martil-tetouan-mdiq-oued-laou-al-hoceima-nador-saidia-oujda-du-2907-au-0308-143",
+      "https://www.ajinsafro.ma/voyage-national/offre-speciale-ete-martil-tetouan-mdiq-oued-laou-al-hoceima-nador-saidia-oujda-plusieurs-departs-disponible-143"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 980,
+    "value": null,
+    "source_expired_at": null,
+    "duration": "week-end",
+    "summary": "Ancienne offre Oued El Marsa, île Laila, Tanger et Asilah. Seule la page de commande historique a pu être retrouvée.",
+    "itinerary": [
+      "Oued El Marsa / île Laila",
+      "Tanger",
+      "Asilah"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "partial",
+    "source_note": "Source principale introuvable; données issues de l’ancienne page de commande.",
+    "legacy_id": 156,
+    "category": "Voyage national",
+    "title": "Oued El Marsa / Tanger / Asilah",
+    "source_url": "https://ajinsafro.ma/team/buy.php?id=156",
+    "legacy_urls": [
+      "https://ajinsafro.ma/team/buy.php?id=156"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 970,
+    "value": 1100,
+    "source_expired_at": "2026-03-10",
+    "duration": "2 jours",
+    "summary": "Week-end Oukaïmeden, Marrakech et vallée de l’Ourika avec hôtel et repas partiels.",
+    "itinerary": [
+      "Oukaïmeden",
+      "Marrakech",
+      "Ourika"
+    ],
+    "included": [
+      "Hôtel 4★",
+      "Dîner du samedi",
+      "Petit-déjeuner du dimanche",
+      "Accompagnement",
+      "Assurance"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 166,
+    "category": "Voyage national",
+    "title": "Oukaïmeden – Marrakech – Ourika (week-end)",
+    "source_url": "https://ajinsafro.ma/voyage-national/weekend-a-oukaimeden-marrakech-le-10-11-mars-2018-166",
+    "legacy_urls": [
+      "https://ajinsafro.ma/voyage-national/weekend-a-oukaimeden-marrakech-le-10-11-mars-2018-166"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 3350,
+    "value": 5320,
+    "source_expired_at": "2026-06-01",
+    "duration": "3 jours",
+    "summary": "Week-end shopping sur la Costa del Sol : Fuengirola, Mijas, Torremolinos, Malaga, Marbella et centres commerciaux.",
+    "itinerary": [
+      "Traversée vers Espagne",
+      "Fuengirola / Mijas / Torremolinos",
+      "Malaga / Plaza Mayor",
+      "Marbella / La Cañada"
+    ],
+    "included": [
+      "Ferry",
+      "Hôtel avec petits-déjeuners",
+      "Transport"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 170,
+    "category": "Voyage international",
+    "title": "Malaga – Torremolinos – Marbella",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/week-end-shopping-torremolinos-malaga-marbella-a-seulement-de-3350-dhs-170",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/week-end-shopping-torremolinos-malaga-marbella-a-seulement-de-3350-dhs-170"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 10900,
+    "value": 12430,
+    "source_expired_at": "2025-08-03",
+    "duration": "8 jours / 7 nuits",
+    "summary": "Circuit Portugal et Séville incluant l’Algarve, Albufeira, Lisbonne et une étape espagnole.",
+    "itinerary": [
+      "Séville",
+      "Algarve / Albufeira",
+      "Faro / Vilamoura",
+      "Lisbonne"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 172,
+    "category": "Voyage international",
+    "title": "Portugal + Séville – 8j/7n",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/circuit-8-jours-7-nuits-a-portugal-et-seville-a-partir-de-10900-dhs-172",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/circuit-8-jours-7-nuits-a-portugal-et-seville-a-partir-de-10900-dhs-172"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 1590,
+    "value": 1700,
+    "source_expired_at": "2020-12-31",
+    "duration": "4 jours",
+    "summary": "Séjour randonnée Imlil/Toubkal, Terre d’Amanar et Marrakech.",
+    "itinerary": [
+      "Imlil",
+      "Toubkal / refuge",
+      "Terre d’Amanar",
+      "Marrakech"
+    ],
+    "included": [
+      "Refuge et hôtel",
+      "Repas prévus",
+      "Guide",
+      "Transport"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 177,
+    "category": "Voyage national",
+    "title": "Imlil – Toubkal – Takerkoust – Marrakech",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/circuit-3-jours-a-imlil-toubkal-takerkoust-marrakech-121314-mai-177",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/circuit-3-jours-a-imlil-toubkal-takerkoust-marrakech-121314-mai-177"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 1480,
+    "value": 1950,
+    "source_expired_at": "2020-07-31",
+    "duration": "4 jours",
+    "summary": "Circuit côtier et montagne dans le nord : Stehat, Oued Laou, Chefchaouen, Fnideq et M’diq.",
+    "itinerary": [
+      "Stehat",
+      "Oued Laou",
+      "Chefchaouen",
+      "Fnideq",
+      "M’diq"
+    ],
+    "included": [
+      "Hôtels",
+      "Dîner et petit-déjeuner",
+      "Transport"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 192,
+    "category": "Voyage national",
+    "title": "Stehat – Oued Laou – Chefchaouen – Fnideq – M’diq",
+    "source_url": "https://ajinsafro.ma/voyage-national/circuit-a-stehat-oued-laou-chefchaouen-fnideq-mdiq-du-18-au-21-aout-2017-192",
+    "legacy_urls": [
+      "https://ajinsafro.ma/voyage-national/circuit-a-stehat-oued-laou-chefchaouen-fnideq-mdiq-du-18-au-21-aout-2017-192"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 1870,
+    "value": 2800,
+    "source_expired_at": "2025-09-22",
+    "duration": "4 jours",
+    "summary": "Circuit nord du Maroc : Asilah, Tanger, Belyounech, Tétouan, Martil, Chefchaouen et Oued Laou.",
+    "itinerary": [
+      "Asilah",
+      "Tanger / Belyounech",
+      "Tétouan / Martil",
+      "Chefchaouen / Oued Laou"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 198,
+    "category": "Voyage national",
+    "title": "Asilah – Tanger – Belyounech – Tétouan – Chefchaouen – Oued Laou",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/circuit-4-jours-asilah-tanger-belyounech-tetouan-chefchaouen-oued-laou-du-13-au-16-aout-2018-198",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/circuit-4-jours-asilah-tanger-belyounech-tetouan-chefchaouen-oued-laou-du-13-au-16-aout-2018-198"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 17590,
+    "value": 19760,
+    "source_expired_at": "2026-08-26",
+    "duration": "10 jours / 9 nuits",
+    "summary": "Circuit Égypte combinant Le Caire et Sharm El-Sheikh avec séjour balnéaire, pyramides et croisière/dîner sur le Nil.",
+    "itinerary": [
+      "Le Caire",
+      "Pyramides et visites urbaines",
+      "Sharm El-Sheikh",
+      "Retour Le Caire"
+    ],
+    "included": [
+      "Vols EgyptAir",
+      "6 nuits Sharm en formule tout compris",
+      "3 nuits Le Caire avec petit-déjeuner",
+      "Dîner sur le Nil",
+      "Visites guidées",
+      "Transferts"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 201,
+    "category": "Voyage international",
+    "title": "Égypte – Le Caire + Sharm El Sheikh",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/terre-des-pharaons-legypte-10-jours-9-nuits-au-caire-and-sharm-el-sheikh-a-partir-de-17590-dhs-201",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/terre-des-pharaons-legypte-10-jours-9-nuits-au-caire-and-sharm-el-sheikh-a-partir-de-17590-dhs-201"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 18900,
+    "value": 23400,
+    "source_expired_at": null,
+    "duration": "10 jours / 8 nuits",
+    "summary": "Séjour Thaïlande centré sur Phuket, Phi Phi, îles et sanctuaire d’éléphants en option.",
+    "itinerary": [
+      "Phuket",
+      "Îles Phi Phi / Khai",
+      "Elephant Jungle Sanctuary"
+    ],
+    "included": [
+      "Vols",
+      "Hôtels",
+      "Transferts"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Fiche actuellement active/réutilisée; seed forcé en expiré.",
+    "legacy_id": 203,
+    "category": "Voyage international",
+    "title": "Thaïlande – Phuket – Phi Phi – jungle des éléphants",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/circuit-thailande-10-jours-8-nuits-des-18900-dhs-phuket-iles-phi-phi-et-experience-jungle-des-elephants-203",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/circuit-thailande-10-jours-8-nuits-des-18900-dhs-phuket-iles-phi-phi-et-experience-jungle-des-elephants-203"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 29950,
+    "value": 32450,
+    "source_expired_at": "2025-09-29",
+    "duration": "12 jours",
+    "summary": "Circuit Philippines : Manille, Siquijor, Bohol et Panglao avec vols/ferries et excursions insulaires.",
+    "itinerary": [
+      "Manille",
+      "Siquijor",
+      "Bohol",
+      "Panglao"
+    ],
+    "included": [
+      "Vols et ferries prévus",
+      "Hôtels avec petits-déjeuners",
+      "Transferts",
+      "Excursions principales"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 210,
+    "category": "Voyage international",
+    "title": "Philippines – Manille, Siquijor, Bohol, Panglao",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/philippines-en-12-jours-manille-siquijor-bohol-et-panglao-a-partir-de-29950-dhs-210",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/philippines-en-12-jours-manille-siquijor-bohol-et-panglao-a-partir-de-29950-dhs-210"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 8600,
+    "value": 11300,
+    "source_expired_at": null,
+    "duration": "5 jours / 4 nuits",
+    "summary": "Séjour Paris depuis le Maroc, avec découverte des principaux monuments, Montmartre et option Disneyland.",
+    "itinerary": [
+      "Vol vers Paris",
+      "Tour des grands monuments",
+      "Montmartre",
+      "Temps libre / Disneyland en option",
+      "Retour"
+    ],
+    "included": [
+      "Vol",
+      "Hébergement",
+      "Petits-déjeuners"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Page réutilisée/active; seed forcé en expiré.",
+    "legacy_id": 233,
+    "category": "Voyage international",
+    "title": "Paris – 5 jours / 4 nuitées",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/sejour-5-jours-4-nuitees-a-la-ville-lumiere-paris-a-partir-de-8600-dhs-233",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/sejour-5-jours-4-nuitees-a-la-ville-lumiere-paris-a-partir-de-8600-dhs-233"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 890,
+    "value": 1400,
+    "source_expired_at": "2025-12-27",
+    "duration": "2 jours",
+    "summary": "Week-end Bin El Ouidane, cascades d’Ouzoud, Marrakech et Terre d’Amanar.",
+    "itinerary": [
+      "Bin El Ouidane",
+      "Ouzoud",
+      "Marrakech",
+      "Terre d’Amanar"
+    ],
+    "included": [
+      "Hôtel",
+      "Dîner",
+      "Petit-déjeuner",
+      "Guide",
+      "Assurance"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 246,
+    "category": "Voyage national",
+    "title": "Marrakech – Bin El Ouidane – Ouzoud – Terre d’Amanar",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/week-end-a-marrakech-bin-el-ouidane-cascades-douzoud-terres-damanar-depart-chaque-vendredi-soir-246",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/week-end-a-marrakech-bin-el-ouidane-cascades-douzoud-terres-damanar-depart-chaque-vendredi-soir-246"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 3400,
+    "value": 5200,
+    "source_expired_at": "2018-01-26",
+    "duration": "5 jours",
+    "summary": "Ancien séjour Madrid par avion au départ de Tanger avec découverte du centre, musées et Gran Vía.",
+    "itinerary": [
+      "Tanger → Madrid",
+      "Centre de Madrid",
+      "Musées / monuments",
+      "Gran Vía et temps libre"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 247,
+    "category": "Voyage international",
+    "title": "Madrid – 5 jours",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/espagne-5-jours-a-madrid-du-27-au-31-janvier-2018-247",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/espagne-5-jours-a-madrid-du-27-au-31-janvier-2018-247"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 3900,
+    "value": 5500,
+    "source_expired_at": "2018-03-13",
+    "duration": "4 jours",
+    "summary": "Séjour Barcelone lié au match FC Barcelone–Chelsea de 2018, avec hébergement et visites optionnelles.",
+    "itinerary": [
+      "Vol vers Barcelone",
+      "Visite de Barcelone",
+      "Match FC Barcelone–Chelsea",
+      "Retour"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 284,
+    "category": "Voyage international",
+    "title": "Barcelone – FC Barcelone vs Chelsea 2018",
+    "source_url": "https://ajinsafro.ma/voyages-international/special-sejour-i-assister-au-matche-du-fc-barcelone-vs-chelsea-du-1303-au-1603-2018-4-jours-3-nuits-284",
+    "legacy_urls": [
+      "https://ajinsafro.ma/voyages-international/special-sejour-i-assister-au-matche-du-fc-barcelone-vs-chelsea-du-1303-au-1603-2018-4-jours-3-nuits-284"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 7400,
+    "value": 9800,
+    "source_expired_at": "2019-01-03",
+    "duration": "8 jours",
+    "summary": "Ancien circuit Portugal passant par Faro, Albufeira, Vilamoura, Lisbonne et activités optionnelles.",
+    "itinerary": [
+      "Faro",
+      "Albufeira",
+      "Vilamoura",
+      "Lisbonne"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Ancienne fiche ayant pu être réutilisée; vérifier les dates.",
+    "legacy_id": 285,
+    "category": "Voyage international",
+    "title": "Portugal – circuit historique",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/circuit-portugal-du-24-juin-au-01-juillet-2018-a-seulement-7200-dhs-285",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/circuit-portugal-du-24-juin-au-01-juillet-2018-a-seulement-7200-dhs-285"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 13780,
+    "value": 15880,
+    "source_expired_at": "2026-06-30",
+    "duration": "8 jours / 7 nuits",
+    "summary": "Fiche historique italienne dont le contenu récent couvre Naples, Capri, Côte Amalfitaine et Rome malgré un ancien slug différent.",
+    "itinerary": [
+      "Naples",
+      "Capri",
+      "Côte Amalfitaine",
+      "Rome"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Slug historique et contenu récent ne correspondent plus parfaitement.",
+    "legacy_id": 287,
+    "category": "Voyage international",
+    "title": "Italie – ancienne fiche Trio Italie",
+    "source_url": "https://ajinsafro.ma/voyages-international/italie-trio-trois-villes-les-plus-reconnues-de-litalie-venise-florence-et-naples-du-08-au-15-avril-287",
+    "legacy_urls": [
+      "https://ajinsafro.ma/voyages-international/italie-trio-trois-villes-les-plus-reconnues-de-litalie-venise-florence-et-naples-du-08-au-15-avril-287"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 13900,
+    "value": 16200,
+    "source_expired_at": "2024-08-11",
+    "duration": "8 jours / 7 nuits",
+    "summary": "Combiné Abu Dhabi et Dubaï avec vols Royal Air Maroc, hôtels, transferts et programme urbain.",
+    "itinerary": [
+      "Abu Dhabi",
+      "Dubaï"
+    ],
+    "included": [
+      "Vols RAM",
+      "2 nuits Abu Dhabi",
+      "5 nuits Dubaï",
+      "Petits-déjeuners",
+      "Transferts",
+      "Guide"
+    ],
+    "excluded": [
+      "Visa et extras"
+    ],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 288,
+    "category": "Voyage international",
+    "title": "Abu Dhabi + Dubaï – 8j/7n",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/circuit-8-jours-7-nuits-aux-emirats-arabes-unis-abu-dhabi-dubai-a-partir-de-13900-dhs-288",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/circuit-8-jours-7-nuits-aux-emirats-arabes-unis-abu-dhabi-dubai-a-partir-de-13900-dhs-288"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 16800,
+    "value": 19600,
+    "source_expired_at": "2026-08-21",
+    "duration": "8 jours / 7 nuits",
+    "summary": "Circuit VIP Tunisie et Malte : Tunis, Carthage, Sidi Bou Saïd, Nabeul, Hammamet et excursion Malte en option.",
+    "itinerary": [
+      "Tunis / Carthage / Sidi Bou Saïd",
+      "Nabeul / Hammamet",
+      "Malte / Blue Lagoon"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 294,
+    "category": "Voyage international",
+    "title": "Tunisie + Malte VIP",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/tunisie-and-malte-vip-8-jours-7-nuits-a-partir-de-16-800-dhs-294",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/tunisie-and-malte-vip-8-jours-7-nuits-a-partir-de-16-800-dhs-294"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 16380,
+    "value": 19380,
+    "source_expired_at": "2018-07-24",
+    "duration": "12 jours / 11 nuits",
+    "summary": "Ancien circuit Thaïlande autour de Bangkok, palais royal, Chao Phraya, marché flottant et Kanchanaburi.",
+    "itinerary": [
+      "Bangkok",
+      "Palais royal / Chao Phraya",
+      "Marché flottant",
+      "Kanchanaburi"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 299,
+    "category": "Voyage international",
+    "title": "Thaïlande – Bangkok – 12j/11n",
+    "source_url": "https://ajinsafro.ma/voyages-international/thailand-en-12-jours-11-nuits-a-partir-de-16380-dhs-plusieurs-dates-sont-disponibles-299",
+    "legacy_urls": [
+      "https://ajinsafro.ma/voyages-international/thailand-en-12-jours-11-nuits-a-partir-de-16380-dhs-plusieurs-dates-sont-disponibles-299"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 15600,
+    "value": 19900,
+    "source_expired_at": null,
+    "duration": "10 jours / 9 nuits",
+    "summary": "Combiné Égypte Le Caire et Sharm El-Sheikh avec pyramides, dîner sur le Nil et séjour balnéaire.",
+    "itinerary": [
+      "Le Caire / pyramides",
+      "Dîner sur le Nil",
+      "Sharm El-Sheikh"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Fiche historique actuellement réutilisée; vérifier tarifs et dates.",
+    "legacy_id": 301,
+    "category": "Voyage international",
+    "title": "Égypte – Sharm El Sheikh + Le Caire – 10j/9n",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/sejour-10-jours-09-nuits-a-legypte-sharm-el-sheikh-caire-a-partir-de-17200-dhs-301",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/sejour-10-jours-09-nuits-a-legypte-sharm-el-sheikh-caire-a-partir-de-17200-dhs-301"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 12890,
+    "value": 14900,
+    "source_expired_at": "2018-07-31",
+    "duration": "11 jours / 10 nuits",
+    "summary": "Ancien combiné Istanbul et Beyrouth avec visites optionnelles du Bosphore, Îles des Princes, Byblos, Jeita et Harissa.",
+    "itinerary": [
+      "Istanbul",
+      "Bosphore / Îles des Princes",
+      "Beyrouth",
+      "Byblos / Jeita / Harissa"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 305,
+    "category": "Voyage international",
+    "title": "Istanbul + Beyrouth",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/partez-a-la-decouverte-distanbul-et-beirut-avec-ajinsafro-11-jours-10-nuits-seulement-avec-12890-mad-305",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/partez-a-la-decouverte-distanbul-et-beirut-avec-ajinsafro-11-jours-10-nuits-seulement-avec-12890-mad-305"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 1550,
+    "value": 1830,
+    "source_expired_at": "2023-09-28",
+    "duration": "3 jours",
+    "summary": "Circuit côtier Jebha et Al Hoceima avec plages, hôtel et activités nautiques optionnelles.",
+    "itinerary": [
+      "Jebha / Kaa Asras",
+      "Playa Monica",
+      "Al Hoceima / Quemado"
+    ],
+    "included": [
+      "2 nuits",
+      "Petits-déjeuners",
+      "Transport",
+      "Accompagnement",
+      "Assurance"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 319,
+    "category": "Voyage national",
+    "title": "Jebha + Al Hoceima – 3 jours",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/voyage-3-jours-a-jebha-et-al-hoceima-a-partir-de-seulement-1550-dhs-319",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/voyage-3-jours-a-jebha-et-al-hoceima-a-partir-de-seulement-1550-dhs-319"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 9890,
+    "value": 13200,
+    "source_expired_at": "2019-08-19",
+    "duration": "8 jours / 7 nuits",
+    "summary": "Circuit Italie : Milan, Venise, Florence et Pise avec vols, hôtels et déplacements inter-villes.",
+    "itinerary": [
+      "Milan",
+      "Venise",
+      "Florence",
+      "Pise"
+    ],
+    "included": [
+      "Vols Air Arabia",
+      "Hôtels 3/4★ avec petits-déjeuners",
+      "Transferts/train/bus",
+      "Accompagnement"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 329,
+    "category": "Voyage international",
+    "title": "Italie – Milan – Venise – Florence – Pise",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/circuit-italie-milan-venise-florence-pisa-08-jours-07-nuits-du-19-au-26-aout-2019-329",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/circuit-italie-milan-venise-florence-pisa-08-jours-07-nuits-du-19-au-26-aout-2019-329"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 13990,
+    "value": 15900,
+    "source_expired_at": "2018-09-01",
+    "duration": "8 jours / 7 nuits",
+    "summary": "Ancien circuit Amsterdam, Bruxelles et Paris avec hébergements et visites urbaines.",
+    "itinerary": [
+      "Amsterdam",
+      "Bruxelles",
+      "Paris"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 330,
+    "category": "Voyage international",
+    "title": "Amsterdam – Bruxelles – Paris",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/le-circuit-de-reveamsterdam-bruxelles-paris-8-jours-7-nuits-du-2409-au-01102018-a-seulement-13990-dh--330",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/le-circuit-de-reveamsterdam-bruxelles-paris-8-jours-7-nuits-du-2409-au-01102018-a-seulement-13990-dh--330"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 6760,
+    "value": 8760,
+    "source_expired_at": "2019-01-19",
+    "duration": null,
+    "summary": "Séjour historique à Amsterdam avec découverte de la ville, croisière sur les canaux et visites optionnelles.",
+    "itinerary": [
+      "Amsterdam",
+      "Canaux",
+      "Centre historique"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 332,
+    "category": "Voyage international",
+    "title": "Amsterdam",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/un-voyage-vers-amsterdam-une-ville-renommee-dans-le-monde-datant-du-17e-siecle-capitale-de-hollande-a-6760-mad--332",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/un-voyage-vers-amsterdam-une-ville-renommee-dans-le-monde-datant-du-17e-siecle-capitale-de-hollande-a-6760-mad--332"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 3750,
+    "value": 5750,
+    "source_expired_at": "2018-12-25",
+    "duration": "3 jours",
+    "summary": "Circuit Gibraltar et Costa del Sol via Tanger/Tarifa, Marbella, Torremolinos, Gibraltar, Estepona et Algésiras.",
+    "itinerary": [
+      "Tanger / Tarifa",
+      "Marbella / Torremolinos",
+      "Gibraltar",
+      "Estepona / Algésiras"
+    ],
+    "included": [
+      "Traversée",
+      "Transport",
+      "Hôtel 3★",
+      "Petits-déjeuners"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 334,
+    "category": "Voyage international",
+    "title": "Gibraltar",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/gibraltar-le-luxe-anglais-au-bord-du-mediterrane-avec-ajinsafro-a-3750-mad-334",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/gibraltar-le-luxe-anglais-au-bord-du-mediterrane-avec-ajinsafro-a-3750-mad-334"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 9850,
+    "value": 12450,
+    "source_expired_at": "2026-08-23",
+    "duration": "8 jours",
+    "summary": "Séjour Tunisie : Tunis, Carthage, Sidi Bou Saïd et Hammamet avec vol et hébergements.",
+    "itinerary": [
+      "Tunis",
+      "Carthage / Sidi Bou Saïd",
+      "Hammamet"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 336,
+    "category": "Voyage international",
+    "title": "Tunisie – Tunis – Carthage – Hammamet",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/sejour-en-tunisie-8-jours-a-tunis-carthage-et-hammamet-a-partir-de-9850-dhs-avec-vol-hotel-3-en-bb-336",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/sejour-en-tunisie-8-jours-a-tunis-carthage-et-hammamet-a-partir-de-9850-dhs-avec-vol-hotel-3-en-bb-336"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 13900,
+    "value": 17400,
+    "source_expired_at": "2024-08-02",
+    "duration": "1 semaine",
+    "summary": "Ancien programme Paris Jeux Olympiques 2024 avec village olympique, monuments et événement sportif.",
+    "itinerary": [
+      "Paris",
+      "Village olympique",
+      "Monuments",
+      "Événement sportif"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 352,
+    "category": "Voyage international",
+    "title": "Paris – Jeux Olympiques 2024",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/programme-pour-une-semaine-a-paris-jeux-olympiques-2024-a-partir-de-13900-dhs-352",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/programme-pour-une-semaine-a-paris-jeux-olympiques-2024-a-partir-de-13900-dhs-352"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 4490,
+    "value": 4900,
+    "source_expired_at": null,
+    "duration": "5 jours",
+    "summary": "Séjour Dakhla de cinq jours avec programme similaire aux offres Dakhla historiques et excursions optionnelles vers Imlili/Porto Rico.",
+    "itinerary": [
+      "Dakhla",
+      "Dune Blanche / sites naturels",
+      "Journée libre",
+      "Imlili / Porto Rico en option"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Page actuellement active; seed forcé en expiré.",
+    "legacy_id": 356,
+    "category": "Voyage national",
+    "title": "Dakhla – séjour 5 jours",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/sejour-5-jours-a-dakhla-depart-de-casablanca-356",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/sejour-5-jours-a-dakhla-depart-de-casablanca-356"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 57700,
+    "value": 69450,
+    "source_expired_at": "2026-04-02",
+    "duration": "16 jours",
+    "summary": "Grand circuit culturel Corée du Sud et Japon couvrant notamment Séoul, Busan et Osaka, avec transports et visites.",
+    "itinerary": [
+      "Séoul",
+      "Busan",
+      "Japon / Osaka et étapes associées"
+    ],
+    "included": [
+      "Hôtels",
+      "Transports inter-villes",
+      "Guide",
+      "Certaines activités et repas"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 367,
+    "category": "Voyage international",
+    "title": "Corée du Sud + Japon – 16 jours",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/decouverte-de-la-coree-et-du-japon-un-voyage-culturel-de-16-jours-a-partir-de-57700-dhs-367",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/decouverte-de-la-coree-et-du-japon-un-voyage-culturel-de-16-jours-a-partir-de-57700-dhs-367"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 27900,
+    "value": null,
+    "source_expired_at": null,
+    "duration": null,
+    "summary": "Ancienne offre Grèce combinant Athènes et Santorin. Seule la page de commande historique a été retrouvée.",
+    "itinerary": [
+      "Athènes",
+      "Santorin"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "partial",
+    "source_note": "Source principale introuvable; compléter le programme dans l’admin.",
+    "legacy_id": 379,
+    "category": "Voyage international",
+    "title": "Grèce – Athènes & Santorin",
+    "source_url": "https://www.ajinsafro.ma/team/buy.php?id=379",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/team/buy.php?id=379"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 21900,
+    "value": 26500,
+    "source_expired_at": "2026-02-12",
+    "duration": null,
+    "summary": "Omra Ramadan 2026 avec vols Etihad, hôtels, transferts, visites religieuses et assistance agence.",
+    "itinerary": [
+      "Vol vers Arabie Saoudite",
+      "Médine / La Mecque selon formule",
+      "Visites",
+      "Retour"
+    ],
+    "included": [
+      "Vols",
+      "Hôtels",
+      "Transferts",
+      "Visites",
+      "Assistance agence"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 381,
+    "category": "Omra",
+    "title": "Omra Ramadan 2026",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/omra-ramadan-2026-a-partir-de-21900-dhs-personne-381",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/omra-ramadan-2026-a-partir-de-21900-dhs-personne-381",
+      "https://www.ajinsafro.ma/team/buy.php?id=381"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 13800,
+    "value": 15800,
+    "source_expired_at": "2019-03-31",
+    "duration": "11 jours / 10 nuits",
+    "summary": "Ancien séjour Bali avec excursions et activités comme rafting à Ayung et découverte de l’île.",
+    "itinerary": [
+      "Bali",
+      "Excursion journée complète",
+      "Rafting Ayung"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 392,
+    "category": "Voyage international",
+    "title": "Bali – 11j/10n, 2019",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/sejour-de-reve-a-bali-11-jours-10-nuits-sans-visa-du-31-mars-au-11-avril-2019-a-partir-13800-mad-392",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/sejour-de-reve-a-bali-11-jours-10-nuits-sans-visa-du-31-mars-au-11-avril-2019-a-partir-13800-mad-392"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 7900,
+    "value": 9800,
+    "source_expired_at": "2019-08-18",
+    "duration": "8 jours / 7 nuits",
+    "summary": "Circuit Portugal via Tanger/Tarifa : Albufeira, Faro, Vilamoura et Lisbonne.",
+    "itinerary": [
+      "Tanger / Tarifa",
+      "Albufeira",
+      "Faro / Vilamoura",
+      "Lisbonne"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 394,
+    "category": "Voyage international",
+    "title": "Portugal – 8j/7n, 2019",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/circuit-portugal-08-jours-07-nuits-du-18-au-25-aout-2019-a-partir-de-7900-mad--394",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/circuit-portugal-08-jours-07-nuits-du-18-au-25-aout-2019-a-partir-de-7900-mad--394"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 1950,
+    "value": 2550,
+    "source_expired_at": "2024-09-08",
+    "duration": "4 jours",
+    "summary": "Circuit Al Hoceima, Nador, Cap de l’Eau, Saïdia et Oujda.",
+    "itinerary": [
+      "Al Hoceima",
+      "Nador",
+      "Cap de l’Eau",
+      "Saïdia",
+      "Oujda"
+    ],
+    "included": [
+      "Hôtel",
+      "Petits-déjeuners",
+      "Transport"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 395,
+    "category": "Voyage national",
+    "title": "Al Hoceima – Saïdia – Nador – Oujda",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/circuit-4-jours-oujda-saidia-nador-al-hoceima-plusieurs-departs-disponibles-395",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/circuit-4-jours-oujda-saidia-nador-al-hoceima-plusieurs-departs-disponibles-395",
+      "https://www.ajinsafro.ma/voyage-national/circuit-4-jours-oujda-saidia-nador-el-hoceima-plusieurs-departs-disponibles-395"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 8790,
+    "value": 11980,
+    "source_expired_at": "2019-08-25",
+    "duration": null,
+    "summary": "Ancien grand circuit en Espagne couvrant plusieurs villes dont Torremolinos, Malaga et Valence.",
+    "itinerary": [
+      "Torremolinos",
+      "Malaga",
+      "Valence",
+      "Autres étapes espagnoles"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 405,
+    "category": "Voyage international",
+    "title": "Circuit Espagne – plusieurs villes",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/circuit-espagne-aller-evasion-a-plus-de-6-villes-despagne-du-2007-au-2807-a-9480-mad-seulement-405",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/circuit-espagne-aller-evasion-a-plus-de-6-villes-despagne-du-2007-au-2807-a-9480-mad-seulement-405"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 31500,
+    "value": 34210,
+    "source_expired_at": null,
+    "duration": "14 jours / 12 nuits",
+    "summary": "Circuit Malaisie : Kuala Lumpur, Penang et Langkawi avec excursions optionnelles à Batu Caves et Malacca.",
+    "itinerary": [
+      "Kuala Lumpur",
+      "Penang",
+      "Langkawi"
+    ],
+    "included": [
+      "Vols",
+      "Hôtels",
+      "Transferts"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Page actuellement active/réutilisée; seed forcé en expiré.",
+    "legacy_id": 419,
+    "category": "Voyage international",
+    "title": "Malaisie – Kuala Lumpur – Penang – Langkawi",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/circuit-14-jours-12-nuits-en-malaisie-kuala-lumpur-penang-langkawi-a-partir-de-22800-dhs-419",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/circuit-14-jours-12-nuits-en-malaisie-kuala-lumpur-penang-langkawi-a-partir-de-22800-dhs-419"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 9500,
+    "value": 10500,
+    "source_expired_at": null,
+    "duration": "8 jours / 7 nuits",
+    "summary": "Séjour Istanbul avec excursions optionnelles à Sapanca, Îles des Princes, Balat/Eyüp, Bosphore et Şile/Ağva.",
+    "itinerary": [
+      "Istanbul",
+      "Sapanca en option",
+      "Îles des Princes en option",
+      "Balat / Eyüp / Bosphore"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Page actuellement active/réutilisée; seed forcé en expiré.",
+    "legacy_id": 426,
+    "category": "Voyage international",
+    "title": "Istanbul – 8j/7n",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/offre-speciale-8-jours-7-nuits-a-istanbul-a-partir-de-7900-dhs-426",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/offre-speciale-8-jours-7-nuits-a-istanbul-a-partir-de-7900-dhs-426"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 15900,
+    "value": 19990,
+    "source_expired_at": "2024-08-31",
+    "duration": "8 jours / 7 nuits",
+    "summary": "Séjour Antalya via Istanbul avec vol Air Arabia, une nuit à Istanbul puis séjour à Antalya.",
+    "itinerary": [
+      "Istanbul",
+      "Antalya"
+    ],
+    "included": [
+      "Vols",
+      "1 nuit Istanbul",
+      "6 nuits Antalya",
+      "Transferts"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 432,
+    "category": "Voyage international",
+    "title": "Antalya via Istanbul – 8j/7n",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/sejour-8-jours-7-nuitees-a-antalya-via-istanbul-a-partir-de-15900-dhs-432",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/sejour-8-jours-7-nuitees-a-antalya-via-istanbul-a-partir-de-15900-dhs-432"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 7890,
+    "value": 9890,
+    "source_expired_at": "2019-07-23",
+    "duration": "8 jours / 7 nuits",
+    "summary": "Ancien séjour Hammamet en formule All Inclusive avec vol Casablanca–Tunis et transferts.",
+    "itinerary": [
+      "Tunis",
+      "Hammamet"
+    ],
+    "included": [
+      "Vol Air Arabia",
+      "Transferts",
+      "Séjour hôtel en All Inclusive"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 436,
+    "category": "Voyage international",
+    "title": "Hammamet All Inclusive – 2019",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/offre-ete-2019-hammamet-en-all-inclusive-a-7980-mad-seulement--436",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/offre-ete-2019-hammamet-en-all-inclusive-a-7980-mad-seulement--436"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 7850,
+    "value": 9500,
+    "source_expired_at": null,
+    "duration": "7 jours / 6 nuits",
+    "summary": "Circuit Andalousie : Séville, Cordoue, Grenade et Costa del Sol avec ferry, hôtels 3★ et accompagnement.",
+    "itinerary": [
+      "Maroc → Algésiras → Séville",
+      "Séville",
+      "Cordoue / Grenade",
+      "Grenade",
+      "Costa del Sol / Fuengirola",
+      "Retour au Maroc"
+    ],
+    "included": [
+      "Transport touristique",
+      "Traversées aller-retour",
+      "6 nuits en hôtels 3★ avec petit-déjeuner",
+      "Visites prévues",
+      "Accompagnement"
+    ],
+    "excluded": [
+      "Visa Schengen",
+      "Repas/boissons non mentionnés",
+      "Dépenses personnelles",
+      "Pourboires"
+    ],
+    "recovery": "rich",
+    "source_note": "Page actuellement réutilisée avec départs 2026; seed forcé en expiré.",
+    "legacy_id": 439,
+    "category": "Voyage international",
+    "title": "Andalousie – Séville, Cordoue, Grenade, Costa del Sol",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/decouvrez-la-fascinante-andalousie-en-7-jours-6-nuits-a-partir-de-7850-dhs-439",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/decouvrez-la-fascinante-andalousie-en-7-jours-6-nuits-a-partir-de-7850-dhs-439",
+      "https://www.ajinsafro.ma/voyages-international/decouvrez-la-fascinante-andalousie-en-7-jours-6-nuits-a-partir-de-7600-dhs--439",
+      "https://www.ajinsafro.ma/team/buy.php?id=439",
+      "https://www.ajinsafro.ma/onedeal.php?id=439"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 180,
+    "value": 510,
+    "source_expired_at": "2020-03-08",
+    "duration": "1 jour",
+    "summary": "Excursion d’une journée à Chefchaouen avec médina, place Uta el-Hammam, kasbah et Ras El Ma.",
+    "itinerary": [
+      "Départ Casablanca/Rabat/Tanger",
+      "Chefchaouen : médina",
+      "Uta el-Hammam / kasbah",
+      "Ras El Ma",
+      "Retour"
+    ],
+    "included": [
+      "Transport",
+      "Guide",
+      "Assurance transport"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 447,
+    "category": "Voyage national",
+    "title": "Excursion Chefchaouen",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/excursion-chefchaouen-depart-chaque-samedi-et-dimanche-447",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/excursion-chefchaouen-depart-chaque-samedi-et-dimanche-447"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": null,
+    "value": null,
+    "source_expired_at": null,
+    "duration": "1 jour",
+    "summary": "Excursion d’une journée à Tanger avec grottes d’Hercule, Cap Spartel, Rmilat, Café Hafa et activité paintball.",
+    "itinerary": [
+      "Tanger",
+      "Grottes d’Hercule",
+      "Cap Spartel",
+      "Rmilat",
+      "Paintball",
+      "Café Hafa"
+    ],
+    "included": [
+      "Transport",
+      "Petit-déjeuner",
+      "Paintball"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 451,
+    "category": "Voyage national",
+    "title": "Excursion Tanger",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/excursion-tanger-depart-chaque-samedi-et-dimanche-451",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/excursion-tanger-depart-chaque-samedi-et-dimanche-451"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 8900,
+    "value": 10400,
+    "source_expired_at": null,
+    "duration": "5 jours / 4 nuits",
+    "summary": "Séjour Barcelone avec quartier gothique, Rambla, port, Sagrada Família et Parc Güell en option.",
+    "itinerary": [
+      "Vol Maroc → Barcelone",
+      "Quartier gothique / Rambla / port",
+      "Sagrada Família / Parc Güell / Aquarium en option",
+      "Journée libre",
+      "Retour"
+    ],
+    "included": [
+      "Vol A/R",
+      "Bagage cabine 10 kg",
+      "4 nuits hôtel 3★ avec petit-déjeuner",
+      "Transferts aéroport-hôtel",
+      "Taxes aériennes"
+    ],
+    "excluded": [
+      "Assurance",
+      "Repas non mentionnés",
+      "Taxes touristiques",
+      "Excursions optionnelles"
+    ],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 466,
+    "category": "Voyage international",
+    "title": "Barcelone – 5j/4n",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/sejour-5-jours-4-nuits-a-barcelone-la-capitale-cosmopolite-de-la-region-catalane-despagne-a-partir-de-8900-dhs-466",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/sejour-5-jours-4-nuits-a-barcelone-la-capitale-cosmopolite-de-la-region-catalane-despagne-a-partir-de-8900-dhs-466"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 2400,
+    "value": 2750,
+    "source_expired_at": "2025-05-05",
+    "duration": null,
+    "summary": "Aventure marocaine multi-étapes avec Marrakech, Ouarzazate, Merzouga et Fès, incluant une nuit en bivouac.",
+    "itinerary": [
+      "Marrakech",
+      "Ouarzazate",
+      "Merzouga",
+      "Fès"
+    ],
+    "included": [
+      "Transport minibus",
+      "Hôtels à Marrakech, Ouarzazate et Fès",
+      "Bivouac Merzouga",
+      "Dromadaire ou 4x4",
+      "4 dîners + 4 petits-déjeuners",
+      "Animation désert",
+      "Accompagnement"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 467,
+    "category": "Voyage national",
+    "title": "Aventure Marocaine – Marrakech – Ouarzazate – Merzouga – Fès",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/aventure-marocaine-evasion-et-decouverte-au-coeur-du-royaume-offre-speciale-vacances-scolaires-a-seulement-2400-dhs--467",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/aventure-marocaine-evasion-et-decouverte-au-coeur-du-royaume-offre-speciale-vacances-scolaires-a-seulement-2400-dhs--467",
+      "https://www.ajinsafro.ma/team/buy.php?id=467"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 690,
+    "value": 920,
+    "source_expired_at": "2020-08-25",
+    "duration": "2 jours",
+    "summary": "Week-end Al Hoceima spécial départs de l’Oriental, avec plages Calabonita/Quemado et visite de la ville.",
+    "itinerary": [
+      "Oujda/Berkane → Al Hoceima",
+      "Calabonita",
+      "Corniche / port / Moro Viejo",
+      "Quemado",
+      "Retour"
+    ],
+    "included": [
+      "Transport",
+      "1 nuit hôtel 3★",
+      "Petit-déjeuner",
+      "Visite guidée",
+      "Assurance"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 480,
+    "category": "Voyage national",
+    "title": "Week-end Al Hoceima spécial Nass CharQ",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/weekend-a-al-hoceima-special-pour-nass-charq-la-perle-de-la-mediterrane-plusieurs-departs-disponibles-480",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/weekend-a-al-hoceima-special-pour-nass-charq-la-perle-de-la-mediterrane-plusieurs-departs-disponibles-480"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 2800,
+    "value": 3500,
+    "source_expired_at": "2020-10-23",
+    "duration": "6 jours / 5 nuits",
+    "summary": "Séjour Agadir par avion avec excursion Legzira, Mirleft et Tiznit et plusieurs activités locales.",
+    "itinerary": [
+      "Vol Rabat → Agadir",
+      "Agadir",
+      "Legzira / Mirleft / Tiznit",
+      "Journées libres/visites",
+      "Retour"
+    ],
+    "included": [
+      "Vol A/R",
+      "Transferts aéroport",
+      "5 nuits hôtel 4★ avec petit-déjeuner",
+      "Excursions prévues",
+      "Train touristique",
+      "Guide",
+      "Bagage cabine 10 kg"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 481,
+    "category": "Voyage national",
+    "title": "Agadir 6j/5n + Legzira – Mirleft – Tiznit",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/6-jours-5-nuits-a-agadir-par-avion-plus-excursion-a-legzira-mirleft-et-tiznit--481",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/6-jours-5-nuits-a-agadir-par-avion-plus-excursion-a-legzira-mirleft-et-tiznit--481"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 5300,
+    "value": 6100,
+    "source_expired_at": "2026-07-01",
+    "duration": "6 jours",
+    "summary": "Voyage Dakhla et Laâyoune par avion au départ de Casablanca, avec excursions et activités optionnelles.",
+    "itinerary": [
+      "Casablanca → Dakhla",
+      "Découverte Dakhla",
+      "Route vers Laâyoune / activités",
+      "Retour depuis Laâyoune"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 483,
+    "category": "Voyage national",
+    "title": "Dakhla + Laâyoune – par avion",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/voyage-a-dakhla-4-jours-exclusive-pour-nass-laayoune-depart-chaque-mercredi-483",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/voyage-a-dakhla-4-jours-exclusive-pour-nass-laayoune-depart-chaque-mercredi-483"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 1460,
+    "value": 1790,
+    "source_expired_at": "2024-09-17",
+    "duration": "3 jours",
+    "summary": "Circuit Al Hoceima, Nador et Saïdia avec plages, découverte urbaine et plongée optionnelle.",
+    "itinerary": [
+      "Al Hoceima / Quemado",
+      "Calabonita / Nador",
+      "Saïdia"
+    ],
+    "included": [
+      "Transport",
+      "2 nuits hôtel",
+      "2 petits-déjeuners",
+      "Accompagnement",
+      "Assurance"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 485,
+    "category": "Voyage national",
+    "title": "Al Hoceima – Nador – Saïdia, 3 jours",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/circuit-3-jours-a-al-hoceima-nador-saidia-a-seulement-1460-dhs-485",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/circuit-3-jours-a-al-hoceima-nador-saidia-a-seulement-1460-dhs-485"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 2890,
+    "value": 3990,
+    "source_expired_at": "2020-10-04",
+    "duration": "5 jours",
+    "summary": "Séjour de luxe Al Hoceima puis Saïdia en formule All Inclusive.",
+    "itinerary": [
+      "Al Hoceima",
+      "Saïdia All Inclusive"
+    ],
+    "included": [
+      "Transport",
+      "4 nuits hôtel",
+      "Al Hoceima en BB",
+      "Saïdia All Inclusive",
+      "Visite guidée",
+      "Assurance"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 487,
+    "category": "Voyage national",
+    "title": "Saïdia All Inclusive + Al Hoceima",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/sejours-de-luxe-chez-ajinsafro-saidia-all-inclusive-plus-al-hoceima-plusieurs-depart-disponible-487",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/sejours-de-luxe-chez-ajinsafro-saidia-all-inclusive-plus-al-hoceima-plusieurs-depart-disponible-487"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 1980,
+    "value": 2490,
+    "source_expired_at": "2020-10-11",
+    "duration": null,
+    "summary": "Week-end Al Hoceima par avion avec hôtel, plages et visites de la ville.",
+    "itinerary": [
+      "Vol Casablanca → Al Hoceima",
+      "Calabonita / Quemado",
+      "Visite d’Al Hoceima",
+      "Retour"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 488,
+    "category": "Voyage national",
+    "title": "Al Hoceima par avion",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/week-end-al-hoceima-par-avion-chez-ajinsafro-plusieurs-depart-disponible-488",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/week-end-al-hoceima-par-avion-chez-ajinsafro-plusieurs-depart-disponible-488"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 1380,
+    "value": 1999,
+    "source_expired_at": "2020-10-08",
+    "duration": null,
+    "summary": "Séjour Al Hoceima avec hôtel de luxe vue mer, combinant Playa Monica et visites côtières.",
+    "itinerary": [
+      "Départ Casablanca/Rabat/Tanger/Tétouan",
+      "Jebha / Playa Monica",
+      "Al Hoceima / hôtel luxe"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 489,
+    "category": "Voyage national",
+    "title": "Al Hoceima avec hôtel de luxe",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/voyage-avec-hotel-de-luxe-a-al-hoceima-exclusive-chez-ajinsafro-plusieurs-depart-disponible-489",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/voyage-avec-hotel-de-luxe-a-al-hoceima-exclusive-chez-ajinsafro-plusieurs-depart-disponible-489"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 1490,
+    "value": 2550,
+    "source_expired_at": "2022-01-03",
+    "duration": "4 jours",
+    "summary": "Circuit nord : Assilah, Tanger, Fnideq, M’diq, Tétouan, Martil, Akchour et Chefchaouen.",
+    "itinerary": [
+      "Assilah / Tanger",
+      "Fnideq / M’diq",
+      "Tétouan / Martil",
+      "Akchour / Chefchaouen"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 494,
+    "category": "Voyage national",
+    "title": "Assilah – Tanger – Fnideq – M’diq – Tétouan – Martil – Akchour – Chefchaouen",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/circuit-4-jours-a-assilah-tanger-fnideq-mdiq-martil-tetouan-chefchaouen-494",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/circuit-4-jours-a-assilah-tanger-fnideq-mdiq-martil-tetouan-chefchaouen-494"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 1250,
+    "value": 2730,
+    "source_expired_at": "2022-06-15",
+    "duration": "3 jours",
+    "summary": "Circuit randonnée Aït Bouguemez, cascades d’Ouzoud et Marrakech.",
+    "itinerary": [
+      "Aït Bouguemez",
+      "Ouzoud",
+      "Marrakech"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 496,
+    "category": "Voyage national",
+    "title": "Aït Bouguemez – Ouzoud – Marrakech",
+    "source_url": "https://www.ajinsafro.ma/team/buy.php?id=496",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/team/buy.php?id=496"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 1690,
+    "value": 1950,
+    "source_expired_at": "2026-07-01",
+    "duration": "3 jours",
+    "summary": "Circuit Imlil, Toubkal et Marrakech avec randonnée et séjour de montagne.",
+    "itinerary": [
+      "Imlil",
+      "Toubkal",
+      "Marrakech"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 498,
+    "category": "Voyage national",
+    "title": "Imlil – Toubkal – Marrakech",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/circuit-3-jours-a-imlil-toubkal-marrakech-depart-chaque-semaine--498",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/circuit-3-jours-a-imlil-toubkal-marrakech-depart-chaque-semaine--498"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 920,
+    "value": 1100,
+    "source_expired_at": "2026-02-17",
+    "duration": "2 jours",
+    "summary": "Week-end Michlifen/Ifrane, Moulay Yacoub et Fès avec découverte de la médina.",
+    "itinerary": [
+      "Michlifen / Ifrane",
+      "Moulay Yacoub",
+      "Fès / médina"
+    ],
+    "included": [
+      "Transport",
+      "1 nuit à Fès",
+      "Petit-déjeuner",
+      "Accompagnement",
+      "Assurance"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 511,
+    "category": "Voyage national",
+    "title": "Ifrane – Moulay Yacoub – Fès",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/week-end-a-ifrane-moulay-yakoub-fes-a-seulement-920-dhs-511",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/week-end-a-ifrane-moulay-yakoub-fes-a-seulement-920-dhs-511",
+      "https://www.ajinsafro.ma/team/buy.php?id=511"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": null,
+    "value": null,
+    "source_expired_at": null,
+    "duration": null,
+    "summary": "Circuit au départ de Marrakech vers Tanger, Chefchaouen et Akchour.",
+    "itinerary": [
+      "Marrakech → Tanger",
+      "Chefchaouen",
+      "Akchour"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "partial",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 513,
+    "category": "Voyage national",
+    "title": "Marrakech → Tanger – Chefchaouen – Akchour",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/circuit-special-depart-de-marrakech-vers-tangerchefchaouenakchour-plusieurs-date-disponible-513",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/circuit-special-depart-de-marrakech-vers-tangerchefchaouenakchour-plusieurs-date-disponible-513"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": null,
+    "value": null,
+    "source_expired_at": null,
+    "duration": null,
+    "summary": "Ancienne offre Nouvel An à Agadir. Seule la page de commande historique a été retrouvée.",
+    "itinerary": [
+      "Agadir"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "partial",
+    "source_note": "Programme détaillé à compléter depuis vos archives internes.",
+    "legacy_id": 515,
+    "category": "Voyage national",
+    "title": "Agadir Nouvel An",
+    "source_url": "https://www.ajinsafro.ma/team/buy.php?id=515",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/team/buy.php?id=515"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 6690,
+    "value": null,
+    "source_expired_at": null,
+    "duration": "5 jours / 4 nuits",
+    "summary": "Séjour Dakhla en hôtels de luxe sur cinq jours, avec formule et excursions selon l’offre choisie.",
+    "itinerary": [
+      "Dakhla",
+      "Excursions nature / lagune",
+      "Journées libres"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "partial",
+    "source_note": "Fiche récupérée mais détails à revoir dans l’admin avant réactivation.",
+    "legacy_id": 521,
+    "category": "Voyage national",
+    "title": "Dakhla 5j/4n – hôtels de luxe",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/sejours-a-dakhla-5-jours-4-nuits-dans-des-hotels-de-luxe-a-partir-de-6690-mad-plusieurs-date-disponible-521",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/sejours-a-dakhla-5-jours-4-nuits-dans-des-hotels-de-luxe-a-partir-de-6690-mad-plusieurs-date-disponible-521"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 1780,
+    "value": null,
+    "source_expired_at": null,
+    "duration": null,
+    "summary": "Ancienne offre hôtelière All Inclusive à Agadir pour une famille, historiquement liée à l’Iberostar Founty Beach.",
+    "itinerary": [
+      "Agadir / séjour hôtel"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "partial",
+    "source_note": "Cette entrée est une offre d’hébergement et non un tour; importée en st_hotel si ce post type existe.",
+    "legacy_id": 537,
+    "category": "Voyage national",
+    "title": "Offre All Inclusive famille",
+    "source_url": "https://www.ajinsafro.ma/team/buy.php?id=537",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/team/buy.php?id=537"
+    ],
+    "service_type": "hotel",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 3790,
+    "value": null,
+    "source_expired_at": null,
+    "duration": null,
+    "summary": "Séjour VIP Al Hoceima par avion avec hébergement en hôtel 3★/4★ et transferts.",
+    "itinerary": [
+      "Vol vers Al Hoceima",
+      "Séjour hôtel",
+      "Transferts / temps libre"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "partial",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 539,
+    "category": "Voyage national",
+    "title": "Al Hoceima VIP – vol + hôtel",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/special-vip-al-hoceima-vol-hebergement-a-lhotel-3-ou-4-transferts-a-3790-dhs-539",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/special-vip-al-hoceima-vol-hebergement-a-lhotel-3-ou-4-transferts-a-3790-dhs-539",
+      "https://www.ajinsafro.ma/voyage-national/special-vip-al-hoceima-vol-hebergement-a-lhotel-3-ou-4-transferts-a-2650-dhs-539"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 5990,
+    "value": null,
+    "source_expired_at": null,
+    "duration": "8 jours",
+    "summary": "Ancienne offre Istanbul sur huit jours, conservée comme historique même si la fiche a connu plusieurs versions.",
+    "itinerary": [
+      "Istanbul",
+      "Visites urbaines et excursions optionnelles"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "partial",
+    "source_note": "Ancienne URL avec paramètre de langue; vérifier contenu/tarif avant réactivation.",
+    "legacy_id": 543,
+    "category": "Voyage international",
+    "title": "Istanbul – 8j/7n (ancienne URL)",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/circuit-8-jours-a-istanbul-a-partir-de-5990-mad--543?lang=fr_FR",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/circuit-8-jours-a-istanbul-a-partir-de-5990-mad--543?lang=fr_FR",
+      "https://www.ajinsafro.ma/voyages-international/evasion-a-istanbul-8-jours-7-nuits-au-coeur-de-lempire-a-partir-de-7990-dhs-543"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 4500,
+    "value": null,
+    "source_expired_at": null,
+    "duration": "4 jours",
+    "summary": "Séjour VIP Agadir par avion avec hôtel et deux jours d’excursions.",
+    "itinerary": [
+      "Vol vers Agadir",
+      "Agadir",
+      "Excursions régionales",
+      "Retour"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "partial",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 546,
+    "category": "Voyage national",
+    "title": "Agadir VIP par avion",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/circuit-4-jours-vip-a-agadir-par-avion-avec-hotel-plus-2-jours-dexcursions-a-seulement-4500-dhs-546",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/circuit-4-jours-vip-a-agadir-par-avion-avec-hotel-plus-2-jours-dexcursions-a-seulement-4500-dhs-546"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 3900,
+    "value": 4900,
+    "source_expired_at": null,
+    "duration": "5 jours / 4 nuits",
+    "summary": "Circuit par avion Errachidia, Erfoud, Rissani, Merzouga, gorges du Todgha, Tinghir et Ouarzazate.",
+    "itinerary": [
+      "Vol Casablanca → Errachidia",
+      "Vallée du Ziz / Erfoud / Rissani",
+      "Merzouga / Khamlia / bivouac",
+      "Todgha / Tinghir / Ouarzazate",
+      "Aït Ben Haddou / retour"
+    ],
+    "included": [
+      "Vol Royal Air Maroc A/R",
+      "Transferts",
+      "Dromadaire",
+      "Maison d’hôtes",
+      "Bivouac",
+      "2 nuits hôtel 3★ à Ouarzazate",
+      "Demi-pension",
+      "4x4 privé",
+      "Animation locale",
+      "Accompagnement"
+    ],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Contenu historique à valider dans l’administration avant réactivation.",
+    "legacy_id": 551,
+    "category": "Voyage national",
+    "title": "Errachidia – Erfoud – Rissani – Merzouga – Todgha – Tinghir – Ouarzazate",
+    "source_url": "https://www.ajinsafro.ma/voyage-national/circuit-5-jours-4-nuits-par-avion-a-errachidia-erfoud-rissani-merzouga-les-gorges-todgha-tinghir-ouarzazate-551",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyage-national/circuit-5-jours-4-nuits-par-avion-a-errachidia-erfoud-rissani-merzouga-les-gorges-todgha-tinghir-ouarzazate-551"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 12900,
+    "value": 14700,
+    "source_expired_at": null,
+    "duration": "8 jours",
+    "summary": "Séjour Dubaï de huit jours axé sur découverte urbaine, désert, Abu Dhabi et activités optionnelles.",
+    "itinerary": [
+      "Arrivée Dubaï",
+      "Découverte de Dubaï",
+      "Journées libres/options",
+      "Retour"
+    ],
+    "included": [
+      "Vol A/R avec escale Istanbul",
+      "7 nuits hôtel 4★ avec petit-déjeuner",
+      "Transferts aéroport-hôtel"
+    ],
+    "excluded": [
+      "Excursions optionnelles",
+      "Repas non mentionnés",
+      "Assurance",
+      "Dépenses personnelles",
+      "Visa"
+    ],
+    "recovery": "rich",
+    "source_note": "Page actuellement active; seed forcé en expiré.",
+    "legacy_id": 553,
+    "category": "Voyage international",
+    "title": "Dubaï – 8 jours",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/evasion-doree-a-dubai-8-jours-de-reve-entre-desert-luxe-et-futur-a-partir-de-12900-dhs-par-personne-553",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/evasion-doree-a-dubai-8-jours-de-reve-entre-desert-luxe-et-futur-a-partir-de-12900-dhs-par-personne-553"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 16300,
+    "value": 19600,
+    "source_expired_at": null,
+    "duration": "14 jours",
+    "summary": "Omra septembre avec vol direct Royal Air Maroc vers Médine, 4 nuits à Médine et 9 nuits à La Mecque selon formule.",
+    "itinerary": [
+      "Vol direct vers Médine",
+      "4 nuits à Médine",
+      "Transfert vers La Mecque",
+      "9 nuits à La Mecque",
+      "Retour"
+    ],
+    "included": [],
+    "excluded": [],
+    "recovery": "rich",
+    "source_note": "Page actuellement active; seed forcé en expiré.",
+    "legacy_id": 554,
+    "category": "Omra",
+    "title": "Omra septembre – 14 jours",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/offre-speciale-omra-septembre-de-14-jours-a-partir-de-16300-dhs-personne-554",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/offre-speciale-omra-septembre-de-14-jours-a-partir-de-16300-dhs-personne-554"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 25800,
+    "value": 31500,
+    "source_expired_at": null,
+    "duration": "14 jours / 12 nuits",
+    "summary": "Combiné Thaïlande et Laos : Bangkok, Luang Prabang et Phuket, avec excursions optionnelles.",
+    "itinerary": [
+      "Casablanca → Bangkok",
+      "Bangkok",
+      "Luang Prabang",
+      "Phuket",
+      "Retour"
+    ],
+    "included": [
+      "Vols internationaux et régionaux",
+      "12 nuits hôtels 4★ avec petit-déjeuner",
+      "Transferts"
+    ],
+    "excluded": [
+      "Excursions optionnelles",
+      "Repas non mentionnés",
+      "Assurance",
+      "Dépenses personnelles",
+      "Visa Laos"
+    ],
+    "recovery": "rich",
+    "source_note": "Page actuellement active; seed forcé en expiré.",
+    "legacy_id": 567,
+    "category": "Voyage international",
+    "title": "Thaïlande + Laos – Bangkok – Luang Prabang – Phuket",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/combine-thailande-and-laos-en-14-jours-12-nuits-3-en-1-bangkok-luang-prabang-phuket-a-partir-de-25800-dhs-personne-567",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/combine-thailande-and-laos-en-14-jours-12-nuits-3-en-1-bangkok-luang-prabang-phuket-a-partir-de-25800-dhs-personne-567"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  },
+  {
+    "price": 10900,
+    "value": 14300,
+    "source_expired_at": null,
+    "duration": "7 jours / 6 nuits",
+    "summary": "Séjour Dubaï avec city tour, safari désert, excursion Abu Dhabi et journées libres.",
+    "itinerary": [
+      "Arrivée Dubaï",
+      "City tour Dubaï",
+      "Safari désert",
+      "Abu Dhabi",
+      "Journées libres",
+      "Retour"
+    ],
+    "included": [
+      "Vol A/R",
+      "Accueil et assistance",
+      "Transferts",
+      "Bus climatisé",
+      "Guide",
+      "6 nuits avec petit-déjeuner",
+      "Excursions prévues"
+    ],
+    "excluded": [
+      "Repas non prévus",
+      "Taxe touristique",
+      "Prestations non mentionnées",
+      "Visa EAU"
+    ],
+    "recovery": "rich",
+    "source_note": "Page actuellement active; seed forcé en expiré.",
+    "legacy_id": 570,
+    "category": "Voyage international",
+    "title": "Dubaï – 7 jours / 6 nuits",
+    "source_url": "https://www.ajinsafro.ma/voyages-international/partez-a-la-decouverte-de-dubai-lors-dun-sejour-inoubliable-de-7-jours-6-nuits-a-partir-de-4800-dhs-570",
+    "legacy_urls": [
+      "https://www.ajinsafro.ma/voyages-international/partez-a-la-decouverte-de-dubai-lors-dun-sejour-inoubliable-de-7-jours-6-nuits-a-partir-de-4800-dhs-570"
+    ],
+    "service_type": "tour",
+    "seed_status": "expired",
+    "completion_status": "incomplete",
+    "requires_images": true,
+    "reactivation_required": true
+  }
+]

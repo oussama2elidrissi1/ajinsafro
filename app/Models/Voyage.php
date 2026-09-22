@@ -61,6 +61,59 @@ class Voyage extends Model
         });
     }
 
+    /** Programme importé du catalogue historique ajinsafro.ma et pas encore repris par une agence. */
+    public const LEGACY_COMPLETION_INCOMPLETE = 'incomplete';
+
+    public const LEGACY_COMPLETION_LABEL = 'À compléter';
+
+    /** Bloc de migration posé par le seeder historique, ou null pour un voyage natif. */
+    public function legacyImport(): ?array
+    {
+        $block = data_get($this->logistics_meta, 'legacy_import');
+
+        return is_array($block) ? $block : null;
+    }
+
+    public function isLegacyImport(): bool
+    {
+        return $this->legacyImport() !== null;
+    }
+
+    /** Vrai tant que la fiche historique n'a pas été complétée (images, départs, prix...). */
+    public function isLegacyIncomplete(): bool
+    {
+        if (! $this->isLegacyImport()) {
+            return false;
+        }
+
+        $status = data_get($this->logistics_meta, 'completion.status', self::LEGACY_COMPLETION_INCOMPLETE);
+
+        return (string) $status === self::LEGACY_COMPLETION_INCOMPLETE;
+    }
+
+    /**
+     * Éléments encore manquants sur une fiche historique (clés stables : images, prix, departs...).
+     *
+     * @return list<string>
+     */
+    public function legacyMissing(): array
+    {
+        $missing = data_get($this->logistics_meta, 'completion.missing');
+
+        return is_array($missing) ? array_values(array_filter($missing, 'is_string')) : [];
+    }
+
+    /**
+     * Chemin public historique (`/voyage-national/...`) à conserver : seul le domaine change
+     * entre l'ancien site `.ma` et la plateforme actuelle.
+     */
+    public function legacyPath(): ?string
+    {
+        $path = data_get($this->logistics_meta, 'seo.legacy_path');
+
+        return is_string($path) && $path !== '' ? $path : null;
+    }
+
     public function programDays()
     {
         return $this->hasMany(TravelProgramDay::class)->orderBy('day_number');

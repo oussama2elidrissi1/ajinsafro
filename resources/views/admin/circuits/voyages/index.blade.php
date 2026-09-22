@@ -296,6 +296,9 @@
                                                 @if(!empty($tour->laravel_slug))
                                                     <span class="aj-badge -info">Laravel</span>
                                                 @endif
+                                                @if(!empty($tour->legacy_incomplete))
+                                                    <span class="aj-badge -warning" title="Programme historique importé : {{ implode(', ', $tour->legacy_missing ?? []) }}">À compléter</span>
+                                                @endif
                                             </div>
                                             <div class="aj-meta-text">{{ $tour->post_name }}</div>
                                         </td>
@@ -367,6 +370,9 @@
                                             <span class="aj-badge -warning">Brouillon</span>
                                         @else
                                             <span class="aj-badge -info">{{ $tour->post_status }}</span>
+                                        @endif
+                                        @if(!empty($tour->legacy_incomplete))
+                                            <span class="aj-badge -warning" title="Programme historique importé : {{ implode(', ', $tour->legacy_missing ?? []) }}">À compléter</span>
                                         @endif
                                     </div>
                                     <div class="aj-card-actions">

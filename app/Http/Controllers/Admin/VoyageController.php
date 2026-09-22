@@ -61,6 +61,9 @@ class VoyageController extends Controller
 
     protected VoyageAvailabilityService $voyageAvailabilityService;
 
+    /** Blocs de `logistics_meta` pilotés par le formulaire logistique (les autres clés sont conservées). */
+    private const LOGISTICS_FORM_KEYS = ['train', 'boat', 'transport'];
+
     private const V2_STEPS = [
         's-general',
         's-pricing',
@@ -180,14 +183,18 @@ class VoyageController extends Controller
                 return $tour;
             });
 
-            // Enrichir la liste avec le slug Laravel (pour le bouton "Voir la page client").
+            // Enrichir la liste avec le slug Laravel (pour le bouton "Voir la page client")
+            // et la marque « À compléter » des programmes importés du catalogue historique.
             $wpIds = $tours->getCollection()->map(fn ($t) => (int) ($t->ID ?? 0))->filter()->values()->all();
             $lvByWp = $wpIds !== []
-                ? Voyage::query()->whereIn('wp_post_id', $wpIds)->get(['wp_post_id', 'slug'])->keyBy('wp_post_id')
+                ? Voyage::query()->whereIn('wp_post_id', $wpIds)->get(['wp_post_id', 'slug', 'logistics_meta'])->keyBy('wp_post_id')
                 : collect();
             $tours->getCollection()->transform(function ($tour) use ($lvByWp) {
                 $wpId = (int) ($tour->ID ?? 0);
-                $tour->laravel_slug = $wpId ? (string) ($lvByWp->get($wpId)->slug ?? '') : '';
+                $voyage = $wpId ? $lvByWp->get($wpId) : null;
+                $tour->laravel_slug = (string) ($voyage->slug ?? '');
+                $tour->legacy_incomplete = $voyage ? $voyage->isLegacyIncomplete() : false;
+                $tour->legacy_missing = $voyage ? $voyage->legacyMissing() : [];
                 return $tour;
             });
         } catch (\Throwable $e) {
@@ -1549,7 +1556,13 @@ class VoyageController extends Controller
             $payload = [];
         }
 
-        $voyage->logistics_meta = $payload;
+        // Le formulaire ne porte que les blocs transport : on conserve les autres clés stockées
+        // dans logistics_meta (migration du catalogue historique, URLs d'origine, marque
+        // « À compléter »), sinon un simple enregistrement de l'étape les effacerait.
+        $existing = is_array($voyage->logistics_meta) ? $voyage->logistics_meta : [];
+        $preserved = array_diff_key($existing, array_flip(self::LOGISTICS_FORM_KEYS));
+
+        $voyage->logistics_meta = array_merge($preserved, $payload);
         $voyage->save();
     }
 
@@ -1634,7 +1647,14 @@ class VoyageController extends Controller
                 ->whereNotNull('date')
                 ->whereNotNull('seats')
                 ->exists()),
-            's-logistics' => $laravelVoyage ? $this->hasAnyNonEmptyScalar($laravelVoyage->logistics_meta ?? []) : false,
+            // Seuls les blocs du formulaire comptent : les métadonnées de migration stockées
+            // dans logistics_meta ne doivent pas faire passer l'étape pour renseignée.
+            's-logistics' => $laravelVoyage
+                ? $this->hasAnyNonEmptyScalar(array_intersect_key(
+                    is_array($laravelVoyage->logistics_meta) ? $laravelVoyage->logistics_meta : [],
+                    array_flip(self::LOGISTICS_FORM_KEYS)
+                ))
+                : false,
         ];
 
         return collect(self::V2_STEPS)

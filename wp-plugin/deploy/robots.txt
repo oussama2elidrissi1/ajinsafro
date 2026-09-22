@@ -1,0 +1,31 @@
+# ---------------------------------------------------------------------------
+# ajinsafro.net — a deposer tel quel a la racine du WordPress public,
+# a cote de wp-config.php (ex. /home/ajinsafronet/public_html/robots.txt).
+#
+# Pourquoi un fichier physique : WordPress sert un robots.txt virtuel, donc
+# genere par un bootstrap PHP complet. Mesure du 2026-09-22 : 1,9 s de reponse,
+# ce qui depasse le delai d'attente de Lighthouse (« Echec de la recuperation
+# de robots.txt : Timed out fetching resource ») et de la plupart des robots.
+# Un fichier reel est servi par Apache en quelques millisecondes.
+#
+# Des qu'il existe, WordPress cesse d'emettre sa version virtuelle : le filtre
+# robots_txt et les regles ajoutees par Rank Math ou WooCommerce ne s'appliquent
+# plus. Le contenu ci-dessous reprend donc a l'identique ce que le site
+# renvoyait avant, sitemap compris. A mettre a jour a la main si WooCommerce
+# ou Rank Math changent leurs recommandations.
+#
+# Attention : ce fichier n'a aucun effet sur la balise
+# <meta name="robots" content="noindex, nofollow"> emise par Rank Math.
+# Celle-ci se corrige dans Rank Math > Reglages du titre > Global Meta.
+# ---------------------------------------------------------------------------
+
+User-agent: *
+Disallow: /wp-content/uploads/wc-logs/
+Disallow: /wp-content/uploads/woocommerce_transient_files/
+Disallow: /wp-content/uploads/woocommerce_uploads/
+Disallow: /*?add-to-cart=
+Disallow: /*?*add-to-cart=
+Disallow: /wp-admin/
+Allow: /wp-admin/admin-ajax.php
+
+Sitemap: https://ajinsafro.net/sitemap_index.xml
