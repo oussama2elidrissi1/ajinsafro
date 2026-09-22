@@ -345,10 +345,26 @@
         syncBodyLock();
     }
 
+    /* La video du hero pese une vingtaine de Mo pour un fond decoratif : on ne la
+       telecharge pas en connexion lente, en mode economie de donnees, ni quand
+       l'utilisateur demande moins d'animations. Le poster reste affiche. */
+    function heroVideoAllowed() {
+        try {
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+            var link = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            if (!link) return true;
+            if (link.saveData) return false;
+
+            return ['slow-2g', '2g', '3g'].indexOf(link.effectiveType) === -1;
+        } catch (e) {
+            return true;
+        }
+    }
+
     /* Video du hero : lancee une fois la page chargee, le poster tient lieu de premier ecran. */
     function initHeroVideo() {
         var video = document.querySelector('[data-aj-hero-video]');
-        if (!video) return;
+        if (!video || !heroVideoAllowed()) return;
 
         var started = false;
         function start() {

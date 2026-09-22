@@ -4,6 +4,7 @@ namespace App\Services\Wp;
 
 use App\Models\Wp\WpPost;
 use App\Models\Wp\WpPostMeta;
+use App\Services\UploadedImageOptimizer;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 
@@ -18,6 +19,17 @@ class WpHeroImageService
      * Allowed mime types for hero image.
      */
     public const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/webp'];
+
+    /**
+     * Largeur maximale conservee dans wp-content/uploads : au-dela, le front
+     * telecharge des pixels qu'il n'affiche jamais (cartes voyage en 768 px).
+     */
+    private const MAX_STORED_WIDTH = 1600;
+
+    /** Tailles intermediaires WordPress par defaut, celles dont srcset a besoin. */
+    private const INTERMEDIATE_SIZES = ['medium' => 300, 'medium_large' => 768, 'large' => 1024];
+
+    private const MIME_BY_EXTENSION = ['webp' => 'image/webp', 'jpg' => 'image/jpeg', 'png' => 'image/png'];
 
     /**
      * Store uploaded file in WP uploads folder and create attachment post.
@@ -41,6 +53,15 @@ class WpHeroImageService
         $extension = $file->getClientOriginalExtension() ?: $file->guessExtension();
         $ext = $extension ?: 'jpg';
 
+        // Les visuels arrivent en 2000 px / 3 Mo pour un affichage en 768 px : on
+        // redimensionne et re-encode (WebP des que GD le permet) avant d'ecrire.
+        // Sans GD, $optimized vaut null et le fichier d'origine est deplace tel quel.
+        $optimized = app(UploadedImageOptimizer::class)->encode((string) $file->getRealPath(), self::MAX_STORED_WIDTH);
+        if ($optimized !== null) {
+            [$optimizedBinary, $ext] = $optimized;
+            $mime = self::MIME_BY_EXTENSION[$ext] ?? $mime;
+        }
+
         // Nom unique : hero-{tourId}-{timestamp}.{ext}
         $filename = 'hero-' . $tourId . '-' . time() . '.' . $ext;
         $relativePath = date('Y/m') . '/' . $filename;
@@ -54,7 +75,10 @@ class WpHeroImageService
             }
         }
 
-        if (!$file->move($dir, $filename)) {
+        $written = $optimized !== null
+            ? @file_put_contents($fullPath, $optimizedBinary) !== false
+            : (bool) $file->move($dir, $filename);
+        if (!$written) {
             \Log::error('WpHeroImageService: échec écriture fichier', ['fullPath' => $fullPath, 'tour_id' => $tourId]);
             throw new \RuntimeException('Impossible d\'enregistrer le fichier dans les uploads WordPress. Vérifiez les droits du dossier.');
         }
@@ -125,13 +149,163 @@ class WpHeroImageService
             return [];
         }
 
+        $width = (int) $imageSize[0];
+        $height = (int) $imageSize[1];
+
         return [
-            'width' => (int) $imageSize[0],
-            'height' => (int) $imageSize[1],
+            'width' => $width,
+            'height' => $height,
             'file' => $relativePath,
-            'sizes' => [],
+            'filesize' => (int) @filesize($fullPath),
+            'sizes' => $this->generateIntermediateSizes($fullPath, $width, $height),
             'image_meta' => [],
         ];
+    }
+
+    /**
+     * Declinaisons intermediaires ecrites a cote du fichier, au nom attendu par
+     * WordPress ({base}-{largeur}x{hauteur}.{ext}). Sans elles, wp_get_attachment_image()
+     * n'a aucun srcset et sert le fichier pleine taille dans une carte de 768 px.
+     * Retourne [] quand GD est absent : WordPress retombe alors sur le fichier complet.
+     *
+     * @return array<string, array{file: string, width: int, height: int, mime-type: string, filesize: int}>
+     */
+    private function generateIntermediateSizes(string $fullPath, int $width, int $height): array
+    {
+        if ($width < 1 || $height < 1) {
+            return [];
+        }
+
+        $optimizer = app(UploadedImageOptimizer::class);
+        $directory = dirname($fullPath);
+        $base = pathinfo($fullPath, PATHINFO_FILENAME);
+        $sizes = [];
+
+        foreach (self::INTERMEDIATE_SIZES as $name => $targetWidth) {
+            if ($targetWidth >= $width) {
+                continue;
+            }
+
+            $encoded = $optimizer->encode($fullPath, $targetWidth);
+            if ($encoded === null) {
+                continue;
+            }
+
+            [$binary, $extension] = $encoded;
+            $dimensions = @getimagesizefromstring($binary);
+            if (! is_array($dimensions)) {
+                continue;
+            }
+
+            $file = sprintf('%s-%dx%d.%s', $base, (int) $dimensions[0], (int) $dimensions[1], $extension);
+            if (@file_put_contents($directory . '/' . $file, $binary) === false) {
+                continue;
+            }
+
+            $sizes[$name] = [
+                'file' => $file,
+                'width' => (int) $dimensions[0],
+                'height' => (int) $dimensions[1],
+                'mime-type' => self::MIME_BY_EXTENSION[$extension] ?? 'image/jpeg',
+                'filesize' => strlen($binary),
+            ];
+        }
+
+        return $sizes;
+    }
+
+    /**
+     * Re-encode un fichier deja present dans wp-content/uploads (images heritees,
+     * televersees avant l'optimisation a l'upload) et regenere ses declinaisons.
+     *
+     * Le fichier d'origine est conserve : seuls _wp_attached_file, le guid, le type
+     * MIME et _wp_attachment_metadata pointent vers la nouvelle version, ce qui evite
+     * de casser un contenu qui referencerait encore l'ancienne URL.
+     *
+     * Retourne null quand il n'y a rien a faire (GD absent, fichier introuvable,
+     * gain inferieur a 10 %).
+     *
+     * @return array{from: string, to: string, before: int, after: int}|null
+     */
+    public function optimizeExistingAttachment(int $attachmentId, int $maxWidth = self::MAX_STORED_WIDTH): ?array
+    {
+        $fullPath = self::attachmentAbsolutePath($attachmentId);
+        $relativePath = self::getAttachedFile($attachmentId);
+        if ($fullPath === null || $relativePath === null) {
+            return null;
+        }
+
+        $before = (int) filesize($fullPath);
+        $encoded = app(UploadedImageOptimizer::class)->encode($fullPath, $maxWidth);
+        if ($encoded === null) {
+            return null;
+        }
+
+        [$binary, $ext] = $encoded;
+        if ($before > 0 && strlen($binary) > $before * 0.9) {
+            return null;
+        }
+
+        $newRelative = (string) preg_replace('/\.[a-z0-9]+$/i', '', $relativePath) . '.' . $ext;
+        if ($newRelative === $relativePath) {
+            $newRelative = (string) preg_replace('/\.[a-z0-9]+$/i', '', $relativePath) . '-opt.' . $ext;
+        }
+
+        $basePath = rtrim((string) config('wordpress.uploads_path'), '/');
+        $newFullPath = $basePath . '/' . ltrim($newRelative, '/');
+        if (@file_put_contents($newFullPath, $binary) === false) {
+            \Log::error('WpHeroImageService: écriture de la version optimisée impossible', [
+                'attachment_id' => $attachmentId,
+                'path' => $newFullPath,
+            ]);
+
+            return null;
+        }
+
+        $metadata = $this->buildAttachmentMetadata($newFullPath, $newRelative);
+
+        WpPostMeta::updateOrCreate(
+            ['post_id' => $attachmentId, 'meta_key' => '_wp_attached_file'],
+            ['meta_value' => $newRelative]
+        );
+        if (! empty($metadata)) {
+            WpPostMeta::updateOrCreate(
+                ['post_id' => $attachmentId, 'meta_key' => '_wp_attachment_metadata'],
+                ['meta_value' => serialize($metadata)]
+            );
+        }
+        WpPost::query()->where('ID', $attachmentId)->update([
+            'guid' => rtrim(self::getUploadsBaseUrl(), '/') . '/' . ltrim($newRelative, '/'),
+            'post_mime_type' => self::MIME_BY_EXTENSION[$ext] ?? 'image/jpeg',
+        ]);
+
+        return [
+            'from' => $relativePath,
+            'to' => $newRelative,
+            'before' => $before,
+            'after' => strlen($binary),
+        ];
+    }
+
+    /**
+     * Chemin disque d'un attachment, ou null s'il est hors de wp-content/uploads
+     * (URL absolue stockee, dossier non configure, fichier absent).
+     */
+    public static function attachmentAbsolutePath(int $attachmentId): ?string
+    {
+        $basePath = config('wordpress.uploads_path');
+        $relativePath = self::getAttachedFile($attachmentId);
+
+        if (empty($basePath) || ! is_string($relativePath) || $relativePath === '') {
+            return null;
+        }
+        if (str_starts_with($relativePath, 'http://') || str_starts_with($relativePath, 'https://')) {
+            return null;
+        }
+
+        $fullPath = rtrim($basePath, '/') . '/' . ltrim($relativePath, '/');
+
+        return is_file($fullPath) && is_readable($fullPath) ? $fullPath : null;
     }
 
     /**

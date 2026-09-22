@@ -31,6 +31,8 @@ $dbr = ajth_get_destinations_by_region();
 <div class="aj-home-wrap">
     <div id="aj-home" class="aj-home">
         <?php ajth_render_site_header( $settings ); ?>
+        <?php // <main> : repere principal attendu par les lecteurs d'ecran ; le header reste en dehors. ?>
+        <main id="aj-main" class="aj-home__main">
         <?php ajth_render_home_hero( $settings ); ?>
 
         <?php
@@ -102,5 +104,6 @@ $dbr = ajth_get_destinations_by_region();
             }
         }
         ?>
+        </main>
     </div>
 </div>

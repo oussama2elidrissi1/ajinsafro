@@ -646,11 +646,17 @@ add_filter('style_loader_tag', 'ajth_style_loader_tag', 20, 4);
 /* Google Fonts : texte visible pendant le chargement (font-display: swap) pour toutes les requetes. */
 function ajth_google_fonts_display_swap($src)
 {
-    if (is_string($src) && strpos($src, 'fonts.googleapis.com/css') !== false && stripos($src, 'display=') === false) {
-        $src .= (strpos($src, '?') === false ? '?' : '&') . 'display=swap';
+    if (! is_string($src) || strpos($src, 'fonts.googleapis.com/css') === false) {
+        return $src;
     }
 
-    return $src;
+    if (stripos($src, 'display=') === false) {
+        return $src . (strpos($src, '?') === false ? '?' : '&') . 'display=swap';
+    }
+
+    // Elementor demande display=auto : le navigateur masque alors le texte le temps
+    // du telechargement de la police (audit « Affichage de la police »).
+    return (string) preg_replace('/([?&])display=(auto|block|fallback|optional)\b/i', '$1display=swap', $src);
 }
 add_filter('style_loader_src', 'ajth_google_fonts_display_swap', 20);
 
