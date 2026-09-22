@@ -262,6 +262,21 @@ class WpTourSyncService
             'tours_program_style' => $voyage->tours_program_style ?? 'list',
         ];
 
+        // Champs commerciaux pilotés par Laravel : ils alimentent le catalogue admin et Traveler
+        // (prix adulte, durée, destination). Écrits seulement s'ils sont renseignés côté Laravel,
+        // pour ne jamais vider une valeur déjà saisie dans WordPress.
+        if ($voyage->price_from !== null && (int) $voyage->price_from > 0) {
+            $metas['adult_price'] = (string) (int) $voyage->price_from;
+            $metas['min_price'] = (string) (int) $voyage->price_from;
+        }
+        $durationDays = $this->parseDurationDays($voyage->duration_text);
+        if ($durationDays !== null) {
+            $metas['duration_day'] = (string) $durationDays;
+        }
+        if (! empty($voyage->destination)) {
+            $metas['address'] = (string) $voyage->destination;
+        }
+
         foreach ($metas as $key => $value) {
             $this->wp->updatePostMeta($wpPostId, $key, $value);
         }
@@ -272,6 +287,21 @@ class WpTourSyncService
                 $this->wp->updatePostMeta($wpPostId, $key, $value);
             }
         }
+    }
+
+    /**
+     * Nombre de jours extrait d'une durée rédigée (« 8 jours / 7 nuits », « 10 à 11 jours »).
+     */
+    protected function parseDurationDays(?string $durationText): ?int
+    {
+        $durationText = trim((string) $durationText);
+        if ($durationText === '' || ! preg_match('/(\d+)/', $durationText, $m)) {
+            return null;
+        }
+
+        $days = (int) $m[1];
+
+        return $days > 0 ? $days : null;
     }
 
     /**

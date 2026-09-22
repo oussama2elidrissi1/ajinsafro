@@ -66,6 +66,9 @@ class Voyage extends Model
 
     public const LEGACY_COMPLETION_LABEL = 'À compléter';
 
+    /** Meta WordPress portant l'identifiant historique ajinsafro.ma, posée par la migration. */
+    public const WP_LEGACY_ID_META = '_ajinsafro_legacy_id';
+
     /** Bloc de migration posé par le seeder historique, ou null pour un voyage natif. */
     public function legacyImport(): ?array
     {

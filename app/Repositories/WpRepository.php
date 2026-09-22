@@ -56,11 +56,35 @@ class WpRepository
         // Update GUID if not set
         if (empty($data['guid'])) {
             $this->updatePost($postId, [
-                'guid' => get_option('siteurl') . '/?post_type=' . $postData['post_type'] . '&p=' . $postId
+                'guid' => $this->siteUrl() . '/?post_type=' . $postData['post_type'] . '&p=' . $postId
             ]);
         }
 
         return $postId;
+    }
+
+    /**
+     * URL du site WordPress.
+     *
+     * `get_option()` n'existe pas hors de WordPress : on lit directement la table des options,
+     * avec repli sur la configuration Laravel.
+     */
+    protected function siteUrl(): string
+    {
+        $cached = null;
+
+        try {
+            $cached = DB::connection($this->connection)
+                ->table($this->prefix . 'options')
+                ->where('option_name', 'siteurl')
+                ->value('option_value');
+        } catch (\Throwable $e) {
+            $cached = null;
+        }
+
+        $url = (string) ($cached ?: config('wordpress.public_site_url') ?: 'https://' . config('app.public_domain'));
+
+        return rtrim($url, '/');
     }
 
     /**

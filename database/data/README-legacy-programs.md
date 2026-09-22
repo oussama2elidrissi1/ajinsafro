@@ -38,6 +38,26 @@ partenaire**, et part en `draft` côté WordPress lors de la synchronisation.
 Images, galeries, départs, disponibilités, chambres, vols. Une fiche importée **n'est pas vendable**
 en l'état — c'est voulu.
 
+## Les rendre visibles dans le catalogue admin
+
+`Circuits > Voyages` est alimenté par WordPress : un voyage Laravel sans `wp_post_id` n'y apparaît
+pas. Après le seed, pousser les programmes vers WordPress :
+
+```bash
+php artisan legacy:push-wp              # simulation
+php artisan legacy:push-wp --execute    # écrit réellement
+php artisan legacy:push-wp --execute --limit=5   # par lots
+php artisan legacy:push-wp --execute --id=43 --id=46
+```
+
+La commande crée le tour `st_tours` en **brouillon**, avec `post_name` = slug historique (l'URL
+publique est donc celle de l'ancien site, seul le domaine change), et pose `_aj_laravel_voyage_id`
+et `_ajinsafro_legacy_id`. Si le plugin WordPress a déjà importé le programme, elle se rattache au
+post existant au lieu d'en créer un second. Elle ne touche jamais un voyage déjà lié.
+
+Les métas `adult_price`, `min_price`, `duration_day` et `address` sont écrites depuis Laravel
+(quand elles sont renseignées) pour que la liste admin affiche prix et durée.
+
 ## La marque « À compléter »
 
 Elle vit dans `voyages.logistics_meta` :
@@ -76,8 +96,8 @@ nouveau : https://ajinsafro.net/voyage-national/circuit-ifrane-michlifen-azrou-m
 (`/team/buy.php?id=...`) : leur chemin public reste à arbitrer et `url_publique` figure dans
 leur liste `missing`.
 
-Comme `WpTourSyncService` recopie `voyage.slug` dans `post_name`, la synchronisation Laravel → WP
-pose le bon slug WordPress. Reste à vérifier côté WordPress que la structure de permalien des
+Comme `WpTourSyncService` recopie `voyage.slug` dans `post_name`, `legacy:push-wp` et la
+synchronisation Laravel → WP posent le bon slug WordPress. Reste à vérifier côté WordPress que la structure de permalien des
 `st_tours` rejoue bien les préfixes `voyage-national` et `voyages-international`.
 
 ### Table de correspondance / redirections
@@ -98,8 +118,9 @@ domaine change) ou `301` pour les 20 variantes historiques (anciens tarifs dans 
 - Une fiche dont `completion.status` n'est plus `incomplete` n'est **plus réécrite** : seules ses
   métadonnées de migration (URLs, lien WordPress) sont rafraîchies.
 - Les jours de programme et les thèmes ne sont créés que si la fiche n'en a pas déjà.
-- `wp_post_id` est renseigné automatiquement si le plugin WordPress a déjà importé le tour
-  (meta `_ajinsafro_legacy_id`). L'import Laravel **n'écrit jamais** dans les tables WordPress.
+- `wp_post_id` est renseigné automatiquement si le tour existe déjà côté WordPress
+  (meta `_ajinsafro_legacy_id`). Le **seeder** n'écrit jamais dans les tables WordPress : seule
+  `legacy:push-wp --execute` le fait, et uniquement pour les voyages non encore liés.
 
 ## Rappel sur le programme importé
 

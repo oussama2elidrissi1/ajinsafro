@@ -34,8 +34,8 @@ class LegacyProgramsSeeder extends Seeder
 
     public const COMPLETION_LABEL = 'À compléter';
 
-    /** Meta posée par le plugin WordPress sur les posts importés, sert à retrouver le tour WP. */
-    public const WP_LEGACY_ID_META = '_ajinsafro_legacy_id';
+    /** Meta posée sur les posts WordPress importés, sert à retrouver le tour WP. */
+    public const WP_LEGACY_ID_META = Voyage::WP_LEGACY_ID_META;
 
     /**
      * Préfixes de chemin de l'ancien site. Ils font partie de l'URL publique et doivent être
@@ -247,13 +247,16 @@ class LegacyProgramsSeeder extends Seeder
      */
     private function destination(array $program): ?string
     {
-        $category = Str::lower((string) ($program['category'] ?? ''));
+        $category = trim(Str::lower((string) ($program['category'] ?? '')));
 
         if (str_contains($category, 'omra')) {
             return 'Arabie Saoudite';
         }
 
-        if (str_contains($category, 'national')) {
+        // Comparaison sur le début de la catégorie : « Voyage international » contient la
+        // sous-chaîne « national », et « Voyage national (ancienne route international) » reste
+        // un circuit marocain.
+        if (str_starts_with($category, 'voyage national')) {
             return 'Maroc';
         }
 
