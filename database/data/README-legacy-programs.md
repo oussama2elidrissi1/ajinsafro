@@ -64,6 +64,27 @@ Le cas `slug proche` est réel : plusieurs programmes historiques existent déj�
 un slug dédoublonné, par exemple `…-a-partir-de-8900-dhs-2` au lieu de `…-a-partir-de-8900-dhs-466`
 (Barcelone, programme 466). Les publier sans précaution créerait deux tours pour la même offre.
 
+### 1 bis. Réparer le lien `_aj_laravel_voyage_id` (à faire avant toute publication)
+
+```bash
+php artisan wp:backfill-links            # simulation
+php artisan wp:backfill-links --execute  # écrit
+```
+
+**Pourquoi c'est indispensable.** Le catalogue public
+(`ajinsafro-traveler-home/templates/voyages.php`) contient un interrupteur tout ou rien : dès qu'au
+moins **un** tour publié porte la meta `_aj_laravel_voyage_id`, la page se restreint aux tours qui la
+portent. Tous les autres disparaissent.
+
+Or cette meta n'était jamais écrite : `WpTourSyncService` passe par `WpRepository`, inopérant à cause
+du double préfixe de table. Conséquence observée : publier un seul programme historique (poussé, lui,
+avec la meta) faisait tomber le catalogue public de 13 voyages à 1. Remettre le programme en
+brouillon les faisait réapparaître.
+
+La commande pose la meta sur tous les tours WordPress déjà rattachés à un voyage Laravel
+(`voyages.wp_post_id`), ce qui rétablit le catalogue complet. Elle signale aussi les tours publiés
+sans voyage Laravel : ceux-là resteront masqués par le filtre, c'est le comportement voulu du plugin.
+
 ### 2. Fusionner les doublons
 
 Quand l'offre existe **déjà** au catalogue (tour WordPress + voyage Laravel rattaché), il ne faut
