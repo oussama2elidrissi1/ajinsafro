@@ -604,6 +604,19 @@ function ajth_dequeue_unused_front_assets(): void
 }
 add_action('wp_enqueue_scripts', 'ajth_dequeue_unused_front_assets', 1000);
 
+/*
+ * Elementor met ses Google Fonts en file d'attente au moment du rendu, donc apres
+ * ajth_dequeue_unused_front_assets() : les handles elementor-gf-* y survivent. Il
+ * demande DM Sans, Roboto et Roboto Slab avec toutes les graisses 100 a 900 et leurs
+ * italiques, uniquement pour le header/footer du theme masque en CSS. Ce filtre est
+ * le point de sortie officiel d'Elementor pour ne pas les imprimer du tout.
+ */
+function ajth_disable_elementor_google_fonts($print)
+{
+    return ajth_is_plugin_front_context() ? false : $print;
+}
+add_filter('elementor/frontend/print_google_fonts', 'ajth_disable_elementor_google_fonts');
+
 /* Feuilles du theme sans effet sur le premier ecran des pages du plugin : chargees sans bloquer le rendu. */
 function ajth_deferred_style_handles(): array
 {
