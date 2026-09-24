@@ -37,6 +37,17 @@ class Departure extends Model
         self::STATUS_CANCELLED,
     ];
 
+    /**
+     * Statuts qui ne correspondent pas à un départ actif au catalogue : brouillon (départ importé
+     * ou en préparation), fermé et annulé. Utilisé par le KPI « avec départs actifs » et le filtre
+     * du catalogue admin.
+     */
+    public const INACTIVE_STATUSES = [
+        self::STATUS_DRAFT,
+        self::STATUS_CLOSED,
+        self::STATUS_CANCELED,
+        self::STATUS_CANCELLED,
+    ];
     protected $fillable = [
         'voyage_id',
         'wp_travel_date_id',

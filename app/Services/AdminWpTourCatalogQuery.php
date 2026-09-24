@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Departure;
 use App\Models\Voyage;
 use App\Models\Wp\WpPost;
 use Illuminate\Http\Request;
@@ -276,7 +277,9 @@ final class AdminWpTourCatalogQuery
         return Voyage::query()
             ->whereNotNull('wp_post_id')
             ->where('wp_post_id', '>', 0)
-            ->whereHas('departures')
+            // Un départ en brouillon, fermé ou annulé n'est pas un départ actif : les dates
+            // historiques importées d'ajinsafro.ma ne doivent pas gonfler ce compteur.
+            ->whereHas('departures', fn ($q) => $q->whereNotIn('status', Departure::INACTIVE_STATUSES))
             ->pluck('wp_post_id')
             ->map(fn ($id) => (int) $id)
             ->unique()
@@ -315,7 +318,9 @@ final class AdminWpTourCatalogQuery
             ->where('status', 'actif')
             ->whereNotNull('wp_post_id')
             ->where('wp_post_id', '>', 0)
-            ->whereHas('departures')
+            // Un départ en brouillon, fermé ou annulé n'est pas un départ actif : les dates
+            // historiques importées d'ajinsafro.ma ne doivent pas gonfler ce compteur.
+            ->whereHas('departures', fn ($q) => $q->whereNotIn('status', Departure::INACTIVE_STATUSES))
             ->when($publishedIds !== [], fn ($q) => $q->whereIn('wp_post_id', $publishedIds))
             ->when($publishedIds === [], fn ($q) => $q->whereRaw('1 = 0'))
             ->whereRaw('LOWER(name) NOT LIKE ?', ['%test%'])
@@ -338,7 +343,9 @@ final class AdminWpTourCatalogQuery
             ->where('status', 'actif')
             ->whereNotNull('wp_post_id')
             ->where('wp_post_id', '>', 0)
-            ->whereHas('departures')
+            // Un départ en brouillon, fermé ou annulé n'est pas un départ actif : les dates
+            // historiques importées d'ajinsafro.ma ne doivent pas gonfler ce compteur.
+            ->whereHas('departures', fn ($q) => $q->whereNotIn('status', Departure::INACTIVE_STATUSES))
             ->when($publishedIds !== [], fn ($q) => $q->whereIn('wp_post_id', $publishedIds))
             ->when($publishedIds === [], fn ($q) => $q->whereRaw('1 = 0'))
             ->whereRaw('LOWER(name) NOT LIKE ?', ['%test%'])
