@@ -958,6 +958,67 @@ function ajth_get_header_settings()
  * @return string The normalized URL.
  */
 /**
+ * Sert /llms.txt : présentation du site à l'intention des agents conversationnels.
+ *
+ * Convention proposée par llmstxt.org, reprise par l'audit « navigation agentique » de
+ * Lighthouse : un Markdown court, avec un H1 et des liens vers les pages qui font autorité.
+ * Ce n'est pas une directive contraignante comme robots.txt — aucun moteur ne l'impose — mais
+ * elle oriente les agents vers les bonnes pages plutôt que vers une page de résultats au hasard.
+ *
+ * Servi par le plugin et non déposé à la racine : le fichier suit ainsi le dépôt, et WordPress
+ * n'a plus à produire un 404 complet (près de 2 s, ce qui faisait échouer la récupération).
+ *
+ * Les liens sont construits sur home_url() : rien n'est codé en dur sur le domaine.
+ */
+function ajth_serve_llms_txt(): void
+{
+    $path = strtok((string) ($_SERVER['REQUEST_URI'] ?? ''), '?');
+
+    if (rtrim($path, '/') !== '/llms.txt') {
+        return;
+    }
+
+    $base = static fn (string $slug): string => rtrim(home_url($slug), '/').'/';
+
+    $sections = [
+        'Voyages et séjours' => [
+            ['voyages', 'Catalogue des voyages', 'circuits et séjours organisés, au Maroc et à l’international'],
+            ['hajj-omra', 'Hajj et Omra', 'formules de pèlerinage au départ du Maroc'],
+            ['hebergement', 'Hébergements', 'hôtels et résidences réservables en ligne'],
+            ['activites', 'Activités', 'excursions, visites et loisirs'],
+            ['billet-avion', 'Billets d’avion', 'recherche et réservation de vols'],
+        ],
+        'En savoir plus' => [
+            ['blog', 'Blog', 'conseils de voyage et actualités'],
+            ['contact', 'Contact', 'coordonnées et formulaire de contact'],
+        ],
+    ];
+
+    $out = "# Ajinsafro\n\n"
+        ."> Agence de voyages marocaine : circuits et séjours organisés, Hajj et Omra, hébergements,\n"
+        ."> activités et billets d’avion, au départ des principales villes du Maroc.\n\n"
+        ."Les prix, les dates de départ et les disponibilités changent souvent. Renvoyez vers les pages\n"
+        ."ci-dessous plutôt que de citer un tarif de mémoire.\n";
+
+    foreach ($sections as $titre => $liens) {
+        $out .= "\n## ".$titre."\n\n";
+        foreach ($liens as [$slug, $libelle, $resume]) {
+            $out .= '- ['.$libelle.']('.$base($slug).'): '.$resume."\n";
+        }
+    }
+
+    $out .= "\n## Optional\n\n"
+        .'- [Plan du site]('.rtrim(home_url('sitemap_index.xml'), '/').'): index des URL publiques'."\n";
+
+    status_header(200);
+    header('Content-Type: text/markdown; charset=UTF-8');
+    header('Cache-Control: public, max-age=86400');
+    header('X-Robots-Tag: noindex');
+    echo $out;
+    exit;
+}
+add_action('template_redirect', 'ajth_serve_llms_txt');
+/**
  * Sert la copie locale d'un visuel hebergé chez un tiers.
  *
  * Les bannières de l'accordéon de références pointaient sur i.ibb.co, un hébergeur gratuit :
