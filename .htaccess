@@ -1,9 +1,19 @@
 # Laravel servi dans un sous-dossier du domaine principal (https://ajinsafro.com/booking/).
-# Tout est renvoyé vers public/, qui reste la seule racine exposée : .env, storage/, vendor/
-# ne sont jamais atteignables. Sans effet quand un sous-domaine pointe déjà directement sur
-# public/ (booking.ajinsafro.com) — ce fichier n'est alors jamais lu.
+#
+# - Un fichier qui existe dans public/ (build/, storage/, images…) est servi tel quel.
+# - Tout le reste passe par index.php à la racine, qui délègue à public/index.php : c'est ce
+#   qui donne à Laravel un SCRIPT_NAME en /booking/index.php, d'où il déduit son préfixe.
+# - .env, storage/ et vendor/ ne sont donc jamais atteignables : seul public/ est exposé.
+#
+# Sans effet quand un sous-domaine pointe déjà directement sur public/ (booking.ajinsafro.com) :
+# ce fichier n'est alors jamais lu.
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
     RewriteCond %{REQUEST_URI} !^/booking/public/
+    RewriteCond %{DOCUMENT_ROOT}/booking/public/$1 -f
     RewriteRule ^(.*)$ public/$1 [L]
+
+    RewriteCond %{REQUEST_URI} !^/booking/index\.php$
+    RewriteRule ^ index.php [L]
 </IfModule>
