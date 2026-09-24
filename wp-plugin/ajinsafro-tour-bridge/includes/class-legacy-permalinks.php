@@ -5,7 +5,7 @@
  * L'ancien site servait les fiches sous /voyage-national/<slug>, /voyages-international/<slug>
  * et, pour certains programmes sans autre URL lisible, /voyages-organisees/<slug> — toujours
  * sans barre finale, avec l'identifiant du programme en fin de slug (…-91). Il exposait aussi
- * des URL techniques (onedeal.php?id=91, buy.php?id=91) et une route alternative /team/<slug>.
+ * des URL techniques (onedeal.php?id=91, /team/buy.php?id=91) et parfois une route alternative.
  *
  * Le nouveau site doit répondre à toutes, à l'identique quand c'est possible (seul le domaine
  * change) et en 301 vers le chemin canonique sinon : c'est ce qui préserve le référencement
@@ -143,7 +143,8 @@ final class AJTB_Legacy_Permalinks {
     public static function redirect_technical_urls() {
         $uri = isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '';
         $path = (string) wp_parse_url($uri, PHP_URL_PATH);
-        if (!in_array(basename($path), self::TECHNICAL_SCRIPTS, true) || trim(dirname($path), '/') !== '') {
+        // À la racine (onedeal.php) comme sous un répertoire (/team/buy.php) : seul le script compte.
+        if (!in_array(basename($path), self::TECHNICAL_SCRIPTS, true)) {
             return;
         }
         $legacy_id = isset($_GET['id']) ? (int) $_GET['id'] : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
