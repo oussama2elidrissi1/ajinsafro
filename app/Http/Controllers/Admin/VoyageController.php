@@ -195,6 +195,7 @@ class VoyageController extends Controller
                 $tour->laravel_slug = (string) ($voyage->slug ?? '');
                 $tour->legacy_incomplete = $voyage ? $voyage->isLegacyIncomplete() : false;
                 $tour->legacy_missing = $voyage ? $voyage->legacyMissing() : [];
+                $tour->legacy_source_url = $voyage?->legacySourceUrl();
                 return $tour;
             });
         } catch (\Throwable $e) {

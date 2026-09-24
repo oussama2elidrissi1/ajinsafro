@@ -299,6 +299,9 @@
                                                 @if(!empty($tour->legacy_incomplete))
                                                     <span class="aj-badge -warning" title="Programme historique importé : {{ implode(', ', $tour->legacy_missing ?? []) }}">À compléter</span>
                                                 @endif
+                                                @if(!empty($tour->legacy_source_url))
+                                                    <a href="{{ $tour->legacy_source_url }}" target="_blank" rel="noopener noreferrer" class="aj-badge -neutral" title="Ouvrir la fiche d'origine sur ajinsafro.ma">Ancien site ↗</a>
+                                                @endif
                                             </div>
                                             <div class="aj-meta-text">{{ $tour->post_name }}</div>
                                         </td>
@@ -373,6 +376,9 @@
                                         @endif
                                         @if(!empty($tour->legacy_incomplete))
                                             <span class="aj-badge -warning" title="Programme historique importé : {{ implode(', ', $tour->legacy_missing ?? []) }}">À compléter</span>
+                                        @endif
+                                        @if(!empty($tour->legacy_source_url))
+                                            <a href="{{ $tour->legacy_source_url }}" target="_blank" rel="noopener noreferrer" class="aj-badge -neutral" title="Ouvrir la fiche d'origine sur ajinsafro.ma">Ancien site ↗</a>
                                         @endif
                                     </div>
                                     <div class="aj-card-actions">

@@ -116,6 +116,32 @@ class Voyage extends Model
 
         return is_string($path) && $path !== '' ? $path : null;
     }
+    /**
+     * URL de la fiche sur l'ancien site ajinsafro.ma, pour vérifier le contenu d'origine depuis
+     * l'admin. C'est l'URL SEO quand elle existe, sinon la première ancienne URL relevée.
+     */
+    public function legacySourceUrl(): ?string
+    {
+        $urls = data_get($this->logistics_meta, 'seo.legacy_urls');
+        if (! is_array($urls)) {
+            return null;
+        }
+
+        $path = $this->legacyPath();
+        foreach ($urls as $url) {
+            if (is_string($url) && $path !== null && str_contains($url, $path)) {
+                return $url;
+            }
+        }
+
+        foreach ($urls as $url) {
+            if (is_string($url) && $url !== '') {
+                return $url;
+            }
+        }
+
+        return null;
+    }
 
     public function programDays()
     {

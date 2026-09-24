@@ -821,6 +821,10 @@
                         <a href="{{ $voyageBackUrl }}" class="vf-back">← Catalogue voyages</a>
                         <span class="vf-status {{ $vfStatusClass }}" id="v2-live-status">{{ $statusLabel }}</span>
                         <span class="vf-ref" id="v2-live-subtitle">{{ $isCreate ? 'Brouillon à créer au premier enregistrement' : 'ID #' . $veWpId }}</span>
+                        @php $veLegacyUrl = $laravelV instanceof \App\Models\Voyage ? $laravelV->legacySourceUrl() : null; @endphp
+                        @if($veLegacyUrl)
+                            <a href="{{ $veLegacyUrl }}" target="_blank" rel="noopener noreferrer" class="vf-ref" title="Consulter la fiche d'origine sur ajinsafro.ma">Ancien site ↗</a>
+                        @endif
                     </div>
                     <h1 class="vf-h1" id="v2-live-title">{{ $headerTitle }}</h1>
                 </div>

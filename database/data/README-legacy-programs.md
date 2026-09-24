@@ -1,42 +1,90 @@
 # Catalogue historique ajinsafro.ma — import Laravel
 
-`legacy-programs.json` contient les **89 programmes** récupérés de l'ancien site `ajinsafro.ma`
-(80 fiches richement récupérées, 9 partielles, 103 URLs historiques). C'est le **même fichier que
-celui du plugin WordPress de migration** : une seule source, pas de divergence entre les deux côtés.
+`legacy-content-194.json` contient les **194 programmes** récupérés de l'ancien site `ajinsafro.ma`
+(extraction du 23/09/2026 : 176 fiches complètes, 18 partielles, 225 anciennes URLs). Il remplace
+`legacy-programs.json` (89 programmes, contenu partiel) dont il est un **sur-ensemble strict**.
+
+`legacy-redirections-301.csv` est la table de redirections fournie avec l'extraction (225 lignes),
+conservée comme référence.
 
 ## Lancer l'import
 
 ```bash
-php artisan db:seed --class=LegacyProgramsSeeder
+php artisan db:seed --class=LegacyContentSeeder --force
 ```
 
-Le seeder n'est volontairement **pas** appelé par `DatabaseSeeder` : il s'agit de données catalogue
-réelles, pas de jeu de démo, et on ne veut pas 89 brouillons sur chaque installation neuve.
+Keyé sur `legacy_id`, donc les 89 déjà importés sont **mis à jour et enrichis**, et les 105 autres
+créés. `LegacyProgramsSeeder` (jeu de 89) est conservé pour l'historique mais n'a plus à être lancé.
 
-## Ce que l'import crée
+Le seeder n'est volontairement **pas** appelé par `DatabaseSeeder` : ce sont des données catalogue
+réelles, pas un jeu de démo.
 
-Pour chaque programme, un `Voyage` Laravel :
+## Ce que l'import remplit
 
-| Champ | Source |
+| Donnée source | Destination |
 |---|---|
-| `name` | titre historique |
-| `slug` | **dernier segment de l'ancienne URL `.ma`** (voir « URLs » plus bas) |
-| `accroche` / `description` | résumé, durée, tarif relevé, note de récupération, lien source |
-| `destination` | `Maroc` (voyage national), `Arabie Saoudite` (Omra), sinon vide |
-| `duration_text` | durée historique |
-| `price_from` / `old_price` | tarif et valeur historiques |
-| `status` | `draft` |
-| `tours_include` / `tours_exclude` | prestations incluses / non incluses |
-| `travel_program_days` | une ligne par étape récupérée |
-| thèmes | `omra`, `week-end`, `circuit` ou `sejour` quand le titre/la catégorie le dit clairement |
+| `titre_h1` / `h1` | `voyages.name` |
+| URL SEO d'origine | `voyages.slug` (voir « URLs ») |
+| `meta_description` | `voyages.accroche` |
+| `description_longue` + hôtels + suppléments + notes | `voyages.description` |
+| `prix_actuel` / `prix_barre` / `devise` | `price_from` / `old_price` / `currency` |
+| `duree_jours` + `duree_nuits` | `duration_text` |
+| `destinations[]` + segment | `destination` |
+| `inclus[]` / `non_inclus[]` | `tours_include` / `tours_exclude` |
+| **`itineraire[]`** | **`travel_program_days`** (1 ligne par étape) |
+| **`dates_depart[]` datées** | **`departures`** (statut `draft`) |
+| `hotels[]`, `supplements[]`, `images[]`, SEO, URLs | `logistics_meta` |
 
-`status = draft` : la fiche reste **invisible du front public, du catalogue agent et du catalogue
-partenaire**, et part en `draft` côté WordPress lors de la synchronisation.
+Volumes obtenus sur les 194 : **1018 jours de programme**, **333 départs datés**, 166 thèmes.
+
+### Dates de départ
+
+Les libellés d'origine sont hétérogènes. `App\Support\LegacyDateParser` ne crée un départ que
+lorsqu'il extrait une date complète (jour + mois + année) :
+
+- `Du 05 au 09 août 2026`, `19/01/2019 Au 24/01/2019`, `07 septembre 2026 (retour 19 septembre)` → départ daté ;
+- `chaque samedi soir`, `Juin 2026`, `11 octobre au 17 octobre` (sans année) → **pas** de départ ;
+- `22:30 : Départ de Tanger « Sahat Oumam »` → point de ramassage, **pas** une date.
+
+Sur 456 lignes, 347 sont datées et 109 rejetées à raison. Les lignes non datées sont conservées
+verbatim dans `logistics_meta.legacy_import.departs_non_dates`.
+
+Les départs sont créés en **brouillon** avec une capacité nulle : ce sont des dates historiques,
+pas des départs vendables. La contrainte unique `(voyage_id, start_date)` interdit les doublons.
+
+### Images
+
+Les URLs pointent encore vers `ajinsafro.ma` : aucune ligne `voyage_images` n'est créée, sinon
+l'affichage casserait à la coupure du domaine. Les photos réelles (dossier `/static/team/`, les
+assets de template sont écartés) sont listées dans
+`logistics_meta.legacy_import.images_a_rapatrier`, et `images` reste dans la liste des manques.
+
+
 
 ## Ce que l'import ne crée jamais
 
-Images, galeries, départs, disponibilités, chambres, vols. Une fiche importée **n'est pas vendable**
-en l'état — c'est voulu.
+Fichiers images, galeries, disponibilités réelles, chambres, vols, prix de vente actifs. Les départs
+importés restent en brouillon à capacité nulle. Une fiche importée **n'est pas vendable** en
+l'état — c'est voulu.
+
+## Attention en cas de reprise partielle
+
+Tant que `logistics_meta.completion.status` vaut `incomplete`, un nouveau passage du seeder
+**réécrit le contenu et remplace les jours de programme** (c'est ce qui permet d'enrichir les 89
+fiches déjà importées). Un agent qui reprend une fiche doit donc passer ce statut à autre chose
+(p. ex. `complete`) pour la figer ; sinon son travail sur les jours serait perdu au prochain import.
+Les départs, eux, ne sont jamais supprimés.
+
+## Le lien vers l'ancien site dans l'admin
+
+Chaque fiche importée porte un lien **« Ancien site ↗ »** vers sa page d'origine sur `ajinsafro.ma`,
+pour comparer le contenu pendant la reprise :
+
+- dans `Circuits > Voyages` (vue tableau et vue cartes), à côté du badge « À compléter » ;
+- dans l'en-tête de la page d'édition v2, à côté de l'ID.
+
+Il est calculé par `Voyage::legacySourceUrl()` : l'URL SEO quand elle existe, sinon la première
+ancienne URL relevée (`/onedeal.php?id=…`). Les 194 programmes en ont un.
 
 ## Les rendre visibles dans le catalogue admin
 
