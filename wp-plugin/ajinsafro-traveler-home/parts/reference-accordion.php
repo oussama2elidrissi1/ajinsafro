@@ -103,6 +103,7 @@ $autoplay = ! empty( $accordion['autoplay'] );
 				<?php
 				$title = isset( $slide['title'] ) ? (string) $slide['title'] : '';
 				$image = isset( $slide['image'] ) ? (string) $slide['image'] : '';
+				$image = function_exists( 'ajth_localize_external_image' ) ? ajth_localize_external_image( $image ) : $image;
 				$pane_bg = isset( $slide['pane_bg'] ) ? (string) $slide['pane_bg'] : '#e5e7eb';
 				$tab_bg = isset( $slide['tab_bg'] ) ? (string) $slide['tab_bg'] : '';
 				$overlay = isset( $slide['overlay'] ) ? (string) $slide['overlay'] : '';

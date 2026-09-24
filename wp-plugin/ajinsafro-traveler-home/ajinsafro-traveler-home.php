@@ -957,6 +957,33 @@ function ajth_get_header_settings()
  * @param  string  $url  The URL to normalize.
  * @return string The normalized URL.
  */
+/**
+ * Sert la copie locale d'un visuel hebergé chez un tiers.
+ *
+ * Les bannières de l'accordéon de références pointaient sur i.ibb.co, un hébergeur gratuit :
+ * une origine de plus sur le chemin critique, des PNG de 200 à 370 Ko, et aucune garantie de
+ * disponibilité pour un site de production. Les mêmes images sont livrées par le plugin, en
+ * WebP (25 à 33 Ko).
+ *
+ * Le remplacement se fait à l'affichage : les réglages déjà enregistrés n'ont pas à être repris.
+ */
+function ajth_localize_external_image(string $url): string
+{
+    static $map = [
+        'i.ibb.co/tTrXK11z' => 'slide-1.webp',
+        'i.ibb.co/KcVS1QKB' => 'slide-2.webp',
+        'i.ibb.co/tP3ByxFZ' => 'slide-3.webp',
+        'i.ibb.co/qLZYDrYz' => 'slide-4.webp',
+    ];
+
+    foreach ($map as $needle => $file) {
+        if (strpos($url, $needle) !== false) {
+            return AJTH_URL.'assets/img/'.$file;
+        }
+    }
+
+    return $url;
+}
 function ajth_normalize_storage_url(string $url): string
 {
     $url = trim($url);
@@ -1321,7 +1348,7 @@ function ajth_default_accordion_slider_slides(): array
         [
             'title' => 'PROGRAMME DE FIDELITE',
             'subtitle' => '',
-            'image' => AJTH_URL.'assets/img/slide-1.png',
+            'image' => AJTH_URL.'assets/img/slide-1.webp',
             'link' => 'https://www.ajinsafro.ma/fidelite',
             'button_text' => "S'inscrire !",
             'button_style' => 'orange',
@@ -1331,7 +1358,7 @@ function ajth_default_accordion_slider_slides(): array
         [
             'title' => 'GROUP DEALS TRAVEL',
             'subtitle' => '',
-            'image' => AJTH_URL.'assets/img/slide-2.png',
+            'image' => AJTH_URL.'assets/img/slide-2.webp',
             'link' => '#',
             'button_text' => '',
             'button_style' => 'orange',
@@ -1341,7 +1368,7 @@ function ajth_default_accordion_slider_slides(): array
         [
             'title' => "L'7AJZ BKRI B'DHAB MCHRI",
             'subtitle' => '',
-            'image' => AJTH_URL.'assets/img/slide-3.png',
+            'image' => AJTH_URL.'assets/img/slide-3.webp',
             'link' => '#',
             'button_text' => 'احجز الآن',
             'button_style' => 'white-arabic',
@@ -1351,7 +1378,7 @@ function ajth_default_accordion_slider_slides(): array
         [
             'title' => 'Programme BZTAM eSFAR',
             'subtitle' => '',
-            'image' => AJTH_URL.'assets/img/slide-4.png',
+            'image' => AJTH_URL.'assets/img/slide-4.webp',
             'link' => '#',
             'button_text' => '',
             'button_style' => 'orange',

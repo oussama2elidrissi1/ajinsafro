@@ -1683,7 +1683,7 @@ body.aj-has-bg-pattern::before {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-image: url('https://i.ibb.co/4n5PwWsV/vecteezy-islamic-geometric-pattern-art-illustration-vector-14002298.jpg');
+    background-image: url('../img/motif-geometrique.webp');
     background-repeat: repeat;
     background-size: 300px;
     opacity: 0.2;
@@ -2957,7 +2957,7 @@ body.aj-has-bg-pattern::after {
     padding-top: 32px;
     margin-top: 28px;
     background-color: transparent;
-    background-image: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 40%, rgba(255,255,255,0) 100%), url('https://i.ibb.co/C59XXd4K/footer.png');
+    background-image: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 40%, rgba(255,255,255,0) 100%), url('../img/footer-fond.webp');
     background-repeat: no-repeat;
     background-position: bottom center;
     background-size: 100% 100%, 100% auto;
