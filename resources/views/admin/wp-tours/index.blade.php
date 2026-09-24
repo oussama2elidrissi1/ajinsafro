@@ -35,7 +35,7 @@
 
                 <div class="alert alert-info">
                     <i class="mdi mdi-information me-2"></i>
-                    <strong>CRUD Direct WordPress</strong> - Modifications immédiatement visibles sur <a href="https://ajinsafro.net" target="_blank">ajinsafro.net</a>
+                    <strong>CRUD Direct WordPress</strong> - Modifications immédiatement visibles sur <a href="{{ config('app.public_url') }}" target="_blank">{{ config('app.public_domain') }}.net</a>
                 </div>
 
                 <div class="table-responsive">
@@ -89,7 +89,7 @@
                                                title="?Éditer">
                                                 <i class="mdi mdi-pencil"></i>
                                             </a>
-                                            <a href="https://ajinsafro.net/tours/{{ $tour->post_name }}" 
+                                            <a href="{{ config('app.public_url') }}/tours/{{ $tour->post_name }}" 
                                                target="_blank" 
                                                class="btn btn-sm btn-info" 
                                                title="Voir sur WordPress">

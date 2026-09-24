@@ -27,16 +27,22 @@ function ajtb_laravel_api_url() {
 /**
  * Base URL of the Laravel (booking) site used to serve public storage files.
  *
- * Uses AJTB_LARAVEL_API_URL when set, otherwise defaults to booking.ajinsafro.net.
+ * Uses AJTB_LARAVEL_API_URL when set, otherwise the `booking` subdomain of the served host,
+ * so that changing domain never requires a code change.
  *
  * @return string Base URL without trailing slash.
  */
 function ajtb_laravel_base_url() {
     $url = trim((string) ajtb_laravel_api_url());
-    if ($url === '') {
-        $url = 'https://booking.ajinsafro.net';
+    if ($url === '' && function_exists('ajth_booking_base_url')) {
+        $url = ajth_booking_base_url();
     }
-    return rtrim($url, '/');
+    if ($url === '') {
+        $host = (string) wp_parse_url(home_url('/'), PHP_URL_HOST);
+        $host = strtolower((string) preg_replace('/^www\./', '', $host));
+        $url = $host !== '' ? 'https://booking.' . $host : '';
+    }
+    return rtrim((string) preg_replace('#/api/?$#', '', $url), '/');
 }
 
 /**

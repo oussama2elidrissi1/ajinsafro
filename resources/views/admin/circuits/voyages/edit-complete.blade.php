@@ -102,7 +102,7 @@
                                 <div class="mb-3">
                                     <label for="slug" class="form-label">Slug (URL)</label>
                                     <input type="text" class="form-control" id="slug" name="slug" value="{{ old('slug', $voyage->post_name) }}">
-                                    <small class="text-muted">URL: ajinsafro.net/tours/<strong>{{ $voyage->post_name }}</strong></small>
+                                    <small class="text-muted">URL: {{ config('app.public_domain') }}/tours/<strong>{{ $voyage->post_name }}</strong></small>
                                 </div>
 
                                 <div class="mb-3">

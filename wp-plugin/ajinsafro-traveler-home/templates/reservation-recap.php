@@ -54,7 +54,7 @@ $has_flights = !empty($tour_data['flights']);
 $has_hotels = !empty($tour_data['hotels']) || !empty($tour_data['accommodations']);
 
 $booking_slug = get_post_field('post_name', $tour_id);
-$booking_url = 'https://booking.ajinsafro.net/voyages/' . rawurlencode((string) $booking_slug);
+$booking_url = ajth_booking_base_url() . '/voyages/' . rawurlencode((string) $booking_slug);
 
 get_header();
 ?>
@@ -440,7 +440,7 @@ get_header();
                 <p class="ajtb-creds__hint"><?php echo esc_html__('Note: ce mot de passe est affiche juste apres creation. Conservez-le.', 'ajinsafro-traveler-home'); ?></p>
             </div>
             <div class="ajtb-confirm-actions">
-                <a class="ajtb-btn-submit" href="https://booking.ajinsafro.net/login"><?php echo esc_html__('Se connecter', 'ajinsafro-traveler-home'); ?></a>
+                <a class="ajtb-btn-submit" href="<?php echo esc_url(ajth_booking_base_url() . '/login'); ?>"><?php echo esc_html__('Se connecter', 'ajinsafro-traveler-home'); ?></a>
                 <button type="button" class="ajtb-btn-cancel" data-ajtb-close-modal><?php echo esc_html__('Fermer', 'ajinsafro-traveler-home'); ?></button>
             </div>
         </div>

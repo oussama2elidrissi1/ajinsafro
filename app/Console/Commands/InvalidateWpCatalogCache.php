@@ -9,7 +9,7 @@ class InvalidateWpCatalogCache extends Command
 {
     protected $signature = 'wp:invalidate-cache
                             {type : accommodation-packages | activity-offers | all}
-                            {--url= : WordPress base URL (e.g. https://ajinsafro.net)}
+                            {--url= : WordPress base URL (défaut : app.public_url)}
                             {--secret= : Invalidate secret defined in wp-config.php}';
 
     protected $description = 'Invalidate WordPress catalog transients from Laravel';

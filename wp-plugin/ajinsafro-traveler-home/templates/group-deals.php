@@ -133,7 +133,7 @@ $hero_min_threshold = 0;
 $stats_average_discount = 0;
 $stats_destination_count = 0;
 $stats_total_guaranteed = 0;
-$booking_base = rtrim((string) get_option('ajinsafro_booking_url', 'https://booking.ajinsafro.net'), '/');
+$booking_base = ajth_booking_base_url();
 
 if ($source_available) {
     $raw_deals = (array) $wpdb->get_results(

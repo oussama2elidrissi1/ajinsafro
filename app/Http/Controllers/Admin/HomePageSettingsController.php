@@ -690,7 +690,7 @@ class HomePageSettingsController extends Controller
 				'title' => 'PROGRAMME DE FIDELITE',
 				'subtitle' => '',
 				'image' => 'https://i.ibb.co/tTrXK11z/Voyagez-Plus-Gagnez-Plus.png',
-				'link' => 'https://www.ajinsafro.ma/fidelite',
+				'link' => rtrim((string) config('app.public_url'), '/').'/fidelite',
 				'button_text' => "S'inscrire !",
 				'button_style' => 'orange',
 				'overlay_color' => 'linear-gradient(to bottom, rgba(0, 163, 224, 0.10), rgba(0, 129, 188, 0.10))',

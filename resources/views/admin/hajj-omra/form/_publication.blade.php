@@ -9,7 +9,7 @@
                 <div class="col-md-8">
                     <label class="form-label" for="slug">Slug</label>
                     <div class="input-group">
-                        <span class="input-group-text ho-mono">ajinsafro.ma/hajj-omra/</span>
+                        <span class="input-group-text ho-mono">{{ config('app.public_domain') }}/hajj-omra/</span>
                         <input type="text" id="slug" name="slug" class="form-control ho-mono @error('slug') is-invalid @enderror"
                                value="{{ old('slug', $package->slug) }}" placeholder="omra-ramadan-1448">
                     </div>
@@ -49,7 +49,7 @@
             ])
             <div class="ho-serp mt-3">
                 <div class="ho-eyebrow mb-2">Aperçu moteur de recherche</div>
-                <div class="ho-serp__url">ajinsafro.ma › hajj-omra › {{ $package->slug ?: 'slug-a-generer' }}</div>
+                <div class="ho-serp__url">{{ config('app.public_domain') }} › hajj-omra › {{ $package->slug ?: 'slug-a-generer' }}</div>
                 <div class="ho-serp__title">{{ $package->meta_title ?: ($package->title ?: "Titre de l'offre") }}</div>
                 <p class="ho-serp__desc">{{ \Illuminate\Support\Str::limit($package->meta_description ?: $package->short_description, 160) ?: 'Ajoutez une meta description pour contrôler ce texte.' }}</p>
             </div>

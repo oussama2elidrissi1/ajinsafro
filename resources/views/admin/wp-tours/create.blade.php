@@ -39,7 +39,7 @@
                             <div class="mb-3">
                                 <label class="form-label">Slug (URL)</label>
                                 <input type="text" name="slug" class="form-control" value="{{ old('slug') }}" placeholder="laissez vide pour générer automatiquement">
-                                <small class="text-muted">Sera visible sur : ajinsafro.net/tours/<strong>votre-slug</strong></small>
+                                <small class="text-muted">Sera visible sur : {{ config('app.public_domain') }}/tours/<strong>votre-slug</strong></small>
                             </div>
 
                             <div class="mb-3">

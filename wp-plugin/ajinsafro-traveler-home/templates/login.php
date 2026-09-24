@@ -23,7 +23,7 @@ add_filter(
 
 $endpoint = function_exists( 'ajth_public_login_endpoint' )
 	? ajth_public_login_endpoint()
-	: 'https://booking.ajinsafro.net/auth/public-login';
+	: ajth_booking_base_url() . '/auth/public-login';
 
 $header_settings = function_exists( 'ajth_get_header_settings' ) ? ajth_get_header_settings() : array();
 $signup_url = ! empty( $header_settings['signup_url'] ) ? (string) $header_settings['signup_url'] : home_url( '/register/' );

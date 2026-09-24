@@ -53,7 +53,7 @@ $has_flights = !empty($tour_data['flights']);
 $has_hotels = !empty($tour_data['hotels']) || !empty($tour_data['accommodations']);
 
 $booking_slug = get_post_field('post_name', $tour_id);
-$booking_url = 'https://booking.ajinsafro.net/voyages/' . rawurlencode((string) $booking_slug);
+$booking_url = ajtb_laravel_base_url() . '/voyages/' . rawurlencode((string) $booking_slug);
 
 get_header();
 ?>
@@ -508,7 +508,7 @@ get_header();
                 </div>
             </div>
             <div class="modal-footer">
-                <a class="btn btn-primary" href="https://booking.ajinsafro.net/login">Se connecter</a>
+                <a class="btn btn-primary" href="<?php echo esc_url(ajtb_laravel_base_url() . '/login'); ?>">Se connecter</a>
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fermer</button>
             </div>
         </div>

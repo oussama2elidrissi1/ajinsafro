@@ -14,7 +14,7 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h4 class="card-title mb-0">?Éditer Tour #{{ $tour['id'] }}</h4>
-                <a href="https://ajinsafro.net/tours/{{ $tour['slug'] }}" target="_blank" class="btn btn-sm btn-info">
+                <a href="{{ config('app.public_url') }}/tours/{{ $tour['slug'] }}" target="_blank" class="btn btn-sm btn-info">
                     <i class="mdi mdi-eye me-1"></i> Voir sur WordPress
                 </a>
             </div>
@@ -50,7 +50,7 @@
                             <div class="mb-3">
                                 <label class="form-label">Slug (URL)</label>
                                 <input type="text" name="slug" class="form-control" value="{{ old('slug', $tour['slug']) }}">
-                                <small class="text-muted">Visible sur : ajinsafro.net/tours/<strong>{{ old('slug', $tour['slug']) }}</strong></small>
+                                <small class="text-muted">Visible sur : {{ config('app.public_domain') }}/tours/<strong>{{ old('slug', $tour['slug']) }}</strong></small>
                             </div>
 
                             <div class="mb-3">

@@ -25,17 +25,10 @@ if ( ! function_exists( 'ajth_laravel_api_base_url' ) ) {
 			$url = AJTH_LARAVEL_API_URL;
 		} elseif ( defined( 'AJTB_LARAVEL_API_URL' ) && is_string( AJTB_LARAVEL_API_URL ) && AJTB_LARAVEL_API_URL !== '' ) {
 			$url = AJTB_LARAVEL_API_URL;
-		} else {
-			$home_host = wp_parse_url( home_url( '/' ), PHP_URL_HOST );
-			$home_host = is_string( $home_host ) ? strtolower( $home_host ) : '';
-
-			if ( '' !== $home_host ) {
-				if ( false !== strpos( $home_host, 'ajinsafro.net' ) ) {
-					$url = 'https://booking.ajinsafro.net/api';
-				} elseif ( in_array( $home_host, array( '127.0.0.1', 'localhost' ), true ) ) {
-					$url = 'http://127.0.0.1:8000/api';
-				}
-			}
+		} elseif ( function_exists( 'ajth_booking_base_url' ) ) {
+			// Déduit de l'hôte servi, pour ne dépendre d'aucun domaine en particulier.
+			$base = ajth_booking_base_url();
+			$url = '' !== $base ? $base . '/api' : '';
 		}
 
 		$url = untrailingslashit( (string) apply_filters( 'ajth_laravel_api_base_url', $url ) );

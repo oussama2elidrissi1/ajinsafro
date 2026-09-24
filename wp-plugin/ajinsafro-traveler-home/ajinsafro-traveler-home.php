@@ -423,7 +423,7 @@ function ajth_preload_styles()
     echo '<link rel="preconnect" href="https://fonts.googleapis.com">'."\n";
     echo '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'."\n";
     // Logo, visuels et video de la home sont servis par l'admin Laravel.
-    echo '<link rel="preconnect" href="https://booking.ajinsafro.net">'."\n";
+    echo '<link rel="preconnect" href="' . esc_url(ajth_booking_base_url()) . '">'."\n";
 
     // Les icones de la barre du haut (fas, far) sont visibles des le premier ecran. Sans
     // preload, leurs polices ne partent qu'apres le telechargement et l'analyse du CSS du
@@ -959,11 +959,11 @@ function ajth_get_header_settings()
 }
 
 /**
- * Normalize storage URLs to point to the correct domain (booking.ajinsafro.net).
+ * Normalize storage URLs to point to the back-office host, whatever the domain in use.
  *
  * The Laravel admin stores images in storage/app/public and generates URLs
  * using Storage::disk('public')->url(). If APP_URL or ADMIN_URL is misconfigured,
- * URLs may point to ajinsafro.net/storage/... instead of booking.ajinsafro.net/storage/...
+ * URLs may point to <site>/storage/... instead of booking.<site>/storage/...
  *
  * This helper fixes those URLs so images load correctly on the front-end.
  *
@@ -1060,6 +1060,45 @@ function ajth_localize_external_image(string $url): string
 
     return $url;
 }
+/**
+ * Base du back-office Laravel, sans barre finale.
+ *
+ * Dans l'ordre : la constante posée dans wp-config.php, l'option d'administration, puis — à
+ * défaut — le sous-domaine `booking` de l'hôte servi. Ce dernier repli est ce qui permet de
+ * changer de domaine (.net, .com, .ma) sans modifier une ligne de code.
+ */
+function ajth_booking_base_url(): string
+{
+    $url = '';
+    foreach (['AJTH_LARAVEL_API_URL', 'AJTB_LARAVEL_API_URL'] as $constant) {
+        if ($url === '' && defined($constant) && is_string(constant($constant))) {
+            $url = (string) constant($constant);
+        }
+    }
+    if ($url === '') {
+        $url = (string) get_option('ajinsafro_booking_url', '');
+    }
+    if ($url === '') {
+        $host = (string) wp_parse_url(home_url('/'), PHP_URL_HOST);
+        $host = strtolower((string) preg_replace('/^www\./', '', $host));
+        if ($host === '127.0.0.1' || $host === 'localhost') {
+            $url = 'http://127.0.0.1:8000';
+        } elseif ($host !== '') {
+            $url = 'https://booking.' . $host;
+        }
+    }
+    // La constante désigne parfois l'API elle-même : c'est la même base.
+    $url = (string) preg_replace('#/api/?$#', '', trim($url));
+
+    return rtrim((string) apply_filters('ajth_booking_base_url', $url), '/');
+}
+
+/** Hôte du back-office, sans le schéma. */
+function ajth_booking_host(): string
+{
+    return (string) wp_parse_url(ajth_booking_base_url(), PHP_URL_HOST);
+}
+
 function ajth_normalize_storage_url(string $url): string
 {
     $url = trim($url);
@@ -1067,11 +1106,18 @@ function ajth_normalize_storage_url(string $url): string
         return '';
     }
 
-    $booking_host = 'booking.ajinsafro.net';
+    $booking_host = ajth_booking_host();
+    if ($booking_host === '') {
+        return $url;
+    }
+
+    // Le site public sert /storage sans le savoir : ces chemins appartiennent au back-office.
+    $public_host = preg_quote((string) wp_parse_url(home_url('/'), PHP_URL_HOST), '#');
+    $bare_host = preg_quote((string) preg_replace('/^www\./', '', (string) wp_parse_url(home_url('/'), PHP_URL_HOST)), '#');
     $wrong_patterns = [
-        '#^https?://ajinsafro\.net/storage/#i',
-        '#^https?://www\.ajinsafro\.net/storage/#i',
-        '#^//ajinsafro\.net/storage/#i',
+        '#^https?://' . $public_host . '/storage/#i',
+        '#^https?://(?:www\.)?' . $bare_host . '/storage/#i',
+        '#^//(?:www\.)?' . $bare_host . '/storage/#i',
     ];
 
     foreach ($wrong_patterns as $pattern) {
@@ -1110,7 +1156,7 @@ function ajth_normalize_auth_urls(array $settings): array
 
 function ajth_public_login_endpoint(): string
 {
-    return apply_filters('ajth_public_login_endpoint', 'https://booking.ajinsafro.net/auth/public-login');
+    return apply_filters('ajth_public_login_endpoint', ajth_booking_base_url() . '/auth/public-login');
 }
 
 /* ──────────────────────────────────────────────
@@ -1425,7 +1471,7 @@ function ajth_default_accordion_slider_slides(): array
             'title' => 'PROGRAMME DE FIDELITE',
             'subtitle' => '',
             'image' => AJTH_URL.'assets/img/slide-1.webp',
-            'link' => 'https://www.ajinsafro.ma/fidelite',
+            'link' => home_url('/fidelite'),
             'button_text' => "S'inscrire !",
             'button_style' => 'orange',
             'overlay_color' => 'linear-gradient(to bottom, rgba(0, 163, 224, 0.10), rgba(0, 129, 188, 0.10))',

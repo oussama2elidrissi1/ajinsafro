@@ -158,44 +158,101 @@ Côté front, les dates passées restent listées sur la page de tour — désac
 antérieure au jour courant. Attention : la page de tour est rendue par
 `templates/v1/single-st_tours.php`, pas par `templates/tour/partials/`.
 
-## Bascule vers ajinsafro.ma (retour sur l'ancien domaine)
+## Changer de domaine
 
-Objectif : ne rien perdre du référencement d'ajinsafro.ma. Chaque ancienne URL de programme doit
-répondre **au même chemin**, seul le domaine change. Les anciennes URL étaient sur
-`https://www.ajinsafro.ma/…` (207 sur 225) : l'hôte canonique doit rester **`www`**.
+Le site a vocation à bouger deux fois : **`ajinsafro.net` → `ajinsafro.com`** maintenant, puis
+**`ajinsafro.com` → `ajinsafro.ma`** une fois la société validée. La procédure ci-dessous vaut
+pour les deux ; seules les valeurs changent.
 
-Ce que le code fait déjà (plugin tour-bridge, `AJTB_Legacy_Permalinks`) : `/voyage-national/…`,
-`/voyages-international/…` et `/voyages-organisees/…` servis en 200 sans barre finale ;
-`onedeal.php?id=` / `buy.php?id=`, `/team/…`, mauvais préfixe et préfixes nus en 301 vers le
-chemin canonique. La fiche est retrouvée par l'identifiant en fin de slug.
+L'hôte canonique retenu est **sans `www`**, comme aujourd'hui. Le back-office suit :
+`booking.<domaine>`.
 
-```bash
-php artisan legacy:sync-permalinks --execute --rename-slugs   # préfixes + anciens slugs
-php artisan legacy:check-urls --base=https://ajinsafro.net    # avant la bascule
-php artisan legacy:check-urls --base=https://www.ajinsafro.ma # le jour même : 0 défaut attendu
-```
+### Ce que le code fait déjà
 
-Liste de bascule, dans l'ordre :
+Rien n'est figé sur un domaine :
 
-1. WordPress : `siteurl` et `home` = `https://www.ajinsafro.ma` ; `.htaccess` racine : 301 de
-   `ajinsafro.ma` (apex) vers `www.ajinsafro.ma`, même chemin ; l'ancien serveur `.ma` doit
-   disparaître avant (sinon deux sites répondent).
-2. `ajinsafro.net` et `booking.ajinsafro.net` : 301 vers les hôtes `.ma`, même chemin (remplace la
-   règle `booking.ajinsafro.net → ajinsafro.net/` de `public/.htaccess`).
-3. Laravel `.env` : `APP_URL`, `ADMIN_URL`, `ADMIN_DOMAIN`, `PARTNER_URL`, `PARTNER_DOMAIN`,
-   `PUBLIC_URL`, `FRONTEND_URL`, `WP_UPLOAD_URL`, `PUBLIC_DOMAIN`, et **`SESSION_DOMAIN=.ajinsafro.ma`**
-   (sans lui, le cookie retombe à l'hôte seul et le SSO admin/partenaire casse en silence) ; puis
-   `config:cache`.
-4. Plugin traveler-home : hôtes codés en dur `booking.ajinsafro.net` (preconnect, normalisation
-   des URL `/storage`, `/auth/public-login`) et références résiduelles à `ajinsafro.ma`
-   (`contact@`, lien fidélité) — à passer sur les hôtes `.ma` définitifs.
-5. Correctifs serveur hors git à refaire : `chmod 600 wp-config.php`, `.htaccess` d'`uploads/`
-   interdisant PHP, aucune archive `.zip` dans `wp-content/plugins/`.
-6. Indexation : `blog_public = 1` (Réglages → Lecture), vider le cache du sitemap Rank Math,
-   vérifier que `st_tours-sitemap.xml` liste les chemins historiques, soumettre le sitemap dans
-   la Search Console d'ajinsafro.ma. Pas d'outil « changement d'adresse » : c'est le même domaine.
-7. Acceptation : `legacy:check-urls --base=https://www.ajinsafro.ma` sans défaut, puis
-   `legacy:check-urls --base=https://ajinsafro.ma` (apex : tout doit rediriger vers `www`).
+- **Laravel** route par `PUBLIC_DOMAIN` / `ADMIN_DOMAIN` / `PARTNER_DOMAIN`, et les liens de
+  l'admin passent par `config('app.public_url')` / `config('app.admin_url')`.
+- **Les plugins WordPress** cherchent le back-office dans cet ordre : la constante
+  `AJTH_LARAVEL_API_URL` (ou `AJTB_LARAVEL_API_URL`) de `wp-config.php`, l'option
+  `ajinsafro_booking_url`, puis — à défaut — le sous-domaine `booking` de l'hôte servi. Sans rien
+  configurer, un site sur `ajinsafro.com` appelle donc `booking.ajinsafro.com`.
+- **Les anciennes URL du catalogue** (`/voyage-national/…`, `/voyages-international/…`,
+  `/voyages-organisees/…`, `onedeal.php?id=`, `/team/buy.php?id=`) sont servies par
+  `AJTB_Legacy_Permalinks`, quel que soit le domaine : le chemin ne change jamais.
+
+### Liste de bascule, dans l'ordre
+
+1. **DNS et certificat.** `ajinsafro.com` et `booking.ajinsafro.com` pointent sur le serveur ;
+   certificat SSL émis pour les deux (AutoSSL cPanel) **avant** de basculer WordPress, sinon le
+   site répond en erreur de certificat entre les deux étapes.
+
+2. **Base WordPress.** Remplacer le domaine partout, sérialisation comprise — jamais en SQL brut :
+
+   ```bash
+   cd ~/public_html
+   wp db export ~/sauvegarde-avant-bascule.sql          # filet de sécurité
+   wp search-replace 'ajinsafro.net' 'ajinsafro.com' --all-tables-with-prefix --dry-run
+   wp search-replace 'ajinsafro.net' 'ajinsafro.com' --all-tables-with-prefix
+   wp option get siteurl && wp option get home           # doivent afficher https://ajinsafro.com
+   wp cache flush && wp rewrite flush
+   ```
+
+   `--dry-run` annonçait 1348 remplacements au 2026-09-24. **Ne pas** lancer de remplacement sur
+   `ajinsafro.ma` : ce domaine apparaît dans des adresses e-mail (`contact@ajinsafro.ma`) et dans
+   les références au catalogue historique, qui doivent rester telles quelles.
+
+3. **Laravel `.env`**, puis `php artisan config:cache` :
+
+   ```
+   APP_URL=https://ajinsafro.com
+   PUBLIC_URL=https://ajinsafro.com
+   FRONTEND_URL=https://ajinsafro.com
+   PUBLIC_DOMAIN=ajinsafro.com
+   ADMIN_URL=https://booking.ajinsafro.com
+   ADMIN_DOMAIN=booking.ajinsafro.com
+   PARTNER_URL=https://partenaire.ajinsafro.com
+   PARTNER_DOMAIN=partenaire.ajinsafro.com
+   WP_UPLOAD_URL=https://ajinsafro.com/wp-content/uploads
+   SESSION_DOMAIN=.ajinsafro.com
+   ```
+
+   `SESSION_DOMAIN` est le piège : sans lui le cookie retombe sur l'hôte seul et la session
+   partagée entre le back-office et le portail partenaire casse **en silence**.
+
+4. **Redirections 301, chemin pour chemin**, depuis l'ancien domaine vers le nouveau —
+   `ajinsafro.net` → `ajinsafro.com`, `booking.ajinsafro.net` → `booking.ajinsafro.com`. Remplace
+   la règle `booking.ajinsafro.net → ajinsafro.net/` de `public/.htaccess` (fichier en
+   `skip-worktree`, voir plus haut). Garder ces redirections en place **au moins un an**.
+
+5. **Correctifs serveur hors git**, à refaire si l'hébergement change : `chmod 600 wp-config.php`,
+   `.htaccess` d'`uploads/` interdisant PHP, aucune archive `.zip` dans `wp-content/plugins/`.
+
+6. **Indexation.** `blog_public = 1` (Réglages → Lecture) — il est volontairement à 0 tant que le
+   site n'est pas définitif. Vider le cache du sitemap Rank Math, vérifier que
+   `st_tours-sitemap.xml` liste bien les chemins historiques, créer la propriété Search Console du
+   nouveau domaine et y soumettre le sitemap.
+
+7. **Search Console — changement d'adresse.** Depuis la propriété de l'ancien domaine, utiliser
+   l'outil « Changement d'adresse » vers le nouveau. Il exige que les deux propriétés soient
+   vérifiées et que les 301 du point 4 soient en place.
+
+8. **Acceptation** : aucune des 368 anciennes URL ne doit tomber.
+
+   ```bash
+   php artisan legacy:check-urls --base=https://ajinsafro.com   # 0 défaut attendu
+   ```
+
+### Le cas d'ajinsafro.ma
+
+Les 368 anciennes URL du catalogue viennent de `www.ajinsafro.ma`. Leur référencement ne se
+transfère que si **le DNS d'`ajinsafro.ma` renvoie en 301, chemin pour chemin**, vers le domaine
+servi. Tant que ce n'est pas fait, le travail sur les permaliens historiques ne sert qu'aux
+visiteurs qui arrivent déjà sur le bon domaine.
+
+Au moment de la bascule finale vers `.ma`, la même liste s'applique en sens inverse
+(`ajinsafro.com` → `ajinsafro.ma`), et le point 7 se fait de `.com` vers `.ma`. Les anciennes URL
+`.ma` redeviennent alors natives : plus aucune redirection inter-domaines pour elles.
 ## Ce que l'import ne crée jamais
 
 Fichiers images, galeries, disponibilités réelles, chambres, vols, prix de vente actifs. Les départs

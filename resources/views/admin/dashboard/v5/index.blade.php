@@ -87,7 +87,7 @@ HTML;
     $bodyHtml = str_replace(
         '<div class="h-14 bg-white flex items-center justify-center px-4 shrink-0 border-b border-slate-200 shadow-sm">
                 <a href="#" class="flex items-center justify-center shrink-0">
-                    <img src="https://booking.ajinsafro.net/storage/home-settings/header/6hZldTmcYICYg6eP8O52lt8GnBe8iuHSi5xiWrdQ.png" alt="Ajinsafro.ma" class="h-8 w-auto max-w-[170px] object-contain transition-opacity duration-300 hover:opacity-95" onerror="this.onerror=null; this.src=\'https://via.placeholder.com/150x32/0b548b/ffffff?text=Ajinsafro.ma\';">
+                    <img src="{{ config('app.admin_url') }}/storage/home-settings/header/6hZldTmcYICYg6eP8O52lt8GnBe8iuHSi5xiWrdQ.png" alt="Ajinsafro.ma" class="h-8 w-auto max-w-[170px] object-contain transition-opacity duration-300 hover:opacity-95" onerror="this.onerror=null; this.src=\'https://via.placeholder.com/150x32/0b548b/ffffff?text=Ajinsafro.ma\';">
                 </a>
             </div>',
         '<div class="h-14 bg-white flex items-center justify-between px-4 shrink-0 border-b border-slate-200 shadow-sm">
@@ -155,7 +155,7 @@ HTML;
     );
 
     $bodyHtml = str_replace(
-        '<img src="https://booking.ajinsafro.net/storage/home-settings/header/6hZldTmcYICYg6eP8O52lt8GnBe8iuHSi5xiWrdQ.png" alt="Ajinsafro" class="h-6 w-auto object-contain bg-white px-2 py-0.5 rounded border border-slate-100">',
+        '<img src="{{ config('app.admin_url') }}/storage/home-settings/header/6hZldTmcYICYg6eP8O52lt8GnBe8iuHSi5xiWrdQ.png" alt="Ajinsafro" class="h-6 w-auto object-contain bg-white px-2 py-0.5 rounded border border-slate-100">',
         '<img src="' . e($dashboardBrandLogo) . '" alt="' . e($dashboardBrandName) . '" class="h-6 w-auto object-contain bg-white px-2 py-0.5 rounded border border-slate-100">',
         $bodyHtml
     );
@@ -195,7 +195,7 @@ HTML;
     );
 
     $bodyHtml = str_replace(
-        '<img src="https://booking.ajinsafro.net/storage/home-settings/header/6hZldTmcYICYg6eP8O52lt8GnBe8iuHSi5xiWrdQ.png" alt="Ajinsafro.ma" class="h-7 w-auto object-contain">',
+        '<img src="{{ config('app.admin_url') }}/storage/home-settings/header/6hZldTmcYICYg6eP8O52lt8GnBe8iuHSi5xiWrdQ.png" alt="Ajinsafro.ma" class="h-7 w-auto object-contain">',
         '<img src="' . e($dashboardBrandLogo) . '" alt="' . e($dashboardBrandName) . '" class="h-7 w-auto object-contain">',
         $bodyHtml
     );

@@ -20,7 +20,7 @@ use Illuminate\Support\Str;
 class LegacyCheckUrlsCommand extends Command
 {
     protected $signature = 'legacy:check-urls
-        {--base=https://ajinsafro.net : Hôte à tester, avec le schéma}
+        {--base= : Hôte à tester, avec le schéma (défaut : app.public_url)}
         {--id=* : Ne tester que ces identifiants historiques}
         {--limit=0 : Nombre maximum de fiches testées}
         {--show-ok : Affiche aussi les URL conformes}';
@@ -29,7 +29,7 @@ class LegacyCheckUrlsCommand extends Command
 
     public function handle(): int
     {
-        $base = rtrim((string) $this->option('base'), '/');
+        $base = rtrim((string) ($this->option('base') ?: config('app.public_url')), '/');
         $limit = max(0, (int) $this->option('limit'));
         $onlyIds = array_map('intval', (array) $this->option('id'));
         $showOk = (bool) $this->option('show-ok');
