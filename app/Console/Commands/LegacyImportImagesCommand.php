@@ -261,8 +261,12 @@ class LegacyImportImagesCommand extends Command
             return null;
         }
 
-        $mime = strtolower(trim(explode(';', (string) $response->header('Content-Type'))[0]));
-        $ext = self::ALLOWED_MIME[$mime] ?? self::ALLOWED_MIME[strtolower((string) ($info['mime'] ?? ''))] ?? null;
+        // Le type détecté prime sur l'en-tête : ajinsafro.ma annonce `image/jpeg` pour tous ses
+        // fichiers, y compris les PNG et les WebP. Se fier à l'en-tête donnerait une extension
+        // qui ment sur le contenu.
+        $detected = strtolower((string) ($info['mime'] ?? ''));
+        $declared = strtolower(trim(explode(';', (string) $response->header('Content-Type'))[0]));
+        $ext = self::ALLOWED_MIME[$detected] ?? self::ALLOWED_MIME[$declared] ?? null;
 
         if ($ext === null) {
             return null;

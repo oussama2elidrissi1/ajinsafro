@@ -112,7 +112,10 @@ class LegacyContentSeeder extends Seeder
         $contentIsEditable = $voyage === null || $this->isStillIncomplete($voyage);
 
         if ($voyage === null) {
-            $voyage = new Voyage(['slug' => $url['slug']]);
+            // Brouillon : une fiche importée n'est ni publique ni vendable tant qu'elle est
+            // « À compléter ». Le statut n'est posé qu'ici : une fiche déjà pilotée par l'agence
+            // garde le sien, même si son contenu est rafraîchi.
+            $voyage = new Voyage(['slug' => $url['slug'], 'status' => 'draft']);
         }
 
         if ($contentIsEditable) {
@@ -279,8 +282,6 @@ class LegacyContentSeeder extends Seeder
             'price_from' => $this->amount($program['prix_actuel'] ?? null),
             'old_price' => $this->amount($program['prix_barre'] ?? null),
             'currency' => trim((string) ($program['devise'] ?? '')) ?: 'MAD',
-            // Brouillon : la fiche n'est ni publique ni vendable tant qu'elle est « À compléter ».
-            'status' => 'draft',
             'tour_price_by' => 'person',
             'tours_include' => $this->stringList($program['inclus'] ?? []),
             'tours_exclude' => $this->stringList($program['non_inclus'] ?? []),
