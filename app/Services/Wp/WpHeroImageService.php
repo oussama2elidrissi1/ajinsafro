@@ -227,6 +227,37 @@ class WpHeroImageService
      *
      * @return array{from: string, to: string, before: int, after: int}|null
      */
+    /**
+     * Reconstruit les métadonnées d'un attachment dont le fichier est présent mais dont
+     * `_wp_attachment_metadata` n'a ni largeur ni hauteur : WordPress ne peut alors calculer
+     * aucun srcset et sert le fichier pleine taille. Les déclinaisons intermédiaires sont
+     * régénérées au passage. Le chemin (`_wp_attached_file`), le guid et le type MIME ne sont
+     * jamais modifiés : rien n'est réencodé.
+     *
+     * Retourne les métadonnées écrites, ou null si le fichier est absent ou illisible.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function rebuildAttachmentMetadata(int $attachmentId): ?array
+    {
+        $relative = self::getAttachedFile($attachmentId);
+        $fullPath = self::attachmentAbsolutePath($attachmentId);
+        if ($relative === null || $relative === '' || $fullPath === null) {
+            return null;
+        }
+
+        $metadata = $this->buildAttachmentMetadata($fullPath, $relative);
+        if ($metadata === []) {
+            return null;
+        }
+
+        WpPostMeta::updateOrCreate(
+            ['post_id' => $attachmentId, 'meta_key' => '_wp_attachment_metadata'],
+            ['meta_value' => serialize($metadata)]
+        );
+
+        return $metadata;
+    }
     public function optimizeExistingAttachment(int $attachmentId, int $maxWidth = self::MAX_STORED_WIDTH): ?array
     {
         $fullPath = self::attachmentAbsolutePath($attachmentId);
