@@ -350,7 +350,11 @@
        l'utilisateur demande moins d'animations. Le poster reste affiche. */
     function heroVideoAllowed() {
         try {
-            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+            if (!window.matchMedia) return true;
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+            // Sur telephone, la video d'ambiance pese plus cher que ce qu'elle apporte :
+            // le poster occupe deja tout le hero, et le fichier fait pres de 20 Mo.
+            if (window.matchMedia('(max-width: 767px)').matches) return false;
             var link = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
             if (!link) return true;
             if (link.saveData) return false;
