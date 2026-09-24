@@ -110,6 +110,23 @@ réutilisation : un second passage ne duplique rien. Une vignette déjà valide 
 `--replace-thumbnail`. **Le statut éditorial des tours n'est pas touché** : une fiche en brouillon
 le reste.
 
+### Garder « À compléter » honnête
+
+`completion.missing` est un instantané calculé au seed. Les traitements qui suivent
+(`legacy:push-wp`, la saisie des agents) remplissent les trous sans le mettre à jour — c'est ainsi
+que `lien_wordpress` restait affiché sur 105 fiches qui avaient pourtant leur tour WordPress.
+
+```bash
+php artisan legacy:refresh-missing              # simulation
+php artisan legacy:refresh-missing --execute    # applique
+```
+
+Recalcule les clés vérifiables en base (`lien_wordpress`, `images`, `programme_jours`, `themes`,
+`duree`, `prix`, `destination`, `prestations_incluses`) et conserve les autres telles quelles :
+`departs_vendables`, `contenu_a_relire`, `extraction_partielle` et `url_publique` relèvent d'une
+décision humaine ou de la qualité de l'extraction. Le recalcul est symétrique — un champ vidé
+réapparaît dans la liste. `completion.status` n'est jamais modifié.
+
 ## Ce que l'import ne crée jamais
 
 Fichiers images, galeries, disponibilités réelles, chambres, vols, prix de vente actifs. Les départs
