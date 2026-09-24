@@ -314,7 +314,8 @@ if ( ! function_exists( 'getAjinsafroHebergements' ) ) {
 			$amenities = ajth_hebergement_normalize_meta_list( get_post_meta( $post_id, 'hotel_amenities', true ) );
 			$featured  = get_post_meta( $post_id, '_is_featured', true );
 			$is_popular = '1' === (string) $featured || 'on' === (string) get_post_meta( $post_id, 'is_featured', true );
-			$image_url = function_exists( 'ajth_hebergement_catalog_card_image_url' ) ? ajth_hebergement_catalog_card_image_url( $post_id ) : '';
+			$image_att = function_exists( 'ajth_hebergement_catalog_card_image_attachment' ) ? ajth_hebergement_catalog_card_image_attachment( $post_id ) : null;
+			$image_url = $image_att ? $image_att['url'] : ( function_exists( 'ajth_hebergement_default_card_image_url' ) ? ajth_hebergement_default_card_image_url() : '' );
 
 			$items[] = array(
 				'id'          => $post_id,
@@ -324,6 +325,8 @@ if ( ! function_exists( 'getAjinsafroHebergements' ) ) {
 				'url'         => get_permalink(),
 				'image_url'   => $image_url,
 				'image'       => $image_url,
+				'image_id'    => $image_att ? (int) $image_att['id'] : 0,
+				'image_size'  => $image_att ? $image_att['size'] : '',
 				'location'    => $location_label,
 				'city'        => $city,
 				'destination' => $destination,

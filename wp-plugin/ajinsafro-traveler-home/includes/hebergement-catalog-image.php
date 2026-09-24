@@ -113,11 +113,17 @@ function ajth_hebergement_default_card_image_url() {
  * @param int $post_id Post st_hotel.
  * @return string URL absolue sûre ou image par défaut plugin.
  */
-function ajth_hebergement_catalog_card_image_url( $post_id ) {
-	$fallback = ajth_hebergement_default_card_image_url();
-	$post_id  = (int) $post_id;
+/**
+ * Attachment retenu pour la carte d'un hébergement : l'identifiant, la taille WordPress
+ * dont l'URL a été validée, et cette URL. Sert à émettre un srcset cohérent avec le src.
+ *
+ * @param int $post_id ID de l'hébergement.
+ * @return array{id:int,size:string,url:string}|null Null sans image exploitable.
+ */
+function ajth_hebergement_catalog_card_image_attachment( $post_id ) {
+	$post_id = (int) $post_id;
 	if ( $post_id <= 0 ) {
-		return $fallback;
+		return null;
 	}
 
 	$attachment_ids = array();
@@ -155,14 +161,20 @@ function ajth_hebergement_catalog_card_image_url( $post_id ) {
 			}
 			$path = get_attached_file( $att_id );
 			if ( $path && is_readable( $path ) ) {
-				return $url;
+				return array( 'id' => (int) $att_id, 'size' => $size, 'url' => $url );
 			}
 			// Fichier absent du FS local (CDN, autre serveur) : garder l’URL si WordPress la valide.
 			if ( function_exists( 'wp_http_validate_url' ) && wp_http_validate_url( $url ) ) {
-				return $url;
+				return array( 'id' => (int) $att_id, 'size' => $size, 'url' => $url );
 			}
 		}
 	}
 
-	return $fallback;
+	return null;
+}
+
+function ajth_hebergement_catalog_card_image_url( $post_id ) {
+	$attachment = ajth_hebergement_catalog_card_image_attachment( $post_id );
+
+	return $attachment ? $attachment['url'] : ajth_hebergement_default_card_image_url();
 }
