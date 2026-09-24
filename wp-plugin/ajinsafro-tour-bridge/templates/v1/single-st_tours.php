@@ -306,11 +306,22 @@ $translate_ui = static function (string $text): string {
 // Accroche de la fiche : la phrase d'introduction du programme, avant la liste de points.
 $tour_excerpt = trim(wp_strip_all_tags((string) get_the_excerpt($tour_id)));
 
-// Étapes de l'itinéraire, déduites de la destination (« Merzouga - Ouarzazate - Marrakech »).
-$route_stops = array_values(array_filter(array_map(
-    static fn ($stop) => trim((string) $stop),
-    preg_split('/\s*(?:–|—|-|,|·|>|\/)\s*/u', $destination) ?: []
-), static fn ($stop) => $stop !== ''));
+// Étapes de l'itinéraire : le titre de chaque journée, ramené à son lieu. La destination ne
+// convient pas, souvent réduite à une catégorie (« Circuit »).
+$route_stops = [];
+foreach ($days as $route_day) {
+    $stage = trim((string) ($route_day['title'] ?? ''));
+    // « Merzouga : Kelâa des M'Gouna - Ouarzazate » → « Merzouga »
+    $stage = trim((string) preg_split('/\s*[:–—]\s*/u', $stage)[0]);
+    // Les intitulés de déroulé ne sont pas des lieux.
+    if ($stage === '' || preg_match('/^(jour|journ[ée]e|d[ée]part|arriv[ée]e|retour)\b/iu', $stage)) {
+        continue;
+    }
+    if (end($route_stops) !== $stage) {
+        $route_stops[] = $stage;
+    }
+}
+$route_stops = array_slice($route_stops, 0, 6);
 
 // Repères affichés sous le titre : ce que le voyageur veut savoir avant de lire le programme.
 $hero_facts = [];
@@ -319,7 +330,7 @@ if (trim($duration_label) !== '') {
 }
 if (count($route_stops) > 1) {
     $hero_facts[] = ['label' => implode(' · ', array_slice($route_stops, 0, 3)), 'tone' => 'plain'];
-} elseif (trim($destination) !== '') {
+} elseif (trim($destination) !== '' && mb_strtolower(trim($destination)) !== 'circuit') {
     $hero_facts[] = ['label' => $destination, 'tone' => 'plain'];
 }
 if (!empty($stats['hotels'])) {
@@ -909,7 +920,7 @@ get_header();
 
                         <div class="ajtb-v1-booking" id="ajtb-v1-search-box">
                             <div class="ajtb-v1-field">
-                                <span class="ajtb-v1-field-label">Ville de départ <span class="ajtb-v1-required" aria-hidden="true">*</span></span>
+                                <span class="ajtb-v1-field-label">Ville de départ<?php echo !empty($search_place_options) ? ' <span class="ajtb-v1-required" aria-hidden="true">*</span>' : ''; ?></span>
                                 <div data-ajtb-normal-departure>
                                     <?php if (!empty($search_place_options)): ?>
                                         <span class="ajtb-v1-select-shell">
@@ -1111,7 +1122,7 @@ get_header();
 
                     <?php if (!empty($best_deals)): ?>
                         <div class="ajtb-v1-side-card ajtb-v1-best-deals">
-                            <h3>Offres recommandees</h3>
+                            <h3>Offres recommandées</h3>
                             <ul>
                                 <?php foreach (array_slice($best_deals, 0, 3) as $deal): ?>
                                     <li><?php echo esc_html($translate_ui((string) $deal)); ?></li>
