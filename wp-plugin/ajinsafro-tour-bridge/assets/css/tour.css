@@ -3487,3 +3487,30 @@ body.ajtb-modal-open {
         bottom: 14px;
     }
 }
+
+/* Dates de depart passees : lisibles, jamais reservables. */
+.ajtb-v1-search-select option:disabled,
+.ajtb-v1-search-select option.ajtb-v1-date-expired {
+    color: #9aa3ad;
+}
+.ajtb-v1-expired-departures {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #6b7280;
+}
+.ajtb-v1-expired-departures__label {
+    font-weight: 700;
+    color: #374151;
+}
+.ajtb-v1-expired-departures__date {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #fee2e2;
+    color: #991b1b;
+    font-weight: 600;
+    white-space: nowrap;
+}

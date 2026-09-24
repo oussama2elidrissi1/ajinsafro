@@ -116,6 +116,7 @@ if (!empty($tour_data['search']['date_options']) && is_array($tour_data['search'
         $search_date_options[] = [
             'value' => $value,
             'display' => $display,
+            'expired' => !empty($date_option['expired']),
         ];
     }
 } elseif (!empty($tour_data['search']['dates']) && is_array($tour_data['search']['dates'])) {
@@ -148,7 +149,17 @@ foreach (['date_depart', 'departure_date', 'depart_date'] as $date_query_key) {
     }
 }
 
-$selected_search_date = !empty($search_date_options) ? (string) $search_date_options[0]['value'] : '';
+// Jamais une date passee par defaut : la premiere a venir, sinon la premiere option (desactivee).
+$selected_search_date = '';
+foreach ($search_date_options as $date_option) {
+    if (empty($date_option['expired'])) {
+        $selected_search_date = (string) $date_option['value'];
+        break;
+    }
+}
+if ($selected_search_date === '' && !empty($search_date_options)) {
+    $selected_search_date = (string) $search_date_options[0]['value'];
+}
 foreach ($search_date_options as $date_option) {
     if (
         ($requested_search_date !== '' && (string) $date_option['value'] === $requested_search_date)
@@ -374,13 +385,23 @@ get_header();
                                 <span class="ajtb-v1-search-value ajtb-v1-search-value--select">
                                     <select class="ajtb-v1-search-select" id="ajtb-v1-search-date" aria-label="Dates de départ disponibles">
                                         <?php foreach ($search_date_options as $date_option): ?>
-                                            <option value="<?php echo esc_attr((string) $date_option['value']); ?>"<?php selected((string) $date_option['value'], $selected_search_date); ?>>
+                                            <option value="<?php echo esc_attr((string) $date_option['value']); ?>"<?php selected((string) $date_option['value'], $selected_search_date); ?><?php disabled(!empty($date_option['expired'])); ?><?php echo !empty($date_option['expired']) ? ' class="ajtb-v1-date-expired"' : ''; ?>>
                                                 <?php echo esc_html($translate_ui((string) $date_option['display'])); ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
                                     <strong aria-hidden="true">&#9662;</strong>
                                 </span>
+                                <?php
+                                $expired_options = array_values(array_filter($search_date_options, static fn ($o) => !empty($o['expired'])));
+                                if (!empty($expired_options)) : ?>
+                                    <div class="ajtb-v1-expired-departures" aria-label="<?php echo esc_attr($translate_ui('Départs passés')); ?>">
+                                        <span class="ajtb-v1-expired-departures__label"><?php echo esc_html($translate_ui('Départs passés')); ?></span>
+                                        <?php foreach (array_slice($expired_options, -6) as $expired_option) : ?>
+                                            <span class="ajtb-v1-expired-departures__date"><?php echo esc_html($translate_ui((string) ($expired_option['display'] ?? $expired_option['value']))); ?></span>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
                             <?php else: ?>
                                 <span class="ajtb-v1-search-value">
                                     <span class="ajtb-v1-search-text"><?php echo esc_html($translate_ui($search_date)); ?></span>

@@ -292,7 +292,11 @@ class AJTB_V1_Data_Provider
         sort($raw_dates);
 
         ksort($date_options_by_value);
-        $first_date = !empty($raw_dates[0]) ? $raw_dates[0] : '';
+        // Date par defaut : la premiere a venir ; a defaut la plus recente des passees, que le
+        // gabarit affichera desactivee.
+        $today_ymd = current_time('Y-m-d');
+        $upcoming_dates = array_values(array_filter($raw_dates, static fn ($d) => $d >= $today_ymd));
+        $first_date = !empty($upcoming_dates[0]) ? $upcoming_dates[0] : (!empty($raw_dates) ? end($raw_dates) : '');
         $first_place = !empty($place_options) ? (string) $place_options[0]['name'] : '';
         $first_place_id = !empty($place_options) ? (int) $place_options[0]['id'] : 0;
 
@@ -312,7 +316,13 @@ class AJTB_V1_Data_Provider
     private static function build_departure_date_option(string $raw_date, ?int $stock, ?float $specific_price, ?float $price_override = null): array
     {
         $label = self::format_date_label($raw_date);
+        // Une date passee reste proposee a la lecture, jamais a la reservation : le gabarit la
+        // desactive et l'etiquette, les gestionnaires AJAX la refusent.
+        $expired = $raw_date < current_time('Y-m-d');
         $parts = [$label];
+        if ($expired) {
+            $parts[] = 'Offre expirée';
+        }
 
         if ($stock !== null) {
             $parts[] = sprintf('%d place%s', $stock, $stock > 1 ? 's' : '');
@@ -331,6 +341,7 @@ class AJTB_V1_Data_Provider
             'stock' => $stock,
             'specific_price' => $specific_price,
             'supplement' => $price_override,
+            'expired' => $expired,
         ];
     }
 
