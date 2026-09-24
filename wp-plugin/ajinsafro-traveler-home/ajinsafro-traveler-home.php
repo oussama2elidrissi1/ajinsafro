@@ -967,6 +967,8 @@ function ajth_get_header_settings()
  *
  * Servi par le plugin et non déposé à la racine : le fichier suit ainsi le dépôt, et WordPress
  * n'a plus à produire un 404 complet (près de 2 s, ce qui faisait échouer la récupération).
+ * Branché sur `plugins_loaded` et non `template_redirect` : la réponse part avant le thème
+ * et la requête principale, qui ne servent à rien ici.
  *
  * Les liens sont construits sur home_url() : rien n'est codé en dur sur le domaine.
  */
@@ -1017,7 +1019,7 @@ function ajth_serve_llms_txt(): void
     echo $out;
     exit;
 }
-add_action('template_redirect', 'ajth_serve_llms_txt');
+add_action('plugins_loaded', 'ajth_serve_llms_txt');
 /**
  * Sert la copie locale d'un visuel hebergé chez un tiers.
  *
