@@ -147,9 +147,10 @@
                 :action="$voyageIndexUrl"
                 method="GET"
                 :reset-url="$voyageIndexUrl"
+                grid-class="aj-voyage-filter-grid"
             >
                 <x-slot name="fields">
-                    <div class="aj-field aj-search-wrap aj-col-3">
+                    <div class="aj-field aj-search-wrap aj-col-4">
                         <label for="q">Recherche</label>
                         <span class="aj-search-icon"><i class="bx bx-search"></i></span>
                         <input id="q" type="search" name="q" class="aj-control" value="{{ request('q') }}" placeholder="Titre, slug...">
@@ -164,7 +165,7 @@
                             <option value="pending" @selected(request('status') === 'pending')>En attente</option>
                         </select>
                     </div>
-                    <div class="aj-field aj-col-2">
+                    <div class="aj-field aj-col-3">
                         <label for="tour_type">Type / thème</label>
                         <select id="tour_type" name="tour_type" class="aj-control">
                             <option value="">Tous</option>
@@ -173,23 +174,23 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="aj-field aj-col-2">
+                    <div class="aj-field aj-col-3">
                         <label for="destination">Destination</label>
                         <input id="destination" type="text" name="destination" class="aj-control" value="{{ request('destination') }}" placeholder="Ville, pays...">
                     </div>
-                    <div class="aj-field aj-col-1">
+                    <div class="aj-field aj-col-2">
                         <label for="price_min">Prix min</label>
                         <input id="price_min" type="number" step="0.01" name="price_min" class="aj-control" value="{{ request('price_min') }}">
                     </div>
-                    <div class="aj-field aj-col-1">
+                    <div class="aj-field aj-col-2">
                         <label for="price_max">Prix max</label>
                         <input id="price_max" type="number" step="0.01" name="price_max" class="aj-control" value="{{ request('price_max') }}">
                     </div>
-                    <div class="aj-field aj-col-1">
+                    <div class="aj-field aj-col-2">
                         <label for="duration_min">Durée min</label>
                         <input id="duration_min" type="number" min="1" name="duration_min" class="aj-control" value="{{ request('duration_min') }}">
                     </div>
-                    <div class="aj-field aj-col-1">
+                    <div class="aj-field aj-col-2">
                         <label for="duration_max">Durée max</label>
                         <input id="duration_max" type="number" min="1" name="duration_max" class="aj-control" value="{{ request('duration_max') }}">
                     </div>
@@ -201,7 +202,7 @@
                         <label for="modified_to">au</label>
                         <input id="modified_to" type="date" name="modified_to" class="aj-control" value="{{ request('modified_to') }}">
                     </div>
-                    <div class="aj-field aj-col-2">
+                    <div class="aj-field aj-col-3">
                         <label for="has_departures">Départs actifs</label>
                         <select id="has_departures" name="has_departures" class="aj-control">
                             <option value="">Indifférent</option>
@@ -209,7 +210,7 @@
                             <option value="0" @selected(request('has_departures') === '0')>Non</option>
                         </select>
                     </div>
-                    <div class="aj-field aj-col-2">
+                    <div class="aj-field aj-col-3">
                         <label for="has_laravel_public">Page Laravel publique</label>
                         <select id="has_laravel_public" name="has_laravel_public" class="aj-control">
                             <option value="">Indifférent</option>

@@ -10,14 +10,14 @@
         <div class="aj-filter-grid {{ $gridClass }}">
             {{ $fields }}
 
-            <div class="d-flex flex-wrap gap-2">
+            <div class="aj-filter-action d-flex flex-wrap gap-2">
                 <button type="submit" class="aj-btn aj-btn-primary w-100">
                     <i class="bx bx-filter-alt"></i>
                     <span>Filtrer</span>
                 </button>
             </div>
             @if($resetUrl)
-                <div class="d-flex flex-wrap gap-2">
+                <div class="aj-filter-action d-flex flex-wrap gap-2">
                     <a href="{{ $resetUrl }}" class="aj-btn aj-btn-soft w-100">
                         <i class="bx bx-reset"></i>
                         <span>Réinitialiser</span>

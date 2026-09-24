@@ -175,6 +175,23 @@
 .aj-catalog-page .aj-col-5 { grid-column: span 5; }
 .aj-catalog-page .aj-col-6 { grid-column: span 6; }
 
+.aj-catalog-page .aj-voyage-filter-grid {
+    gap: 14px 12px;
+}
+
+.aj-catalog-page .aj-voyage-filter-grid .aj-field {
+    min-width: 0;
+}
+
+.aj-catalog-page .aj-voyage-filter-grid .aj-filter-action {
+    grid-column: span 3;
+}
+
+.aj-catalog-page .aj-voyage-filter-grid .aj-btn {
+    width: 100%;
+    white-space: nowrap;
+}
+
 .aj-catalog-page .aj-field label {
     display: block;
     margin: 0 0 6px 4px;
@@ -604,7 +621,8 @@
     .aj-catalog-page .aj-col-3,
     .aj-catalog-page .aj-col-4,
     .aj-catalog-page .aj-col-5,
-    .aj-catalog-page .aj-col-6 {
+    .aj-catalog-page .aj-col-6,
+    .aj-catalog-page .aj-voyage-filter-grid .aj-filter-action {
         grid-column: span 1;
     }
 }
