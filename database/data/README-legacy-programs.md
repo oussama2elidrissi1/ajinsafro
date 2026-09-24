@@ -158,6 +158,44 @@ Côté front, les dates passées restent listées sur la page de tour — désac
 antérieure au jour courant. Attention : la page de tour est rendue par
 `templates/v1/single-st_tours.php`, pas par `templates/tour/partials/`.
 
+## Bascule vers ajinsafro.ma (retour sur l'ancien domaine)
+
+Objectif : ne rien perdre du référencement d'ajinsafro.ma. Chaque ancienne URL de programme doit
+répondre **au même chemin**, seul le domaine change. Les anciennes URL étaient sur
+`https://www.ajinsafro.ma/…` (207 sur 225) : l'hôte canonique doit rester **`www`**.
+
+Ce que le code fait déjà (plugin tour-bridge, `AJTB_Legacy_Permalinks`) : `/voyage-national/…`,
+`/voyages-international/…` et `/voyages-organisees/…` servis en 200 sans barre finale ;
+`onedeal.php?id=` / `buy.php?id=`, `/team/…`, mauvais préfixe et préfixes nus en 301 vers le
+chemin canonique. La fiche est retrouvée par l'identifiant en fin de slug.
+
+```bash
+php artisan legacy:sync-permalinks --execute --rename-slugs   # préfixes + anciens slugs
+php artisan legacy:check-urls --base=https://ajinsafro.net    # avant la bascule
+php artisan legacy:check-urls --base=https://www.ajinsafro.ma # le jour même : 0 défaut attendu
+```
+
+Liste de bascule, dans l'ordre :
+
+1. WordPress : `siteurl` et `home` = `https://www.ajinsafro.ma` ; `.htaccess` racine : 301 de
+   `ajinsafro.ma` (apex) vers `www.ajinsafro.ma`, même chemin ; l'ancien serveur `.ma` doit
+   disparaître avant (sinon deux sites répondent).
+2. `ajinsafro.net` et `booking.ajinsafro.net` : 301 vers les hôtes `.ma`, même chemin (remplace la
+   règle `booking.ajinsafro.net → ajinsafro.net/` de `public/.htaccess`).
+3. Laravel `.env` : `APP_URL`, `ADMIN_URL`, `ADMIN_DOMAIN`, `PARTNER_URL`, `PARTNER_DOMAIN`,
+   `PUBLIC_URL`, `FRONTEND_URL`, `WP_UPLOAD_URL`, `PUBLIC_DOMAIN`, et **`SESSION_DOMAIN=.ajinsafro.ma`**
+   (sans lui, le cookie retombe à l'hôte seul et le SSO admin/partenaire casse en silence) ; puis
+   `config:cache`.
+4. Plugin traveler-home : hôtes codés en dur `booking.ajinsafro.net` (preconnect, normalisation
+   des URL `/storage`, `/auth/public-login`) et références résiduelles à `ajinsafro.ma`
+   (`contact@`, lien fidélité) — à passer sur les hôtes `.ma` définitifs.
+5. Correctifs serveur hors git à refaire : `chmod 600 wp-config.php`, `.htaccess` d'`uploads/`
+   interdisant PHP, aucune archive `.zip` dans `wp-content/plugins/`.
+6. Indexation : `blog_public = 1` (Réglages → Lecture), vider le cache du sitemap Rank Math,
+   vérifier que `st_tours-sitemap.xml` liste les chemins historiques, soumettre le sitemap dans
+   la Search Console d'ajinsafro.ma. Pas d'outil « changement d'adresse » : c'est le même domaine.
+7. Acceptation : `legacy:check-urls --base=https://www.ajinsafro.ma` sans défaut, puis
+   `legacy:check-urls --base=https://ajinsafro.ma` (apex : tout doit rediriger vers `www`).
 ## Ce que l'import ne crée jamais
 
 Fichiers images, galeries, disponibilités réelles, chambres, vols, prix de vente actifs. Les départs
