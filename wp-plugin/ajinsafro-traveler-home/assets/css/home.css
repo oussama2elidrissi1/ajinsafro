@@ -1005,7 +1005,9 @@ body.aj-custom-header #masthead {
 .aj-hero {
     position: relative;
     width: 100%;
-    min-height: 420px;
+    /* Aligne sur le CSS critique en ligne : une valeur differente ici
+       redimensionnerait le hero au chargement de cette feuille (CLS). */
+    min-height: clamp(520px, 72vh, 760px);
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
@@ -3670,7 +3672,7 @@ body.aj-has-bg-pattern::after {
     .aj-navbar__inner { min-height: 64px; height: 64px; padding-left: 16px; padding-right: 16px; gap: 12px; }
     .aj-navbar__logo { flex-shrink: 0; }
     .aj-navbar__logo-img { max-height: 32px; }
-    .aj-hero { min-height: 340px; padding: 60px 12px 50px; }
+    .aj-hero { padding: 60px 12px 50px; }
     .aj-search-float { width: 94%; margin-top: -60px; }
     .aj-search__tabs { overflow-x: auto; }
     .aj-tab { padding: 10px 14px; font-size: .8rem; }
@@ -3736,7 +3738,7 @@ body.aj-has-bg-pattern::after {
     .aj-topbar__item { max-width: 120px; }
 
     .aj-hero {
-        min-height: 280px;
+        min-height: 560px;
         padding: 50px 10px 40px;
     }
     .aj-search-float { margin-top: -40px; }
