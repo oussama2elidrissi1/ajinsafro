@@ -127,6 +127,37 @@ Recalcule les clés vérifiables en base (`lien_wordpress`, `images`, `programme
 décision humaine ou de la qualité de l'extraction. Le recalcul est symétrique — un champ vidé
 réapparaît dans la liste. `completion.status` n'est jamais modifié.
 
+### Finaliser et publier
+
+Les états d'étape du CRUD v2 (« x / 14 validées ») se lisent dans quatre magasins — métas
+WordPress, tables `aj_tour_*` / `aj_travel_dates`, tables Laravel des vols, items, extras et
+logistique — et non dans les colonnes Laravel. `legacy:finalize` écrit par les mêmes chemins que
+le formulaire et complète chaque étape :
+
+```bash
+php artisan legacy:finalize                       # simulation
+php artisan legacy:finalize --execute             # complète sans publier
+php artisan legacy:finalize --execute --publish   # complète et publie
+```
+
+Données extraites d'abord — hôtels (catégorie et ville, **sans nom**), suppléments avec prix
+analysés, `date_expiration` de l'ancienne offre comme date passée pour les fiches sans départ —
+génériques et reconnaissables ensuite (« Hôtel 4 étoiles », « Vol à confirmer »). Pas de vol
+fabriqué pour un voyage national en autocar. Couverture empruntée à une fiche de même destination
+pour les fiches sans photo. Les lieux Traveler (`st_location`) sont créés par destination.
+
+Rien n'est écrasé : chaque bloc n'est créé que s'il est absent, la commande est idempotente.
+`--publish` passe le tour en `publish`, la fiche en `actif`, et pose `completion.status =
+finalized` (le badge « À compléter » disparaît).
+
+Le 2026-09-24, 193 fiches ont été finalisées et publiées ainsi ; restaient 14 fiches sans aucune
+date (elles affichent « Date à confirmer ») et 6 sans aucune photo, faute de source.
+
+Côté front, les dates passées restent listées sur la page de tour — désactivées, étiquetées
+« Offre expirée », jamais présélectionnées — et les gestionnaires AJAX refusent toute date
+antérieure au jour courant. Attention : la page de tour est rendue par
+`templates/v1/single-st_tours.php`, pas par `templates/tour/partials/`.
+
 ## Ce que l'import ne crée jamais
 
 Fichiers images, galeries, disponibilités réelles, chambres, vols, prix de vente actifs. Les départs
