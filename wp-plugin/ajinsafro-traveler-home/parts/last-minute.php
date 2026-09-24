@@ -59,7 +59,15 @@ if ( ! $q->have_posts() ) return;
                     <div class="aj-ribbon"><span>Featured</span></div>
                     <div class="aj-card2__image">
                         <?php if ( has_post_thumbnail() ) : ?>
-                            <?php the_post_thumbnail( 'medium_large', array( 'loading' => 'lazy' ) ); ?>
+                            <?php
+                            // Sans `sizes`, WordPress annonce 768px et le navigateur telecharge une
+                            // declinaison 2 a 4 fois trop grande. Les cartes suivent .aj-slider-v2__item :
+                            // 80vw jusqu'a 768px, 50vw jusqu'a 1024px, puis 25% d'un conteneur de 1280px.
+                            the_post_thumbnail( 'medium_large', array(
+                                'loading' => 'lazy',
+                                'sizes'   => '(max-width: 768px) 80vw, (max-width: 1024px) 50vw, 300px',
+                            ) );
+                            ?>
                         <?php else : ?>
                             <div style="width:100%;height:100%;background:linear-gradient(135deg,#ccc,#aaa);"></div>
                         <?php endif; ?>
