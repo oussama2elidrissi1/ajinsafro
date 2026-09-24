@@ -90,6 +90,26 @@ Le renommage est reporté sur `voyage_images.path`, `voyages.featured_image` et
 `legacy_import.images_importees`, de sorte qu'aucune référence ne reste orpheline. La commande est
 idempotente et peut être relancée pour contrôler l'intégrité de la médiathèque historique.
 
+### Rendre les photos visibles dans l'admin et sur le front
+
+Rapatrier ne suffit pas : le catalogue admin et le thème Traveler lisent la vignette dans le meta
+WordPress `_thumbnail_id`, jamais dans `voyages.featured_image`. Tant que les fichiers ne sont pas
+déclarés comme *attachments*, les fiches importées restent sans image à l'écran.
+
+```bash
+php artisan legacy:publish-images-to-wp              # simulation
+php artisan legacy:publish-images-to-wp --execute    # publie
+```
+
+Chaque photo est copiée sous `wp-content/uploads/{Y}/{m}/legacy-{legacy_id}-{n}.{ext}` — le nom
+permet de retrouver le programme d'origine depuis la médiathèque WordPress —, un attachment est
+créé, puis la vignette et la galerie (`_gallery`, `gallery`, `st_gallery`) sont posées sur le tour.
+
+Les attachments créés sont mémorisés dans `legacy_import.wp_attachments` et vérifiés en base avant
+réutilisation : un second passage ne duplique rien. Une vignette déjà valide est conservée, sauf
+`--replace-thumbnail`. **Le statut éditorial des tours n'est pas touché** : une fiche en brouillon
+le reste.
+
 ## Ce que l'import ne crée jamais
 
 Fichiers images, galeries, disponibilités réelles, chambres, vols, prix de vente actifs. Les départs
