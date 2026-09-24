@@ -5,6 +5,14 @@
 
     RewriteEngine On
 
+    # Aucun PHP n'a à s'exécuter dans les assets compilés : les bibliothèques front livrent
+    # parfois leurs pages de démonstration (jquery.repeater/test-post-parse.php renvoyait le
+    # POST reçu, soit une XSS réfléchie sur le domaine du back-office).
+    RewriteRule ^build/.*\.php$ - [F,L]
+
+    # Archives et vidages n'ont rien à faire dans la racine publique.
+    RewriteRule \.(zip|sql|bak|old|log|sqlite)$ - [F,L]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

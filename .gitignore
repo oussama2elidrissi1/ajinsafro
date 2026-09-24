@@ -17,3 +17,7 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+
+# Journaux : ils contiennent des traces d'exécution et des données clients.
+/storage/logs/*.log
+error_log
