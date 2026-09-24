@@ -68,8 +68,9 @@ class LegacyPushToWpCommand extends Command
         $byExactName = $tours->keyBy(fn ($t) => (string) $t->post_name);
         $byBaseName = $tours->groupBy(fn ($t) => LegacyCheckCommand::slugBase((string) $t->post_name));
         $linkedPostIds = Voyage::query()->whereNotNull('wp_post_id')->pluck('wp_post_id')->map(fn ($id) => (int) $id)->all();
+        $existingTourIds = $tours->keyBy(fn ($t) => (int) $t->ID);
 
-        $stats = ['created' => 0, 'linked' => 0, 'already' => 0, 'conflict' => 0, 'failed' => 0];
+        $stats = ['created' => 0, 'linked' => 0, 'already' => 0, 'stale' => 0, 'conflict' => 0, 'failed' => 0];
         $processed = 0;
 
         foreach ($voyages as $voyage) {
@@ -79,10 +80,21 @@ class LegacyPushToWpCommand extends Command
 
             $legacyId = (int) data_get($voyage->logistics_meta, 'legacy_import.legacy_id');
 
-            if ($voyage->wp_post_id) {
+            if ($voyage->wp_post_id && $existingTourIds->has((int) $voyage->wp_post_id)) {
                 $stats['already']++;
 
                 continue;
+            }
+
+            // Lien mort : le tour WordPress a été supprimé depuis. Sans cette reprise le programme
+            // reste absent du catalogue et son ancienne URL répond 404 — une URL indexée perdue.
+            if ($voyage->wp_post_id) {
+                $stats['stale']++;
+                $this->line(sprintf('  <fg=yellow>lien mort</> legacy %-4d : tour WP %d supprimé, la fiche est recréée', $legacyId, (int) $voyage->wp_post_id));
+                if ($execute) {
+                    $voyage->update(['wp_post_id' => null]);
+                }
+                $voyage->wp_post_id = null;
             }
 
             $exact = $byExactName->get($voyage->slug);
@@ -166,11 +178,12 @@ class LegacyPushToWpCommand extends Command
 
         $this->newLine();
         $this->info(sprintf(
-            '%s : %d créés, %d rattachés, %d déjà liés, %d doublons non traités, %d en échec.',
+            '%s : %d créés, %d rattachés, %d déjà liés, %d liens morts repris, %d doublons non traités, %d en échec.',
             $execute ? 'Publication WordPress' : 'Simulation (relancez avec --execute)',
             $stats['created'],
             $stats['linked'],
             $stats['already'],
+            $stats['stale'],
             $stats['conflict'],
             $stats['failed']
         ));
