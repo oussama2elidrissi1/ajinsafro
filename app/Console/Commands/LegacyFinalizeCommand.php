@@ -368,10 +368,15 @@ class LegacyFinalizeCommand extends Command
             }
         }
 
-        // 10. Logistique.
+        // 10. Logistique : même structure que le formulaire (logistics_meta[transport][type|capacity|notes]) ;
+        //     l'étape est validée dès qu'un scalaire non vide s'y trouve.
         $meta = is_array($voyage->logistics_meta) ? $voyage->logistics_meta : [];
-        if (trim((string) ($meta['transport'] ?? '')) === '') {
-            $meta['transport'] = $isNational ? 'Autocar' : 'Avion';
+        if (! $this->hasScalar($meta['transport'] ?? null)) {
+            $meta['transport'] = [
+                'type' => $isNational ? 'Autocar' : 'Avion',
+                'capacity' => self::DEFAULT_MAX_PEOPLE,
+                'notes' => 'Transport générique : à préciser à la réactivation de l’offre.',
+            ];
             $actions[] = 'logistique';
             $this->bump('logistique');
         }
@@ -577,5 +582,24 @@ class LegacyFinalizeCommand extends Command
     private function norm(string $s): string
     {
         return mb_strtolower(trim(preg_replace('/\s+/u', ' ', $s)));
+    }
+
+    /** Même critère que l'étape Logistique du CRUD : un scalaire non vide, à n'importe quelle profondeur. */
+    private function hasScalar(mixed $value): bool
+    {
+        if (is_array($value)) {
+            foreach ($value as $entry) {
+                if ($this->hasScalar($entry)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        return $value !== null && trim((string) $value) !== '';
     }
 }
