@@ -371,7 +371,7 @@ $expired_date_options = array_values(array_filter($search_date_options, static f
 // Aucun départ à choisir : le dire, plutôt que d'afficher une liste inerte.
 $no_departure_label = $expired_date_options !== [] && $upcoming_date_options === []
     ? 'Aucun départ à venir — nous consulter'
-    : $translate_ui($search_date);
+    : "Date à confirmer";
 
 $header_settings = function_exists('ajth_get_header_settings') ? (array) ajth_get_header_settings() : [];
 $contact_phone = trim((string) ($header_settings['phone'] ?? ''));
