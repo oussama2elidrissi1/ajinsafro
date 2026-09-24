@@ -1,0 +1,9 @@
+# Laravel servi dans un sous-dossier du domaine principal (https://ajinsafro.com/booking/).
+# Tout est renvoyé vers public/, qui reste la seule racine exposée : .env, storage/, vendor/
+# ne sont jamais atteignables. Sans effet quand un sous-domaine pointe déjà directement sur
+# public/ (booking.ajinsafro.com) — ce fichier n'est alors jamais lu.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^/booking/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
