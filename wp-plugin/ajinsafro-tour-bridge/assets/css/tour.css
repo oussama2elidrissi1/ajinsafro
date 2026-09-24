@@ -1835,6 +1835,11 @@ body.ajtb-modal-open {
     color: var(--ajtb-v1-text);
     font-weight: 600;
     text-align: right;
+    /* Un intitule de voyage tient en deux lignes : au-dela il chasse le prix hors de vue. */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
 }
 .ajtb-v1-summary-block {
     display: grid;

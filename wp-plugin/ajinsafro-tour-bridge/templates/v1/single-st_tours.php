@@ -306,6 +306,20 @@ $translate_ui = static function (string $text): string {
 // Accroche de la fiche : la phrase d'introduction du programme, avant la liste de points.
 $tour_excerpt = trim(wp_strip_all_tags((string) get_the_excerpt($tour_id)));
 
+// Le même texte alimente l'accroche, les points clés et les offres recommandées : ne l'afficher
+// qu'une fois. Comparaison sur la ponctuation et la casse près, l'accroche étant souvent tronquée.
+$same_as_lead = static function ($candidate) use ($tour_excerpt): bool {
+    $normalize = static fn ($text) => trim(preg_replace('/[^\p{L}\p{N}]+/u', ' ', mb_strtolower((string) $text)) ?: '');
+    $lead = $normalize($tour_excerpt);
+    $other = $normalize($candidate);
+    if ($lead === '' || $other === '') {
+        return false;
+    }
+    return $lead === $other || str_starts_with($lead, $other) || str_starts_with($other, $lead);
+};
+$overview_points = array_values(array_filter($overview_points, static fn ($point) => !$same_as_lead($point)));
+$best_deals = array_values(array_filter($best_deals, static fn ($deal) => !$same_as_lead($deal)));
+
 // Étapes de l'itinéraire : le titre de chaque journée, ramené à son lieu. La destination ne
 // convient pas, souvent réduite à une catégorie (« Circuit »).
 $route_stops = [];
