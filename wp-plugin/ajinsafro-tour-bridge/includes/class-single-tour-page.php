@@ -596,6 +596,12 @@ class AJTB_Single_Tour_Page
                 'message' => __('Paramètres incomplets.', 'ajinsafro-tour-bridge'),
             ], 422);
         }
+        // Les dates passees restent affichees (« Offre expiree ») mais ne se reservent jamais.
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $departure_date) && $departure_date < current_time('Y-m-d')) {
+            wp_send_json_error([
+                'message' => __('Offre expirée : cette date de départ est passée.', 'ajinsafro-tour-bridge'),
+            ], 422);
+        }
 
         if ($client_mode === 'new' && ($client_first_name === '' || $client_last_name === '')) {
             wp_send_json_error([
@@ -1443,6 +1449,12 @@ class AJTB_Single_Tour_Page
         if ($tour_id <= 0 || $departure_date === '') {
             wp_send_json_error([
                 'message' => __('Paramètres incomplets.', 'ajinsafro-tour-bridge'),
+            ], 422);
+        }
+        // Les dates passees restent affichees (« Offre expiree ») mais ne se reservent jamais.
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $departure_date) && $departure_date < current_time('Y-m-d')) {
+            wp_send_json_error([
+                'message' => __('Offre expirée : cette date de départ est passée.', 'ajinsafro-tour-bridge'),
             ], 422);
         }
 

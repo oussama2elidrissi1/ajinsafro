@@ -16,6 +16,7 @@ if (!defined('ABSPATH')) {
 $wp_post_id = get_the_ID();
 $departure_places = [];
 $available_dates = [];
+$expired_dates = [];
 
 // Direct database queries (no repository needed)
 global $wpdb;
@@ -136,9 +137,20 @@ try {
     ), ARRAY_A);
     
     if ($dates) {
-        $available_dates = array_map(function($dateRow) {
-            return $dateRow['date'];
-        }, $dates);
+        // Les dates passees restent affichees en « Offre expiree » ; seules les dates a venir
+        // sont reservables. Le refus d'une date passee est aussi applique cote serveur.
+        $today = current_time('Y-m-d');
+        foreach ($dates as $dateRow) {
+            $d = (string) ($dateRow['date'] ?? '');
+            if ($d === '') {
+                continue;
+            }
+            if ($d < $today) {
+                $expired_dates[] = $d;
+            } else {
+                $available_dates[] = $d;
+            }
+        }
     }
 } catch (\Exception $e) {
     // Silently fail if tables don't exist
@@ -147,6 +159,7 @@ try {
     }
     $departure_places = [];
     $available_dates = [];
+    $expired_dates = [];
 }
 
 $storage_key = 'aj_tb_search';
@@ -229,6 +242,7 @@ $max_children = 10;
 // Prepare JSON data for JavaScript
 $departure_places_json = wp_json_encode($departure_places);
 $available_dates_json = wp_json_encode($available_dates);
+$expired_dates_json = wp_json_encode($expired_dates);
 ?>
 
 <div class="aj-searchbar" id="aj-searchbar" 
@@ -236,7 +250,8 @@ $available_dates_json = wp_json_encode($available_dates);
      data-max-adults="<?php echo (int) $max_adults; ?>" 
      data-max-children="<?php echo (int) $max_children; ?>"
      data-departure-places="<?php echo esc_attr($departure_places_json); ?>"
-     data-available-dates="<?php echo esc_attr($available_dates_json); ?>">
+     data-available-dates="<?php echo esc_attr($available_dates_json); ?>"
+     data-expired-dates="<?php echo esc_attr($expired_dates_json); ?>">
     <div class="aj-searchbar__row">
         <!-- 1. Starting from -->
         <div class="aj-searchitem aj-searchitem--from">
@@ -340,6 +355,18 @@ $available_dates_json = wp_json_encode($available_dates);
     </div>
 </div>
 
+<?php if (!empty($expired_dates)) : ?>
+<div class="aj-expired-departures" aria-label="<?php esc_attr_e('Départs passés', 'ajinsafro-tour-bridge'); ?>">
+    <span class="aj-expired-departures__label"><?php esc_html_e('Départs passés', 'ajinsafro-tour-bridge'); ?></span>
+    <?php foreach (array_slice($expired_dates, -6) as $expired) :
+        $expired_ts = strtotime($expired); ?>
+        <span class="aj-expired-departures__date">
+            <?php echo esc_html($expired_ts ? date_i18n('j M Y', $expired_ts) : $expired); ?>
+            <em><?php esc_html_e('Offre expirée', 'ajinsafro-tour-bridge'); ?></em>
+        </span>
+    <?php endforeach; ?>
+</div>
+<?php endif; ?>
 <script>
 jQuery(document).ready(function($) {
     'use strict';
@@ -353,6 +380,7 @@ jQuery(document).ready(function($) {
     
     var departurePlacesData = JSON.parse(searchbar.getAttribute('data-departure-places') || '[]');
     var availableDatesData = JSON.parse(searchbar.getAttribute('data-available-dates') || '[]');
+    var expiredDatesData = JSON.parse(searchbar.getAttribute('data-expired-dates') || '[]');
     
     console.log('[AJTB] Available dates:', availableDatesData);
     
@@ -477,7 +505,7 @@ jQuery(document).ready(function($) {
     var dateDisplay = document.getElementById('aj-search-date-display');
     var hiddenDateInput = document.getElementById('aj-search-date');
     var datePopover = document.getElementById('aj-date-popover');
-    if (dateDisplay && hiddenDateInput && datePopover && availableDatesData.length > 0) {
+    if (dateDisplay && hiddenDateInput && datePopover && (availableDatesData.length > 0 || expiredDatesData.length > 0)) {
         function initDatepickerPopover() {
             if (typeof $.fn.datepicker !== 'function') return;
             
@@ -522,6 +550,9 @@ jQuery(document).ready(function($) {
                 beforeShowDay: function(date) {
                     var dateString = $.datepicker.formatDate('yy-mm-dd', date);
                     var isAvailable = availableDatesData.indexOf(dateString) !== -1;
+                    if (!isAvailable && expiredDatesData.indexOf(dateString) !== -1) {
+                        return [false, 'aj-expired-date', 'Offre expirée'];
+                    }
                     return [isAvailable, isAvailable ? 'aj-available-date' : 'aj-unavailable-date', isAvailable ? '' : 'Date non disponible'];
                 },
                 onSelect: function(dateText) {
@@ -540,6 +571,8 @@ jQuery(document).ready(function($) {
                     $(popoverInput).datepicker('setDate', hiddenDateInput.value);
                 } else if (availableDatesData.length > 0) {
                     $(popoverInput).datepicker('setDate', availableDatesData[0]);
+                } else if (expiredDatesData.length > 0) {
+                    $(popoverInput).datepicker('setDate', expiredDatesData[expiredDatesData.length - 1]);
                 }
                 $(popoverInput).datepicker('show');
             }
@@ -913,6 +946,42 @@ jQuery(document).ready(function($) {
 }
 
 /* Dates disponibles – style par défaut */
+.ui-datepicker .aj-expired-date,
+.ui-datepicker .aj-expired-date a,
+.ui-datepicker .aj-expired-date span {
+    color: #9aa3ad !important;
+    background: #f3f4f6 !important;
+    text-decoration: line-through;
+    cursor: not-allowed;
+}
+.aj-expired-departures {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    margin: 10px 0 0;
+    font-size: 13px;
+    color: #6b7280;
+}
+.aj-expired-departures__label {
+    font-weight: 700;
+    color: #374151;
+}
+.aj-expired-departures__date {
+    text-decoration: line-through;
+}
+.aj-expired-departures__date em {
+    font-style: normal;
+    text-decoration: none;
+    margin-left: 4px;
+    padding: 1px 6px;
+    border-radius: 6px;
+    background: #fee2e2;
+    color: #991b1b;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
 .ui-datepicker .aj-available-date,
 .ui-datepicker .aj-available-date a {
     color: #1e3a5f !important;
