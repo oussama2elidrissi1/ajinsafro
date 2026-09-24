@@ -303,6 +303,40 @@ $translate_ui = static function (string $text): string {
     return trim(preg_replace('/\s{2,}/', ' ', $text) ?: $text);
 };
 
+// Accroche de la fiche : la phrase d'introduction du programme, avant la liste de points.
+$tour_excerpt = trim(wp_strip_all_tags((string) get_the_excerpt($tour_id)));
+
+// Étapes de l'itinéraire, déduites de la destination (« Merzouga - Ouarzazate - Marrakech »).
+$route_stops = array_values(array_filter(array_map(
+    static fn ($stop) => trim((string) $stop),
+    preg_split('/\s*(?:–|—|-|,|·|>|\/)\s*/u', $destination) ?: []
+), static fn ($stop) => $stop !== ''));
+
+// Repères affichés sous le titre : ce que le voyageur veut savoir avant de lire le programme.
+$hero_facts = [];
+if (trim($duration_label) !== '') {
+    $hero_facts[] = ['label' => $translate_ui($duration_label), 'tone' => 'plain'];
+}
+if (count($route_stops) > 1) {
+    $hero_facts[] = ['label' => implode(' · ', array_slice($route_stops, 0, 3)), 'tone' => 'plain'];
+} elseif (trim($destination) !== '') {
+    $hero_facts[] = ['label' => $destination, 'tone' => 'plain'];
+}
+if (!empty($stats['hotels'])) {
+    $hero_facts[] = ['label' => 'Hébergement inclus', 'tone' => 'included'];
+}
+if (!empty($stats['transfers'])) {
+    $hero_facts[] = ['label' => 'Transferts inclus', 'tone' => 'included'];
+}
+
+// Le sélecteur de dates n'offre que les départs encore ouverts ; les départs passés restent
+// affichés en dessous, jamais réservables — une offre expirée doit rester lisible.
+$upcoming_date_options = array_values(array_filter($search_date_options, static fn ($o) => empty($o['expired'])));
+$expired_date_options = array_values(array_filter($search_date_options, static fn ($o) => !empty($o['expired'])));
+
+$header_settings = function_exists('ajth_get_header_settings') ? (array) ajth_get_header_settings() : [];
+$contact_phone = trim((string) ($header_settings['phone'] ?? ''));
+$contact_url = home_url('/contact/');
 get_header();
 ?>
 
@@ -330,156 +364,24 @@ get_header();
 
     <main class="ajtb-v1-main">
         <div class="ajtb-v1-container">
-            <section class="ajtb-v1-search-box" id="ajtb-v1-search-box" aria-label="Recherche premium">
-                <div class="ajtb-v1-search-grid">
-                    <div class="ajtb-v1-search-card">
-                        <span class="ajtb-v1-search-label">Lieu de départ</span>
-                        <div data-ajtb-normal-departure>
-                            <?php if (!empty($search_place_options)): ?>
-                                <span class="ajtb-v1-search-value ajtb-v1-search-value--select">
-                                    <select class="ajtb-v1-search-select" id="ajtb-v1-search-from" aria-label="Lieux de départ disponibles">
-                                        <?php foreach ($search_place_options as $place_option): ?>
-                                            <?php
-                                            $place_id = isset($place_option['id']) ? (int) $place_option['id'] : 0;
-                                            $place_name = isset($place_option['name']) ? trim((string) $place_option['name']) : '';
-                                            $place_code = isset($place_option['code']) ? trim((string) $place_option['code']) : '';
-                                            if ($place_name === '') {
-                                                continue;
-                                            }
-                                            $is_selected = ($search_departure_id > 0 && $place_id === $search_departure_id)
-                                                || ($search_departure_id <= 0 && $search_departure !== '' && $place_name === $search_departure);
-                                            ?>
-                                            <option value="<?php echo esc_attr((string) $place_id); ?>" data-place-name="<?php echo esc_attr($place_name); ?>" data-place-code="<?php echo esc_attr($place_code); ?>"<?php selected($is_selected, true); ?>>
-                                                <?php echo esc_html($place_name); ?><?php echo $place_code !== '' ? esc_html(' (' . $place_code . ')') : ''; ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                    <strong aria-hidden="true">&#9662;</strong>
-                                </span>
-                            <?php else: ?>
-                                <span class="ajtb-v1-search-value">
-                                    <span class="ajtb-v1-search-text"><?php echo esc_html($search_departure !== '' ? $search_departure : 'Aucun lieu de départ configuré'); ?></span>
-                                    <strong aria-hidden="true">&#9662;</strong>
-                                </span>
-                            <?php endif; ?>
-                        </div>
-
-                        <div data-ajtb-custom-departure hidden>
-                            <span class="ajtb-v1-search-value ajtb-v1-search-value--select">
-                                <input
-                                    type="text"
-                                    class="ajtb-v1-search-select"
-                                    id="ajtb-v1-custom-departure-place"
-                                    name="custom_departure_place"
-                                    placeholder="Écrire votre lieu de départ"
-                                    autocomplete="address-level2">
-                                <strong aria-hidden="true">&#9662;</strong>
-                            </span>
-                            <div class="ajtb-v1-field-error" id="ajtb-v1-custom-departure-place-error" hidden></div>
-                        </div>
-                    </div>
-                    <div class="ajtb-v1-search-card">
-                        <span class="ajtb-v1-search-label">Date de départ</span>
-                        <div data-ajtb-normal-date>
-                            <?php if (!empty($search_date_options)): ?>
-                                <span class="ajtb-v1-search-value ajtb-v1-search-value--select">
-                                    <select class="ajtb-v1-search-select" id="ajtb-v1-search-date" aria-label="Dates de départ disponibles">
-                                        <?php foreach ($search_date_options as $date_option): ?>
-                                            <option value="<?php echo esc_attr((string) $date_option['value']); ?>"<?php selected((string) $date_option['value'], $selected_search_date); ?><?php disabled(!empty($date_option['expired'])); ?><?php echo !empty($date_option['expired']) ? ' class="ajtb-v1-date-expired"' : ''; ?>>
-                                                <?php echo esc_html($translate_ui((string) $date_option['display'])); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                    <strong aria-hidden="true">&#9662;</strong>
-                                </span>
-                                <?php
-                                $expired_options = array_values(array_filter($search_date_options, static fn ($o) => !empty($o['expired'])));
-                                if (!empty($expired_options)) : ?>
-                                    <div class="ajtb-v1-expired-departures" aria-label="<?php echo esc_attr($translate_ui('Départs passés')); ?>">
-                                        <span class="ajtb-v1-expired-departures__label"><?php echo esc_html($translate_ui('Départs passés')); ?></span>
-                                        <?php foreach (array_slice($expired_options, -6) as $expired_option) : ?>
-                                            <span class="ajtb-v1-expired-departures__date"><?php echo esc_html($translate_ui((string) ($expired_option['display'] ?? $expired_option['value']))); ?></span>
-                                        <?php endforeach; ?>
-                                    </div>
-                                <?php endif; ?>
-                            <?php else: ?>
-                                <span class="ajtb-v1-search-value">
-                                    <span class="ajtb-v1-search-text"><?php echo esc_html($translate_ui($search_date)); ?></span>
-                                    <strong aria-hidden="true">&#9662;</strong>
-                                </span>
-                            <?php endif; ?>
-                        </div>
-
-                        <div data-ajtb-custom-date hidden>
-                            <span class="ajtb-v1-search-value ajtb-v1-search-value--select">
-                                <input
-                                    type="date"
-                                    class="ajtb-v1-search-select"
-                                    id="ajtb-v1-custom-departure-date"
-                                    name="custom_departure_date">
-                                <strong aria-hidden="true">&#9662;</strong>
-                            </span>
-                            <div class="ajtb-v1-field-error" id="ajtb-v1-custom-departure-date-error" hidden></div>
-                        </div>
-                    </div>
-                    <div class="ajtb-v1-search-card">
-                        <span class="ajtb-v1-search-label">Voyageurs</span>
-                        <div
-                            class="ajtb-v1-guests-picker"
-                            data-max-adults="<?php echo esc_attr((string) $guest_max_adults); ?>"
-                            data-max-children="<?php echo esc_attr((string) $guest_max_children); ?>"
-                            data-max-total="<?php echo esc_attr((string) $guest_max_total); ?>">
-                            <button type="button" class="ajtb-v1-guest-trigger" id="ajtb-v1-guest-trigger" aria-expanded="false">
-                                <span class="ajtb-v1-search-value">
-                                    <span class="ajtb-v1-search-text" id="ajtb-v1-guest-summary"><?php echo esc_html($search_guests); ?></span>
-                                    <strong aria-hidden="true">&#9662;</strong>
-                                </span>
-                            </button>
-                            <div class="ajtb-v1-guest-popover" id="ajtb-v1-guest-popover" hidden>
-                                <div class="ajtb-v1-guest-row">
-                                    <div>
-                                        <strong>Adultes</strong>
-                                        <span>Âge 12+</span>
-                                    </div>
-                                    <div class="ajtb-v1-guest-stepper">
-                                        <button type="button" data-ajtb-guest-action="minus" data-ajtb-guest-target="adults">-</button>
-                                        <span id="ajtb-v1-guest-adults-value"><?php echo esc_html((string) $guest_adults); ?></span>
-                                        <button type="button" data-ajtb-guest-action="plus" data-ajtb-guest-target="adults">+</button>
-                                    </div>
-                                </div>
-                                <div class="ajtb-v1-guest-row">
-                                    <div>
-                                        <strong>Enfants</strong>
-                                        <span>Âge 2-11</span>
-                                    </div>
-                                    <div class="ajtb-v1-guest-stepper">
-                                        <button type="button" data-ajtb-guest-action="minus" data-ajtb-guest-target="children">-</button>
-                                        <span id="ajtb-v1-guest-children-value"><?php echo esc_html((string) $guest_children); ?></span>
-                                        <button type="button" data-ajtb-guest-action="plus" data-ajtb-guest-target="children">+</button>
-                                    </div>
-                                </div>
-                                <button type="button" class="ajtb-v1-guest-apply" id="ajtb-v1-guest-apply">Appliquer</button>
-                            </div>
-                            <input type="hidden" id="ajtb-v1-guest-adults-input" value="<?php echo esc_attr((string) $guest_adults); ?>">
-                            <input type="hidden" id="ajtb-v1-guest-children-input" value="<?php echo esc_attr((string) $guest_children); ?>">
-                        </div>
-                    </div>
-                    <div class="ajtb-v1-search-card ajtb-v1-search-card--request">
-                        <span class="ajtb-v1-search-label">Type de demande</span>
-                        <span class="ajtb-v1-search-value ajtb-v1-search-value--select">
-                            <select class="ajtb-v1-search-select" id="ajtb-v1-request-type" aria-label="Type de demande">
-                                <option value="available">Départ disponible</option>
-                                <option value="demande_a_la_carte">Demande à la carte</option>
-                            </select>
-                            <strong aria-hidden="true">&#9662;</strong>
-                        </span>
-                    </div>
-                </div>
-                <p id="ajtb-v1-custom-message" class="ajtb-v1-request-note" hidden>Votre demande sera traitée par un conseiller Ajinsafro.</p>
-            </section>
+            <nav class="ajtb-v1-breadcrumb" aria-label="Fil d'Ariane">
+                <a href="<?php echo esc_url(home_url('/')); ?>">Accueil</a>
+                <span aria-hidden="true">/</span>
+                <a href="<?php echo esc_url(home_url('/voyages/')); ?>">Voyages</a>
+                <span aria-hidden="true">/</span>
+                <span aria-current="page"><?php echo esc_html($tour_title); ?></span>
+            </nav>
 
             <section class="ajtb-v1-hero" aria-label="En-tête du voyage">
                 <h1 class="ajtb-v1-title"><?php echo esc_html($tour_title); ?></h1>
+
+                <?php if (!empty($hero_facts)): ?>
+                    <div class="ajtb-v1-hero-facts">
+                        <?php foreach ($hero_facts as $hero_fact): ?>
+                            <span class="ajtb-v1-fact<?php echo $hero_fact['tone'] === 'included' ? ' ajtb-v1-fact--included' : ''; ?>"><?php echo esc_html((string) $hero_fact['label']); ?></span>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
 
                 <div class="ajtb-v1-gallery <?php echo esc_attr($hero_gallery_class); ?>" data-image-count="<?php echo esc_attr((string) $hero_count); ?>">
                     <?php foreach ($hero_images as $index => $gallery_img): ?>
@@ -497,11 +399,31 @@ get_header();
                     <section class="ajtb-v1-tab-panel is-active" id="ajtb-v1-panel-itinerary" role="tabpanel">
                         <article class="ajtb-v1-card ajtb-v1-overview-card">
                             <p class="ajtb-v1-kicker">Aperçu du voyage</p>
-                            <ul class="ajtb-v1-overview-list">
-                                <?php foreach ($overview_points as $point): ?>
-                                    <li><?php echo esc_html($translate_ui((string) $point)); ?></li>
-                                <?php endforeach; ?>
-                            </ul>
+
+                            <?php if ($tour_excerpt !== ''): ?>
+                                <p class="ajtb-v1-overview-lead"><?php echo esc_html($tour_excerpt); ?></p>
+                            <?php endif; ?>
+
+                            <?php if (!empty($overview_points)): ?>
+                                <ul class="ajtb-v1-overview-list">
+                                    <?php foreach ($overview_points as $point): ?>
+                                        <li><?php echo esc_html($translate_ui((string) $point)); ?></li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            <?php endif; ?>
+
+                            <?php if (count($route_stops) > 1): ?>
+                                <ol class="ajtb-v1-route" aria-label="Itinéraire">
+                                    <?php foreach ($route_stops as $stop_index => $route_stop): ?>
+                                        <li>
+                                            <span class="ajtb-v1-route-stop"><?php echo esc_html($route_stop); ?></span>
+                                            <?php if ($stop_index < count($route_stops) - 1): ?>
+                                                <span class="ajtb-v1-route-arrow" aria-hidden="true">&rarr;</span>
+                                            <?php endif; ?>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ol>
+                            <?php endif; ?>
                         </article>
 
                         <div class="ajtb-v1-included-bar">
@@ -513,12 +435,28 @@ get_header();
                             <?php endforeach; ?>
                         </div>
 
-                        <div class="ajtb-v1-stats-grid" data-program-filters>
-                            <button type="button" class="ajtb-v1-stat is-active" data-program-filter="all" aria-pressed="true"><strong><?php echo esc_html((string) (int) $stats['days']); ?></strong><span>Programme du jour</span></button>
-                            <button type="button" class="ajtb-v1-stat" data-program-filter="flight" aria-pressed="false"><strong><?php echo esc_html((string) (int) $stats['flights']); ?></strong><span>Vols</span></button>
-                            <button type="button" class="ajtb-v1-stat" data-program-filter="transfer" aria-pressed="false"><strong><?php echo esc_html((string) (int) $stats['transfers']); ?></strong><span>Transferts</span></button>
-                            <button type="button" class="ajtb-v1-stat" data-program-filter="hotel" aria-pressed="false"><strong><?php echo esc_html((string) (int) $stats['hotels']); ?></strong><span>Hôtels</span></button>
-                            <button type="button" class="ajtb-v1-stat" data-program-filter="activity" aria-pressed="false"><strong><?php echo esc_html((string) (int) $stats['activities']); ?></strong><span>Activités</span></button>
+                        <div class="ajtb-v1-tabs" data-program-filters role="group" aria-label="Filtrer le programme">
+                            <button type="button" class="ajtb-v1-tab is-active" data-program-filter="all" aria-pressed="true">
+                                <span class="ajtb-v1-tab-label">Programme</span>
+                                <span class="ajtb-v1-tab-count"><?php echo esc_html((string) (int) $stats['days']); ?> jours</span>
+                            </button>
+                            <?php
+                            $program_tabs = [
+                                ['filter' => 'flight', 'label' => 'Vols', 'count' => (int) ($stats['flights'] ?? 0)],
+                                ['filter' => 'transfer', 'label' => 'Transferts', 'count' => (int) ($stats['transfers'] ?? 0)],
+                                ['filter' => 'hotel', 'label' => 'Hôtels', 'count' => (int) ($stats['hotels'] ?? 0)],
+                                ['filter' => 'activity', 'label' => 'Activités', 'count' => (int) ($stats['activities'] ?? 0)],
+                            ];
+                            foreach ($program_tabs as $program_tab):
+                                if ($program_tab['count'] <= 0) {
+                                    continue;
+                                }
+                            ?>
+                                <button type="button" class="ajtb-v1-tab" data-program-filter="<?php echo esc_attr($program_tab['filter']); ?>" aria-pressed="false">
+                                    <span class="ajtb-v1-tab-label"><?php echo esc_html($program_tab['label']); ?></span>
+                                    <span class="ajtb-v1-tab-count"><?php echo esc_html((string) $program_tab['count']); ?></span>
+                                </button>
+                            <?php endforeach; ?>
                         </div>
 
                         <div class="ajtb-v1-day-layout">
@@ -528,7 +466,10 @@ get_header();
                                         type="button"
                                         class="ajtb-v1-day-chip<?php echo $i === 0 ? ' is-active' : ''; ?>"
                                         data-ajtb-day-target="ajtb-v1-day-<?php echo esc_attr((string) (int) $day['day']); ?>">
-                                        <?php echo esc_html($translate_ui((string) ($day['date_label'] ?? ('Jour ' . (int) $day['day'])))); ?>
+                                        <span class="ajtb-v1-day-chip__n">Jour <?php echo esc_html((string) (int) $day['day']); ?></span>
+                                        <?php if (!empty($day['date_label'])): ?>
+                                            <span class="ajtb-v1-day-chip__date"><?php echo esc_html($translate_ui((string) $day['date_label'])); ?></span>
+                                        <?php endif; ?>
                                     </button>
                                 <?php endforeach; ?>
                             </aside>
@@ -625,9 +566,12 @@ get_header();
                                             <header class="ajtb-v1-day-head">
                                                 <div class="ajtb-v1-day-head-left">
                                                     <span class="ajtb-v1-day-badge">Jour <?php echo esc_html((string) $day_num); ?></span>
-                                                    <h3><?php echo esc_html($translate_ui((string) ($day['title'] ?? ('Jour ' . $day_num)))); ?></h3>
-                                                    <p><?php echo esc_html($included_label); ?></p>
+                                                    <?php if (!empty($day['date_label'])): ?>
+                                                        <span class="ajtb-v1-day-date"><?php echo esc_html($translate_ui((string) $day['date_label'])); ?></span>
+                                                    <?php endif; ?>
                                                 </div>
+                                                <h3><?php echo esc_html($translate_ui((string) ($day['title'] ?? ('Jour ' . $day_num)))); ?></h3>
+                                                <p class="ajtb-v1-day-included"><?php echo esc_html($included_label); ?></p>
                                             </header>
                                             <div class="ajtb-v1-day-content">
                                                 <?php if ($day_rich_html !== ''): ?>
@@ -960,21 +904,152 @@ get_header();
                         data-date-prices="<?php echo esc_attr((string) $price_date_map_json); ?>"
                     >
                         <div class="ajtb-v1-summary-head">
-                            <div>
-                                <h3>Recapitulatif de reservation</h3>
-                            </div>
+                            <h3>Récapitulatif de réservation</h3>
                         </div>
 
-                        <div class="ajtb-v1-summary-price-row">
-                            <div>
-                                <span class="ajtb-v1-summary-label">Prix total</span>
-                                <p class="ajtb-v1-summary-price"><span id="ajtb-v1-price-amount"><?php echo esc_html($price_amount); ?></span> <span id="ajtb-v1-price-currency"><?php echo esc_html($price_currency); ?></span></p>
+                        <div class="ajtb-v1-booking" id="ajtb-v1-search-box">
+                            <div class="ajtb-v1-field">
+                                <span class="ajtb-v1-field-label">Ville de départ <span class="ajtb-v1-required" aria-hidden="true">*</span></span>
+                                <div data-ajtb-normal-departure>
+                                    <?php if (!empty($search_place_options)): ?>
+                                        <span class="ajtb-v1-select-shell">
+                                            <select class="ajtb-v1-search-select" id="ajtb-v1-search-from" aria-label="Lieux de départ disponibles">
+                                                <?php foreach ($search_place_options as $place_option): ?>
+                                                    <?php
+                                                    $place_id = isset($place_option['id']) ? (int) $place_option['id'] : 0;
+                                                    $place_name = isset($place_option['name']) ? trim((string) $place_option['name']) : '';
+                                                    $place_code = isset($place_option['code']) ? trim((string) $place_option['code']) : '';
+                                                    if ($place_name === '') {
+                                                        continue;
+                                                    }
+                                                    $is_selected = ($search_departure_id > 0 && $place_id === $search_departure_id)
+                                                        || ($search_departure_id <= 0 && $search_departure !== '' && $place_name === $search_departure);
+                                                    ?>
+                                                    <option value="<?php echo esc_attr((string) $place_id); ?>" data-place-name="<?php echo esc_attr($place_name); ?>" data-place-code="<?php echo esc_attr($place_code); ?>"<?php selected($is_selected, true); ?>>
+                                                        <?php echo esc_html($place_name); ?><?php echo $place_code !== '' ? esc_html(' (' . $place_code . ')') : ''; ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </span>
+                                    <?php else: ?>
+                                        <p class="ajtb-v1-field-static"><?php echo esc_html($search_departure !== '' ? $search_departure : 'Aucun lieu de départ configuré'); ?></p>
+                                    <?php endif; ?>
+                                </div>
+
+                                <div data-ajtb-custom-departure hidden>
+                                    <span class="ajtb-v1-select-shell">
+                                        <input
+                                            type="text"
+                                            class="ajtb-v1-search-select"
+                                            id="ajtb-v1-custom-departure-place"
+                                            name="custom_departure_place"
+                                            placeholder="Écrire votre lieu de départ"
+                                            autocomplete="address-level2">
+                                    </span>
+                                    <div class="ajtb-v1-field-error" id="ajtb-v1-custom-departure-place-error" hidden></div>
+                                </div>
                             </div>
-                            <p class="ajtb-v1-summary-unit"><span id="ajtb-v1-price-per-person"><?php echo esc_html($price_amount); ?> <?php echo esc_html($price_currency); ?></span><small>par personne</small></p>
-                            <div class="ajtb-v1-price-breakdown" id="ajtb-v1-price-breakdown" hidden>
-                                <div><span>Prix / pers.</span><strong id="ajtb-v1-breakdown-base">-</strong></div>
-                                <div><span>Supplément date</span><strong id="ajtb-v1-breakdown-supp">-</strong></div>
-                                <div><span>Prix final / pers.</span><strong id="ajtb-v1-breakdown-final">-</strong></div>
+
+                            <div class="ajtb-v1-field">
+                                <span class="ajtb-v1-field-label">Date de départ <span class="ajtb-v1-required" aria-hidden="true">*</span></span>
+                                <div data-ajtb-normal-date>
+                                    <?php if (!empty($search_date_options)): ?>
+                                        <?php if (!empty($upcoming_date_options)): ?>
+                                            <div class="ajtb-v1-date-grid" role="group" aria-label="Dates de départ disponibles">
+                                                <?php foreach ($upcoming_date_options as $date_option): ?>
+                                                    <?php $is_picked = (string) $date_option['value'] === $selected_search_date; ?>
+                                                    <button
+                                                        type="button"
+                                                        class="ajtb-v1-date<?php echo $is_picked ? ' is-active' : ''; ?>"
+                                                        data-ajtb-date-value="<?php echo esc_attr((string) $date_option['value']); ?>"
+                                                        aria-pressed="<?php echo $is_picked ? 'true' : 'false'; ?>">
+                                                        <?php echo esc_html($translate_ui((string) $date_option['display'])); ?>
+                                                    </button>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <span class="ajtb-v1-select-shell<?php echo !empty($upcoming_date_options) ? ' ajtb-v1-sr-only' : ''; ?>">
+                                            <select class="ajtb-v1-search-select" id="ajtb-v1-search-date" aria-label="Dates de départ disponibles">
+                                                <?php foreach ($search_date_options as $date_option): ?>
+                                                    <option value="<?php echo esc_attr((string) $date_option['value']); ?>"<?php selected((string) $date_option['value'], $selected_search_date); ?><?php disabled(!empty($date_option['expired'])); ?><?php echo !empty($date_option['expired']) ? ' class="ajtb-v1-date-expired"' : ''; ?>>
+                                                        <?php echo esc_html($translate_ui((string) $date_option['display'])); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </span>
+
+                                        <?php if (!empty($expired_date_options)): ?>
+                                            <div class="ajtb-v1-expired-departures" aria-label="<?php echo esc_attr($translate_ui('Départs passés')); ?>">
+                                                <span class="ajtb-v1-expired-departures__label"><?php echo esc_html($translate_ui('Offres expirées')); ?></span>
+                                                <?php foreach (array_slice($expired_date_options, -6) as $expired_option): ?>
+                                                    <span class="ajtb-v1-expired-departures__date"><?php echo esc_html($translate_ui((string) ($expired_option['display'] ?? $expired_option['value']))); ?></span>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <p class="ajtb-v1-field-static"><?php echo esc_html($translate_ui($search_date)); ?></p>
+                                    <?php endif; ?>
+                                </div>
+
+                                <div data-ajtb-custom-date hidden>
+                                    <span class="ajtb-v1-select-shell">
+                                        <input
+                                            type="date"
+                                            class="ajtb-v1-search-select"
+                                            id="ajtb-v1-custom-departure-date"
+                                            name="custom_departure_date">
+                                    </span>
+                                    <div class="ajtb-v1-field-error" id="ajtb-v1-custom-departure-date-error" hidden></div>
+                                </div>
+                            </div>
+
+                            <div class="ajtb-v1-field">
+                                <span class="ajtb-v1-field-label">Voyageurs</span>
+                                <div
+                                    class="ajtb-v1-guests-picker"
+                                    data-max-adults="<?php echo esc_attr((string) $guest_max_adults); ?>"
+                                    data-max-children="<?php echo esc_attr((string) $guest_max_children); ?>"
+                                    data-max-total="<?php echo esc_attr((string) $guest_max_total); ?>">
+                                    <span class="ajtb-v1-sr-only" id="ajtb-v1-guest-summary"><?php echo esc_html($search_guests); ?></span>
+                                    <div class="ajtb-v1-guest-rows" id="ajtb-v1-guest-popover">
+                                        <div class="ajtb-v1-guest-row">
+                                            <div>
+                                                <strong>Adultes</strong>
+                                                <span>Âge 12+</span>
+                                            </div>
+                                            <div class="ajtb-v1-guest-stepper">
+                                                <button type="button" data-ajtb-guest-action="minus" data-ajtb-guest-target="adults" aria-label="Retirer un adulte">&minus;</button>
+                                                <span id="ajtb-v1-guest-adults-value"><?php echo esc_html((string) $guest_adults); ?></span>
+                                                <button type="button" data-ajtb-guest-action="plus" data-ajtb-guest-target="adults" aria-label="Ajouter un adulte">+</button>
+                                            </div>
+                                        </div>
+                                        <div class="ajtb-v1-guest-row">
+                                            <div>
+                                                <strong>Enfants</strong>
+                                                <span>Âge 2-11</span>
+                                            </div>
+                                            <div class="ajtb-v1-guest-stepper">
+                                                <button type="button" data-ajtb-guest-action="minus" data-ajtb-guest-target="children" aria-label="Retirer un enfant">&minus;</button>
+                                                <span id="ajtb-v1-guest-children-value"><?php echo esc_html((string) $guest_children); ?></span>
+                                                <button type="button" data-ajtb-guest-action="plus" data-ajtb-guest-target="children" aria-label="Ajouter un enfant">+</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" id="ajtb-v1-guest-adults-input" value="<?php echo esc_attr((string) $guest_adults); ?>">
+                                    <input type="hidden" id="ajtb-v1-guest-children-input" value="<?php echo esc_attr((string) $guest_children); ?>">
+                                </div>
+                            </div>
+
+                            <div class="ajtb-v1-field">
+                                <span class="ajtb-v1-field-label">Type de demande</span>
+                                <span class="ajtb-v1-select-shell">
+                                    <select class="ajtb-v1-search-select" id="ajtb-v1-request-type" aria-label="Type de demande">
+                                        <option value="available">Départ disponible</option>
+                                        <option value="demande_a_la_carte">Demande à la carte</option>
+                                    </select>
+                                </span>
+                                <p id="ajtb-v1-custom-message" class="ajtb-v1-request-note" hidden>Votre demande sera traitée par un conseiller Ajinsafro.</p>
                             </div>
                         </div>
 
@@ -984,7 +1059,7 @@ get_header();
                                 <dd id="ajtb-v1-summary-tour"><?php echo esc_html($tour_title); ?></dd>
                             </div>
                             <div>
-                                <dt>Depart</dt>
+                                <dt>Départ de</dt>
                                 <dd id="ajtb-v1-summary-departure"><?php echo esc_html($search_departure !== '' ? $search_departure : '-'); ?></dd>
                             </div>
                             <div>
@@ -996,34 +1071,42 @@ get_header();
                                 <dd id="ajtb-v1-summary-guests"><?php echo esc_html($search_guests); ?></dd>
                             </div>
                             <div>
-                                <dt>Duree</dt>
+                                <dt>Durée</dt>
                                 <dd id="ajtb-v1-summary-duration"><?php echo esc_html($translate_ui($duration_label)); ?></dd>
                             </div>
                             <div>
-                                <dt>Hebergement</dt>
-                                <dd id="ajtb-v1-summary-hotel"><?php echo esc_html(!empty($stats['hotels']) ? 'Inclus' : 'A confirmer'); ?></dd>
+                                <dt>Hébergement</dt>
+                                <dd id="ajtb-v1-summary-hotel"><?php echo esc_html(!empty($stats['hotels']) ? 'Inclus' : 'À confirmer'); ?></dd>
                             </div>
                             <div>
-                                <dt>Activites</dt>
-                                <dd id="ajtb-v1-summary-activities">A confirmer</dd>
+                                <dt>Activités</dt>
+                                <dd id="ajtb-v1-summary-activities">À confirmer</dd>
                             </div>
                         </dl>
 
+                        <div class="ajtb-v1-summary-price-row ajtb-v1-price-box">
+                            <span class="ajtb-v1-summary-label">Prix total</span>
+                            <p class="ajtb-v1-summary-price"><span id="ajtb-v1-price-amount"><?php echo esc_html($price_amount); ?></span> <span id="ajtb-v1-price-currency"><?php echo esc_html($price_currency); ?></span></p>
+                            <p class="ajtb-v1-summary-unit"><span id="ajtb-v1-price-per-person"><?php echo esc_html($price_amount); ?> <?php echo esc_html($price_currency); ?></span><small>par personne</small></p>
+                            <div class="ajtb-v1-price-breakdown" id="ajtb-v1-price-breakdown" hidden>
+                                <div><span>Prix / pers.</span><strong id="ajtb-v1-breakdown-base">-</strong></div>
+                                <div><span>Supplément date</span><strong id="ajtb-v1-breakdown-supp">-</strong></div>
+                                <div><span>Prix final / pers.</span><strong id="ajtb-v1-breakdown-final">-</strong></div>
+                            </div>
+                        </div>
+
                         <button type="button" class="ajtb-v1-summary-action" id="ajtb-v1-summary-action">Continuer</button>
+                        <p class="ajtb-v1-summary-hint" id="ajtb-v1-summary-hint">Aucun paiement à cette étape.</p>
                     </div>
 
-                    <div class="ajtb-v1-side-card ajtb-v1-side-highlight">
-                        <h3>Dates de depart</h3>
-                        <?php if (!empty($search_date_options)): ?>
-                            <ul class="ajtb-v1-departure-list">
-                                <?php foreach ($search_date_options as $date_option): ?>
-                                    <li><?php echo esc_html($translate_ui((string) $date_option['display'])); ?></li>
-                                <?php endforeach; ?>
-                            </ul>
-                            <p>Depart : <?php echo esc_html($search_departure); ?></p>
-                        <?php else: ?>
-                            <p><?php echo esc_html($translate_ui($search_date)); ?> - Depart : <?php echo esc_html($search_departure); ?></p>
-                        <?php endif; ?>
+                    <div class="ajtb-v1-side-card ajtb-v1-contact-card">
+                        <div>
+                            <strong>Une question sur ce voyage ?</strong>
+                            <?php if ($contact_phone !== ''): ?>
+                                <a class="ajtb-v1-contact-phone" href="<?php echo esc_url('tel:' . preg_replace('/[^0-9+]/', '', $contact_phone)); ?>"><?php echo esc_html($contact_phone); ?></a>
+                            <?php endif; ?>
+                        </div>
+                        <a class="ajtb-v1-contact-link" href="<?php echo esc_url($contact_url); ?>">Nous contacter</a>
                     </div>
 
                     <?php if (!empty($best_deals)): ?>

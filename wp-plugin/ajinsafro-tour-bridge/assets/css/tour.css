@@ -4,23 +4,37 @@
  */
 
 :root {
-    --ajtb-v1-brand-dark: #0e3a5a;
-    --ajtb-v1-brand-blue: #0083c4;
-    --ajtb-v1-brand-blue-strong: #006ea8;
-    --ajtb-v1-brand-orange: #f37a1f;
-    --ajtb-v1-brand-orange-strong: #d95f08;
-    --ajtb-v1-bg: #f0f6fc;
+    /* Palette « Circuit detail » : fond bleuté très clair, cartes blanches cernées d'un trait
+       fin, un seul bleu d'action, un orange d'accent, un vert pour ce qui est inclus.
+       Aucune ombre : la hiérarchie tient aux bordures et aux aplats. */
+    --ajtb-v1-brand-dark: #0d2137;
+    --ajtb-v1-brand-blue: #144e8c;
+    --ajtb-v1-brand-blue-strong: #0d3767;
+    --ajtb-v1-brand-orange: #f5821f;
+    --ajtb-v1-brand-orange-strong: #c2570a;
+    --ajtb-v1-bg: #eef3f9;
     --ajtb-v1-card: #ffffff;
-    --ajtb-v1-text: #13243d;
-    --ajtb-v1-text-soft: #5f6f87;
-    --ajtb-v1-line: #d9e4f2;
-    --ajtb-v1-shadow: 0 14px 34px rgba(14, 58, 90, 0.11);
-    --ajtb-v1-radius-xl: 20px;
+    --ajtb-v1-text: #0d2137;
+    --ajtb-v1-text-body: #2e4c66;
+    --ajtb-v1-text-muted: #3d5a75;
+    --ajtb-v1-text-soft: #5b7690;
+    --ajtb-v1-line: #dce7f2;
+    --ajtb-v1-line-strong: #cfdcea;
+    --ajtb-v1-surface-soft: #f6fafd;
+    --ajtb-v1-surface-mute: #f9fbfd;
+    --ajtb-v1-ok: #146b45;
+    --ajtb-v1-ok-bg: #e4f5ec;
+    --ajtb-v1-ok-line: #bde3cf;
+    --ajtb-v1-warn: #a24c07;
+    --ajtb-v1-danger: #a8401f;
+    --ajtb-v1-shadow: none;
+    --ajtb-v1-radius-xl: 16px;
     --ajtb-v1-radius-lg: 16px;
     --ajtb-v1-radius-md: 12px;
     --ajtb-v1-radius-sm: 10px;
+    --ajtb-v1-font: "Outfit", "Segoe UI", Roboto, Arial, sans-serif;
+    --ajtb-v1-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
-
 .day-activity-card-proposition {
     border-color: rgba(243, 122, 31, 0.38);
     background: linear-gradient(180deg, #fffaf4 0%, #ffffff 100%);
@@ -111,7 +125,7 @@ body.single-st_tours .footer-bottom {
 }
 
 .ajtb-v1-page {
-    font-family: "Poppins", "Segoe UI", Roboto, Arial, sans-serif;
+    font-family: var(--ajtb-v1-font);
     color: var(--ajtb-v1-text);
     min-height: 100vh;
     --ajtb-v1-admin-top: 0px;
@@ -229,51 +243,160 @@ body.single-st_tours .footer-bottom {
     box-shadow: 0 12px 24px rgba(243, 122, 31, 0.28);
 }
 
-.ajtb-v1-search-box {
-    width: min(1120px, 100%);
-    margin: 0 auto 16px;
-    padding: 10px;
-    border-radius: 20px;
-    background: #ffffff;
-    box-shadow: 0 10px 24px rgba(14, 58, 90, 0.08);
-    border: 1px solid #dbe7f3;
-    position: sticky;
-    top: var(--ajtb-v1-sticky-top);
-    z-index: 160;
-    transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
-}
+/* ── Formulaire de réservation, dans le récapitulatif ─────────────────────────
+   Les champs sont empilés au contact du prix : le voyageur choisit sa ville, sa date et le
+   nombre de voyageurs sans quitter des yeux le total. */
 
-.ajtb-v1-search-grid {
-    display: grid;
-    grid-template-columns: 1.15fr 1fr 1fr 1fr;
-    gap: 10px;
-    align-items: stretch;
-}
-
-.ajtb-v1-search-box.is-stuck {
-    box-shadow: 0 16px 30px rgba(14, 58, 90, 0.12);
-    border-color: #cfe0f3;
-}
-
-.ajtb-v1-search-card {
-    background: linear-gradient(180deg, #ffffff, #fbfdff);
-    border-radius: 14px;
-    border: 1px solid #dbe7f3;
-    padding: 11px 14px;
-    min-height: 68px;
+.ajtb-v1-booking {
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    gap: 6px;
-    box-shadow: 0 4px 10px rgba(15, 79, 121, 0.05);
+    gap: 16px;
+    margin-bottom: 16px;
 }
 
+.ajtb-v1-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+}
+
+.ajtb-v1-field-label {
+    color: var(--ajtb-v1-text-body);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ajtb-v1-required {
+    color: var(--ajtb-v1-danger);
+}
+
+.ajtb-v1-field-static {
+    margin: 0;
+    color: var(--ajtb-v1-text-muted);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.ajtb-v1-select-shell {
+    position: relative;
+    display: block;
+    min-width: 0;
+}
+
+.ajtb-v1-select-shell::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    width: 8px;
+    height: 8px;
+    margin-top: -6px;
+    border-right: 2px solid var(--ajtb-v1-text-soft);
+    border-bottom: 2px solid var(--ajtb-v1-text-soft);
+    transform: rotate(45deg);
+    pointer-events: none;
+}
+
+.ajtb-v1-select-shell:has(input)::after {
+    display: none;
+}
+
+.ajtb-v1-search-select {
+    width: 100%;
+    min-width: 0;
+    padding: 12px 34px 12px 12px;
+    border: 1px solid var(--ajtb-v1-line-strong);
+    border-radius: var(--ajtb-v1-radius-sm);
+    background: var(--ajtb-v1-card);
+    color: var(--ajtb-v1-text);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.3;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+.ajtb-v1-select-shell input.ajtb-v1-search-select {
+    padding-right: 12px;
+    cursor: text;
+}
+
+.ajtb-v1-search-select:focus-visible {
+    outline: none;
+    border-color: var(--ajtb-v1-brand-blue);
+    box-shadow: 0 0 0 3px rgba(20, 78, 140, 0.18);
+}
+
+/* Le <select> des dates reste dans le document — il pilote prix, chambres et extras — mais
+   la grille de boutons est ce que l'on voit. */
+.ajtb-v1-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.ajtb-v1-date-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 6px;
+}
+
+.ajtb-v1-date {
+    min-height: 44px;
+    padding: 8px 6px;
+    border: 1px solid var(--ajtb-v1-line-strong);
+    border-radius: 9px;
+    background: var(--ajtb-v1-card);
+    color: var(--ajtb-v1-text);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.25;
+    cursor: pointer;
+    transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
+}
+
+.ajtb-v1-date:hover {
+    border-color: var(--ajtb-v1-brand-blue);
+}
+
+.ajtb-v1-date.is-active {
+    border-color: var(--ajtb-v1-brand-blue);
+    background: var(--ajtb-v1-brand-blue);
+    color: #fff;
+}
+
+.ajtb-v1-date:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(20, 78, 140, 0.18);
+}
+
+.ajtb-v1-request-note {
+    margin: 0;
+    color: var(--ajtb-v1-text-soft);
+    font-size: 12.5px;
+    line-height: 1.45;
+}
+
+/* ── Champs du récapitulatif de validation (étape 2) ──────────────────────────
+   Cette page présente encore ses champs sous la forme intitulé + valeur, avec un
+   panneau de voyageurs à ouvrir ; la fiche voyage, elle, les affiche en clair. */
+
 .ajtb-v1-search-label {
-    color: #68809f;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
+    color: var(--ajtb-v1-text-body);
+    font-size: 12px;
+    font-weight: 600;
 }
 
 .ajtb-v1-search-value {
@@ -281,11 +404,15 @@ body.single-st_tours .footer-bottom {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    color: #102540;
-    font-size: 15px;
-    font-weight: 700;
-    line-height: 1.2;
     min-width: 0;
+    color: var(--ajtb-v1-text);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.3;
+}
+
+.ajtb-v1-search-value--select {
+    align-items: stretch;
 }
 
 .ajtb-v1-search-text {
@@ -296,55 +423,72 @@ body.single-st_tours .footer-bottom {
 }
 
 .ajtb-v1-search-value strong {
+    flex: 0 0 auto;
     width: 24px;
     height: 24px;
-    border-radius: 999px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: #eef5ff;
-    border: 1px solid #d6e5f7;
-    color: #335c87;
+    border: 1px solid var(--ajtb-v1-line);
+    border-radius: 999px;
+    background: var(--ajtb-v1-surface-soft);
+    color: var(--ajtb-v1-text-soft);
     font-size: 12px;
-    flex: 0 0 auto;
 }
 
-.ajtb-v1-search-value--select {
-    align-items: stretch;
-}
-
-.ajtb-v1-search-select {
+.ajtb-v1-guest-trigger {
     width: 100%;
-    min-width: 0;
+    margin: 0;
+    padding: 0;
     border: 0;
     background: transparent;
-    color: #102540;
-    font-size: 15px;
-    font-weight: 700;
-    line-height: 1.25;
-    padding: 0;
-    margin: 0;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    outline: none;
+    font-family: inherit;
+    text-align: left;
     cursor: pointer;
 }
 
-.ajtb-v1-search-select:focus {
-    color: #0b3c65;
+.ajtb-v1-guest-popover {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 8px);
+    z-index: 40;
+    padding: 12px;
+    border: 1px solid var(--ajtb-v1-line);
+    border-radius: 14px;
+    background: var(--ajtb-v1-card);
+    box-shadow: 0 18px 34px rgba(13, 33, 55, 0.14);
 }
 
-.ajtb-v1-request-note {
-    margin: 10px 2px 0;
-    color: #5f7591;
-    font-size: 12px;
-    line-height: 1.45;
+.ajtb-v1-guest-popover[hidden] {
+    display: none;
 }
 
+.ajtb-v1-guest-apply {
+    margin-top: 10px;
+    width: 100%;
+    min-height: 40px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--ajtb-v1-brand-blue);
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.ajtb-v1-guest-apply:hover {
+    background: var(--ajtb-v1-brand-blue-strong);
+}
+
+@media (max-width: 767px) {
+    .ajtb-v1-guest-popover {
+        position: static;
+        margin-top: 8px;
+        box-shadow: none;
+    }
+}
 .ajtb-v1-field-error {
     margin-top: 6px;
     color: #b42318;
@@ -357,33 +501,10 @@ body.single-st_tours .footer-bottom {
     position: relative;
 }
 
-.ajtb-v1-guest-trigger {
-    width: 100%;
-    border: 0;
-    padding: 0;
-    margin: 0;
-    background: transparent;
-    text-align: left;
-    cursor: pointer;
+.ajtb-v1-guest-rows {
+    display: flex;
+    flex-direction: column;
 }
-
-.ajtb-v1-guest-popover {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: calc(100% + 8px);
-    z-index: 40;
-    padding: 12px;
-    border-radius: 14px;
-    border: 1px solid #dbe7f5;
-    background: #ffffff;
-    box-shadow: 0 18px 34px rgba(16, 37, 64, 0.16);
-}
-
-.ajtb-v1-guest-popover[hidden] {
-    display: none;
-}
-
 .ajtb-v1-guest-row {
     display: flex;
     align-items: center;
@@ -412,22 +533,24 @@ body.single-st_tours .footer-bottom {
 .ajtb-v1-guest-stepper {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
+    padding: 3px;
+    border: 1px solid var(--ajtb-v1-line-strong);
+    border-radius: 10px;
 }
-
 .ajtb-v1-guest-stepper button {
-    width: 28px;
-    height: 28px;
-    border: 1px solid #d2e3f6;
+    width: 40px;
+    height: 40px;
+    border: 0;
     border-radius: 8px;
-    background: #f6faff;
-    color: #25496d;
-    font-size: 16px;
-    font-weight: 800;
+    background: var(--ajtb-v1-surface-soft);
+    color: var(--ajtb-v1-brand-blue);
+    font-family: inherit;
+    font-size: 18px;
+    font-weight: 600;
     line-height: 1;
     cursor: pointer;
 }
-
 .ajtb-v1-guest-stepper span {
     min-width: 20px;
     text-align: center;
@@ -436,20 +559,6 @@ body.single-st_tours .footer-bottom {
     font-weight: 700;
 }
 
-.ajtb-v1-guest-apply {
-    margin-top: 10px;
-    width: 100%;
-    min-height: 40px;
-    border: 0;
-    border-radius: 10px;
-    color: #fff;
-    font-size: 12px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    background: linear-gradient(180deg, #1d8eff, #005ff7);
-    cursor: pointer;
-}
 
 .ajtb-v1-search-btn {
     border: 0;
@@ -474,11 +583,57 @@ body.single-st_tours .footer-bottom {
     filter: brightness(1.05);
 }
 
-.ajtb-v1-hero {
-    margin-top: 10px;
-    text-align: center;
+.ajtb-v1-breadcrumb {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    color: var(--ajtb-v1-text-soft);
+    font-size: 12.5px;
 }
 
+.ajtb-v1-breadcrumb a {
+    color: var(--ajtb-v1-brand-blue);
+    text-decoration: none;
+}
+
+.ajtb-v1-breadcrumb a:hover {
+    color: var(--ajtb-v1-brand-blue-strong);
+}
+
+.ajtb-v1-breadcrumb [aria-current] {
+    color: var(--ajtb-v1-text);
+}
+
+.ajtb-v1-hero {
+    margin-top: 12px;
+}
+
+.ajtb-v1-hero-facts {
+    margin-top: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ajtb-v1-fact {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border: 1px solid var(--ajtb-v1-line);
+    border-radius: 999px;
+    background: var(--ajtb-v1-card);
+    color: var(--ajtb-v1-text);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.ajtb-v1-fact--included {
+    border-color: var(--ajtb-v1-ok-line);
+    background: var(--ajtb-v1-ok-bg);
+    color: var(--ajtb-v1-ok);
+    font-weight: 600;
+}
 .ajtb-v1-hero-kicker {
     margin: 0 0 10px;
     color: #0f5e8a;
@@ -489,19 +644,15 @@ body.single-st_tours .footer-bottom {
 }
 
 .ajtb-v1-title {
-    margin: 0 auto;
-    color: #15253f;
-    width: min(100%, 980px);
-    font-size: clamp(28px, 2.4vw, 32px);
-    line-height: 1.12;
-    font-weight: 800;
-    letter-spacing: -0.012em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-align: center;
+    margin: 12px 0 0;
+    max-width: 34ch;
+    color: var(--ajtb-v1-text);
+    font-size: clamp(24px, 3vw, 36px);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+    text-wrap: pretty;
 }
-
 .ajtb-v1-meta-pills {
     display: none;
 }
@@ -526,30 +677,20 @@ body.single-st_tours .footer-bottom {
 }
 
 .ajtb-v1-gallery {
-    margin-top: 16px;
+    margin-top: 18px;
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
-    grid-auto-rows: 156px;
+    grid-auto-rows: clamp(110px, 15vw, 185px);
     gap: 10px;
-    padding: 10px;
-    border-radius: 22px;
-    border: 1px solid #d7e6f4;
-    background: linear-gradient(180deg, #f9fcff, #f4f8fd);
-    box-shadow: 0 12px 24px rgba(14, 58, 90, 0.08);
 }
-
 .ajtb-v1-gallery-item {
     margin: 0;
     grid-column: span 4;
     height: 100%;
-    border-radius: 16px;
+    border-radius: var(--ajtb-v1-radius-lg);
     overflow: hidden;
-    background: #e7f0f8;
-    border: 1px solid #d6e5f6;
-    box-shadow: 0 8px 18px rgba(14, 58, 90, 0.08);
-    transition: transform 0.22s ease, box-shadow 0.22s ease;
+    background: #dfe9f3;
 }
-
 .ajtb-v1-gallery-media {
     width: 100%;
     height: 100%;
@@ -640,13 +781,12 @@ body.single-st_tours .footer-bottom {
 }
 
 .ajtb-v1-layout {
-    margin-top: 22px;
+    margin-top: clamp(18px, 2.4vw, 28px);
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 330px;
-    gap: 22px;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
+    gap: clamp(16px, 2vw, 24px);
     align-items: start;
 }
-
 .ajtb-v1-main-column {
     min-width: 0;
 }
@@ -655,9 +795,8 @@ body.single-st_tours .footer-bottom {
     position: sticky;
     top: var(--ajtb-v1-rail-top);
     display: grid;
-    gap: 18px;
+    gap: 14px;
 }
-
 .ajtb-v1-tab-panel {
     display: none;
 }
@@ -670,12 +809,12 @@ body.single-st_tours .footer-bottom {
 .ajtb-v1-side-card {
     background: var(--ajtb-v1-card);
     border: 1px solid var(--ajtb-v1-line);
-    border-radius: 18px;
-    box-shadow: 0 12px 28px rgba(14, 58, 90, 0.09);
+    border-radius: var(--ajtb-v1-radius-lg);
+    box-shadow: var(--ajtb-v1-shadow);
 }
 
 .ajtb-v1-card {
-    padding: 22px;
+    padding: clamp(16px, 2vw, 22px);
 }
 
 .ajtb-v1-overview-card {
@@ -683,22 +822,58 @@ body.single-st_tours .footer-bottom {
 }
 
 .ajtb-v1-kicker {
-    margin: 0 0 10px;
-    color: var(--ajtb-v1-brand-blue);
+    margin: 0;
+    color: var(--ajtb-v1-brand-orange-strong);
+    font-family: var(--ajtb-v1-font-mono);
     font-size: 12px;
-    font-weight: 800;
-    letter-spacing: 0.08em;
+    font-weight: 500;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
 }
 
-.ajtb-v1-overview-list {
-    margin: 0;
-    padding-left: 18px;
-    color: var(--ajtb-v1-text-soft);
-    font-size: 13px;
-    line-height: 1.7;
+.ajtb-v1-overview-lead {
+    margin: 10px 0 0;
+    color: var(--ajtb-v1-text-body);
+    font-size: 15px;
+    line-height: 1.6;
+    text-wrap: pretty;
 }
 
+.ajtb-v1-route {
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.ajtb-v1-route li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ajtb-v1-route-stop {
+    padding: 6px 10px;
+    border: 1px solid var(--ajtb-v1-line);
+    border-radius: 8px;
+    background: var(--ajtb-v1-surface-soft);
+}
+
+.ajtb-v1-route-arrow {
+    color: #9fb6cc;
+}
+.ajtb-v1-overview-list {
+    margin: 12px 0 0;
+    padding-left: 18px;
+    color: var(--ajtb-v1-text-body);
+    font-size: 14px;
+    line-height: 1.65;
+}
 .ajtb-v1-included-bar {
     margin: 0 0 16px;
     display: flex;
@@ -709,107 +884,106 @@ body.single-st_tours .footer-bottom {
 .ajtb-v1-chip {
     display: inline-flex;
     align-items: center;
-    min-height: 38px;
-    padding: 0 12px;
-    border-radius: var(--ajtb-v1-radius-sm);
-    border: 1px solid #d9e6f4;
-    background: #f9fcff;
-    color: #4f6481;
-    font-size: 12px;
-    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--ajtb-v1-line);
+    background: var(--ajtb-v1-card);
+    color: var(--ajtb-v1-text-body);
+    font-size: 13px;
+    font-weight: 500;
 }
-
-.ajtb-v1-stats-grid {
+.ajtb-v1-tabs {
     margin-bottom: 16px;
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 10px;
+    display: flex;
+    gap: 6px;
+    padding: 6px;
+    border: 1px solid var(--ajtb-v1-line);
+    border-radius: 14px;
+    background: var(--ajtb-v1-card);
+    overflow-x: auto;
 }
 
-.ajtb-v1-stat {
-    appearance: none;
-    border: 1px solid #dbe7f5;
-    background: linear-gradient(180deg, #fcfeff, #f4f9ff);
-    border-radius: var(--ajtb-v1-radius-md);
-    padding: 11px 8px;
-    text-align: center;
+.ajtb-v1-tab {
+    flex: 1 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 0;
+    border-radius: 10px;
+    padding: 11px 16px;
+    background: transparent;
+    color: var(--ajtb-v1-text-body);
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    white-space: nowrap;
     cursor: pointer;
-    transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
-    box-shadow: 0 4px 12px rgba(15, 79, 121, 0.06);
+    transition: background 0.16s ease, color 0.16s ease;
 }
 
-.ajtb-v1-stat:hover {
-    transform: translateY(-1px);
-    border-color: #b8cef0;
-    box-shadow: 0 10px 22px rgba(15, 79, 121, 0.1);
+.ajtb-v1-tab:hover {
+    background: var(--ajtb-v1-surface-soft);
 }
 
-.ajtb-v1-stat:focus-visible {
-    outline: 3px solid rgba(0, 123, 255, 0.18);
-    outline-offset: 2px;
-}
-
-.ajtb-v1-stat.is-active {
-    color: #fff;
-    border-color: transparent;
-    background: linear-gradient(180deg, var(--ajtb-v1-brand-blue), var(--ajtb-v1-brand-blue-strong));
-    box-shadow: 0 14px 28px rgba(0, 110, 168, 0.22);
-}
-
-.ajtb-v1-stat.is-active strong,
-.ajtb-v1-stat.is-active span {
+.ajtb-v1-tab.is-active {
+    background: var(--ajtb-v1-brand-blue);
     color: #fff;
 }
 
-.ajtb-v1-stat strong {
-    display: block;
-    color: #152843;
-    font-size: 19px;
-    font-weight: 800;
+.ajtb-v1-tab.is-active:hover {
+    background: var(--ajtb-v1-brand-blue-strong);
 }
 
-.ajtb-v1-stat span {
-    display: block;
-    color: #6d7f99;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+.ajtb-v1-tab-count {
+    opacity: 0.7;
+    font-weight: 500;
 }
 
+.ajtb-v1-tab:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(20, 78, 140, 0.18);
+}
 .ajtb-v1-day-layout {
-    display: grid;
-    grid-template-columns: 112px minmax(0, 1fr);
-    gap: 18px;
-}
-
-.ajtb-v1-day-nav {
-    position: sticky;
-    top: var(--ajtb-v1-rail-top);
-    align-self: start;
     display: flex;
     flex-direction: column;
+    gap: 14px;
+}
+.ajtb-v1-day-nav {
+    display: flex;
+    flex-wrap: wrap;
     gap: 8px;
 }
-
 .ajtb-v1-day-chip {
-    border: 1px solid #dce7f4;
-    border-radius: var(--ajtb-v1-radius-md);
-    min-height: 42px;
-    background: #ffffff;
-    color: #576a84;
-    font-size: 12px;
-    font-weight: 700;
+    border: 1px solid var(--ajtb-v1-line);
+    border-radius: 10px;
+    padding: 8px 12px;
+    background: var(--ajtb-v1-card);
+    font-family: inherit;
+    font-size: 12.5px;
+    text-align: left;
     cursor: pointer;
+    transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.ajtb-v1-day-chip:hover {
+    border-color: var(--ajtb-v1-brand-blue);
+}
+
+.ajtb-v1-day-chip__n {
+    display: block;
+    color: var(--ajtb-v1-brand-orange-strong);
+    font-weight: 700;
+}
+
+.ajtb-v1-day-chip__date {
+    display: block;
+    color: var(--ajtb-v1-text-muted);
 }
 
 .ajtb-v1-day-chip.is-active {
-    color: #fff;
-    border-color: transparent;
-    background: linear-gradient(180deg, #1d8eff, #005ff6);
-    box-shadow: 0 11px 20px rgba(0, 95, 246, 0.24);
+    border-color: var(--ajtb-v1-brand-blue);
+    background: var(--ajtb-v1-surface-soft);
 }
-
 .ajtb-v1-timeline {
     position: relative;
 }
@@ -817,45 +991,37 @@ body.single-st_tours .footer-bottom {
 .ajtb-v1-timeline::before {
     content: "";
     position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 17px;
+    top: 10px;
+    bottom: 10px;
+    left: 7px;
     width: 2px;
-    background: linear-gradient(180deg, #d0e2f8, #b9d2f3);
+    background: var(--ajtb-v1-line-strong);
 }
-
 .ajtb-v1-day-card {
     position: relative;
-    padding-left: 44px;
-    margin-bottom: 18px;
+    padding-left: 34px;
+    margin-bottom: 14px;
     scroll-margin-top: var(--ajtb-v1-day-scroll-offset);
 }
-
 .ajtb-v1-day-card::before {
     content: "";
     position: absolute;
-    left: 8px;
-    top: 20px;
-    width: 18px;
-    height: 18px;
+    left: 1px;
+    top: 22px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     background: #fff;
-    border: 4px solid var(--ajtb-v1-brand-blue);
-    box-shadow: 0 0 0 6px #ebf4ff;
+    border: 3px solid var(--ajtb-v1-brand-blue);
 }
-
 .ajtb-v1-day-box {
-    background: #fff;
-    border: 1px solid #dce7f5;
+    background: var(--ajtb-v1-card);
+    border: 1px solid var(--ajtb-v1-line);
     border-radius: var(--ajtb-v1-radius-lg);
-    box-shadow: var(--ajtb-v1-shadow);
     overflow: hidden;
 }
-
 .ajtb-v1-day-head {
-    padding: 16px 18px;
-    border-bottom: 1px solid #e3edf8;
-    background: #fcfeff;
+    padding: clamp(16px, 2vw, 20px) clamp(16px, 2vw, 20px) 0;
 }
 
 .ajtb-v1-day-head-left {
@@ -866,42 +1032,46 @@ body.single-st_tours .footer-bottom {
 }
 
 .ajtb-v1-day-badge {
-    min-height: 26px;
-    padding: 0 10px;
+    padding: 4px 10px;
     border-radius: 999px;
     display: inline-flex;
     align-items: center;
-    color: #fff;
-    font-size: 11px;
-    font-weight: 800;
-    background: linear-gradient(180deg, #ff9c61, #f06c41);
-}
-
-.ajtb-v1-day-head h3 {
-    margin: 0;
-    color: #152842;
-    font-size: 19px;
-    font-weight: 800;
-}
-
-.ajtb-v1-day-head p {
-    margin: 0;
-    color: #677891;
+    background: var(--ajtb-v1-brand-orange);
+    color: #2a1400;
     font-size: 12px;
     font-weight: 700;
 }
 
+.ajtb-v1-day-date {
+    color: var(--ajtb-v1-text-soft);
+    font-size: 12.5px;
+}
+
+.ajtb-v1-day-head h3 {
+    margin: 10px 0 0;
+    color: var(--ajtb-v1-text);
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+}
+
+.ajtb-v1-day-included {
+    margin: 6px 0 0;
+    color: var(--ajtb-v1-ok);
+    font-size: 12.5px;
+    font-weight: 600;
+}
 .ajtb-v1-day-content {
     padding: 18px;
 }
 
 .ajtb-v1-day-desc {
     margin: 0 0 16px;
-    color: #596981;
-    font-size: 13px;
-    line-height: 1.72;
+    color: var(--ajtb-v1-text-body);
+    font-size: 14.5px;
+    line-height: 1.65;
+    text-wrap: pretty;
 }
-
 .ajtb-v1-day-desc.is-collapsed,
 .ajtb-v1-media-row p.is-collapsed {
     display: -webkit-box;
@@ -919,15 +1089,15 @@ body.single-st_tours .footer-bottom {
 
 .ajtb-v1-expand-toggle {
     margin: -6px 0 12px;
-    padding: 0;
+    padding: 6px 0;
     border: 0;
-    background: transparent;
+    background: none;
     color: var(--ajtb-v1-brand-blue);
-    font-size: 12px;
-    font-weight: 700;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
     cursor: pointer;
 }
-
 .ajtb-v1-service-card {
     margin-bottom: 12px;
     border: 1px solid #dce8f6;
@@ -1526,30 +1696,22 @@ body.ajtb-modal-open {
 }
 
 .ajtb-v1-side-card {
-    padding: 20px;
+    padding: clamp(16px, 2vw, 20px);
     position: relative;
     overflow: hidden;
 }
-
 .ajtb-v1-summary-card {
-    display: grid;
-    gap: 12px;
+    display: block;
 }
-
 .ajtb-v1-summary-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
+    margin-bottom: 16px;
 }
-
 .ajtb-v1-summary-head h3 {
     margin: 0;
-    color: #152842;
+    color: var(--ajtb-v1-text);
     font-size: 18px;
-    font-weight: 800;
+    font-weight: 600;
 }
-
 .ajtb-v1-summary-subtitle {
     margin: 4px 0 0;
     color: #687a93;
@@ -1573,46 +1735,38 @@ body.ajtb-modal-open {
 }
 
 .ajtb-v1-summary-price-row {
-    display: grid;
-    gap: 12px;
-    padding: 16px;
-    border-radius: 16px;
-    border: 1px solid #d9e6f5;
-    background: linear-gradient(180deg, #fbfdff, #f4f8ff);
+    margin-top: 12px;
+    padding: 14px;
+    border: 1px solid var(--ajtb-v1-line);
+    border-radius: var(--ajtb-v1-radius-md);
+    background: var(--ajtb-v1-surface-soft);
 }
-
 .ajtb-v1-summary-label {
     display: block;
-    margin-bottom: 4px;
-    color: #6a7d97;
-    font-size: 11px;
-    font-weight: 800;
-    text-transform: uppercase;
+    color: var(--ajtb-v1-text-soft);
+    font-size: 12px;
+    font-weight: 600;
     letter-spacing: 0.06em;
+    text-transform: uppercase;
 }
-
 .ajtb-v1-summary-price {
-    margin: 0;
-    color: #13243d;
-    font-size: 16px;
+    margin: 4px 0 0;
+    color: var(--ajtb-v1-text);
+    font-size: 18px;
     font-weight: 700;
 }
-
 .ajtb-v1-summary-price span {
-    color: #0f2a46;
-    font-size: 36px;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    line-height: 1;
-}
-
-.ajtb-v1-summary-unit {
-    margin: 0;
-    color: #2f4c70;
-    font-size: 13px;
+    font-size: 30px;
     font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
 }
-
+.ajtb-v1-summary-unit {
+    margin: 2px 0 0;
+    color: var(--ajtb-v1-text-muted);
+    font-size: 13px;
+    font-weight: 500;
+}
 .ajtb-v1-summary-unit span {
     display: block;
 }
@@ -1658,38 +1812,30 @@ body.ajtb-modal-open {
 }
 
 .ajtb-v1-summary-list {
-    margin: 0;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 8px;
+    margin: 16px 0 0;
+    padding-top: 12px;
+    border-top: 1px solid var(--ajtb-v1-bg);
+    display: flex;
+    flex-direction: column;
 }
-
 .ajtb-v1-summary-list div {
-    padding: 10px 0;
-    border-top: 1px solid #e6eef7;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    gap: 12px;
+    padding: 7px 0;
+    font-size: 13.5px;
 }
-
 .ajtb-v1-summary-list dt {
     margin: 0;
-    color: #6d7f99;
-    font-size: 10px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+    color: var(--ajtb-v1-text-soft);
+    font-weight: 400;
 }
-
 .ajtb-v1-summary-list dd {
     margin: 0;
-    color: #16304d;
-    font-size: 13px;
-    font-weight: 700;
-    line-height: 1.45;
+    color: var(--ajtb-v1-text);
+    font-weight: 600;
     text-align: right;
 }
-
 .ajtb-v1-summary-block {
     display: grid;
     gap: 8px;
@@ -1729,31 +1875,71 @@ body.ajtb-modal-open {
 }
 
 .ajtb-v1-summary-action {
+    margin-top: 14px;
     width: 100%;
-    min-height: 46px;
     border: 0;
-    border-radius: 14px;
-    cursor: pointer;
+    border-radius: 11px;
+    padding: 14px;
+    background: var(--ajtb-v1-brand-blue);
     color: #fff;
-    font-size: 13px;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    background: linear-gradient(180deg, #1d8eff, #005ff7);
-    box-shadow: 0 14px 22px rgba(0, 95, 247, 0.22);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
 }
 
+.ajtb-v1-summary-hint {
+    margin: 8px 0 0;
+    color: var(--ajtb-v1-text-soft);
+    font-size: 12.5px;
+    text-align: center;
+}
 .ajtb-v1-summary-action:hover {
-    filter: brightness(1.04);
+    background: var(--ajtb-v1-brand-blue-strong);
 }
-
 .ajtb-v1-side-card h3 {
     margin: 0 0 10px;
-    color: #152842;
-    font-size: 18px;
-    font-weight: 800;
+    color: var(--ajtb-v1-text);
+    font-size: 16px;
+    font-weight: 600;
 }
 
+/* Carte de contact : le téléphone reste à portée quand le récapitulatif est long. */
+.ajtb-v1-contact-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.ajtb-v1-contact-card strong {
+    display: block;
+    color: var(--ajtb-v1-text);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.ajtb-v1-contact-phone {
+    display: block;
+    color: var(--ajtb-v1-text-muted);
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.ajtb-v1-contact-link {
+    border: 1px solid var(--ajtb-v1-line-strong);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--ajtb-v1-brand-blue);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.ajtb-v1-contact-link:hover {
+    border-color: var(--ajtb-v1-brand-blue);
+}
 .ajtb-v1-price {
     margin: 0;
     color: #35495f;
@@ -3274,10 +3460,6 @@ body.ajtb-modal-open {
 }
 
 @media (max-width: 1200px) {
-    .ajtb-v1-search-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
     .ajtb-v1-search-btn {
         min-height: 56px;
     }
@@ -3305,20 +3487,6 @@ body.ajtb-modal-open {
     .ajtb-v1-page {
         --ajtb-v1-rail-top: 168px;
         --ajtb-v1-day-scroll-offset: 150px;
-    }
-
-    .ajtb-v1-day-layout {
-        grid-template-columns: 1fr;
-    }
-
-    .ajtb-v1-day-nav {
-        position: static;
-        flex-direction: row;
-        flex-wrap: wrap;
-    }
-
-    .ajtb-v1-stats-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .ajtb-v1-flight-grid {
@@ -3363,30 +3531,6 @@ body.ajtb-modal-open {
         width: min(1260px, calc(100vw - 22px));
     }
 
-    .ajtb-v1-search-box {
-        position: static;
-        top: auto;
-        z-index: 1;
-        padding: 12px;
-        border-radius: 16px;
-        width: 100%;
-    }
-
-    .ajtb-v1-search-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .ajtb-v1-search-card {
-        min-height: 72px;
-        padding: 12px 14px;
-    }
-
-    .ajtb-v1-guest-popover {
-        position: static;
-        margin-top: 8px;
-        box-shadow: 0 10px 20px rgba(16, 37, 64, 0.12);
-    }
-
     .ajtb-v1-search-btn {
         width: 100%;
         min-height: 50px;
@@ -3394,26 +3538,16 @@ body.ajtb-modal-open {
     }
 
     .ajtb-v1-title {
-        width: 100%;
-        font-size: 24px;
-        line-height: 1.14;
         max-width: 100%;
     }
 
     .ajtb-v1-tabs {
-        gap: 20px;
-        overflow-x: auto;
-        white-space: nowrap;
         flex-wrap: nowrap;
     }
 
     .ajtb-v1-page {
         --ajtb-v1-rail-top: 148px;
         --ajtb-v1-day-scroll-offset: 136px;
-    }
-
-    .ajtb-v1-stats-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .ajtb-v1-gallery {

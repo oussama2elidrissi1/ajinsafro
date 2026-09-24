@@ -149,7 +149,7 @@ function ajth_enqueue_front_assets()
     // Google Fonts - Poppins + Noto Sans Arabic (for RTL promo cards)
     wp_enqueue_style(
         'ajth-google-fonts',
-        'https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&family=Noto+Sans+Arabic:wght@400;600;700&family=Poppins:wght@300;400;500;600;700;800;900&display=swap',
+        'https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&family=Noto+Sans+Arabic:wght@400;600;700&family=Outfit:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700;800;900&display=swap',
         [],
         null
     );

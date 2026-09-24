@@ -135,6 +135,45 @@
         });
     }
 
+    /**
+     * Grille des départs à venir. Les boutons pilotent le <select> masqué, qui reste la source
+     * de vérité : tout ce qui écoute son `change` (prix, chambres, extras) continue de marcher.
+     */
+    function initDepartureDateGrid() {
+        var grid = document.querySelector(".ajtb-v1-date-grid");
+        var select = document.getElementById("ajtb-v1-search-date");
+        if (!grid || !select) {
+            return;
+        }
+
+        var buttons = Array.prototype.slice.call(
+            grid.querySelectorAll("[data-ajtb-date-value]"),
+        );
+
+        function paint() {
+            buttons.forEach(function (button) {
+                var isActive =
+                    button.getAttribute("data-ajtb-date-value") === select.value;
+                button.classList.toggle("is-active", isActive);
+                button.setAttribute("aria-pressed", isActive ? "true" : "false");
+            });
+        }
+
+        buttons.forEach(function (button) {
+            button.addEventListener("click", function () {
+                var value = button.getAttribute("data-ajtb-date-value");
+                if (!value || select.value === value) {
+                    return;
+                }
+                select.value = value;
+                select.dispatchEvent(new Event("change", { bubbles: true }));
+                paint();
+            });
+        });
+
+        select.addEventListener("change", paint);
+        paint();
+    }
     function initProgramFilters() {
         var filterButtons = Array.prototype.slice.call(
             document.querySelectorAll("[data-program-filter]"),
@@ -296,8 +335,6 @@
         var childrenInput = document.getElementById("ajtb-v1-guest-children-input");
 
         if (
-            !trigger ||
-            !popover ||
             !summary ||
             !adultsValue ||
             !childrenValue ||
@@ -401,6 +438,9 @@
         }
 
         function setOpen(open) {
+            if (!trigger || !popover) {
+                return;
+            }
             if (open) {
                 popover.removeAttribute("hidden");
                 trigger.setAttribute("aria-expanded", "true");
@@ -440,10 +480,12 @@
             render();
         });
 
-        trigger.addEventListener("click", function () {
-            var isOpen = !popover.hasAttribute("hidden");
-            setOpen(!isOpen);
-        });
+        if (trigger && popover) {
+            trigger.addEventListener("click", function () {
+                var isOpen = !popover.hasAttribute("hidden");
+                setOpen(!isOpen);
+            });
+        }
 
         if (applyBtn) {
             applyBtn.addEventListener("click", function () {
@@ -3350,6 +3392,7 @@
 
     document.addEventListener("DOMContentLoaded", function () {
         initTabs();
+        initDepartureDateGrid();
         initProgramFilters();
         initDayChips();
         initFloatingButton();
