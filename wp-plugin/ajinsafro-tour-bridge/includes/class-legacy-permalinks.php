@@ -129,9 +129,11 @@ final class AJTB_Legacy_Permalinks {
             self::redirect($target);
         }
 
+        // Par identifiant, pas par `name` : WP_Query passe `name` dans sanitize_title_for_query(),
+        // qui supprime les doubles tirets — or des slugs historiques en portent (…-semaine--498).
         $wp->query_vars = array(
             'post_type' => AJTB_POST_TYPE,
-            'name' => $post->post_name,
+            'p' => (int) $post->ID,
             self::QUERY_VAR => 1,
         );
     }

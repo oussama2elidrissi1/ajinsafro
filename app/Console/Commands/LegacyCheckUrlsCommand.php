@@ -120,7 +120,9 @@ class LegacyCheckUrlsCommand extends Command
     /** Null si conforme, sinon la raison. */
     private function verdict(string $path, int $status, string $location, ?string $canonical, string $base): ?string
     {
-        $isCanonical = $canonical !== null && rtrim($path, '/') === rtrim($canonical, '/');
+        // Le chemin seul compte : `…-187?lang=` est le canonique avec un paramètre, servi tel quel.
+        $pathOnly = (string) parse_url($path, PHP_URL_PATH);
+        $isCanonical = $canonical !== null && rtrim($pathOnly, '/') === rtrim($canonical, '/');
 
         if ($isCanonical) {
             if ($status === 200) {
