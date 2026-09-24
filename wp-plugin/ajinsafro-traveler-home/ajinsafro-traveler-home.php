@@ -424,6 +424,18 @@ function ajth_preload_styles()
     // Logo, visuels et video de la home sont servis par l'admin Laravel.
     echo '<link rel="preconnect" href="https://booking.ajinsafro.net">'."\n";
 
+    // Les icones de la barre du haut (fas, far) sont visibles des le premier ecran. Sans
+    // preload, leurs polices ne partent qu'apres le telechargement et l'analyse du CSS du
+    // theme, et font-display:block les laisse invisibles jusque-la. Le preload lance la
+    // requete des l'analyse du HTML. Pas de preload pour Brands : plus rien ne l'invoque.
+    $fa_dir = get_template_directory().'/v3/fonts/fontawesome/webfonts/';
+    $fa_uri = get_template_directory_uri().'/v3/fonts/fontawesome/webfonts/';
+    foreach (['fa-solid-900.woff2', 'fa-regular-400.woff2'] as $fa_file) {
+        if (is_file($fa_dir.$fa_file)) {
+            echo '<link rel="preload" as="font" type="font/woff2" crossorigin href="'.esc_url($fa_uri.$fa_file).'">'."\n";
+        }
+    }
+
     if ($on_home) {
         $media = ajth_hero_media(ajth_get_settings());
         $lcp = $media['mode'] === 'video' ? $media['poster'] : $media['image'];
