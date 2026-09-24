@@ -333,14 +333,17 @@ $day_date_label = static function (array $day) use ($translate_ui): string {
 // convient pas, souvent réduite à une catégorie (« Circuit »).
 $route_stops = [];
 foreach ($days as $route_day) {
-    $stage = trim((string) ($route_day['title'] ?? ''));
-    // « Merzouga : Kelâa des M'Gouna - Ouarzazate » → « Merzouga »
-    $stage = trim((string) preg_split('/\s*[:–—]\s*/u', $stage)[0]);
-    // Les intitulés de déroulé ne sont pas des lieux.
-    if ($stage === '' || preg_match('/^(jour|journ[ée]e|d[ée]part|arriv[ée]e|retour)\b/iu', $stage)) {
-        continue;
-    }
-    if (end($route_stops) !== $stage) {
+    $title = trim((string) ($route_day['title'] ?? ''));
+    // « Casablanca — Kuala Lumpur », « Merzouga : Kelâa des M'Gouna - Ouarzazate », « Bali / Ubud »
+    foreach (preg_split('/\s*[:–—\/,]\s*|\s+-\s+/u', $title) ?: [] as $stage) {
+        $stage = trim((string) $stage);
+        // Les intitulés de déroulé ne sont pas des lieux.
+        if ($stage === '' || preg_match('/^(jour|journ[ée]e|d[ée]part|arriv[ée]e|retour)\b/iu', $stage)) {
+            continue;
+        }
+        if (in_array($stage, $route_stops, true)) {
+            continue;
+        }
         $route_stops[] = $stage;
     }
 }
@@ -1116,7 +1119,7 @@ get_header();
                             </div>
                             <div>
                                 <dt>Date</dt>
-                                <dd id="ajtb-v1-summary-date"><?php echo esc_html($translate_ui($search_date)); ?></dd>
+                                <dd id="ajtb-v1-summary-date"><?php echo esc_html($upcoming_date_options !== [] ? $translate_ui($search_date) : $no_departure_label); ?></dd>
                             </div>
                             <div>
                                 <dt>Voyageurs</dt>
