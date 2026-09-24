@@ -83,6 +83,7 @@ require_once AJTH_DIR.'includes/activity-catalog.php';
 require_once AJTH_DIR.'includes/hajj-omra-catalog.php';
 require_once AJTH_DIR.'includes/economic-offers-catalog.php';
 require_once AJTH_DIR.'includes/page-banners.php';
+require_once AJTH_DIR.'includes/hardening.php';
 require_once AJTH_DIR.'includes/class-catalog-cache-invalidate.php';
 require_once AJTH_DIR.'includes/class-admin-settings.php';
 require_once AJTH_DIR.'includes/class-ajinsafro-agent.php';

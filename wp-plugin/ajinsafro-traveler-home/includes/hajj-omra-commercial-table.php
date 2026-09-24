@@ -2,6 +2,10 @@
 /** Shared, framework-independent renderer used by WordPress and Laravel preview. */
 namespace Ajinsafro\HajjOmra;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 final class CommercialTable
 {
     public static function localized(array $row, string $field, string $locale): string

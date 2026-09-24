@@ -1,4 +1,7 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Locale is applied after reading the shared bilingual API cache. */
 function ajth_ho_locale() {
     $requested = $_GET['lang'] ?? null;
