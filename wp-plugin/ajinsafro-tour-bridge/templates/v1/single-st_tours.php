@@ -135,6 +135,7 @@ if (empty($search_date_options) && $search_date !== '') {
     $search_date_options[] = [
         'value' => $search_date,
         'display' => $search_date,
+        'placeholder' => true,
     ];
 }
 
@@ -320,6 +321,14 @@ $same_as_lead = static function ($candidate) use ($tour_excerpt): bool {
 $overview_points = array_values(array_filter($overview_points, static fn ($point) => !$same_as_lead($point)));
 $best_deals = array_values(array_filter($best_deals, static fn ($deal) => !$same_as_lead($deal)));
 
+// Libellé de date d'une journée : vide quand il ne fait que répéter « Jour N », ce qui arrive
+// sur les programmes historiques importés sans calendrier.
+$day_date_label = static function (array $day) use ($translate_ui): string {
+    $label = $translate_ui(trim((string) ($day['date_label'] ?? '')));
+
+    return preg_match('/^jour\s*\d+$/iu', $label) ? '' : $label;
+};
+
 // Étapes de l'itinéraire : le titre de chaque journée, ramené à son lieu. La destination ne
 // convient pas, souvent réduite à une catégorie (« Circuit »).
 $route_stops = [];
@@ -356,8 +365,13 @@ if (!empty($stats['transfers'])) {
 
 // Le sélecteur de dates n'offre que les départs encore ouverts ; les départs passés restent
 // affichés en dessous, jamais réservables — une offre expirée doit rester lisible.
-$upcoming_date_options = array_values(array_filter($search_date_options, static fn ($o) => empty($o['expired'])));
+$upcoming_date_options = array_values(array_filter($search_date_options, static fn ($o) => empty($o['expired']) && empty($o['placeholder'])));
 $expired_date_options = array_values(array_filter($search_date_options, static fn ($o) => !empty($o['expired'])));
+
+// Aucun départ à choisir : le dire, plutôt que d'afficher une liste inerte.
+$no_departure_label = $expired_date_options !== [] && $upcoming_date_options === []
+    ? 'Aucun départ à venir — nous consulter'
+    : $translate_ui($search_date);
 
 $header_settings = function_exists('ajth_get_header_settings') ? (array) ajth_get_header_settings() : [];
 $contact_phone = trim((string) ($header_settings['phone'] ?? ''));
@@ -492,8 +506,8 @@ get_header();
                                         class="ajtb-v1-day-chip<?php echo $i === 0 ? ' is-active' : ''; ?>"
                                         data-ajtb-day-target="ajtb-v1-day-<?php echo esc_attr((string) (int) $day['day']); ?>">
                                         <span class="ajtb-v1-day-chip__n">Jour <?php echo esc_html((string) (int) $day['day']); ?></span>
-                                        <?php if (!empty($day['date_label'])): ?>
-                                            <span class="ajtb-v1-day-chip__date"><?php echo esc_html($translate_ui((string) $day['date_label'])); ?></span>
+                                        <?php if (($chip_date = $day_date_label($day)) !== ''): ?>
+                                            <span class="ajtb-v1-day-chip__date"><?php echo esc_html($chip_date); ?></span>
                                         <?php endif; ?>
                                     </button>
                                 <?php endforeach; ?>
@@ -573,7 +587,14 @@ get_header();
                                     if (!empty($meals)) {
                                         $included_parts[] = count($meals) . ' Repas';
                                     }
-                                    $included_label = !empty($included_parts) ? ('Inclus : ' . implode(' - ', $included_parts)) : 'Inclus : Détails du programme';
+                                    // Sans service rattaché à la journée, la ligne « Inclus » n'apprend rien.
+                                    $included_label = !empty($included_parts) ? ('Inclus : ' . implode(' - ', $included_parts)) : '';
+                                    $day_date_text = $day_date_label($day);
+                                    $day_title_text = $translate_ui(trim((string) ($day['title'] ?? '')));
+                                    // Le badge dit déjà « Jour N » : inutile de le répéter en titre.
+                                    if (preg_match('/^jour\s*\d+$/iu', $day_title_text)) {
+                                        $day_title_text = '';
+                                    }
                                     $day_description = trim((string) ($day['description'] ?? ''));
                                     $day_notes_raw = trim((string) ($day['notes'] ?? ''));
                                     $day_notes_html = $day_notes_raw !== ''
@@ -591,12 +612,16 @@ get_header();
                                             <header class="ajtb-v1-day-head">
                                                 <div class="ajtb-v1-day-head-left">
                                                     <span class="ajtb-v1-day-badge">Jour <?php echo esc_html((string) $day_num); ?></span>
-                                                    <?php if (!empty($day['date_label'])): ?>
-                                                        <span class="ajtb-v1-day-date"><?php echo esc_html($translate_ui((string) $day['date_label'])); ?></span>
+                                                    <?php if ($day_date_text !== ''): ?>
+                                                        <span class="ajtb-v1-day-date"><?php echo esc_html($day_date_text); ?></span>
                                                     <?php endif; ?>
                                                 </div>
-                                                <h3><?php echo esc_html($translate_ui((string) ($day['title'] ?? ('Jour ' . $day_num)))); ?></h3>
-                                                <p class="ajtb-v1-day-included"><?php echo esc_html($included_label); ?></p>
+                                                <?php if ($day_title_text !== ''): ?>
+                                                    <h3><?php echo esc_html($day_title_text); ?></h3>
+                                                <?php endif; ?>
+                                                <?php if ($included_label !== ''): ?>
+                                                    <p class="ajtb-v1-day-included"><?php echo esc_html($included_label); ?></p>
+                                                <?php endif; ?>
                                             </header>
                                             <div class="ajtb-v1-day-content">
                                                 <?php if ($day_rich_html !== ''): ?>
@@ -992,9 +1017,11 @@ get_header();
                                                     </button>
                                                 <?php endforeach; ?>
                                             </div>
+                                        <?php else: ?>
+                                            <p class="ajtb-v1-field-static"><?php echo esc_html($no_departure_label); ?></p>
                                         <?php endif; ?>
 
-                                        <span class="ajtb-v1-select-shell<?php echo !empty($upcoming_date_options) ? ' ajtb-v1-sr-only' : ''; ?>">
+                                        <span class="ajtb-v1-select-shell ajtb-v1-sr-only">
                                             <select class="ajtb-v1-search-select" id="ajtb-v1-search-date" aria-label="Dates de départ disponibles">
                                                 <?php foreach ($search_date_options as $date_option): ?>
                                                     <option value="<?php echo esc_attr((string) $date_option['value']); ?>"<?php selected((string) $date_option['value'], $selected_search_date); ?><?php disabled(!empty($date_option['expired'])); ?><?php echo !empty($date_option['expired']) ? ' class="ajtb-v1-date-expired"' : ''; ?>>
