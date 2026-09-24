@@ -158,99 +158,149 @@ Côté front, les dates passées restent listées sur la page de tour — désac
 antérieure au jour courant. Attention : la page de tour est rendue par
 `templates/v1/single-st_tours.php`, pas par `templates/tour/partials/`.
 
-## Passer sur ajinsafro.com — procédure
+## Migrer vers un nouveau VPS, sur ajinsafro.com
 
-### Où en est-on (constaté le 2026-09-24)
+Migration **cPanel → cPanel** : le compte entier change de serveur, et le site prend le domaine
+`ajinsafro.com`. Deux opérations distinctes, à ne pas mener en même temps.
 
-| Hôte | Serveur | Contenu servi |
-| --- | --- | --- |
-| `ajinsafro.net`, `booking.ajinsafro.net` | **23.92.215.93** | le nouveau site (WordPress + Laravel) |
-| `www.ajinsafro.ma` | 23.92.215.92 | **l'ancien site, toujours en ligne** — ses URL répondent 200 |
-| `ajinsafro.com` | 23.92.215.92 | rien : « Index of / » |
+### Inventaire de l'existant (constaté le 2026-09-24)
 
-**Aucun fichier n'est à déplacer.** Le nouveau site reste sur 23.92.215.93 ; c'est le domaine qui
-change de cible. Le travail se résume à : faire pointer `ajinsafro.com` sur le bon serveur, réécrire
-le domaine dans la base WordPress et dans `.env`, puis rediriger `.net` vers `.com`.
+| | |
+| --- | --- |
+| Serveur actuel | 23.92.215.93, compte cPanel `ajinsafronet`, cPanel 11.138.0.8 |
+| Fichiers | 1,9 Go — dont 461 Mo d'`uploads`, 519 Mo pour Laravel (52 Mo de `vendor/`) |
+| Base | 57 Mo — MariaDB 10.11.19 |
+| Pile | PHP 8.1.34 (extensions standard + `zip`, pas d'ionCube), WordPress 6.9.9, Laravel 10.50 |
+| Extensions WP | 16 actives, thème Traveler |
+| E-mails | **rien à migrer** : `ajinsafro.ma` est chez Google Workspace, les boîtes locales sont vides |
+| Tâches cron | **aucune** |
+| Dépôt | `github.com/oussama2elidrissi1/ajinsafro`, branche `main`, accès OK depuis le serveur |
 
-### Recommandation sur `ajinsafro.ma`
+### Deux anomalies à corriger pendant la migration
 
-`.ma` est la destination finale **et** il porte déjà tout le référencement. Le plus sûr est donc de
-**ne rien y toucher maintenant** : l'ancien site continue de tourner sur 23.92.215.92 jusqu'à la
-validation de la société. Le jour venu, on fait pointer `ajinsafro.ma` sur 23.92.215.93 : les 368
-anciennes URL redeviennent **natives**, servies à l'identique par `AJTB_Legacy_Permalinks`, et il n'y
-a aucune migration de référencement à faire — c'est précisément ce pour quoi les permaliens
-historiques ont été construits.
+Elles préexistent et n'ont rien à voir avec le déménagement, mais c'est le bon moment :
 
-Conséquence : **garder `ajinsafro.com` en `noindex`** (`blog_public = 0`, comme aujourd'hui pour
-`.net`). L'indexer puis basculer sur `.ma` ferait voyager le référencement deux fois, et créerait un
-doublon de contenu avec l'ancien site `.ma` encore en ligne.
+1. **Aucun e-mail ne part.** `.env` porte la configuration de développement de Laravel :
+   `MAIL_HOST=mailpit`, `MAIL_PORT=1025`, `MAIL_FROM_ADDRESS="hello@example.com"`. Mailpit n'existe
+   pas sur le serveur : confirmations de réservation et réinitialisations de mot de passe échouent.
+   À remplacer par le SMTP du nouvel hébergement, ou par Google Workspace puisque le domaine y est
+   déjà.
+2. **Le planificateur Laravel ne tourne pas** — il n'y a aucune tâche cron. À créer sur le nouveau
+   serveur :
 
-### Étape 1 — Vérifier les e-mails avant de toucher au DNS
-
-Déplacer l'enregistrement `A` ne déplace pas les `MX`. Si des boîtes e-mail existent sur
-`ajinsafro.com`, noter les `MX` actuels et les conserver à l'identique. Les adresses utilisées par le
-projet sont en `@ajinsafro.ma` et ne sont pas concernées.
-
-### Étape 2 — DNS
-
-Chez le registrar d'`ajinsafro.com` :
-
-1. La veille, abaisser le TTL des enregistrements `A` à 300 s (bascule rapide, retour arrière rapide).
-2. Le jour J : `A @` et `A www` → **23.92.215.93**.
-3. Attendre la propagation avant l'étape suivante :
-
-   ```bash
-   getent hosts ajinsafro.com        # doit afficher 23.92.215.93
+   ```
+   * * * * * cd /home/ajinsafronet/public_html/booking && php artisan schedule:run >> /dev/null 2>&1
    ```
 
-### Étape 3 — cPanel du nouveau serveur
+### Le piège principal : le nom du compte cPanel
 
-Sur le compte `ajinsafronet` (23.92.215.93) :
+`public/storage` est un lien symbolique **absolu** vers
+`/home/ajinsafronet/public_html/booking/storage/app/public`. Si le compte cPanel porte un autre nom
+sur le nouveau VPS, le lien pointe dans le vide et **toutes les images gérées par Laravel
+disparaissent** (visuels de voyages, réglages de la page d'accueil).
 
-1. Ajouter `ajinsafro.com` en **alias** (domaine parqué), afin qu'il serve la **même** racine
-   `~/public_html`. **Pas** en « addon domain » : cela créerait une racine séparée
-   `~/public_html/ajinsafro.com` et servirait un site vide.
-2. Créer le sous-domaine `booking.ajinsafro.com`, racine `~/public_html/booking/public`.
-3. Créer `partenaire.ajinsafro.com` si le portail partenaire est utilisé.
-4. Lancer AutoSSL et **vérifier les trois certificats avant de continuer** :
+**Créer le compte avec le même nom d'utilisateur `ajinsafronet`.** À défaut, recréer le lien après
+restauration :
 
-   ```bash
-   for H in ajinsafro.com booking.ajinsafro.com partenaire.ajinsafro.com; do
-     echo | openssl s_client -connect $H:443 -servername $H 2>/dev/null \
-       | openssl x509 -noout -subject -dates
-   done
-   ```
+```bash
+cd ~/public_html/booking && rm -f public/storage && php artisan storage:link
+```
 
-### Étape 4 — Sauvegardes
+---
+
+### Phase 1 — J-2 : préparer
+
+1. Abaisser à **300 s** le TTL des enregistrements `A` de `ajinsafro.net` et `ajinsafro.com`.
+2. Vérifier que le nouveau VPS offre au moins : **PHP 8.1** (avec `bcmath curl gd imap intl
+   mbstring mysqli pdo_mysql sqlite3 zip`), **MariaDB 10.11**, **cPanel ≥ 11.138**. Une version de
+   cPanel plus ancienne que la source refuse la restauration.
+3. Sur le nouveau VPS : `mysql`, `php -v`, `wp --info` disponibles.
+
+### Phase 2 — Transfert du compte
+
+**Option A — outil de transfert WHM (recommandé).** Depuis le WHM du **nouveau** serveur :
+*Transfers → Transfer Tool*, renseigner l'IP et le mot de passe root de l'ancien, sélectionner le
+compte `ajinsafronet`. Tout suit : fichiers, base, utilisateurs MySQL, zones DNS, SSL, cron.
+
+**Option B — sauvegarde complète.** Sur l'ancien serveur :
+
+```bash
+# cPanel > Sauvegardes > Télécharger une sauvegarde complète du site
+# ou en ligne de commande, côté root :
+/usr/local/cpanel/scripts/pkgacct ajinsafronet
+```
+
+Puis sur le nouveau, en root : `/scripts/restorepkg /chemin/cpmove-ajinsafronet.tar.gz`.
+
+Pendant le transfert, **l'ancien site reste en ligne** : le DNS n'a pas bougé.
+
+### Phase 3 — Vérifier avant de toucher au DNS
+
+C'est l'étape qui évite toute coupure. Sur **votre poste**, forcer la résolution vers le nouveau
+serveur en ajoutant à votre fichier `hosts` (`C:\Windows\System32\drivers\etc\hosts`) :
+
+```
+<IP_DU_NOUVEAU_VPS>  ajinsafro.net www.ajinsafro.net booking.ajinsafro.net
+```
+
+Puis, dans votre navigateur, parcourir le **nouveau** serveur sous l'ancien domaine et vérifier :
+
+- la page d'accueil, une fiche voyage, le catalogue hébergements ;
+- la connexion publique et le back-office `booking.ajinsafro.net/login` ;
+- une réservation de bout en bout ;
+- les images servies par Laravel (le lien `storage`).
+
+Côté serveur :
+
+```bash
+cd ~/public_html/booking
+php artisan optimize:clear
+php artisan legacy:check-urls --base=https://ajinsafro.net   # 368 URL, 0 défaut
+stat -c "%a %n" ~/public_html/wp-config.php ~/public_html/booking/.env   # 600 tous les deux
+ls -la ~/public_html/booking/public/storage                  # le lien doit résoudre
+git -C ~/public_html/booking status --porcelain              # doit être vide
+```
+
+Retirer ensuite la ligne du fichier `hosts`.
+
+### Phase 4 — Ajouter le domaine ajinsafro.com
+
+Sur le nouveau serveur, une fois la phase 3 concluante :
+
+1. `ajinsafro.com` en **alias** (domaine parqué) du compte — il sert la **même** racine
+   `~/public_html`. **Pas** en « addon domain », qui créerait une racine séparée et vide.
+2. Sous-domaine `booking.ajinsafro.com` → racine `~/public_html/booking/public`.
+3. `partenaire.ajinsafro.com` si le portail partenaire est utilisé.
+4. AutoSSL, puis vérifier les trois certificats.
+
+### Phase 5 — Bascule DNS
+
+1. `A @` et `A www` d'`ajinsafro.com` → **IP du nouveau VPS**.
+2. `A` d'`ajinsafro.net`, `booking`, `partenaire` → **IP du nouveau VPS**.
+3. **Ne pas toucher aux `MX`** : `ajinsafro.ma` reste chez Google Workspace.
+4. Vérifier : `getent hosts ajinsafro.com` puis `getent hosts ajinsafro.net`.
+
+### Phase 6 — Basculer le contenu sur .com
+
+Une fois le DNS propagé, sur le nouveau serveur :
 
 ```bash
 cd ~/public_html
 wp db export ~/sauvegarde-avant-com-$(date +%F).sql
-tar czf ~/sauvegarde-uploads-$(date +%F).tar.gz wp-content/uploads wp-config.php
-cp ~/public_html/booking/.env ~/sauvegarde-env-$(date +%F)
-```
-
-### Étape 5 — Base WordPress
-
-`wp search-replace` gère les données sérialisées ; un `UPDATE` SQL les corromprait.
-
-```bash
-cd ~/public_html
 wp search-replace 'ajinsafro.net' 'ajinsafro.com' --all-tables-with-prefix --dry-run
 wp search-replace 'ajinsafro.net' 'ajinsafro.com' --all-tables-with-prefix
-wp option get siteurl && wp option get home     # https://ajinsafro.com attendu
+wp option get siteurl && wp option get home
 wp cache flush && wp rewrite flush --hard
+wp transient delete --all
 ```
 
-La même passe corrige `booking.ajinsafro.net` → `booking.ajinsafro.com`, la chaîne étant contenue
-dans `ajinsafro.net`. Au 2026-09-24, la simulation annonçait **1348 remplacements**.
+`booking.ajinsafro.net` est corrigé au passage, la chaîne étant contenue dans `ajinsafro.net`.
+Au 2026-09-24, la simulation annonçait **1348 remplacements**.
 
-> **Ne jamais lancer de remplacement sur `ajinsafro.ma`.** Ce domaine porte les adresses e-mail
-> (`contact@ajinsafro.ma`) et les références au catalogue historique, qui doivent rester intactes.
+> **Ne jamais lancer de remplacement sur `ajinsafro.ma`** : ce domaine porte les adresses e-mail et
+> les références au catalogue historique, qui doivent rester intactes.
 
-### Étape 6 — Laravel
-
-Dans `~/public_html/booking/.env` :
+Puis `~/public_html/booking/.env` :
 
 ```
 APP_URL=https://ajinsafro.com
@@ -273,24 +323,14 @@ cd ~/public_html/booking
 php artisan optimize:clear && php artisan config:cache && php artisan view:cache
 ```
 
-Rien d'autre à modifier : le routage lit `PUBLIC_DOMAIN` / `ADMIN_DOMAIN`, et les plugins WordPress
-déduisent le back-office du sous-domaine `booking` de l'hôte servi.
+Rien d'autre à modifier dans le code : le routage lit `PUBLIC_DOMAIN` / `ADMIN_DOMAIN`, et les
+plugins WordPress déduisent le back-office du sous-domaine `booking` de l'hôte servi.
 
-### Étape 7 — Vider les caches
+### Phase 7 — Rediriger .net vers .com
 
-```bash
-cd ~/public_html
-wp super-cache flush 2>/dev/null || rm -rf wp-content/cache/*
-wp transient delete --all
-```
-
-### Étape 8 — Rediriger `.net` vers `.com`
-
-**Site public** — dans `~/public_html/.htaccess`, *avant* le bloc `# BEGIN WordPress` (ce fichier
-n'est pas suivi par git, il s'édite directement sur le serveur) :
+Dans `~/public_html/.htaccess`, avant `# BEGIN WordPress` (fichier hors git) :
 
 ```apache
-# L'ancien domaine renvoie vers le nouveau, chemin pour chemin.
 <IfModule mod_rewrite.c>
 RewriteEngine On
 RewriteCond %{HTTP_HOST} ^(www\.)?ajinsafro\.net$ [NC]
@@ -298,37 +338,36 @@ RewriteRule ^(.*)$ https://ajinsafro.com/$1 [R=301,L]
 </IfModule>
 ```
 
-**Back-office** — la même règle pour `booking.ajinsafro.net` doit passer par
-`booking/public/.htaccess`, **qui est suivi par git** : l'écrire à la main serait effacé au
-déploiement suivant. Elle se commite et se déploie normalement, et seulement une fois l'étape 3
-confirmée — sinon l'accès admin renvoie vers un hôte qui n'existe pas encore.
+La règle équivalente pour `booking.ajinsafro.net` va dans `booking/public/.htaccess`, **suivi par
+git** : elle se commite et se déploie, sinon le prochain `git reset --hard` l'efface.
 
 Garder ces redirections **au moins un an**.
 
-### Étape 9 — Recette
+### Phase 8 — Recette et finitions
 
 ```bash
 cd ~/public_html/booking
-php artisan legacy:check-urls --base=https://ajinsafro.com   # 368 URL, 0 défaut attendu
+php artisan legacy:check-urls --base=https://ajinsafro.com   # 368 URL, 0 défaut
 ```
 
-Puis à la main : la page d'accueil, une fiche voyage, le catalogue hébergements, la connexion
-publique, une réservation de bout en bout, et le back-office sur `booking.ajinsafro.com/login`.
+À refaire sur le nouveau serveur, car hors git :
 
-### Étape 10 — Après la bascule
+- `chmod 600 ~/public_html/wp-config.php` et `~/public_html/booking/.env` ;
+- `.htaccess` d'`uploads/` interdisant l'exécution de PHP ;
+- aucune archive `.zip` dans `wp-content/plugins/` ;
+- la tâche cron du planificateur Laravel (voir plus haut) ;
+- la configuration `MAIL_*` réelle (voir plus haut).
 
-- Search Console : créer la propriété `ajinsafro.com`, y soumettre le sitemap.
-- Mettre à jour les liens externes (fiche Google, réseaux sociaux, signatures).
-- **Ne pas** utiliser l'outil « changement d'adresse » depuis `.net` tant que `.net` n'était pas
-  indexé — il ne l'est pas, `blog_public` étant à 0.
+**Garder l'ancien VPS allumé deux à quatre semaines**, le temps de s'assurer que rien ne manque.
 
-### Plus tard — la bascule finale vers `ajinsafro.ma`
+### Plus tard — la bascule finale vers ajinsafro.ma
 
-Une fois la société validée : faire pointer `ajinsafro.ma` et `www.ajinsafro.ma` sur
-**23.92.215.93**, les ajouter en alias sur le compte, émettre les certificats, rejouer les étapes 4
-à 7 avec `ajinsafro.com` → `ajinsafro.ma`, rediriger `.com` vers `.ma`, puis **passer
-`blog_public` à 1**. Les 368 anciennes URL sont alors servies nativement, au même chemin qu'à
-l'époque : aucun référencement à transférer.
+`ajinsafro.ma` porte tout le référencement et l'ancien site y tourne encore (23.92.215.92). Le plus
+sûr est de **ne rien y toucher** jusqu'à la validation de la société, et de garder `ajinsafro.com`
+en `noindex` (`blog_public = 0`). Le jour venu, faire pointer `ajinsafro.ma` sur le nouveau VPS :
+les 368 anciennes URL redeviennent **natives**, au même chemin qu'à l'époque, servies par
+`AJTB_Legacy_Permalinks`. Aucun référencement à transférer — c'est précisément ce pour quoi les
+permaliens historiques ont été construits. Passer alors `blog_public` à 1.
 ## Ce que l'import ne crée jamais
 
 Fichiers images, galeries, disponibilités réelles, chambres, vols, prix de vente actifs. Les départs
