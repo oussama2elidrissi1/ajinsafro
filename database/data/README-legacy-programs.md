@@ -54,10 +54,28 @@ pas des départs vendables. La contrainte unique `(voyage_id, start_date)` inter
 
 ### Images
 
-Les URLs pointent encore vers `ajinsafro.ma` : aucune ligne `voyage_images` n'est créée, sinon
+Le seeder ne crée aucune ligne `voyage_images` : les URLs pointent encore vers `ajinsafro.ma` et
 l'affichage casserait à la coupure du domaine. Les photos réelles (dossier `/static/team/`, les
 assets de template sont écartés) sont listées dans
 `logistics_meta.legacy_import.images_a_rapatrier`, et `images` reste dans la liste des manques.
+
+Le rapatriement se fait ensuite avec :
+
+```bash
+php artisan legacy:import-images                    # simulation
+php artisan legacy:import-images --execute --limit=10   # premier lot
+php artisan legacy:import-images --execute              # le reste
+```
+
+**À lancer sur le serveur** : c'est son stockage qui reçoit les fichiers, et il doit pouvoir
+joindre `ajinsafro.ma`. Volume : 401 fichiers distincts sur 135 programmes, ~120 Mo.
+
+Chaque fichier est écrit sur le disque `public` sous `voyages/legacy/{legacy_id}/{n}.{ext}`, une
+ligne `voyage_images` est créée, et la première photo devient la couverture si la fiche n'en a pas.
+Le corps de la réponse est décodé avant écriture : une 404 ou une page HTML servie à la place d'une
+image est rejetée. La commande est idempotente — elle retient les URLs déjà copiées dans
+`images_importees` et ne retente que les échecs. `images` ne quitte la liste des manques que
+lorsque toutes les photos d'une fiche sont passées.
 
 
 
