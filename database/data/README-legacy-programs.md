@@ -77,7 +77,18 @@ image est rejetée. La commande est idempotente — elle retient les URLs déjà
 `images_importees` et ne retente que les échecs. `images` ne quitte la liste des manques que
 lorsque toutes les photos d'une fiche sont passées.
 
+L'extension vient du **contenu décodé**, pas de l'en-tête `Content-Type` : `ajinsafro.ma` annonce
+`image/jpeg` pour tous ses fichiers, y compris ses PNG et ses WebP. Les rapatriements antérieurs à
+ce correctif ont produit des fichiers mal nommés ; pour les remettre d'aplomb :
 
+```bash
+php artisan legacy:fix-image-extensions              # simulation
+php artisan legacy:fix-image-extensions --execute    # renomme
+```
+
+Le renommage est reporté sur `voyage_images.path`, `voyages.featured_image` et
+`legacy_import.images_importees`, de sorte qu'aucune référence ne reste orpheline. La commande est
+idempotente et peut être relancée pour contrôler l'intégrité de la médiathèque historique.
 
 ## Ce que l'import ne crée jamais
 
