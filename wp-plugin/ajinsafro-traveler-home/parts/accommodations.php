@@ -37,29 +37,17 @@ if ( empty( $hebergements ) ) return;
                         <?php
                         // Les cartes suivent .aj-slider-v2__item, comme le carrousel de last-minute.php :
                         // 80vw jusqu'a 768px, 50vw jusqu'a 1024px, puis 25% d'un conteneur de 1280px.
-                        // Sans srcset, le navigateur prenait la declinaison 1024px pour un affichage en 300px.
+                        // Le helper choisit une famille de tailles pour laquelle WordPress sait calculer
+                        // un srcset (le `large` carre de Traveler n'en a pas) ; src suit cette famille.
                         $image_id   = isset( $hebergement['image_id'] ) ? (int) $hebergement['image_id'] : 0;
                         $image_size = ! empty( $hebergement['image_size'] ) ? (string) $hebergement['image_size'] : 'large';
-                        $srcset     = '';
-                        if ( $image_id > 0 && function_exists( 'wp_get_attachment_image_srcset' ) ) {
-                            $raw_srcset = wp_get_attachment_image_srcset( $image_id, $image_size );
-                            if ( is_string( $raw_srcset ) && $raw_srcset !== '' ) {
-                                // Chaque candidat passe par le meme normaliseur d'hote que le src.
-                                $candidates = array();
-                                foreach ( explode( ',', $raw_srcset ) as $candidate ) {
-                                    $candidate = trim( $candidate );
-                                    if ( $candidate === '' ) {
-                                        continue;
-                                    }
-                                    $bits = preg_split( '/\s+/', $candidate, 2 );
-                                    $c_url = function_exists( 'ajth_normalize_upload_image_url' ) ? ajth_normalize_upload_image_url( $bits[0] ) : $bits[0];
-                                    $candidates[] = $c_url . ( isset( $bits[1] ) ? ' ' . $bits[1] : '' );
-                                }
-                                $srcset = implode( ', ', $candidates );
-                            }
-                        }
+                        $responsive = ( $image_id > 0 && function_exists( 'ajth_hebergement_card_responsive_image' ) )
+                            ? ajth_hebergement_card_responsive_image( $image_id, $image_size )
+                            : array( 'src' => '', 'srcset' => '', 'size' => '' );
+                        $srcset = $responsive['srcset'];
+                        $src    = $srcset !== '' ? $responsive['src'] : $hebergement['image_url'];
                         ?>
-                        <img loading="lazy" decoding="async" width="900" height="600" src="<?php echo esc_url( $hebergement['image_url'] ); ?>"<?php if ( $srcset !== '' ) : ?> srcset="<?php echo esc_attr( $srcset ); ?>" sizes="(max-width: 768px) 80vw, (max-width: 1024px) 50vw, 300px"<?php endif; ?> alt="<?php echo esc_attr( $hebergement['title'] ); ?>">
+                        <img loading="lazy" decoding="async" width="900" height="600" src="<?php echo esc_url( $src ); ?>"<?php if ( $srcset !== '' ) : ?> srcset="<?php echo esc_attr( $srcset ); ?>" sizes="(max-width: 768px) 80vw, (max-width: 1024px) 50vw, 300px"<?php endif; ?> alt="<?php echo esc_attr( $hebergement['title'] ); ?>">
                         <?php if ( ! empty( $hebergement['category'] ) ) : ?>
                         <span class="aj-card2__badge aj-card2__badge--info"><?php echo esc_html( $hebergement['category'] ); ?></span>
                         <?php endif; ?>

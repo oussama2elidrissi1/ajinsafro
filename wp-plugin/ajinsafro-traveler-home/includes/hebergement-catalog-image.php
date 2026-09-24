@@ -178,3 +178,62 @@ function ajth_hebergement_catalog_card_image_url( $post_id ) {
 
 	return $attachment ? $attachment['url'] : ajth_hebergement_default_card_image_url();
 }
+
+/**
+ * Image responsive d'une carte : src et srcset issus d'une même famille de tailles.
+ *
+ * WordPress ne calcule un srcset que parmi les tailles de même ratio que celle demandée. Or
+ * Traveler génère `large` en carré 1024x1024, souvent seul de son ratio : demandée en premier,
+ * elle ne produit aucun srcset et une carte de 300 px reçoit 1024 px. On essaie donc la taille
+ * préférée puis medium_large, full et medium, et on retient la première pour laquelle un
+ * srcset existe — src compris, pour rester dans la même famille. À défaut, le src de la
+ * première taille valide, sans srcset.
+ *
+ * @param int    $attachment_id  ID de l'attachment.
+ * @param string $preferred_size Taille retenue par le sélecteur de carte.
+ * @return array{src:string,srcset:string,size:string}
+ */
+function ajth_hebergement_card_responsive_image( $attachment_id, $preferred_size = 'large' ) {
+	$attachment_id = (int) $attachment_id;
+	$empty         = array( 'src' => '', 'srcset' => '', 'size' => '' );
+	if ( $attachment_id <= 0 || ! function_exists( 'wp_get_attachment_image_url' ) ) {
+		return $empty;
+	}
+
+	$order = array_values( array_unique( array_merge( array( (string) $preferred_size ), array( 'medium_large', 'full', 'medium' ) ) ) );
+	$first = null;
+
+	foreach ( $order as $size ) {
+		$url = wp_get_attachment_image_url( $attachment_id, $size );
+		if ( ! $url ) {
+			continue;
+		}
+		$url = ajth_normalize_upload_image_url( $url );
+		if ( ! ajth_is_browser_safe_image_url( $url ) ) {
+			continue;
+		}
+		if ( null === $first ) {
+			$first = array( 'src' => $url, 'srcset' => '', 'size' => $size );
+		}
+
+		$raw = function_exists( 'wp_get_attachment_image_srcset' ) ? wp_get_attachment_image_srcset( $attachment_id, $size ) : '';
+		if ( ! is_string( $raw ) || $raw === '' ) {
+			continue;
+		}
+
+		// Chaque candidat passe par le même normaliseur d'hôte que le src.
+		$candidates = array();
+		foreach ( explode( ',', $raw ) as $candidate ) {
+			$candidate = trim( $candidate );
+			if ( $candidate === '' ) {
+				continue;
+			}
+			$bits         = preg_split( '/\s+/', $candidate, 2 );
+			$candidates[] = ajth_normalize_upload_image_url( $bits[0] ) . ( isset( $bits[1] ) ? ' ' . $bits[1] : '' );
+		}
+
+		return array( 'src' => $url, 'srcset' => implode( ', ', $candidates ), 'size' => $size );
+	}
+
+	return $first ? $first : $empty;
+}
